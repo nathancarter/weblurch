@@ -1,0 +1,9 @@
+{
+  "name": "weblurch",
+  "version": "0.0.0",
+  "description": "A web-based rich text editor with extensions to support mathematics and the validation thereof",
+  "author": "Nathan Carter <ncarter@bentley.edu> (http://web.bentley.edu/empl/c/ncarter)",
+  "license": "LGPLv3",
+  "dependencies": {
+  }
+}
