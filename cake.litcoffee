@@ -29,6 +29,8 @@ These constants define how the functions below perform.
     srcdir = './src/'
     outdir = './app/'
     srcout = 'weblurch.litcoffee'
+    docdir = './doc/'
+    doctmp = 'template.html'
 
 ## The `app` build process
 
@@ -61,8 +63,8 @@ This generates `.js` and `.js.map` files.
             console.log stdout + stderr if stdout + stderr
             throw err if err
 
-Run `uglifyjs` to minify the results,
-taking source maps into account.
+Run [uglifyjs](https://github.com/mishoo/UglifyJS)
+to minify the results, taking source maps into account.
 Report completion when done, or throw an error if there was one.
 (Note that `uglify` output is not printed unless there was an
 error, because uglify dumps a bit of spam I'm suppressing.)
@@ -81,6 +83,66 @@ error, because uglify dumps a bit of spam I'm suppressing.)
                     console.log stdout + stderr
                     throw err
                 console.log 'Done building app.'
+
+## The `doc` build process
+
+    task 'doc', 'Build the documentation', ( options ) ->
+        console.log 'Begin building doc...'
+
+Fetch all files in the source directory, plus this file,
+plus any `.md` files in the `doc/` dir that need converting,
+and the template HTML output file from the `doc/` directory.
+
+        all = ( srcdir + f for f in fs.readdirSync srcdir )
+        all.push 'cake.litcoffee'
+        all = all.concat( docdir + f for f in \
+            fs.readdirSync docdir when /\.md$/.test( f ) )
+        html = fs.readFileSync docdir + doctmp, 'utf8'
+
+Build a file navigation list from those files' names.
+
+        nav = {}
+        for file in all
+            end = ( path = file.split '/' ).pop()
+            ( nav[path.join '/'] ?= [] ).push end
+        navtxt = ''
+        for path, entries of nav
+            navtxt += "<p>#{path || './'}</p><ul>"
+            for e in entries
+                navtxt += "<li><a href='#{e}.html'>#{e}</a></li>"
+            navtxt += '</ul>'
+
+Load the [marked](https://github.com/chjj/marked) module,
+for parsing markdown
+and doing syntax highlighting of indented code blocks.
+Set its options to use [hightlight.js](http://highlightjs.org/)
+for code highlighting, which handles
+[coffeescript](http://coffeescript.org/) very well,
+and one of whose stylesheets is already installed
+in the `doc/` output folder.
+
+        marked = require 'marked'
+        marked.setOptions highlight: ( code ) ->
+            require( 'highlight.js' ).highlightAuto( code ).value
+
+Read each source file and place its marked-down version into the
+HTML template, saving it into the docs directory.
+
+        for file in all
+            end = file.split( '/' ).pop()
+            console.log "\tCreating #{end}.html..."
+            contents = fs.readFileSync file, 'utf8'
+            myhtml = html.replace( 'RIGHT',
+                                   'weblurch source code docs' )
+                         .replace( 'LEFT', navtxt )
+                         .replace( 'MIDDLE', marked contents )
+                         .replace( /<pre><code>/g,
+                                   '<pre class="hljs"><code>' )
+            fs.writeFileSync "#{docdir+end}.html", myhtml, 'utf8'
+
+Indicate successful completion of the task.
+
+        console.log 'Done building doc.'
 
 [litcoffee]: (http://coffeescript.org/#literate)
 

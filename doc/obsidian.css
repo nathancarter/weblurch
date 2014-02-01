@@ -1,0 +1,194 @@
+
+/*
+ * Nathan Carter obtained this file from the highlight.js source
+ * repository, and is complying with its license by including
+ * that license here:
+ *
+ * Copyright (c) 2006, Ivan Sagalaev
+ * All rights reserved.
+ * Redistribution and use in source and binary forms, with or
+ * without modification, are permitted provided that the following
+ * conditions are met:
+ * 
+ *     * Redistributions of source code must retain the above
+ *       copyright notice, this list of conditions and the
+ *       following disclaimer.
+ *     * Redistributions in binary form must reproduce the above
+ *       copyright notice, this list of conditions and the
+ *       following disclaimer in the documentation and/or other
+ *       materials provided with the distribution.
+ *     * Neither the name of highlight.js nor the names of its
+ *       contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written
+ *       permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS
+ * IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+ * SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
+ * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ */
+
+/**
+ *  Obsidian style
+ *  ported by Alexander Marenin (http://github.com/ioncreature)
+ */
+
+.hljs {
+    display: block; padding: 0.5em;
+    background: #282B2E;
+}
+
+.hljs-keyword,
+.hljs-literal,
+.hljs-change,
+.hljs-winutils,
+.hljs-flow,
+.lisp .hljs-title,
+.clojure .hljs-built_in,
+.nginx .hljs-title,
+.css .hljs-id,
+.tex .hljs-special {
+    color: #93C763;
+}
+
+.hljs-number {
+    color: #FFCD22;
+}
+
+.hljs {
+    color: #E0E2E4;
+}
+
+.css .hljs-tag,
+.css .hljs-pseudo {
+    color: #D0D2B5;
+}
+
+.hljs-attribute,
+.hljs .hljs-constant {
+    color: #668BB0;
+}
+
+.xml .hljs-attribute {
+    color: #B3B689;
+}
+
+.xml .hljs-tag .hljs-value {
+    color: #E8E2B7;
+}
+
+.hljs-code,
+.hljs-class .hljs-title,
+.hljs-header {
+    color: white;
+}
+
+.hljs-class,
+.hljs-hexcolor {
+    color: #93C763;
+}
+
+.hljs-regexp {
+    color: #D39745;
+}
+
+.hljs-at_rule,
+.hljs-at_rule .hljs-keyword {
+    color: #A082BD;
+}
+
+.hljs-doctype {
+    color: #557182;
+}
+
+.hljs-link_url,
+.hljs-tag,
+.hljs-tag .hljs-title,
+.hljs-bullet,
+.hljs-subst,
+.hljs-emphasis,
+.haskell .hljs-type,
+.hljs-preprocessor,
+.hljs-pragma,
+.ruby .hljs-class .hljs-parent,
+.hljs-built_in,
+.sql .hljs-aggregate,
+.django .hljs-template_tag,
+.django .hljs-variable,
+.smalltalk .hljs-class,
+.hljs-javadoc,
+.django .hljs-filter .hljs-argument,
+.smalltalk .hljs-localvars,
+.smalltalk .hljs-array,
+.hljs-attr_selector,
+.hljs-pseudo,
+.hljs-addition,
+.hljs-stream,
+.hljs-envvar,
+.apache .hljs-tag,
+.apache .hljs-cbracket,
+.tex .hljs-command,
+.hljs-prompt {
+    color: #8CBBAD;
+}
+
+.hljs-string {
+    color: #EC7600;
+}
+
+.hljs-comment,
+.java .hljs-annotation,
+.hljs-blockquote,
+.hljs-horizontal_rule,
+.python .hljs-decorator,
+.hljs-template_comment,
+.hljs-pi,
+.hljs-deletion,
+.hljs-shebang,
+.apache .hljs-sqbracket,
+.tex .hljs-formula {
+    color: #818E96;
+}
+
+.hljs-keyword,
+.hljs-literal,
+.css .hljs-id,
+.hljs-phpdoc,
+.hljs-title,
+.hljs-header,
+.haskell .hljs-type,
+.vbscript .hljs-built_in,
+.sql .hljs-aggregate,
+.rsl .hljs-built_in,
+.smalltalk .hljs-class,
+.diff .hljs-header,
+.hljs-chunk,
+.hljs-winutils,
+.bash .hljs-variable,
+.apache .hljs-tag,
+.tex .hljs-special,
+.hljs-request,
+.hljs-at_rule .hljs-keyword,
+.hljs-status {
+    font-weight: bold;
+}
+
+.coffeescript .javascript,
+.javascript .xml,
+.tex .hljs-formula,
+.xml .javascript,
+.xml .vbscript,
+.xml .css,
+.xml .hljs-cdata {
+    opacity: 0.5;
+}
