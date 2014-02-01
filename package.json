@@ -8,6 +8,6 @@
     "uglify-js" : "2.4.12",
     "marked": "0.3.0",
     "highlight.js": "8.0.0",
-    "jasmine-node": "1.13.0"
+    "jasmine-node": "1.13.1"
   }
 }
