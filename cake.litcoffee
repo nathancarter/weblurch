@@ -146,5 +146,16 @@ Indicate successful completion of the task.
 
         console.log 'Done building doc.'
 
+## The `test` build process
+
+    task 'test', 'Run all unit tests', ->
+        console.log 'Begin tests...'
+        exec 'node node_modules/jasmine-node/lib/jasmine-node/' +
+             'cli.js --verbose --coffee test/',
+             (err, stdout, stderr) ->
+                 console.log stdout + stderr if stdout + stderr
+                 throw err if err
+                 console.log 'Tests done.'
+
 [litcoffee]: (http://coffeescript.org/#literate)
 
