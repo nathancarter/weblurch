@@ -22,6 +22,10 @@ First, verify that `npm install` has been run in this folder.
                         """
             process.exit 1
 
+Next import other modules we'll need later.
+
+    { exec } = require 'child_process'
+
 ## Constants
 
 These constants define how the functions below perform.
@@ -57,8 +61,7 @@ Run `coffee` compiler on that file, also creating a source map.
 This generates `.js` and `.js.map` files.
 
         console.log "\tCompiling #{outdir+srcout}..."
-        ( require 'child_process' ).exec \
-        "coffee --map --compile #{outdir+srcout}",
+        exec "coffee --map --compile #{outdir+srcout}",
         ( err, stdout, stderr ) ->
             console.log stdout + stderr if stdout + stderr
             throw err if err
@@ -71,13 +74,12 @@ error, because uglify dumps a bit of spam I'm suppressing.)
 
             srcoutbase = /^(.*)\.[^.]*$/.exec( srcout )[1]
             console.log "\tMinifying #{srcoutbase}.js..."
-            ( require 'child_process' ).exec \
-                "../node_modules/uglify-js/bin/uglifyjs " +
-                "-c -m -v false " +
-                "--in-source-map #{srcoutbase}.map " +
-                "-o #{srcoutbase}.min.js " +
-                "--source-map #{srcoutbase}.min.js.map",
-                { cwd : outdir },
+            exec "../node_modules/uglify-js/bin/uglifyjs " +
+                 "-c -m -v false " +
+                 "--in-source-map #{srcoutbase}.map " +
+                 "-o #{srcoutbase}.min.js " +
+                 "--source-map #{srcoutbase}.min.js.map",
+                 { cwd : outdir },
             ( err, stdout, stderr ) ->
                 if err
                     console.log stdout + stderr
