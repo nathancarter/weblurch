@@ -5,6 +5,8 @@
   "author": "Nathan Carter <ncarter@bentley.edu> (http://web.bentley.edu/empl/c/ncarter)",
   "license": "LGPLv3",
   "dependencies": {
-    "uglify-js" : "2.4.12"
+    "uglify-js" : "2.4.12",
+    "marked": "0.3.0",
+    "highlight.js": "8.0.0"
   }
 }
