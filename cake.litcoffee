@@ -61,7 +61,7 @@ Run `coffee` compiler on that file, also creating a source map.
 This generates `.js` and `.js.map` files.
 
         console.log "\tCompiling #{outdir+srcout}..."
-        exec "coffee --map --compile #{outdir+srcout}",
+        exec "coffee --map --compile #{srcout}", { cwd : outdir },
         ( err, stdout, stderr ) ->
             console.log stdout + stderr if stdout + stderr
             throw err if err
