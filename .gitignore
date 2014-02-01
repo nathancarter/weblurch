@@ -3,3 +3,5 @@ app/*.js
 app/*.litcoffee
 app/*.map
 node_modules/*
+doc/*.litcoffee.html
+doc/*.md.html
