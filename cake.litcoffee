@@ -7,6 +7,17 @@ the source code of which is kept to a one-liner,
 so that most of the repository can be written
 in [the literate variant of CoffeeScript][litcoffee].
 
+## Easy way to build all
+
+If you want to build and test evertything, just run `cake all`.
+It simply invokes all the other tasks, defined below.
+
+    queue = []
+    dequeue = -> if queue.length > 0 then invoke queue.shift()
+    task 'all', 'Build app, doc, and run tests', ->
+        queue = [ 'app', 'doc', 'test' ]
+        dequeue()
+
 ## Requirements
 
 First, verify that `npm install` has been run in this folder.
@@ -85,6 +96,7 @@ error, because uglify dumps a bit of spam I'm suppressing.)
                     console.log stdout + stderr
                     throw err
                 console.log 'Done building app.'
+                dequeue()
 
 ## The `doc` build process
 
@@ -145,6 +157,7 @@ HTML template, saving it into the docs directory.
 Indicate successful completion of the task.
 
         console.log 'Done building doc.'
+        dequeue()
 
 ## The `test` build process
 
@@ -156,6 +169,7 @@ Indicate successful completion of the task.
                  console.log stdout + stderr if stdout + stderr
                  throw err if err
                  console.log 'Tests done.'
+                 dequeue()
 
 [litcoffee]: (http://coffeescript.org/#literate)
 
