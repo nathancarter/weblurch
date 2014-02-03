@@ -3,14 +3,18 @@
 
 ## Add test results to HTML output
 
- * Import xml2js module
- * Have jasmine (also?) create XML output
+ * Import xml2js module.
+ * Have jasmine (also?) create XML output.
  * When generating docs, scrape that XML output and create
    `test/results.md`.
- * Add that file to the list of files that `cake doc` processes
+ * Add that file to the list of files that `cake doc` processes.
 
-## Test hyperlinks
+## Documentation improvements
 
+ * Add title to navigation bar.
+ * Make nav bar and right side hover always about 30px from top,
+   even as you scroll down.
+ * Add link in nav bar to `app/index.html`.
  * Make hyperlinks from individual `describe "..."` code lines to
    the corresponding sections of `test/results.md`.
 
@@ -19,6 +23,7 @@
  * Put in it a stub html file for now, like `app/index.html`, but
    later we’ll add real functionality to it for testing purposes
    (e.g., multi-pane view, etc.).
+ * Create link to that page from the docs nav bar.
  * Create another section in `cake.litcoffee` that will take
    `.litcoffee` files in `testapp/` and put them in a separate
    joined, minified file in that same folder.
