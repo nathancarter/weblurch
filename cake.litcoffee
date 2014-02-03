@@ -46,6 +46,7 @@ These constants define how the functions below perform.
     srcout = 'weblurch.litcoffee'
     docdir = './doc/'
     doctmp = 'template.html'
+    testdir = './test/'
 
 ## The `app` build process
 
@@ -109,6 +110,8 @@ and the template HTML output file from the `doc/` directory.
 
         all = ( srcdir + f for f in fs.readdirSync srcdir )
         all.push 'cake.litcoffee'
+        all = all.concat( testdir + f for f in \
+            fs.readdirSync testdir when /\.litcoffee$/.test( f ) )
         all = all.concat( docdir + f for f in \
             fs.readdirSync docdir when /\.md$/.test( f ) )
         html = fs.readFileSync docdir + doctmp, 'utf8'
@@ -163,8 +166,8 @@ Indicate successful completion of the task.
 
     task 'test', 'Run all unit tests', ->
         console.log 'Begin tests...'
-        exec 'node node_modules/jasmine-node/lib/jasmine-node/' +
-             'cli.js --verbose --coffee test/',
+        exec "node node_modules/jasmine-node/lib/jasmine-node/" +
+             "cli.js --verbose --coffee #{testdir}",
              (err, stdout, stderr) ->
                  console.log stdout + stderr if stdout + stderr
                  throw err if err
