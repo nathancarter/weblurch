@@ -1,5 +1,9 @@
 
-/* Thanks to http://www.thenoodleincident.com/tutorials/box_lesson/basic3_touch.html */
+/* Thanks to:
+ * http://www.thenoodleincident.com/tutorials/box_lesson/basic3_touch.html
+ * for the original version of this file.
+ * I've made small modifications (Nathan Carter).
+ */
 
 body {
     margin: 0px 0px 0px 0px;
@@ -10,18 +14,18 @@ body {
     }
 a {
     text-decoration: none;
-    font-weight: bold;
-    color:  #ccc;
+    /*font-weight: bold;*/
+    color:  #9c6;
     outline: none;
     }
 a:visited {
-    color:  #ccc;
+    color:  #9c6;
     }
 a:active {
-    color:  #ccc;
+    color:  #9c6;
     }
 a:hover {
-    color: #ccc;
+    color: #9c6;
     text-decoration: underline;
     }
 .ahem {
@@ -52,6 +56,7 @@ h2 {
     font-weight: bold;
     margin-top: 0;
     margin-bottom: 0;
+    color: #e70;
     }
 h3 {
     font-size: 16px;
