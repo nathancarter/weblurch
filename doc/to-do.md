@@ -1,11 +1,6 @@
 
 # To-do list for this project
 
-## Documentation improvements
-
- * Make hyperlinks from individual `describe "..."` code lines to
-   the corresponding sections of `test/results.md`.
-
 ## Create `testapp/` folder
 
  * Put in it a stub html file for now, like `app/index.html`, but
