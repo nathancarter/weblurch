@@ -123,12 +123,16 @@ Build a file navigation list from those files' names.
         nav = {}
         for file in all
             end = ( path = file.split '/' ).pop()
-            ( nav[path.join '/'] ?= [] ).push end
+            ( nav[path.join '/'] ?= [] ).push {
+                file : end, text : end }
+        nav[outdir[...-1]] = [ {
+            file : ".#{outdir}/index", text : 'index.html' } ]
         navtxt = '<h3>Navigation</h3>'
         for path in ( Object.keys nav ).sort()
             navtxt += "<p>#{path || './'}</p><ul>"
             for e in nav[path]
-                navtxt += "<li><a href='#{e}.html'>#{e}</a></li>"
+                navtxt += "<li><a href='#{e.file}.html'>" +
+                          "#{e.text}</a></li>"
             navtxt += '</ul>'
 
 Load the [marked](https://github.com/chjj/marked) module,

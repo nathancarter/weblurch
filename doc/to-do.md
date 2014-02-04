@@ -3,7 +3,6 @@
 
 ## Documentation improvements
 
- * Add link in nav bar to `app/index.html`.
  * Make hyperlinks from individual `describe "..."` code lines to
    the corresponding sections of `test/results.md`.
 
