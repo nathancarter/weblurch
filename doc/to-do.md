@@ -3,8 +3,6 @@
 
 ## Documentation improvements
 
- * Make nav bar and right side hover always about 30px from top,
-   even as you scroll down.
  * Add link in nav bar to `app/index.html`.
  * Make hyperlinks from individual `describe "..."` code lines to
    the corresponding sections of `test/results.md`.
