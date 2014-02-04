@@ -124,10 +124,10 @@ Build a file navigation list from those files' names.
         for file in all
             end = ( path = file.split '/' ).pop()
             ( nav[path.join '/'] ?= [] ).push end
-        navtxt = ''
-        for path, entries of nav
+        navtxt = '<h3>Navigation</h3>'
+        for path in ( Object.keys nav ).sort()
             navtxt += "<p>#{path || './'}</p><ul>"
-            for e in entries
+            for e in nav[path]
                 navtxt += "<li><a href='#{e}.html'>#{e}</a></li>"
             navtxt += '</ul>'
 
@@ -151,9 +151,9 @@ HTML template, saving it into the docs directory.
             end = file.split( '/' ).pop()
             console.log "\tCreating #{end}.html..."
             contents = fs.readFileSync file, 'utf8'
-            myhtml = html.replace( 'RIGHT',
+            myhtml = html.replace( 'LEFT',
                                    'weblurch source code docs' )
-                         .replace( 'LEFT', navtxt )
+                         .replace( 'RIGHT', navtxt )
                          .replace( 'MIDDLE', marked contents )
                          .replace( /<pre><code>/g,
                                    '<pre class="hljs"><code>' )
