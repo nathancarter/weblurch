@@ -153,3 +153,10 @@ pre {
     margin-top: 20px;
     margin-bottom: 10px; 
     }
+.test-pass {
+    color: #9c6;
+}
+.test-fail {
+    color: #e70;
+}
+
