@@ -111,19 +111,19 @@ img {
     padding: 10px;
     border: 0px;
     background: #666;
-    width: 290px; /* ie5win fudge begins */
+    width: 270px; /* ie5win fudge begins */
     voice-family: "\"}\"";
     voice-family:inherit;
-    width: 270px;
+    width: 250px;
     }
 html>body #left {
-    width: 270px; /* ie5win fudge ends */
+    width: 250px; /* ie5win fudge ends */
     }
 #middle {
     padding: 10px;
     border: 0px;
     background: #666;
-    margin: -20px 290px 0px 290px; /* ie5win fudge begins */
+    margin: -20px 270px 0px 270px; /* ie5win fudge begins */
     voice-family: "\"}\"";
     voice-family:inherit;
     margin-top: 0px;
@@ -139,13 +139,13 @@ html>body #middle {
     padding: 10px;
     border: 0px;
     background: #666;
-    width: 290px; /* ie5win fudge begins */
+    width: 270px; /* ie5win fudge begins */
     voice-family: "\"}\"";
     voice-family:inherit;
-    width: 270px;
+    width: 250px;
     }
 html>body #right {
-    width: 270px; /* ie5win fudge ends */
+    width: 250px; /* ie5win fudge ends */
     }
 pre {
     font-size: 12px;

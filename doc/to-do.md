@@ -1,14 +1,6 @@
 
 # To-do list for this project
 
-## Add test results to HTML output
-
- * Import xml2js module.
- * Have jasmine (also?) create XML output.
- * When generating docs, scrape that XML output and create
-   `test/results.md`.
- * Add that file to the list of files that `cake doc` processes.
-
 ## Documentation improvements
 
  * Add title to navigation bar.
