@@ -3,9 +3,6 @@
 
 ## Create `testapp/` folder
 
- * Put in it a stub html file for now, like `app/index.html`, but
-   later we’ll add real functionality to it for testing purposes
-   (e.g., multi-pane view, etc.).
  * Create link to that page from the docs nav bar.
  * Create another section in `cake.litcoffee` that will take
    `.litcoffee` files in `testapp/` and put them in a separate
