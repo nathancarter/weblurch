@@ -43,7 +43,8 @@ Next import other modules we'll need later.
 These constants define how the functions below perform.
 
     srcdir = './src/'
-    outdir = './app/'
+    appdir = './app/'
+    tappdir = './testapp/'
     srcout = 'weblurch.litcoffee'
     docdir = './doc/'
     doctmp = 'template.html'
@@ -68,14 +69,14 @@ Next concatenate all `.litcoffee` source files into one.
                 if /\.litcoffee$/.test file
                     console.log "\tReading #{srcdir + file}..."
                     all.push fs.readFileSync srcdir + file, 'utf8'
-        console.log "\tWriting #{outdir+srcout}..."
-        fs.writeFileSync outdir+srcout, all.join( '\n\n' ), 'utf8'
+        console.log "\tWriting #{appdir+srcout}..."
+        fs.writeFileSync appdir+srcout, all.join( '\n\n' ), 'utf8'
 
 Run `coffee` compiler on that file, also creating a source map.
 This generates `.js` and `.js.map` files.
 
-        console.log "\tCompiling #{outdir+srcout}..."
-        exec "coffee --map --compile #{srcout}", { cwd : outdir },
+        console.log "\tCompiling #{appdir+srcout}..."
+        exec "coffee --map --compile #{srcout}", { cwd : appdir },
         ( err, stdout, stderr ) ->
             console.log stdout + stderr if stdout + stderr
             throw err if err
@@ -93,7 +94,7 @@ error, because uglify dumps a bit of spam I'm suppressing.)
                  "--in-source-map #{srcoutbase}.map " +
                  "-o #{srcoutbase}.min.js " +
                  "--source-map #{srcoutbase}.min.js.map",
-                 { cwd : outdir },
+                 { cwd : appdir },
             ( err, stdout, stderr ) ->
                 if err
                     console.log stdout + stderr
@@ -125,8 +126,10 @@ Build a file navigation list from those files' names.
             end = ( path = file.split '/' ).pop()
             ( nav[path.join '/'] ?= [] ).push {
                 file : end, text : end }
-        nav[outdir[...-1]] = [ {
-            file : ".#{outdir}/index", text : 'index.html' } ]
+        nav[appdir[...-1]] = [
+            { file : ".#{appdir}index", text : 'index.html' } ]
+        nav[tappdir[...-1]] = [
+            { file : ".#{tappdir}index", text : 'index.html' } ]
         navtxt = '<h3>Navigation</h3>'
         for path in ( Object.keys nav ).sort()
             navtxt += "<p>#{path || './'}</p><ul>"

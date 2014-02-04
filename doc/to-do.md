@@ -3,7 +3,6 @@
 
 ## Create `testapp/` folder
 
- * Create link to that page from the docs nav bar.
  * Create another section in `cake.litcoffee` that will take
    `.litcoffee` files in `testapp/` and put them in a separate
    joined, minified file in that same folder.
