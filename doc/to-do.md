@@ -1,11 +1,6 @@
 
 # To-do list for this project
 
-## Create `testapp/` folder
-
- * Make these files yet another section in the nav bar created
-   by `cake doc`.
-
 ## `LurchEditor` class must implement these features
 
  * Its constructor takes a DOM element and initializes it for

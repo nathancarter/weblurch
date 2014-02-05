@@ -167,6 +167,9 @@ and the template HTML output file from the `doc/` directory.
             fs.readdirSync testdir when /\.litcoffee$/.test( f ) )
         all = all.concat( docdir + f for f in \
             fs.readdirSync docdir when /\.md$/.test( f ) )
+        all = all.concat( tappdir + f for f in \
+            fs.readdirSync tappdir when /\.litcoffee$/.test( f ) \
+            and f isnt tappout )
         html = fs.readFileSync docdir + doctmp, 'utf8'
 
 Build a file navigation list from those files' names.
@@ -176,10 +179,10 @@ Build a file navigation list from those files' names.
             end = ( path = file.split '/' ).pop()
             ( nav[path.join '/'] ?= [] ).push {
                 file : end, text : end }
-        nav[appdir[...-1]] = [
-            { file : ".#{appdir}index", text : 'index.html' } ]
-        nav[tappdir[...-1]] = [
-            { file : ".#{tappdir}index", text : 'index.html' } ]
+        ( nav[appdir[...-1]] ?= [] ).push {
+            file : ".#{appdir}index", text : 'index.html' }
+        ( nav[tappdir[...-1]] ?= [] ).push {
+            file : ".#{tappdir}index", text : 'index.html' }
         navtxt = '<h3>Navigation</h3>'
         for path in ( Object.keys nav ).sort()
             navtxt += "<p>#{path || './'}</p><ul>"
