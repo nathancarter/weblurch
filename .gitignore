@@ -2,6 +2,9 @@
 app/*.js
 app/*.litcoffee
 app/*.map
+testapp/*.js
+testapp/testapp.litcoffee
+testapp/*.map
 node_modules/*
 doc/*.litcoffee.html
 doc/*.md.html
