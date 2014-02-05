@@ -45,9 +45,9 @@ The plan for implementing this specification is documented in
     * unique ids are maintained across insertions/deletions by
       keeping in the `LurchEditor` object (not the DOM) a list
       $[a\_1,\ldots,a\_n]$ such that an id is available iff it's
-      on the list or $>a\_n$
+      on the list or $ >a\_n$
     * to get a new integer id, either `shift()` the list if it's
-      length is $>1$, or return `list[0]++` otherwise
+      length is $ >1$, or return `list[0]++` otherwise
     * when deleting a container/content with an id, if its id is
       `< list[length-1]`, insert it into the list, preserving order
  * Its constructor therefore takes a DOM element and initializes it
