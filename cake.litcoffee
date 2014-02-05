@@ -15,7 +15,7 @@ It simply invokes all the other tasks, defined below.
     queue = []
     dequeue = -> if queue.length > 0 then invoke queue.shift()
     task 'all', 'Build app, doc, and run tests', ->
-        queue = [ 'app', 'test', 'doc' ]
+        queue = [ 'app', 'testapp', 'test', 'doc' ]
         dequeue()
 
 ## Requirements
@@ -46,6 +46,7 @@ These constants define how the functions below perform.
     appdir = './app/'
     tappdir = './testapp/'
     srcout = 'weblurch.litcoffee'
+    tappout = 'testapp.litcoffee'
     docdir = './doc/'
     doctmp = 'template.html'
     testdir = './test/'
@@ -58,17 +59,15 @@ These constants define how the functions below perform.
 
 Before building the app, ensure that the output folder exists.
 
-        if !fs.existsSync 'app'
-            fs.mkdirSync 'app'
+        fs.mkdirSync appdir unless fs.existsSync appdir
 
 Next concatenate all `.litcoffee` source files into one.
 
         all = []
         for file, index in fs.readdirSync srcdir
-            do ( file, index ) ->
-                if /\.litcoffee$/.test file
-                    console.log "\tReading #{srcdir + file}..."
-                    all.push fs.readFileSync srcdir + file, 'utf8'
+            if /\.litcoffee$/.test file
+                console.log "\tReading #{srcdir + file}..."
+                all.push fs.readFileSync srcdir + file, 'utf8'
         console.log "\tWriting #{appdir+srcout}..."
         fs.writeFileSync appdir+srcout, all.join( '\n\n' ), 'utf8'
 
@@ -94,12 +93,63 @@ error, because uglify dumps a bit of spam I'm suppressing.)
                  "--in-source-map #{srcoutbase}.map " +
                  "-o #{srcoutbase}.min.js " +
                  "--source-map #{srcoutbase}.min.js.map",
-                 { cwd : appdir },
-            ( err, stdout, stderr ) ->
+            { cwd : appdir }, ( err, stdout, stderr ) ->
                 if err
                     console.log stdout + stderr
                     throw err
                 console.log 'Done building app.'
+                dequeue()
+
+## The `testapp` build process
+
+This build process is nearly identical to that of `app`.
+
+    task 'testapp', 'Build the testapp', ( options ) ->
+        console.log 'Begin building testapp...'
+
+Before building, ensure that the output folder exists.
+
+        fs.mkdirSync tappdir unless fs.existsSync tappdir
+
+Next concatenate all `.litcoffee` source files from the test app
+directory into one.
+
+        all = []
+        for file, index in fs.readdirSync tappdir
+            if file isnt tappout and /\.litcoffee$/.test file
+                console.log "\tReading #{tappdir + file}..."
+                all.push fs.readFileSync tappdir + file, 'utf8'
+        console.log "\tWriting #{tappdir+tappout}..."
+        fs.writeFileSync tappdir+tappout, all.join( '\n\n' ),
+            'utf8'
+
+Run `coffee` compiler on that file, also creating a source map.
+This generates `.js` and `.js.map` files.
+
+        console.log "\tCompiling #{tappdir+tappout}..."
+        exec "coffee --map --compile #{tappout}",
+        { cwd : tappdir }, ( err, stdout, stderr ) ->
+            console.log stdout + stderr if stdout + stderr
+            throw err if err
+
+Run [uglifyjs](https://github.com/mishoo/UglifyJS)
+to minify the results, taking source maps into account.
+Report completion when done, or throw an error if there was one.
+(Note that `uglify` output is not printed unless there was an
+error, because uglify dumps a bit of spam I'm suppressing.)
+
+            tappoutbase = /^(.*)\.[^.]*$/.exec( tappout )[1]
+            console.log "\tMinifying #{tappoutbase}.js..."
+            exec "../node_modules/uglify-js/bin/uglifyjs " +
+                 "-c -m -v false " +
+                 "--in-source-map #{tappoutbase}.map " +
+                 "-o #{tappoutbase}.min.js " +
+                 "--source-map #{tappoutbase}.min.js.map",
+            { cwd : tappdir }, ( err, stdout, stderr ) ->
+                if err
+                    console.log stdout + stderr
+                    throw err
+                console.log 'Done building testapp.'
                 dequeue()
 
 ## The `doc` build process

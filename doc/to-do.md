@@ -3,11 +3,6 @@
 
 ## Create `testapp/` folder
 
- * Create another section in `cake.litcoffee` that will take
-   `.litcoffee` files in `testapp/` and put them in a separate
-   joined, minified file in that same folder.
- * Create a stub file of that type and ensure it gets imported
-   into the test app.
  * Make these files yet another section in the nav bar created
    by `cake doc`.
 
