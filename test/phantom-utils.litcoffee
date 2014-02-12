@@ -18,6 +18,7 @@ recorded as attributes of the page object.
    resource error
  * `page.err` will be a generic error object, if there was a
    generic error
+
 This can easily be used within the asynchronous test framework in
 [Jasmine](http://jasmine.github.io/) by placing a call to this in a
 `beforeEach` call.
