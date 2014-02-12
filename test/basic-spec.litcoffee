@@ -14,7 +14,12 @@ tests.  This is done through a bridge from
     describe 'app index.html', ->
         toLoad = './app/index.html'
 
-### Verify that the page loads
+First, a few variables that will be set up before each test and
+then used during the tests, so they are declared at this scope.
+
+        loaded = no
+        phantom = null
+        page = null
 
 In the [Jasmine](http://jasmine.github.io/) testing framework,
 asynchronous tests are handled using `beforeEach` functions that
@@ -23,24 +28,49 @@ setup is complete, and all tests will wait for that call to
 happen.  Each test must then also call `done()` before flow will
 proceed on to any other tests thereafter.
 
-        loaded = no
         beforeEach ( done ) ->
-            nps.create ( err, phantom ) ->
+            nps.create ( err, ph) ->
                 if err then console.log err ; throw err
-                phantom.createPage ( err, page ) ->
+                phantom = ph
+                phantom.createPage ( err, pg ) ->
                     if err then console.log err ; throw err
+                    page = pg
+                    page.onResourceError = ( err ) ->
+                        nps.reserr = err
+                    page.onError = ( err ) -> nps.err = err
                     page.open toLoad, ( err, status ) ->
                         if err then console.log err ; throw err
                         loaded = yes
-                        phantom.exit()
                         done()
+
+After each test, we must clean up with a corresponding `afterEach`
+call, which simply ends the Phantom process.
+
+        afterEach ( done ) ->
+            phantom.exit()
+            done()
+
+### Verify that the page loads
+
         it 'should load', ( done ) ->
             expect( loaded ).toBeTruthy()
             done()
 
 ### Verify that it loaded without errors
 
-This test not yet implemented.
+        it 'should find the page', ( done ) ->
+            expect( nps.reserr ).toBeFalsy()
+            done()
+        it 'should load without errors', ( done ) ->
+            expect( nps.err ).toBeFalsy()
+            done()
+
+### Verify that `LurchEditor` is defined
+
+        it 'should have LurchEditor defined', ( done ) ->
+            page.evaluate ( -> LurchEditor ), ( err, result ) ->
+                expect( result ).toBeTruthy()
+                done()
 
 Later we will also add tests that use `page.get 'content'`,
 `page.render 'outfile.png'`, etc.

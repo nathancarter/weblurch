@@ -5,7 +5,7 @@ A Lurch Editor is an HTML DIV (that has *not* been marked as
 `content-editable` in the browser) but that will be made editable
 by the user through the functionality of this class.
 
-    class LurchEditor
+    window.LurchEditor = class LurchEditor
 
 The object maintains a list of unique integer ids for assigning to
 elements in the HTML DOM, from that DIV on downwards in the tree.
