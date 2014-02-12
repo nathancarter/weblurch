@@ -37,26 +37,13 @@ The plan for implementing this specification is documented in
 
 ## Document structure and the `LurchEditor` class
 
- * A document will simply be an HTML DIV that's *not* browser
-   `content-editable` but that is made editable through the
-   `LurchEditor` class.
- * That class will give individual DOM nodes a unique integer id,
-   for the purposes of referencing one node from another.
-    * unique ids are maintained across insertions/deletions by
-      keeping in the `LurchEditor` object (not the DOM) a list
-      $[a\_1,\ldots,a\_n]$ such that an id is available iff it's
-      on the list or $ >a\_n$
-    * to get a new integer id, either `shift()` the list if it's
-      length is $ >1$, or return `list[0]++` otherwise
-    * when deleting a container/content with an id, if its id is
-      `< list[length-1]`, insert it into the list, preserving order
- * Its constructor therefore takes a DOM element and initializes it
-   for use as follows
-    * Collect a list of all used ids, removing any ids that
-      aren’t of the correct form
-    * Create a list of the complement of the set of used ids,
-      as a set of free ids
-    * For every un-id’d element, give it the next available id
+Create unit tests for those parts of the `LurchEditor` class
+that are already implemented; see the
+[Lurch Editor class documentation](lurcheditor.litcoffee.html)
+for which those are.
+
+Implement the parts described here that are not yet implemented,
+and then test these as well.
  * Later one can query which element in the document is the
    editable one managed by that `LurchEditor`, but it cannot be
    swapped out for another.  If you wish to edit another, just
