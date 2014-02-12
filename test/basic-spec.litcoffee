@@ -1,13 +1,10 @@
 
 # Basic tests of compiled app code
 
-Because the compiled app runs in a web browser, we load up the
-headless browser [PhantomJS](http://phantomjs.org/) for these
-tests.  This is done through a bridge from
-[node.js](http://nodejs.org/) to PhantomJS called
-[node-phantom-simple](https://npmjs.org/package/node-phantom-simple).
+Pull in the utility functions in `phantom-utils` that make it
+easier to write the tests below.
 
-    nps = require 'node-phantom-simple'
+    { startPhantom } = require './phantom-utils'
 
 ## `app/index.html` page
 
@@ -29,19 +26,9 @@ happen.  Each test must then also call `done()` before flow will
 proceed on to any other tests thereafter.
 
         beforeEach ( done ) ->
-            nps.create ( err, ph) ->
-                if err then console.log err ; throw err
-                phantom = ph
-                phantom.createPage ( err, pg ) ->
-                    if err then console.log err ; throw err
-                    page = pg
-                    page.onResourceError = ( err ) ->
-                        nps.reserr = err
-                    page.onError = ( err ) -> nps.err = err
-                    page.open toLoad, ( err, status ) ->
-                        if err then console.log err ; throw err
-                        loaded = yes
-                        done()
+            startPhantom toLoad, ( ph, pg ) ->
+                [ loaded, phantom, page ] = [ yes, ph, pg ]
+                done()
 
 After each test, we must clean up with a corresponding `afterEach`
 call, which simply ends the Phantom process.
@@ -59,10 +46,10 @@ call, which simply ends the Phantom process.
 ### Verify that it loaded without errors
 
         it 'should find the page', ( done ) ->
-            expect( nps.reserr ).toBeFalsy()
+            expect( page.reserr ).toBeFalsy()
             done()
         it 'should load without errors', ( done ) ->
-            expect( nps.err ).toBeFalsy()
+            expect( page.err ).toBeFalsy()
             done()
 
 ### Verify that `LurchEditor` is defined
