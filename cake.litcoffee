@@ -161,8 +161,9 @@ Fetch all files in the source directory, plus this file,
 plus any `.md` files in the `doc/` dir that need converting,
 and the template HTML output file from the `doc/` directory.
 
-        all = ( srcdir + f for f in fs.readdirSync srcdir )
-        all.push 'cake.litcoffee'
+        all = [ 'cake.litcoffee' ]
+        all = all.concat( srcdir + f for f in \
+            fs.readdirSync srcdir when /\.litcoffee$/.test( f ) )
         all = all.concat( testdir + f for f in \
             fs.readdirSync testdir when /\.litcoffee$/.test( f ) )
         all = all.concat( docdir + f for f in \
