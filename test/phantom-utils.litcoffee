@@ -8,7 +8,16 @@ This is done through a bridge from [node.js](http://nodejs.org/)
 to PhantomJS, called [node-phantom-simple](
 https://npmjs.org/package/node-phantom-simple).
 
+We also include
+[stack-trace](https://www.npmjs.org/package/stack-trace) because
+it is useful for knowing which files call `phantomDescribe`,
+below, so that those files can be logged for use in documentation
+generation later.
+
     nps = require 'node-phantom-simple'
+    st = require 'stack-trace'
+
+# The main API, `phantomDescribe`
 
 The following function makes it easy to set up a Phantom instance
 and load into it a page from a given URL.  If any errors take place
@@ -25,6 +34,11 @@ Jasmine's `describe` function with a call to this one.  An example
 appears after the following code.
 
     exports.phantomDescribe = ( text, url, tests ) ->
+
+First, we record which unit test called this function.  See the
+documentation for `logUnitTestName` below for additional details.
+
+        logUnitTestName text
         describe text, ->
 
 An object in which to store the `phantom` and `page` objects
@@ -72,4 +86,29 @@ Example use (note the very important `=>` for preserving `this`):
     #     it 'must load', ( done ) =>
     #         expect( page.loaded ).toBeTruthy()
     #         done()
+
+# Logging unit test names and filenames
+
+We want to keep track of the mapping from unit test names to
+filenames in which they were defined, so that documentation
+generation can create links from test results to files that
+define those tests.  This function uses the stack trace to find
+which unit test file (of the form `\*-spec.litcoffee`) made a
+call to `phantomDescribe`, and logs that data in a JSON file in
+the test reports directory.
+
+    savefile = './reports/unit-test-names.json'
+    logUnitTestName = ( name ) ->
+        fs = require 'fs'
+        try
+            mapping = JSON.parse fs.readFileSync savefile
+        catch error
+            mapping = { }
+        for frame in st.get()
+            fn = frame.getFileName()
+            if /-spec\.litcoffee/.test fn
+                mapping[name] = ( fn.split '/' ).pop()
+                fs.writeFileSync savefile,
+                                 JSON.stringify mapping, null, 2
+                break
 
