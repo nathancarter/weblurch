@@ -14,7 +14,7 @@ It simply invokes all the other tasks, defined below.
 
     queue = []
     dequeue = -> if queue.length > 0 then invoke queue.shift()
-    task 'all', 'Build app, doc, and run tests', ->
+    task 'all', 'Build app, testapp, docs, and run tests', ->
         queue = [ 'app', 'testapp', 'test', 'doc' ]
         dequeue()
 
@@ -54,7 +54,7 @@ These constants define how the functions below perform.
 
 ## The `app` build process
 
-    task 'app', 'Build the entire app', ( options ) ->
+    task 'app', 'Build the main app', ( options ) ->
         console.log 'Begin building app...'
 
 Before building the app, ensure that the output folder exists.
