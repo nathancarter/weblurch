@@ -228,7 +228,8 @@ Indicate successful completion of the task.
 ## The `test` build process
 
     task 'test', 'Run all unit tests', ->
-        console.log 'Begin tests...'
+        console.log '''Begin tests...
+                       (please wait while jasmine loads)'''
 
 First remove all old reports in the test reports folder.
 If we do not do this, then any deleted tests will still have their
