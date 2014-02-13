@@ -53,6 +53,7 @@ These constants define how the functions below perform.
     repdir = './reports/'
     mapfile = './reports/unit-test-names.json'
     linkpng = '<img src="link.png" class="anchor">'
+    mainpg = 'index.md'
 
 ## The `app` build process
 
@@ -178,15 +179,19 @@ and the template HTML output file from the `doc/` directory.
 Build a file navigation list from those files' names.
 
         nav = {}
+        navtxt = '<h3 align=center>Navigation</h3><br>'
         for file in all
             end = ( path = file.split '/' ).pop()
-            ( nav[path.join '/'] ?= [] ).push {
-                file : end, text : end }
+            if end is mainpg
+                navtxt += "<h3><a href='#{mainpg}.html'>" +
+                          "Main Page</a></h3>"
+            else
+                ( nav[path.join '/'] ?= [] ).push {
+                    file : end, text : end }
         ( nav[appdir[...-1]] ?= [] ).push {
             file : ".#{appdir}index", text : 'index.html' }
         ( nav[tappdir[...-1]] ?= [] ).push {
             file : ".#{tappdir}index", text : 'index.html' }
-        navtxt = '<h3>Navigation</h3>'
         for path in ( Object.keys nav ).sort()
             navtxt += "<p>#{path || './'}</p><ul>"
             for e in nav[path]
