@@ -265,6 +265,7 @@ Read those XML files and produce [Markdown](markdown) output,
 all together into a single output file.
 
             for report in fs.readdirSync repdir
+                if !/\.xml$/i.test report then continue
                 parseString fs.readFileSync( repdir + report ),
                 ( err, result ) ->
                     for item in result.testsuites.testsuite
