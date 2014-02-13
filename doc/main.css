@@ -159,4 +159,10 @@ pre {
 .test-fail {
     color: #e70;
 }
+.anchor {
+    opacity: 0.2;
+}
+.anchor:hover {
+    opacity: 0.7;
+}
 

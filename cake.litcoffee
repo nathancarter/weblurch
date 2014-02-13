@@ -51,6 +51,8 @@ These constants define how the functions below perform.
     doctmp = 'template.html'
     testdir = './test/'
     repdir = './reports/'
+    mapfile = './reports/unit-test-names.json'
+    linkpng = '<img src="link.png" class="anchor">'
 
 ## The `app` build process
 
@@ -202,8 +204,17 @@ and one of whose stylesheets is already installed
 in the `doc/` output folder.
 
         marked = require 'marked'
-        marked.setOptions highlight: ( code ) ->
-            require( 'highlight.js' ).highlightAuto( code ).value
+        renderer = new marked.Renderer()
+        renderer.heading = ( text, level ) ->
+            escapedText = escapeHeadingText text
+            "<h#{level}><a name='#{escapedText}'></a>#{text} " +
+            "&nbsp; <font size=-1><a href='##{escapedText}'>" +
+            "#{linkpng}</a></font></h#{level}>"
+        marked.setOptions
+            highlight: ( code ) ->
+                require( 'highlight.js' ) \
+                    .highlightAuto( code ).value
+            renderer: renderer
 
 Read each source file and place its marked-down version into the
 HTML template, saving it into the docs directory.
@@ -247,6 +258,16 @@ bunch of XML files).
         ( err, stdout, stderr ) ->
             console.log stdout + stderr if stdout + stderr
 
+Now that the tests have been run, see if they created a file
+mapping the unit test names to the files in which they are defined.
+If so, we will use it below to create links from test results to
+test definition files.
+
+            try
+                mapping = JSON.parse fs.readFileSync mapfile
+            catch error
+                mapping = null
+
 Create the header for the test output page and two functions for
 flagging test passes/failures with the appropriate CSS classes.
 
@@ -270,16 +291,28 @@ all together into a single output file.
                 ( err, result ) ->
                     for item in result.testsuites.testsuite
 
-Create header for this test.
+Create header for this test.  Use the `mapping` computed above to
+create links, if possible.
 
-                        md += "# #{item.$.name} (" +
-                              "#{item.$.time} ms)\n\n"
+                        name = item.$.name
+                        if name of mapping
+                            escapedName = escapeHeadingText name
+                            name = "<a href='#{mapping[name]}" +
+                                   ".html##{escapedName}'>" +
+                                   "#{name}</a>"
+                        md += "# #{name} (#{item.$.time} ms)\n\n"
 
-Create subheader for each case in the test.
+Create subheader for each case in the test.  Again, use the
+`mapping` computed above to create links, if possible.
 
                         for c in item.testcase
-                            md += "### #{c.$.name} (" +
-                                  "#{c.$.time} ms)\n\n"
+                            cn = c.$.name
+                            name = item.$.name
+                            if name of mapping
+                                esc = escapeHeadingText c.$.name
+                                cn = "<a href='#{mapping[name]}" +
+                                     ".html##{esc}'>#{cn}</a>"
+                            md += "### #{cn} (#{c.$.time} ms)\n\n"
 
 Create list item for each failure, or one single item reporting
 a pass if there were no failures.
@@ -308,6 +341,12 @@ Indicate successful completion of the task.
 
             console.log 'Tests done.'
             dequeue()
+
+Function that escapes heading text into lower-case text with no
+spaces, used in a few of the tasks above.
+
+    escapeHeadingText = ( text ) ->
+        text.toLowerCase().replace /[^\w]+/g, '-'
 
 [litcoffee]: (http://coffeescript.org/#literate)
 [markdown]: (http://daringfireball.net/projects/markdown/)

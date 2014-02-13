@@ -9,20 +9,29 @@ for setting up tests as documented more thoroughly in
 
     { phantomDescribe } = require './phantom-utils'
 
-### Verify that `LurchEditor` class exists
+## LurchEditor class
 
     phantomDescribe 'LurchEditor class', './app/index.html', ->
+
+### should exist
+
+That is, the class should be defined in the global namespace of
+the browser after loading the main app page.
+
         it 'should exist', ( done ) =>
             @page.evaluate ( -> LurchEditor ), ( err, result ) ->
                 expect( result ).toBeTruthy()
                 done()
 
-### Test `freeIds` API
+## LurchEditor instances
+
+    phantomDescribe 'LurchEditor instances', './app/index.html', ->
+
+### should initialize freeIds
 
 A newly created `LurchEditor` instance should have a `freeIds`
 array containing only zero.
 
-    phantomDescribe 'LurchEditor instances', './app/index.html', ->
         it 'should initialize freeIds', ( done ) =>
             @page.evaluate ( ->
                 L = new LurchEditor()
@@ -36,7 +45,9 @@ yielding nonnegative integers starting with zero and counting
 upwards.  The resulting `freeIds` array should have in it just
 the next integer.
 
-        it 'nextfreeId() should count 0,1,2,...', ( done ) =>
+### nextFreeId() should count 0,1,2,...
+
+        it 'nextFreeId() should count 0,1,2,...', ( done ) =>
             @page.evaluate ( ->
                 L = new LurchEditor()
                 result = []
@@ -49,6 +60,8 @@ the next integer.
             ), ( err, result ) ->
                 expect( result ).toEqual( [ 0, 1, 2, 3, [ 4 ] ] )
                 done()
+
+### addFreeId() re-inserts in order
 
 After a newly created instance has undergone the same sequence of
 `nextFreeId()` calls as above, then restoring the id 2 should put

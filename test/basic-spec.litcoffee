@@ -6,26 +6,29 @@ easier to write the tests below.
 
     { phantomDescribe } = require './phantom-utils'
 
-## Test `app/index.html` page
+## app/index.html page
 
-    phantomDescribe 'app index.html', './app/index.html', ->
+    phantomDescribe 'app/index.html page', './app/index.html', ->
 
-### Verify that the page loads
+### should load
 
         it 'should load', ( done ) =>
             expect( @page.loaded ).toBeTruthy()
             done()
 
-### Verify that it loaded without errors
+### should find all its resources
 
-        it 'should find the page', ( done ) =>
+        it 'should find all its resources', ( done ) =>
             expect( @page.reserr ).toBeFalsy()
             done()
+
+### should load without errors
+
         it 'should load without errors', ( done ) =>
             expect( @page.err ).toBeFalsy()
             done()
 
-### Verify that `LurchEditor` is defined
+### should have LurchEditor defined
 
         it 'should have LurchEditor defined', ( done ) =>
             @page.evaluate ( -> LurchEditor ), ( err, result ) ->
