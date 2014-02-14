@@ -37,10 +37,8 @@ The plan for implementing this specification is documented in
 
 ## Document structure and the `LurchEditor` class
 
-Create unit tests for those parts of the `LurchEditor` class
-that are already implemented; see the
-[Lurch Editor class documentation](lurcheditor.litcoffee.html)
-for which those are.
+This specification is for those parts of the `LurchEditor` class
+which have not yet been implemented.  (Some already have.)
 
 Implement the parts described here that are not yet implemented,
 and then test these as well.

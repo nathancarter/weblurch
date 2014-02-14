@@ -6,8 +6,11 @@ here](spec.md.html).
 
 ## Foundations
 
- * Build the constructor of the `LurchEditor` class, as
-   documented [here](spec.md.html).
+ * Create unit tests for those parts of the `LurchEditor` class
+   constructor that are already implemented; see the
+   [Lurch Editor class documentation](lurcheditor.litcoffee.html)
+   for which those are implemented, and compare to the tests in
+   [the Lurch Editor unit test](lurcheditor-spec.litcoffee.html).
  * Use that constructor to initialize divs in the the app and
    the test app.
  * Create unit tests to verify that these do not cause errors.

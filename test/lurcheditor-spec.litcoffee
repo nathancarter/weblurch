@@ -23,9 +23,10 @@ the browser after loading the main app page.
                 expect( result ).toBeTruthy()
                 done()
 
-## LurchEditor instances
+## LurchEditor instances without DIVs
 
-    phantomDescribe 'LurchEditor instances', './app/index.html', ->
+    phantomDescribe 'LurchEditor instances without DIVs',
+    './app/index.html', ->
 
 ### should initialize freeIds
 
@@ -92,6 +93,17 @@ should yield 2, 4, 5, 6, ...
                     2, 4, 5, 6 # last four generated ids
                 ]
                 done()
+
+## LurchEditor instances with DIVs
+
+Nothing has been tested regarding constructing a new `LurchEditor`
+instance around an existing DOM element, and verifying that it
+does the correct things with the IDs.  See the documentation in
+[the Lurch Editor class itself](lurcheditor.litcoffee.html) for
+more information on what the constructor is expected to do in
+those situations.
+
+## To come
 
 More to come on this unit test as more features of the
 `LurchEditor` class are implemented.
