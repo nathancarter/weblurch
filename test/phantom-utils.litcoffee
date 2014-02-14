@@ -61,6 +61,8 @@ be sure it loaded successfully.
                             P.page.reserr = err
                         P.page.onError = ( err ) ->
                             P.page.err = err
+                        P.page.onConsoleMessage = ( message ) ->
+                            console.log message
                         P.page.open url, ( err, status ) ->
                             if err then console.log err ; throw err
                             P.page.loaded = yes
