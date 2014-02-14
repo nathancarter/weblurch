@@ -39,7 +39,7 @@ The constructor takes any DIV from the browser's HTML DOM, or no
 argument if the instance is not to be made visible in a webpage.
 
         constructor: ( div ) ->
-            if div and div?.tag isnt 'DIV'
+            if div and div?.tagName isnt 'DIV'
                 throw new Error '''LurchEditor can only be
                     constructed in a DIV node'''
 

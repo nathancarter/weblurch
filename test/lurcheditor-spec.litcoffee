@@ -96,12 +96,26 @@ should yield 2, 4, 5, 6, ...
 
 ## LurchEditor instances with DIVs
 
+    phantomDescribe 'LurchEditor instances with DIVs',
+    './app/index.html', ->
+
 Nothing has been tested regarding constructing a new `LurchEditor`
 instance around an existing DOM element, and verifying that it
 does the correct things with the IDs.  See the documentation in
 [the Lurch Editor class itself](lurcheditor.litcoffee.html) for
 more information on what the constructor is expected to do in
 those situations.
+
+        it 'should give an empty DIV id 0', ( done ) =>
+            @page.evaluate ( ->
+                div = document.createElement 'div'
+                document.body.appendChild div
+                console.log document.body.innerHTML
+                L = new LurchEditor div
+                [ parseInt( div.id ), L.freeIds ]
+            ), ( err, result ) ->
+                expect( result ).toEqual [ 0, [ 1 ] ]
+                done()
 
 ## To come
 
