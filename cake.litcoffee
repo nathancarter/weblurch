@@ -211,10 +211,19 @@ in the `doc/` output folder.
         marked = require 'marked'
         renderer = new marked.Renderer()
         renderer.heading = ( text, level ) ->
-            escapedText = escapeHeadingText text
+            if m = /^(.*) \([0-9.]+ ms\)/.exec text
+                escapedText = escapeHeadingText m[1]
+            else
+                escapedText = escapeHeadingText text
+            if marked.isTestFile
+                results = "<font size=-1><a href='" +
+                          "test-results.md.html#" +
+                          "#{escapedText}'>see results</a></font>"
+            else
+                results = ''
             "<h#{level}><a name='#{escapedText}'></a>#{text} " +
-            "&nbsp; <font size=-1><a href='##{escapedText}'>" +
-            "#{linkpng}</a></font></h#{level}>"
+            "&nbsp; #{results} <font size=-1><a href='" +
+            "##{escapedText}'>#{linkpng}</a></font></h#{level}>"
         marked.setOptions
             highlight: ( code ) ->
                 require( 'highlight.js' ) \
@@ -228,6 +237,7 @@ HTML template, saving it into the docs directory.
             end = file.split( '/' ).pop()
             console.log "\tCreating #{end}.html..."
             contents = fs.readFileSync file, 'utf8'
+            marked.isTestFile = /-spec\.litcoffee/.test end
             myhtml = html.replace( 'LEFT',
                                    'weblurch source code docs' )
                          .replace( 'RIGHT', navtxt )
@@ -300,24 +310,29 @@ Create header for this test.  Use the `mapping` computed above to
 create links, if possible.
 
                         name = item.$.name
+                        md += "# #{name} (#{item.$.time} ms)"
                         if name of mapping
                             escapedName = escapeHeadingText name
-                            name = "<a href='#{mapping[name]}" +
-                                   ".html##{escapedName}'>" +
-                                   "#{name}</a>"
-                        md += "# #{name} (#{item.$.time} ms)\n\n"
+                            md += " <font size=-1>" +
+                                  "<a href='#{mapping[name]}" +
+                                  ".html##{escapedName}'>" +
+                                  "see source</a></font>"
+                        md += '\n\n'
 
 Create subheader for each case in the test.  Again, use the
 `mapping` computed above to create links, if possible.
 
                         for c in item.testcase
                             cn = c.$.name
-                            name = item.$.name
-                            if name of mapping
+                            md += "### #{cn} (#{c.$.time} ms)"
+                            if item.$.name of mapping
                                 esc = escapeHeadingText c.$.name
-                                cn = "<a href='#{mapping[name]}" +
-                                     ".html##{esc}'>#{cn}</a>"
-                            md += "### #{cn} (#{c.$.time} ms)\n\n"
+                                md += " <font size=-1>" +
+                                      "<a href='" +
+                                      "#{mapping[item.$.name]}." +
+                                      "html##{esc}'>see source" +
+                                      "</a></font>"
+                            md += '\n\n'
 
 Create list item for each failure, or one single item reporting
 a pass if there were no failures.
