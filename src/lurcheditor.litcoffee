@@ -70,7 +70,6 @@ by the class's constructor as part of the procedure for
 initializing the node in the DOM into which 
 
         cleanIds: ( node ) ->
-            console.log node
             result = []
             if node not instanceof Node then return result
             if !/^\d+$/.test node.id then node.removeAttribute 'id'
