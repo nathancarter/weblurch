@@ -1,51 +1,107 @@
 
-# To-do list for this project
+# Project Plan
 
-This to-do list aims to implement [the specifications documented
-here](spec.md.html).
+This document aims to be a complete plan for what needs to be done
+on this project.  It can be viewed as a to-do list in chronological
+order, the first items being those that should be done next, and
+the later items those that must come after.  Necessarily, the later
+items are more vague than the earlier ones.
 
 ## Foundations
 
  * Create unit tests for those parts of the `LurchEditor` class
-   constructor that are already implemented; see the
-   [Lurch Editor class documentation](lurcheditor.litcoffee.html)
-   for which those are implemented, and compare to the tests in
-   [the Lurch Editor unit test](lurcheditor-spec.litcoffee.html).
- * Use that constructor to initialize divs in the the app and
+   constructor that are implemented but not yet tested.
+   The test about [using the constructor on a DIV](
+   lurcheditor-spec.litcoffee.html#lurcheditor-instances-with-divs)
+   only includes a test on an empty DIV.  It should include
+   several more tests, of all of these features:
+    * If there are non-positive-integer ids on the DIV or any of
+      its descendant elements, they should get removed.
+    * Every element from the DIV on down (inclusive) should get
+      a unique integer id.
+    * The list of free ids should be exactly the complement of
+      the set of used ids after such a procedure.
+ * Use that constructor to initialize DIVs in the the app and
    the test app.
- * Create unit tests to verify that these do not cause errors.
+ * Create a unit test to verify that the test app loads without
+   errors.
+ * Add a method to the `LurchEditor` class for querying which
+   element in the document is the editable one managed by that
+   instance.
+ * Verify the correctness of that method with unit testing.
 
 ## Editing
 
  * Create each of the functions in the editing API for the
    `LurchEditor` class.  These need not yet fire events.
- * Add to the test app a user interface for making arbitrary
-   API calls in the model (could be just a JS eval of the code
-   in an input box, or you could have a drop-down for the few
-   functions in the API).
+   Normally one would place this API inside the nodes of the tree
+   being edited, but we won't do that so that we're not creating
+   a new "Node" class when the DOM already has one.
+    * `insert(node,location)`
+    * `remove(node)`
+    * `move(node,newlocation)`
+    * `replace(node,withthisnode)`
+    * `change(node,attrkey,attrval)`
+ * Add documentation to the `LurchEditor` class source code saying
+   that all changes to the document will happen using one of the
+   API functions listed above.
 
 ## Test environment
 
- * Add to the test app a view that shows the document as HTML
-   source; this function could be in `LurchEditor`.  It can be
-   updated after every API call.
- * Add event firing after each API call that changes the
-   document.
- * Have the controller update the HTML source view when it hears
-   one of those events, rather than after every call.
+ * Import into the project a UI toolkit such as
+   [Bootstrap](http://getbootstrap.com).
+   (If you use bootstrap, replace your link png with its link
+   glyphicon.)
+ * Import that UI into both the app and test app pages, rewriting
+   them to fit its format if necessary.
+ * Split the test app into tabs, one containing a view that shows
+   the document as HTML source.
+ * Add to the test app a user interface for making any of these
+   API calls in the model (could be just a JS eval of the code
+   in an input box, or you could have a drop-down for the few
+   functions in the API).
+ * Update the source view after every API call.
+
+## Events
+
+ * Make each editing API call emit events that can be listened to
+   by anyone who needs to know about them, including later
+   bubbling and validation features.
+   (If the document wants to merge adjacent pieces of content with
+   identical attributes, concatenating their string contents, this
+   should result in the firing of one delete and one change event.)
+ * Have the test app update the HTML source view when it hears
+   one of those events, rather than after every API call.
+ * Also create an `undo()` function (together with `redo()` and
+   `canUndo()` and `canRedo()`) that invert/replay the above
+   events.
 
 ## Easy test generation
 
- * Have test app controller save state of model at start and
+ * Have test app save the state of the model at the start and
    after every API call, as well as storing all API calls, thus
-   keeping a full history
+   keeping a full history.
+    * API calls are recorded as the names and parameters of
+      functions called in the `LurchEditor` model by the
+      controller, easy to replay later.
+      (It may seem tempting to utilize the built-in `undo()` and
+      `redo()` methods of `LurchEditor` for this, but resist that
+      temptation because it makes the test suite depend for its
+      correctness on the correctness of the thing being tested.)
+    * Document states are just HTML, so that test suites can be run
+      by a node script from the command line.  If need be, this
+      HTML can be converted to JSON using the simple technique in
+      [this StackOverflow answer](
+      http://stackoverflow.com/a/7824214/670492).
  * Add buttons to the test app for marking points in the history
    as correct or incorrect (with optional comments) and store
    that data in the history as well
- * Create UI for seeing that history, giving it a name, and
-   copying it to the clipboard as JSON text (or simply
-   downloading it as a file `testnamehere.json`, if
-   possible--even better!)
+ * Create a UI for viewing that history, giving it a name, and
+   downloading it as a JSON file `putTestNameHere.json`.
+ * Create a method in [phantom-utils](phantom-utils.litcoffee.html)
+   (possibly rename to `test-utils`?) that can run such a test
+   history inside a jasmine test (i.e., one `describe` with a bunch
+   of `it`s and `expect`s in it.
  * Create a folder in the repository for holding such test JSON
    files and organize it hierarchically by topic
  * Add to the `cake test` procedure the running of all test
@@ -53,23 +109,29 @@ here](spec.md.html).
    in [Markdown](https://daringfireball.net/projects/markdown/).
  * Categorize the outputs with section headers, etc., imitating
    the structure of the folder hierarchy.
- * Later we can create a shell script that backs up the old
-   HTML version of the Markdown output, runs the test suite,
-   and then automatically emails the developers if the new
-   output differs from the old.  This can be run nightly on a
-   server after a git pull.
 
-## Better access to automated testing results, for developers
+## Better access to automated testing results
 
  * As part of the `cake test` procedure, unite the JSON of all
-   the saved tests into one big JSON object and create a `.js`
-   file that assigns that object to a global variable.
- * Import that script into the test app.
+   the saved test histories into one big JSON object and create a
+   `.js` file that assigns that object to a global variable.
+ * Import that `.js` file into the test app.
  * Create a UI for choosing a test to run from a hierarchical
    list generated from that variable's value.
  * Create functionality that can replay the chosen test one
    step at a time and show the expected vs. the actual, with
    differences highlighted.
+
+## Eventually, once you put this on a server
+
+ * Have the server nightly do a git pull of the latest version.
+   Once that's working, have it run a shell script that does the
+   following.
+    * Back up the old HTML version of the test suite output.
+    * Run the test suite.
+    * Email the developers if and only if the new output differs
+      from the old in an important way (i.e., not just timings,
+      but results).
 
 ## Cursor
 

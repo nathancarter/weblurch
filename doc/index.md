@@ -14,7 +14,7 @@ To try any of this code out, see
 [Getting Started](#getting-started), below.
 
 To know what some vague plans are for this repository, see
-[the to-do list](to-do.md.html).
+[the project plan](plan.md.html).
 
 ## Structure of this repository
 
