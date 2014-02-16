@@ -34,10 +34,10 @@ A newly created `LurchEditor` instance should have a `freeIds`
 array containing only zero.
 
         it 'should initialize freeIds', ( done ) =>
-            @page.evaluate ( ->
+            @page.evaluate ->
                 L = new LurchEditor()
                 L.freeIds
-            ), ( err, result ) ->
+            , ( err, result ) ->
                 expect( result ).toEqual( [ 0 ] )
                 done()
 
@@ -49,7 +49,7 @@ the next integer.
 ### nextFreeId() should count 0,1,2,...
 
         it 'nextFreeId() should count 0,1,2,...', ( done ) =>
-            @page.evaluate ( ->
+            @page.evaluate ->
                 L = new LurchEditor()
                 result = []
                 result.push L.nextFreeId()
@@ -58,7 +58,7 @@ the next integer.
                 result.push L.nextFreeId()
                 result.push L.freeIds
                 result
-            ), ( err, result ) ->
+            , ( err, result ) ->
                 expect( result ).toEqual( [ 0, 1, 2, 3, [ 4 ] ] )
                 done()
 
@@ -71,7 +71,7 @@ any id 4 or higher should do nothing.  Then calls to `nextFreeId`
 should yield 2, 4, 5, 6, ...
 
         it 'addfreeId() re-inserts in order', ( done ) =>
-            @page.evaluate ( ->
+            @page.evaluate ->
                 L = new LurchEditor()
                 result = []
                 L.nextFreeId() # four calls to nextFreeId()
@@ -86,7 +86,7 @@ should yield 2, 4, 5, 6, ...
                 result.push L.nextFreeId()
                 result.push L.nextFreeId()
                 result
-            ), ( err, result ) ->
+            , ( err, result ) ->
                 expect( result ).toEqual [
                     [ 4 ] # first saved freeIds array
                     [ 2, 4 ] # second saved freeIds array
@@ -110,12 +110,12 @@ When constructed in an empty DIV, it should give that DIV the id 0,
 and thus have a free ids list of `[ 1 ]` aftewards.
 
         it 'should give an empty DIV id 0', ( done ) =>
-            @page.evaluate ( ->
+            @page.evaluate ->
                 div = document.createElement 'div'
                 document.body.appendChild div
                 L = new LurchEditor div
                 [ parseInt( div.id ), L.freeIds ]
-            ), ( err, result ) ->
+            , ( err, result ) ->
                 expect( result ).toEqual [ 0, [ 1 ] ]
                 done()
 
@@ -126,7 +126,7 @@ nonnegative integer id.  In this test, we verify only that it
 removed all of their old ids.
 
         it 'should remove all invalid ids', ( done ) =>
-            @page.evaluate ( ->
+            @page.evaluate ->
                 div = document.createElement 'div'
                 document.body.appendChild div
                 div.innerHTML =
@@ -169,7 +169,7 @@ record "is null" for each, and expect all true results.)
                     result.after[key] =
                         document.getElementById( key ) is null
                 result
-            ), ( err, result ) ->
+            , ( err, result ) ->
 
 Verify that all the "before"s were not null.
 
