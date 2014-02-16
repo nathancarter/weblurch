@@ -110,7 +110,6 @@ those situations.
             @page.evaluate ( ->
                 div = document.createElement 'div'
                 document.body.appendChild div
-                console.log document.body.innerHTML
                 L = new LurchEditor div
                 [ parseInt( div.id ), L.freeIds ]
             ), ( err, result ) ->
