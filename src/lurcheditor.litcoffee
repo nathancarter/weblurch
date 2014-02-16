@@ -67,7 +67,8 @@ constructor gives it the next available id.
 Collect a list of all used ids in the given node, removing any
 ids that aren't just nonnegative integers.  This routine is used
 by the class's constructor as part of the procedure for
-initializing the node in the DOM into which 
+initializing the node in the DOM in which the LurchEditor will
+reside.
 
         cleanIds: ( node ) ->
             result = []
