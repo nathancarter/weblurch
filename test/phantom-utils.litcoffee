@@ -58,8 +58,10 @@ be sure it loaded successfully.
                         P.page = pg
                         P.page.loaded = no
                         P.page.onResourceError = ( err ) ->
+                            console.log 'Page resource error:', err
                             P.page.reserr = err
                         P.page.onError = ( err ) ->
+                            console.log 'Page error:', err
                             P.page.err = err
                         P.page.onConsoleMessage = ( message ) ->
                             console.log message
