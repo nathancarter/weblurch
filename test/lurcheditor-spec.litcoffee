@@ -117,8 +117,3 @@ those situations.
                 expect( result ).toEqual [ 0, [ 1 ] ]
                 done()
 
-## To come
-
-More to come on this unit test as more features of the
-`LurchEditor` class are implemented.
-
