@@ -73,7 +73,8 @@ reside.
         cleanIds: ( node ) ->
             result = []
             if node not instanceof Node then return result
-            if !/^\d+$/.test node.id then node.removeAttribute 'id'
+            if node.id and not /^\d+$/.test node.id
+                node.removeAttribute 'id'
             for child in node.childNodes
                 result = result.concat ( id for id in \
                     @cleanIds child when id not in result )

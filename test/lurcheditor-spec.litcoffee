@@ -96,15 +96,18 @@ should yield 2, 4, 5, 6, ...
 
 ## LurchEditor instances with DIVs
 
+We now test constructing a new `LurchEditor` instance around an
+existing DOM element, and verify that it does the correct things
+with ids.  See the documentation in
+[the Lurch Editor class itself](lurcheditor.litcoffee.html) for
+details on what the constructor is expected to do in these
+situations, or read each test description below.
+
     phantomDescribe 'LurchEditor instances with DIVs',
     './app/index.html', ->
 
-Nothing has been tested regarding constructing a new `LurchEditor`
-instance around an existing DOM element, and verifying that it
-does the correct things with the IDs.  See the documentation in
-[the Lurch Editor class itself](lurcheditor.litcoffee.html) for
-more information on what the constructor is expected to do in
-those situations.
+When constructed in an empty DIV, it should give that DIV the id 0,
+and thus have a free ids list of `[ 1 ]` aftewards.
 
         it 'should give an empty DIV id 0', ( done ) =>
             @page.evaluate ( ->
@@ -114,5 +117,76 @@ those situations.
                 [ parseInt( div.id ), L.freeIds ]
             ), ( err, result ) ->
                 expect( result ).toEqual [ 0, [ 1 ] ]
+                done()
+
+When constructed in a DIV containing a hierarchy of nested spans,
+some of which have ids, all of which are invalid, it should remove
+all of their old ids, and assign them each a new, unique,
+nonnegative integer id.  In this test, we verify only that it
+removed all of their old ids.
+
+        it 'should remove all invalid ids', ( done ) =>
+            @page.evaluate ( ->
+                div = document.createElement 'div'
+                document.body.appendChild div
+                div.innerHTML =
+                    '''
+                    <span id="yo">some span
+                        <span id="inner">inner span</span>
+                    </span>
+                    <b id="-1">neg number</b>
+                    <br>
+                    <a href="foo" id="-0">weird</a>
+                    <span id="1.0">int-ish float</span>
+                    <span>
+                        <span>
+                            <span id="hank">way inside</span>
+                        </span>
+                        <i>italic</i>
+                    </span>
+                    '''
+                oldids = 'yo inner -1 -0 1.0 hank'.split ' '
+
+For each id we expect to be in the document (because it's mentioned
+in the HTML code given above), record whether it was actually
+present in the document.  (We record "is null" for each, and expect
+all false results.)
+
+                result = before: { }, after: { }
+                for key in oldids
+                    result.before[key] =
+                        document.getElementById( key ) is null
+
+Install the Lurch Editor in the DIV in question.
+
+                L = new LurchEditor div
+
+For each id that used to be in the document, record whether it is
+still present in the document.  (We expect it to *not* be; we
+record "is null" for each, and expect all true results.)
+
+                for key in oldids
+                    result.after[key] =
+                        document.getElementById( key ) is null
+                result
+            ), ( err, result ) ->
+
+Verify that all the "before"s were not null.
+
+                expect( result.before['yo'] ).toBeFalsy()
+                expect( result.before['inner'] ).toBeFalsy()
+                expect( result.before['-1'] ).toBeFalsy()
+                expect( result.before['-0'] ).toBeFalsy()
+                expect( result.before['1.0'] ).toBeFalsy()
+                expect( result.before['hank'] ).toBeFalsy()
+
+Verify that all the "after"s were null.
+
+                expect( result.after['yo'] ).toBeTruthy()
+                expect( result.after['inner'] ).toBeTruthy()
+                expect( result.after['-1'] ).toBeTruthy()
+                expect( result.after['-0'] ).toBeTruthy()
+                expect( result.after['1.0'] ).toBeTruthy()
+                expect( result.after['hank'] ).toBeTruthy()
                 done()
 
