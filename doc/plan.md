@@ -7,14 +7,6 @@ order, the first items being those that should be done next, and
 the later items those that must come after.  Necessarily, the later
 items are more vague than the earlier ones.
 
-## Bug
-
- * The current testing setup calls `create()` in
-   `node-phantom-simple` too many times, so that we get the
-   warning about a possible EventEmitter memory leak detected.
-   Try to create a situation in which only one PhantomJS instance
-   needs to be created for the test suite to be run.
-
 ## Foundations
 
  * Create unit tests for those parts of the `LurchEditor` class

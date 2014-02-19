@@ -254,8 +254,7 @@ Indicate successful completion of the task.
 ## The `test` build process
 
     task 'test', 'Run all unit tests', ->
-        console.log '''Begin tests...
-                       (Please wait while PhantomJS loads.)'''
+        console.log 'Begin tests...'
 
 First remove all old reports in the test reports folder.
 If we do not do this, then any deleted tests will still have their
@@ -269,7 +268,8 @@ Run [jasmine](http://jasmine.github.io/) on all files in the
 bunch of XML files).
 
         exec "node node_modules/jasmine-node/lib/jasmine-node/" +
-             "cli.js --junitreport --verbose --coffee #{testdir}",
+             "cli.js --junitreport --verbose --coffee " +
+             "--forceexit #{testdir}",
         ( err, stdout, stderr ) ->
             console.log stdout + stderr if stdout + stderr
 
