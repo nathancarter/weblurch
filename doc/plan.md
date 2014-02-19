@@ -15,8 +15,6 @@ items are more vague than the earlier ones.
    lurcheditor-spec.litcoffee.html#lurcheditor-instances-with-divs)
    only includes a test on an empty DIV.  It should include
    several more tests, of all of these features:
-    * If there are non-positive-integer ids on the DIV or any of
-      its descendant elements, they should get removed.
     * Every element from the DIV on down (inclusive) should get
       a unique integer id.
     * The list of free ids should be exactly the complement of

@@ -255,7 +255,7 @@ Indicate successful completion of the task.
 
     task 'test', 'Run all unit tests', ->
         console.log '''Begin tests...
-                       (please wait while jasmine loads)'''
+                       (Please wait while PhantomJS loads.)'''
 
 First remove all old reports in the test reports folder.
 If we do not do this, then any deleted tests will still have their
