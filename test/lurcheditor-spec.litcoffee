@@ -38,7 +38,7 @@ array containing only zero.
                 L = new LurchEditor()
                 L.freeIds
             , ( err, result ) ->
-                expect( result ).toEqual( [ 0 ] )
+                expect( result ).toEqual [ 0 ]
                 done()
 
 Calling `nextFreeId()` on a newly created instance should keep
@@ -59,7 +59,7 @@ the next integer.
                 result.push L.freeIds
                 result
             , ( err, result ) ->
-                expect( result ).toEqual( [ 0, 1, 2, 3, [ 4 ] ] )
+                expect( result ).toEqual [ 0, 1, 2, 3, [ 4 ] ]
                 done()
 
 ### addFreeId() re-inserts in order
@@ -109,6 +109,8 @@ situations, or read each test description below.
 When constructed in an empty DIV, it should give that DIV the id 0,
 and thus have a free ids list of `[ 1 ]` aftewards.
 
+### should give an empty DIV id 0
+
         it 'should give an empty DIV id 0', ( done ) =>
             @page.evaluate ->
                 div = document.createElement 'div'
@@ -124,6 +126,8 @@ some of which have ids, all of which are invalid, it should remove
 all of their old ids, and assign them each a new, unique,
 nonnegative integer id.  In this test, we verify only that it
 removed all of their old ids.
+
+### should remove all invalid ids
 
         it 'should remove all invalid ids', ( done ) =>
             @page.evaluate ->
