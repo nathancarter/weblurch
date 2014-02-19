@@ -194,3 +194,73 @@ Verify that all the "after"s were null.
                 expect( result.after['hank'] ).toBeTruthy()
                 done()
 
+### should assign unique integer ids
+
+If we re-run the same test as the previous (creating a
+`LurchEditor` class around the same DIV) we should find that it
+has also assigned unique non-negative integer ids to each element
+in the DOM tree beneath that DIV, starting with 0 and proceeding
+upwards sequentially.
+
+        it 'should assign unique integer ids', ( done ) =>
+            @page.evaluate ->
+                div = document.createElement 'div'
+                document.body.appendChild div
+                div.innerHTML =
+                    '''
+                    <span id="yo">some span
+                        <span id="inner">inner span</span>
+                    </span>
+                    <b id="-1">neg number</b>
+                    <br>
+                    <a href="foo" id="-0">weird</a>
+                    <span id="1.0">int-ish float</span>
+                    <span>
+                        <span>
+                            <span id="hank">way inside</span>
+                        </span>
+                        <i>italic</i>
+                    </span>
+                    '''
+
+Construct the `LurchEditor` instance around the div, as before.
+
+                LE = new LurchEditor div
+
+Now find all ids of all nodes under that div.
+
+                allNodesUnder = ( node ) ->
+                    result = [ node ]
+                    for child in node.childNodes
+                        result = result.concat allNodesUnder child
+                    result
+                {
+                    ids: ( parseInt node.id for node in \
+                            allNodesUnder div when node.id )
+                    freeIds: LE.freeIds[..]
+                }
+            , ( err, result ) ->
+
+Sort the ids and verify that the list is `[ 0, 1, ..., 10 ]`.
+(There are nine tags in the HTML code above, plus the DIV
+containing them.)
+
+                result.ids.sort ( a, b ) -> a - b
+                expect( result.ids[0] ).toEqual 0
+                expect( result.ids[1] ).toEqual 1
+                expect( result.ids[2] ).toEqual 2
+                expect( result.ids[3] ).toEqual 3
+                expect( result.ids[4] ).toEqual 4
+                expect( result.ids[5] ).toEqual 5
+                expect( result.ids[6] ).toEqual 6
+                expect( result.ids[7] ).toEqual 7
+                expect( result.ids[8] ).toEqual 8
+                expect( result.ids[9] ).toEqual 9
+                expect( result.ids[10] ).toEqual 10
+                expect( result.ids.length ).toEqual 11
+
+Verify that the list of free ids is "everything 11 and above."
+
+                expect( result.freeIds ).toEqual [ 11 ]
+                done()
+

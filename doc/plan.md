@@ -7,14 +7,21 @@ order, the first items being those that should be done next, and
 the later items those that must come after.  Necessarily, the later
 items are more vague than the earlier ones.
 
+## Bug
+
+ * The current testing setup calls `create()` in
+   `node-phantom-simple` too many times, so that we get the
+   warning about a possible EventEmitter memory leak detected.
+   Try to create a situation in which only one PhantomJS instance
+   needs to be created for the test suite to be run.
+
 ## Foundations
 
  * Create unit tests for those parts of the `LurchEditor` class
    constructor that are implemented but not yet tested.
    The test about [using the constructor on a DIV](
    lurcheditor-spec.litcoffee.html#lurcheditor-instances-with-divs)
-   only includes a test on an empty DIV.  It should include
-   several more tests, of all of these features:
+   should also test both of these features:
     * Every element from the DIV on down (inclusive) should get
       a unique integer id.
     * The list of free ids should be exactly the complement of
