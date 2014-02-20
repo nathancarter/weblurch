@@ -26,12 +26,13 @@ next such free id and then mark that id as consumed from the list.
                 @freeIds[0]++
 
 When an id in use becomes free, we need a function that will put
-it back into the list of free ids.
+it back into the list of free ids.  The sort in the code below is
+by numerical order, not dictionary (string) order.
 
         addFreeId: ( id ) ->
             if id < @freeIds[@freeIds.length-1]
                 @freeIds.push id
-                @freeIds.sort()
+                @freeIds.sort ( a, b ) -> a - b
 
 ## `LurchEditor` constructor
 
