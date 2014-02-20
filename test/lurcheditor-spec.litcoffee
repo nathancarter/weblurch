@@ -264,3 +264,88 @@ Verify that the list of free ids is "everything 11 and above."
                 expect( result.freeIds ).toEqual [ 11 ]
                 done()
 
+### should work with existing integer ids
+
+If we run a similar test to the previous two, but with the DIV
+slightly altered to include a few valid integer ids, we should
+find that it has also assigned unique non-negative integer ids to
+each element in the DOM tree beneath that DIV, starting with 0 and
+proceeding upwards sequentially, but keeping the existing valid
+integer ids unchanged.
+
+        it 'should work with existing integer ids', ( done ) =>
+            @page.evaluate ->
+                div = document.createElement 'div'
+                document.body.appendChild div
+                div.innerHTML =
+                    '''
+                    <span id="yo">some span
+                        <span id="inner">inner span</span>
+                    </span>
+                    <b id="1">pos number</b>
+                    <br>
+                    <a href="foo" id="-0">weird</a>
+                    <span id="20">big-ish number</span>
+                    <span>
+                        <span>
+                            <span id="hank">way inside</span>
+                        </span>
+                        <i id=4>italic</i>
+                    </span>
+                    '''
+
+Construct the `LurchEditor` instance around the div, as before.
+
+                LE = new LurchEditor div
+
+Now find all ids of all nodes under that div.
+
+                allNodesUnder = ( node ) ->
+                    result = [ node ]
+                    for child in node.childNodes
+                        result = result.concat allNodesUnder child
+                    result
+                result =
+                    ids: ( parseInt node.id for node in \
+                            allNodesUnder div when node.id )
+                    freeIds: LE.freeIds[..]
+                    texts: { }
+                for i in [0..9].concat [ 20 ]
+                    result.texts[i] =
+                        document.getElementById( "#{i}" ) \
+                            .textContent.replace /^\s+|\s+$/g, ''
+                result
+            , ( err, result ) ->
+
+Sort the ids and verify that the list is `[ 0, 1, ..., 9, 20 ]`.
+(There are nine tags in the HTML code above, plus the DIV
+containing them.)
+
+                result.ids.sort ( a, b ) -> a - b
+                expect( result.ids[0] ).toEqual 0
+                expect( result.ids[1] ).toEqual 1
+                expect( result.ids[2] ).toEqual 2
+                expect( result.ids[3] ).toEqual 3
+                expect( result.ids[4] ).toEqual 4
+                expect( result.ids[5] ).toEqual 5
+                expect( result.ids[6] ).toEqual 6
+                expect( result.ids[7] ).toEqual 7
+                expect( result.ids[8] ).toEqual 8
+                expect( result.ids[9] ).toEqual 9
+                expect( result.ids[10] ).toEqual 20
+                expect( result.ids.length ).toEqual 11
+
+Verify that the list of free ids is "everything 10 and above,
+except 20."
+
+                expect( result.freeIds ).toEqual \
+                    [ 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21 ]
+
+Verify that the ids for the nodes that already had valid integer
+ids were left unchanged.
+
+                expect( result.texts[4] ).toEqual 'italic'
+                expect( result.texts[1] ).toEqual 'pos number'
+                expect( result.texts[20] ).toEqual 'big-ish number'
+                done()
+

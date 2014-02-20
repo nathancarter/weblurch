@@ -52,11 +52,9 @@ aren't nonnegative integers.
 Then it computes the list of `freeIds` as the complement of the set
 of nonnegative integer ids found by `cleanIds`.
 
-            @freeIds = if usedIds.length \
-                then [0...usedIds.shift()] else [ 0 ]
-            for i in usedIds
-                @freeIds = @freeIds.concat \
-                    [@freeIds[@freeIds.length-1]...i]
+            @freeIds = if usedIds.length is 0 then [ 0 ] else
+                ( i for i in [0..(Math.max usedIds...)+1] \
+                    when i not in usedIds )
 
 Last, for every HTMLElement under the DIV without an id, the
 constructor gives it the next available id.
@@ -74,8 +72,11 @@ reside.
         cleanIds: ( node ) ->
             result = []
             if node not instanceof Node then return result
-            if node.id and not /^\d+$/.test node.id
-                node.removeAttribute 'id'
+            if node.id
+                if /^\d+$/.test node.id
+                    result.push parseInt node.id
+                else
+                    node.removeAttribute 'id'
             for child in node.childNodes
                 result = result.concat ( id for id in \
                     @cleanIds child when id not in result )

@@ -9,15 +9,6 @@ items are more vague than the earlier ones.
 
 ## Foundations
 
- * Create unit tests for those parts of the `LurchEditor` class
-   constructor that are implemented but not yet tested.
-   The test about [using the constructor on a DIV](
-   lurcheditor-spec.litcoffee.html#lurcheditor-instances-with-divs)
-   should also test both of these features:
-    * Every element from the DIV on down (inclusive) should get
-      a unique integer id.
-    * The list of free ids should be exactly the complement of
-      the set of used ids after such a procedure.
  * Use that constructor to initialize DIVs in the the app and
    the test app.
  * Create a unit test to verify that the test app loads without
