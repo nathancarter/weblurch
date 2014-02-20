@@ -42,6 +42,7 @@ Next import other modules we'll need later.
 
 These constants define how the functions below perform.
 
+    title = 'webLurch'
     srcdir = './src/'
     appdir = './app/'
     tappdir = './testapp/'
@@ -235,15 +236,18 @@ HTML template, saving it into the docs directory.
 
         for file in all
             end = file.split( '/' ).pop()
+            beginning = end.split( '.' ).shift()
             console.log "\tCreating #{end}.html..."
             contents = fs.readFileSync file, 'utf8'
             marked.isTestFile = /-spec\.litcoffee/.test end
             myhtml = html.replace( 'LEFT',
-                                   'weblurch source code docs' )
+                                   "#{title} source code docs" )
                          .replace( 'RIGHT', navtxt )
                          .replace( 'MIDDLE', marked contents )
                          .replace( /<pre><code>/g,
                                    '<pre class="hljs"><code>' )
+                         .replace( 'TITLE',
+                                   "#{title} docs: #{beginning}" )
             fs.writeFileSync "#{docdir+end}.html", myhtml, 'utf8'
 
 Indicate successful completion of the task.
