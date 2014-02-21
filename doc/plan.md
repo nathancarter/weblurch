@@ -9,14 +9,12 @@ items are more vague than the earlier ones.
 
 ## Foundations
 
- * Use that constructor to initialize DIVs in the the app and
-   the test app.
- * Create a unit test to verify that the test app loads without
-   errors.
  * Add a method to the `LurchEditor` class for querying which
    element in the document is the editable one managed by that
    instance.
  * Verify the correctness of that method with unit testing.
+ * Test that in both the app and testapp contexts, the
+   `LurchEditor` instance sets the editable div's id to zero.
 
 ## Editing
 
