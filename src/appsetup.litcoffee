@@ -1,11 +1,11 @@
 
-# Setup routine for the test app
+# Setup routine for the main app
 
 The following routine is run after
-[the test app page](../testapp/index.html) has finished loading, to
+[the main app page](../app/index.html) has finished loading, to
 create a `LurchEditor` instance in the page itself.
 
-    window.testAppSetup = ->
+    window.appSetup = ->
         window.LE =
             new LurchEditor document.getElementById 'editor'
 
