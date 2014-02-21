@@ -35,23 +35,33 @@ strong, b {
     font-weight: bold;
     }
 p {
-    font-size: 12px;
+    font-size: 16px;
     line-height: 22px;
     margin-top: 20px;
     margin-bottom: 10px; 
-    }
+}
+li { font-size: 16px; }
+pre {
+    font-size: 16px;
+    line-height: 22px;
+    margin-top: 20px;
+    margin-bottom: 10px; 
+}
+code {
+    font-size: 115%;
+}
 
 /* weird ie5win bug: all line-height to font-size ratios must agree or box gets pushed around. UPDATE: this has turned out to be very rare. my current recommendation is IGNORE this warning. at the moment i'm leaving it in only in case the issue turns up again. possibly the original bug in march 2001 was caused by an unusual combination of factors, although this solved it at the time.*/
 
 h1 {
-    font-size: 24px;
+    font-size: 30px;
     line-height: 44px;
     font-weight: bold;
     margin-top: 0;
     margin-bottom: 0;
     }
 h2 {
-    font-size: 18px;
+    font-size: 22px;
     line-height: 40px;
     font-weight: bold;
     margin-top: 0;
@@ -59,28 +69,28 @@ h2 {
     color: #e70;
     }
 h3 {
-    font-size: 16px;
+    font-size: 20px;
     line-height: 22px;
     font-weight: bold;
     margin-top: 0;
     margin-bottom: 0;
     }
 h4 {
-    font-size: 14px;
+    font-size: 18px;
     line-height: 26px;
     font-weight: bold;
     margin-top: 0;
     margin-bottom: 0;
     }
 h5 {
-    font-size: 12px;
+    font-size: 16px;
     line-height: 22px;
     font-weight: bold;
     margin-top: 0;
     margin-bottom: 0;
     }
 h6 {
-    font-size: 10px;
+    font-size: 12px;
     line-height: 18px;
     font-weight: bold;
     margin-top: 0;
@@ -91,14 +101,14 @@ img {
     }
 .nowrap {
     white-space: nowrap;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: bold;
     margin-top: 0;
     margin-bottom: 0;
 /* must be combined with nobr in html for ie5win */
     }
 .tiny {
-    font-size: 9px;
+    font-size: 11px;
     line-height: 16px;
     margin-top: 15px;
     margin-bottom: 5px; 
@@ -146,12 +156,6 @@ html>body #middle {
     }
 html>body #right {
     width: 250px; /* ie5win fudge ends */
-    }
-pre {
-    font-size: 12px;
-    line-height: 22px;
-    margin-top: 20px;
-    margin-bottom: 10px; 
     }
 .test-pass {
     color: #9c6;
