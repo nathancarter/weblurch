@@ -7,11 +7,6 @@ order, the first items being those that should be done next, and
 the later items those that must come after.  Necessarily, the later
 items are more vague than the earlier ones.
 
-## Foundations
-
- * Test that in both the app and testapp contexts, the
-   `LurchEditor` instance sets the editable div's id to zero.
-
 ## Editing
 
  * Create each of the functions in the editing API for the

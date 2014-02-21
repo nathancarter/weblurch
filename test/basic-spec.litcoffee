@@ -35,6 +35,14 @@ easier to write the tests below.
                 expect( result ).toBeTruthy()
                 done()
 
+### should initialize main div to id 0
+
+        it 'should initialize main div to id 0', ( done ) =>
+            @page.evaluate ( -> LE.getElement().id ),
+            ( err, result ) ->
+                expect( result ).toEqual '0'
+                done()
+
 Later we will also add tests that use `page.get 'content'`,
 `page.render 'outfile.png'`, etc.
 
@@ -66,6 +74,14 @@ Later we will also add tests that use `page.get 'content'`,
         it 'should have LurchEditor defined', ( done ) =>
             @page.evaluate ( -> LurchEditor ), ( err, result ) ->
                 expect( result ).toBeTruthy()
+                done()
+
+### should initialize main div to id 0
+
+        it 'should initialize main div to id 0', ( done ) =>
+            @page.evaluate ( -> LE.getElement().id ),
+            ( err, result ) ->
+                expect( result ).toEqual '0'
                 done()
 
 Later we will also add tests that use `page.get 'content'`,
