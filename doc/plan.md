@@ -9,16 +9,20 @@ items are more vague than the earlier ones.
 
 ## Editing
 
+ * Create a function for computing the address of any given DOM
+   Node within the `LurchEditor`'s main HTML element.  The result
+   should be an array of child indices, the path through the tree,
+   from the top down.
  * Create each of the functions in the editing API for the
    `LurchEditor` class.  These need not yet fire events.
    Normally one would place this API inside the nodes of the tree
    being edited, but we won't do that so that we're not creating
    a new "Node" class when the DOM already has one.
-    * `insert(node,location)`
-    * `remove(node)`
-    * `move(node,newlocation)`
-    * `replace(node,withthisnode)`
-    * `change(node,attrkey,attrval)`
+    * `insert(address,nodetoinsert)`
+    * `remove(address)`
+    * `move(oldaddress,newaddress)`
+    * `replace(address,replacementnode)`
+    * `change(address,attrkey,attrval)`
  * Add documentation to the `LurchEditor` class source code saying
    that all changes to the document will happen using one of the
    API functions listed above.
