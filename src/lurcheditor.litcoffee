@@ -40,6 +40,7 @@ The constructor takes any DIV from the browser's HTML DOM, or no
 argument if the instance is not to be made visible in a webpage.
 
         constructor: ( div ) ->
+            @element = null
             if div and div?.tagName isnt 'DIV'
                 throw new Error '''LurchEditor can only be
                     constructed in a DIV node'''
@@ -60,6 +61,12 @@ Last, for every HTMLElement under the DIV without an id, the
 constructor gives it the next available id.
 
             @assignIds div
+
+Now that all of that has succeeded, store the div we just processed
+in a member variable so it can be queried later, in
+`editorElement`.
+
+            @element = div
 
 ## Functions used by the constructor
 
@@ -91,4 +98,15 @@ not given ids.
             if node instanceof HTMLElement and not node.id
                 node.id = @nextFreeId()
             @assignIds child for child in node.childNodes
+
+## Getters
+
+So far there is only one, for querying the element passed at
+construction time, over which this object has taken "ownership."
+(Although in JavaScript/CoffeeScript, no members are truly private,
+the intent is that the fields of an object should not be directly
+accessed from outside the class except through getters and
+setters.)
+
+        getElement: -> @element
 

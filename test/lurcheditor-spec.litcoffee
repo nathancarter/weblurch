@@ -94,6 +94,19 @@ should yield 2, 4, 5, 6, ...
                 ]
                 done()
 
+### should return a null element
+
+An instance of the `LurchEditor` class created without a div should
+return null from its `getElement` method.
+
+        it 'should return a null element', ( done ) =>
+            @page.evaluate ->
+                L = new LurchEditor()
+                L.getElement()
+            , ( err, result ) ->
+                expect( result ).toBeNull()
+                done()
+
 ## LurchEditor instances with DIVs
 
 We now test constructing a new `LurchEditor` instance around an
@@ -347,5 +360,23 @@ ids were left unchanged.
                 expect( result.texts[4] ).toEqual 'italic'
                 expect( result.texts[1] ).toEqual 'pos number'
                 expect( result.texts[20] ).toEqual 'big-ish number'
+                done()
+
+### should return the correct div
+
+An instance of the `LurchEditor` class created without a div should
+return null from its `getElement` method.
+
+        it 'should return a null element', ( done ) =>
+            @page.evaluate ->
+                div = document.createElement 'div'
+                document.body.appendChild div
+
+Construct the `LurchEditor` instance around the div, as before.
+
+                LE = new LurchEditor div
+                div is LE.getElement()
+            , ( err, result ) ->
+                expect( result ).toBeTruthy()
                 done()
 
