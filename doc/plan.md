@@ -9,10 +9,13 @@ items are more vague than the earlier ones.
 
 ## Editing
 
- * Create a function for computing the address of any given DOM
-   Node within the `LurchEditor`'s main HTML element.  The result
-   should be an array of child indices, the path through the tree,
-   from the top down.
+ * Add to app and testapp unit tests a check to be sure the
+   address function is defined.
+ * Write a unit test for the `address` function in the
+   [DOM utilities](domutils.litcoffee.html) module.
+ * Create a member function of the `LurchEditor` class that
+   computes the address of any given DOM Node within the instance's
+   main HTML element.
  * Create each of the functions in the editing API for the
    `LurchEditor` class.  These need not yet fire events.
    Normally one would place this API inside the nodes of the tree
