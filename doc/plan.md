@@ -9,11 +9,7 @@ items are more vague than the earlier ones.
 
 ## Build process
 
- * Factor common tasks out of the build process into a file
-   `buildutils.litcoffee` in the root folder.  Access this from
-   `cake.litcoffee` through `require`.
-    * Create an `enqueue` function, so that `task 'all'` can
-      replace its assignment statement with a call to `enqueue`.
+ * Add the following features to the `buildutils.litcoffee` module.
     * A redefinition of the `cake` `task()` function with the
       following before/after advice.
        * After any task, `dequeue()` is automatically called.  Now

@@ -7,16 +7,19 @@ the source code of which is kept to a one-liner,
 so that most of the repository can be written
 in [the literate variant of CoffeeScript][litcoffee].
 
+We keep a set of build utilities in a separate module, which we
+now load.
+
+    build = require './buildutils'
+
 ## Easy way to build all
 
 If you want to build and test evertything, just run `cake all`.
 It simply invokes all the other tasks, defined below.
 
-    queue = []
-    dequeue = -> if queue.length > 0 then invoke queue.shift()
     task 'all', 'Build app, testapp, docs, and run tests', ->
-        queue = [ 'app', 'testapp', 'test', 'doc' ]
-        dequeue()
+        build.enqueue 'app', 'testapp', 'test', 'doc'
+        build.dequeue()
 
 ## Requirements
 
@@ -102,7 +105,7 @@ error, because uglify dumps a bit of spam I'm suppressing.)
                     console.log stdout + stderr
                     throw err
                 console.log 'Done building app.'
-                dequeue()
+                build.dequeue()
 
 ## The `testapp` build process
 
@@ -154,7 +157,7 @@ error, because uglify dumps a bit of spam I'm suppressing.)
                     console.log stdout + stderr
                     throw err
                 console.log 'Done building testapp.'
-                dequeue()
+                build.dequeue()
 
 ## The `doc` build process
 
@@ -253,7 +256,7 @@ HTML template, saving it into the docs directory.
 Indicate successful completion of the task.
 
         console.log 'Done building doc.'
-        dequeue()
+        build.dequeue()
 
 ## The `test` build process
 
@@ -364,7 +367,7 @@ by the doc task, defined above.
 Indicate successful completion of the task.
 
             console.log 'Tests done.'
-            dequeue()
+            build.dequeue()
 
 Function that escapes heading text into lower-case text with no
 spaces, used in a few of the tasks above.
