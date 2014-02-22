@@ -7,6 +7,41 @@ order, the first items being those that should be done next, and
 the later items those that must come after.  Necessarily, the later
 items are more vague than the earlier ones.
 
+## Build process
+
+ * Factor common tasks out of the build process into a file
+   `buildutils.litcoffee` in the root folder.  Access this from
+   `cake.litcoffee` through `require`.
+    * Create an `enqueue` function, so that `task 'all'` can
+      replace its assignment statement with a call to `enqueue`.
+    * A redefinition of the `cake` `task()` function with the
+      following before/after advice.
+       * After any task, `dequeue()` is automatically called.  Now
+         no task need mention `dequeue` again.
+       * Before and after any task, the `'Begin...'` and
+         `'Done...'` messages are automatically printed, so they
+         can be removed from each task.
+    * The code verifying that `npm install` has been run.
+    * A routine to fetch all filenames in a given folder that match
+      a given regexp.  The routine should take a variable number of
+      parameters, alternating folder-regexp-folder-regexp-etc.
+    * A routine to concatenate the contents of a given list of
+      files (given by their filenames) into one new file, with any
+      given separator between them.
+    * A routine to run the coffeescript compiler on a given input
+      file, and that will generate a source map, and work in the
+      folder of the file in question.  It will also uglify the
+      output, again preserving source maps.  It calls a callback
+      when done.
+    * A single routine that takes a filename and runs `marked` on
+      it, being smart enough to detect whether it is a test file or
+      not, and cerate results links if and only if it is.  Results
+      are returned as a string.
+ * Update build process to include in app compilation any sources
+   in the app folder other than `weblurch.litcoffee`, just as the
+   testapp build process does.  Then move `appsetup.litcoffee` in
+   there, for better organization.
+
 ## Editing
 
  * Add to app and testapp unit tests a check to be sure the
