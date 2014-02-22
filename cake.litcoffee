@@ -61,7 +61,6 @@ These constants define how the functions below perform.
 ## The `app` build process
 
     build.asyncTask 'app', 'Build the main app', ( done ) ->
-        console.log 'Begin building app...'
 
 Before building the app, ensure that the output folder exists.
 
@@ -103,7 +102,6 @@ error, because uglify dumps a bit of spam I'm suppressing.)
                 if err
                     console.log stdout + stderr
                     throw err
-                console.log 'Done building app.'
                 done()
 
 ## The `testapp` build process
@@ -111,7 +109,6 @@ error, because uglify dumps a bit of spam I'm suppressing.)
 This build process is nearly identical to that of `app`.
 
     build.asyncTask 'testapp', 'Build the testapp', ( done ) ->
-        console.log 'Begin building testapp...'
 
 Before building, ensure that the output folder exists.
 
@@ -155,13 +152,11 @@ error, because uglify dumps a bit of spam I'm suppressing.)
                 if err
                     console.log stdout + stderr
                     throw err
-                console.log 'Done building testapp.'
                 done()
 
 ## The `doc` build process
 
     build.task 'doc', 'Build the documentation', ->
-        console.log 'Begin building doc...'
 
 Fetch all files in the source directory, plus this file,
 plus any `.md` files in the `doc/` dir that need converting,
@@ -253,14 +248,9 @@ HTML template, saving it into the docs directory.
                                    "#{title} docs: #{beginning}" )
             fs.writeFileSync "#{docdir+end}.html", myhtml, 'utf8'
 
-Indicate successful completion of the task.
-
-        console.log 'Done building doc.'
-
 ## The `test` build process
 
     build.asyncTask 'test', 'Run all unit tests', ( done ) ->
-        console.log 'Begin tests...'
 
 First remove all old reports in the test reports folder.
 If we do not do this, then any deleted tests will still have their
@@ -362,10 +352,6 @@ by the doc task, defined above.
 
             fs.writeFileSync "#{docdir}/test-results.md",
                 md, 'utf8'
-
-Indicate successful completion of the task.
-
-            console.log 'Tests done.'
             done()
 
 Function that escapes heading text into lower-case text with no

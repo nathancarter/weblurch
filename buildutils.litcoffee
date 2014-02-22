@@ -26,13 +26,17 @@ and only if there is a next task to dequeue.
 
     exports.dequeue = -> invoke queue.shift() if queue.length > 0
 
-### Automatically dequeueing
+### Automatic dequeueing and messaging
 
 Each task function would therefore have to end with a call to
 `dequeue`, so that after each task is completed, if there are more
 tasks still in the queue, the next one gets run.  But that is
 undesirable.  It would be better if the task definer provided by
 `cake` did this for us.  So we redefine it to do so.
+
+While we're at it, we will print messages saying which tasks are
+being started/completed, so that the individual tasks no longer
+need to handle that on their own.
 
 First, define a new task function unique to this module.
 
@@ -43,7 +47,9 @@ execution function, one that does whatever the actual task function
 is, then calls dequeue.
 
         task name, description, ->
+            console.log "Begin building #{name}..."
             func()
+            console.log "Done building #{name}."
             exports.dequeue()
 
 Now, some build tasks may be asynchronous, and we'll need to wait
@@ -53,9 +59,12 @@ function that you should call when the task is done.
 
     exports.asyncTask = ( name, description, func ) ->
         task name, description, ->
-            func -> exports.dequeue()
+            console.log "Begin building #{name}..."
+            func ->
+                console.log "Done building #{name}."
+                exports.dequeue()
 
-That last line means that your asynchronous task function needs to
+Those last lines mean that your asynchronous task function needs to
 take a `done` function as parameter, and call it when the task is
-finally complete.  It will then run the dequeue call.
+finally complete.  It will then print done and do a dequeue.
 
