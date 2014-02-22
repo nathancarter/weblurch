@@ -17,9 +17,8 @@ now load.
 If you want to build and test evertything, just run `cake all`.
 It simply invokes all the other tasks, defined below.
 
-    task 'all', 'Build app, testapp, docs, and run tests', ->
+    build.task 'all', 'Build app, testapp, docs, and run tests', ->
         build.enqueue 'app', 'testapp', 'test', 'doc'
-        build.dequeue()
 
 ## Requirements
 
@@ -61,7 +60,7 @@ These constants define how the functions below perform.
 
 ## The `app` build process
 
-    task 'app', 'Build the main app', ( options ) ->
+    build.asyncTask 'app', 'Build the main app', ( done ) ->
         console.log 'Begin building app...'
 
 Before building the app, ensure that the output folder exists.
@@ -105,13 +104,13 @@ error, because uglify dumps a bit of spam I'm suppressing.)
                     console.log stdout + stderr
                     throw err
                 console.log 'Done building app.'
-                build.dequeue()
+                done()
 
 ## The `testapp` build process
 
 This build process is nearly identical to that of `app`.
 
-    task 'testapp', 'Build the testapp', ( options ) ->
+    build.asyncTask 'testapp', 'Build the testapp', ( done ) ->
         console.log 'Begin building testapp...'
 
 Before building, ensure that the output folder exists.
@@ -157,18 +156,19 @@ error, because uglify dumps a bit of spam I'm suppressing.)
                     console.log stdout + stderr
                     throw err
                 console.log 'Done building testapp.'
-                build.dequeue()
+                done()
 
 ## The `doc` build process
 
-    task 'doc', 'Build the documentation', ( options ) ->
+    build.task 'doc', 'Build the documentation', ->
         console.log 'Begin building doc...'
 
 Fetch all files in the source directory, plus this file,
 plus any `.md` files in the `doc/` dir that need converting,
 and the template HTML output file from the `doc/` directory.
 
-        all = [ 'cake.litcoffee' ]
+        all = ( f for f in fs.readdirSync '.' \
+            when /\.litcoffee$/.test f )
         all = all.concat( srcdir + f for f in \
             fs.readdirSync srcdir when /\.litcoffee$/.test( f ) )
         all = all.concat( testdir + f for f in \
@@ -256,11 +256,10 @@ HTML template, saving it into the docs directory.
 Indicate successful completion of the task.
 
         console.log 'Done building doc.'
-        build.dequeue()
 
 ## The `test` build process
 
-    task 'test', 'Run all unit tests', ->
+    build.asyncTask 'test', 'Run all unit tests', ( done ) ->
         console.log 'Begin tests...'
 
 First remove all old reports in the test reports folder.
@@ -367,7 +366,7 @@ by the doc task, defined above.
 Indicate successful completion of the task.
 
             console.log 'Tests done.'
-            build.dequeue()
+            done()
 
 Function that escapes heading text into lower-case text with no
 spaces, used in a few of the tasks above.
