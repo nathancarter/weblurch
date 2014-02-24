@@ -1,6 +1,11 @@
 
 # Utility functions supporting the build process
 
+Several places in this module we access the filesystem, so import
+that module up front.
+
+    fs = require 'fs'
+
 ## Task queue
 
 ### Enqueueing and dequeueing tasks
@@ -82,7 +87,6 @@ the required modules are present, and exits with a helpful error
 message if any are not.
 
     exports.verifyPackagesInstalled = ->
-        fs = require 'fs'
         pj = JSON.parse fs.readFileSync 'package.json'
         missing = ( key for key of pj.dependencies when \
             not fs.existsSync "./node_modules/#{key}" )
@@ -94,4 +98,43 @@ message if any are not.
                         To fix this, run: npm install
                         """
             process.exit 1
+
+## Fetching filenames from a folder
+
+Often during the build process, we need a list of all files of a
+certain type in a certain directory.  This simple function does
+that for us, returning the result as an array.
+
+It takes parameters in pairs, a folder as a string, then a regexp
+to use for filtering files in that folder (only those that match
+are returned).  As many folder-regexp pairs as you want may be
+passed; the concatenated results are returned, each as a string
+that begins with the folder name it belongs in (e.g.,
+`'data/images/thing.png'`).
+
+    exports.dir = ( args... ) ->
+        result = []
+        for i in [0...args.length-1] by 2
+            if args[i][-1..] != '/' then args[i] += '/'
+            for file in fs.readdirSync args[i]
+                if args[i+1].test file
+                    result.push args[i]+file
+        result
+
+## Loading contents of text files
+
+It is convenient to be able to load the contents of many text files
+at once, and this function does so.  Pass it an array of filenames,
+and you get back an object whose keys are those filenames and whose
+values are the text contents of the files.
+
+Obviously for many very large files, this will use a lot of memory.
+For a reasonable number of text files, there is no problem.
+
+    exports.readFiles = ( names ) ->
+        result = { }
+        for name in names
+            console.log "\tReading #{name}..."
+            result[name] = fs.readFileSync name, 'utf8'
+        result
 

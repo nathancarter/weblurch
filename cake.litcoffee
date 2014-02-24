@@ -59,12 +59,8 @@ Before building the app, ensure that the output folder exists.
 
 Next concatenate all `.litcoffee` source files into one.
 
-        all = []
-        for file, index in fs.readdirSync srcdir
-            if /\.litcoffee$/.test file
-                console.log "\tReading #{srcdir + file}..."
-                all.push fs.readFileSync srcdir + file, 'utf8'
-        console.log "\tWriting #{appdir+srcout}..."
+        all = ( fs.readFileSync name for name in \
+            build.dir srcdir, /\.litcoffee$/ )
         fs.writeFileSync appdir+srcout, all.join( '\n\n' ), 'utf8'
 
 Run `coffee` compiler on that file, also creating a source map.
@@ -108,12 +104,9 @@ Before building, ensure that the output folder exists.
 Next concatenate all `.litcoffee` source files from the test app
 directory into one.
 
-        all = []
-        for file, index in fs.readdirSync tappdir
-            if file isnt tappout and /\.litcoffee$/.test file
-                console.log "\tReading #{tappdir + file}..."
-                all.push fs.readFileSync tappdir + file, 'utf8'
-        console.log "\tWriting #{tappdir+tappout}..."
+        all = ( fs.readFileSync name for name in \
+            build.dir tappdir, /\.litcoffee$/ \
+            when name.indexOf( tappout ) is -1 )
         fs.writeFileSync tappdir+tappout, all.join( '\n\n' ),
             'utf8'
 
@@ -153,17 +146,12 @@ Fetch all files in the source directory, plus this file,
 plus any `.md` files in the `doc/` dir that need converting,
 and the template HTML output file from the `doc/` directory.
 
-        all = ( f for f in fs.readdirSync '.' \
-            when /\.litcoffee$/.test f )
-        all = all.concat( srcdir + f for f in \
-            fs.readdirSync srcdir when /\.litcoffee$/.test( f ) )
-        all = all.concat( testdir + f for f in \
-            fs.readdirSync testdir when /\.litcoffee$/.test( f ) )
-        all = all.concat( docdir + f for f in \
-            fs.readdirSync docdir when /\.md$/.test( f ) )
-        all = all.concat( tappdir + f for f in \
-            fs.readdirSync tappdir when /\.litcoffee$/.test( f ) \
-            and f isnt tappout )
+        all = ( f for f in build.dir( '.', /\.litcoffee$/,
+                                      srcdir, /\.litcoffee$/,
+                                      testdir, /\.litcoffee$/,
+                                      docdir, /\.md$/,
+                                      tappdir, /\.litcoffee$/ ) \
+            when f.indexOf( tappout ) is -1 )
         html = fs.readFileSync docdir + doctmp, 'utf8'
 
 Build a file navigation list from those files' names.
@@ -216,7 +204,7 @@ in the `doc/` output folder.
             "##{escapedText}'>#{linkpng}</a></font></h#{level}>"
         marked.setOptions
             highlight: ( code ) ->
-                require( 'highlight.js' ) \
+                require( 'highlight.js' )
                     .highlightAuto( code ).value
             renderer: renderer
 
@@ -287,9 +275,8 @@ flagging test passes/failures with the appropriate CSS classes.
 Read those XML files and produce [Markdown](markdown) output,
 all together into a single output file.
 
-            for report in fs.readdirSync repdir
-                if !/\.xml$/i.test report then continue
-                parseString fs.readFileSync( repdir + report ),
+            for report in build.dir repdir, /\.xml$/i
+                parseString fs.readFileSync( report ),
                 ( err, result ) ->
                     for item in result.testsuites.testsuite
 
