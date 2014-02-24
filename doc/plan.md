@@ -9,11 +9,6 @@ items are more vague than the earlier ones.
 
 ## Build process
 
- * Add the following features to the `buildutils.litcoffee` module.
-    * A single routine that takes a filename and runs `marked` on
-      it, being smart enough to detect whether it is a test file or
-      not, and cerate results links if and only if it is.  Results
-      are returned as a string.
  * Update build process to include in app compilation any sources
    in the app folder other than `weblurch.litcoffee`, just as the
    testapp build process does.  Then move `appsetup.litcoffee` in

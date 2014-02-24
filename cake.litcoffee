@@ -5,7 +5,8 @@ This file defines the build processes in this repository.
 It is imported by the `Cakefile` in this repository,
 the source code of which is kept to a one-liner,
 so that most of the repository can be written
-in [the literate variant of CoffeeScript][litcoffee].
+in [the literate variant of CoffeeScript](
+http://coffeescript.org/#literate).
 
 We keep a set of build utilities in a separate module, which we
 now load.
@@ -45,7 +46,6 @@ These constants define how the functions below perform.
     testdir = './test/'
     repdir = './reports/'
     mapfile = './reports/unit-test-names.json'
-    linkpng = '<img src="link.png" class="anchor">'
     mainpg = 'index.md'
 
 ## The `app` build process
@@ -132,37 +132,6 @@ Build a file navigation list from those files' names.
                           "#{e.text}</a></li>"
             navtxt += '</ul>'
 
-Load the [marked](https://github.com/chjj/marked) module,
-for parsing [Markdown](markdown)
-and doing syntax highlighting of indented code blocks.
-Set its options to use [hightlight.js](http://highlightjs.org/)
-for code highlighting, which handles
-[coffeescript](http://coffeescript.org/) very well,
-and one of whose stylesheets is already installed
-in the `doc/` output folder.
-
-        marked = require 'marked'
-        renderer = new marked.Renderer()
-        renderer.heading = ( text, level ) ->
-            if m = /^(.*) \([0-9.]+ ms\)/.exec text
-                escapedText = escapeHeadingText m[1]
-            else
-                escapedText = escapeHeadingText text
-            if marked.isTestFile
-                results = "<font size=-1><a href='" +
-                          "test-results.md.html#" +
-                          "#{escapedText}'>see results</a></font>"
-            else
-                results = ''
-            "<h#{level}><a name='#{escapedText}'></a>#{text} " +
-            "&nbsp; #{results} <font size=-1><a href='" +
-            "##{escapedText}'>#{linkpng}</a></font></h#{level}>"
-        marked.setOptions
-            highlight: ( code ) ->
-                require( 'highlight.js' )
-                    .highlightAuto( code ).value
-            renderer: renderer
-
 Read each source file and place its marked-down version into the
 HTML template, saving it into the docs directory.
 
@@ -170,12 +139,10 @@ HTML template, saving it into the docs directory.
             end = file.split( '/' ).pop()
             beginning = end.split( '.' ).shift()
             console.log "\tCreating #{end}.html..."
-            contents = fs.readFileSync file, 'utf8'
-            marked.isTestFile = /-spec\.litcoffee/.test end
             myhtml = html.replace( 'LEFT',
                                    "#{title} source code docs" )
                          .replace( 'RIGHT', navtxt )
-                         .replace( 'MIDDLE', marked contents )
+                         .replace( 'MIDDLE', build.md2html file )
                          .replace( /<pre><code>/g,
                                    '<pre class="hljs"><code>' )
                          .replace( 'TITLE',
@@ -242,7 +209,7 @@ create links, if possible.
                         name = item.$.name
                         md += "# #{name} (#{item.$.time} ms)"
                         if name of mapping
-                            escapedName = escapeHeadingText name
+                            escapedName = build.escapeHeading name
                             md += " <font size=-1>" +
                                   "<a href='#{mapping[name]}" +
                                   ".html##{escapedName}'>" +
@@ -256,7 +223,7 @@ Create subheader for each case in the test.  Again, use the
                             cn = c.$.name
                             md += "### #{cn} (#{c.$.time} ms)"
                             if item.$.name of mapping
-                                esc = escapeHeadingText c.$.name
+                                esc = build.escapeHeading c.$.name
                                 md += " <font size=-1>" +
                                       "<a href='" +
                                       "#{mapping[item.$.name]}." +
@@ -287,13 +254,4 @@ by the doc task, defined above.
             fs.writeFileSync "#{docdir}/test-results.md",
                 md, 'utf8'
             done()
-
-Function that escapes heading text into lower-case text with no
-spaces, used in a few of the tasks above.
-
-    escapeHeadingText = ( text ) ->
-        text.toLowerCase().replace /[^\w]+/g, '-'
-
-[litcoffee]: (http://coffeescript.org/#literate)
-[markdown]: (http://daringfireball.net/projects/markdown/)
 

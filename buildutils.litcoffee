@@ -183,3 +183,60 @@ because `uglify` dumps a bit of spam I'm suppressing.)
                 if err then console.log stdout + stderr ; throw err
                 callback()
 
+## Converting Markdown to HTML
+
+The following function uses the
+[marked](http://github.com/chjj/marked) module to parse
+[Markdown](http://daringfireball.net/projects/markdown), including
+syntax highlighting of indented code blocks as
+[coffeescript](http://coffeescript.org).  The highlighting is done
+by [highlight.js](http://highlightjs.org), and one of its
+stylehseets is already installed in the `doc/` output folder.
+
+The following image is used to indicate an anchor.
+
+    linkpng = '<img src="link.png" class="anchor">'
+
+And now, the conversion function.
+
+    exports.md2html = ( infile ) ->
+        marked = require 'marked'
+
+We install a routine that creates headings in the format we want
+them for our documentation.  This routine makes each heading an
+anchor so that links can point to it.  It also makes headings in
+test files include links to the results of those tests.
+
+        renderer = new marked.Renderer()
+        renderer.heading = ( text, level ) ->
+            if m = /^(.*) \([0-9.]+ ms\)/.exec text
+                escapedText = exports.escapeHeading m[1]
+            else
+                escapedText = exports.escapeHeading text
+            if /-spec\.litcoffee/.test infile
+                results = "<font size=-1><a href='" +
+                          "test-results.md.html#" +
+                          "#{escapedText}'>see results</a></font>"
+            else
+                results = ''
+            "<h#{level}><a name='#{escapedText}'></a>#{text} " +
+            "&nbsp; #{results} <font size=-1><a href='" +
+            "##{escapedText}'>#{linkpng}</a></font></h#{level}>"
+
+Install the renderer just created, as well as highlighting support
+provided by `highlight.js`.
+
+        marked.setOptions
+            highlight: ( code ) ->
+                require( 'highlight.js' )
+                    .highlightAuto( code ).value
+            renderer: renderer
+        marked fs.readFileSync infile, 'utf8'
+
+This utility function escapes text into lower-case with no spaces,
+and is used in a routine above, as well as other parts of the build
+process.
+
+    exports.escapeHeading = ( text ) ->
+        text.toLowerCase().replace /[^\w]+/g, '-'
+
