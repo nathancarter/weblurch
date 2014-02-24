@@ -18,7 +18,7 @@ within any other.  If the second parameter (the ancestor, called
 `M` above) is not supplied, then it is taken to be the top-level
 Node (i.e., the furthest-up ancestor, with no `.parentNode`).
 
-    address = ( node, ancestor = null ) ->
+    window.address = ( node, ancestor = null ) ->
 
 First, be safe by ensuring that `node` is actually a DOM Node.
 

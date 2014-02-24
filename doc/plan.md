@@ -9,8 +9,6 @@ items are more vague than the earlier ones.
 
 ## Editing
 
- * Add to app and testapp unit tests a check to be sure the
-   address function is defined.
  * Write a unit test for the `address` function in the
    [DOM utilities](domutils.litcoffee.html) module.
  * Create a member function of the `LurchEditor` class that

@@ -28,11 +28,17 @@ easier to write the tests below.
             expect( @page.err ).toBeFalsy()
             done()
 
-### should have LurchEditor defined
+### should have global variables defined
 
-        it 'should have LurchEditor defined', ( done ) =>
-            @page.evaluate ( -> LurchEditor ), ( err, result ) ->
-                expect( result ).toBeTruthy()
+        it 'should have global variables defined', ( done ) =>
+            @page.evaluate ->
+                {
+                    address : address
+                    lurchEditor : LurchEditor
+                }
+            , ( err, result ) ->
+                expect( result.address ).toBeTruthy()
+                expect( result.lurchEditor ).toBeTruthy()
                 done()
 
 ### should initialize main div to id 0
@@ -69,11 +75,17 @@ Later we will also add tests that use `page.get 'content'`,
             expect( @page.err ).toBeFalsy()
             done()
 
-### should have LurchEditor defined
+### should have global variables defined
 
-        it 'should have LurchEditor defined', ( done ) =>
-            @page.evaluate ( -> LurchEditor ), ( err, result ) ->
-                expect( result ).toBeTruthy()
+        it 'should have global variables defined', ( done ) =>
+            @page.evaluate ->
+                {
+                    address : address
+                    lurchEditor : LurchEditor
+                }
+            , ( err, result ) ->
+                expect( result.address ).toBeTruthy()
+                expect( result.lurchEditor ).toBeTruthy()
                 done()
 
 ### should initialize main div to id 0
