@@ -48,7 +48,31 @@ Although there are others we could test, these are enough for now.
 
 ### should be empty for N,N
 
-This test is not yet written.
+        it 'should be empty for N,N', ( done ) =>
+
+We will test a few cases of `N,N` for various `N`.
+
+            @page.evaluate ->
+                pardiv = document.createElement 'div'
+                document.body.appendChild pardiv
+                chidiv1 = document.createElement 'div'
+                pardiv.appendChild chidiv1
+                chidiv2 = document.createElement 'div'
+                pardiv.appendChild chidiv2
+                [
+                    address( pardiv, pardiv )
+                    address( chidiv1, chidiv1 )
+                    address( chidiv2, chidiv2 )
+                    address( document, document )
+                    address( document.body, document.body )
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toEqual [ ]
+                expect( result[1] ).toEqual [ ]
+                expect( result[2] ).toEqual [ ]
+                expect( result[3] ).toEqual [ ]
+                expect( result[4] ).toEqual [ ]
+                done()
 
 ### should be empty for top-level,null
 
