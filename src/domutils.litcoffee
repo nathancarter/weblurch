@@ -26,19 +26,25 @@ First, be safe by ensuring that `node` is actually a DOM Node.
             throw Error 'address() requires a Node as argument 0'
 
 The base case comes in two flavors.
-If the two parameters match, then they must be the same node, so
-return the empty array.
-Or, if we've reached the top level when the second parameter was
-omitted, that's the same thing.
+First, if the two parameters match, then they must be the same
+node, so return the empty array.
 
         if node is ancestor then return []
-        if not ancestor and not node.parentNode then return []
+
+Second, if we've reached the top level then we must consider the
+second parameter.  Were we looking inside a specific ancestor?  If
+so, we didn't find it, so return null.  If not, return the empty
+array, because we are the top level.
+
+        if not node.parentNode
+            return if ancestor then null else []
 
 Otherwise, recur up the ancestor tree, and concatenate our own
-index in our parent with the array we compute there.  (If the
-recursion returns null, then the following code will do so as well,
-thanks to the `?.` operator.)
+index in our parent with the array we compute there, if there is
+one.
 
-        ( address node.parentNode, ancestor )?.concat \
+        recur = address node.parentNode, ancestor
+        if recur is null then return null
+        recur.concat \
             [ node.parentNode.childNodes[..].indexOf node ]
 
