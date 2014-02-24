@@ -1,6 +1,7 @@
 *.swp
 app/*.js
-app/*.litcoffee
+app/weblurch.litcoffee
+app/app.litcoffee
 app/*.map
 testapp/*.js
 testapp/testapp.litcoffee

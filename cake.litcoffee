@@ -40,6 +40,7 @@ These constants define how the functions below perform.
     appdir = './app/'
     tappdir = './testapp/'
     srcout = 'weblurch.litcoffee'
+    appout = 'app.litcoffee'
     tappout = 'testapp.litcoffee'
     docdir = './doc/'
     doctmp = 'template.html'
@@ -61,6 +62,16 @@ Next concatenate all `.litcoffee` source files into one.
         all = ( fs.readFileSync name for name in \
             build.dir srcdir, /\.litcoffee$/ )
         fs.writeFileSync appdir+srcout, all.join( '\n\n' ), 'utf8'
+
+Also compile any files specific to the main app (as opposed to the
+test app), which will sit in the app folder rather than the source
+folder.
+
+        all = ( fs.readFileSync name for name in \
+            build.dir( appdir, /\.litcoffee$/ ) \
+            when name.indexOf( srcout ) is -1 and
+                 name.indexOf( appout ) is -1 )
+        fs.writeFileSync appdir+appout, all.join( '\n\n' ), 'utf8'
 
 Run the compile process defined in
 [the build utilities module](buildutils.litcoffee.html).

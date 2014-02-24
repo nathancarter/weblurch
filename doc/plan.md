@@ -7,13 +7,6 @@ order, the first items being those that should be done next, and
 the later items those that must come after.  Necessarily, the later
 items are more vague than the earlier ones.
 
-## Build process
-
- * Update build process to include in app compilation any sources
-   in the app folder other than `weblurch.litcoffee`, just as the
-   testapp build process does.  Then move `appsetup.litcoffee` in
-   there, for better organization.
-
 ## Editing
 
  * Add to app and testapp unit tests a check to be sure the
