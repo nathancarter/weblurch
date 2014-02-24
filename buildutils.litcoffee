@@ -68,3 +68,30 @@ Those last lines mean that your asynchronous task function needs to
 take a `done` function as parameter, and call it when the task is
 finally complete.  It will then print done and do a dequeue.
 
+## Verifying npm install has been run
+
+It is useful to verify that `npm install` has been run in this
+folder before attempting to load `node` modules mentioned in the
+`package.json` file.
+
+This is because the build process relies on a few such modules, and
+it is very frustrating for the build process to crash because it's
+missing one of them, showing what would be a cryptic error message
+to a new downloader.  So this routine first checks to be sure that
+the required modules are present, and exits with a helpful error
+message if any are not.
+
+    exports.verifyPackagesInstalled = ->
+        fs = require 'fs'
+        pj = JSON.parse fs.readFileSync 'package.json'
+        missing = ( key for key of pj.dependencies when \
+            not fs.existsSync "./node_modules/#{key}" )
+            .join ', '
+        if missing isnt ''
+            console.log """
+                        This folder is not yet set up.
+                        Missing node.js package(s): #{missing}
+                        To fix this, run: npm install
+                        """
+            process.exit 1
+

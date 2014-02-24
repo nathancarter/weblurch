@@ -10,7 +10,6 @@ items are more vague than the earlier ones.
 ## Build process
 
  * Add the following features to the `buildutils.litcoffee` module.
-    * The code verifying that `npm install` has been run.
     * A routine to fetch all filenames in a given folder that match
       a given regexp.  The routine should take a variable number of
       parameters, alternating folder-regexp-folder-regexp-etc.

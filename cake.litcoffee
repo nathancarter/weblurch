@@ -22,23 +22,14 @@ It simply invokes all the other tasks, defined below.
 
 ## Requirements
 
-First, verify that `npm install` has been run in this folder.
+Verify that `npm install` has been run in this folder, then import
+other modules we'll need later (which were installed by npm
+install).
 
-    fs = require 'fs'
-    pkg = JSON.parse fs.readFileSync 'package.json'
-    for key of pkg.dependencies
-        if !fs.existsSync "./node_modules/#{key}"
-            console.log """
-                        This folder is not yet set up.
-                        Missing node.js package: #{key}
-                        To fix this, run: npm install
-                        """
-            process.exit 1
-
-Next import other modules we'll need later.
-
+    build.verifyPackagesInstalled()
     { exec } = require 'child_process'
     { parseString } = require 'xml2js'
+    fs = require 'fs'
 
 ## Constants
 
