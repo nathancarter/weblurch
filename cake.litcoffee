@@ -27,7 +27,6 @@ other modules we'll need later (which were installed by npm
 install).
 
     build.verifyPackagesInstalled()
-    { exec } = require 'child_process'
     { parseString } = require 'xml2js'
     fs = require 'fs'
 
@@ -63,33 +62,11 @@ Next concatenate all `.litcoffee` source files into one.
             build.dir srcdir, /\.litcoffee$/ )
         fs.writeFileSync appdir+srcout, all.join( '\n\n' ), 'utf8'
 
-Run `coffee` compiler on that file, also creating a source map.
-This generates `.js` and `.js.map` files.
+Run the compile process defined in
+[the build utilities module](buildutils.litcoffee.html).
+This compiles, minifies, and generates source maps.
 
-        console.log "\tCompiling #{appdir+srcout}..."
-        exec "coffee --map --compile #{srcout}", { cwd : appdir },
-        ( err, stdout, stderr ) ->
-            console.log stdout + stderr if stdout + stderr
-            throw err if err
-
-Run [uglifyjs](https://github.com/mishoo/UglifyJS)
-to minify the results, taking source maps into account.
-Report completion when done, or throw an error if there was one.
-(Note that `uglify` output is not printed unless there was an
-error, because uglify dumps a bit of spam I'm suppressing.)
-
-            srcoutbase = /^(.*)\.[^.]*$/.exec( srcout )[1]
-            console.log "\tMinifying #{srcoutbase}.js..."
-            exec "../node_modules/uglify-js/bin/uglifyjs " +
-                 "-c -m -v false " +
-                 "--in-source-map #{srcoutbase}.map " +
-                 "-o #{srcoutbase}.min.js " +
-                 "--source-map #{srcoutbase}.min.js.map",
-            { cwd : appdir }, ( err, stdout, stderr ) ->
-                if err
-                    console.log stdout + stderr
-                    throw err
-                done()
+        build.compile appdir+srcout, done
 
 ## The `testapp` build process
 
@@ -110,33 +87,11 @@ directory into one.
         fs.writeFileSync tappdir+tappout, all.join( '\n\n' ),
             'utf8'
 
-Run `coffee` compiler on that file, also creating a source map.
-This generates `.js` and `.js.map` files.
+Run the compile process defined in
+[the build utilities module](buildutils.litcoffee.html).
+This compiles, minifies, and generates source maps.
 
-        console.log "\tCompiling #{tappdir+tappout}..."
-        exec "coffee --map --compile #{tappout}",
-        { cwd : tappdir }, ( err, stdout, stderr ) ->
-            console.log stdout + stderr if stdout + stderr
-            throw err if err
-
-Run [uglifyjs](https://github.com/mishoo/UglifyJS)
-to minify the results, taking source maps into account.
-Report completion when done, or throw an error if there was one.
-(Note that `uglify` output is not printed unless there was an
-error, because uglify dumps a bit of spam I'm suppressing.)
-
-            tappoutbase = /^(.*)\.[^.]*$/.exec( tappout )[1]
-            console.log "\tMinifying #{tappoutbase}.js..."
-            exec "../node_modules/uglify-js/bin/uglifyjs " +
-                 "-c -m -v false " +
-                 "--in-source-map #{tappoutbase}.map " +
-                 "-o #{tappoutbase}.min.js " +
-                 "--source-map #{tappoutbase}.min.js.map",
-            { cwd : tappdir }, ( err, stdout, stderr ) ->
-                if err
-                    console.log stdout + stderr
-                    throw err
-                done()
+        build.compile tappdir+tappout, done
 
 ## The `doc` build process
 
@@ -242,9 +197,10 @@ Run [jasmine](http://jasmine.github.io/) on all files in the
 `test/` folder, and produce output in `junitreport` format (a
 bunch of XML files).
 
-        exec "node node_modules/jasmine-node/lib/jasmine-node/" +
-             "cli.js --junitreport --verbose --coffee " +
-             "--forceexit #{testdir}",
+        ( require 'child_process' ).exec \
+            "node node_modules/jasmine-node/lib/jasmine-node/" +
+            "cli.js --junitreport --verbose --coffee " +
+            "--forceexit #{testdir}",
         ( err, stdout, stderr ) ->
             console.log stdout + stderr if stdout + stderr
 

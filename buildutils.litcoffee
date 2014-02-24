@@ -1,10 +1,11 @@
 
 # Utility functions supporting the build process
 
-Several places in this module we access the filesystem, so import
-that module up front.
+Several places in this module we access the filesystem, or spawn
+child processes with `exec`.  So import those modules up front.
 
     fs = require 'fs'
+    { exec } = require 'child_process'
 
 ## Task queue
 
@@ -137,4 +138,48 @@ For a reasonable number of text files, there is no problem.
             console.log "\tReading #{name}..."
             result[name] = fs.readFileSync name, 'utf8'
         result
+
+## Compile literate coffeescript files
+
+Call this function with an input filename and a callback function.
+The input filename should contain the path also, unless it is the
+current directory.
+
+The input file should be a `.litcoffee` file, and this function
+will generate a corresponding `.js` file (compiled coffeescript),
+`.min.js` file (minified version of the previous), and
+`.map` and `.min.js.map` files (source map files for both).
+When the compilation is done, the callback function will be called.
+
+    exports.compile = ( srcfile, callback ) ->
+
+Separate the path and filename out from one another.
+
+        [ all, path, file ] = /^(.*)\/([^\\]*)$/.exec srcfile
+        console.log "\tCompiling #{srcfile}..."
+
+Run the `coffee` compiler on the file, also creating a source map.
+This generates both `.js` and `.js.map` files.
+
+        exec "coffee --map --compile #{file}", { cwd : path },
+        ( err, stdout, stderr ) ->
+            console.log stdout + stderr if stdout + stderr
+            throw err if err
+
+Run [uglifyjs](http://github.com/mishoo/UglifyJS) to minify the
+results, taking source maps into account.  Call the callback when
+done, or throw an error if there was one.
+
+(The `uglify` output is not printed unless there was an error,
+because `uglify` dumps a bit of spam I'm suppressing.)
+
+            base = /^(.*)\.[^.]*$/.exec( file )[1]
+            console.log "\tMinifying #{base}.js..."
+            exec "../node_modules/uglify-js/bin/uglifyjs " +
+                 "-c -m -v false --in-source-map #{base}.map " +
+                 "-o #{base}.min.js " +
+                 "--source-map #{base}.min.js.map", { cwd : path },
+            ( err, stdout, stderr ) ->
+                if err then console.log stdout + stderr ; throw err
+                callback()
 

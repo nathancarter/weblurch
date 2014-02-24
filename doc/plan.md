@@ -10,14 +10,6 @@ items are more vague than the earlier ones.
 ## Build process
 
  * Add the following features to the `buildutils.litcoffee` module.
-    * A routine to concatenate the contents of a given list of
-      files (given by their filenames) into one new file, with any
-      given separator between them.
-    * A routine to run the coffeescript compiler on a given input
-      file, and that will generate a source map, and work in the
-      folder of the file in question.  It will also uglify the
-      output, again preserving source maps.  It calls a callback
-      when done.
     * A single routine that takes a filename and runs `marked` on
       it, being smart enough to detect whether it is a test file or
       not, and cerate results links if and only if it is.  Results
