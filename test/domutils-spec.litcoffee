@@ -145,7 +145,99 @@ list of child nodes of the document body.
 
 ### should work for grandchildren, etc.
 
-This test is not yet written.
+        it 'should work for grandchildren, etc.', ( done ) =>
+            @page.evaluate ->
+
+First, we construct a hierarchy with several levels so that we can
+ask questions across those various levels.  This also ensures that
+we know exactly what the child indices are, because we designed
+the hierarchy in the first place.  I am careful to allow no
+whitespace between 
+
+                hierarchy = '''
+                    <span id="test-0">foo</span>
+                    <span id="test-1">bar</span>
+                    <div id="test-2">
+                        <span id="test-3">baz</span>
+                        <div id="test-4">
+                            <div id="test-5">
+                                <span id="test-6">
+                                    f(<i>x</i>)
+                                </span>
+                                <span id="test-7">
+                                    f(<i>x</i>)
+                                </span>
+                            </div>
+                            <div id="test-8">
+                            </div>
+                        </div>
+                    </div>
+                    '''
+
+In order to ensure that we do not insert any text nodes that would
+ruin our index counts, we first process that string to remove
+unwanted whitespace.
+
+                hierarchy = hierarchy.replace( /^\s*|\s*$/g, '' )
+                                     .replace( />\s*</g, '><' )
+
+Now create that hierarchy inside our page, for testing.
+
+                div = document.createElement 'div'
+                document.body.appendChild div
+                div.innerHTML = hierarchy
+                elts = ( document.getElementById "test-#{i}" \
+                    for i in [0..8] )
+
+We check the address of each test element inside the div we just
+created, as well as inside the div called `test-2`.
+
+                [
+                    address elts[0], div
+                    address elts[1], div
+                    address elts[2], div
+                    address elts[3], div
+                    address elts[4], div
+                    address elts[5], div
+                    address elts[6], div
+                    address elts[7], div
+                    address elts[8], div
+                    address elts[2], elts[2]
+                    address elts[3], elts[2]
+                    address elts[4], elts[2]
+                    address elts[5], elts[2]
+                    address elts[6], elts[2]
+                    address elts[7], elts[2]
+                    address elts[8], elts[2]
+                ]
+
+When checking addresses, note that `result[i]` corresopnds to the
+node with id "test-i", for any $i\in\{0,1,\ldots,7,8\}$.
+
+            , ( err, result ) ->
+
+First, check the descendants of the main div.
+
+                expect( result[0] ).toEqual [ 0 ]
+                expect( result[1] ).toEqual [ 1 ]
+                expect( result[2] ).toEqual [ 2 ]
+                expect( result[3] ).toEqual [ 2, 0 ]
+                expect( result[4] ).toEqual [ 2, 1 ]
+                expect( result[5] ).toEqual [ 2, 1, 0 ]
+                expect( result[6] ).toEqual [ 2, 1, 0, 0 ]
+                expect( result[7] ).toEqual [ 2, 1, 0, 1 ]
+                expect( result[8] ).toEqual [ 2, 1, 1 ]
+
+Next, check the descendants of the element with id `test-2`.
+
+                expect( result[9] ).toEqual [ ]
+                expect( result[10] ).toEqual [ 0 ]
+                expect( result[11] ).toEqual [ 1 ]
+                expect( result[12] ).toEqual [ 1, 0 ]
+                expect( result[13] ).toEqual [ 1, 0, 0 ]
+                expect( result[14] ).toEqual [ 1, 0, 1 ]
+                expect( result[15] ).toEqual [ 1, 1 ]
+                done()
 
 ### should throw errors on non-nodes
 
