@@ -76,7 +76,22 @@ We will test a few cases of `N,N` for various `N`.
 
 ### should be empty for top-level,null
 
-This test is not yet written.
+        it 'should be empty for top-level,null', ( done ) =>
+
+The simplest way to test this is to compute the address of the
+document, and expect it to be the empty array.  But we also have
+the document create an empty div and not put it inside any other
+node, and we expect that its address will also be the empty array.
+
+            @page.evaluate ->
+                [
+                    address document
+                    address document.createElement 'div'
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toEqual [ ]
+                expect( result[1] ).toEqual [ ]
+                done()
 
 ### should be length-1 for a child
 
