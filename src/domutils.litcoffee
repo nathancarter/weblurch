@@ -45,6 +45,6 @@ one.
 
         recur = address node.parentNode, ancestor
         if recur is null then return null
-        recur.concat \
-            [ node.parentNode.childNodes[..].indexOf node ]
+        recur.concat [ Array.prototype.slice.apply(
+            node.parentNode.childNodes ).indexOf node ]
 

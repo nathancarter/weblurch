@@ -95,7 +95,53 @@ node, and we expect that its address will also be the empty array.
 
 ### should be length-1 for a child
 
-This test is not yet written.
+        it 'should be length-1 for a child', ( done ) =>
+            @page.evaluate ->
+
+First, add some structure to the document.
+
+                pardiv = document.createElement 'div'
+                document.body.appendChild pardiv
+                chidiv1 = document.createElement 'div'
+                pardiv.appendChild chidiv1
+                chidiv2 = document.createElement 'div'
+                pardiv.appendChild chidiv2
+
+Next, create some structure outside the document.
+
+                outer = document.createElement 'div'
+                inner = document.createElement 'span'
+                outer.appendChild inner
+
+We call the `address` function in several different ways, but each
+time we call it on an immediate child of the second argument
+(or an immediate child of the document, with no second argument).
+Sometimes we compute the same result in both of those ways to
+verify that they are equal.
+
+                [
+                    address document.childNodes[0], document
+                    address document.childNodes[0]
+                    address chidiv1, pardiv
+                    address chidiv2, pardiv
+                    address pardiv, document.body
+                    document.body.childNodes.length
+                    address inner, outer
+                ]
+            , ( err, result ) ->
+                console.log result
+                expect( result[0] ).toEqual [ 0 ]
+                expect( result[1] ).toEqual [ 0 ]
+                expect( result[2] ).toEqual [ 0 ]
+                expect( result[3] ).toEqual [ 1 ]
+
+The next line verifies that `pardiv` was the last element in the
+list of child nodes of the document body.
+
+                expect( result[4] ).toEqual [ result[5]-1 ]
+                expect( result[6] ).toEqual [ 0 ]
+                done()
+
 
 ### should work for grandchildren, etc.
 
