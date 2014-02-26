@@ -9,10 +9,6 @@ items are more vague than the earlier ones.
 
 ## Editing
 
- * Complete the unit test for the `address` function in the
-   [DOM utilities](domutils.litcoffee.html) module.  (See the end
-   of [the unit test file itself](domutils-spec.litcoffee.html),
-   which contains headings for tests not yet implemented.
  * Create a member function of the `LurchEditor` class that
    computes the address of any given DOM Node within the instance's
    main HTML element.

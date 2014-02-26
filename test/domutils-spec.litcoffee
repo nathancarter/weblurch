@@ -240,6 +240,64 @@ Next, check the descendants of the element with id `test-2`.
 
 ### should throw errors on non-nodes
 
-This test is not yet written.
-(Use the `expect( ... ).toThrow()` facility in `jasmine`.)
+Each of the various silly things tried below should all throw an
+exception.  Thus we put each in a `try`-`catch` block that returns
+the computed value if no error occurred, or the error message if
+one did occur.  We verify that an error occurs in every case.
+
+        it 'should throw errors on non-nodes', ( done ) =>
+
+Computing the address of a numeric literal should throw an error.
+We verify that the message returned contains some of the error
+text we expect.
+
+            @page.evaluate ->
+                try address 3 catch e then e.message
+            , ( err, result ) ->
+                expect( /requires.*Node/.test result ).toBeTruthy()
+                done()
+
+Computing the address of an empty object should throw an error.
+Same test as above.
+
+            @page.evaluate ->
+                try address { } catch e then e.message
+            , ( err, result ) ->
+                expect( /requires.*Node/.test result ).toBeTruthy()
+                done()
+
+Computing the address of an array of nodes should throw an error.
+Same test as above.
+
+            @page.evaluate ->
+                node1 = document.body
+                node2 = document.createElement 'div'
+                node1.appendChild node2
+                try address [ node1, node2 ] catch e then e.message
+            , ( err, result ) ->
+                expect( /requires.*Node/.test result ).toBeTruthy()
+                done()
+
+Now repeat the same three tests, but this time also pass in valid
+nodes as second parameters.  The errors should still be thrown.
+
+            @page.evaluate ->
+                try address 3, document catch e then e.message
+            , ( err, result ) ->
+                expect( /requires.*Node/.test result ).toBeTruthy()
+                done()
+            @page.evaluate ->
+                try address { }, document catch e then e.message
+            , ( err, result ) ->
+                expect( /requires.*Node/.test result ).toBeTruthy()
+                done()
+            @page.evaluate ->
+                node1 = document.body
+                node2 = document.createElement 'div'
+                node1.appendChild node2
+                try address [ node1, node2 ], document
+                catch e then e.message
+            , ( err, result ) ->
+                expect( /requires.*Node/.test result ).toBeTruthy()
+                done()
 
