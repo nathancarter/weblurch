@@ -129,7 +129,6 @@ verify that they are equal.
                     address inner, outer
                 ]
             , ( err, result ) ->
-                console.log result
                 expect( result[0] ).toEqual [ 0 ]
                 expect( result[1] ).toEqual [ 0 ]
                 expect( result[2] ).toEqual [ 0 ]
