@@ -9,9 +9,14 @@ items are more vague than the earlier ones.
 
 ## Editing
 
- * Create a member function of the `LurchEditor` class that
-   computes the address of any given DOM Node within the instance's
-   main HTML element.
+ * Add an inverse to the address member function, index, which
+   takes an address and yields the descendant with that address in
+   the node on which it was called.
+ * Create member functions of the `LurchEditor` class that
+   compute addresses/indices relative to the instance's main HTML
+   element.  Add small unit tests of these, because they will have
+   been thoroughly tested elsewhere and these should therefore just
+   be spot checks.
  * Create each of the functions in the editing API for the
    `LurchEditor` class.  These need not yet fire events.
    Normally one would place this API inside the nodes of the tree
