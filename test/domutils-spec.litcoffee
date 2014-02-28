@@ -8,12 +8,19 @@ easier to write the tests below.
 
 ## address member function of Node class
 
+The tests in this section test the `address` member function in the
+`Node` prototype.
+[See its definition here.](domutils.litcoffee.html#address).
+
     phantomDescribe 'address member function of Node class',
     './app/index.html', ->
 
 ### should be defined
 
         it 'should be defined', ( done ) =>
+
+First, just verify that it's present.
+
             @page.evaluate ( -> Node.prototype.address ),
             ( err, result ) ->
                 expect( result ).toBeTruthy()
@@ -251,6 +258,10 @@ their addresses relative to that element.
 
 ## index member function of Node class
 
+The tests in this section test the `index` member function in the
+`Node` prototype.  This function is like the inverse of `address`.
+[See its definition here.](domutils.litcoffee.html#index).
+
     phantomDescribe 'index member function of Node class',
     './app/index.html', ->
 
@@ -260,5 +271,153 @@ their addresses relative to that element.
             @page.evaluate ( -> Node.prototype.index ),
             ( err, result ) ->
                 expect( result ).toBeTruthy()
+                done()
+
+### should give errors for non-arrays
+
+        it 'should give errors for non-arrays', ( done ) =>
+
+Verify that calls to the function throw errors if anything but an
+array is passed as the argument.
+
+            @page.evaluate ->
+                result = []
+                result.push try document.index 0 \
+                            catch e then e.message
+                result.push try document.index { 0: 0 } \
+                            catch e then e.message
+                result.push try document.index document \
+                            catch e then e.message
+                result.push try document.index ( -> ) \
+                            catch e then e.message
+                result.push try document.index '[0,0]' \
+                            catch e then e.message
+                result
+            , ( err, result ) ->
+
+Now verify that each of the items in the resulting array contains
+the relevant portion of the expected error message.
+
+                expect( /requires an array/.test result[0] )
+                    .toBeTruthy()
+                expect( /requires an array/.test result[1] )
+                    .toBeTruthy()
+                expect( /requires an array/.test result[2] )
+                    .toBeTruthy()
+                expect( /requires an array/.test result[3] )
+                    .toBeTruthy()
+                expect( /requires an array/.test result[4] )
+                    .toBeTruthy()
+                done()
+
+### should yield itself for []
+
+        it 'should yield itself for []', ( done ) =>
+
+Verify that `N.index []` yields `N`, for any node `N`.
+We test a variety of type of nodes, including the document, the
+body, some DIVs and SPANs inside, as well as some DIVs and SPANs
+that are not part of the document.
+
+            @page.evaluate ->
+                divInPage = document.createElement 'div'
+                document.body.appendChild divInPage
+                spanInPage = document.createElement 'span'
+                document.body.appendChild spanInPage
+                divOutside = document.createElement 'div'
+                spanOutside = document.createElement 'span'
+                [
+                    divInPage is divInPage.index []
+                    spanInPage is spanInPage.index []
+                    divOutside is divOutside.index []
+                    spanOutside is spanOutside.index []
+                    document is document.index []
+                    document.body is document.body.index []
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toBeTruthy()
+                expect( result[1] ).toBeTruthy()
+                expect( result[2] ).toBeTruthy()
+                expect( result[3] ).toBeTruthy()
+                expect( result[4] ).toBeTruthy()
+                expect( result[5] ).toBeTruthy()
+                done()
+
+### should work for descendant indices
+
+        it 'should work for descendant indices', ( done ) =>
+            @page.evaluate ->
+
+Here we re-use the same hierarchy from [a test above](
+#should-work-for-grandchildren-etc-), for the same reasons.
+
+                hierarchy = '''
+                    <span id="test-0">foo</span>
+                    <span id="test-1">bar</span>
+                    <div id="test-2">
+                        <span id="test-3">baz</span>
+                        <div id="test-4">
+                            <div id="test-5">
+                                <span id="test-6">
+                                    f(<i>x</i>)
+                                </span>
+                                <span id="test-7">
+                                    f(<i>x</i>)
+                                </span>
+                            </div>
+                            <div id="test-8">
+                            </div>
+                        </div>
+                    </div>
+                    '''
+
+For the same reasons as above, we remove whitespace between tags
+before creating a DOM structure from that code.
+
+                hierarchy = hierarchy.replace( /^\s*|\s*$/g, '' )
+                                     .replace( />\s*</g, '><' )
+
+Now create that hierarchy inside our page, for testing.
+
+                div = document.createElement 'div'
+                document.body.appendChild div
+                div.innerHTML = hierarchy
+
+Look up a lot of addresses, and store their ids (if they are
+elements with ids) or their text content (if they are text nodes).
+
+                [
+                    div.index( [ 0 ] ).id
+                    div.index( [ 1 ] ).id
+                    div.index( [ 2 ] ).id
+                    div.index( [ 0, 0 ] ).textContent
+                    div.index( [ 1, 0 ] ).textContent
+                    div.index( [ 2, 0 ] ).id
+                    div.index( [ 2, 0, 0 ] ).textContent
+                    div.index( [ 2, 1 ] ).id
+                    div.index( [ 2, 1, 0 ] ).id
+                    div.index( [ 2, 1, 0, 0 ] ).id
+                    div.index( [ 2, 1, 0, 0, 1 ] ).textContent
+                    div.index( [ 2, 1, 0, 1 ] ).id
+                    div.index( [ 2, 1, 1 ] ).id
+                ]
+
+Verify the ids and text contents computed above match the
+hierarchy and indices given.
+
+            , ( err, result ) ->
+                expect( result[0] ).toEqual 'test-0'
+                expect( result[1] ).toEqual 'test-1'
+                expect( result[2] ).toEqual 'test-2'
+                expect( result[3] ).toEqual 'foo'
+                expect( result[4] ).toEqual 'bar'
+                expect( result[5] ).toEqual 'test-3'
+                expect( result[6] ).toEqual 'baz'
+                expect( result[7] ).toEqual 'test-4'
+                expect( result[8] ).toEqual 'test-5'
+                expect( result[9] ).toEqual 'test-6'
+                expect( result[10] ).toEqual 'x'
+                expect( result[11] ).toEqual 'test-7'
+                expect( result[12] ).toEqual 'test-8'
                 done()
 

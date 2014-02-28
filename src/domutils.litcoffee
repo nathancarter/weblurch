@@ -80,5 +80,5 @@ the given address.  The `?.` syntax below ensures that that index
 is valid, so that we do not attempt to call this function
 recursively on something other than a node.
 
-        @childNodes[index[0]]?.index index[1..]
+        @childNodes[address[0]]?.index address[1..]
 
