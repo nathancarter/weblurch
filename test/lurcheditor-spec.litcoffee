@@ -119,12 +119,13 @@ situations, or read each test description below.
     phantomDescribe 'LurchEditor instances with DIVs',
     './app/index.html', ->
 
-When constructed in an empty DIV, it should give that DIV the id 0,
-and thus have a free ids list of `[ 1 ]` aftewards.
-
 ### should give an empty DIV id 0
 
         it 'should give an empty DIV id 0', ( done ) =>
+
+When constructed in an empty DIV, it should give that DIV the id 0,
+and thus have a free ids list of `[ 1 ]` aftewards.
+
             @page.evaluate ->
                 div = document.createElement 'div'
                 document.body.appendChild div
@@ -134,15 +135,16 @@ and thus have a free ids list of `[ 1 ]` aftewards.
                 expect( result ).toEqual [ 0, [ 1 ] ]
                 done()
 
+### should remove all invalid ids
+
+        it 'should remove all invalid ids', ( done ) =>
+
 When constructed in a DIV containing a hierarchy of nested spans,
 some of which have ids, all of which are invalid, it should remove
 all of their old ids, and assign them each a new, unique,
 nonnegative integer id.  In this test, we verify only that it
 removed all of their old ids.
 
-### should remove all invalid ids
-
-        it 'should remove all invalid ids', ( done ) =>
             @page.evaluate ->
                 div = document.createElement 'div'
                 document.body.appendChild div
@@ -209,13 +211,14 @@ Verify that all the "after"s were null.
 
 ### should assign unique integer ids
 
+        it 'should assign unique integer ids', ( done ) =>
+
 If we re-run the same test as the previous (creating a
 `LurchEditor` class around the same DIV) we should find that it
 has also assigned unique non-negative integer ids to each element
 in the DOM tree beneath that DIV, starting with 0 and proceeding
 upwards sequentially.
 
-        it 'should assign unique integer ids', ( done ) =>
             @page.evaluate ->
                 div = document.createElement 'div'
                 document.body.appendChild div
@@ -364,10 +367,11 @@ ids were left unchanged.
 
 ### should return the correct div
 
+        it 'should return a null element', ( done ) =>
+
 An instance of the `LurchEditor` class created without a div should
 return null from its `getElement` method.
 
-        it 'should return a null element', ( done ) =>
             @page.evaluate ->
                 div = document.createElement 'div'
                 document.body.appendChild div
@@ -378,5 +382,51 @@ Construct the `LurchEditor` instance around the div, as before.
                 div is LE.getElement()
             , ( err, result ) ->
                 expect( result ).toBeTruthy()
+                done()
+
+### should have working address and index
+
+        it 'should have working address and index', ( done ) =>
+
+The `LurchEditor` class defines shortuct address and index
+functions that just make the calls relative to their main HTML
+elements.  We verify here briefly that those functions work, but
+do not test them extensively, since that is already done in
+[the unit test for DOM utilities](domutils-spec.litcoffee.html).
+
+            @page.evaluate ->
+                div = document.createElement 'div'
+                div.id = '0'
+                document.body.appendChild div
+                span1 = document.createElement 'span'
+                span1.id = '1'
+                div.appendChild span1
+                span2 = document.createElement 'span'
+                span2.id = '2'
+                div.appendChild span2
+                LE = new LurchEditor div
+
+Four address queries followed by four index queries, the last of
+which we expect to be undefined.
+
+                [
+                    LE.address div
+                    LE.address span1
+                    LE.address span2
+                    null is LE.address document
+                    LE.index( [] ).id
+                    LE.index( [ 0 ] ).id
+                    LE.index( [ 1 ] ).id
+                    typeof LE.index [ 0, 0 ]
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toEqual []
+                expect( result[1] ).toEqual [ 0 ]
+                expect( result[2] ).toEqual [ 1 ]
+                expect( result[3] ).toBeTruthy()
+                expect( result[4] ).toEqual '0'
+                expect( result[5] ).toEqual '1'
+                expect( result[6] ).toEqual '2'
+                expect( result[7] ).toEqual 'undefined'
                 done()
 

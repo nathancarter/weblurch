@@ -110,3 +110,25 @@ setters.)
 
         getElement: -> @element
 
+With that getter, however, I classify two convenience methods it
+enables.  DOM Nodes have the methods `address` and `index`
+implemented in them; see [the documentation on those functions](
+domutils.litcoffee.html#address) for more information.
+
+It will be convenient to be able to call such methods in a
+`LurchEditor`, thereby having its main element provided as the
+default arguments.  We therefore define the following two shortcut
+functions.
+
+Let `LE.address N` be shorthand for `N.address LE.getElement()`.
+
+        address: ( node ) -> node?.address @element
+
+Let `LE.index A` be shorthand for `LE.getElement().index A`.
+
+        index: ( address ) -> @element?.index address
+
+We therefore have the guarantee `N == LE.index LE.address N`
+inherited from the address and index
+functions defined in the Node prototype.
+
