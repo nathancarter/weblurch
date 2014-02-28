@@ -76,9 +76,13 @@ If the array is empty, we've hit the base case of this recursion.
         if address.length is 0 then return this
 
 Othwerise, recur on the child whose index is the first element of
-the given address.  The `?.` syntax below ensures that that index
+the given address.  There are two safety checks here.  First, we
+verify that the index we're about to look up is a number (otherwise
+things like `[0]` will be treated as zero, which is probably
+erroneous).  Second, the `?.` syntax below ensures that that index
 is valid, so that we do not attempt to call this function
 recursively on something other than a node.
 
+        if typeof address[0] isnt 'number' then return undefined
         @childNodes[address[0]]?.index address[1..]
 

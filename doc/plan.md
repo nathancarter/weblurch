@@ -9,7 +9,6 @@ items are more vague than the earlier ones.
 
 ## Editing
 
- * Test the index function in the Node prototype.
  * Create member functions of the `LurchEditor` class that
    compute addresses/indices relative to the instance's main HTML
    element.  Add small unit tests of these, because they will have

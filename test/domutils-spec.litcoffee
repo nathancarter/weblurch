@@ -421,3 +421,92 @@ hierarchy and indices given.
                 expect( result[12] ).toEqual 'test-8'
                 done()
 
+### should give undefined for bad indices
+
+        it 'should give undefined for bad indices', ( done ) =>
+
+Verify that calls to the function return undefined if any step in
+the address array is invalid.  There are many ways for this to
+happen (entry less than zero, entry larger than number of children
+at that level, entry not an integer, entry not a number at all).
+We test each of these cases below.
+
+            @page.evaluate ->
+
+First we re-create the same hierarchy from [a test above](
+#should-work-for-grandchildren-etc-), for the same reasons.
+
+                hierarchy = '''
+                    <span id="test-0">foo</span>
+                    <span id="test-1">bar</span>
+                    <div id="test-2">
+                        <span id="test-3">baz</span>
+                        <div id="test-4">
+                            <div id="test-5">
+                                <span id="test-6">
+                                    f(<i>x</i>)
+                                </span>
+                                <span id="test-7">
+                                    f(<i>x</i>)
+                                </span>
+                            </div>
+                            <div id="test-8">
+                            </div>
+                        </div>
+                    </div>
+                    '''
+
+For the same reasons as above, we remove whitespace between tags
+before creating a DOM structure from that code.
+
+                hierarchy = hierarchy.replace( /^\s*|\s*$/g, '' )
+                                     .replace( />\s*</g, '><' )
+
+Now create that hierarchy inside our page, for testing.
+
+                div = document.createElement 'div'
+                document.body.appendChild div
+                div.innerHTML = hierarchy
+
+Now call `div.index` with addresses that contain each of the
+erroneous steps mentioned above.  Here we call `typeof` on each
+of the return values, because we expect that they will be
+undefined in each case, and we wish to populate our array with
+that information in string form, so that it can be returned from
+the page as valid JSON.
+
+                [
+                    typeof div.index [ -1 ]
+                    typeof div.index [ 3 ]
+                    typeof div.index [ 300000 ]
+                    typeof div.index [ 0.2 ]
+                    typeof div.index [ 'something' ]
+                    typeof div.index [ 'childNodes' ]
+                    typeof div.index [ [ 0 ] ]
+                    typeof div.index [ [ ] ]
+                    typeof div.index [ { } ]
+                    typeof div.index [ div ]
+                    typeof div.index [ 0, -1 ]
+                    typeof div.index [ 0, 1 ]
+                    typeof div.index [ 0, 'ponies' ]
+                ]
+            , ( err, result ) ->
+
+Now verify that each of the items in the resulting array contains
+the relevant portion of the expected error message.
+
+                expect( result[0] ).toEqual 'undefined'
+                expect( result[1] ).toEqual 'undefined'
+                expect( result[2] ).toEqual 'undefined'
+                expect( result[3] ).toEqual 'undefined'
+                expect( result[4] ).toEqual 'undefined'
+                expect( result[5] ).toEqual 'undefined'
+                expect( result[6] ).toEqual 'undefined'
+                expect( result[7] ).toEqual 'undefined'
+                expect( result[8] ).toEqual 'undefined'
+                expect( result[9] ).toEqual 'undefined'
+                expect( result[10] ).toEqual 'undefined'
+                expect( result[11] ).toEqual 'undefined'
+                expect( result[12] ).toEqual 'undefined'
+                done()
+
