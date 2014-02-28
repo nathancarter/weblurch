@@ -15,7 +15,8 @@ walk through children to get from `M` down to `N`.  Special cases:
 
 The following member function of the `Node` class adds the address
 function to that class.  Using the `M` and `N` from above, one
-would call it like `N.address M`.
+would call it like `N.address M`.  [See below](#index) for its
+inverse function, `index`.
 
 It computes the address of any one DOM node within any other.
 If the parameter (the ancestor, called `M` above) is not supplied,
@@ -47,4 +48,37 @@ one.
         if recur is null then return null
         recur.concat [ Array.prototype.slice.apply(
             @parentNode.childNodes ).indexOf this ]
+
+## Index
+
+This function is an inverse for `address`,
+[defined above](#address).
+
+The node at index `I` in node `N` is the descendant `M` of `N` in
+the node hierarchy such that `M.address N` is `I`.
+In short, if `N` is any ancestor of `M`, then
+`N.index(M.address(N)) == M`.
+
+Keeping in mind that an address is simply an array of nonnegative
+integers, the implementation is simply repeated lookups in some
+`childNodes` arrays.  It is therefore quite short, with most of
+the code going to type safety.
+
+    Node.prototype.index = ( address ) ->
+
+Require that the parameter be an array.
+
+        if address not instanceof Array
+            throw Error 'Node address function requires an array'
+
+If the array is empty, we've hit the base case of this recursion.
+
+        if address.length is 0 then return this
+
+Othwerise, recur on the child whose index is the first element of
+the given address.  The `?.` syntax below ensures that that index
+is valid, so that we do not attempt to call this function
+recursively on something other than a node.
+
+        @childNodes[index[0]]?.index index[1..]
 

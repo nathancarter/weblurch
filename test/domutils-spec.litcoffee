@@ -249,3 +249,16 @@ their addresses relative to that element.
                 expect( result[15] ).toEqual [ 1, 1 ]
                 done()
 
+## index member function of Node class
+
+    phantomDescribe 'index member function of Node class',
+    './app/index.html', ->
+
+### should be defined
+
+        it 'should be defined', ( done ) =>
+            @page.evaluate ( -> Node.prototype.index ),
+            ( err, result ) ->
+                expect( result ).toBeTruthy()
+                done()
+
