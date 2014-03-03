@@ -9,16 +9,22 @@ items are more vague than the earlier ones.
 
 ## Editing
 
- * Create each of the functions in the editing API for the
-   `LurchEditor` class.  These need not yet fire events.
-   Normally one would place this API inside the nodes of the tree
-   being edited, but we won't do that so that we're not creating
-   a new "Node" class when the DOM already has one.
+ * Test `LurchEditor`'s `address` and `index` functions to ensure
+   that they function correctly (returning null in both cases) if
+   the `LurchEditor` instance has no main HTML element.
+ * Add each of the functions to the DOM Node prototype.  Test each
+   as you create it.
     * `insert(address,nodetoinsert)`
     * `remove(address)`
     * `move(oldaddress,newaddress)`
     * `replace(address,replacementnode)`
     * `change(address,attrkey,attrval)`
+ * Now add each of those same functions to the `LurchEditor` class,
+   having it forward the call to its main HTML element.  Ensure
+   that these behave correctly (doing nothing, returning null) in
+   the event that the `LurchEditor` has no main HTML element.
+ * Test each of the above functions only slightly, since it is
+   tested (thoroughly, though indirectly) in the Node prototype.
  * Add documentation to the `LurchEditor` class source code saying
    that all changes to the document will happen using one of the
    API functions listed above.
