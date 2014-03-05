@@ -7,27 +7,99 @@ order, the first items being those that should be done next, and
 the later items those that must come after.  Necessarily, the later
 items are more vague than the earlier ones.
 
-## Editing
+## Background
 
  * Test `LurchEditor`'s `address` and `index` functions to ensure
    that they function correctly (returning null in both cases) if
    the `LurchEditor` instance has no main HTML element.
- * Add each of the functions to the DOM Node prototype.  Test each
-   as you create it.
-    * `insert(address,nodetoinsert)`
-    * `remove(address)`
-    * `move(oldaddress,newaddress)`
-    * `replace(address,replacementnode)`
-    * `change(address,attrkey,attrval)`
- * Now add each of those same functions to the `LurchEditor` class,
-   having it forward the call to its main HTML element.  Ensure
-   that these behave correctly (doing nothing, returning null) in
-   the event that the `LurchEditor` has no main HTML element.
- * Test each of the above functions only slightly, since it is
-   tested (thoroughly, though indirectly) in the Node prototype.
- * Add documentation to the `LurchEditor` class source code saying
-   that all changes to the document will happen using one of the
-   API functions listed above.
+ * In the [DOM utilities module](domutils.litcoffee.html), create
+   a method for serializing DOM Nodes into JSON, and another method
+   for reversing the process.  Create unit tests for both.  You may
+   want to see [this StackOverflow answer](
+   http://stackoverflow.com/a/7824214/670492).
+
+## DOM Edit Tracker
+
+ * Create a `DOMEditTracker` class that can be instantiated with a
+   single HTML element as parameter and that remembers that
+   element.  Make `LurchEditor` inherit from this class, so we're
+   factoring out that aspect of a `LurchEditor` into that class.
+ * Give `DOMEditTracker` a class method that returns the instance
+   whose main HTML element is or contains the one passed as
+   argument, if there is such an instance.  Create a unit test for
+   the `DOMEditTracker` class that tests this class method.
+ * Create a new class for storing DOM editing events, but for now
+   it's just a stub; call it `DOMEditAction`.
+ * Create a `DOMEditTracker` instance method called
+   `nodeEditHappened` that takes a `DOMEditAction` instance as
+   parameter and pushes it onto an internal stack.  See the next
+   bullet point for the definition of that class.
+ * Add to the `DOMEditAction` class the ability to instantiate it
+   with any of the following types of data.  Do this in parallel
+   with the following bullet points, which instantiate this class
+   and discuss the testing thereof.
+    * N.appendChild(node)
+       * returns node
+       * record with N's address and the serialized node
+    * N.insertBefore(node,beforeThisChild)
+       * returns newnode
+       * if beforeThisChild is omitted, it's the same as append
+       * record with N's address, the serialized node, and the
+         index of beforeThisChild (or child node length if absent)
+    * N.normalize()
+       * removes empty text nodes
+       * joins adjacent text nodes
+       * no return value
+       * record as N's address together with a mapfrom indices to
+         text content of all current child text nodes of N
+    * N.removeAttribute(name)
+       * no return value
+       * record as N's address, name, and original attribute value
+    * N.removeAttributeNode(attrNode)
+       * returns attrNode
+       * e.g.: N.removeAttributeNode(N.getAttributeNode('style'))
+       * record as N's address and original attribute name and
+         value
+    * N.removeChild(childNode)
+       * returns childNode
+       * record as N's address, the child's original index within
+         N, and a serialization of the child
+    * N.replaceChild(newnode,oldnode)
+       * returns oldnode, I think
+       * record as N's address, the child's original index within
+         N, and serializations of both oldnode and newnode
+    * N.setAttribute(name,value)
+       * both strings, no return value
+       * record as N's address, name, and value, as well as the
+         original value of the attribute beforehand
+    * N.setAttributeNode(attrNode)
+       * returns replaced node if any, otherwise null
+       * e.g.:
+         `var atr=document.createAttribute("class");
+         atr.nodeValue="democlass";
+         myDiv.setAttributeNode(atr);`
+       * record as N's address, the name and value of the attribute
+         after setting, as well as the original value of the
+         attribute beforehand
+    * Note that element.dataset.foo is not supported.
+ * In the [DOM utilities module](domutils.litcoffee.html), modify
+   all functions in the Node prototype that manipulate the DOM so
+   that, after their completion, they call `nodeEditHappened` in
+   the containing `DOMEditTracker` instance notifying it of which
+   method was called in them, if it was successful in modifying the
+   DOM, by creating and passing a `DOMEditAction` instance.
+   Create unit tests that verify that the data is correctly
+   recorded in the internal array of the `DOMEditTracker` instance.
+ * Add undo and redo methods to a `LurchEditor` instance that move
+   an index pointer up and down the internal list of past actions,
+   and that chop off the redo-able actions if an edit comes in that
+   is not from an undo/redo action.  Thorough unit tests as well.
+ * Add canUndo() and canRedo() methods to the `LurchEditor` class
+   that just report whether the index pointer isn't at the top or
+   bottom of the stack.  Test.
+ * Add a `toString()` method to `DOMEditAction` that can describe
+   it.  Add methods to `LurchEditor` that can describe the actions
+   that would take place if undo or redo were invoked.  Test.
 
 ## Test environment
 
@@ -39,43 +111,17 @@ items are more vague than the earlier ones.
    them to fit its format if necessary.
  * Split the test app into tabs, one containing a view that shows
    the document as HTML source.
- * Add to the test app a user interface for making any of these
-   API calls in the model (could be just a JS eval of the code
-   in an input box, or you could have a drop-down for the few
-   functions in the API).
+ * Add to the test app a user interface for making any of the
+   editing API calls on any Node in the `LurchEditor`'s main HTML
+   element (could be just a JS eval of the code in an input box).
  * Update the source view after every API call.
-
-## Events
-
- * Make each editing API call emit events that can be listened to
-   by anyone who needs to know about them, including later
-   bubbling and validation features.
-   (If the document wants to merge adjacent pieces of content with
-   identical attributes, concatenating their string contents, this
-   should result in the firing of one delete and one change event.)
- * Have the test app update the HTML source view when it hears
-   one of those events, rather than after every API call.
- * Also create an `undo()` function (together with `redo()` and
-   `canUndo()` and `canRedo()`) that invert/replay the above
-   events.
 
 ## Easy test generation
 
  * Have test app save the state of the model at the start and
    after every API call, as well as storing all API calls, thus
-   keeping a full history.
-    * API calls are recorded as the names and parameters of
-      functions called in the `LurchEditor` model by the
-      controller, easy to replay later.
-      (It may seem tempting to utilize the built-in `undo()` and
-      `redo()` methods of `LurchEditor` for this, but resist that
-      temptation because it makes the test suite depend for its
-      correctness on the correctness of the thing being tested.)
-    * Document states are just HTML, so that test suites can be run
-      by a node script from the command line.  If need be, this
-      HTML can be converted to JSON using the simple technique in
-      [this StackOverflow answer](
-      http://stackoverflow.com/a/7824214/670492).
+   keeping a full history.  API calls are recorded as the actual
+   code that was evaluated, easy to replay later (and objective).
  * Add buttons to the test app for marking points in the history
    as correct or incorrect (with optional comments) and store
    that data in the history as well
@@ -105,7 +151,7 @@ items are more vague than the earlier ones.
    step at a time and show the expected vs. the actual, with
    differences highlighted.
 
-## Eventually, once you put this on a server
+## Later, when you put the repository on a server
 
  * Have the server nightly do a git pull of the latest version.
    Once that's working, have it run a shell script that does the
@@ -115,6 +161,16 @@ items are more vague than the earlier ones.
     * Email the developers if and only if the new output differs
       from the old in an important way (i.e., not just timings,
       but results).
+
+## Events
+
+ * Make each call to `nodeEditHappened` (as well as each call to
+   undo or redo in a `DOMEditTracker`) fire events about which
+   address(es) in the DOM (below the tracker's main HTML element)
+   changed.  These events can be listened to by later bubbling and
+   validation features.
+ * Have the test app update the HTML source view when it hears
+   one of those events, rather than after every API call.
 
 ## Cursor
 
