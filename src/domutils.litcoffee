@@ -86,3 +86,32 @@ recursively on something other than a node.
         if typeof address[0] isnt 'number' then return undefined
         @childNodes[address[0]]?.index address[1..]
 
+## Serialization
+
+These methods are for serializing and unserializing DOM nodes to
+objects that are amenable to JSON processing.  Documentation and
+testing for them is forthcoming.
+
+    Node.prototype.toJSON = ->
+        if @textContent then return @textContent
+        if this not instanceof Element
+            throw Error "Cannot serialize this node: #{this}"
+        result =
+            tagName : @tagName
+            attributes : { }
+            children : [ chi.toJSON() for chi in @childNodes ]
+        for attribute in @attributes
+            result.attributes[attribute.name] = attribute.value
+        result
+
+    Node.fromJSON = ( json ) ->
+        if typeof json is 'string' then return json
+        if not 'tagName' of json
+            throw Error "Object has no tagName: #{this}"
+        result = document.createElement json.tagName
+        for own key, value of json.attributes
+            result.setAttribute key, value
+        for child in json.children
+            result.appendChild Node.fromJSON child
+        result
+
