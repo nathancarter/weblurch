@@ -510,3 +510,41 @@ the relevant portion of the expected error message.
                 expect( result[12] ).toEqual 'undefined'
                 done()
 
+## Node toJSON conversion
+
+The tests in this section test the `toJSON` member function in the
+`Node` prototype.
+[See its definition here.](domutils.litcoffee.html#serialization).
+
+    phantomDescribe 'Node toJSON conversion',
+    './app/index.html', ->
+
+### should be defined
+
+        it 'should be defined', ( done ) =>
+
+First, just verify that it's present.
+
+            @page.evaluate ( -> Node.prototype.toJSON ),
+            ( err, result ) ->
+                expect( result ).toBeTruthy()
+                done()
+
+### should convert text nodes to strings
+
+        it 'should convert text nodes to strings', ( done ) =>
+            @page.evaluate ->
+                textNode = document.createTextNode 'foo'
+                div = document.createElement 'div'
+                div.innerHTML = '<i>italic</i> not italic'
+                [
+                    textNode.toJSON()
+                    div.childNodes[0].childNodes[0].toJSON()
+                    div.childNodes[1].toJSON()
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toEqual 'foo'
+                expect( result[1] ).toEqual 'italic'
+                expect( result[2] ).toEqual ' not italic'
+                done()
+
