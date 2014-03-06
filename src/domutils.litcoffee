@@ -99,7 +99,7 @@ defined, one can take any node `N` and call `N.toJSON()`.
 
 Text nodes are simply returned as strings.
 
-        if @textContent then return @textContent
+        if this not instanceof Element then return @textContent
 
 Non-text nodes must be elements in order to be serialized by this
 routine.
@@ -107,14 +107,14 @@ routine.
         if this not instanceof Element
             throw Error "Cannot serialize this node: #{this}"
 
-A serialized HTMLElement is an object with three properties, tag
+A serialized Element is an object with three properties, tag
 name, attribute dictionary, and child nodes array.  We create that
 object, then fill in the attributes dictionary afterward.
 
         result =
             tagName : @tagName
             attributes : { }
-            children : [ chi.toJSON() for chi in @childNodes ]
+            children : chi.toJSON() for chi in @childNodes
         for attribute in @attributes
             result.attributes[attribute.name] = attribute.value
         result
@@ -124,7 +124,7 @@ Next, the function for converting an object produced with
 its one parameter to be one of two types, either a string (meaning
 that a text node should be returned) or an object with the three
 properties given above (tagName, attributes, children, meaning that
-an HTMLElement should be returned).  One calls it by writing
+an Element should be returned).  One calls it by writing
 `Node.toJSON object`.
 
     Node.fromJSON = ( json ) ->

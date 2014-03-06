@@ -548,3 +548,184 @@ First, just verify that it's present.
                 expect( result[2] ).toEqual ' not italic'
                 done()
 
+### should handle spans correctly
+
+        it 'should handle spans correctly', ( done ) =>
+
+Must correctly convert things of the form `<span>text</span>` or
+`<i>text</i>` or any other simple, non-nested tag.  Three simple
+tests are done, plus one with two different attributes.
+
+            @page.evaluate ->
+                # <span>hello</span>, created this way:
+                span1 = document.createElement 'span'
+                span1.appendChild document.createTextNode 'hello'
+                # <span>world</span>, created this way:
+                span2 = document.createElement 'span'
+                span2.innerHTML = 'world'
+                # <i>The Great Gatsby</i>, lifted out of a div:
+                div1 = document.createElement 'div'
+                div1.innerHTML = '<i>The Great Gatsby</i>'
+                # one with attributes, also lifted out of a div:
+                div2 = document.createElement 'div'
+                div2.innerHTML = '<i class="X" id="Y">Z</i>'
+                [
+                    span1.toJSON()
+                    span2.toJSON()
+                    div1.childNodes[0].toJSON()
+                    div2.childNodes[0].toJSON()
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toEqual {
+                    tagName : 'SPAN'
+                    attributes : { }
+                    children : [ 'hello' ]
+                }
+                expect( result[1] ).toEqual {
+                    tagName : 'SPAN'
+                    attributes : { }
+                    children : [ 'world' ]
+                }
+                expect( result[2] ).toEqual {
+                    tagName : 'I'
+                    attributes : { }
+                    children : [ 'The Great Gatsby' ]
+                }
+                expect( result[3] ).toEqual {
+                    tagName : 'I'
+                    attributes : { class : 'X', id : 'Y' }
+                    children : [ 'Z' ]
+                }
+                done()
+
+### should handle hierarchies correctly
+
+        it 'should handle hierarchies correctly', ( done ) =>
+
+The above tests cover simple situations, either DOM trees of
+height 1 or 2.  Now we consider situations in which there are
+many levels to the Node tree.  I choose two examples, and mix in
+a diversity of depths, attributes, tag names, etc.
+
+            @page.evaluate ->
+                div1 = document.createElement 'div'
+                div1.innerHTML = '<span class="outermost" id=0>' +
+                                 '<span class="middleman" id=1>' +
+                                 '<span class="innermost" id=2>' +
+                                 'finally, the text' +
+                                 '</span></span></span>'
+                document.body.appendChild div1
+                div2 = document.createElement 'div'
+                div2.innerHTML = '<p>Some paragraph.</p>' +
+                                 '<p>Another paragraph, this ' +
+                                 'one with some ' +
+                                 '<b>force!</b></p>' +
+                                 '<table border=1>' +
+                                 '<tr><td width=50%>Name</td>' +
+                                 '</td><td width=50%>Age</td>' +
+                                 '</tr></table>'
+                document.body.appendChild div2
+                [
+                    div1.toJSON()
+                    div2.toJSON()
+                ]
+            , ( err, result ) ->
+                expectedAnswer1 = {
+                    tagName : 'DIV'
+                    attributes : { }
+                    children : [
+                        {
+                            tagName : 'SPAN'
+                            attributes : {
+                                class : 'outermost'
+                                id : '0'
+                            }
+                            children : [
+                                {
+                                    tagName : 'SPAN'
+                                    attributes : {
+                                        class : 'middleman'
+                                        id : '1'
+                                    }
+                                    children : [
+                                        {
+                                            tagName : 'SPAN'
+                                            attributes : {
+                                                class : 'innermost'
+                                                id : '2'
+                                            }
+                                            children : [
+                                                'finally, the text'
+                                                
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+                expectedAnswer2 = {
+                    tagName : 'DIV'
+                    attributes : { }
+                    children : [
+                        {
+                            tagName : 'P'
+                            attributes : { }
+                            children : [ 'Some paragraph.' ]
+                        }
+                        {
+                            tagName : 'P'
+                            attributes : { }
+                            children : [
+                                'Another paragraph, ' +
+                                'this one with some '
+                                {
+                                    tagName : 'B'
+                                    attributes : { }
+                                    children : [ 'force!' ]
+                                }
+                            ]
+                        }
+                        {
+                            tagName : 'TABLE'
+                            attributes : { border : '1' }
+                            children : [
+                                {
+                                    tagName : 'TBODY'
+                                    attributes : { }
+                                    children : [
+                                        {
+                                            tagName : 'TR'
+                                            attributes : { }
+                                            children : [
+                                                {
+                                                    tagName : 'TD'
+                                                    attributes : {
+                                                        width :
+                                                            '50%'
+                                                    }
+                                                    children :
+                                                        [ 'Name' ]
+                                                }
+                                                {
+                                                    tagName : 'TD'
+                                                    attributes : {
+                                                        width :
+                                                            '50%'
+                                                    }
+                                                    children :
+                                                        [ 'Age' ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+                expect( result[0] ).toEqual expectedAnswer1
+                expect( result[1] ).toEqual expectedAnswer2
+                done()
+
