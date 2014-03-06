@@ -145,7 +145,7 @@ Next, if we can find a comment flag in the object, then we create
 and return a comment.
 
         if 'comment' of json and json.comment
-            return json.content
+            return document.createComment json.content
 
 The only other possibility is that the object encodes an Element.
 So if we can't get a tag name from the object, we cannot proceed,
