@@ -9,14 +9,19 @@ items are more vague than the earlier ones.
 
 ## Background
 
+ * In the [DOM utilities module](domutils.litcoffee.html), create
+   unit tests for the unserialization function `Node.fromJSON`.
  * Test `LurchEditor`'s `address` and `index` functions to ensure
    that they function correctly (returning null in both cases) if
    the `LurchEditor` instance has no main HTML element.
- * In the [DOM utilities module](domutils.litcoffee.html), create
-   a method for serializing DOM Nodes into JSON, and another method
-   for reversing the process.  Create unit tests for both.  You may
-   want to see [this StackOverflow answer](
-   http://stackoverflow.com/a/7824214/670492).
+
+## Publishing
+
+ * Push this repository to github.
+ * Enable github pages for the repository.
+ * Add a task to the build process that merges the latest generated
+   documentation into the ghpages branch and commits to that branch
+   before returning to master.
 
 ## DOM Edit Tracker
 
