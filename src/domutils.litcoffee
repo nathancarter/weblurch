@@ -89,13 +89,28 @@ recursively on something other than a node.
 ## Serialization
 
 These methods are for serializing and unserializing DOM nodes to
-objects that are amenable to JSON processing.  Documentation and
-testing for them is forthcoming.
+objects that are amenable to JSON processing.
+
+First, the function for converting a DOM Node to an object that
+can be serialized with `JSON.stringify`.  After this function is
+defined, one can take any node `N` and call `N.toJSON()`.
 
     Node.prototype.toJSON = ->
+
+Text nodes are simply returned as strings.
+
         if @textContent then return @textContent
+
+Non-text nodes must be elements in order to be serialized by this
+routine.
+
         if this not instanceof Element
             throw Error "Cannot serialize this node: #{this}"
+
+A serialized HTMLElement is an object with three properties, tag
+name, attribute dictionary, and child nodes array.  We create that
+object, then fill in the attributes dictionary afterward.
+
         result =
             tagName : @tagName
             attributes : { }
@@ -104,10 +119,30 @@ testing for them is forthcoming.
             result.attributes[attribute.name] = attribute.value
         result
 
+Next, the function for converting an object produced with
+`N.toJSON()` back into an actual DOM Node.  This function requires
+its one parameter to be one of two types, either a string (meaning
+that a text node should be returned) or an object with the three
+properties given above (tagName, attributes, children, meaning that
+an HTMLElement should be returned).  One calls it by writing
+`Node.toJSON object`.
+
     Node.fromJSON = ( json ) ->
-        if typeof json is 'string' then return json
+
+Handle the easy case first:  strings yield text nodes.
+
+        if typeof json is 'string'
+            return document.createTextNode json
+
+Next, if we can't get a tag name from the object, we cannot
+proceed, and thus the input was invalid.
+
         if not 'tagName' of json
             throw Error "Object has no tagName: #{this}"
+
+Create an element using the tag name, add any attributes from the
+given object, and recur on the child array if there is one.
+
         result = document.createElement json.tagName
         for own key, value of json.attributes
             result.setAttribute key, value
