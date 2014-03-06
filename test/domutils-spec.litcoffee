@@ -523,7 +523,7 @@ The tests in this section test the `toJSON` member function in the
 
         it 'should be defined', ( done ) =>
 
-First, just verify that it's present.
+First, just verify that the function itself is present.
 
             @page.evaluate ( -> Node.prototype.toJSON ),
             ( err, result ) ->
@@ -546,6 +546,23 @@ First, just verify that it's present.
                 expect( result[0] ).toEqual 'foo'
                 expect( result[1] ).toEqual 'italic'
                 expect( result[2] ).toEqual ' not italic'
+                done()
+
+### should convert comment nodes to objects
+
+        it 'should convert comment nodes to objects', ( done ) =>
+            @page.evaluate ->
+                comment1 = document.createComment 'comment content'
+                comment2 = document.createComment ''
+                [
+                    comment1.toJSON()
+                    comment2.toJSON()
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toEqual \
+                    comment : yes, content : 'comment content'
+                expect( result[1] ).toEqual \
+                    comment : yes, content : ''
                 done()
 
 ### should handle spans correctly
@@ -604,8 +621,8 @@ tests are done, plus one with two different attributes.
 
 The above tests cover simple situations, either DOM trees of
 height 1 or 2.  Now we consider situations in which there are
-many levels to the Node tree.  I choose two examples, and mix in
-a diversity of depths, attributes, tag names, etc.
+many levels to the Node tree.  I choose three examples, and mix in
+a diversity of depths, attributes, tag names, comments, etc.
 
             @page.evaluate ->
                 div1 = document.createElement 'div'
@@ -622,12 +639,19 @@ a diversity of depths, attributes, tag names, etc.
                                  '<b>force!</b></p>' +
                                  '<table border=1>' +
                                  '<tr><td width=50%>Name</td>' +
+                                 '<!--random comment-->' +
                                  '</td><td width=50%>Age</td>' +
                                  '</tr></table>'
                 document.body.appendChild div2
+                div3 = document.createElement 'div'
+                div3.innerHTML = 'start with a text node' +
+                                 '<!-- then a comment -->' +
+                                 '<p>then <i>MORE</i></p>'
+                document.body.appendChild div3
                 [
                     div1.toJSON()
                     div2.toJSON()
+                    div3.toJSON()
                 ]
             , ( err, result ) ->
                 expectedAnswer1 = {
@@ -709,6 +733,12 @@ a diversity of depths, attributes, tag names, etc.
                                                         [ 'Name' ]
                                                 }
                                                 {
+                                                    comment : yes
+                                                    content :
+                                                        'random ' +
+                                                        'comment'
+                                                }
+                                                {
                                                     tagName : 'TD'
                                                     attributes : {
                                                         width :
@@ -725,7 +755,31 @@ a diversity of depths, attributes, tag names, etc.
                         }
                     ]
                 }
+                expectedAnswer3 = {
+                    tagName : 'DIV'
+                    attributes : { }
+                    children : [
+                        'start with a text node'
+                        {
+                            comment : yes
+                            content : ' then a comment '
+                        }
+                        {
+                            tagName : 'P'
+                            attributes : { }
+                            children : [
+                                'then '
+                                {
+                                    tagName : 'I'
+                                    attributes : { }
+                                    children : [ 'MORE' ]
+                                }
+                            ]
+                        }
+                    ]
+                }
                 expect( result[0] ).toEqual expectedAnswer1
                 expect( result[1] ).toEqual expectedAnswer2
+                expect( result[2] ).toEqual expectedAnswer3
                 done()
 

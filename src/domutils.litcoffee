@@ -96,13 +96,20 @@ can be serialized with `JSON.stringify`.  After this function is
 defined, one can take any node `N` and call `N.toJSON()`.
 
     Node.prototype.toJSON = ->
+        console.log 'toJSON', @outerHTML
 
 Text nodes are simply returned as strings.
 
-        if this not instanceof Element then return @textContent
+        if this instanceof Text then return @textContent
 
-Non-text nodes must be elements in order to be serialized by this
-routine.
+Comment nodes are returned as objects with a comment flag and a
+text content attribute.
+
+        if this instanceof Comment
+            return comment : yes, content : @textContent
+
+All other types of nodes must be elements in order to be serialized
+by this routine.
 
         if this not instanceof Element
             throw Error "Cannot serialize this node: #{this}"
@@ -134,8 +141,15 @@ Handle the easy case first:  strings yield text nodes.
         if typeof json is 'string'
             return document.createTextNode json
 
-Next, if we can't get a tag name from the object, we cannot
-proceed, and thus the input was invalid.
+Next, if we can find a comment flag in the object, then we create
+and return a comment.
+
+        if 'comment' of json and json.comment
+            return json.content
+
+The only other possibility is that the object encodes an Element.
+So if we can't get a tag name from the object, we cannot proceed,
+and thus the input was invalid.
 
         if not 'tagName' of json
             throw Error "Object has no tagName: #{this}"
