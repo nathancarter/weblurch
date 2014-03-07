@@ -804,3 +804,60 @@ a diversity of depths, attributes, tag names, comments, etc.
                 expect( result[2] ).toEqual expectedAnswer3
                 done()
 
+### should respect verbosity setting
+
+        it 'should respect verbosity setting', ( done ) =>
+
+The verbosity setting of the serializer defaults to true, and gives
+results like those shown in the tests above, whose object keys are
+human-readable.  If verbosity is disabled, as in the tests below,
+then each key is shrunk to a unique one-letter abbreviation, as
+documented [in the module where the serialization is implemented](
+domutils.litcoffee.html#serialization).
+
+Here we do only one, brief test of each of the types tested above.
+
+            @page.evaluate ->
+                node1 = document.createTextNode 'text node'
+                node2 = document.createComment 'swish'
+                node3 = document.createElement 'hr'
+                div = document.createElement 'div'
+                div.innerHTML = '<p align="left">paragraph</p>' +
+                                '<p><span id="foo">bar</span>' +
+                                ' <i class="baz">quux</i></p>'
+                node4 = div.childNodes[0]
+                node5 = div.childNodes[1]
+                [
+                    node1.toJSON no
+                    node2.toJSON no
+                    node3.toJSON no
+                    node4.toJSON no
+                    node5.toJSON no
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toEqual 'text node'
+                expect( result[1] ).toEqual m : yes, n : 'swish'
+                expect( result[2] ).toEqual t : 'HR'
+                expect( result[3] ).toEqual {
+                    t : 'P'
+                    a : align : 'left'
+                    c : [ 'paragraph' ]
+                }
+                expect( result[4] ).toEqual {
+                    t : 'P'
+                    c : [
+                        {
+                            t : 'SPAN'
+                            a : id : 'foo'
+                            c : [ 'bar' ]
+                        }
+                        ' '
+                        {
+                            t : 'I'
+                            a : class : 'baz'
+                            c : [ 'quux' ]
+                        }
+                    ]
+                }
+                done()
+

@@ -95,7 +95,17 @@ First, the function for converting a DOM Node to an object that
 can be serialized with `JSON.stringify`.  After this function is
 defined, one can take any node `N` and call `N.toJSON()`.
 
-    Node.prototype.toJSON = ->
+    Node.prototype.toJSON = ( verbose = yes ) ->
+
+The `verbose` parameter uses human-readable object keys, and is the
+default.  A more compact version can be obtained by setting that
+value to false.  The inverse function below can handle either
+format.  The shrinking of keys follows the following convention.
+ * tagName becomes t
+ * attributes becomes a
+ * children becomes c
+ * comment becomes m
+ * content becomes n
 
 Text nodes are simply returned as strings.
 
@@ -105,7 +115,10 @@ Comment nodes are returned as objects with a comment flag and a
 text content attribute.
 
         if this instanceof Comment
-            return comment : yes, content : @textContent
+            return if verbose
+                comment : yes, content : @textContent
+            else
+                m : yes, n : @textContent
 
 All other types of nodes must be elements in order to be serialized
 by this routine.
@@ -124,8 +137,16 @@ and only if they are nonempty.
             for attribute in @attributes
                 result.attributes[attribute.name] = attribute.value
         if @childNodes.length
-            result.children = ( chi.toJSON() \
-                for chi in @childNodes )
+            result.children =
+                chi.toJSON verbose for chi in @childNodes
+
+If verbosity is disabled, change all the object keys to one-letter
+abbreviations.
+
+        if not verbose
+            result.t = result.tagName ; delete result.tagName
+            result.a = result.attributes ; delete result.attributes
+            result.c = result.children ; delete result.children
         result
 
 Next, the function for converting an object produced with
