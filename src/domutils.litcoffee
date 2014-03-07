@@ -88,6 +88,8 @@ recursively on something other than a node.
 
 ## Serialization
 
+### From DOM Nodes to objects
+
 These methods are for serializing and unserializing DOM nodes to
 objects that are amenable to JSON processing.
 
@@ -149,6 +151,8 @@ abbreviations.
             result.c = result.children ; delete result.children
         result
 
+### From objects to DOM Nodes
+
 Next, the function for converting an object produced with
 `N.toJSON()` back into an actual DOM Node.  This function requires
 its one parameter to be one of two types, either a string (meaning
@@ -169,23 +173,25 @@ and return a comment.
 
         if 'comment' of json and json.comment
             return document.createComment json.content
+        if 'm' of json and json.m
+            return document.createComment json.n
 
 The only other possibility is that the object encodes an Element.
 So if we can't get a tag name from the object, we cannot proceed,
 and thus the input was invalid.
 
-        if not 'tagName' of json
-            throw Error "Object has no tagName: #{this}"
+        if not 'tagName' of json and not 't' of json
+            throw Error "Object has no t[agName]: #{this}"
 
 Create an element using the tag name, add any attributes from the
 given object, and recur on the child array if there is one.
 
-        result = document.createElement json.tagName
-        if 'attributes' of json
-            for own key, value of json.attributes
+        result = document.createElement json.tagName or json.t
+        if attributes = json.attributes or json.a
+            for own key, value of attributes
                 result.setAttribute key, value
-        if 'children' of json
-            for child in json.children
+        if children = json.children or json.c
+            for child in children
                 result.appendChild Node.fromJSON child
         result
 

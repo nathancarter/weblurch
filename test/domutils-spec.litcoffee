@@ -433,8 +433,9 @@ We test each of these cases below.
 
             @page.evaluate ->
 
-First we re-create the same hierarchy from [a test above](
-#should-work-for-grandchildren-etc-), for the same reasons.
+First we re-create the same hierarchy from
+[a test above](#should-work-for-grandchildren-etc-),
+for the same reasons.
 
                 hierarchy = '''
                     <span id="test-0">foo</span>
@@ -860,4 +861,169 @@ Here we do only one, brief test of each of the types tested above.
                     ]
                 }
                 done()
+
+## Node fromJSON conversion
+
+The tests in this section test the `fromJSON` member function in
+the `Node` object.
+[See its definition here.](
+domutils.litcoffee.html#from-objects-to-dom-nodes)
+
+    phantomDescribe 'Node fromJSON conversion',
+    './app/index.html', ->
+
+### should be defined
+
+        it 'should be defined', ( done ) =>
+
+First, just verify that the function itself is present.
+
+            @page.evaluate ( -> Node.fromJSON ),
+            ( err, result ) ->
+                expect( result ).toBeTruthy()
+                done()
+
+### should convert strings to text nodes
+
+        it 'should convert strings to text nodes', ( done ) =>
+
+This test is simply the inverse of the analogous test earlier.
+It verifies that two strings, one empty and one nonempty, both get
+converted correctly into `Text` instances with the appropriate
+content.
+
+            @page.evaluate ->
+                node1 = Node.fromJSON 'just a string'
+                node2 = Node.fromJSON ''
+                [
+                    node1 instanceof Node
+                    node1 instanceof Text
+                    node1 instanceof Comment
+                    node1 instanceof Element
+                    node1.textContent
+                    node2 instanceof Node
+                    node2 instanceof Text
+                    node2 instanceof Comment
+                    node2 instanceof Element
+                    node2.textContent
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toBeTruthy()
+                expect( result[1] ).toBeTruthy()
+                expect( result[2] ).toBeFalsy()
+                expect( result[3] ).toBeFalsy()
+                expect( result[4] ).toEqual 'just a string'
+                expect( result[5] ).toBeTruthy()
+                expect( result[6] ).toBeTruthy()
+                expect( result[7] ).toBeFalsy()
+                expect( result[8] ).toBeFalsy()
+                expect( result[9] ).toEqual ''
+                done()
+
+### should handle comment objects
+
+        it 'should handle comment objects', ( done ) =>
+
+This test is simply the inverse of the analogous test earlier.
+It verifies that two objects, one in verbose and one in
+non-verbose notation, one empty and one nonempty, both get
+converted correctly into `Comment` instances with the appropriate
+content.
+
+            @page.evaluate ->
+                node1 = Node.fromJSON m : yes, n : 'some comment'
+                node2 = Node.fromJSON comment : yes, content : ''
+                [
+                    node1 instanceof Node
+                    node1 instanceof Text
+                    node1 instanceof Comment
+                    node1 instanceof Element
+                    node1.textContent
+                    node2 instanceof Node
+                    node2 instanceof Text
+                    node2 instanceof Comment
+                    node2 instanceof Element
+                    node2.textContent
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toBeTruthy()
+                expect( result[1] ).toBeFalsy()
+                expect( result[2] ).toBeTruthy()
+                expect( result[3] ).toBeFalsy()
+                expect( result[4] ).toEqual 'some comment'
+                expect( result[5] ).toBeTruthy()
+                expect( result[6] ).toBeFalsy()
+                expect( result[7] ).toBeTruthy()
+                expect( result[8] ).toBeFalsy()
+                expect( result[9] ).toEqual ''
+                done()
+
+### should be able to create empty elements
+
+        it 'should be able to create empty elements', ( done ) =>
+
+This test is simply the inverse of the analogous test earlier.
+It verifies that two objects, one in verbose and one in
+non-verbose notation, both get converted correctly into `Element`
+instances with no children but the appropriate tags and
+attributes.
+
+            @page.evaluate ->
+                node1 = Node.fromJSON \
+                    tagName : 'hr',
+                    attributes : class : 'y', whatever : 'dude'
+                node2 = Node.fromJSON t : 'br', a : id : '24601'
+                console.log node1.outerHTML, node2.outerHTML
+                [
+                    node1 instanceof Node
+                    node1 instanceof Text
+                    node1 instanceof Comment
+                    node1 instanceof Element
+                    node1.tagName
+                    node1.childNodes.length
+                    node1.attributes.length
+                    node1.attributes[0].name
+                    node1.attributes[0].value
+                    node1.attributes[1].name
+                    node1.attributes[1].value
+                    node2 instanceof Node
+                    node2 instanceof Text
+                    node2 instanceof Comment
+                    node2 instanceof Element
+                    node2.tagName
+                    node2.childNodes.length
+                    node2.attributes.length
+                    node2.attributes[0].name
+                    node2.attributes[0].value
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toBeTruthy()
+                expect( result[1] ).toBeFalsy()
+                expect( result[2] ).toBeFalsy()
+                expect( result[3] ).toBeTruthy()
+                expect( result[4] ).toEqual 'HR'
+                expect( result[5] ).toEqual 0
+                expect( result[6] ).toEqual 2
+                expect( result[7] ).toEqual 'class'
+                expect( result[8] ).toEqual 'y'
+                expect( result[9] ).toEqual 'whatever'
+                expect( result[10] ).toEqual 'dude'
+                expect( result[11] ).toBeTruthy()
+                expect( result[12] ).toBeFalsy()
+                expect( result[13] ).toBeFalsy()
+                expect( result[14] ).toBeTruthy()
+                expect( result[15] ).toEqual 'BR'
+                expect( result[16] ).toEqual 0
+                expect( result[17] ).toEqual 1
+                expect( result[18] ).toEqual 'id'
+                expect( result[19] ).toEqual '24601'
+                done()
+
+### should build depth-one DOM trees
+
+These tests are not yet written.
+
+### should build deep DOM trees
+
+These tests are not yet written.
 
