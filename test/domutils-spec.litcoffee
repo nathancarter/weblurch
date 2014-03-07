@@ -594,18 +594,9 @@ with the correct tag name and attributes, but no children.
                         height : '24'
                         src : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAYCAIAAACNybHWAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA63pUWHRYTUw6Y29tLmFkb2JlLnhtcAAAGJVtULsOwiAU3fsVBOdy+9ChhHaxcTNpnHSsikoUaAqm+PcWWx9Rmbj3vOAwR51sJLc1cvKiDHU5rvd6y2l/92vA6EGx5xyvlxWa65ajGZmSCBcBQoi1+wNdlYtR3k85PlnbUICu60iXEt0eIc6yDKIEkiTsGaG5KVu7UJnJYPL0KbnZtaKxQivk53qrrzbHeOQMZwjiTryTlCGPR5OdluARiEkEL29v77e0Eo5f1qWQXJk+o0hjBn+Bv8LNG0+mn8LNj5DB13eGrmAsqwgYvIovgjseJHia4Qg7sAAAAV5JREFUSIntlL9rwkAUx18uPQttvICSmqjn5pDi4BJHwdm/VzI6xFEHsWSyBWtOUxSbqks8yHVwsWdRA7WT3/H9+PB9946nzGYzuJruhBD/Tf+az8eet2Jst9mc7s9ks7lSqdpsEtM8zirT6VQKvQ8GvusmaWZSEKq127Rel70fu/ZdFyFUo9QkJIPxae6O8zCK/CB46XR0yyKFwmEWiZ967fUSIZ4preTzZ9EAkMG4Yhg2pSJJxp4n0WT6ijEAMAk5/xwHMnUdAD4Zk2jyVvdrvMT1oe4xBoB4vZZof/wjb/Qb/Ua/El2+M1jTAGDHeSpozDkAYE2Tr5hUtz+hYRSlou/r9WJRisveaaOhIOQHwWS5jC+YIOZ8slj4jIGqlh1Hoimj0Uhq+PD9t25XJEkK86pabbUM25bCv2z1ybYfDYP1++sw5NvtaSzWNGJZZcd5yOWOUcpwOEzhMaW+AXrrPiceQvueAAAAAElFTkSuQmCC'
                     }
-                    children : [ ]
                 }
-                expect( result[1] ).toEqual {
-                    tagName : 'HR'
-                    attributes : { }
-                    children : [ ]
-                }
-                expect( result[2] ).toEqual {
-                    tagName : 'BR'
-                    attributes : { }
-                    children : [ ]
-                }
+                expect( result[1] ).toEqual tagName : 'HR'
+                expect( result[2] ).toEqual tagName : 'BR'
                 done()
 
 ### should handle spans correctly
@@ -638,22 +629,19 @@ tests are done, plus one with two different attributes.
             , ( err, result ) ->
                 expect( result[0] ).toEqual {
                     tagName : 'SPAN'
-                    attributes : { }
                     children : [ 'hello' ]
                 }
                 expect( result[1] ).toEqual {
                     tagName : 'SPAN'
-                    attributes : { }
                     children : [ 'world' ]
                 }
                 expect( result[2] ).toEqual {
                     tagName : 'I'
-                    attributes : { }
                     children : [ 'The Great Gatsby' ]
                 }
                 expect( result[3] ).toEqual {
                     tagName : 'I'
-                    attributes : { class : 'X', id : 'Y' }
+                    attributes : class : 'X', id : 'Y'
                     children : [ 'Z' ]
                 }
                 done()
@@ -699,7 +687,6 @@ a diversity of depths, attributes, tag names, comments, etc.
             , ( err, result ) ->
                 expectedAnswer1 = {
                     tagName : 'DIV'
-                    attributes : { }
                     children : [
                         {
                             tagName : 'SPAN'
@@ -734,22 +721,18 @@ a diversity of depths, attributes, tag names, comments, etc.
                 }
                 expectedAnswer2 = {
                     tagName : 'DIV'
-                    attributes : { }
                     children : [
                         {
                             tagName : 'P'
-                            attributes : { }
                             children : [ 'Some paragraph.' ]
                         }
                         {
                             tagName : 'P'
-                            attributes : { }
                             children : [
                                 'Another paragraph, ' +
                                 'this one with some '
                                 {
                                     tagName : 'B'
-                                    attributes : { }
                                     children : [ 'force!' ]
                                 }
                             ]
@@ -760,11 +743,9 @@ a diversity of depths, attributes, tag names, comments, etc.
                             children : [
                                 {
                                     tagName : 'TBODY'
-                                    attributes : { }
                                     children : [
                                         {
                                             tagName : 'TR'
-                                            attributes : { }
                                             children : [
                                                 {
                                                     tagName : 'TD'
@@ -800,7 +781,6 @@ a diversity of depths, attributes, tag names, comments, etc.
                 }
                 expectedAnswer3 = {
                     tagName : 'DIV'
-                    attributes : { }
                     children : [
                         'start with a text node'
                         {
@@ -809,12 +789,10 @@ a diversity of depths, attributes, tag names, comments, etc.
                         }
                         {
                             tagName : 'P'
-                            attributes : { }
                             children : [
                                 'then '
                                 {
                                     tagName : 'I'
-                                    attributes : { }
                                     children : [ 'MORE' ]
                                 }
                             ]

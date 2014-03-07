@@ -113,16 +113,19 @@ by this routine.
         if this not instanceof Element
             throw Error "Cannot serialize this node: #{this}"
 
-A serialized Element is an object with three properties, tag
+A serialized Element is an object with up to three properties, tag
 name, attribute dictionary, and child nodes array.  We create that
-object, then fill in the attributes dictionary afterward.
+object, then add the attributes dictionary and children array if
+and only if they are nonempty.
 
-        result =
-            tagName : @tagName
-            attributes : { }
-            children : chi.toJSON() for chi in @childNodes
-        for attribute in @attributes
-            result.attributes[attribute.name] = attribute.value
+        result = tagName : @tagName
+        if @attributes.length
+            result.attributes = { }
+            for attribute in @attributes
+                result.attributes[attribute.name] = attribute.value
+        if @childNodes.length
+            result.children = ( chi.toJSON() \
+                for chi in @childNodes )
         result
 
 Next, the function for converting an object produced with
@@ -157,9 +160,11 @@ Create an element using the tag name, add any attributes from the
 given object, and recur on the child array if there is one.
 
         result = document.createElement json.tagName
-        for own key, value of json.attributes
-            result.setAttribute key, value
-        for child in json.children
-            result.appendChild Node.fromJSON child
+        if 'attributes' of json
+            for own key, value of json.attributes
+                result.setAttribute key, value
+        if 'children' of json
+            for child in json.children
+                result.appendChild Node.fromJSON child
         result
 
