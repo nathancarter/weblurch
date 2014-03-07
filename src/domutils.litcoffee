@@ -96,7 +96,6 @@ can be serialized with `JSON.stringify`.  After this function is
 defined, one can take any node `N` and call `N.toJSON()`.
 
     Node.prototype.toJSON = ->
-        console.log 'toJSON', @outerHTML
 
 Text nodes are simply returned as strings.
 

@@ -514,7 +514,7 @@ the relevant portion of the expected error message.
 
 The tests in this section test the `toJSON` member function in the
 `Node` prototype.
-[See its definition here.](domutils.litcoffee.html#serialization).
+[See its definition here.](domutils.litcoffee.html#serialization)
 
     phantomDescribe 'Node toJSON conversion',
     './app/index.html', ->
@@ -533,6 +533,10 @@ First, just verify that the function itself is present.
 ### should convert text nodes to strings
 
         it 'should convert text nodes to strings', ( done ) =>
+
+HTML text nodes should serialize as ordinary strings.
+We test a variety of ways they might occur.
+
             @page.evaluate ->
                 textNode = document.createTextNode 'foo'
                 div = document.createElement 'div'
@@ -551,6 +555,10 @@ First, just verify that the function itself is present.
 ### should convert comment nodes to objects
 
         it 'should convert comment nodes to objects', ( done ) =>
+
+HTML comment nodes should serialize as objects with the comment
+flag and the comment's text content as well.
+
             @page.evaluate ->
                 comment1 = document.createComment 'comment content'
                 comment2 = document.createComment ''
@@ -563,6 +571,41 @@ First, just verify that the function itself is present.
                     comment : yes, content : 'comment content'
                 expect( result[1] ).toEqual \
                     comment : yes, content : ''
+                done()
+
+### should handle other no-children elements
+
+        it 'should handle other no-children elements', ( done ) =>
+
+Other no-children elements include images, horizontal rules, and
+line breaks.  We verify that in each case the object is encoded
+with the correct tag name and attributes, but no children.
+
+            @page.evaluate ->
+                div = document.createElement 'div'
+                div.innerHTML = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAYCAIAAACNybHWAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA63pUWHRYTUw6Y29tLmFkb2JlLnhtcAAAGJVtULsOwiAU3fsVBOdy+9ChhHaxcTNpnHSsikoUaAqm+PcWWx9Rmbj3vOAwR51sJLc1cvKiDHU5rvd6y2l/92vA6EGx5xyvlxWa65ajGZmSCBcBQoi1+wNdlYtR3k85PlnbUICu60iXEt0eIc6yDKIEkiTsGaG5KVu7UJnJYPL0KbnZtaKxQivk53qrrzbHeOQMZwjiTryTlCGPR5OdluARiEkEL29v77e0Eo5f1qWQXJk+o0hjBn+Bv8LNG0+mn8LNj5DB13eGrmAsqwgYvIovgjseJHia4Qg7sAAAAV5JREFUSIntlL9rwkAUx18uPQttvICSmqjn5pDi4BJHwdm/VzI6xFEHsWSyBWtOUxSbqks8yHVwsWdRA7WT3/H9+PB9946nzGYzuJruhBD/Tf+az8eet2Jst9mc7s9ks7lSqdpsEtM8zirT6VQKvQ8GvusmaWZSEKq127Rel70fu/ZdFyFUo9QkJIPxae6O8zCK/CB46XR0yyKFwmEWiZ967fUSIZ4preTzZ9EAkMG4Yhg2pSJJxp4n0WT6ijEAMAk5/xwHMnUdAD4Zk2jyVvdrvMT1oe4xBoB4vZZof/wjb/Qb/Ua/El2+M1jTAGDHeSpozDkAYE2Tr5hUtz+hYRSlou/r9WJRisveaaOhIOQHwWS5jC+YIOZ8slj4jIGqlh1Hoimj0Uhq+PD9t25XJEkK86pabbUM25bCv2z1ybYfDYP1++sw5NvtaSzWNGJZZcd5yOWOUcpwOEzhMaW+AXrrPiceQvueAAAAAElFTkSuQmCC" width="31" height="24">' +
+                                '<hr><br>'
+                div.childNodes[i].toJSON() for i in [0..2]
+            , ( err, result ) ->
+                expect( result[0] ).toEqual {
+                    tagName : 'IMG'
+                    attributes : {
+                        width : '31'
+                        height : '24'
+                        src : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAYCAIAAACNybHWAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA63pUWHRYTUw6Y29tLmFkb2JlLnhtcAAAGJVtULsOwiAU3fsVBOdy+9ChhHaxcTNpnHSsikoUaAqm+PcWWx9Rmbj3vOAwR51sJLc1cvKiDHU5rvd6y2l/92vA6EGx5xyvlxWa65ajGZmSCBcBQoi1+wNdlYtR3k85PlnbUICu60iXEt0eIc6yDKIEkiTsGaG5KVu7UJnJYPL0KbnZtaKxQivk53qrrzbHeOQMZwjiTryTlCGPR5OdluARiEkEL29v77e0Eo5f1qWQXJk+o0hjBn+Bv8LNG0+mn8LNj5DB13eGrmAsqwgYvIovgjseJHia4Qg7sAAAAV5JREFUSIntlL9rwkAUx18uPQttvICSmqjn5pDi4BJHwdm/VzI6xFEHsWSyBWtOUxSbqks8yHVwsWdRA7WT3/H9+PB9946nzGYzuJruhBD/Tf+az8eet2Jst9mc7s9ks7lSqdpsEtM8zirT6VQKvQ8GvusmaWZSEKq127Rel70fu/ZdFyFUo9QkJIPxae6O8zCK/CB46XR0yyKFwmEWiZ967fUSIZ4preTzZ9EAkMG4Yhg2pSJJxp4n0WT6ijEAMAk5/xwHMnUdAD4Zk2jyVvdrvMT1oe4xBoB4vZZof/wjb/Qb/Ua/El2+M1jTAGDHeSpozDkAYE2Tr5hUtz+hYRSlou/r9WJRisveaaOhIOQHwWS5jC+YIOZ8slj4jIGqlh1Hoimj0Uhq+PD9t25XJEkK86pabbUM25bCv2z1ybYfDYP1++sw5NvtaSzWNGJZZcd5yOWOUcpwOEzhMaW+AXrrPiceQvueAAAAAElFTkSuQmCC'
+                    }
+                    children : [ ]
+                }
+                expect( result[1] ).toEqual {
+                    tagName : 'HR'
+                    attributes : { }
+                    children : [ ]
+                }
+                expect( result[2] ).toEqual {
+                    tagName : 'BR'
+                    attributes : { }
+                    children : [ ]
+                }
                 done()
 
 ### should handle spans correctly
