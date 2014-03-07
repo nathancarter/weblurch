@@ -9,11 +9,6 @@ items are more vague than the earlier ones.
 
 ## Background
 
- * Extend the [DOM utilities module](domutils.litcoffee.html)'s
-   unit tests for serialization of DOM Nodes to also test elements
-   with no children, such as A, IMG, HR, and BR tags, especially
-   including IMG tags with base-64 image data embedded in an
-   attribute.
  * In the [DOM utilities module](domutils.litcoffee.html), create
    unit tests for the unserialization function `Node.fromJSON`.
  * Test `LurchEditor`'s `address` and `index` functions to ensure
