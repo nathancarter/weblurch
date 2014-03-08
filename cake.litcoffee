@@ -294,7 +294,7 @@ master.  It's just what you should run before pushing to github.
                 console.log stdout + stderr if stdout + stderr
                 if err then throw err
                 console.log 'Building all in gh-pages...'
-                build.enqueue 'all', ->
+                build.enqueue 'app', 'testapp', 'test', 'doc', ->
                     exec "git commit -a -m 'Updating gh-pages " +
                          "with latest generated docs'",
                     ( err, stdout, stderr ) ->
