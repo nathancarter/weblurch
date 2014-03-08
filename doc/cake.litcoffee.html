@@ -227,7 +227,8 @@ repository.</p>
 changes from master, re-runs all other build tasks, commits the
 resulting documentation changes, and switches branches back to
 master.  It&#39;s just what you should run before pushing to github.</p>
-<pre class="hljs"><code>build.task <span class="hljs-string">'pages'</span>, <span class="hljs-string">'Update gh-pages branch before pushing'</span>, -&gt;
+<pre class="hljs"><code>build.asyncTask <span class="hljs-string">'pages'</span>,
+<span class="hljs-string">'Update gh-pages branch before pushing'</span>, ( done ) -&gt;
     console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Switching to gh-pages branch...'</span>
     exec <span class="hljs-string">'git checkout gh-pages'</span>, ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
         console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span> <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
@@ -236,26 +237,22 @@ master.  It&#39;s just what you should run before pushing to github.</p>
         exec <span class="hljs-string">'git merge master'</span>, ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
             console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span> <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
             <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> throw err
-            console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Committing merge...'</span>
-            exec <span class="hljs-string">"git commit -m 'Merging in work from "</span> +
-                 <span class="hljs-string">"master'"</span>, ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
-                console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span> <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
-                <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> throw err
-                console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Building all in gh-pages...'</span>
-                build.enqueue <span class="hljs-string">'all'</span>, -&gt;
-                    exec <span class="hljs-string">"git commit -a -m 'Updating gh-"</span> +
-                         <span class="hljs-string">"pages with latest generated docs'"</span>,
+            console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Building all in gh-pages...'</span>
+            build.enqueue <span class="hljs-string">'app'</span>, <span class="hljs-string">'testapp'</span>, <span class="hljs-string">'test'</span>, <span class="hljs-string">'doc'</span>, -&gt;
+                exec <span class="hljs-string">"git commit -a -m 'Updating gh-pages "</span> +
+                     <span class="hljs-string">"with latest generated docs'"</span>,
+                ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
+                    <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
+                        console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
+                    <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> throw err
+                    console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Going back to master...'</span>
+                    exec <span class="hljs-string">'git checkout master'</span>,
                     ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
                         <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
                             console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
                         <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> throw err
-                        console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Going back to master...'</span>
-                        exec <span class="hljs-string">'git checkout master'</span>,
-                        ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
-                            <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
-                                console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
-                            <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> throw err
-                            done()
+                        console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Done.'</span>
+            done()
 </code></pre>
         </div>
         <div id="right">
