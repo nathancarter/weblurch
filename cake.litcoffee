@@ -283,6 +283,9 @@ changes from master, re-runs all other build tasks, commits the
 resulting documentation changes, and switches branches back to
 master.  It's just what you should run before pushing to github.
 
+It's an asynchronous task because it uses `exec`.  We begin with
+switching to gh-pages and merging in changes.
+
     build.asyncTask 'pages',
     'Update gh-pages branch before pushing', ( done ) ->
         console.log 'Switching to gh-pages branch...'
@@ -293,8 +296,20 @@ master.  It's just what you should run before pushing to github.
             exec 'git merge master', ( err, stdout, stderr ) ->
                 console.log stdout + stderr if stdout + stderr
                 if err then throw err
+
+Now we enqueue all the other build tasks that need to be done to
+update the documentation so that we can then commit the changes to
+this branch.  The final thing we enqueue is a function that the
+build process will call once it's run all the other build tasks in
+the queue.
+
                 console.log 'Building all in gh-pages...'
                 build.enqueue 'app', 'testapp', 'test', 'doc', ->
+
+This function commits the changes done by the other steps in the
+build process, then switches back to the master branch and reports
+completion to the user.
+
                     exec "git commit -a -m 'Updating gh-pages " +
                          "with latest generated docs'",
                     ( err, stdout, stderr ) ->
@@ -308,5 +323,10 @@ master.  It's just what you should run before pushing to github.
                                 console.log stdout + stderr
                             if err then throw err
                             console.log 'Done.'
+
+We report that we're done with this task once we enqueue all those
+things, so that the build system will then start processing what
+we put on the queue.
+
                 done()
 
