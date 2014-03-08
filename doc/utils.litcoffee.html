@@ -1,0 +1,33 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="./main.css"/>
+        <link rel="stylesheet" href="./obsidian.css"/>
+        <link rel="shortcut icon" href="favicon.png"/>
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config( {
+              tex2jax: { inlineMath: [ [ '$', '$' ], [ '\\(', '\\)' ] ] }
+            } );
+        </script>
+        <script type="text/javascript"
+                src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+        <title>webLurch docs: utils</title>
+    </head>
+    <body>
+        <div id="left">
+            webLurch source code docs
+        </div>
+        <div id="middle">
+            <h1><a name='setup-routine-for-the-test-app'></a>Setup routine for the test app &nbsp;  <font size=-1><a href='#setup-routine-for-the-test-app'><img src="link.png" class="anchor"></a></font></h1><p>The following routine is run after
+<a href="../testapp/index.html">the test app page</a> has finished loading, to
+create a <code>LurchEditor</code> instance in the page itself.</p>
+<pre class="hljs"><code><span class="hljs-built_in">window</span>.<span class="hljs-function"><span class="hljs-title">testAppSetup</span> = -&gt;</span>
+    <span class="hljs-built_in">window</span>.LE =
+        <span class="hljs-keyword">new</span> LurchEditor <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'editor'</span>
+</code></pre>
+        </div>
+        <div id="right">
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+        </div>
+    </body>
+</html>

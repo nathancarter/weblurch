@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "testapp.js",
+  "sourceRoot": "",
+  "sources": [
+    "testapp.litcoffee"
+  ],
+  "names": [],
+  "mappings": ";AAOI;AAAA,EAAA,MAAM,CAAC,YAAP,GAAsB,SAAA,GAAA;WAClB,MAAM,CAAC,EAAP,GACQ,IAAA,WAAA,CAAY,QAAQ,CAAC,cAAT,CAAwB,QAAxB,CAAZ,EAFU;EAAA,CAAtB,CAAA;AAAA"
+}

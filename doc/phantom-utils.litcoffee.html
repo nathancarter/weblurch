@@ -1,0 +1,137 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="./main.css"/>
+        <link rel="stylesheet" href="./obsidian.css"/>
+        <link rel="shortcut icon" href="favicon.png"/>
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config( {
+              tex2jax: { inlineMath: [ [ '$', '$' ], [ '\\(', '\\)' ] ] }
+            } );
+        </script>
+        <script type="text/javascript"
+                src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+        <title>webLurch docs: phantom-utils</title>
+    </head>
+    <body>
+        <div id="left">
+            webLurch source code docs
+        </div>
+        <div id="middle">
+            <h1><a name='utilities-useful-to-the-testing-suite'></a>Utilities useful to the testing suite &nbsp;  <font size=-1><a href='#utilities-useful-to-the-testing-suite'><img src="link.png" class="anchor"></a></font></h1><p>The compiled app runs in a web browser, so this module provides
+utility functions for dealing with the headless browser
+<a href="http://phantomjs.org/">PhantomJS</a> for use in automated testing.
+This is done through a bridge from <a href="http://nodejs.org/">node.js</a>
+to PhantomJS, called <a href="https://npmjs.org/package/node-phantom-simple">node-phantom-simple</a>.</p>
+<p>We also include
+<a href="https://www.npmjs.org/package/stack-trace">stack-trace</a> because
+it is useful for knowing which files call <code>phantomDescribe</code>,
+below, so that those files can be logged for use in documentation
+generation later.</p>
+<pre class="hljs"><code>nps = <span class="hljs-keyword">require</span> <span class="hljs-string">'node-phantom-simple'</span>
+st = <span class="hljs-keyword">require</span> <span class="hljs-string">'stack-trace'</span>
+</code></pre><h1><a name='the-main-api-code-phantomdescribe-code-'></a>The main API, <code>phantomDescribe</code> &nbsp;  <font size=-1><a href='#the-main-api-code-phantomdescribe-code-'><img src="link.png" class="anchor"></a></font></h1><p>The <code>phantomDescribe</code> function makes it easy to set up a PhantomJS
+instance and load into it a page from a given URL.  If any errors
+take place during the loading process, they are thrown as
+exceptions, or recorded as attributes of the page object.</p>
+<ul>
+<li><code>page.reserr</code> will be a resource error object, if there was a
+resource error</li>
+<li><code>page.err</code> will be a generic error object, if there was a
+generic error</li>
+</ul>
+<p>This can easily be used within the asynchronous test framework in
+<a href="http://jasmine.github.io/">Jasmine</a> by replacing a call to
+Jasmine&#39;s <code>describe</code> function with a call to <code>phantomDescribe</code>.
+An example appears <a href="#example">further below</a>.</p>
+<h1><a name='private-api'></a>Private API &nbsp;  <font size=-1><a href='#private-api'><img src="link.png" class="anchor"></a></font></h1><p>Here is a global variable in which I store the one PhantomJS
+instance I create.  (Creating many PhantomJS instances
+leads to errors about too many listeners for an <code>EventEmitter</code>, so
+I use one global PhantomJS instance.)  It starts uninitialized,
+and I prove a function for querying whether it has been
+initialized since then.</p>
+<pre class="hljs"><code>P = <span class="hljs-attribute">phantom</span>: <span class="hljs-literal">null</span>, <span class="hljs-attribute">page</span>: <span class="hljs-literal">null</span>
+<span class="hljs-function"><span class="hljs-title">phantomInitialized</span> = -&gt;</span> P?.phantom <span class="hljs-keyword">and</span> P?.page
+</code></pre><p>This function loads into that global instance any given URL.
+It does not check <code>phantomInitialized</code> first; that is the business
+of the next function, below.
+Once the URL is loaded, this function calls the given callback.</p>
+<p>It sets <code>P.page</code> to be false before the page opening is attempted,
+and sets it to true if the opening complets without error.</p>
+<pre class="hljs"><code><span class="hljs-function"><span class="hljs-title">loadURLInPhantom</span> = <span class="hljs-params">( url, callback )</span> -&gt;</span>
+    P.page.loaded = <span class="hljs-literal">no</span>
+    P.page.open url, <span class="hljs-function"><span class="hljs-params">( err, status )</span> -&gt;</span>
+        <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> <span class="hljs-built_in">console</span>.log err ; <span class="hljs-keyword">throw</span> err
+        P.page.loaded = <span class="hljs-literal">yes</span>
+        callback()
+</code></pre><p>This function initializes the global variable <code>P</code>, loads the given
+URL into the page stored in that global variable, and then calls a
+callback function.  If <code>P</code> was already initialized, then this just
+calls the callback.</p>
+<pre class="hljs"><code><span class="hljs-function"><span class="hljs-title">initializePhantom</span> = <span class="hljs-params">( url, callback )</span> -&gt;</span>
+    <span class="hljs-keyword">if</span> phantomInitialized()
+        loadURLInPhantom url, callback
+    <span class="hljs-keyword">else</span>
+        nps.create <span class="hljs-function"><span class="hljs-params">( err, ph )</span> -&gt;</span>
+            <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> <span class="hljs-built_in">console</span>.log err ; <span class="hljs-keyword">throw</span> err
+            P.phantom = ph
+            P.phantom.createPage <span class="hljs-function"><span class="hljs-params">( err, pg )</span> -&gt;</span>
+                <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> <span class="hljs-built_in">console</span>.log err ; <span class="hljs-keyword">throw</span> err
+                P.page = pg
+                P.page.<span class="hljs-function"><span class="hljs-title">onResourceError</span> = <span class="hljs-params">( err )</span> -&gt;</span>
+                    <span class="hljs-built_in">console</span>.log <span class="hljs-string">'Page resource error:'</span>, err
+                    P.page.reserr = err
+                P.page.<span class="hljs-function"><span class="hljs-title">onError</span> = <span class="hljs-params">( err )</span> -&gt;</span>
+                    <span class="hljs-built_in">console</span>.log <span class="hljs-string">'Page error:'</span>, err
+                    P.page.err = err
+                P.page.<span class="hljs-function"><span class="hljs-title">onConsoleMessage</span> = <span class="hljs-params">( message )</span> -&gt;</span>
+                    <span class="hljs-built_in">console</span>.log message
+                loadURLInPhantom url, callback
+</code></pre><h1><a name='public-api'></a>Public API &nbsp;  <font size=-1><a href='#public-api'><img src="link.png" class="anchor"></a></font></h1><p>And now we define the one function this module exports, which will
+initialize the members of <code>P</code> if and when needed.</p>
+<pre class="hljs"><code><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">phantomDescribe</span> = <span class="hljs-params">( text, url, tests )</span> -&gt;</span>
+</code></pre><p>First, we record which unit test called this function.  See the
+documentation for <code>logUnitTestName</code> below for additional details.</p>
+<pre class="hljs"><code>    logUnitTestName <span class="hljs-keyword">text</span>
+    describe <span class="hljs-keyword">text</span>, -&gt;
+</code></pre><p>Before each test, load the given page into the headless browser and
+be sure it loaded successfully.</p>
+<pre class="hljs"><code>        beforeEach <span class="hljs-function"><span class="hljs-params">( done )</span> -&gt;</span> initializePhantom url, done
+</code></pre><p>Run the tests that the user passed in as a function.
+Provide the user the <code>phantom</code> and <code>page</code> objects from earlier
+as attributes of the <code>this</code> object when <code>tests</code> is run.
+Thus they can access them as <code>@phantom</code> and <code>@page</code>.</p>
+<pre class="hljs"><code>        tests<span class="hljs-preprocessor">.apply</span> P
+</code></pre><h1><a name='example'></a>Example &nbsp;  <font size=-1><a href='#example'><img src="link.png" class="anchor"></a></font></h1><p>Example use (note the very important <code>=&gt;</code> for preserving <code>this</code>):</p>
+<pre class="hljs"><code><span class="hljs-preprocessor"># phantomDescribe 'My page', './index.html', -&gt;</span>
+<span class="hljs-preprocessor">#     it 'must load', ( done ) =&gt;</span>
+<span class="hljs-preprocessor">#         expect( @page.loaded ).toBeTruthy()</span>
+<span class="hljs-preprocessor">#         done()</span>
+</code></pre><h1><a name='logging-unit-test-names-and-filenames'></a>Logging unit test names and filenames &nbsp;  <font size=-1><a href='#logging-unit-test-names-and-filenames'><img src="link.png" class="anchor"></a></font></h1><p>We want to keep track of the mapping from unit test names to
+filenames in which they were defined, so that documentation
+generation can create links from test results to files that
+define those tests.  This function uses the stack trace to find
+which unit test file (of the form <code>\*-spec.litcoffee</code>) made a
+call to <code>phantomDescribe</code>, and logs that data in a JSON file in
+the test reports directory.</p>
+<pre class="hljs"><code>savefile = <span class="hljs-string">'./reports/unit-test-names.json'</span>
+<span class="hljs-function"><span class="hljs-title">logUnitTestName</span> = <span class="hljs-params">( name )</span> -&gt;</span>
+    fs = <span class="hljs-built_in">require</span> <span class="hljs-string">'fs'</span>
+    <span class="hljs-keyword">try</span>
+        mapping = JSON.parse fs.readFileSync savefile
+    <span class="hljs-keyword">catch</span> error
+        mapping = { }
+    <span class="hljs-keyword">for</span> frame <span class="hljs-keyword">in</span> st.get()
+        fn = frame.getFileName()
+        <span class="hljs-keyword">if</span> <span class="hljs-regexp">/-spec\.litcoffee/</span>.test fn
+            mapping[name] = ( fn.split <span class="hljs-string">'/'</span> ).pop()
+            fs.writeFileSync savefile,
+                             JSON.stringify mapping, <span class="hljs-literal">null</span>, <span class="hljs-number">2</span>
+            <span class="hljs-keyword">break</span>
+</code></pre>
+        </div>
+        <div id="right">
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,223 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="./main.css"/>
+        <link rel="stylesheet" href="./obsidian.css"/>
+        <link rel="shortcut icon" href="favicon.png"/>
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config( {
+              tex2jax: { inlineMath: [ [ '$', '$' ], [ '\\(', '\\)' ] ] }
+            } );
+        </script>
+        <script type="text/javascript"
+                src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+        <title>webLurch docs: cake</title>
+    </head>
+    <body>
+        <div id="left">
+            webLurch source code docs
+        </div>
+        <div id="middle">
+            <h1><a name='build-process-definitions'></a>Build process definitions &nbsp;  <font size=-1><a href='#build-process-definitions'><img src="link.png" class="anchor"></a></font></h1><p>This file defines the build processes in this repository.
+It is imported by the <code>Cakefile</code> in this repository,
+the source code of which is kept to a one-liner,
+so that most of the repository can be written
+in <a href="http://coffeescript.org/#literate">the literate variant of CoffeeScript</a>.</p>
+<p>We keep a set of build utilities in a separate module, which we
+now load.</p>
+<pre class="hljs"><code>build = <span class="hljs-keyword">require</span> <span class="hljs-string">'./buildutils'</span>
+</code></pre><h2><a name='easy-way-to-build-all'></a>Easy way to build all &nbsp;  <font size=-1><a href='#easy-way-to-build-all'><img src="link.png" class="anchor"></a></font></h2><p>If you want to build and test evertything, just run <code>cake all</code>.
+It simply invokes all the other tasks, defined below.</p>
+<pre class="hljs"><code>build.<span class="hljs-keyword">task</span> <span class="hljs-string">'all'</span>, <span class="hljs-string">'Build app, testapp, docs, and run tests'</span>, -&gt;
+    build.enqueue <span class="hljs-string">'app'</span>, <span class="hljs-string">'testapp'</span>, <span class="hljs-string">'test'</span>, <span class="hljs-string">'doc'</span>
+</code></pre><h2><a name='requirements'></a>Requirements &nbsp;  <font size=-1><a href='#requirements'><img src="link.png" class="anchor"></a></font></h2><p>Verify that <code>npm install</code> has been run in this folder, then import
+other modules we&#39;ll need later (which were installed by npm
+install).</p>
+<pre class="hljs"><code>build.verifyPackagesInstalled()
+{ parseString } = <span class="hljs-keyword">require</span> <span class="hljs-string">'xml2js'</span>
+fs = <span class="hljs-keyword">require</span> <span class="hljs-string">'fs'</span>
+</code></pre><h2><a name='constants'></a>Constants &nbsp;  <font size=-1><a href='#constants'><img src="link.png" class="anchor"></a></font></h2><p>These constants define how the functions below perform.</p>
+<pre class="hljs"><code>title = <span class="hljs-string">'webLurch'</span>
+srcdir = <span class="hljs-string">'./src/'</span>
+appdir = <span class="hljs-string">'./app/'</span>
+tappdir = <span class="hljs-string">'./testapp/'</span>
+srcout = <span class="hljs-string">'weblurch.litcoffee'</span>
+appout = <span class="hljs-string">'app.litcoffee'</span>
+tappout = <span class="hljs-string">'testapp.litcoffee'</span>
+docdir = <span class="hljs-string">'./doc/'</span>
+doctmp = <span class="hljs-string">'template.html'</span>
+testdir = <span class="hljs-string">'./test/'</span>
+repdir = <span class="hljs-string">'./reports/'</span>
+mapfile = <span class="hljs-string">'./reports/unit-test-names.json'</span>
+mainpg = <span class="hljs-string">'index.md'</span>
+</code></pre><h2><a name='the-code-app-code-build-process'></a>The <code>app</code> build process &nbsp;  <font size=-1><a href='#the-code-app-code-build-process'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>build.asyncTask <span class="hljs-string">'app'</span>, <span class="hljs-string">'Build the main app'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> -&gt;</span>
+</code></pre><p>Before building the app, ensure that the output folder exists.</p>
+<pre class="hljs"><code>    fs<span class="hljs-preprocessor">.mkdirSync</span> appdir unless fs<span class="hljs-preprocessor">.existsSync</span> appdir
+</code></pre><p>Next concatenate all <code>.litcoffee</code> source files into one.</p>
+<pre class="hljs"><code>    <span class="hljs-literal">all</span> <span class="hljs-subst">=</span> ( fs<span class="hljs-built_in">.</span>readFileSync name for name <span class="hljs-keyword">in</span> <span class="hljs-subst">\</span>
+        build<span class="hljs-built_in">.</span>dir srcdir, <span class="hljs-subst">/</span><span class="hljs-subst">\</span><span class="hljs-built_in">.</span>litcoffee$<span class="hljs-subst">/</span> )
+    fs<span class="hljs-built_in">.</span>writeFileSync appdir<span class="hljs-subst">+</span>srcout, <span class="hljs-literal">all</span><span class="hljs-built_in">.</span><span class="hljs-keyword">join</span>( <span class="hljs-string">'\n\n'</span> ), <span class="hljs-string">'utf8'</span>
+</code></pre><p>Also compile any files specific to the main app (as opposed to the
+test app), which will sit in the app folder rather than the source
+folder.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">all</span> = ( fs.readFileSync name <span class="hljs-keyword">for</span> name <span class="hljs-keyword">in</span> \
+        build.dir( appdir, /\.litcoffee$/ ) \
+        <span class="hljs-keyword">when</span> name.indexOf( srcout ) <span class="hljs-keyword">is</span> -<span class="hljs-number">1</span> <span class="hljs-keyword">and</span>
+             name.indexOf( appout ) <span class="hljs-keyword">is</span> -<span class="hljs-number">1</span> )
+    fs.writeFileSync appdir+appout, <span class="hljs-keyword">all</span>.join( '\n\n' ), <span class="hljs-attribute">'utf8</span>'
+</code></pre><p>Run the compile process defined in
+<a href="buildutils.litcoffee.html">the build utilities module</a>.
+This compiles, minifies, and generates source maps.</p>
+<pre class="hljs"><code>    build.compile appdir+srcout, <span class="hljs-keyword">done</span>
+</code></pre><h2><a name='the-code-testapp-code-build-process'></a>The <code>testapp</code> build process &nbsp;  <font size=-1><a href='#the-code-testapp-code-build-process'><img src="link.png" class="anchor"></a></font></h2><p>This build process is nearly identical to that of <code>app</code>.</p>
+<pre class="hljs"><code>build.asyncTask <span class="hljs-string">'testapp'</span>, <span class="hljs-string">'Build the testapp'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> -&gt;</span>
+</code></pre><p>Before building, ensure that the output folder exists.</p>
+<pre class="hljs"><code>    fs<span class="hljs-preprocessor">.mkdirSync</span> tappdir unless fs<span class="hljs-preprocessor">.existsSync</span> tappdir
+</code></pre><p>Next concatenate all <code>.litcoffee</code> source files from the test app
+directory into one.</p>
+<pre class="hljs"><code>    all = ( fs.readFileSync name <span class="hljs-keyword">for</span> name <span class="hljs-keyword">in</span> \
+        build.dir tappdir, /\.litcoffee$/ \
+        <span class="hljs-keyword">when</span> name.indexOf( tappout ) <span class="hljs-keyword">is</span> -<span class="hljs-number">1</span> )
+    fs.writeFileSync tappdir+tappout, all.<span class="hljs-keyword">join</span>( <span class="hljs-comment">'\n\n' ),</span>
+        <span class="hljs-comment">'utf8'</span>
+</code></pre><p>Run the compile process defined in
+<a href="buildutils.litcoffee.html">the build utilities module</a>.
+This compiles, minifies, and generates source maps.</p>
+<pre class="hljs"><code>    build.compile tappdir+tappout, <span class="hljs-keyword">done</span>
+</code></pre><h2><a name='the-code-doc-code-build-process'></a>The <code>doc</code> build process &nbsp;  <font size=-1><a href='#the-code-doc-code-build-process'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>build.<span class="hljs-keyword">task</span> <span class="hljs-string">'doc'</span>, <span class="hljs-string">'Build the documentation'</span>, -&gt;
+</code></pre><p>Fetch all files in the source directory, plus this file,
+plus any <code>.md</code> files in the <code>doc/</code> dir that need converting,
+and the template HTML output file from the <code>doc/</code> directory.</p>
+<pre class="hljs"><code>    all = ( f <span class="hljs-keyword">for</span> f <span class="hljs-keyword">in</span> build.dir( <span class="hljs-string">'.'</span>, <span class="hljs-regexp">/\.litcoffee$/</span>,
+                                  srcdir, <span class="hljs-regexp">/\.litcoffee$/</span>,
+                                  testdir, <span class="hljs-regexp">/\.litcoffee$/</span>,
+                                  docdir, <span class="hljs-regexp">/\.md$/</span>,
+                                  tappdir, <span class="hljs-regexp">/\.litcoffee$/</span> ) \
+        <span class="hljs-keyword">when</span> f.indexOf( tappout ) <span class="hljs-keyword">is</span> -<span class="hljs-number">1</span> )
+    html = fs.readFileSync docdir + doctmp, <span class="hljs-string">'utf8'</span>
+</code></pre><p>Build a file navigation list from those files&#39; names.</p>
+<pre class="hljs"><code>    nav = {}
+    navtxt = <span class="hljs-string">'&lt;h3 align=center&gt;Navigation&lt;/h3&gt;&lt;br&gt;'</span>
+    <span class="hljs-keyword">for</span> file <span class="hljs-keyword">in</span> all
+        end = ( path = file.split <span class="hljs-string">'/'</span> ).pop()
+        <span class="hljs-keyword">if</span> end is mainpg
+            navtxt += <span class="hljs-string">"&lt;h3&gt;&lt;a href='#{mainpg}.html'&gt;"</span> +
+                      <span class="hljs-string">"Main Page&lt;/a&gt;&lt;/h3&gt;"</span>
+        <span class="hljs-keyword">else</span>
+            ( nav[path.join <span class="hljs-string">'/'</span>] ?= [] ).push {
+                file : end, text : end }
+    ( nav[appdir[<span class="hljs-keyword">...</span>-<span class="hljs-number">1</span>]] ?= [] ).push {
+        file : <span class="hljs-string">".#{appdir}index"</span>, text : <span class="hljs-string">'index.html'</span> }
+    ( nav[tappdir[<span class="hljs-keyword">...</span>-<span class="hljs-number">1</span>]] ?= [] ).push {
+        file : <span class="hljs-string">".#{tappdir}index"</span>, text : <span class="hljs-string">'index.html'</span> }
+    <span class="hljs-keyword">for</span> path <span class="hljs-keyword">in</span> ( Object.keys nav ).sort()
+        navtxt += <span class="hljs-string">"&lt;p&gt;#{path || './'}&lt;/p&gt;&lt;ul&gt;"</span>
+        <span class="hljs-keyword">for</span> e <span class="hljs-keyword">in</span> nav[path]
+            navtxt += <span class="hljs-string">"&lt;li&gt;&lt;a href='#{e.file}.html'&gt;"</span> +
+                      <span class="hljs-string">"#{e.text}&lt;/a&gt;&lt;/li&gt;"</span>
+        navtxt += <span class="hljs-string">'&lt;/ul&gt;'</span>
+</code></pre><p>Read each source file and place its marked-down version into the
+HTML template, saving it into the docs directory.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">for</span> file <span class="hljs-keyword">in</span> all
+        <span class="hljs-keyword">end</span> = file.split( <span class="hljs-string">'/'</span> ).pop()
+        beginning = <span class="hljs-keyword">end</span>.split( <span class="hljs-string">'.'</span> ).shift()
+        console.log <span class="hljs-string">"\tCreating <span class="hljs-subst">#{<span class="hljs-keyword">end</span>}</span>.html..."</span>
+        myhtml = html.replace( <span class="hljs-string">'LEFT'</span>,
+                               <span class="hljs-string">"<span class="hljs-subst">#{title}</span> source code docs"</span> )
+                     .replace( <span class="hljs-string">'RIGHT'</span>, navtxt )
+                     .replace( <span class="hljs-string">'MIDDLE'</span>, build.md2html file )
+                     .replace( <span class="hljs-regexp">/&lt;pre&gt;&lt;code&gt;/g</span>,
+                               <span class="hljs-string">'&lt;pre class="hljs"&gt;&lt;code&gt;'</span> )
+                     .replace( <span class="hljs-string">'TITLE'</span>,
+                               <span class="hljs-string">"<span class="hljs-subst">#{title}</span> docs: <span class="hljs-subst">#{beginning}</span>"</span> )
+        fs.writeFileSync <span class="hljs-string">"<span class="hljs-subst">#{docdir+<span class="hljs-keyword">end</span>}</span>.html"</span>, myhtml, <span class="hljs-string">'utf8'</span>
+</code></pre><h2><a name='the-code-test-code-build-process'></a>The <code>test</code> build process &nbsp;  <font size=-1><a href='#the-code-test-code-build-process'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>build.asyncTask <span class="hljs-string">'test'</span>, <span class="hljs-string">'Run all unit tests'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> -&gt;</span>
+</code></pre><p>First remove all old reports in the test reports folder.
+If we do not do this, then any deleted tests will still have their
+reports lingering in the output folder forever.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">for</span> <span class="hljs-keyword">report</span> <span class="hljs-keyword">in</span> fs.readdirSync repdir
+        fs.unlinkSync repdir + <span class="hljs-keyword">report</span>
+</code></pre><p>Run <a href="http://jasmine.github.io/">jasmine</a> on all files in the
+<code>test/</code> folder, and produce output in <code>junitreport</code> format (a
+bunch of XML files).</p>
+<pre class="hljs"><code>    ( <span class="hljs-built_in">require</span> <span class="hljs-string">'child_process'</span> ).exec \
+        <span class="hljs-string">"node node_modules/jasmine-node/lib/jasmine-node/"</span> +
+        <span class="hljs-string">"cli.js --junitreport --verbose --coffee "</span> +
+        <span class="hljs-string">"--forceexit #{testdir}"</span>,
+    ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
+        console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span> <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
+</code></pre><p>Now that the tests have been run, see if they created a file
+mapping the unit test names to the files in which they are defined.
+If so, we will use it below to create links from test results to
+test definition files.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">try</span>
+            mapping = <span class="hljs-built_in">JSON</span>.parse fs.readFileSync mapfile
+        <span class="hljs-keyword">catch</span> error
+            mapping = <span class="hljs-literal">null</span>
+</code></pre><p>Create the header for the test output page and two functions for
+flagging test passes/failures with the appropriate CSS classes.</p>
+<pre class="hljs"><code>        md = <span class="hljs-comment"><span class="hljs-xmlDocTag">'''</span></span>
+             <span class="hljs-preprocessor"># Autogenerated test results</span>
+
+             This file was autogenerated <span class="hljs-keyword">by</span> the build system.
+
+
+             <span class="hljs-comment"><span class="hljs-xmlDocTag">'''</span></span>
+        pass = <span class="hljs-comment">'<span class="hljs-xmlDocTag">&lt;span class="test-pass"&gt;</span>Pass<span class="hljs-xmlDocTag">&lt;/span&gt;</span>'</span>
+        fail = ( x ) -&gt;
+            <span class="hljs-string">"&lt;span class='test-fail'&gt;Failure #{x}&lt;/span&gt;"</span>
+</code></pre><p>Read those XML files and produce <a href="markdown">Markdown</a> output,
+all together into a single output file.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">for</span> report <span class="hljs-keyword">in</span> build.dir repdir, <span class="hljs-regexp">/\.xml$/i</span>
+            parseString fs.readFileSync( report ),
+            <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+                <span class="hljs-keyword">for</span> item <span class="hljs-keyword">in</span> result.testsuites.testsuite
+</code></pre><p>Create header for this test.  Use the <code>mapping</code> computed above to
+create links, if possible.</p>
+<pre class="hljs"><code>                    name = item.<span class="hljs-variable">$.</span>name
+                    md += <span class="hljs-string">"# <span class="hljs-subst">#{name}</span> (<span class="hljs-subst">#{item.<span class="hljs-variable">$.</span>time}</span> ms)"</span>
+                    <span class="hljs-keyword">if</span> name of mapping
+                        escapedName = build.escapeHeading name
+                        md += <span class="hljs-string">" &lt;font size=-1&gt;"</span> +
+                              <span class="hljs-string">"&lt;a href='<span class="hljs-subst">#{mapping[name]}</span>"</span> +
+                              <span class="hljs-string">".html#<span class="hljs-subst">#{escapedName}</span>'&gt;"</span> +
+                              <span class="hljs-string">"see source&lt;/a&gt;&lt;/font&gt;"</span>
+                    md += <span class="hljs-string">'\n\n'</span>
+</code></pre><p>Create subheader for each case in the test.  Again, use the
+<code>mapping</code> computed above to create links, if possible.</p>
+<pre class="hljs"><code>                    <span class="hljs-keyword">for</span> c <span class="hljs-keyword">in</span> item.testcase
+                        cn = c.<span class="hljs-variable">$.</span>name
+                        md += <span class="hljs-string">"### <span class="hljs-subst">#{cn}</span> (<span class="hljs-subst">#{c.<span class="hljs-variable">$.</span>time}</span> ms)"</span>
+                        <span class="hljs-keyword">if</span> item.<span class="hljs-variable">$.</span>name of mapping
+                            esc = build.escapeHeading c.<span class="hljs-variable">$.</span>name
+                            md += <span class="hljs-string">" &lt;font size=-1&gt;"</span> +
+                                  <span class="hljs-string">"&lt;a href='"</span> +
+                                  <span class="hljs-string">"<span class="hljs-subst">#{mapping[item.<span class="hljs-variable">$.</span>name]}</span>."</span> +
+                                  <span class="hljs-string">"html#<span class="hljs-subst">#{esc}</span>'&gt;see source"</span> +
+                                  <span class="hljs-string">"&lt;/a&gt;&lt;/font&gt;"</span>
+                        md += <span class="hljs-string">'\n\n'</span>
+</code></pre><p>Create list item for each failure, or one single item reporting
+a pass if there were no failures.</p>
+<pre class="hljs"><code>                        <span class="hljs-keyword">if</span> c.failure
+                            <span class="hljs-keyword">for</span> f <span class="hljs-keyword">in</span> c.failure
+                                md += <span class="hljs-string">" * <span class="hljs-subst">#{fail f}</span>\n\n"</span>
+                        <span class="hljs-keyword">else</span>
+                            md += <span class="hljs-string">" * <span class="hljs-subst">#{pass}</span>\n\n"</span>
+</code></pre><p>Create a footer for this test, summarizing its time and totals.</p>
+<pre class="hljs"><code>                    md += <span class="hljs-string">"Above tests run at "</span> +
+                          <span class="hljs-string">"<span class="hljs-subst">#{item.<span class="hljs-variable">$.</span>timestamp}</span>.  "</span> +
+                          <span class="hljs-string">"Tests: <span class="hljs-subst">#{item.<span class="hljs-variable">$.</span>tests}</span> - "</span> +
+                          <span class="hljs-string">"Errors: <span class="hljs-subst">#{item.<span class="hljs-variable">$.</span>errors}</span> - "</span> +
+                          <span class="hljs-string">"Failures: <span class="hljs-subst">#{item.<span class="hljs-variable">$.</span>failures}</span>\n\n"</span>
+</code></pre><p>That output file goes in the <code>doc/</code> folder for later processing
+by the doc task, defined above.</p>
+<pre class="hljs"><code>        fs.writeFileSync <span class="hljs-string">"#{docdir}/test-results.md"</span>,
+            md, <span class="hljs-string">'utf8'</span>
+        <span class="hljs-keyword">done</span>()
+</code></pre>
+        </div>
+        <div id="right">
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+        </div>
+    </body>
+</html>

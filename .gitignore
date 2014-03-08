@@ -1,13 +1,4 @@
 *.swp
-app/*.js
-app/weblurch.litcoffee
-app/app.litcoffee
-app/*.map
-testapp/*.js
-testapp/testapp.litcoffee
-testapp/*.map
 node_modules/*
-doc/*.litcoffee.html
-doc/*.md.html
 doc/test-results.md
 reports/*

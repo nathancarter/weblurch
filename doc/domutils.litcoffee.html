@@ -1,0 +1,171 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="./main.css"/>
+        <link rel="stylesheet" href="./obsidian.css"/>
+        <link rel="shortcut icon" href="favicon.png"/>
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config( {
+              tex2jax: { inlineMath: [ [ '$', '$' ], [ '\\(', '\\)' ] ] }
+            } );
+        </script>
+        <script type="text/javascript"
+                src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+        <title>webLurch docs: domutils</title>
+    </head>
+    <body>
+        <div id="left">
+            webLurch source code docs
+        </div>
+        <div id="middle">
+            <h1><a name='utility-functions-for-working-with-the-dom'></a>Utility functions for working with the DOM &nbsp;  <font size=-1><a href='#utility-functions-for-working-with-the-dom'><img src="link.png" class="anchor"></a></font></h1><h2><a name='address'></a>Address &nbsp;  <font size=-1><a href='#address'><img src="link.png" class="anchor"></a></font></h2><p>The address of a node <code>N</code> in an ancestor node <code>M</code> is an array <code>a</code>
+of non-negative integer indices such that
+<code>M.childNodes[a[0]].childNodes[a[1]]. ...
+.childNodes[a[a.length-1]] == N</code>.  Think of it as the path one must
+walk through children to get from <code>M</code> down to <code>N</code>.  Special cases:</p>
+<ul>
+<li>If the array is of length 1, then <code>M == N.parentNode</code>.</li>
+<li>If the array is empty, <code>[]</code>, then <code>M == N</code>.</li>
+<li>If <code>M</code> is not an ancestor of <code>N</code>, then we say the address of <code>N</code>
+within <code>M</code> is null (not an array at all).</li>
+</ul>
+<p>The following member function of the <code>Node</code> class adds the address
+function to that class.  Using the <code>M</code> and <code>N</code> from above, one
+would call it like <code>N.address M</code>.  <a href="#index">See below</a> for its
+inverse function, <code>index</code>.</p>
+<p>It computes the address of any one DOM node within any other.
+If the parameter (the ancestor, called <code>M</code> above) is not supplied,
+then it defaults to the top-level Node above <code>N</code>
+(i.e., the furthest-up ancestor, with no <code>.parentNode</code>,
+which usually means it&#39;s the global variable <code>document</code>).</p>
+<pre class="hljs"><code>Node.prototype.<span class="hljs-function"><span class="hljs-title">address</span> = <span class="hljs-params">( ancestor = <span class="hljs-literal">null</span> )</span> -&gt;</span>
+</code></pre><p>The base case comes in two flavors.
+First, if the parameter is this node, then the correct result is
+the empty array.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">this</span> <span class="hljs-keyword">is</span> ancestor <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> []
+</code></pre><p>Second, if we&#39;ve reached the top level then we must consider the
+second parameter.  Were we restricted to a specific ancestor?  If
+so, we didn&#39;t find it, so return null.  If not, return the empty
+array, because we have reached the top level.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-property">@parentNode</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">if</span> ancestor <span class="hljs-keyword">then</span> <span class="hljs-literal">null</span> <span class="hljs-keyword">else</span> []
+</code></pre><p>Otherwise, recur up the ancestor tree, and concatenate our own
+index in our parent with the array we compute there, if there is
+one.</p>
+<pre class="hljs"><code>    recur = <span class="hljs-property">@parentNode</span>.address ancestor
+    <span class="hljs-keyword">if</span> recur <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>
+    recur.concat [ Array.prototype.slice.apply(
+        <span class="hljs-property">@parentNode</span>.childNodes ).indexOf <span class="hljs-keyword">this</span> ]
+</code></pre><h2><a name='index'></a>Index &nbsp;  <font size=-1><a href='#index'><img src="link.png" class="anchor"></a></font></h2><p>This function is an inverse for <code>address</code>,
+<a href="#address">defined above</a>.</p>
+<p>The node at index <code>I</code> in node <code>N</code> is the descendant <code>M</code> of <code>N</code> in
+the node hierarchy such that <code>M.address N</code> is <code>I</code>.
+In short, if <code>N</code> is any ancestor of <code>M</code>, then
+<code>N.index(M.address(N)) == M</code>.</p>
+<p>Keeping in mind that an address is simply an array of nonnegative
+integers, the implementation is simply repeated lookups in some
+<code>childNodes</code> arrays.  It is therefore quite short, with most of
+the code going to type safety.</p>
+<pre class="hljs"><code>Node.prototype.<span class="hljs-function"><span class="hljs-title">index</span> = <span class="hljs-params">( address )</span> -&gt;</span>
+</code></pre><p>Require that the parameter be an array.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> address not <span class="hljs-keyword">instanceof</span> <span class="hljs-built_in">Array</span>
+        <span class="hljs-keyword">throw</span> <span class="hljs-built_in">Error</span> <span class="hljs-string">'Node address function requires an array'</span>
+</code></pre><p>If the array is empty, we&#39;ve hit the base case of this recursion.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> address.length <span class="hljs-keyword">is</span> <span class="hljs-number">0</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>
+</code></pre><p>Othwerise, recur on the child whose index is the first element of
+the given address.  There are two safety checks here.  First, we
+verify that the index we&#39;re about to look up is a number (otherwise
+things like <code>[0]</code> will be treated as zero, which is probably
+erroneous).  Second, the <code>?.</code> syntax below ensures that that index
+is valid, so that we do not attempt to call this function
+recursively on something other than a node.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">typeof</span> address[<span class="hljs-number">0</span>] <span class="hljs-keyword">isnt</span> <span class="hljs-string">'number'</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-literal">undefined</span>
+    <span class="hljs-property">@childNodes</span>[address[<span class="hljs-number">0</span>]]?.index address[<span class="hljs-number">1.</span>.]
+</code></pre><h2><a name='serialization'></a>Serialization &nbsp;  <font size=-1><a href='#serialization'><img src="link.png" class="anchor"></a></font></h2><h3><a name='from-dom-nodes-to-objects'></a>From DOM Nodes to objects &nbsp;  <font size=-1><a href='#from-dom-nodes-to-objects'><img src="link.png" class="anchor"></a></font></h3><p>These methods are for serializing and unserializing DOM nodes to
+objects that are amenable to JSON processing.</p>
+<p>First, the function for converting a DOM Node to an object that
+can be serialized with <code>JSON.stringify</code>.  After this function is
+defined, one can take any node <code>N</code> and call <code>N.toJSON()</code>.</p>
+<pre class="hljs"><code>Node.prototype.<span class="hljs-function"><span class="hljs-title">toJSON</span> = <span class="hljs-params">( verbose = <span class="hljs-literal">yes</span> )</span> -&gt;</span>
+</code></pre><p>The <code>verbose</code> parameter uses human-readable object keys, and is the
+default.  A more compact version can be obtained by setting that
+value to false.  The inverse function below can handle either
+format.  The shrinking of keys follows the following convention.</p>
+<ul>
+<li>tagName becomes t</li>
+<li>attributes becomes a</li>
+<li>children becomes c</li>
+<li>comment becomes m</li>
+<li>content becomes n</li>
+</ul>
+<p>Text nodes are simply returned as strings.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">this</span> <span class="hljs-keyword">instanceof</span> Text <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-property">@textContent</span>
+</code></pre><p>Comment nodes are returned as objects with a comment flag and a
+text content attribute.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">this</span> <span class="hljs-keyword">instanceof</span> Comment
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">if</span> verbose
+            comment : <span class="hljs-literal">yes</span>, content : <span class="hljs-property">@textContent</span>
+        <span class="hljs-keyword">else</span>
+            m : <span class="hljs-literal">yes</span>, n : <span class="hljs-property">@textContent</span>
+</code></pre><p>All other types of nodes must be elements in order to be serialized
+by this routine.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">this</span> <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Element
+        <span class="hljs-keyword">throw</span> Error <span class="hljs-string">"Cannot serialize this node: <span class="hljs-subst">#{<span class="hljs-keyword">this</span>}</span>"</span>
+</code></pre><p>A serialized Element is an object with up to three properties, tag
+name, attribute dictionary, and child nodes array.  We create that
+object, then add the attributes dictionary and children array if
+and only if they are nonempty.</p>
+<pre class="hljs"><code>    <span class="hljs-built_in">result</span> = tagName : @tagName
+    <span class="hljs-keyword">if</span> @attributes.<span class="hljs-built_in">length</span>
+        <span class="hljs-built_in">result</span>.attributes = { }
+        <span class="hljs-keyword">for</span> attribute <span class="hljs-operator">in</span> @attributes
+            <span class="hljs-built_in">result</span>.attributes[attribute.name] = attribute.<span class="hljs-built_in">value</span>
+    <span class="hljs-keyword">if</span> @childNodes.<span class="hljs-built_in">length</span>
+        <span class="hljs-built_in">result</span>.children =
+            chi.toJSON verbose <span class="hljs-keyword">for</span> chi <span class="hljs-operator">in</span> @childNodes
+</code></pre><p>If verbosity is disabled, change all the object keys to one-letter
+abbreviations.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-operator">not</span> verbose
+        <span class="hljs-built_in">result</span>.t = <span class="hljs-built_in">result</span>.tagName ; <span class="hljs-built_in">delete</span> <span class="hljs-built_in">result</span>.tagName
+        <span class="hljs-built_in">result</span>.<span class="hljs-operator">a</span> = <span class="hljs-built_in">result</span>.attributes ; <span class="hljs-built_in">delete</span> <span class="hljs-built_in">result</span>.attributes
+        <span class="hljs-built_in">result</span>.c = <span class="hljs-built_in">result</span>.children ; <span class="hljs-built_in">delete</span> <span class="hljs-built_in">result</span>.children
+    <span class="hljs-built_in">result</span>
+</code></pre><h3><a name='from-objects-to-dom-nodes'></a>From objects to DOM Nodes &nbsp;  <font size=-1><a href='#from-objects-to-dom-nodes'><img src="link.png" class="anchor"></a></font></h3><p>Next, the function for converting an object produced with
+<code>N.toJSON()</code> back into an actual DOM Node.  This function requires
+its one parameter to be one of two types, either a string (meaning
+that a text node should be returned) or an object with the three
+properties given above (tagName, attributes, children, meaning that
+an Element should be returned).  One calls it by writing
+<code>Node.toJSON object</code>.</p>
+<pre class="hljs"><code>Node.<span class="hljs-function"><span class="hljs-title">fromJSON</span> = <span class="hljs-params">( json )</span> -&gt;</span>
+</code></pre><p>Handle the easy case first:  strings yield text nodes.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">typeof</span> json <span class="hljs-keyword">is</span> <span class="hljs-string">'string'</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">document</span>.createTextNode json
+</code></pre><p>Next, if we can find a comment flag in the object, then we create
+and return a comment.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-string">'comment'</span> <span class="hljs-keyword">of</span> json <span class="hljs-keyword">and</span> json.comment
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">document</span>.createComment json.content
+    <span class="hljs-keyword">if</span> <span class="hljs-string">'m'</span> <span class="hljs-keyword">of</span> json <span class="hljs-keyword">and</span> json.m
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">document</span>.createComment json.n
+</code></pre><p>The only other possibility is that the object encodes an Element.
+So if we can&#39;t get a tag name from the object, we cannot proceed,
+and thus the input was invalid.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-string">'tagName'</span> <span class="hljs-keyword">of</span> json <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span> <span class="hljs-string">'t'</span> <span class="hljs-keyword">of</span> json
+        <span class="hljs-keyword">throw</span> Error <span class="hljs-string">"Object has no t[agName]: <span class="hljs-subst">#{<span class="hljs-keyword">this</span>}</span>"</span>
+</code></pre><p>Create an element using the tag name, add any attributes from the
+given object, and recur on the child array if there is one.</p>
+<pre class="hljs"><code>    <span class="hljs-built_in">result</span> = document.createElement json.tagName <span class="hljs-operator">or</span> json.t
+    <span class="hljs-keyword">if</span> attributes = json.attributes <span class="hljs-operator">or</span> json.<span class="hljs-operator">a</span>
+        <span class="hljs-keyword">for</span> own key, <span class="hljs-built_in">value</span> <span class="hljs-operator">of</span> attributes
+            <span class="hljs-built_in">result</span>.setAttribute key, <span class="hljs-built_in">value</span>
+    <span class="hljs-keyword">if</span> children = json.children <span class="hljs-operator">or</span> json.c
+        <span class="hljs-keyword">for</span> child <span class="hljs-operator">in</span> children
+            <span class="hljs-built_in">result</span>.appendChild Node.fromJSON child
+    <span class="hljs-built_in">result</span>
+</code></pre>
+        </div>
+        <div id="right">
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+        </div>
+    </body>
+</html>
