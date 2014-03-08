@@ -307,5 +307,6 @@ master.  It's just what you should run before pushing to github.
                             if stdout + stderr
                                 console.log stdout + stderr
                             if err then throw err
-                            done()
+                            console.log 'Done.'
+                done()
 
