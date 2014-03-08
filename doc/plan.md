@@ -9,8 +9,6 @@ items are more vague than the earlier ones.
 
 ## Publishing
 
- * Push this repository to github.
- * Enable github pages for the repository.
  * Add a task to the build process that merges the latest generated
    documentation into the ghpages branch and commits to that branch
    before returning to master.
