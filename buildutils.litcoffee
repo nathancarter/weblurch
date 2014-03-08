@@ -23,14 +23,19 @@ First, we need an empty queue.
 
 Next, the enqueue function simply pushes onto that array.
 
-    exports.enqueue = ( strings... ) ->
-        queue = queue.concat strings
+    exports.enqueue = ( tasks... ) ->
+        queue = queue.concat tasks
 
 The dequeue function passes the next task name on the queue to
 `cake`'s `invoke` function (thereby removing it from the queue), if
-and only if there is a next task to dequeue.
+and only if there is a next task to dequeue.  The exception to this
+is that if the next task on the queue is not a string (a task name)
+but instead is a function, then we just call it.
 
-    exports.dequeue = -> invoke queue.shift() if queue.length > 0
+    exports.dequeue = ->
+        if queue.length > 0
+            next = queue.shift()
+            if typeof next is 'string' then invoke next else next()
 
 ### Automatic dequeueing and messaging
 
