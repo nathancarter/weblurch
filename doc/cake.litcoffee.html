@@ -36,6 +36,7 @@ install).</p>
 <pre class="hljs"><code>build.verifyPackagesInstalled()
 { parseString } = <span class="hljs-keyword">require</span> <span class="hljs-string">'xml2js'</span>
 fs = <span class="hljs-keyword">require</span> <span class="hljs-string">'fs'</span>
+<span class="hljs-keyword">exec</span> = <span class="hljs-keyword">require</span>( <span class="hljs-string">'child_process'</span> ).<span class="hljs-keyword">exec</span>
 </code></pre><h2><a name='constants'></a>Constants &nbsp;  <font size=-1><a href='#constants'><img src="link.png" class="anchor"></a></font></h2><p>These constants define how the functions below perform.</p>
 <pre class="hljs"><code>title = <span class="hljs-string">'webLurch'</span>
 srcdir = <span class="hljs-string">'./src/'</span>
@@ -142,10 +143,9 @@ reports lingering in the output folder forever.</p>
 </code></pre><p>Run <a href="http://jasmine.github.io/">jasmine</a> on all files in the
 <code>test/</code> folder, and produce output in <code>junitreport</code> format (a
 bunch of XML files).</p>
-<pre class="hljs"><code>    ( <span class="hljs-built_in">require</span> <span class="hljs-string">'child_process'</span> ).exec \
-        <span class="hljs-string">"node node_modules/jasmine-node/lib/jasmine-node/"</span> +
-        <span class="hljs-string">"cli.js --junitreport --verbose --coffee "</span> +
-        <span class="hljs-string">"--forceexit #{testdir}"</span>,
+<pre class="hljs"><code>    exec <span class="hljs-string">"node node_modules/jasmine-node/lib/jasmine-node/"</span> +
+         <span class="hljs-string">"cli.js --junitreport --verbose --coffee "</span> +
+         <span class="hljs-string">"--forceexit #{testdir}"</span>,
     ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
         console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span> <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
 </code></pre><p>Now that the tests have been run, see if they created a file
@@ -216,6 +216,46 @@ by the doc task, defined above.</p>
 <pre class="hljs"><code>        fs.writeFileSync <span class="hljs-string">"#{docdir}/test-results.md"</span>,
             md, <span class="hljs-string">'utf8'</span>
         <span class="hljs-keyword">done</span>()
+</code></pre><h2><a name='the-code-pages-code-build-process'></a>The <code>pages</code> build process &nbsp;  <font size=-1><a href='#the-code-pages-code-build-process'><img src="link.png" class="anchor"></a></font></h2><p>After changes are made to the master branch of this repository in
+git, we eventually want to propagate them to the gh-pages branch,
+because that branch is the one that github uses as the basis for
+the project web pages (hence the name, short for &quot;github pages&quot;).
+Usually you should do this before pushing commits to github, so
+that the website on github reflects the latest state of the
+repository.</p>
+<p>This build task switches to the gh-pages branch, merges in all
+changes from master, re-runs all other build tasks, commits the
+resulting documentation changes, and switches branches back to
+master.  It&#39;s just what you should run before pushing to github.</p>
+<pre class="hljs"><code>build.task <span class="hljs-string">'pages'</span>, <span class="hljs-string">'Update gh-pages branch before pushing'</span>, -&gt;
+    console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Switching to gh-pages branch...'</span>
+    exec <span class="hljs-string">'git checkout gh-pages'</span>, ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
+        console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span> <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
+        <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> throw err
+        console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Merging in changes...'</span>
+        exec <span class="hljs-string">'git merge master'</span>, ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
+            console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span> <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
+            <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> throw err
+            console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Committing merge...'</span>
+            exec <span class="hljs-string">"git commit -m 'Merging in work from "</span> +
+                 <span class="hljs-string">"master'"</span>, ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
+                console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span> <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
+                <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> throw err
+                console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Building all in gh-pages...'</span>
+                build.enqueue <span class="hljs-string">'all'</span>, -&gt;
+                    exec <span class="hljs-string">"git commit -a -m 'Updating gh-"</span> +
+                         <span class="hljs-string">"pages with latest generated docs'"</span>,
+                    ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
+                        <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
+                            console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
+                        <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> throw err
+                        console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Going back to master...'</span>
+                        exec <span class="hljs-string">'git checkout master'</span>,
+                        ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
+                            <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
+                                console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
+                            <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> throw err
+                            done()
 </code></pre>
         </div>
         <div id="right">

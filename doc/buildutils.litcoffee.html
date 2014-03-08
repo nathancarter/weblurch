@@ -30,12 +30,17 @@ tasks defined in the cakefile.</p>
 <p>First, we need an empty queue.</p>
 <pre class="hljs"><code><span class="hljs-attribute">queue </span>=<span class="hljs-string"> []</span>
 </code></pre><p>Next, the enqueue function simply pushes onto that array.</p>
-<pre class="hljs"><code><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">enqueue</span> = <span class="hljs-params">( strings... )</span> -&gt;</span>
-    queue = queue.concat strings
+<pre class="hljs"><code><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">enqueue</span> = <span class="hljs-params">( tasks... )</span> -&gt;</span>
+    queue = queue.concat tasks
 </code></pre><p>The dequeue function passes the next task name on the queue to
 <code>cake</code>&#39;s <code>invoke</code> function (thereby removing it from the queue), if
-and only if there is a next task to dequeue.</p>
-<pre class="hljs"><code>exports<span class="hljs-built_in">.</span>dequeue <span class="hljs-subst">=</span> <span class="hljs-subst">-&gt; </span>invoke <span class="hljs-built_in">queue</span><span class="hljs-built_in">.</span>shift() <span class="hljs-keyword">if</span> <span class="hljs-built_in">queue</span><span class="hljs-built_in">.</span>length <span class="hljs-subst">&gt;</span> <span class="hljs-number">0</span>
+and only if there is a next task to dequeue.  The exception to this
+is that if the next task on the queue is not a string (a task name)
+but instead is a function, then we just call it.</p>
+<pre class="hljs"><code>exports.dequeue = -&gt;
+    <span class="hljs-keyword">if</span> queue.<span class="hljs-keyword">length</span> &gt; <span class="hljs-number">0</span>
+        <span class="hljs-keyword">next</span> = queue.<span class="hljs-keyword">shift</span>()
+        <span class="hljs-keyword">if</span> typeof <span class="hljs-keyword">next</span> is <span class="hljs-string">'string'</span> then invoke <span class="hljs-keyword">next</span> <span class="hljs-keyword">else</span> <span class="hljs-keyword">next</span>()
 </code></pre><h3><a name='automatic-dequeueing-and-messaging'></a>Automatic dequeueing and messaging &nbsp;  <font size=-1><a href='#automatic-dequeueing-and-messaging'><img src="link.png" class="anchor"></a></font></h3><p>Each task function would therefore have to end with a call to
 <code>dequeue</code>, so that after each task is completed, if there are more
 tasks still in the queue, the next one gets run.  But that is
