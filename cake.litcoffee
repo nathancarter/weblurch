@@ -283,7 +283,8 @@ changes from master, re-runs all other build tasks, commits the
 resulting documentation changes, and switches branches back to
 master.  It's just what you should run before pushing to github.
 
-    build.task 'pages', 'Update gh-pages branch before pushing', ->
+    build.asyncTask 'pages',
+    'Update gh-pages branch before pushing', ->
         console.log 'Switching to gh-pages branch...'
         exec 'git checkout gh-pages', ( err, stdout, stderr ) ->
             console.log stdout + stderr if stdout + stderr
