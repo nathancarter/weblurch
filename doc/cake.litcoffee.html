@@ -68,7 +68,8 @@ folder.</p>
 </code></pre><p>Run the compile process defined in
 <a href="buildutils.litcoffee.html">the build utilities module</a>.
 This compiles, minifies, and generates source maps.</p>
-<pre class="hljs"><code>    build.compile appdir+srcout, <span class="hljs-keyword">done</span>
+<pre class="hljs"><code>    build<span class="hljs-preprocessor">.compile</span> appdir+srcout, -&gt;
+    build<span class="hljs-preprocessor">.compile</span> appdir+appout, done
 </code></pre><h2><a name='the-code-testapp-code-build-process'></a>The <code>testapp</code> build process &nbsp;  <font size=-1><a href='#the-code-testapp-code-build-process'><img src="link.png" class="anchor"></a></font></h2><p>This build process is nearly identical to that of <code>app</code>.</p>
 <pre class="hljs"><code>build.asyncTask <span class="hljs-string">'testapp'</span>, <span class="hljs-string">'Build the testapp'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> -&gt;</span>
 </code></pre><p>Before building, ensure that the output folder exists.</p>
@@ -135,8 +136,9 @@ HTML template, saving it into the docs directory.</p>
 </code></pre><p>First remove all old reports in the test reports folder.
 If we do not do this, then any deleted tests will still have their
 reports lingering in the output folder forever.</p>
-<pre class="hljs"><code>    <span class="hljs-keyword">for</span> <span class="hljs-keyword">report</span> <span class="hljs-keyword">in</span> fs.readdirSync repdir
-        fs.unlinkSync repdir + <span class="hljs-keyword">report</span>
+<pre class="hljs"><code>    fs<span class="hljs-preprocessor">.mkdirSync</span> repdir unless fs<span class="hljs-preprocessor">.existsSync</span> repdir
+    for report <span class="hljs-keyword">in</span> fs<span class="hljs-preprocessor">.readdirSync</span> repdir
+        fs<span class="hljs-preprocessor">.unlinkSync</span> repdir + report
 </code></pre><p>Run <a href="http://jasmine.github.io/">jasmine</a> on all files in the
 <code>test/</code> folder, and produce output in <code>junitreport</code> format (a
 bunch of XML files).</p>
