@@ -293,24 +293,19 @@ master.  It's just what you should run before pushing to github.
             exec 'git merge master', ( err, stdout, stderr ) ->
                 console.log stdout + stderr if stdout + stderr
                 if err then throw err
-                console.log 'Committing merge...'
-                exec "git commit -m 'Merging in work from " +
-                     "master'", ( err, stdout, stderr ) ->
-                    console.log stdout + stderr if stdout + stderr
-                    if err then throw err
-                    console.log 'Building all in gh-pages...'
-                    build.enqueue 'all', ->
-                        exec "git commit -a -m 'Updating gh-" +
-                             "pages with latest generated docs'",
+                console.log 'Building all in gh-pages...'
+                build.enqueue 'all', ->
+                    exec "git commit -a -m 'Updating gh-pages " +
+                         "with latest generated docs'",
+                    ( err, stdout, stderr ) ->
+                        if stdout + stderr
+                            console.log stdout + stderr
+                        if err then throw err
+                        console.log 'Going back to master...'
+                        exec 'git checkout master',
                         ( err, stdout, stderr ) ->
                             if stdout + stderr
                                 console.log stdout + stderr
                             if err then throw err
-                            console.log 'Going back to master...'
-                            exec 'git checkout master',
-                            ( err, stdout, stderr ) ->
-                                if stdout + stderr
-                                    console.log stdout + stderr
-                                if err then throw err
-                                done()
+                            done()
 
