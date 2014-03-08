@@ -284,7 +284,7 @@ resulting documentation changes, and switches branches back to
 master.  It's just what you should run before pushing to github.
 
     build.asyncTask 'pages',
-    'Update gh-pages branch before pushing', ->
+    'Update gh-pages branch before pushing', ( done ) ->
         console.log 'Switching to gh-pages branch...'
         exec 'git checkout gh-pages', ( err, stdout, stderr ) ->
             console.log stdout + stderr if stdout + stderr
