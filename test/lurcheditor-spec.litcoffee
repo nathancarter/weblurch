@@ -430,3 +430,26 @@ which we expect to be undefined.
                 expect( result[7] ).toEqual 'undefined'
                 done()
 
+### should give no address and index if empty
+
+        it 'should give no address and index if empty', ( done ) =>
+
+The shortuct address and index functions in the `LurchEditor` class
+should function correctly (returning null) if the main HTML element
+of the instance is empty.
+
+            @page.evaluate ->
+                div = document.createElement 'div'
+                document.body.appendChild div
+                LE = new LurchEditor()
+                console.log LE.address div
+                console.log LE.index div
+                [
+                    null is LE.address div
+                    null is LE.index div
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toBeTruthy()
+                expect( result[1] ).toBeTruthy()
+                done()
+

@@ -121,12 +121,16 @@ default arguments.  We therefore define the following two shortcut
 functions.
 
 Let `LE.address N` be shorthand for `N.address LE.getElement()`.
+But if we have no main HTML element, return null.
 
-        address: ( node ) -> node?.address @element
+        address: ( node ) ->
+            if @element then node?.address @element else null
 
 Let `LE.index A` be shorthand for `LE.getElement().index A`.
+But if we have no main HTML element, return null.
 
-        index: ( address ) -> @element?.index address
+        index: ( address ) ->
+            if @element then @element.index address else null
 
 We therefore have the guarantee `N == LE.index LE.address N`
 inherited from the address and index

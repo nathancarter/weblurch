@@ -7,12 +7,6 @@ order, the first items being those that should be done next, and
 the later items those that must come after.  Necessarily, the later
 items are more vague than the earlier ones.
 
-## Background
-
- * Test `LurchEditor`'s `address` and `index` functions to ensure
-   that they function correctly (returning null in both cases) if
-   the `LurchEditor` instance has no main HTML element.
-
 ## Publishing
 
  * Push this repository to github.
