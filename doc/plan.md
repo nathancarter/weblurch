@@ -9,8 +9,6 @@ items are more vague than the earlier ones.
 
 ## Background
 
- * In the [DOM utilities module](domutils.litcoffee.html), create
-   unit tests for the unserialization function `Node.fromJSON`.
  * Test `LurchEditor`'s `address` and `index` functions to ensure
    that they function correctly (returning null in both cases) if
    the `LurchEditor` instance has no main HTML element.

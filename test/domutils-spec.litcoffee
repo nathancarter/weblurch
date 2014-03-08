@@ -973,7 +973,6 @@ attributes.
                     tagName : 'hr',
                     attributes : class : 'y', whatever : 'dude'
                 node2 = Node.fromJSON t : 'br', a : id : '24601'
-                console.log node1.outerHTML, node2.outerHTML
                 [
                     node1 instanceof Node
                     node1 instanceof Text
@@ -1021,9 +1020,121 @@ attributes.
 
 ### should build depth-one DOM trees
 
-These tests are not yet written.
+        it 'should build depth-one DOM trees', ( done ) =>
+
+This test is simply the inverse of the analogous test earlier.
+Depth-one trees are those that are objects with a children array,
+no child of which has any children itself.  We test with one that
+uses verbose notation and one using non-verbose.  In each case,
+some of the parts have attributes and some don't.
+
+            @page.evaluate ->
+                node1 = Node.fromJSON {
+                    t : 'I'
+                    c : [
+                        'non-bold stuff, followed by '
+                        {
+                            t : 'B'
+                            a : class : 'C', id : '123'
+                            c : 'bold stuff'
+                        }
+                    ]
+                }
+                node2 = Node.fromJSON {
+                    tagName : 'p'
+                    attributes : {
+                        style : 'border: 1px solid gray;'
+                        width : '100%'
+                    }
+                    children : [
+                        {
+                            tagName : 'span'
+                            children : [ 'some text' ]
+                        }
+                        {
+                            tagName : 'span'
+                            children : [ 'yup, more text' ]
+                        }
+                    ]
+                }
+                [
+                    node1.outerHTML
+                    node2.outerHTML
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toEqual \
+                    '<i>non-bold stuff, followed by ' +
+                    '<b class="C" id="123">bold stuff</b></i>'
+                expect( result[1] ).toEqual \
+                    '<p style="border: 1px solid gray;" ' +
+                    'width="100%"><span>some text</span>' +
+                    '<span>yup, more text</span></p>'
+                done()
 
 ### should build deep DOM trees
 
-These tests are not yet written.
+        it 'should build depth-one DOM trees', ( done ) =>
+
+This test is simply the inverse of the analogous test earlier.
+The routines for building DOM trees from JSON objects should be
+able to create many-level, nested structures.  Here I mix
+verbose and non-verbose notation in one, large test, to be sure
+that this works.
+
+            @page.evaluate ->
+                node = Node.fromJSON {
+                    t : 'div'
+                    a : class : 'navigation', width : '600'
+                    c : [
+                        {
+                            t : 'div'
+                            a : id : 'paragraph1'
+                            c : [
+                                {
+                                    t : 'span'
+                                    c : [ 'Start paragraph 1.' ]
+                                }
+                                {
+                                    t : 'span'
+                                    c : [ 'Middle paragraph 1.' ]
+                                }
+                                {
+                                    t : 'span'
+                                    c : [ 'End paragraph 1.' ]
+                                }
+                            ]
+                        }
+                        {
+                            tagName : 'div'
+                            attributes : {
+                                id : 'paragraph2'
+                                style : 'padding : 5px;'
+                            }
+                            children : [
+                                {
+                                    tagName : 'span'
+                                    children : [
+                                        {
+                                            t : 'span'
+                                            c : [ 'way inside' ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+                node.outerHTML
+            , ( err, result ) ->
+                expect( result ).toEqual \
+                    '<div class="navigation" width="600">' +
+                    '<div id="paragraph1">' +
+                    '<span>Start paragraph 1.</span>' +
+                    '<span>Middle paragraph 1.</span>' +
+                    '<span>End paragraph 1.</span></div>' +
+                    '<div id="paragraph2" ' +
+                    'style="padding : 5px;"><span><span>' +
+                    'way inside</span></span></div></div>'
+                done()
+
 
