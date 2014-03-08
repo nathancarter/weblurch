@@ -77,7 +77,8 @@ Run the compile process defined in
 [the build utilities module](buildutils.litcoffee.html).
 This compiles, minifies, and generates source maps.
 
-        build.compile appdir+srcout, done
+        build.compile appdir+srcout, ->
+        build.compile appdir+appout, done
 
 ## The `testapp` build process
 
@@ -168,6 +169,7 @@ First remove all old reports in the test reports folder.
 If we do not do this, then any deleted tests will still have their
 reports lingering in the output folder forever.
 
+        fs.mkdirSync repdir unless fs.existsSync repdir
         for report in fs.readdirSync repdir
             fs.unlinkSync repdir + report
 
