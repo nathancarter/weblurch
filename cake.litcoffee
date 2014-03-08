@@ -30,6 +30,7 @@ install).
     build.verifyPackagesInstalled()
     { parseString } = require 'xml2js'
     fs = require 'fs'
+    exec = require( 'child_process' ).exec
 
 ## Constants
 
@@ -177,10 +178,9 @@ Run [jasmine](http://jasmine.github.io/) on all files in the
 `test/` folder, and produce output in `junitreport` format (a
 bunch of XML files).
 
-        ( require 'child_process' ).exec \
-            "node node_modules/jasmine-node/lib/jasmine-node/" +
-            "cli.js --junitreport --verbose --coffee " +
-            "--forceexit #{testdir}",
+        exec "node node_modules/jasmine-node/lib/jasmine-node/" +
+             "cli.js --junitreport --verbose --coffee " +
+             "--forceexit #{testdir}",
         ( err, stdout, stderr ) ->
             console.log stdout + stderr if stdout + stderr
 
@@ -267,4 +267,49 @@ by the doc task, defined above.
             fs.writeFileSync "#{docdir}/test-results.md",
                 md, 'utf8'
             done()
+
+## The `pages` build process
+
+After changes are made to the master branch of this repository in
+git, we eventually want to propagate them to the gh-pages branch,
+because that branch is the one that github uses as the basis for
+the project web pages (hence the name, short for "github pages").
+Usually you should do this before pushing commits to github, so
+that the website on github reflects the latest state of the
+repository.
+
+This build task switches to the gh-pages branch, merges in all
+changes from master, re-runs all other build tasks, commits the
+resulting documentation changes, and switches branches back to
+master.  It's just what you should run before pushing to github.
+
+    build.task 'pages', 'Update gh-pages branch before pushing', ->
+        console.log 'Switching to gh-pages branch...'
+        exec 'git checkout gh-pages', ( err, stdout, stderr ) ->
+            console.log stdout + stderr if stdout + stderr
+            if err then throw err
+            console.log 'Merging in changes...'
+            exec 'git merge master', ( err, stdout, stderr ) ->
+                console.log stdout + stderr if stdout + stderr
+                if err then throw err
+                console.log 'Committing merge...'
+                exec "git commit -m 'Merging in work from " +
+                     "master'", ( err, stdout, stderr ) ->
+                    console.log stdout + stderr if stdout + stderr
+                    if err then throw err
+                    console.log 'Building all in gh-pages...'
+                    build.enqueue 'all', ->
+                        exec "git commit -a -m 'Updating gh-" +
+                             "pages with latest generated docs'",
+                        ( err, stdout, stderr ) ->
+                            if stdout + stderr
+                                console.log stdout + stderr
+                            if err then throw err
+                            console.log 'Going back to master...'
+                            exec 'git checkout master',
+                            ( err, stdout, stderr ) ->
+                                if stdout + stderr
+                                    console.log stdout + stderr
+                                if err then throw err
+                                done()
 
