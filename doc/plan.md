@@ -7,12 +7,7 @@ order, the first items being those that should be done next, and
 the later items those that must come after.  Necessarily, the later
 items are more vague than the earlier ones.
 
-## Publishing
-
- * Add a task to the build process that merges the latest generated
-   documentation into the ghpages branch and commits to that branch
-   before returning to master.
- * Make the README.md in the main branch point to the github pages.
+# Word Processing Foundation
 
 ## DOM Edit Tracker
 
@@ -97,7 +92,9 @@ items are more vague than the earlier ones.
    it.  Add methods to `LurchEditor` that can describe the actions
    that would take place if undo or redo were invoked.  Test.
 
-## Test environment
+# Test environment
+
+## Test app
 
  * Import into the project a UI toolkit such as
    [Bootstrap](http://getbootstrap.com).
@@ -157,6 +154,8 @@ items are more vague than the earlier ones.
     * Email the developers if and only if the new output differs
       from the old in an important way (i.e., not just timings,
       but results).
+
+# More Word Processing Foundation
 
 ## Events
 
@@ -244,6 +243,8 @@ items are more vague than the earlier ones.
    storage with the world using something like
    [Firebase](https://www.firebase.com/) or a custom server.
 
+# Logical Foundation
+
 ## Dependencies
 
  * Create a way to give a document a title, author, language,
@@ -322,6 +323,7 @@ items are more vague than the earlier ones.
 
 ## Background computation of the property graph
 
+ * more detail needed here later
  * create unit tests as you go
 
 ## Background computation of bubble meanings
