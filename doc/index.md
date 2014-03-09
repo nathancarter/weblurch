@@ -100,11 +100,13 @@ replaced by a more robust application later.
 If you want to build any of the source code or documentation in
 this repository, follow these instructions.
 
+ * Clone [this repository](
+   https://github.com/nathancarter/weblurch).
  * Install [node.js](http://nodejs.org).
  * Install [CoffeeScript](http://coffeescript.org).
  * Run `cake` in the root folder of the repository to see the
    options for the build process.  Start with `cake all`.
- * Browse these documents for more information.  The source code is
-   literate, so there's lots of documentation embedded in it, by
-   design.
+ * Browse these documents for more information.  (See the
+   navigation pane to the right.)  The source code is literate, so
+   there's lots of documentation embedded in it, by nature.
 
