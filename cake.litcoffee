@@ -312,6 +312,9 @@ completion to the user.
 
                     exec 'git add doc/*.html',
                     ( err, stdout, stderr ) ->
+                        if stdout + stderr
+                            console.log stdout + stderr
+                        if err then throw err
                         exec "git commit -a -m 'Updating gh-" +
                              "pages with latest generated docs'",
                         ( err, stdout, stderr ) ->
