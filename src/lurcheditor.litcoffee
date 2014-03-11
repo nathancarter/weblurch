@@ -93,20 +93,10 @@ not given ids.
                 node.id = @nextFreeId()
             @assignIds child for child in node.childNodes
 
-## Getters
+## Convenience methods
 
-So far there is only one, for querying the element passed at
-construction time, over which this object has taken "ownership."
-(Although in JavaScript/CoffeeScript, no members are truly private,
-the intent is that the fields of an object should not be directly
-accessed from outside the class except through getters and
-setters.)
-
-        getElement: -> @element
-
-With that getter, however, I classify two convenience methods it
-enables.  DOM Nodes have the methods `address` and `index`
-implemented in them; see [the documentation on those functions](
+DOM Nodes have the methods `address` and `index` implemented in
+them; see [the documentation on those functions](
 domutils.litcoffee.html#address) for more information.
 
 It will be convenient to be able to call such methods in a
@@ -127,6 +117,6 @@ But if we have no main HTML element, return null.
             if @element then @element.index address else null
 
 We therefore have the guarantee `N == LE.index LE.address N`
-inherited from the address and index
-functions defined in the Node prototype.
+inherited from the address and index functions defined in the Node
+prototype.
 
