@@ -11,8 +11,6 @@ items are more vague than the earlier ones.
 
 ## DOM Edit Tracker
 
- * Factor out of the `LurchEditor` unit tests those that apply to
-   `DOMEditTracker`s as well: constructor and `getElement`.
  * Create a new class for storing DOM editing events, but for now
    it's just a stub; call it `DOMEditAction`.
  * Create a `DOMEditTracker` instance method called
