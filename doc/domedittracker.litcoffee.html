@@ -1,0 +1,48 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="./main.css"/>
+        <link rel="stylesheet" href="./obsidian.css"/>
+        <link rel="shortcut icon" href="favicon.png"/>
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config( {
+              tex2jax: { inlineMath: [ [ '$', '$' ], [ '\\(', '\\)' ] ] }
+            } );
+        </script>
+        <script type="text/javascript"
+                src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+        <title>webLurch docs: domedittracker</title>
+    </head>
+    <body>
+        <div id="left">
+            webLurch source code docs
+        </div>
+        <div id="middle">
+            <h1><a name='dom-edit-tracker-class'></a>DOM Edit Tracker class &nbsp;  <font size=-1><a href='#dom-edit-tracker-class'><img src="link.png" class="anchor"></a></font></h1><p>A <code>DOMEditTracker</code> is responsible for watching the edits to the
+DOM within a single HTML DIV element, and thus it takes one at
+construction time.</p>
+<h2><a name='constructor'></a>Constructor &nbsp;  <font size=-1><a href='#constructor'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>window.DOMEditTracker = <span class="hljs-keyword">class</span> DOMEditTracker
+    <span class="hljs-function"><span class="hljs-keyword">constructor</span>:</span> ( <span class="hljs-keyword">div</span> ) -&gt;
+</code></pre><p>If they did not pass a valid DIV, then store null in the member
+variable reserved for that purpose.  If they passed <em>something</em>
+but it wasn&#39;t a DIV, then throw an Error.</p>
+<pre class="hljs"><code>        @<span class="hljs-keyword">element</span> = <span class="hljs-constant">null</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-operator">div</span> <span class="hljs-operator">and</span> <span class="hljs-operator">div</span>?.tagName isnt <span class="hljs-string">'DIV'</span>
+            throw <span class="hljs-built_in">new</span> Error <span class="hljs-string">'DOMEditTracker can only be '</span> +
+                            <span class="hljs-string">'constructed in a DIV node'</span>
+</code></pre><p>Otherwise, store the DIV they passed for later reference.</p>
+<pre class="hljs"><code>        @<span class="hljs-keyword">element</span> = <span class="hljs-operator">div</span>
+</code></pre><h2><a name='getters'></a>Getters &nbsp;  <font size=-1><a href='#getters'><img src="link.png" class="anchor"></a></font></h2><p>Although in CoffeeScript, no members are truly private, the
+intent is that the fields of an object should not be directly
+accessed from outside the class except through getters and
+setters.</p>
+<p>So far there is only one, for querying the element passed at
+construction time, over which this object has taken &quot;ownership.&quot;</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">getElement</span>: <span class="hljs-string">-&gt; @element</span>
+</code></pre>
+        </div>
+        <div id="right">
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+        </div>
+    </body>
+</html>
