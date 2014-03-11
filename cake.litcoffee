@@ -310,19 +310,21 @@ This function commits the changes done by the other steps in the
 build process, then switches back to the master branch and reports
 completion to the user.
 
-                    exec "git commit -a -m 'Updating gh-pages " +
-                         "with latest generated docs'",
+                    exec 'git add doc/*.html',
                     ( err, stdout, stderr ) ->
-                        if stdout + stderr
-                            console.log stdout + stderr
-                        if err then throw err
-                        console.log 'Going back to master...'
-                        exec 'git checkout master',
+                        exec "git commit -a -m 'Updating gh-" +
+                             "pages with latest generated docs'",
                         ( err, stdout, stderr ) ->
                             if stdout + stderr
                                 console.log stdout + stderr
                             if err then throw err
-                            console.log 'Done.'
+                            console.log 'Going back to master...'
+                            exec 'git checkout master',
+                            ( err, stdout, stderr ) ->
+                                if stdout + stderr
+                                    console.log stdout + stderr
+                                if err then throw err
+                                console.log 'Done.'
 
 We report that we're done with this task once we enqueue all those
 things, so that the build system will then start processing what
