@@ -249,19 +249,21 @@ the queue.</p>
 </code></pre><p>This function commits the changes done by the other steps in the
 build process, then switches back to the master branch and reports
 completion to the user.</p>
-<pre class="hljs"><code>                exec <span class="hljs-string">"git commit -a -m 'Updating gh-pages "</span> +
-                     <span class="hljs-string">"with latest generated docs'"</span>,
+<pre class="hljs"><code>                exec <span class="hljs-string">'git add doc/*.html'</span>,
                 ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
-                    <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
-                        console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
-                    <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> throw err
-                    console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Going back to master...'</span>
-                    exec <span class="hljs-string">'git checkout master'</span>,
+                    exec <span class="hljs-string">"git commit -a -m 'Updating gh-"</span> +
+                         <span class="hljs-string">"pages with latest generated docs'"</span>,
                     ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
                         <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
                             console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
                         <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> throw err
-                        console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Done.'</span>
+                        console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Going back to master...'</span>
+                        exec <span class="hljs-string">'git checkout master'</span>,
+                        ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
+                            <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
+                                console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
+                            <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> throw err
+                            console.<span class="hljs-built_in">log</span> <span class="hljs-string">'Done.'</span>
 </code></pre><p>We report that we&#39;re done with this task once we enqueue all those
 things, so that the build system will then start processing what
 we put on the queue.</p>
