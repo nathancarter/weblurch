@@ -5,7 +5,7 @@ A Lurch Editor is an HTML DIV (that has *not* been marked as
 `content-editable` in the browser) but that will be made editable
 by the user through the functionality of this class.
 
-    window.LurchEditor = class LurchEditor
+    window.LurchEditor = class LurchEditor extends DOMEditTracker
 
 ## Functions related to ids
 
@@ -38,12 +38,12 @@ by numerical order, not dictionary (string) order.
 
 The constructor takes any DIV from the browser's HTML DOM, or no
 argument if the instance is not to be made visible in a webpage.
+See the constructor of [the ancestor `DOMEditTracker` class](
+domedittracker.litcoffee.html) for more information on the call to
+`super`.
 
         constructor: ( div ) ->
-            @element = null
-            if div and div?.tagName isnt 'DIV'
-                throw new Error '''LurchEditor can only be
-                    constructed in a DIV node'''
+            super div
 
 It calls `cleanIds` on that DIV to remove from it any ids that
 aren't nonnegative integers.
@@ -61,12 +61,6 @@ Last, for every HTMLElement under the DIV without an id, the
 constructor gives it the next available id.
 
             @assignIds div
-
-Now that all of that has succeeded, store the div we just processed
-in a member variable so it can be queried later, in
-`editorElement`.
-
-            @element = div
 
 ## Functions used by the constructor
 
@@ -99,20 +93,10 @@ not given ids.
                 node.id = @nextFreeId()
             @assignIds child for child in node.childNodes
 
-## Getters
+## Convenience methods
 
-So far there is only one, for querying the element passed at
-construction time, over which this object has taken "ownership."
-(Although in JavaScript/CoffeeScript, no members are truly private,
-the intent is that the fields of an object should not be directly
-accessed from outside the class except through getters and
-setters.)
-
-        getElement: -> @element
-
-With that getter, however, I classify two convenience methods it
-enables.  DOM Nodes have the methods `address` and `index`
-implemented in them; see [the documentation on those functions](
+DOM Nodes have the methods `address` and `index` implemented in
+them; see [the documentation on those functions](
 domutils.litcoffee.html#address) for more information.
 
 It will be convenient to be able to call such methods in a
@@ -133,6 +117,6 @@ But if we have no main HTML element, return null.
             if @element then @element.index address else null
 
 We therefore have the guarantee `N == LE.index LE.address N`
-inherited from the address and index
-functions defined in the Node prototype.
+inherited from the address and index functions defined in the Node
+prototype.
 

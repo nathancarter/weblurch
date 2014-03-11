@@ -11,14 +11,8 @@ items are more vague than the earlier ones.
 
 ## DOM Edit Tracker
 
- * Create a `DOMEditTracker` class that can be instantiated with a
-   single HTML element as parameter and that remembers that
-   element.  Make `LurchEditor` inherit from this class, so we're
-   factoring out that aspect of a `LurchEditor` into that class.
- * Give `DOMEditTracker` a class method that returns the instance
-   whose main HTML element is or contains the one passed as
-   argument, if there is such an instance.  Create a unit test for
-   the `DOMEditTracker` class that tests this class method.
+ * Factor out of the `LurchEditor` unit tests those that apply to
+   `DOMEditTracker`s as well: constructor and `getElement`.
  * Create a new class for storing DOM editing events, but for now
    it's just a stub; call it `DOMEditAction`.
  * Create a `DOMEditTracker` instance method called
