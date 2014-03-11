@@ -21,7 +21,7 @@
             <h1><a name='-code-lurcheditor-code-class'></a><code>LurchEditor</code> class &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-class'><img src="link.png" class="anchor"></a></font></h1><p>A Lurch Editor is an HTML DIV (that has <em>not</em> been marked as
 <code>content-editable</code> in the browser) but that will be made editable
 by the user through the functionality of this class.</p>
-<pre class="hljs"><code><span class="hljs-built_in">window</span>.LurchEditor = <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LurchEditor</span></span>
+<pre class="hljs"><code>window.LurchEditor = <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LurchEditor</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">DOMEditTracker</span></span>
 </code></pre><h2><a name='functions-related-to-ids'></a>Functions related to ids &nbsp;  <font size=-1><a href='#functions-related-to-ids'><img src="link.png" class="anchor"></a></font></h2><p>The object maintains a list of unique integer ids for assigning to
 elements in the HTML DOM, from that DIV on downwards in the tree.
 The list <code>@freeIds</code> is a list $[a_1,\ldots,a_n]$ such that an id
@@ -43,12 +43,11 @@ by numerical order, not dictionary (string) order.</p>
             <span class="hljs-property">@freeIds</span>.push id
             <span class="hljs-property">@freeIds</span>.sort <span class="hljs-function"><span class="hljs-params">( a, b )</span> -&gt;</span> a - b
 </code></pre><h2><a name='-code-lurcheditor-code-constructor'></a><code>LurchEditor</code> constructor &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-constructor'><img src="link.png" class="anchor"></a></font></h2><p>The constructor takes any DIV from the browser&#39;s HTML DOM, or no
-argument if the instance is not to be made visible in a webpage.</p>
+argument if the instance is not to be made visible in a webpage.
+See the constructor of <a href="domedittracker.litcoffee.html">the ancestor <code>DOMEditTracker</code> class</a> for more information on the call to
+<code>super</code>.</p>
 <pre class="hljs"><code>    <span class="hljs-function"><span class="hljs-keyword">constructor</span>:</span> ( <span class="hljs-keyword">div</span> ) -&gt;
-        @element = null
-        <span class="hljs-keyword">if</span> <span class="hljs-keyword">div</span> <span class="hljs-keyword">and</span> <span class="hljs-keyword">div</span>?.tagName isnt <span class="hljs-string">'DIV'</span>
-            throw <span class="hljs-keyword">new</span> Error <span class="hljs-string">'''LurchEditor can only be
-                constructed in a DIV node'''</span>
+        super <span class="hljs-keyword">div</span>
 </code></pre><p>It calls <code>cleanIds</code> on that DIV to remove from it any ids that
 aren&#39;t nonnegative integers.</p>
 <pre class="hljs"><code><span class="hljs-attribute">        usedIds </span>=<span class="hljs-string"> @cleanIds div</span>
@@ -60,10 +59,6 @@ of nonnegative integer ids found by <code>cleanIds</code>.</p>
 </code></pre><p>Last, for every HTMLElement under the DIV without an id, the
 constructor gives it the next available id.</p>
 <pre class="hljs"><code>        @assign<span class="hljs-variable">Ids</span> <span class="hljs-keyword">div</span>
-</code></pre><p>Now that all of that has succeeded, store the div we just processed
-in a member variable so it can be queried later, in
-<code>editorElement</code>.</p>
-<pre class="hljs"><code>        @<span class="hljs-keyword">element</span> = <span class="hljs-operator">div</span>
 </code></pre><h2><a name='functions-used-by-the-constructor'></a>Functions used by the constructor &nbsp;  <font size=-1><a href='#functions-used-by-the-constructor'><img src="link.png" class="anchor"></a></font></h2><p>Collect a list of all used ids in the given node, removing any
 ids that aren&#39;t just nonnegative integers.  This routine is used
 by the class&#39;s constructor as part of the procedure for
@@ -89,16 +84,8 @@ not given ids.</p>
         <span class="hljs-keyword">if</span> node <span class="hljs-keyword">instanceof</span> HTMLElement <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span> node.id
             node.id = <span class="hljs-property">@nextFreeId</span>()
         <span class="hljs-property">@assignIds</span> child <span class="hljs-keyword">for</span> child <span class="hljs-keyword">in</span> node.childNodes
-</code></pre><h2><a name='getters'></a>Getters &nbsp;  <font size=-1><a href='#getters'><img src="link.png" class="anchor"></a></font></h2><p>So far there is only one, for querying the element passed at
-construction time, over which this object has taken &quot;ownership.&quot;
-(Although in JavaScript/CoffeeScript, no members are truly private,
-the intent is that the fields of an object should not be directly
-accessed from outside the class except through getters and
-setters.)</p>
-<pre class="hljs"><code>    <span class="hljs-attribute">getElement</span>: <span class="hljs-string">-&gt; @element</span>
-</code></pre><p>With that getter, however, I classify two convenience methods it
-enables.  DOM Nodes have the methods <code>address</code> and <code>index</code>
-implemented in them; see <a href="domutils.litcoffee.html#address">the documentation on those functions</a> for more information.</p>
+</code></pre><h2><a name='convenience-methods'></a>Convenience methods &nbsp;  <font size=-1><a href='#convenience-methods'><img src="link.png" class="anchor"></a></font></h2><p>DOM Nodes have the methods <code>address</code> and <code>index</code> implemented in
+them; see <a href="domutils.litcoffee.html#address">the documentation on those functions</a> for more information.</p>
 <p>It will be convenient to be able to call such methods in a
 <code>LurchEditor</code>, thereby having its main element provided as the
 default arguments.  We therefore define the following two shortcut
@@ -112,12 +99,12 @@ But if we have no main HTML element, return null.</p>
 <pre class="hljs"><code>    <span class="hljs-attribute">index</span>: <span class="hljs-function"><span class="hljs-params">( address )</span> -&gt;</span>
         <span class="hljs-keyword">if</span> <span class="hljs-property">@element</span> <span class="hljs-keyword">then</span> <span class="hljs-property">@element</span>.index address <span class="hljs-keyword">else</span> <span class="hljs-literal">null</span>
 </code></pre><p>We therefore have the guarantee <code>N == LE.index LE.address N</code>
-inherited from the address and index
-functions defined in the Node prototype.</p>
+inherited from the address and index functions defined in the Node
+prototype.</p>
 
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>
