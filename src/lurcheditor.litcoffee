@@ -5,7 +5,7 @@ A Lurch Editor is an HTML DIV (that has *not* been marked as
 `content-editable` in the browser) but that will be made editable
 by the user through the functionality of this class.
 
-    window.LurchEditor = class LurchEditor
+    window.LurchEditor = class LurchEditor extends DOMEditTracker
 
 ## Functions related to ids
 
@@ -38,12 +38,12 @@ by numerical order, not dictionary (string) order.
 
 The constructor takes any DIV from the browser's HTML DOM, or no
 argument if the instance is not to be made visible in a webpage.
+See the constructor of [the ancestor `DOMEditTracker` class](
+domedittracker.litcoffee.html) for more information on the call to
+`super`.
 
         constructor: ( div ) ->
-            @element = null
-            if div and div?.tagName isnt 'DIV'
-                throw new Error '''LurchEditor can only be
-                    constructed in a DIV node'''
+            super div
 
 It calls `cleanIds` on that DIV to remove from it any ids that
 aren't nonnegative integers.
@@ -61,12 +61,6 @@ Last, for every HTMLElement under the DIV without an id, the
 constructor gives it the next available id.
 
             @assignIds div
-
-Now that all of that has succeeded, store the div we just processed
-in a member variable so it can be queried later, in
-`editorElement`.
-
-            @element = div
 
 ## Functions used by the constructor
 

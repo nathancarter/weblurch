@@ -11,10 +11,6 @@ items are more vague than the earlier ones.
 
 ## DOM Edit Tracker
 
- * Create a `DOMEditTracker` class that can be instantiated with a
-   single HTML element as parameter and that remembers that
-   element.  Make `LurchEditor` inherit from this class, so we're
-   factoring out that aspect of a `LurchEditor` into that class.
  * Give `DOMEditTracker` a class method that returns the instance
    whose main HTML element is or contains the one passed as
    argument, if there is such an instance.  Create a unit test for
