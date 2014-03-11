@@ -11,3 +11,4 @@ doc/*.litcoffee.html
 doc/*.md.html
 doc/test-results.md
 reports/*
+nps-jn-test
