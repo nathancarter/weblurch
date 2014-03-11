@@ -87,15 +87,6 @@ should yield 2, 4, 5, 6, ...</p>
                 <span class="hljs-number">2</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span> <span class="hljs-comment"># last four generated ids</span>
             ]
             done()
-</code></pre><h3><a name='should-return-a-null-element'></a>should return a null element &nbsp; <font size=-1><a href='test-results.md.html#should-return-a-null-element'>see results</a></font> <font size=-1><a href='#should-return-a-null-element'><img src="link.png" class="anchor"></a></font></h3><p>An instance of the <code>LurchEditor</code> class created without a div should
-return null from its <code>getElement</code> method.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should return a null element'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            L = <span class="hljs-keyword">new</span> LurchEditor()
-            L.getElement()
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toBeNull()
-            done()
 </code></pre><h2><a name='lurcheditor-instances-with-divs'></a>LurchEditor instances with DIVs &nbsp; <font size=-1><a href='test-results.md.html#lurcheditor-instances-with-divs'>see results</a></font> <font size=-1><a href='#lurcheditor-instances-with-divs'><img src="link.png" class="anchor"></a></font></h2><p>We now test constructing a new <code>LurchEditor</code> instance around an
 existing DOM element, and verify that it does the correct things
 with ids.  See the documentation in
@@ -303,18 +294,6 @@ ids were left unchanged.</p>
             expect( <span class="hljs-built_in">result</span>.texts[<span class="hljs-number">1</span>] ).toEqual <span class="hljs-string">'pos number'</span>
             expect( <span class="hljs-built_in">result</span>.texts[<span class="hljs-number">20</span>] ).toEqual <span class="hljs-string">'big-ish number'</span>
             done()
-</code></pre><h3><a name='should-return-the-correct-div'></a>should return the correct div &nbsp; <font size=-1><a href='test-results.md.html#should-return-the-correct-div'>see results</a></font> <font size=-1><a href='#should-return-the-correct-div'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should return a null element'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-</code></pre><p>An instance of the <code>LurchEditor</code> class created without a div should
-return null from its <code>getElement</code> method.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
-            <span class="hljs-built_in">document</span>.body.appendChild div
-</code></pre><p>Construct the <code>LurchEditor</code> instance around the div, as before.</p>
-<pre class="hljs"><code>            LE = <span class="hljs-keyword">new</span> LurchEditor <span class="hljs-keyword">div</span>
-            <span class="hljs-keyword">div</span> <span class="hljs-keyword">is</span> LE.getElement()
-        , ( err, <span class="hljs-keyword">result</span> ) -&gt;
-            expect( <span class="hljs-keyword">result</span> ).toBeTruthy()
-            done()
 </code></pre><h3><a name='should-have-working-address-and-index'></a>should have working address and index &nbsp; <font size=-1><a href='test-results.md.html#should-have-working-address-and-index'>see results</a></font> <font size=-1><a href='#should-have-working-address-and-index'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should have working address and index'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
 </code></pre><p>The <code>LurchEditor</code> class defines shortuct address and index
 functions that just make the calls relative to their main HTML
@@ -375,7 +354,7 @@ of the instance is empty.</p>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>
