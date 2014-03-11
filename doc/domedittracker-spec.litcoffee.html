@@ -1,0 +1,72 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="./main.css"/>
+        <link rel="stylesheet" href="./obsidian.css"/>
+        <link rel="shortcut icon" href="favicon.png"/>
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config( {
+              tex2jax: { inlineMath: [ [ '$', '$' ], [ '\\(', '\\)' ] ] }
+            } );
+        </script>
+        <script type="text/javascript"
+                src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+        <title>webLurch docs: domedittracker-spec</title>
+    </head>
+    <body>
+        <div id="left">
+            webLurch source code docs
+        </div>
+        <div id="middle">
+            <h1><a name='tests-for-the-code-domedittracker-code-class'></a>Tests for the <code>DOMEditTracker</code> class &nbsp; <font size=-1><a href='test-results.md.html#tests-for-the-code-domedittracker-code-class'>see results</a></font> <font size=-1><a href='#tests-for-the-code-domedittracker-code-class'><img src="link.png" class="anchor"></a></font></h1><p>Pull in the utility functions in
+<a href="phantom-utils.litcoffee.html">phantom-utils</a> that make it
+easier to write the tests below.  Then follow the same structure
+for setting up tests as documented more thoroughly in
+<a href="basic-spec.litcoffee.html">the basic unit test</a>.</p>
+<pre class="hljs"><code>{ phantomDescribe } = <span class="hljs-keyword">require</span> <span class="hljs-string">'./phantom-utils'</span>
+</code></pre><h2><a name='domedittracker-class'></a>DOMEditTracker class &nbsp; <font size=-1><a href='test-results.md.html#domedittracker-class'>see results</a></font> <font size=-1><a href='#domedittracker-class'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'LurchEditor class'</span>, <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
+</code></pre><h3><a name='should-exist'></a>should exist &nbsp; <font size=-1><a href='test-results.md.html#should-exist'>see results</a></font> <font size=-1><a href='#should-exist'><img src="link.png" class="anchor"></a></font></h3><p>That is, the class should be defined in the global namespace of
+the browser after loading the main app page.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should exist'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate (<span class="hljs-function"> -&gt;</span> DOMEditTracker ),
+        <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toBeTruthy()
+            done()
+</code></pre><h2><a name='domedittracker-instances-without-divs'></a>DOMEditTracker instances without DIVs &nbsp; <font size=-1><a href='test-results.md.html#domedittracker-instances-without-divs'>see results</a></font> <font size=-1><a href='#domedittracker-instances-without-divs'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'DOMEditTracker instances without DIVs'</span>,
+<span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
+</code></pre><h3><a name='should-return-a-null-element'></a>should return a null element &nbsp; <font size=-1><a href='test-results.md.html#should-return-a-null-element'>see results</a></font> <font size=-1><a href='#should-return-a-null-element'><img src="link.png" class="anchor"></a></font></h3><p>An instance of the <code>DOMEditTracker</code> class created without a div
+should return null from its <code>getElement</code> method.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should return a null element'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            D = <span class="hljs-keyword">new</span> DOMEditTracker()
+            D.getElement()
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toBeNull()
+            done()
+</code></pre><h2><a name='domedittracker-instances-with-divs'></a>DOMEditTracker instances with DIVs &nbsp; <font size=-1><a href='test-results.md.html#domedittracker-instances-with-divs'>see results</a></font> <font size=-1><a href='#domedittracker-instances-with-divs'><img src="link.png" class="anchor"></a></font></h2><p>We now test constructing a new <code>DOMEditTracker</code> instance around an
+existing DOM element, and verify that it does the correct things
+with ids.  See the documentation in
+<a href="lurcheditor.litcoffee.html">the Lurch Editor class itself</a> for
+details on what the constructor is expected to do in these
+situations, or read each test description below.</p>
+<pre class="hljs"><code>phantomDescribe <span class="hljs-string">'DOMEditTracker instances with DIVs'</span>,
+<span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
+</code></pre><h3><a name='should-return-the-correct-div'></a>should return the correct div &nbsp; <font size=-1><a href='test-results.md.html#should-return-the-correct-div'>see results</a></font> <font size=-1><a href='#should-return-the-correct-div'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should return the correct div'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+</code></pre><p>An instance of the <code>LurchEditor</code> class created without a div should
+return null from its <code>getElement</code> method.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">document</span>.body.appendChild div
+</code></pre><p>Construct the <code>DOMEditTracker</code> instance around the div, as before.</p>
+<pre class="hljs"><code>            D = <span class="hljs-keyword">new</span> DOMEditTracker <span class="hljs-keyword">div</span>
+            <span class="hljs-keyword">div</span> <span class="hljs-keyword">is</span> D.getElement()
+        , ( err, <span class="hljs-keyword">result</span> ) -&gt;
+            expect( <span class="hljs-keyword">result</span> ).toBeTruthy()
+            done()
+</code></pre>
+        </div>
+        <div id="right">
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+        </div>
+    </body>
+</html>
