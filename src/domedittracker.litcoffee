@@ -23,6 +23,11 @@ Otherwise, store the DIV they passed for later reference.
 
             @element = div
 
+In either case, initialize the internal undo/redo stack of
+`DOMEditAction` instances to be empty.
+
+            @stack = []
+
 ## Getters
 
 Although in CoffeeScript, no members are truly private, the
@@ -34,4 +39,18 @@ So far there is only one, for querying the element passed at
 construction time, over which this object has taken "ownership."
 
         getElement: -> @element
+
+## Events
+
+When any editing takes place inside the DOM tree watched by an
+instance of this class, then the instance will want to be notified
+of it.  We therefore provide this method by which it can be
+notified.
+
+The one parameter should be an instance of the `DOMEditAction`
+class.  If it is not, it is ignored.
+
+        nodeEditHappened: ( action ) ->
+            if action instanceof DOMEditAction
+                @stack.push action
 

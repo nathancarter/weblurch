@@ -11,10 +11,6 @@ items are more vague than the earlier ones.
 
 ## DOM Edit Tracker
 
- * Create a `DOMEditTracker` instance method called
-   `nodeEditHappened` that takes a `DOMEditAction` instance as
-   parameter and pushes it onto an internal stack.  See the next
-   bullet point for the definition of that class.
  * Add to the `DOMEditAction` class the ability to instantiate it
    with any of the following types of data.  Do this in parallel
    with the following bullet points, which instantiate this class
