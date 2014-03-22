@@ -7,6 +7,11 @@ order, the first items being those that should be done next, and
 the later items those that must come after.  Necessarily, the later
 items are more vague than the earlier ones.
 
+## Bug fixes
+
+ * Navigation pane in auto-generated source code documentation does
+   not support vertical scrolling.
+
 # Word Processing Foundation
 
 ## DOM Edit Tracker
