@@ -46,8 +46,19 @@ one.
 
         recur = @parentNode.address ancestor
         if recur is null then return null
-        recur.concat [ Array.prototype.slice.apply(
-            @parentNode.childNodes ).indexOf this ]
+        recur.concat [ @indexInParent() ]
+
+You'll notice that the final line of code above depends on the
+as-yet-undefined helper function `indexInParent()`.  We therefore
+create that simple helper function now, which is also a useful
+member of the `Node` prototype.
+
+    Node.prototype.indexInParent = ->
+        if @parentNode
+            Array.prototype.slice.apply(
+                @parentNode.childNodes ).indexOf this
+        else
+            -1
 
 ## Index
 
