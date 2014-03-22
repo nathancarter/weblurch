@@ -410,8 +410,6 @@ of the instance is empty.
                 div = document.createElement 'div'
                 document.body.appendChild div
                 LE = new LurchEditor()
-                console.log LE.address div
-                console.log LE.index div
                 [
                     null is LE.address div
                     null is LE.index div
