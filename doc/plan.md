@@ -16,12 +16,10 @@ items are more vague than the earlier ones.
 
 ## DOM Edit Tracker
 
- * Add to the `DOMEditAction` class the ability to instantiate it
-   with any of the following types of data.  Do this in parallel
-   with the following bullet points, which instantiate this class
-   and discuss the testing thereof.
  * Test `DOMEditTracker` class's ability to keep track of all of
    its instances, and detect which contain a given DOM Node.
+ * Test instantiating the `DOMEditAction` class with each of the
+   following types of data.
     * N.appendChild(node)
        * returns node
        * record with N's address and the serialized node
