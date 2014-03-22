@@ -20,6 +20,8 @@ items are more vague than the earlier ones.
    with any of the following types of data.  Do this in parallel
    with the following bullet points, which instantiate this class
    and discuss the testing thereof.
+ * Test `DOMEditTracker` class's ability to keep track of all of
+   its instances, and detect which contain a given DOM Node.
     * N.appendChild(node)
        * returns node
        * record with N's address and the serialized node
