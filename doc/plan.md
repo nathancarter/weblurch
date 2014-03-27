@@ -11,8 +11,6 @@ items are more vague than the earlier ones.
 
 ## DOM Edit Tracker
 
- * Test `DOMEditTracker` class's ability to detect which instance
-   contains a given DOM Node.
  * Test instantiating the `DOMEditAction` class with each of the
    following types of data.
     * N.appendChild(node)

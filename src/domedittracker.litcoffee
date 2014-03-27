@@ -22,7 +22,7 @@ charge of an ancestor of any given DOM Node.  It returns the
 
         @instanceOver = ( node ) ->
             if node not instanceof Node then return null
-            for tracker in instances
+            for tracker in @instances
                 if tracker.getElement() is node
                     return tracker
             @instanceOver node.parentNode

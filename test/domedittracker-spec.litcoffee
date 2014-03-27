@@ -76,6 +76,90 @@ Send these results back to be verified.
                 expect( result[6] ).toBeTruthy()
                 done()
 
+### should find the correct containers
+
+There will already be one `DOMEditTracker` instance in place,
+instantiated by the index page itself.  It is over the first div in
+the document.
+
+This test creates a second div in the document and places another
+`DOMEditTracker` instance over it, then checks to be sure that
+each of the two instances that have elements can be found as the
+instances in charge of those elements and their descendants.
+It also tests the same for an instance whose element is outside
+the document.
+
+        it 'should find the correct containers', ( done ) =>
+            @page.evaluate ->
+
+Here is the new div to add to the document, with some inner
+elements and a `DOMEditTracker` instance around it.
+
+                div = document.createElement 'div'
+                document.body.appendChild div
+                div.innerHTML = '''
+                    <div>just some tags in a hierarchy
+                    <span>for testing purposes</span></div>
+                    '''
+                ielt = document.createElement 'i'
+                ielt.textContent = 'dummy'
+                div.appendChild ielt
+                another = new DOMEditTracker div
+
+Now we do the tests, all of which should come out true.  We check
+in the callback function below that they do so.
+
+First, is the original `DOMEditTracker` instance in charge of the
+first div in the document?
+
+                result = []
+                firstDiv = document.body
+                    .getElementsByTagName( 'div' )[0]
+                result.push DOMEditTracker.instances[0] is
+                    DOMEditTracker.instanceOver firstDiv
+
+Second, is the new `DOMEditTracker` instance in charge of the div
+created above?  And of one of its child nodes?  And one of its
+grandchild nodes?
+
+                result.push another is
+                    DOMEditTracker.instanceOver div
+                result.push another is
+                    DOMEditTracker.instanceOver ielt
+                result.push another is
+                    DOMEditTracker.instanceOver ielt.childNodes[0]
+
+Now create an instance around a div outside the document, and do
+similar tests on it.
+
+                outside = document.createElement 'div'
+                child = document.createElement 'p'
+                outside.appendChild child
+                grandchild = document.createElement 'b'
+                grandchild.textContent = 'waah'
+                child.appendChild grandchild
+                final = new DOMEditTracker outside
+                result.push final is
+                    DOMEditTracker.instanceOver outside
+                result.push final is
+                    DOMEditTracker.instanceOver child
+                result.push final is
+                    DOMEditTracker.instanceOver grandchild
+                result.push final is
+                    DOMEditTracker.instanceOver \
+                    grandchild.childNodes[0]
+                result
+            , ( err, result ) ->
+                expect( result[0] ).toBeTruthy()
+                expect( result[1] ).toBeTruthy()
+                expect( result[2] ).toBeTruthy()
+                expect( result[3] ).toBeTruthy()
+                expect( result[4] ).toBeTruthy()
+                expect( result[5] ).toBeTruthy()
+                expect( result[6] ).toBeTruthy()
+                expect( result[7] ).toBeTruthy()
+                done()
+
 ## DOMEditTracker instances without DIVs
 
     phantomDescribe 'DOMEditTracker instances without DIVs',
