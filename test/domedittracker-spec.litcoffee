@@ -11,7 +11,7 @@ for setting up tests as documented more thoroughly in
 
 ## DOMEditTracker class
 
-    phantomDescribe 'LurchEditor class', './app/index.html', ->
+    phantomDescribe 'DOMEditTracker class', './app/index.html', ->
 
 ### should exist
 
