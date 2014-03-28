@@ -12,6 +12,8 @@ the undo/redo stack for an application.
 
     window.DOMEditAction = class DOMEditAction
 
+## Constructor
+
 The constructor requires that the data given be of the appropriate
 form for one of the nine acceptable ways to instantiate this class.
 They are these:
@@ -36,7 +38,7 @@ They are these:
    should be set and the new attribute node to set on it
 
 
-        @constructor: ( type, node, data... ) ->
+        constructor: ( type, node, data... ) ->
 
 The node on which the operation has been performed is stored as its
 address in the nearest `DOMEditTracker` containing it, in `@node`.
@@ -56,7 +58,7 @@ tracker.  (But this class is not very useful if there is no edit
 tracker; we avoid throwing an error mainly for the convenience of
 the caller.)
 
-            @node = node.address @tracker
+            @node = node.address @tracker.getElement()
 
 For type "appendChild", the node to append is stored serialized,
 in `@toAppend`.

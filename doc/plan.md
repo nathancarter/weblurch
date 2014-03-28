@@ -12,7 +12,24 @@ items are more vague than the earlier ones.
 ## DOM Edit Tracker
 
  * Test instantiating the `DOMEditAction` class with each of the
-   following types of data.
+   following types of data.  (Some are already done; those listed
+   here are what remain.)
+    * N.insertBefore(node,beforeThisChild)
+    * N.normalize()
+    * N.removeAttribute(name)
+    * N.removeAttributeNode(attrNode)
+    * N.removeChild(childNode)
+    * N.replaceChild(newnode,oldnode)
+    * N.setAttribute(name,value)
+    * N.setAttributeNode(attrNode)
+ * In the [DOM utilities module](domutils.litcoffee.html), modify
+   all functions in the Node prototype that manipulate the DOM so
+   that, during their completion, they call `nodeEditHappened` in
+   the containing `DOMEditTracker` instance notifying it of which
+   method was called in them, if it was successful in modifying the
+   DOM, by creating and passing a `DOMEditAction` instance.
+   Create unit tests that verify that the data is correctly
+   recorded in the internal array of the `DOMEditTracker` instance.
     * N.appendChild(node)
        * returns node
        * record with N's address and the serialized node
@@ -57,14 +74,6 @@ items are more vague than the earlier ones.
          after setting, as well as the original value of the
          attribute beforehand
     * Note that element.dataset.foo is not supported.
- * In the [DOM utilities module](domutils.litcoffee.html), modify
-   all functions in the Node prototype that manipulate the DOM so
-   that, after their completion, they call `nodeEditHappened` in
-   the containing `DOMEditTracker` instance notifying it of which
-   method was called in them, if it was successful in modifying the
-   DOM, by creating and passing a `DOMEditAction` instance.
-   Create unit tests that verify that the data is correctly
-   recorded in the internal array of the `DOMEditTracker` instance.
  * Add undo and redo methods to a `LurchEditor` instance that move
    an index pointer up and down the internal list of past actions,
    and that chop off the redo-able actions if an edit comes in that

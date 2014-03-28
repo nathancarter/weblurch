@@ -24,3 +24,26 @@ the browser after loading the main app page.
                 expect( result ).toBeTruthy()
                 done()
 
+### should have "appendChild" instances
+
+That is, we should e able to construct instances of the class with
+the type "appendChild", as described [in the documentation for the
+class's constructor](domeditaction.litcoffee.html#constructor).
+
+        it 'should have "appendChild" instances', ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                span = document.createElement 'span'
+                T = new DOMEditAction 'appendChild', div, span
+                result = [
+                    T.tracker is DOMEditTracker.instances[0]
+                    T.node
+                    T.toAppend
+                ]
+                result
+            , ( err, result ) ->
+                expect( result[0] ).toBeTruthy()
+                expect( result[1] ).toEqual []
+                expect( result[2] ).toEqual tagName : 'SPAN'
+                done()
+
