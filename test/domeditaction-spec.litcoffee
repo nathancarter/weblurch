@@ -26,7 +26,7 @@ the browser after loading the main app page.
 
 ### should have "appendChild" instances
 
-That is, we should e able to construct instances of the class with
+That is, we should be able to construct instances of the class with
 the type "appendChild", as described [in the documentation for the
 class's constructor](domeditaction.litcoffee.html#constructor).
 

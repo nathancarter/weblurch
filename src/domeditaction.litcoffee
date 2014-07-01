@@ -40,8 +40,8 @@ They are these:
 
         constructor: ( type, node, data... ) ->
 
-The node on which the operation has been performed is stored as its
-address in the nearest `DOMEditTracker` containing it, in `@node`.
+The `node` parameter must actually be a DOM Node, or this
+constructor cannot function.
 
             if node not instanceof Node
                 throw Error 'This is not a node: ' + node
