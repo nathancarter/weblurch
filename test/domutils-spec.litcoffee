@@ -21,7 +21,7 @@ the `Node` prototype.
 
 First, just verify that it's present.
 
-            @page.evaluate ( -> Node.prototype.address ),
+            @page.evaluate ( -> Node::address ),
             ( err, result ) ->
                 expect( result ).toBeTruthy()
                 done()
@@ -268,7 +268,7 @@ The tests in this section test the `index` member function in the
 ### should be defined
 
         it 'should be defined', ( done ) =>
-            @page.evaluate ( -> Node.prototype.index ),
+            @page.evaluate ( -> Node::index ),
             ( err, result ) ->
                 expect( result ).toBeTruthy()
                 done()
@@ -526,7 +526,7 @@ The tests in this section test the `toJSON` member function in the
 
 First, just verify that the function itself is present.
 
-            @page.evaluate ( -> Node.prototype.toJSON ),
+            @page.evaluate ( -> Node::toJSON ),
             ( err, result ) ->
                 expect( result ).toBeTruthy()
                 done()

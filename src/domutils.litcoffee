@@ -24,7 +24,7 @@ then it defaults to the top-level Node above `N`
 (i.e., the furthest-up ancestor, with no `.parentNode`,
 which usually means it's the global variable `document`).
 
-    Node.prototype.address = ( ancestor = null ) ->
+    Node::address = ( ancestor = null ) ->
 
 The base case comes in two flavors.
 First, if the parameter is this node, then the correct result is
@@ -53,9 +53,9 @@ as-yet-undefined helper function `indexInParent()`.  We therefore
 create that simple helper function now, which is also a useful
 member of the `Node` prototype.
 
-    Node.prototype.indexInParent = ->
+    Node::indexInParent = ->
         if @parentNode
-            Array.prototype.slice.apply(
+            Array::slice.apply(
                 @parentNode.childNodes ).indexOf this
         else
             -1
@@ -75,7 +75,7 @@ integers, the implementation is simply repeated lookups in some
 `childNodes` arrays.  It is therefore quite short, with most of
 the code going to type safety.
 
-    Node.prototype.index = ( address ) ->
+    Node::index = ( address ) ->
 
 Require that the parameter be an array.
 
@@ -108,7 +108,7 @@ First, the function for converting a DOM Node to an object that
 can be serialized with `JSON.stringify`.  After this function is
 defined, one can take any node `N` and call `N.toJSON()`.
 
-    Node.prototype.toJSON = ( verbose = yes ) ->
+    Node::toJSON = ( verbose = yes ) ->
 
 The `verbose` parameter uses human-readable object keys, and is the
 default.  A more compact version can be obtained by setting that
@@ -223,8 +223,8 @@ the appended `node`, but should also create and propagate a
 address and a serialized copy of `node`.
 
     do ->
-        original = Node.prototype.appendChild
-        Node.prototype.appendChild = ( node ) ->
+        original = Node::appendChild
+        Node::appendChild = ( node ) ->
             tracker = DOMEditTracker.instanceOver this
             if tracker
                 event = new DOMEditAction 'appendChild', this, node
