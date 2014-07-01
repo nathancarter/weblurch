@@ -91,14 +91,14 @@ omitted, in `@insertBefore`.
                     @insertBefore = node.childNodes.length
 
 For type "normalize", we store a map from indices to text content
-for all current child text nodes of `@node`, in `@textChildren`,
+for all current child text nodes of `node`, in `@textChildren`,
 thus making this edit action invertible later if necessary.
 
             else if type is 'normalize'
                 if data.length isnt 0
                     throw Error 'Wrong # of parameters: ' + data
                 @textChildren = {}
-                for child, i in @node.childNodes
+                for child, i in node.childNodes
                     if child instanceof Text
                         @textChildren[i] = child.textContent
 
