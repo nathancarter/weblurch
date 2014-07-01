@@ -171,8 +171,7 @@ These will have an integer `childIndex` member containing the
 index of the child before removal, and a `child` member containing
 a serialized version of the removed child.
 
-        it 'should have "removeChild" instances',
-        ( done ) =>
+        it 'should have "removeChild" instances', ( done ) =>
             @page.evaluate ->
                 div = document.getElementById '0'
                 div.innerHTML = 'first child text node'
@@ -206,8 +205,7 @@ index of the child being replaced, an `oldChild` member containing
 a serialized version of the replaced child, and a `newChild`
 member containing a serialization of the replacement child.
 
-        it 'should have "replaceChild" instances',
-        ( done ) =>
+        it 'should have "replaceChild" instances', ( done ) =>
             @page.evaluate ->
                 div = document.getElementById '0'
                 div.innerHTML = 'first child text node'
@@ -248,11 +246,41 @@ attribute being changed, a string `oldValue` member containing the
 value of the attribute before it was set, and a string `newValue`
 member containing the value after the attribute is set.
 
-        it 'should have "setAttribute" instances',
-        ( done ) =>
+        it 'should have "setAttribute" instances', ( done ) =>
             @page.evaluate ->
                 div = document.getElementById '0'
                 T = new DOMEditAction 'setAttribute', div, 'id', 1
+                result = [
+                    T.tracker is DOMEditTracker.instances[0]
+                    T.node
+                    T.name
+                    T.oldValue
+                    T.newValue
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toBeTruthy()
+                expect( result[1] ).toEqual []
+                expect( result[2] ).toEqual 'id'
+                expect( result[3] ).toEqual '0'
+                expect( result[4] ).toEqual '1'
+                done()
+
+### should have "setAttributeNode" instances
+
+That is, we should be able to construct instances of the class with
+the type "setAttributeNode", as described [in the documentation for
+the class's constructor](domeditaction.litcoffee.html#constructor).
+These will have a string `name` member containing the name of the
+attribute being changed, a string `oldValue` member containing the
+value of the attribute before it was set, and a string `newValue`
+member containing the value after the attribute is set.
+
+        it 'should have "setAttributeNode" instances', ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                attr = document.createAttribute 'id'
+                attr.value = 1
+                T = new DOMEditAction 'setAttributeNode', div, attr
                 result = [
                     T.tracker is DOMEditTracker.instances[0]
                     T.node

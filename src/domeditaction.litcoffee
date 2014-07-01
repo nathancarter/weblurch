@@ -175,7 +175,7 @@ previous case, and under the same names.
                     throw Error 'Invalid parameter: ' + data[0]
                 @name = data[0].name
                 @newValue = data[0].value
-                @oldValue = @node.getAttribute @name
+                @oldValue = node.getAttribute @name
 
 If none of the above types were what the caller was trying to
 construct, throw an error, because they're the only types
