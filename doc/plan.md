@@ -181,6 +181,14 @@ items are more vague than the earlier ones.
     * delete selection
     * change properties of paragraph around cursor
       (e.g., justification, indentation)
+    * cut, copy, and paste
+      (See [this StackOverflow answer](
+      http://stackoverflow.com/a/11347714/670492) for a possibly
+      helpful way to put complex content on the clipboard from
+      JavaScript.)
+      * implement copy, and then cut is copy-then-delete
+      * implement paste when there is no selection, and then paste
+        when there is a selection is just delete-then-paste
  * As you create each, create tests for it as well, and save
    them in the repository
 
@@ -203,6 +211,7 @@ items are more vague than the earlier ones.
       selection
     * Ctrl + B/I/U/L/R/E = apply properties to selection or
       paragraph around cursor, as appropriate
+    * Ctrl + X/C/V = cut/copy/paste
  * In the test app, when the JS eval
    input does not have focus (and yet we're in one of the main
    view tabs, not the export-a-test-JSON view) react to
