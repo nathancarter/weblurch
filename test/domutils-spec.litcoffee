@@ -348,8 +348,9 @@ that are not part of the document.
         it 'should work for descendant indices', ( done ) =>
             @page.evaluate ->
 
-Here we re-use the same hierarchy from [a test above](
-#should-work-for-grandchildren-etc-), for the same reasons.
+Here we re-use the same hierarchy from
+[a test above](#should-work-for-grandchildren-etc-),
+for the same reasons.
 
                 hierarchy = '''
                     <span id="test-0">foo</span>
