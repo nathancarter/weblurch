@@ -21,7 +21,7 @@
             <h1><a name='-code-lurcheditor-code-class'></a><code>LurchEditor</code> class &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-class'><img src="link.png" class="anchor"></a></font></h1><p>A Lurch Editor is an HTML DIV (that has <em>not</em> been marked as
 <code>content-editable</code> in the browser) but that will be made editable
 by the user through the functionality of this class.</p>
-<pre class="hljs"><code>window.LurchEditor = <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LurchEditor</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">DOMEditTracker</span></span>
+<pre class="hljs"><code><span class="hljs-built_in">window</span>.LurchEditor = <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LurchEditor</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">DOMEditTracker</span></span>
 </code></pre><h2><a name='functions-related-to-ids'></a>Functions related to ids &nbsp;  <font size=-1><a href='#functions-related-to-ids'><img src="link.png" class="anchor"></a></font></h2><p>The object maintains a list of unique integer ids for assigning to
 elements in the HTML DOM, from that DIV on downwards in the tree.
 The list <code>@freeIds</code> is a list $[a_1,\ldots,a_n]$ such that an id
@@ -30,11 +30,11 @@ than $a_n$.  For this reason, the list begins as <code>[ 0 ]</code>, in the
 constructor, below.</p>
 <p>When a free id is needed, we need a function that will give the
 next such free id and then mark that id as consumed from the list.</p>
-<pre class="hljs"><code>    nextFreeId: -&gt;
-        <span class="hljs-keyword">if</span> <span class="hljs-variable">@freeIds</span>.<span class="hljs-keyword">length</span> &gt; <span class="hljs-number">1</span>
-            <span class="hljs-variable">@freeIds</span>.<span class="hljs-keyword">shift</span>()
+<pre class="hljs"><code>    <span class="hljs-attribute">nextFreeId</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-property">@freeIds</span>.length &gt; <span class="hljs-number">1</span>
+            <span class="hljs-property">@freeIds</span>.shift()
         <span class="hljs-keyword">else</span>
-            <span class="hljs-variable">@freeIds</span>[<span class="hljs-number">0</span>]++
+            <span class="hljs-property">@freeIds</span>[<span class="hljs-number">0</span>]++
 </code></pre><p>When an id in use becomes free, we need a function that will put
 it back into the list of free ids.  The sort in the code below is
 by numerical order, not dictionary (string) order.</p>
@@ -46,11 +46,11 @@ by numerical order, not dictionary (string) order.</p>
 argument if the instance is not to be made visible in a webpage.
 See the constructor of <a href="domedittracker.litcoffee.html">the ancestor <code>DOMEditTracker</code> class</a> for more information on the call to
 <code>super</code>.</p>
-<pre class="hljs"><code>    <span class="hljs-function"><span class="hljs-keyword">constructor</span>:</span> ( <span class="hljs-keyword">div</span> ) -&gt;
-        super <span class="hljs-keyword">div</span>
+<pre class="hljs"><code>    <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">( div )</span> -&gt;</span>
+        <span class="hljs-keyword">super</span> div
 </code></pre><p>It calls <code>cleanIds</code> on that DIV to remove from it any ids that
 aren&#39;t nonnegative integers.</p>
-<pre class="hljs"><code><span class="hljs-attribute">        usedIds </span>=<span class="hljs-string"> @cleanIds div</span>
+<pre class="hljs"><code>        usedIds = <span class="hljs-property">@cleanIds</span> div
 </code></pre><p>Then it computes the list of <code>freeIds</code> as the complement of the set
 of nonnegative integer ids found by <code>cleanIds</code>.</p>
 <pre class="hljs"><code>        <span class="hljs-property">@freeIds</span> = <span class="hljs-keyword">if</span> usedIds.length <span class="hljs-keyword">is</span> <span class="hljs-number">0</span> <span class="hljs-keyword">then</span> [ <span class="hljs-number">0</span> ] <span class="hljs-keyword">else</span>
@@ -58,24 +58,24 @@ of nonnegative integer ids found by <code>cleanIds</code>.</p>
                 <span class="hljs-keyword">when</span> i <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> usedIds )
 </code></pre><p>Last, for every HTMLElement under the DIV without an id, the
 constructor gives it the next available id.</p>
-<pre class="hljs"><code>        @assign<span class="hljs-variable">Ids</span> <span class="hljs-keyword">div</span>
+<pre class="hljs"><code>        <span class="hljs-property">@assignIds</span> div
 </code></pre><h2><a name='functions-used-by-the-constructor'></a>Functions used by the constructor &nbsp;  <font size=-1><a href='#functions-used-by-the-constructor'><img src="link.png" class="anchor"></a></font></h2><p>Collect a list of all used ids in the given node, removing any
 ids that aren&#39;t just nonnegative integers.  This routine is used
 by the class&#39;s constructor as part of the procedure for
 initializing the node in the DOM in which the LurchEditor will
 reside.</p>
-<pre class="hljs"><code>    cleanIds: ( node ) -&gt;
-        <span class="hljs-constant">result</span> = []
-        <span class="hljs-keyword">if</span> node <span class="hljs-keyword">not</span> instanceof Node <span class="hljs-keyword">then</span> <span class="hljs-constant">return</span> <span class="hljs-constant">result</span>
-        <span class="hljs-keyword">if</span> node.<span class="hljs-property">id</span>
-            <span class="hljs-keyword">if</span> /^\d+$/.test node.<span class="hljs-property">id</span>
-                <span class="hljs-constant">result</span>.push parseInt node.<span class="hljs-property">id</span>
+<pre class="hljs"><code>    <span class="hljs-attribute">cleanIds</span>: <span class="hljs-function"><span class="hljs-params">( node )</span> -&gt;</span>
+        result = []
+        <span class="hljs-keyword">if</span> node <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> result
+        <span class="hljs-keyword">if</span> node.id
+            <span class="hljs-keyword">if</span> <span class="hljs-regexp">/^\d+$/</span>.test node.id
+                result.push parseInt node.id
             <span class="hljs-keyword">else</span>
-                node.removeAttribute '<span class="hljs-property">id</span>'
+                node.removeAttribute <span class="hljs-string">'id'</span>
         <span class="hljs-keyword">for</span> child <span class="hljs-keyword">in</span> node.childNodes
-            <span class="hljs-constant">result</span> = <span class="hljs-constant">result</span>.concat ( <span class="hljs-property">id</span> <span class="hljs-keyword">for</span> <span class="hljs-property">id</span> <span class="hljs-keyword">in</span> \
-                @cleanIds child when <span class="hljs-property">id</span> <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> <span class="hljs-constant">result</span> )
-        <span class="hljs-constant">result</span>
+            result = result.concat ( id <span class="hljs-keyword">for</span> id <span class="hljs-keyword">in</span> \
+                <span class="hljs-property">@cleanIds</span> child <span class="hljs-keyword">when</span> id <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> result )
+        result
 </code></pre><p>Assign ids to every HTMLElement under the given node, using this
 object&#39;s <code>nextFreeId</code> function to do so.  Non-HTMLElement nodes are
 not given ids.</p>
@@ -104,7 +104,7 @@ prototype.</p>
 
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

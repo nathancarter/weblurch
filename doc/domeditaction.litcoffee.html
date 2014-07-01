@@ -25,12 +25,234 @@ setting and removing attributes, and normalizing nodes.</p>
 <p>An instance will store all the data needed to undo or redo the
 action it represents, so that a stack of such instances can form
 the undo/redo stack for an application.</p>
+<p>The protocol for what data to store in each case is described here.</p>
+<ul>
+<li><code>N.appendChild(node)</code><ul>
+<li>returns <code>node</code></li>
+<li>event contains <code>N</code>&#39;s address and the serialized node</li>
+</ul>
+</li>
+<li><code>N.insertBefore(node,beforeThisChild)</code><ul>
+<li>returns <code>node</code></li>
+<li>if beforeThisChild is omitted, it&#39;s the same as append</li>
+<li>event contains <code>N</code>&#39;s address, the serialized node, and the
+index of beforeThisChild (or child node length if absent)</li>
+</ul>
+</li>
+<li><code>N.normalize()</code><ul>
+<li>no return value</li>
+<li>removes empty text nodes</li>
+<li>joins adjacent text nodes</li>
+<li>event contains <code>N</code>&#39;s address together with a map from indices
+to text content of all current child text nodes of <code>N</code></li>
+</ul>
+</li>
+<li><code>N.removeAttribute(name)</code><ul>
+<li>no return value</li>
+<li>event contains <code>N</code>&#39;s address, name, and original attribute
+value</li>
+</ul>
+</li>
+<li><code>N.removeAttributeNode(attrNode)</code><ul>
+<li>returns <code>attrNode</code></li>
+<li>e.g.: <code>N.removeAttributeNode(N.getAttributeNode(&#39;style&#39;))</code></li>
+<li>event contains <code>N</code>&#39;s address and original attribute name and
+value</li>
+</ul>
+</li>
+<li><code>N.removeChild(childNode)</code><ul>
+<li>returns <code>childNode</code></li>
+<li>event contains <code>N</code>&#39;s address, the child&#39;s original index
+within <code>N</code>, and a serialization of the child</li>
+</ul>
+</li>
+<li><code>N.replaceChild(newnode,oldnode)</code><ul>
+<li>returns <code>oldnode</code>, I think</li>
+<li>event contains <code>N</code>&#39;s address, the child&#39;s original index
+within <code>N</code>, and serializations of both <code>oldnode</code> and <code>newnode</code></li>
+</ul>
+</li>
+<li><code>N.setAttribute(name,value)</code><ul>
+<li>no return value</li>
+<li>both strings</li>
+<li>event contains <code>N</code>&#39;s address, name, and value, as well as the
+original value of the attribute beforehand</li>
+</ul>
+</li>
+<li><code>N.setAttributeNode(attrNode)</code><ul>
+<li>returns replaced node if any, otherwise null</li>
+<li>e.g.:
+<code>var atr=document.createAttribute(&quot;class&quot;);
+atr.nodeValue=&quot;democlass&quot;;
+myDiv.setAttributeNode(atr);</code></li>
+<li>event contains <code>N</code>&#39;s address, the name and value of the
+attribute after setting, as well as the original value of the
+attribute beforehand</li>
+</ul>
+</li>
+<li>Note that <code>element.dataset.foo</code> is not supported.</li>
+</ul>
+<p>Now begins the code for the class.</p>
 <pre class="hljs"><code><span class="hljs-built_in">window</span>.DOMEditAction = <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DOMEditAction</span></span>
-</code></pre><p>For now, this class is a stub and will need to be expanded later.</p>
+</code></pre><h2><a name='constructor'></a>Constructor &nbsp;  <font size=-1><a href='#constructor'><img src="link.png" class="anchor"></a></font></h2><p>The constructor requires that the data given be of the appropriate
+form for one of the nine acceptable ways to instantiate this class.
+They are these:</p>
+<ul>
+<li>type &quot;appendChild&quot;, with data the parent node and child to
+append</li>
+<li>type &quot;insertBefore&quot;, with data the parent node, the child to
+insert, and the child before which to insert it, which may be
+omitted to mean the same thing as append</li>
+<li>type &quot;normalize&quot;, with data the parent node</li>
+<li>type &quot;removeAttribute&quot;, with data the node from which to remove
+the attribute, and name of the attribute to remove</li>
+<li>type &quot;removeAttributeNode&quot;, with data the node from which to
+remove the attribute, and the attribute node to remove</li>
+<li>type &quot;removeChild&quot;, with data the parent node and the child to
+remove</li>
+<li>type &quot;replaceChild&quot;, with data the parent node, the child to
+replace, and the node with which to replace it</li>
+<li>type &quot;setAttribute&quot;, with data the node whose attribute should
+be set, the name of the attribute to set, and the value to which
+it should be set</li>
+<li>type &quot;setAttributeNode&quot;, with data the node whose attribute
+should be set and the new attribute node to set on it</li>
+</ul>
+<pre class="hljs"><code>    <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">( type, node, data... )</span> -&gt;</span>
+</code></pre><p>The <code>node</code> parameter must actually be a DOM Node, or this
+constructor cannot function.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> node <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node
+            <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'This is not a node: '</span> + node
+</code></pre><p>The <code>DOMEditTracker</code> instance in which all of this will operate is
+stored in the member <code>@tracker</code>.  If there is no such tracker, that
+member will be null.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@tracker</span> = DOMEditTracker.instanceOver node
+</code></pre><p>The node itself is stored in <code>@node</code> as the address within the
+given edit tracker, or within its topmost ancestor if there is no
+tracker.  (But this class is not very useful if there is no edit
+tracker; we avoid throwing an error mainly for the convenience of
+the caller.)</p>
+<pre class="hljs"><code>        <span class="hljs-property">@node</span> = node.address <span class="hljs-property">@tracker</span>.getElement()
+</code></pre><p>For type &quot;appendChild&quot;, the node to append is stored serialized,
+in <code>@toAppend</code>.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> type <span class="hljs-keyword">is</span> <span class="hljs-string">'appendChild'</span>
+            <span class="hljs-keyword">if</span> data.length <span class="hljs-keyword">isnt</span> <span class="hljs-number">1</span>
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Wrong # of parameters: '</span> + data
+            <span class="hljs-keyword">if</span> data[<span class="hljs-number">0</span>] <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid parameter: '</span> + data
+            <span class="hljs-property">@toAppend</span> = data[<span class="hljs-number">0</span>].toJSON()
+</code></pre><p>For type &quot;insertBefore&quot;, the node to insert is stored serialized,
+in <code>@toInsert</code>, and the node before which to insert it is stored as
+its index, or the previous number of children if this parameter was
+omitted, in <code>@insertBefore</code>.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> type <span class="hljs-keyword">is</span> <span class="hljs-string">'insertBefore'</span>
+            <span class="hljs-keyword">if</span> data.length <span class="hljs-keyword">isnt</span> <span class="hljs-number">1</span> <span class="hljs-keyword">and</span> data.length <span class="hljs-keyword">isnt</span> <span class="hljs-number">2</span>
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Wrong # of parameters: '</span> + data
+            <span class="hljs-keyword">if</span> data[<span class="hljs-number">0</span>] <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid parameter: '</span> + data[<span class="hljs-number">0</span>]
+            <span class="hljs-property">@toInsert</span> = data[<span class="hljs-number">0</span>].toJSON()
+            <span class="hljs-keyword">if</span> data.length <span class="hljs-keyword">is</span> <span class="hljs-number">2</span>
+                <span class="hljs-keyword">if</span> data[<span class="hljs-number">1</span>] <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node
+                    <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid parameter: '</span> + data[<span class="hljs-number">0</span>]
+                <span class="hljs-keyword">if</span> data[<span class="hljs-number">1</span>].parentNode <span class="hljs-keyword">isnt</span> node
+                    <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid child: '</span> + data[<span class="hljs-number">0</span>]
+                <span class="hljs-property">@insertBefore</span> = data[<span class="hljs-number">1</span>].indexInParent()
+            <span class="hljs-keyword">else</span>
+                <span class="hljs-property">@insertBefore</span> = node.childNodes.length
+</code></pre><p>For type &quot;normalize&quot;, we store a map from indices to text content
+for all current child text nodes of <code>node</code>, in <code>@textChildren</code>,
+thus making this edit action invertible later if necessary.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> type <span class="hljs-keyword">is</span> <span class="hljs-string">'normalize'</span>
+            <span class="hljs-keyword">if</span> data.length <span class="hljs-keyword">isnt</span> <span class="hljs-number">0</span>
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Wrong # of parameters: '</span> + data
+            <span class="hljs-property">@textChildren</span> = {}
+            <span class="hljs-keyword">for</span> child, i <span class="hljs-keyword">in</span> node.childNodes
+                <span class="hljs-keyword">if</span> child <span class="hljs-keyword">instanceof</span> Text
+                    <span class="hljs-property">@textChildren</span>[i] = child.textContent
+</code></pre><p>For type &quot;removeAttribute&quot;, we store the name of the attribute
+in <code>@name</code>, together with its original value in <code>@value</code>.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> type <span class="hljs-keyword">is</span> <span class="hljs-string">'removeAttribute'</span>
+            <span class="hljs-keyword">if</span> data.length <span class="hljs-keyword">isnt</span> <span class="hljs-number">1</span>
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Wrong # of parameters: '</span> + data
+            <span class="hljs-property">@name</span> = data[<span class="hljs-number">0</span>] + <span class="hljs-string">''</span>
+            <span class="hljs-property">@value</span> = node.getAttribute <span class="hljs-property">@name</span>
+</code></pre><p>For type &quot;removeAttributeNode&quot;, we store the same data as in the
+previous type, under the same names.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> type <span class="hljs-keyword">is</span> <span class="hljs-string">'removeAttributeNode'</span>
+            <span class="hljs-keyword">if</span> data.length <span class="hljs-keyword">isnt</span> <span class="hljs-number">1</span>
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Wrong # of parameters: '</span> + data
+            <span class="hljs-keyword">if</span> data[<span class="hljs-number">0</span>] <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Attr
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid attribute node: '</span> +
+                            data[<span class="hljs-number">0</span>]
+            { <span class="hljs-property">@name</span>, <span class="hljs-property">@value</span> } = data[<span class="hljs-number">0</span>]
+</code></pre><p>For type &quot;removeChild&quot;, we store the child&#39;s original index within
+<code>@node</code> as <code>@childIndex</code>, and a serialization of the child, as
+<code>@child</code>.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> type <span class="hljs-keyword">is</span> <span class="hljs-string">'removeChild'</span>
+            <span class="hljs-keyword">if</span> data.length <span class="hljs-keyword">isnt</span> <span class="hljs-number">1</span>
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Wrong # of parameters: '</span> + data
+            <span class="hljs-keyword">if</span> data[<span class="hljs-number">0</span>] <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid parameter: '</span> + data[<span class="hljs-number">0</span>]
+            <span class="hljs-keyword">if</span> data[<span class="hljs-number">0</span>].parentNode <span class="hljs-keyword">isnt</span> node
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid child: '</span> + data[<span class="hljs-number">0</span>]
+            <span class="hljs-property">@childIndex</span> = data[<span class="hljs-number">0</span>].indexInParent()
+            <span class="hljs-property">@child</span> = data[<span class="hljs-number">0</span>].toJSON()
+</code></pre><p>For type &quot;replaceChild&quot;, we store the child&#39;s original index within
+<code>@node</code> as <code>@childIndex</code>, a serialization of the child, as
+<code>@oldChild</code>, and a serialization of the replacement, as
+<code>@newChild</code>.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> type <span class="hljs-keyword">is</span> <span class="hljs-string">'replaceChild'</span>
+            <span class="hljs-keyword">if</span> data.length <span class="hljs-keyword">isnt</span> <span class="hljs-number">2</span>
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Wrong # of parameters: '</span> + data
+            <span class="hljs-keyword">if</span> data[<span class="hljs-number">0</span>] <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid parameter: '</span> + data[<span class="hljs-number">0</span>]
+            <span class="hljs-keyword">if</span> data[<span class="hljs-number">1</span>] <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid parameter: '</span> + data[<span class="hljs-number">1</span>]
+            <span class="hljs-keyword">if</span> data[<span class="hljs-number">0</span>].parentNode <span class="hljs-keyword">isnt</span> node
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid child: '</span> + data[<span class="hljs-number">0</span>]
+            <span class="hljs-property">@childIndex</span> = data[<span class="hljs-number">0</span>].indexInParent()
+            <span class="hljs-property">@oldChild</span> = data[<span class="hljs-number">0</span>].toJSON()
+            <span class="hljs-property">@newChild</span> = data[<span class="hljs-number">1</span>].toJSON()
+</code></pre><p>For type &quot;setAttribute&quot;, we store the name and value to which the
+attribute will be set, in <code>@name</code> and <code>@newValue</code>, respectively, as
+well as the attribute&#39;s original value, in <code>@oldValue</code>.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> type <span class="hljs-keyword">is</span> <span class="hljs-string">'setAttribute'</span>
+            <span class="hljs-keyword">if</span> data.length <span class="hljs-keyword">isnt</span> <span class="hljs-number">2</span>
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Wrong # of parameters: '</span> + data
+            <span class="hljs-property">@name</span> = data[<span class="hljs-number">0</span>] + <span class="hljs-string">''</span>
+            <span class="hljs-property">@newValue</span> = data[<span class="hljs-number">1</span>] + <span class="hljs-string">''</span>
+            <span class="hljs-property">@oldValue</span> = node.getAttribute <span class="hljs-property">@name</span>
+</code></pre><p>For type &quot;setAttributeNode&quot;, we store the same data as in the
+previous case, and under the same names.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> type <span class="hljs-keyword">is</span> <span class="hljs-string">'setAttributeNode'</span>
+            <span class="hljs-keyword">if</span> data.length <span class="hljs-keyword">isnt</span> <span class="hljs-number">1</span>
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Wrong # of parameters: '</span> + data
+            <span class="hljs-keyword">if</span> data[<span class="hljs-number">0</span>] <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Attr
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid parameter: '</span> + data[<span class="hljs-number">0</span>]
+            <span class="hljs-property">@name</span> = data[<span class="hljs-number">0</span>].name
+            <span class="hljs-property">@newValue</span> = data[<span class="hljs-number">0</span>].value
+            <span class="hljs-property">@oldValue</span> = node.getAttribute <span class="hljs-property">@name</span>
+</code></pre><p>If none of the above types were what the caller was trying to
+construct, throw an error, because they&#39;re the only types
+supported.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid DOMEditAction type: '</span> + type
+</code></pre><p>The class also provides a serialization method, mostly for use in
+unit testing, because instances of the object can then be sent in
+and out of a headless browser as JSON.  This implementation just
+copies into an object all possibly-relevant fields of the object,
+then stringifies it.</p>
+<p>This function is indirectly tested in that many other unit tests
+depend upon it to test other functionality.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">toJSON</span>:<span class="hljs-function"> -&gt;</span>
+        JSON.stringify { <span class="hljs-property">@node</span>, <span class="hljs-property">@toAppend</span>, <span class="hljs-property">@toInsert</span>,
+            <span class="hljs-property">@insertBefore</span>, <span class="hljs-property">@textChildren</span>, <span class="hljs-property">@name</span>, <span class="hljs-property">@value</span>,
+            <span class="hljs-property">@child</span>, <span class="hljs-property">@childIndex</span>, <span class="hljs-property">@oldChild</span>, <span class="hljs-property">@newChild</span>,
+            <span class="hljs-property">@oldValue</span>, <span class="hljs-property">@newValue</span> }
+</code></pre><p>Additional member functions of this class will be added later.</p>
 
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

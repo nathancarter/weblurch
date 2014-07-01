@@ -18,31 +18,63 @@
             webLurch source code docs
         </div>
         <div id="middle">
-            <h1><a name='dom-edit-tracker-class'></a>DOM Edit Tracker class &nbsp;  <font size=-1><a href='#dom-edit-tracker-class'><img src="link.png" class="anchor"></a></font></h1><p>A <code>DOMEditTracker</code> is responsible for watching the edits to the
-DOM within a single HTML DIV element, and thus it takes one at
-construction time.</p>
-<h2><a name='constructor'></a>Constructor &nbsp;  <font size=-1><a href='#constructor'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>window.DOMEditTracker = <span class="hljs-keyword">class</span> DOMEditTracker
-    <span class="hljs-function"><span class="hljs-keyword">constructor</span>:</span> ( <span class="hljs-keyword">div</span> ) -&gt;
+            <h1><a name='dom-edit-tracker-class'></a>DOM Edit Tracker class &nbsp;  <font size=-1><a href='#dom-edit-tracker-class'><img src="link.png" class="anchor"></a></font></h1><pre class="hljs"><code><span class="hljs-built_in">window</span>.DOMEditTracker = <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DOMEditTracker</span></span>
+</code></pre><p>A <code>DOMEditTracker</code> is responsible for watching the edits to the
+DOM within a single HTML DIV element, and thus it takes such a DIV
+at construction time.</p>
+<h2><a name='tracking-instances'></a>Tracking instances &nbsp;  <font size=-1><a href='#tracking-instances'><img src="link.png" class="anchor"></a></font></h2><p>The class itself also tracks all instances thereof currently in
+memory, so that it can find the one whose DIV contains any given
+DOM Node.  This way when changes take place in a DOM Node, the
+corresponding edit tracker, if any, can be notified.</p>
+<pre class="hljs"><code>    <span class="hljs-property">@instances</span> = []
+</code></pre><p>Here is the class method taht finds the edit tracker instance in
+charge of an ancestor of any given DOM Node.  It returns the
+<code>DOMEditTracker</code> instance if there is one, and null otherwise.</p>
+<pre class="hljs"><code>    <span class="hljs-property">@instanceOver</span> = <span class="hljs-function"><span class="hljs-params">( node )</span> -&gt;</span>
+        <span class="hljs-keyword">if</span> node <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>
+        <span class="hljs-keyword">for</span> tracker <span class="hljs-keyword">in</span> <span class="hljs-property">@instances</span>
+            <span class="hljs-keyword">if</span> tracker.getElement() <span class="hljs-keyword">is</span> node
+                <span class="hljs-keyword">return</span> tracker
+        <span class="hljs-property">@instanceOver</span> node.parentNode
+</code></pre><h2><a name='constructor'></a>Constructor &nbsp;  <font size=-1><a href='#constructor'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>    <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">( div )</span> -&gt;</span>
 </code></pre><p>If they did not pass a valid DIV, then store null in the member
 variable reserved for that purpose.  If they passed <em>something</em>
 but it wasn&#39;t a DIV, then throw an Error.</p>
-<pre class="hljs"><code>        @<span class="hljs-keyword">element</span> = <span class="hljs-constant">null</span>
-        <span class="hljs-keyword">if</span> <span class="hljs-operator">div</span> <span class="hljs-operator">and</span> <span class="hljs-operator">div</span>?.tagName isnt <span class="hljs-string">'DIV'</span>
-            throw <span class="hljs-built_in">new</span> Error <span class="hljs-string">'DOMEditTracker can only be '</span> +
+<pre class="hljs"><code>        <span class="hljs-property">@element</span> = <span class="hljs-literal">null</span>
+        <span class="hljs-keyword">if</span> div <span class="hljs-keyword">and</span> div?.tagName <span class="hljs-keyword">isnt</span> <span class="hljs-string">'DIV'</span>
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error <span class="hljs-string">'DOMEditTracker can only be '</span> +
                             <span class="hljs-string">'constructed in a DIV node'</span>
 </code></pre><p>Otherwise, store the DIV they passed for later reference.</p>
-<pre class="hljs"><code>        @<span class="hljs-keyword">element</span> = <span class="hljs-operator">div</span>
+<pre class="hljs"><code>        <span class="hljs-property">@element</span> = div
+</code></pre><p>In either case, initialize the internal undo/redo stack of
+<code>DOMEditAction</code> instances to be empty.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@stack</span> = []
+</code></pre><p>And add this newly created instance to the list of all instances.</p>
+<pre class="hljs"><code>        DOMEditTracker.instances.push <span class="hljs-keyword">this</span>
 </code></pre><h2><a name='getters'></a>Getters &nbsp;  <font size=-1><a href='#getters'><img src="link.png" class="anchor"></a></font></h2><p>Although in CoffeeScript, no members are truly private, the
 intent is that the fields of an object should not be directly
 accessed from outside the class except through getters and
 setters.</p>
-<p>So far there is only one, for querying the element passed at
-construction time, over which this object has taken &quot;ownership.&quot;</p>
-<pre class="hljs"><code>    <span class="hljs-attribute">getElement</span>: <span class="hljs-string">-&gt; @element</span>
+<p>The first is for querying the element passed at construction time,
+over which this object has taken &quot;ownership.&quot;</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">getElement</span>:<span class="hljs-function"> -&gt;</span> <span class="hljs-property">@element</span>
+</code></pre><p>Then we provide one for querying the stack of edit actions.  A copy
+of the stack is returned, so that the caller may modify it as they
+see fit without harming this object.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">getEditActions</span>:<span class="hljs-function"> -&gt;</span> <span class="hljs-property">@stack</span>[..]
+</code></pre><h2><a name='events'></a>Events &nbsp;  <font size=-1><a href='#events'><img src="link.png" class="anchor"></a></font></h2><p>When any editing takes place inside the DOM tree watched by an
+instance of this class, then the instance will want to be notified
+of it.  We therefore provide this method by which it can be
+notified.</p>
+<p>The one parameter should be an instance of the <code>DOMEditAction</code>
+class.  If it is not, it is ignored.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">nodeEditHappened</span>: <span class="hljs-function"><span class="hljs-params">( action )</span> -&gt;</span>
+        <span class="hljs-keyword">if</span> action <span class="hljs-keyword">instanceof</span> DOMEditAction
+            <span class="hljs-property">@stack</span>.push action
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

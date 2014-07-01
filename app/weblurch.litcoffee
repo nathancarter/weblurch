@@ -1,13 +1,288 @@
 
-# DOM Edit Tracker class
+# DOM Edit Action
 
-A `DOMEditTracker` is responsible for watching the edits to the
-DOM within a single HTML DIV element, and thus it takes one at
-construction time.
+This class will embody a single, atomic edit to a DOM tree.  This
+includes all the kinds of edit performable with the usual Node
+API, including inserting, removing, and replacing children,
+setting and removing attributes, and normalizing nodes.
+
+An instance will store all the data needed to undo or redo the
+action it represents, so that a stack of such instances can form
+the undo/redo stack for an application.
+
+The protocol for what data to store in each case is described here.
+ * `N.appendChild(node)`
+   * returns `node`
+   * event contains `N`'s address and the serialized node
+ * `N.insertBefore(node,beforeThisChild)`
+   * returns `node`
+   * if beforeThisChild is omitted, it's the same as append
+   * event contains `N`'s address, the serialized node, and the
+     index of beforeThisChild (or child node length if absent)
+ * `N.normalize()`
+   * no return value
+   * removes empty text nodes
+   * joins adjacent text nodes
+   * event contains `N`'s address together with a map from indices
+     to text content of all current child text nodes of `N`
+ * `N.removeAttribute(name)`
+   * no return value
+   * event contains `N`'s address, name, and original attribute
+     value
+ * `N.removeAttributeNode(attrNode)`
+   * returns `attrNode`
+   * e.g.: `N.removeAttributeNode(N.getAttributeNode('style'))`
+   * event contains `N`'s address and original attribute name and
+     value
+ * `N.removeChild(childNode)`
+   * returns `childNode`
+   * event contains `N`'s address, the child's original index
+     within `N`, and a serialization of the child
+ * `N.replaceChild(newnode,oldnode)`
+   * returns `oldnode`, I think
+   * event contains `N`'s address, the child's original index
+     within `N`, and serializations of both `oldnode` and `newnode`
+ * `N.setAttribute(name,value)`
+   * no return value
+   * both strings
+   * event contains `N`'s address, name, and value, as well as the
+     original value of the attribute beforehand
+ * `N.setAttributeNode(attrNode)`
+   * returns replaced node if any, otherwise null
+   * e.g.:
+     `var atr=document.createAttribute("class");
+     atr.nodeValue="democlass";
+     myDiv.setAttributeNode(atr);`
+   * event contains `N`'s address, the name and value of the
+     attribute after setting, as well as the original value of the
+     attribute beforehand
+ * Note that `element.dataset.foo` is not supported.
+
+Now begins the code for the class.
+
+    window.DOMEditAction = class DOMEditAction
 
 ## Constructor
 
+The constructor requires that the data given be of the appropriate
+form for one of the nine acceptable ways to instantiate this class.
+They are these:
+ * type "appendChild", with data the parent node and child to
+   append
+ * type "insertBefore", with data the parent node, the child to
+   insert, and the child before which to insert it, which may be
+   omitted to mean the same thing as append
+ * type "normalize", with data the parent node
+ * type "removeAttribute", with data the node from which to remove
+   the attribute, and name of the attribute to remove
+ * type "removeAttributeNode", with data the node from which to
+   remove the attribute, and the attribute node to remove
+ * type "removeChild", with data the parent node and the child to
+   remove
+ * type "replaceChild", with data the parent node, the child to
+   replace, and the node with which to replace it
+ * type "setAttribute", with data the node whose attribute should
+   be set, the name of the attribute to set, and the value to which
+   it should be set
+ * type "setAttributeNode", with data the node whose attribute
+   should be set and the new attribute node to set on it
+
+
+        constructor: ( type, node, data... ) ->
+
+The `node` parameter must actually be a DOM Node, or this
+constructor cannot function.
+
+            if node not instanceof Node
+                throw Error 'This is not a node: ' + node
+
+The `DOMEditTracker` instance in which all of this will operate is
+stored in the member `@tracker`.  If there is no such tracker, that
+member will be null.
+
+            @tracker = DOMEditTracker.instanceOver node
+
+The node itself is stored in `@node` as the address within the
+given edit tracker, or within its topmost ancestor if there is no
+tracker.  (But this class is not very useful if there is no edit
+tracker; we avoid throwing an error mainly for the convenience of
+the caller.)
+
+            @node = node.address @tracker.getElement()
+
+For type "appendChild", the node to append is stored serialized,
+in `@toAppend`.
+
+            if type is 'appendChild'
+                if data.length isnt 1
+                    throw Error 'Wrong # of parameters: ' + data
+                if data[0] not instanceof Node
+                    throw Error 'Invalid parameter: ' + data
+                @toAppend = data[0].toJSON()
+
+For type "insertBefore", the node to insert is stored serialized,
+in `@toInsert`, and the node before which to insert it is stored as
+its index, or the previous number of children if this parameter was
+omitted, in `@insertBefore`.
+
+            else if type is 'insertBefore'
+                if data.length isnt 1 and data.length isnt 2
+                    throw Error 'Wrong # of parameters: ' + data
+                if data[0] not instanceof Node
+                    throw Error 'Invalid parameter: ' + data[0]
+                @toInsert = data[0].toJSON()
+                if data.length is 2
+                    if data[1] not instanceof Node
+                        throw Error 'Invalid parameter: ' + data[0]
+                    if data[1].parentNode isnt node
+                        throw Error 'Invalid child: ' + data[0]
+                    @insertBefore = data[1].indexInParent()
+                else
+                    @insertBefore = node.childNodes.length
+
+For type "normalize", we store a map from indices to text content
+for all current child text nodes of `node`, in `@textChildren`,
+thus making this edit action invertible later if necessary.
+
+            else if type is 'normalize'
+                if data.length isnt 0
+                    throw Error 'Wrong # of parameters: ' + data
+                @textChildren = {}
+                for child, i in node.childNodes
+                    if child instanceof Text
+                        @textChildren[i] = child.textContent
+
+For type "removeAttribute", we store the name of the attribute
+in `@name`, together with its original value in `@value`.
+
+            else if type is 'removeAttribute'
+                if data.length isnt 1
+                    throw Error 'Wrong # of parameters: ' + data
+                @name = data[0] + ''
+                @value = node.getAttribute @name
+
+For type "removeAttributeNode", we store the same data as in the
+previous type, under the same names.
+
+            else if type is 'removeAttributeNode'
+                if data.length isnt 1
+                    throw Error 'Wrong # of parameters: ' + data
+                if data[0] not instanceof Attr
+                    throw Error 'Invalid attribute node: ' +
+                                data[0]
+                { @name, @value } = data[0]
+
+For type "removeChild", we store the child's original index within
+`@node` as `@childIndex`, and a serialization of the child, as
+`@child`.
+
+            else if type is 'removeChild'
+                if data.length isnt 1
+                    throw Error 'Wrong # of parameters: ' + data
+                if data[0] not instanceof Node
+                    throw Error 'Invalid parameter: ' + data[0]
+                if data[0].parentNode isnt node
+                    throw Error 'Invalid child: ' + data[0]
+                @childIndex = data[0].indexInParent()
+                @child = data[0].toJSON()
+
+For type "replaceChild", we store the child's original index within
+`@node` as `@childIndex`, a serialization of the child, as
+`@oldChild`, and a serialization of the replacement, as
+`@newChild`.
+
+            else if type is 'replaceChild'
+                if data.length isnt 2
+                    throw Error 'Wrong # of parameters: ' + data
+                if data[0] not instanceof Node
+                    throw Error 'Invalid parameter: ' + data[0]
+                if data[1] not instanceof Node
+                    throw Error 'Invalid parameter: ' + data[1]
+                if data[0].parentNode isnt node
+                    throw Error 'Invalid child: ' + data[0]
+                @childIndex = data[0].indexInParent()
+                @oldChild = data[0].toJSON()
+                @newChild = data[1].toJSON()
+
+For type "setAttribute", we store the name and value to which the
+attribute will be set, in `@name` and `@newValue`, respectively, as
+well as the attribute's original value, in `@oldValue`.
+
+            else if type is 'setAttribute'
+                if data.length isnt 2
+                    throw Error 'Wrong # of parameters: ' + data
+                @name = data[0] + ''
+                @newValue = data[1] + ''
+                @oldValue = node.getAttribute @name
+
+For type "setAttributeNode", we store the same data as in the
+previous case, and under the same names.
+
+            else if type is 'setAttributeNode'
+                if data.length isnt 1
+                    throw Error 'Wrong # of parameters: ' + data
+                if data[0] not instanceof Attr
+                    throw Error 'Invalid parameter: ' + data[0]
+                @name = data[0].name
+                @newValue = data[0].value
+                @oldValue = node.getAttribute @name
+
+If none of the above types were what the caller was trying to
+construct, throw an error, because they're the only types
+supported.
+
+            else throw Error 'Invalid DOMEditAction type: ' + type
+
+The class also provides a serialization method, mostly for use in
+unit testing, because instances of the object can then be sent in
+and out of a headless browser as JSON.  This implementation just
+copies into an object all possibly-relevant fields of the object,
+then stringifies it.
+
+This function is indirectly tested in that many other unit tests
+depend upon it to test other functionality.
+
+        toJSON: ->
+            JSON.stringify { @node, @toAppend, @toInsert,
+                @insertBefore, @textChildren, @name, @value,
+                @child, @childIndex, @oldChild, @newChild,
+                @oldValue, @newValue }
+
+Additional member functions of this class will be added later.
+
+
+
+
+# DOM Edit Tracker class
+
     window.DOMEditTracker = class DOMEditTracker
+
+A `DOMEditTracker` is responsible for watching the edits to the
+DOM within a single HTML DIV element, and thus it takes such a DIV
+at construction time.
+
+## Tracking instances
+
+The class itself also tracks all instances thereof currently in
+memory, so that it can find the one whose DIV contains any given
+DOM Node.  This way when changes take place in a DOM Node, the
+corresponding edit tracker, if any, can be notified.
+
+        @instances = []
+
+Here is the class method taht finds the edit tracker instance in
+charge of an ancestor of any given DOM Node.  It returns the
+`DOMEditTracker` instance if there is one, and null otherwise.
+
+        @instanceOver = ( node ) ->
+            if node not instanceof Node then return null
+            for tracker in @instances
+                if tracker.getElement() is node
+                    return tracker
+            @instanceOver node.parentNode
+
+## Constructor
+
         constructor: ( div ) ->
 
 If they did not pass a valid DIV, then store null in the member
@@ -23,6 +298,15 @@ Otherwise, store the DIV they passed for later reference.
 
             @element = div
 
+In either case, initialize the internal undo/redo stack of
+`DOMEditAction` instances to be empty.
+
+            @stack = []
+
+And add this newly created instance to the list of all instances.
+
+            DOMEditTracker.instances.push this
+
 ## Getters
 
 Although in CoffeeScript, no members are truly private, the
@@ -30,10 +314,30 @@ intent is that the fields of an object should not be directly
 accessed from outside the class except through getters and
 setters.
 
-So far there is only one, for querying the element passed at
-construction time, over which this object has taken "ownership."
+The first is for querying the element passed at construction time,
+over which this object has taken "ownership."
 
         getElement: -> @element
+
+Then we provide one for querying the stack of edit actions.  A copy
+of the stack is returned, so that the caller may modify it as they
+see fit without harming this object.
+
+        getEditActions: -> @stack[..]
+
+## Events
+
+When any editing takes place inside the DOM tree watched by an
+instance of this class, then the instance will want to be notified
+of it.  We therefore provide this method by which it can be
+notified.
+
+The one parameter should be an instance of the `DOMEditAction`
+class.  If it is not, it is ignored.
+
+        nodeEditHappened: ( action ) ->
+            if action instanceof DOMEditAction
+                @stack.push action
 
 
 
@@ -63,7 +367,7 @@ then it defaults to the top-level Node above `N`
 (i.e., the furthest-up ancestor, with no `.parentNode`,
 which usually means it's the global variable `document`).
 
-    Node.prototype.address = ( ancestor = null ) ->
+    Node::address = ( ancestor = null ) ->
 
 The base case comes in two flavors.
 First, if the parameter is this node, then the correct result is
@@ -85,8 +389,19 @@ one.
 
         recur = @parentNode.address ancestor
         if recur is null then return null
-        recur.concat [ Array.prototype.slice.apply(
-            @parentNode.childNodes ).indexOf this ]
+        recur.concat [ @indexInParent() ]
+
+You'll notice that the final line of code above depends on the
+as-yet-undefined helper function `indexInParent()`.  We therefore
+create that simple helper function now, which is also a useful
+member of the `Node` prototype.
+
+    Node::indexInParent = ->
+        if @parentNode
+            Array::slice.apply(
+                @parentNode.childNodes ).indexOf this
+        else
+            -1
 
 ## Index
 
@@ -103,7 +418,7 @@ integers, the implementation is simply repeated lookups in some
 `childNodes` arrays.  It is therefore quite short, with most of
 the code going to type safety.
 
-    Node.prototype.index = ( address ) ->
+    Node::index = ( address ) ->
 
 Require that the parameter be an array.
 
@@ -136,7 +451,7 @@ First, the function for converting a DOM Node to an object that
 can be serialized with `JSON.stringify`.  After this function is
 defined, one can take any node `N` and call `N.toJSON()`.
 
-    Node.prototype.toJSON = ( verbose = yes ) ->
+    Node::toJSON = ( verbose = yes ) ->
 
 The `verbose` parameter uses human-readable object keys, and is the
 default.  A more compact version can be obtained by setting that
@@ -233,6 +548,37 @@ given object, and recur on the child array if there is one.
             for child in children
                 result.appendChild Node.fromJSON child
         result
+
+## Change events
+
+Whenever a change is made to a DOM Node using one of the built-in
+methods of the Node prototype, notifications of that cahnge event
+must be sent to any `DOMEditTracker` instance containing the
+modified node.  To facilitate this, we modify those Node prototype
+methods so that they not only do their original work, but also
+send the notification events in question.
+
+### appendChild
+
+The new version of `N.appendChild(node)` should, as before, return
+the appended `node`, but should also create and propagate a
+`DOMEditAction` instance of type "appendChild" containing `N`'s
+address and a serialized copy of `node`.
+
+    '''
+    appendChild insertBefore normalize removeAttribute
+    removeAttributeNode removeChild replaceChild
+    setAttribute setAttributeNode
+    '''.split( ' ' ).map ( methodName ) ->
+        original = Node::[methodName]
+        Node::[methodName] = ( args... ) ->
+            tracker = DOMEditTracker.instanceOver this
+            if tracker
+                event = new DOMEditAction methodName, this, args...
+            result = original.call this, args...
+            if tracker
+                tracker.nodeEditHappened event
+            result
 
 
 

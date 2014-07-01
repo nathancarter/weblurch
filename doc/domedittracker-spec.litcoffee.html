@@ -23,14 +23,122 @@
 easier to write the tests below.  Then follow the same structure
 for setting up tests as documented more thoroughly in
 <a href="basic-spec.litcoffee.html">the basic unit test</a>.</p>
-<pre class="hljs"><code>{ phantomDescribe } = <span class="hljs-keyword">require</span> <span class="hljs-string">'./phantom-utils'</span>
-</code></pre><h2><a name='domedittracker-class'></a>DOMEditTracker class &nbsp; <font size=-1><a href='test-results.md.html#domedittracker-class'>see results</a></font> <font size=-1><a href='#domedittracker-class'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'LurchEditor class'</span>, <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>{ phantomDescribe } = <span class="hljs-built_in">require</span> <span class="hljs-string">'./phantom-utils'</span>
+</code></pre><h2><a name='domedittracker-class'></a>DOMEditTracker class &nbsp; <font size=-1><a href='test-results.md.html#domedittracker-class'>see results</a></font> <font size=-1><a href='#domedittracker-class'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'DOMEditTracker class'</span>, <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
 </code></pre><h3><a name='should-exist'></a>should exist &nbsp; <font size=-1><a href='test-results.md.html#should-exist'>see results</a></font> <font size=-1><a href='#should-exist'><img src="link.png" class="anchor"></a></font></h3><p>That is, the class should be defined in the global namespace of
 the browser after loading the main app page.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should exist'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
         <span class="hljs-property">@page</span>.evaluate (<span class="hljs-function"> -&gt;</span> DOMEditTracker ),
         <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
             expect( result ).toBeTruthy()
+            done()
+</code></pre><h3><a name='should-track-instances'></a>should track instances &nbsp; <font size=-1><a href='test-results.md.html#should-track-instances'>see results</a></font> <font size=-1><a href='#should-track-instances'><img src="link.png" class="anchor"></a></font></h3><p>Each instance of the class created should be placed in an array
+stored in the class variable <code>@instances</code>.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should track instances'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+</code></pre><p>I will do several tests and put all their results in the following
+array, for checking below.</p>
+<pre class="hljs"><code>            result = []
+</code></pre><p>First of all, the page itself instantiates an edit tracker upon
+loading, one surrounding a child of the document body.  So we first
+check that there is an instance already, and its element has the
+desired id.</p>
+<pre class="hljs"><code>            result.push DOMEditTracker.instances.length
+            result.push DOMEditTracker.instances[<span class="hljs-number">0</span>] \
+                .getElement().parentNode <span class="hljs-keyword">is</span> <span class="hljs-built_in">document</span>.body
+</code></pre><p>Create an edit tracker and check to be sure the instances array
+has length 2 and contains the new instance.</p>
+<pre class="hljs"><code>            T1 = <span class="hljs-keyword">new</span> DOMEditTracker
+            result.push DOMEditTracker.instances.length
+            result.push DOMEditTracker.instances[<span class="hljs-number">1</span>] <span class="hljs-keyword">is</span> T1
+</code></pre><p>Create another, this one around an element outside the document,
+and check to be sure the instances array has length 3 and contains
+the two new instances in the appropriate order.</p>
+<pre class="hljs"><code>            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            T2 = <span class="hljs-keyword">new</span> DOMEditTracker div
+            result.push DOMEditTracker.instances.length
+            result.push DOMEditTracker.instances[<span class="hljs-number">1</span>] <span class="hljs-keyword">is</span> T1
+            result.push DOMEditTracker.instances[<span class="hljs-number">2</span>] <span class="hljs-keyword">is</span> T2
+</code></pre><p>Send these results back to be verified.</p>
+<pre class="hljs"><code>            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result[<span class="hljs-number">0</span>] ).toEqual <span class="hljs-number">1</span>
+            expect( result[<span class="hljs-number">1</span>] ).toBeTruthy()
+            expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-number">2</span>
+            expect( result[<span class="hljs-number">3</span>] ).toBeTruthy()
+            expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-number">3</span>
+            expect( result[<span class="hljs-number">5</span>] ).toBeTruthy()
+            expect( result[<span class="hljs-number">6</span>] ).toBeTruthy()
+            done()
+</code></pre><h3><a name='should-find-the-correct-containers'></a>should find the correct containers &nbsp; <font size=-1><a href='test-results.md.html#should-find-the-correct-containers'>see results</a></font> <font size=-1><a href='#should-find-the-correct-containers'><img src="link.png" class="anchor"></a></font></h3><p>There will already be one <code>DOMEditTracker</code> instance in place,
+instantiated by the index page itself.  It is over the first div in
+the document.</p>
+<p>This test creates a second div in the document and places another
+<code>DOMEditTracker</code> instance over it, then checks to be sure that
+each of the two instances that have elements can be found as the
+instances in charge of those elements and their descendants.
+It also tests the same for an instance whose element is outside
+the document.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should find the correct containers'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Here is the new div to add to the document, with some inner
+elements and a <code>DOMEditTracker</code> instance around it.</p>
+<pre class="hljs"><code>            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">document</span>.body.appendChild div
+            div.innerHTML = <span class="hljs-string">'''
+                &lt;div&gt;just some tags in a hierarchy
+                &lt;span&gt;for testing purposes&lt;/span&gt;&lt;/div&gt;
+                '''</span>
+            ielt = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'i'</span>
+            ielt.textContent = <span class="hljs-string">'dummy'</span>
+            div.appendChild ielt
+            another = <span class="hljs-keyword">new</span> DOMEditTracker div
+</code></pre><p>Now we do the tests, all of which should come out true.  We check
+in the callback function below that they do so.</p>
+<p>First, is the original <code>DOMEditTracker</code> instance in charge of the
+first div in the document?</p>
+<pre class="hljs"><code>            result = []
+            firstDiv = <span class="hljs-built_in">document</span>.body
+                .getElementsByTagName( <span class="hljs-string">'div'</span> )[<span class="hljs-number">0</span>]
+            result.push DOMEditTracker.instances[<span class="hljs-number">0</span>] <span class="hljs-keyword">is</span>
+                DOMEditTracker.instanceOver firstDiv
+</code></pre><p>Second, is the new <code>DOMEditTracker</code> instance in charge of the div
+created above?  And of one of its child nodes?  And one of its
+grandchild nodes?</p>
+<pre class="hljs"><code>            result.push another <span class="hljs-keyword">is</span>
+                DOMEditTracker.instanceOver div
+            result.push another <span class="hljs-keyword">is</span>
+                DOMEditTracker.instanceOver ielt
+            result.push another <span class="hljs-keyword">is</span>
+                DOMEditTracker.instanceOver ielt.childNodes[<span class="hljs-number">0</span>]
+</code></pre><p>Now create an instance around a div outside the document, and do
+similar tests on it.</p>
+<pre class="hljs"><code>            outside = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            child = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'p'</span>
+            outside.appendChild child
+            grandchild = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'b'</span>
+            grandchild.textContent = <span class="hljs-string">'waah'</span>
+            child.appendChild grandchild
+            final = <span class="hljs-keyword">new</span> DOMEditTracker outside
+            result.push final <span class="hljs-keyword">is</span>
+                DOMEditTracker.instanceOver outside
+            result.push final <span class="hljs-keyword">is</span>
+                DOMEditTracker.instanceOver child
+            result.push final <span class="hljs-keyword">is</span>
+                DOMEditTracker.instanceOver grandchild
+            result.push final <span class="hljs-keyword">is</span>
+                DOMEditTracker.instanceOver \
+                grandchild.childNodes[<span class="hljs-number">0</span>]
+            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
+            expect( result[<span class="hljs-number">1</span>] ).toBeTruthy()
+            expect( result[<span class="hljs-number">2</span>] ).toBeTruthy()
+            expect( result[<span class="hljs-number">3</span>] ).toBeTruthy()
+            expect( result[<span class="hljs-number">4</span>] ).toBeTruthy()
+            expect( result[<span class="hljs-number">5</span>] ).toBeTruthy()
+            expect( result[<span class="hljs-number">6</span>] ).toBeTruthy()
+            expect( result[<span class="hljs-number">7</span>] ).toBeTruthy()
             done()
 </code></pre><h2><a name='domedittracker-instances-without-divs'></a>DOMEditTracker instances without DIVs &nbsp; <font size=-1><a href='test-results.md.html#domedittracker-instances-without-divs'>see results</a></font> <font size=-1><a href='#domedittracker-instances-without-divs'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'DOMEditTracker instances without DIVs'</span>,
 <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
@@ -58,15 +166,15 @@ return null from its <code>getElement</code> method.</p>
             div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">document</span>.body.appendChild div
 </code></pre><p>Construct the <code>DOMEditTracker</code> instance around the div, as before.</p>
-<pre class="hljs"><code>            D = <span class="hljs-keyword">new</span> DOMEditTracker <span class="hljs-keyword">div</span>
-            <span class="hljs-keyword">div</span> <span class="hljs-keyword">is</span> D.getElement()
-        , ( err, <span class="hljs-keyword">result</span> ) -&gt;
-            expect( <span class="hljs-keyword">result</span> ).toBeTruthy()
+<pre class="hljs"><code>            D = <span class="hljs-keyword">new</span> DOMEditTracker div
+            div <span class="hljs-keyword">is</span> D.getElement()
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toBeTruthy()
             done()
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

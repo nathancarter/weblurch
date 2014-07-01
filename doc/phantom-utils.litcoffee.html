@@ -28,8 +28,8 @@ to PhantomJS, called <a href="https://npmjs.org/package/node-phantom-simple">nod
 it is useful for knowing which files call <code>phantomDescribe</code>,
 below, so that those files can be logged for use in documentation
 generation later.</p>
-<pre class="hljs"><code>nps = <span class="hljs-keyword">require</span> <span class="hljs-string">'node-phantom-simple'</span>
-st = <span class="hljs-keyword">require</span> <span class="hljs-string">'stack-trace'</span>
+<pre class="hljs"><code>nps = <span class="hljs-built_in">require</span> <span class="hljs-string">'node-phantom-simple'</span>
+st = <span class="hljs-built_in">require</span> <span class="hljs-string">'stack-trace'</span>
 </code></pre><h1><a name='the-main-api-code-phantomdescribe-code-'></a>The main API, <code>phantomDescribe</code> &nbsp;  <font size=-1><a href='#the-main-api-code-phantomdescribe-code-'><img src="link.png" class="anchor"></a></font></h1><p>The <code>phantomDescribe</code> function makes it easy to set up a PhantomJS
 instance and load into it a page from a given URL.  If any errors
 take place during the loading process, they are thrown as
@@ -92,8 +92,8 @@ initialize the members of <code>P</code> if and when needed.</p>
 <pre class="hljs"><code><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">phantomDescribe</span> = <span class="hljs-params">( text, url, tests )</span> -&gt;</span>
 </code></pre><p>First, we record which unit test called this function.  See the
 documentation for <code>logUnitTestName</code> below for additional details.</p>
-<pre class="hljs"><code>    logUnitTestName <span class="hljs-keyword">text</span>
-    describe <span class="hljs-keyword">text</span>, -&gt;
+<pre class="hljs"><code>    logUnitTestName text
+    describe text,<span class="hljs-function"> -&gt;</span>
 </code></pre><p>Before each test, load the given page into the headless browser and
 be sure it loaded successfully.</p>
 <pre class="hljs"><code>        beforeEach <span class="hljs-function"><span class="hljs-params">( done )</span> -&gt;</span> initializePhantom url, done
@@ -101,12 +101,12 @@ be sure it loaded successfully.</p>
 Provide the user the <code>phantom</code> and <code>page</code> objects from earlier
 as attributes of the <code>this</code> object when <code>tests</code> is run.
 Thus they can access them as <code>@phantom</code> and <code>@page</code>.</p>
-<pre class="hljs"><code>        tests<span class="hljs-preprocessor">.apply</span> P
+<pre class="hljs"><code>        tests.apply P
 </code></pre><h1><a name='example'></a>Example &nbsp;  <font size=-1><a href='#example'><img src="link.png" class="anchor"></a></font></h1><p>Example use (note the very important <code>=&gt;</code> for preserving <code>this</code>):</p>
-<pre class="hljs"><code><span class="hljs-preprocessor"># phantomDescribe 'My page', './index.html', -&gt;</span>
-<span class="hljs-preprocessor">#     it 'must load', ( done ) =&gt;</span>
-<span class="hljs-preprocessor">#         expect( @page.loaded ).toBeTruthy()</span>
-<span class="hljs-preprocessor">#         done()</span>
+<pre class="hljs"><code><span class="hljs-comment"># phantomDescribe 'My page', './index.html', -&gt;</span>
+<span class="hljs-comment">#     it 'must load', ( done ) =&gt;</span>
+<span class="hljs-comment">#         expect( @page.loaded ).toBeTruthy()</span>
+<span class="hljs-comment">#         done()</span>
 </code></pre><h1><a name='logging-unit-test-names-and-filenames'></a>Logging unit test names and filenames &nbsp;  <font size=-1><a href='#logging-unit-test-names-and-filenames'><img src="link.png" class="anchor"></a></font></h1><p>We want to keep track of the mapping from unit test names to
 filenames in which they were defined, so that documentation
 generation can create links from test results to files that
@@ -131,7 +131,7 @@ the test reports directory.</p>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

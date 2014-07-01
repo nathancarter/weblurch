@@ -20,15 +20,15 @@
         <div id="middle">
             <h1><a name='utility-functions-supporting-the-build-process'></a>Utility functions supporting the build process &nbsp;  <font size=-1><a href='#utility-functions-supporting-the-build-process'><img src="link.png" class="anchor"></a></font></h1><p>Several places in this module we access the filesystem, or spawn
 child processes with <code>exec</code>.  So import those modules up front.</p>
-<pre class="hljs"><code>fs = <span class="hljs-keyword">require</span> <span class="hljs-string">'fs'</span>
-{ <span class="hljs-keyword">exec</span> } = <span class="hljs-keyword">require</span> <span class="hljs-string">'child_process'</span>
+<pre class="hljs"><code>fs = <span class="hljs-built_in">require</span> <span class="hljs-string">'fs'</span>
+{ exec } = <span class="hljs-built_in">require</span> <span class="hljs-string">'child_process'</span>
 </code></pre><h2><a name='task-queue'></a>Task queue &nbsp;  <font size=-1><a href='#task-queue'><img src="link.png" class="anchor"></a></font></h2><h3><a name='enqueueing-and-dequeueing-tasks'></a>Enqueueing and dequeueing tasks &nbsp;  <font size=-1><a href='#enqueueing-and-dequeueing-tasks'><img src="link.png" class="anchor"></a></font></h3><p>The next few functions make it possible to add tasks to a queue and
 dequeue them later into active duty.  Enqueueing any string stores
 it for later execution, which happens when you dequeue; that passes
 the string to <code>cake</code>&#39;s <code>invoke</code>.  Such strings should be names of
 tasks defined in the cakefile.</p>
 <p>First, we need an empty queue.</p>
-<pre class="hljs"><code><span class="hljs-attribute">queue </span>=<span class="hljs-string"> []</span>
+<pre class="hljs"><code>queue = []
 </code></pre><p>Next, the enqueue function simply pushes onto that array.</p>
 <pre class="hljs"><code><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">enqueue</span> = <span class="hljs-params">( tasks... )</span> -&gt;</span>
     queue = queue.concat tasks
@@ -37,10 +37,10 @@ tasks defined in the cakefile.</p>
 and only if there is a next task to dequeue.  The exception to this
 is that if the next task on the queue is not a string (a task name)
 but instead is a function, then we just call it.</p>
-<pre class="hljs"><code>exports.dequeue = -&gt;
-    <span class="hljs-keyword">if</span> queue.<span class="hljs-keyword">length</span> &gt; <span class="hljs-number">0</span>
-        <span class="hljs-keyword">next</span> = queue.<span class="hljs-keyword">shift</span>()
-        <span class="hljs-keyword">if</span> typeof <span class="hljs-keyword">next</span> is <span class="hljs-string">'string'</span> then invoke <span class="hljs-keyword">next</span> <span class="hljs-keyword">else</span> <span class="hljs-keyword">next</span>()
+<pre class="hljs"><code><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">dequeue</span> = -&gt;</span>
+    <span class="hljs-keyword">if</span> queue.length &gt; <span class="hljs-number">0</span>
+        next = queue.shift()
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">typeof</span> next <span class="hljs-keyword">is</span> <span class="hljs-string">'string'</span> <span class="hljs-keyword">then</span> invoke next <span class="hljs-keyword">else</span> next()
 </code></pre><h3><a name='automatic-dequeueing-and-messaging'></a>Automatic dequeueing and messaging &nbsp;  <font size=-1><a href='#automatic-dequeueing-and-messaging'><img src="link.png" class="anchor"></a></font></h3><p>Each task function would therefore have to end with a call to
 <code>dequeue</code>, so that after each task is completed, if there are more
 tasks still in the queue, the next one gets run.  But that is
@@ -81,15 +81,15 @@ missing one of them, showing what would be a cryptic error message
 to a new downloader.  So this routine first checks to be sure that
 the required modules are present, and exits with a helpful error
 message if any are not.</p>
-<pre class="hljs"><code>exports.verifyPackagesInstalled = -&gt;
+<pre class="hljs"><code><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">verifyPackagesInstalled</span> = -&gt;</span>
     pj = JSON.parse fs.readFileSync <span class="hljs-string">'package.json'</span>
-    missing = ( key <span class="hljs-keyword">for</span> key of pj.dependencies when \
-        not fs.existsSync <span class="hljs-string">"./node_modules/#{key}"</span> )
+    missing = ( key <span class="hljs-keyword">for</span> key <span class="hljs-keyword">of</span> pj.dependencies <span class="hljs-keyword">when</span> \
+        <span class="hljs-keyword">not</span> fs.existsSync <span class="hljs-string">"./node_modules/<span class="hljs-subst">#{key}</span>"</span> )
         .join <span class="hljs-string">', '</span>
-    <span class="hljs-keyword">if</span> missing isnt <span class="hljs-string">''</span>
-        console.log <span class="hljs-string">"""
+    <span class="hljs-keyword">if</span> missing <span class="hljs-keyword">isnt</span> <span class="hljs-string">''</span>
+        <span class="hljs-built_in">console</span>.log <span class="hljs-string">"""
                     This folder is not yet set up.
-                    Missing node.js package(s): #{missing}
+                    Missing node.js package(s): <span class="hljs-subst">#{missing}</span>
                     To fix this, run: npm install
                     """</span>
         process.exit <span class="hljs-number">1</span>
@@ -102,14 +102,14 @@ are returned).  As many folder-regexp pairs as you want may be
 passed; the concatenated results are returned, each as a string
 that begins with the folder name it belongs in (e.g.,
 <code>&#39;data/images/thing.png&#39;</code>).</p>
-<pre class="hljs"><code>exports.dir = ( args... ) -&gt;
-    <span class="hljs-built_in">result</span> = []
-    <span class="hljs-keyword">for</span> i <span class="hljs-operator">in</span> [<span class="hljs-number">0.</span>..args.<span class="hljs-built_in">length</span>-<span class="hljs-number">1</span>] <span class="hljs-keyword">by</span> <span class="hljs-number">2</span>
+<pre class="hljs"><code><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">dir</span> = <span class="hljs-params">( args... )</span> -&gt;</span>
+    result = []
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">0.</span>..args.length-<span class="hljs-number">1</span>] <span class="hljs-keyword">by</span> <span class="hljs-number">2</span>
         <span class="hljs-keyword">if</span> args[i][-<span class="hljs-number">1.</span>.] != <span class="hljs-string">'/'</span> <span class="hljs-keyword">then</span> args[i] += <span class="hljs-string">'/'</span>
-        <span class="hljs-keyword">for</span> <span class="hljs-built_in">file</span> <span class="hljs-operator">in</span> fs.readdirSync args[i]
-            <span class="hljs-keyword">if</span> args[i+<span class="hljs-number">1</span>].test <span class="hljs-built_in">file</span>
-                <span class="hljs-built_in">result</span>.push args[i]+<span class="hljs-built_in">file</span>
-    <span class="hljs-built_in">result</span>
+        <span class="hljs-keyword">for</span> file <span class="hljs-keyword">in</span> fs.readdirSync args[i]
+            <span class="hljs-keyword">if</span> args[i+<span class="hljs-number">1</span>].test file
+                result.push args[i]+file
+    result
 </code></pre><h2><a name='loading-contents-of-text-files'></a>Loading contents of text files &nbsp;  <font size=-1><a href='#loading-contents-of-text-files'><img src="link.png" class="anchor"></a></font></h2><p>It is convenient to be able to load the contents of many text files
 at once, and this function does so.  Pass it an array of filenames,
 and you get back an object whose keys are those filenames and whose
@@ -132,14 +132,14 @@ will generate a corresponding <code>.js</code> file (compiled coffeescript),
 When the compilation is done, the callback function will be called.</p>
 <pre class="hljs"><code><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">compile</span> = <span class="hljs-params">( srcfile, callback )</span> -&gt;</span>
 </code></pre><p>Separate the path and filename out from one another.</p>
-<pre class="hljs"><code>    [ all, path, <span class="hljs-keyword">file</span> ] = /^(.<span class="hljs-variable">*)</span>\/([^\\]<span class="hljs-variable">*)</span><span class="hljs-variable">$/</span>.<span class="hljs-keyword">exec</span> srcfile
-    console.<span class="hljs-keyword">log</span> <span class="hljs-string">"\tCompiling #{srcfile}..."</span>
+<pre class="hljs"><code>    [ all, path, file ] = <span class="hljs-regexp">/^(.*)\/([^\\]*)$/</span>.exec srcfile
+    <span class="hljs-built_in">console</span>.log <span class="hljs-string">"\tCompiling <span class="hljs-subst">#{srcfile}</span>..."</span>
 </code></pre><p>Run the <code>coffee</code> compiler on the file, also creating a source map.
 This generates both <code>.js</code> and <code>.js.map</code> files.</p>
-<pre class="hljs"><code>    exec <span class="hljs-string">"coffee --map --compile #{file}"</span>, { cwd : path },
-    ( err, <span class="hljs-keyword">stdout</span>, <span class="hljs-keyword">stderr</span> ) -&gt;
-        console.<span class="hljs-built_in">log</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span> <span class="hljs-keyword">if</span> <span class="hljs-keyword">stdout</span> + <span class="hljs-keyword">stderr</span>
-        throw err <span class="hljs-keyword">if</span> err
+<pre class="hljs"><code>    exec <span class="hljs-string">"coffee --map --compile <span class="hljs-subst">#{file}</span>"</span>, { cwd : path },
+    <span class="hljs-function"><span class="hljs-params">( err, stdout, stderr )</span> -&gt;</span>
+        <span class="hljs-built_in">console</span>.log stdout + stderr <span class="hljs-keyword">if</span> stdout + stderr
+        <span class="hljs-keyword">throw</span> err <span class="hljs-keyword">if</span> err
 </code></pre><p>Run <a href="http://github.com/mishoo/UglifyJS">uglifyjs</a> to minify the
 results, taking source maps into account.  Call the callback when
 done, or throw an error if there was one.</p>
@@ -162,7 +162,7 @@ syntax highlighting of indented code blocks as
 by <a href="http://highlightjs.org">highlight.js</a>, and one of its
 stylehseets is already installed in the <code>doc/</code> output folder.</p>
 <p>The following image is used to indicate an anchor.</p>
-<pre class="hljs"><code>linkpng = '<span class="hljs-tag">&lt;<span class="hljs-title">img</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"link.png"</span> <span class="hljs-attribute">class</span>=<span class="hljs-value">"anchor"</span>&gt;</span>'
+<pre class="hljs"><code>linkpng = <span class="hljs-string">'&lt;img src="link.png" class="anchor"&gt;'</span>
 </code></pre><p>And now, the conversion function.</p>
 <pre class="hljs"><code><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">md2html</span> = <span class="hljs-params">( infile )</span> -&gt;</span>
     marked = <span class="hljs-built_in">require</span> <span class="hljs-string">'marked'</span>
@@ -190,7 +190,7 @@ provided by <code>highlight.js</code>.</p>
 <pre class="hljs"><code>    marked.setOptions
         <span class="hljs-attribute">highlight</span>: <span class="hljs-function"><span class="hljs-params">( code )</span> -&gt;</span>
             <span class="hljs-built_in">require</span>( <span class="hljs-string">'highlight.js'</span> )
-                .highlightAuto( code ).value
+                .highlight( <span class="hljs-string">'coffeescript'</span>, code ).value
         <span class="hljs-attribute">renderer</span>: renderer
     marked fs.readFileSync infile, <span class="hljs-string">'utf8'</span>
 </code></pre><p>This utility function escapes text into lower-case with no spaces,
@@ -201,7 +201,7 @@ process.</p>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

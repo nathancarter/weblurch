@@ -20,7 +20,7 @@
         <div id="middle">
             <h1><a name='basic-tests-of-compiled-app-code'></a>Basic tests of compiled app code &nbsp; <font size=-1><a href='test-results.md.html#basic-tests-of-compiled-app-code'>see results</a></font> <font size=-1><a href='#basic-tests-of-compiled-app-code'><img src="link.png" class="anchor"></a></font></h1><p>Pull in the utility functions in <code>phantom-utils</code> that make it
 easier to write the tests below.</p>
-<pre class="hljs"><code>{ phantomDescribe } = <span class="hljs-keyword">require</span> <span class="hljs-string">'./phantom-utils'</span>
+<pre class="hljs"><code>{ phantomDescribe } = <span class="hljs-built_in">require</span> <span class="hljs-string">'./phantom-utils'</span>
 </code></pre><h2><a name='app-index-html-page'></a>app/index.html page &nbsp; <font size=-1><a href='test-results.md.html#app-index-html-page'>see results</a></font> <font size=-1><a href='#app-index-html-page'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'app/index.html page'</span>, <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
 </code></pre><h3><a name='should-load'></a>should load &nbsp; <font size=-1><a href='test-results.md.html#should-load'>see results</a></font> <font size=-1><a href='#should-load'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should load'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
         expect( <span class="hljs-property">@page</span>.loaded ).toBeTruthy()
@@ -34,7 +34,7 @@ easier to write the tests below.</p>
 </code></pre><h3><a name='should-have-global-variables-defined'></a>should have global variables defined &nbsp; <font size=-1><a href='test-results.md.html#should-have-global-variables-defined'>see results</a></font> <font size=-1><a href='#should-have-global-variables-defined'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should have global variables defined'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
         <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
             {
-                address : Node.prototype.address
+                address : <span class="hljs-attribute">Node</span>::address
                 lurchEditor : LurchEditor
             }
         , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
@@ -62,7 +62,7 @@ easier to write the tests below.</p>
 </code></pre><h3><a name='should-have-global-variables-defined'></a>should have global variables defined &nbsp; <font size=-1><a href='test-results.md.html#should-have-global-variables-defined'>see results</a></font> <font size=-1><a href='#should-have-global-variables-defined'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should have global variables defined'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
         <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
             {
-                address : Node.prototype.address
+                address : <span class="hljs-attribute">Node</span>::address
                 lurchEditor : LurchEditor
             }
         , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
@@ -79,7 +79,7 @@ easier to write the tests below.</p>
 
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

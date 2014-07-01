@@ -24,88 +24,18 @@ order, the first items being those that should be done next, and
 the later items those that must come after.  Necessarily, the later
 items are more vague than the earlier ones.</p>
 <h1><a name='word-processing-foundation'></a>Word Processing Foundation &nbsp;  <font size=-1><a href='#word-processing-foundation'><img src="link.png" class="anchor"></a></font></h1><h2><a name='dom-edit-tracker'></a>DOM Edit Tracker &nbsp;  <font size=-1><a href='#dom-edit-tracker'><img src="link.png" class="anchor"></a></font></h2><ul>
-<li>Create a new class for storing DOM editing events, but for now
-it&#39;s just a stub; call it <code>DOMEditAction</code>.</li>
-<li>Create a <code>DOMEditTracker</code> instance method called
-<code>nodeEditHappened</code> that takes a <code>DOMEditAction</code> instance as
-parameter and pushes it onto an internal stack.  See the next
-bullet point for the definition of that class.</li>
-<li>Add to the <code>DOMEditAction</code> class the ability to instantiate it
-with any of the following types of data.  Do this in parallel
-with the following bullet points, which instantiate this class
-and discuss the testing thereof.<ul>
-<li>N.appendChild(node)<ul>
-<li>returns node</li>
-<li>record with N&#39;s address and the serialized node</li>
+<li>Create unit tests that verify that the data is correctly
+recorded in the internal array of the <code>DOMEditTracker</code> instance.<ul>
+<li>N.insertBefore(node,beforeThisChild)</li>
+<li>N.normalize()</li>
+<li>N.removeAttribute(name)</li>
+<li>N.removeAttributeNode(attrNode)</li>
+<li>N.removeChild(childNode)</li>
+<li>N.replaceChild(newnode,oldnode)</li>
+<li>N.setAttribute(name,value)</li>
+<li>N.setAttributeNode(attrNode)</li>
 </ul>
 </li>
-<li>N.insertBefore(node,beforeThisChild)<ul>
-<li>returns newnode</li>
-<li>if beforeThisChild is omitted, it&#39;s the same as append</li>
-<li>record with N&#39;s address, the serialized node, and the
-index of beforeThisChild (or child node length if absent)</li>
-</ul>
-</li>
-<li>N.normalize()<ul>
-<li>removes empty text nodes</li>
-<li>joins adjacent text nodes</li>
-<li>no return value</li>
-<li>record as N&#39;s address together with a mapfrom indices to
-text content of all current child text nodes of N</li>
-</ul>
-</li>
-<li>N.removeAttribute(name)<ul>
-<li>no return value</li>
-<li>record as N&#39;s address, name, and original attribute value</li>
-</ul>
-</li>
-<li>N.removeAttributeNode(attrNode)<ul>
-<li>returns attrNode</li>
-<li>e.g.: N.removeAttributeNode(N.getAttributeNode(&#39;style&#39;))</li>
-<li>record as N&#39;s address and original attribute name and
-value</li>
-</ul>
-</li>
-<li>N.removeChild(childNode)<ul>
-<li>returns childNode</li>
-<li>record as N&#39;s address, the child&#39;s original index within
-N, and a serialization of the child</li>
-</ul>
-</li>
-<li>N.replaceChild(newnode,oldnode)<ul>
-<li>returns oldnode, I think</li>
-<li>record as N&#39;s address, the child&#39;s original index within
-N, and serializations of both oldnode and newnode</li>
-</ul>
-</li>
-<li>N.setAttribute(name,value)<ul>
-<li>both strings, no return value</li>
-<li>record as N&#39;s address, name, and value, as well as the
-original value of the attribute beforehand</li>
-</ul>
-</li>
-<li>N.setAttributeNode(attrNode)<ul>
-<li>returns replaced node if any, otherwise null</li>
-<li>e.g.:
-<code>var atr=document.createAttribute(&quot;class&quot;);
-atr.nodeValue=&quot;democlass&quot;;
-myDiv.setAttributeNode(atr);</code></li>
-<li>record as N&#39;s address, the name and value of the attribute
-after setting, as well as the original value of the
-attribute beforehand</li>
-</ul>
-</li>
-<li>Note that element.dataset.foo is not supported.</li>
-</ul>
-</li>
-<li>In the <a href="domutils.litcoffee.html">DOM utilities module</a>, modify
-all functions in the Node prototype that manipulate the DOM so
-that, after their completion, they call <code>nodeEditHappened</code> in
-the containing <code>DOMEditTracker</code> instance notifying it of which
-method was called in them, if it was successful in modifying the
-DOM, by creating and passing a <code>DOMEditAction</code> instance.
-Create unit tests that verify that the data is correctly
-recorded in the internal array of the <code>DOMEditTracker</code> instance.</li>
 <li>Add undo and redo methods to a <code>LurchEditor</code> instance that move
 an index pointer up and down the internal list of past actions,
 and that chop off the redo-able actions if an edit comes in that
@@ -205,6 +135,15 @@ somewhere).</li>
 <li>delete selection</li>
 <li>change properties of paragraph around cursor
 (e.g., justification, indentation)</li>
+<li>cut, copy, and paste
+(See <a href="http://stackoverflow.com/a/11347714/670492">this StackOverflow answer</a> for a possibly
+helpful way to put complex content on the clipboard from
+JavaScript.)<ul>
+<li>implement copy, and then cut is copy-then-delete</li>
+<li>implement paste when there is no selection, and then paste
+when there is a selection is just delete-then-paste</li>
+</ul>
+</li>
 </ul>
 </li>
 <li>As you create each, create tests for it as well, and save
@@ -227,6 +166,7 @@ selection</li>
 selection</li>
 <li>Ctrl + B/I/U/L/R/E = apply properties to selection or
 paragraph around cursor, as appropriate</li>
+<li>Ctrl + X/C/V = cut/copy/paste</li>
 </ul>
 </li>
 <li>In the test app, when the JS eval
@@ -356,10 +296,24 @@ theorems proven based on assumptions that you therefore must
 guarantee hold in your implementation)</li>
 <li>create unit tests as you go</li>
 </ul>
+<h1><a name='unit-tests-for-later'></a>Unit tests for later &nbsp;  <font size=-1><a href='#unit-tests-for-later'><img src="link.png" class="anchor"></a></font></h1><p>The following unit tests were skipped earlier in development,
+because they are less important than the ones that were written,
+and yet are included here for the sake of completeness, and so that
+they are not forgotten.  A complete unit testing suite would have
+tests for all of the following cases.</p>
+<ul>
+<li><a href="domeditaction-spec.litcoffee.html">The tests for the DOMEditAction constructor</a> test every constructor by
+passing it correct parameters.  They do not do any testing to
+ensure that the constructor throws an error upon receiving
+incorrect parameters, except one test that ensures that the
+action type is valid.  In particular, no testing is done to
+ensure that the node must be valid, nor that for each individual
+action type, the parameters must be given correctly.</li>
+</ul>
 
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>
