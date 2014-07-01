@@ -8,8 +8,8 @@ easier to write the tests below.
 
 ## address member function of Node class
 
-The tests in this section test the `address` member function in the
-`Node` prototype.
+The tests in this section test the `address` member function in
+the `Node` prototype.
 [See its definition here.](domutils.litcoffee.html#address).
 
     phantomDescribe 'address member function of Node class',
@@ -21,7 +21,7 @@ The tests in this section test the `address` member function in the
 
 First, just verify that it's present.
 
-            @page.evaluate ( -> Node.prototype.address ),
+            @page.evaluate ( -> Node::address ),
             ( err, result ) ->
                 expect( result ).toBeTruthy()
                 done()
@@ -268,7 +268,7 @@ The tests in this section test the `index` member function in the
 ### should be defined
 
         it 'should be defined', ( done ) =>
-            @page.evaluate ( -> Node.prototype.index ),
+            @page.evaluate ( -> Node::index ),
             ( err, result ) ->
                 expect( result ).toBeTruthy()
                 done()
@@ -526,7 +526,7 @@ The tests in this section test the `toJSON` member function in the
 
 First, just verify that the function itself is present.
 
-            @page.evaluate ( -> Node.prototype.toJSON ),
+            @page.evaluate ( -> Node::toJSON ),
             ( err, result ) ->
                 expect( result ).toBeTruthy()
                 done()
@@ -1137,4 +1137,62 @@ that this works.
                     'way inside</span></span></div></div>'
                 done()
 
+## Using Node prototype methods
+
+The tests in this section test the modifications made to the Node
+prototype that emit events when methods defined in that prototype
+are used for editing.
+
+    phantomDescribe 'using Node prototype methods',
+    './app/index.html', ->
+
+### should send alerts on `appendChild` calls
+
+We append an empty span to a div containing only whitespace, and
+expect to hear a `DOMEditAction` in response, indicating that the
+span was appended to the root of the tracked tree.
+
+We then append an empty span inside that span, and expect a
+similar event notification, but this time with an address inside
+the root rather than at the root.
+
+        it 'should send alerts on appendChild calls', ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                span = document.createElement 'span'
+
+Append the span to the div, then an element to the span.  Since
+the div has a whitespace text node in it, the span will be its
+second child, but the thing added inside the span will be its
+first.
+
+                result1 = div.appendChild span
+                onemore = document.createElement 'span'
+                result2 = span.appendChild onemore
+                tracker = DOMEditTracker.instanceOver div
+
+Return the serialized versions of the recorded edit actions,
+along with all return values from calls to `appendChild`.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push result1.address tracker.getElement()
+                result.push result2.address tracker.getElement()
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 4
+
+Validate the serialized versions of the `appendChild` events.
+
+                expect( JSON.parse result[0] ).toEqual
+                    node : [], toAppend : { tagName : 'SPAN' }
+                expect( JSON.parse result[1] ).toEqual
+                    node : [ 1 ], toAppend : { tagName : 'SPAN' }
+
+Validate the return values, which must be the addresses of the
+appended children within the original div.
+
+                expect( result[2] ).toEqual [ 1 ]
+                expect( result[3] ).toEqual [ 1, 0 ]
+                done()
 

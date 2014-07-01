@@ -24,7 +24,7 @@ then it defaults to the top-level Node above `N`
 (i.e., the furthest-up ancestor, with no `.parentNode`,
 which usually means it's the global variable `document`).
 
-    Node.prototype.address = ( ancestor = null ) ->
+    Node::address = ( ancestor = null ) ->
 
 The base case comes in two flavors.
 First, if the parameter is this node, then the correct result is
@@ -46,8 +46,19 @@ one.
 
         recur = @parentNode.address ancestor
         if recur is null then return null
-        recur.concat [ Array.prototype.slice.apply(
-            @parentNode.childNodes ).indexOf this ]
+        recur.concat [ @indexInParent() ]
+
+You'll notice that the final line of code above depends on the
+as-yet-undefined helper function `indexInParent()`.  We therefore
+create that simple helper function now, which is also a useful
+member of the `Node` prototype.
+
+    Node::indexInParent = ->
+        if @parentNode
+            Array::slice.apply(
+                @parentNode.childNodes ).indexOf this
+        else
+            -1
 
 ## Index
 
@@ -64,7 +75,7 @@ integers, the implementation is simply repeated lookups in some
 `childNodes` arrays.  It is therefore quite short, with most of
 the code going to type safety.
 
-    Node.prototype.index = ( address ) ->
+    Node::index = ( address ) ->
 
 Require that the parameter be an array.
 
@@ -97,7 +108,7 @@ First, the function for converting a DOM Node to an object that
 can be serialized with `JSON.stringify`.  After this function is
 defined, one can take any node `N` and call `N.toJSON()`.
 
-    Node.prototype.toJSON = ( verbose = yes ) ->
+    Node::toJSON = ( verbose = yes ) ->
 
 The `verbose` parameter uses human-readable object keys, and is the
 default.  A more compact version can be obtained by setting that
@@ -194,4 +205,35 @@ given object, and recur on the child array if there is one.
             for child in children
                 result.appendChild Node.fromJSON child
         result
+
+## Change events
+
+Whenever a change is made to a DOM Node using one of the built-in
+methods of the Node prototype, notifications of that cahnge event
+must be sent to any `DOMEditTracker` instance containing the
+modified node.  To facilitate this, we modify those Node prototype
+methods so that they not only do their original work, but also
+send the notification events in question.
+
+### appendChild
+
+The new version of `N.appendChild(node)` should, as before, return
+the appended `node`, but should also create and propagate a
+`DOMEditAction` instance of type "appendChild" containing `N`'s
+address and a serialized copy of `node`.
+
+    '''
+    appendChild insertBefore normalize removeAttribute
+    removeAttributeNode removeChild replaceChild
+    setAttribute setAttributeNode
+    '''.split( ' ' ).map ( methodName ) ->
+        original = Node::[methodName]
+        Node::[methodName] = ( args... ) ->
+            tracker = DOMEditTracker.instanceOver this
+            if tracker
+                event = new DOMEditAction methodName, this, args...
+            result = original.call this, args...
+            if tracker
+                tracker.nodeEditHappened event
+            result
 

@@ -11,68 +11,16 @@ items are more vague than the earlier ones.
 
 ## DOM Edit Tracker
 
- * Create a new class for storing DOM editing events, but for now
-   it's just a stub; call it `DOMEditAction`.
- * Create a `DOMEditTracker` instance method called
-   `nodeEditHappened` that takes a `DOMEditAction` instance as
-   parameter and pushes it onto an internal stack.  See the next
-   bullet point for the definition of that class.
- * Add to the `DOMEditAction` class the ability to instantiate it
-   with any of the following types of data.  Do this in parallel
-   with the following bullet points, which instantiate this class
-   and discuss the testing thereof.
-    * N.appendChild(node)
-       * returns node
-       * record with N's address and the serialized node
-    * N.insertBefore(node,beforeThisChild)
-       * returns newnode
-       * if beforeThisChild is omitted, it's the same as append
-       * record with N's address, the serialized node, and the
-         index of beforeThisChild (or child node length if absent)
-    * N.normalize()
-       * removes empty text nodes
-       * joins adjacent text nodes
-       * no return value
-       * record as N's address together with a mapfrom indices to
-         text content of all current child text nodes of N
-    * N.removeAttribute(name)
-       * no return value
-       * record as N's address, name, and original attribute value
-    * N.removeAttributeNode(attrNode)
-       * returns attrNode
-       * e.g.: N.removeAttributeNode(N.getAttributeNode('style'))
-       * record as N's address and original attribute name and
-         value
-    * N.removeChild(childNode)
-       * returns childNode
-       * record as N's address, the child's original index within
-         N, and a serialization of the child
-    * N.replaceChild(newnode,oldnode)
-       * returns oldnode, I think
-       * record as N's address, the child's original index within
-         N, and serializations of both oldnode and newnode
-    * N.setAttribute(name,value)
-       * both strings, no return value
-       * record as N's address, name, and value, as well as the
-         original value of the attribute beforehand
-    * N.setAttributeNode(attrNode)
-       * returns replaced node if any, otherwise null
-       * e.g.:
-         `var atr=document.createAttribute("class");
-         atr.nodeValue="democlass";
-         myDiv.setAttributeNode(atr);`
-       * record as N's address, the name and value of the attribute
-         after setting, as well as the original value of the
-         attribute beforehand
-    * Note that element.dataset.foo is not supported.
- * In the [DOM utilities module](domutils.litcoffee.html), modify
-   all functions in the Node prototype that manipulate the DOM so
-   that, after their completion, they call `nodeEditHappened` in
-   the containing `DOMEditTracker` instance notifying it of which
-   method was called in them, if it was successful in modifying the
-   DOM, by creating and passing a `DOMEditAction` instance.
-   Create unit tests that verify that the data is correctly
+ * Create unit tests that verify that the data is correctly
    recorded in the internal array of the `DOMEditTracker` instance.
+    * N.insertBefore(node,beforeThisChild)
+    * N.normalize()
+    * N.removeAttribute(name)
+    * N.removeAttributeNode(attrNode)
+    * N.removeChild(childNode)
+    * N.replaceChild(newnode,oldnode)
+    * N.setAttribute(name,value)
+    * N.setAttributeNode(attrNode)
  * Add undo and redo methods to a `LurchEditor` instance that move
    an index pointer up and down the internal list of past actions,
    and that chop off the redo-able actions if an edit comes in that
@@ -180,6 +128,14 @@ items are more vague than the earlier ones.
     * delete selection
     * change properties of paragraph around cursor
       (e.g., justification, indentation)
+    * cut, copy, and paste
+      (See [this StackOverflow answer](
+      http://stackoverflow.com/a/11347714/670492) for a possibly
+      helpful way to put complex content on the clipboard from
+      JavaScript.)
+      * implement copy, and then cut is copy-then-delete
+      * implement paste when there is no selection, and then paste
+        when there is a selection is just delete-then-paste
  * As you create each, create tests for it as well, and save
    them in the repository
 
@@ -202,6 +158,7 @@ items are more vague than the earlier ones.
       selection
     * Ctrl + B/I/U/L/R/E = apply properties to selection or
       paragraph around cursor, as appropriate
+    * Ctrl + X/C/V = cut/copy/paste
  * In the test app, when the JS eval
    input does not have focus (and yet we're in one of the main
    view tabs, not the export-a-test-JSON view) react to
@@ -333,4 +290,21 @@ items are more vague than the earlier ones.
    theorems proven based on assumptions that you therefore must
    guarantee hold in your implementation)
  * create unit tests as you go
+
+# Unit tests for later
+
+The following unit tests were skipped earlier in development,
+because they are less important than the ones that were written,
+and yet are included here for the sake of completeness, and so that
+they are not forgotten.  A complete unit testing suite would have
+tests for all of the following cases.
+
+ * [The tests for the DOMEditAction constructor](
+   domeditaction-spec.litcoffee.html) test every constructor by
+   passing it correct parameters.  They do not do any testing to
+   ensure that the constructor throws an error upon receiving
+   incorrect parameters, except one test that ensures that the
+   action type is valid.  In particular, no testing is done to
+   ensure that the node must be valid, nor that for each individual
+   action type, the parameters must be given correctly.
 

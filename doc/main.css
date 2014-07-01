@@ -144,6 +144,7 @@ html>body #middle {
 #right {
     position: fixed;
     top: 40px;
+    bottom: 40px;
     right: 0px; /* Opera5.02 will show a space at right when there is no scroll bar */
     margin: 0px;
     padding: 10px;
@@ -153,6 +154,7 @@ html>body #middle {
     voice-family: "\"}\"";
     voice-family:inherit;
     width: 250px;
+    overflow: scroll;
     }
 html>body #right {
     width: 250px; /* ie5win fudge ends */

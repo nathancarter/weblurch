@@ -33,7 +33,7 @@ easier to write the tests below.
         it 'should have global variables defined', ( done ) =>
             @page.evaluate ->
                 {
-                    address : Node.prototype.address
+                    address : Node::address
                     lurchEditor : LurchEditor
                 }
             , ( err, result ) ->
@@ -80,7 +80,7 @@ Later we will also add tests that use `page.get 'content'`,
         it 'should have global variables defined', ( done ) =>
             @page.evaluate ->
                 {
-                    address : Node.prototype.address
+                    address : Node::address
                     lurchEditor : LurchEditor
                 }
             , ( err, result ) ->
