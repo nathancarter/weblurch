@@ -103,7 +103,7 @@ content at that time.
             , ( err, result ) ->
                 expect( result[0] ).toBeTruthy()
                 expect( result[1] ).toEqual []
-                expect( result[2] ).toEqual \
+                expect( result[2] ).toEqual
                     0 : 'one', 1 : 'two', 3 : 'four'
                 done()
 
@@ -160,5 +160,39 @@ value that the attribute had before removal.
                 expect( result[1] ).toEqual []
                 expect( result[2] ).toEqual 'id'
                 expect( result[3] ).toEqual '0'
+                done()
+
+### should have "removeChild" instances
+
+That is, we should be able to construct instances of the class with
+the type "removeChild", as described [in the documentation for the
+class's constructor](domeditaction.litcoffee.html#constructor).
+These will have an integer `childIndex` member containing the
+index of the child before removal, and a `child` member containing
+a serialized version of the removed child.
+
+        it 'should have "removeChild" instances',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.innerHTML = 'first child text node'
+                span = document.createElement 'span'
+                span.innerHTML = 'span contents, just text'
+                div.appendChild span
+                div.appendChild document.createTextNode 'more text'
+                T = new DOMEditAction 'removeChild', div, span
+                result = [
+                    T.tracker is DOMEditTracker.instances[0]
+                    T.node
+                    T.childIndex
+                    T.child
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toBeTruthy()
+                expect( result[1] ).toEqual []
+                expect( result[2] ).toEqual 1
+                expect( result[3] ).toEqual
+                    'tagName' : 'SPAN',
+                    'children' : [ 'span contents, just text' ]
                 done()
 
