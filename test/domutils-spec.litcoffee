@@ -1160,16 +1160,39 @@ the root rather than at the root.
             @page.evaluate ->
                 div = document.getElementById '0'
                 span = document.createElement 'span'
-                div.appendChild span
+
+Append the span to the div, then an element to the span.  Since
+the div has a whitespace text node in it, the span will be its
+second child, but the thing added inside the span will be its
+first.
+
+                result1 = div.appendChild span
                 onemore = document.createElement 'span'
-                span.appendChild onemore
+                result2 = span.appendChild onemore
                 tracker = DOMEditTracker.instanceOver div
-                tracker.getEditActions().map ( x ) -> x.toJSON()
+
+Return the serialized versions of the recorded edit actions,
+along with all return values from calls to `appendChild`.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push result1.address tracker.getElement()
+                result.push result2.address tracker.getElement()
+                result
             , ( err, result ) ->
-                expect( result.length ).toEqual 2
+                expect( result.length ).toEqual 4
+
+Validate the serialized versions of the `appendChild` events.
+
                 expect( JSON.parse result[0] ).toEqual
                     node : [], toAppend : { tagName : 'SPAN' }
                 expect( JSON.parse result[1] ).toEqual
                     node : [ 1 ], toAppend : { tagName : 'SPAN' }
+
+Validate the return values, which must be the addresses of the
+appended children within the original div.
+
+                expect( result[2] ).toEqual [ 1 ]
+                expect( result[3] ).toEqual [ 1, 0 ]
                 done()
 
