@@ -1264,3 +1264,90 @@ appended children within the original div.
                 expect( result[5] ).toEqual [ 0, 0 ]
                 done()
 
+### should send alerts on `normalize` calls
+
+We insert a text node after the existing whitespce in the div,
+and normalize.  We test that the normalize event is emitted.
+
+We then insert an empty span after the text, append two text node
+children inside it, with an empty span between.  We then normalize
+that node and repeat the test.
+
+        it 'should send alerts on normalize calls', ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.appendChild document.createTextNode 'example'
+                span = document.createElement 'span'
+                span.innerHTML = 'foo<span></span>bar'
+
+Normalize the div, append the span, and normalize the span.
+
+                result1 = div.normalize()
+                div.appendChild span
+                result2 = span.normalize()
+                tracker = DOMEditTracker.instanceOver div
+
+Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to normalize
+were undefined, as they should be.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push typeof result1
+                result.push typeof result2
+                result
+            , ( err, result ) ->
+
+We'll be looking for the four `normalize` events, plus the two
+`appendChild` events that aren't what we're testing here, but
+certainly did occur during the test, and thus got recorded.
+
+                expect( result.length ).toEqual 6
+
+Validate the serialized versions of the various events.
+First, the `appendChild` call that adds the "example" text node.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'appendChild', node : [],
+                    toAppend : 'example'
+
+Next, the first of two normalize events that we're testing, this
+one done on a div with two text children and no other children.
+
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'normalize', node : [],
+                    textChildren : {
+                        0 : '\n        '
+                        1 : 'example'
+                    }
+
+Next, an `appendChild` event that isn't part of this test, but is
+included for completeness.
+
+                expect( JSON.parse result[2] ).toEqual
+                    type : 'appendChild', node : [],
+                    toAppend : {
+                        tagName : 'SPAN'
+                        children : [
+                            'foo'
+                            { tagName : 'SPAN' }
+                            'bar'
+                        ]
+                    }
+
+Finally, the second normalize event, called on the span inside the
+div, with two text node children, not adjacent.
+
+                expect( JSON.parse result[3] ).toEqual
+                    type : 'normalize', node : [ 1 ],
+                    textChildren : {
+                        0 : 'foo'
+                        2 : 'bar'
+                    }
+
+Ensure that the return values were all undefined.
+
+                expect( result[4] ).toEqual 'undefined'
+                expect( result[5] ).toEqual 'undefined'
+                done()
+
