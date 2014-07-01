@@ -16,9 +16,9 @@ The protocol for what data to store in each case is described here.
    * event contains `N`'s address and the serialized node
  * `N.insertBefore(node,beforeThisChild)`
    * returns `node`
-   * if beforeThisChild is omitted, it's the same as append
+   * if `beforeThisChild` is omitted, it's the same as append
    * event contains `N`'s address, the serialized node, and the
-     index of beforeThisChild (or child node length if absent)
+     index of `beforeThisChild` (or child node length if absent)
  * `N.normalize()`
    * no return value
    * removes empty text nodes
@@ -27,12 +27,12 @@ The protocol for what data to store in each case is described here.
      to text content of all current child text nodes of `N`
  * `N.removeAttribute(name)`
    * no return value
-   * event contains `N`'s address, name, and original attribute
+   * event contains `N`'s address, `name`, and original attribute
      value
  * `N.removeAttributeNode(attrNode)`
    * returns `attrNode`
    * e.g.: `N.removeAttributeNode(N.getAttributeNode('style'))`
-   * event contains `N`'s address and original attribute name and
+   * event contains `N`'s address and original attribute `name` and
      value
  * `N.removeChild(childNode)`
    * returns `childNode`
@@ -45,8 +45,8 @@ The protocol for what data to store in each case is described here.
  * `N.setAttribute(name,value)`
    * no return value
    * both strings
-   * event contains `N`'s address, name, and value, as well as the
-     original value of the attribute beforehand
+   * event contains `N`'s address, `name`, and `value`, as well as
+     the original value of the attribute beforehand
  * `N.setAttributeNode(attrNode)`
    * returns replaced node if any, otherwise null
    * e.g.:

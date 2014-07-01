@@ -1153,13 +1153,14 @@ expect to hear a `DOMEditAction` in response, indicating that the
 span was appended to the root of the tracked tree.
 
 We then append an empty span inside that span, and expect a
-similar event notification, but this time with an address inside
-the root rather than at the root.
+similar event notification, but this time with an address further
+inside the root.
 
         it 'should send alerts on appendChild calls', ( done ) =>
             @page.evaluate ->
                 div = document.getElementById '0'
                 span = document.createElement 'span'
+                onemore = document.createElement 'span'
 
 Append the span to the div, then an element to the span.  Since
 the div has a whitespace text node in it, the span will be its
@@ -1167,7 +1168,6 @@ second child, but the thing added inside the span will be its
 first.
 
                 result1 = div.appendChild span
-                onemore = document.createElement 'span'
                 result2 = span.appendChild onemore
                 tracker = DOMEditTracker.instanceOver div
 
@@ -1194,5 +1194,67 @@ appended children within the original div.
 
                 expect( result[2] ).toEqual [ 1 ]
                 expect( result[3] ).toEqual [ 1, 0 ]
+                done()
+
+### should send alerts on `insertBefore` calls
+
+We insert an empty span in a div containing only whitespace,
+before that whitespace node, and expect to hear a `DOMEditAction`
+in response, indicating that the span was inserted under the root
+of the tracked tree, at index 0.
+
+We then insert an empty span at index 2, which is equivalent to an
+append call, and expect another event, with index 2.
+
+We then insert a final empty span, inside the first one, and
+expect a similar event notification, but this time with an
+address further inside the root.
+
+        it 'should send alerts on appendChild calls', ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                text = div.childNodes[0]
+                span = document.createElement 'span'
+                onemore = document.createElement 'span'
+                twomore = document.createElement 'span'
+
+Insert the span into the div, at index 0.  Then insert another 
+at index 2.  Then insert the final span into the first span.
+
+                result1 = div.insertBefore span, text
+                result2 = div.insertBefore onemore # == append
+                result3 = span.insertBefore twomore # == append
+                tracker = DOMEditTracker.instanceOver div
+
+Return the serialized versions of the recorded edit actions,
+along with all return values from calls to `appendChild`.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push result1.address tracker.getElement()
+                result.push result2.address tracker.getElement()
+                result.push result3.address tracker.getElement()
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 6
+
+Validate the serialized versions of the `insertBefore` events.
+
+                expect( JSON.parse result[0] ).toEqual
+                    node : [], toInsert : { tagName : 'SPAN' },
+                    insertBefore : 0
+                expect( JSON.parse result[1] ).toEqual
+                    node : [], toInsert : { tagName : 'SPAN' },
+                    insertBefore : 2
+                expect( JSON.parse result[2] ).toEqual
+                    node : [ 0 ], toInsert : { tagName : 'SPAN' },
+                    insertBefore : 0
+
+Validate the return values, which must be the addresses of the
+appended children within the original div.
+
+                expect( result[3] ).toEqual [ 0 ]
+                expect( result[4] ).toEqual [ 2 ]
+                expect( result[5] ).toEqual [ 0, 0 ]
                 done()
 
