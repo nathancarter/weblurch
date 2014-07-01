@@ -8,8 +8,8 @@ easier to write the tests below.
 
 ## address member function of Node class
 
-The tests in this section test the `address` member function in the
-`Node` prototype.
+The tests in this section test the `address` member function in
+the `Node` prototype.
 [See its definition here.](domutils.litcoffee.html#address).
 
     phantomDescribe 'address member function of Node class',
@@ -1137,4 +1137,39 @@ that this works.
                     'way inside</span></span></div></div>'
                 done()
 
+## Using Node prototype methods
+
+The tests in this section test the modifications made to the Node
+prototype that emit events when methods defined in that prototype
+are used for editing.
+
+    phantomDescribe 'using Node prototype methods',
+    './app/index.html', ->
+
+### should send alerts on `appendChild` calls
+
+We append an empty span to a div containing only whitespace, and
+expect to hear a `DOMEditAction` in response, indicating that the
+span was appended to the root of the tracked tree.
+
+We then append an empty span inside that span, and expect a
+similar event notification, but this time with an address inside
+the root rather than at the root.
+
+        it 'should send alerts on appendChild calls', ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                span = document.createElement 'span'
+                div.appendChild span
+                onemore = document.createElement 'span'
+                span.appendChild onemore
+                tracker = DOMEditTracker.instanceOver div
+                tracker.getEditActions().map ( x ) -> x.toJSON()
+            , ( err, result ) ->
+                expect( result.length ).toEqual 2
+                expect( JSON.parse result[0] ).toEqual
+                    node : [], toAppend : { tagName : 'SPAN' }
+                expect( JSON.parse result[1] ).toEqual
+                    node : [ 1 ], toAppend : { tagName : 'SPAN' }
+                done()
 
