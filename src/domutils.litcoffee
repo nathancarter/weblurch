@@ -222,14 +222,18 @@ the appended `node`, but should also create and propagate a
 `DOMEditAction` instance of type "appendChild" containing `N`'s
 address and a serialized copy of `node`.
 
-    do ->
-        original = Node::appendChild
-        Node::appendChild = ( node ) ->
+    '''
+    appendChild insertBefore normalize removeAttribute
+    removeAttributeNode removeChild replaceChild
+    setAttribute setAttributeNode
+    '''.split( ' ' ).map ( methodName ) ->
+        original = Node::[methodName]
+        Node::[methodName] = ( args... ) ->
             tracker = DOMEditTracker.instanceOver this
             if tracker
-                event = new DOMEditAction 'appendChild', this, node
-            original.call this, node
+                event = new DOMEditAction methodName, this, args...
+            result = original.call this, args...
             if tracker
                 tracker.nodeEditHappened event
-            node
+            result
 
