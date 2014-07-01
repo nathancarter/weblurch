@@ -1185,9 +1185,11 @@ along with all return values from calls to `appendChild`.
 Validate the serialized versions of the `appendChild` events.
 
                 expect( JSON.parse result[0] ).toEqual
-                    node : [], toAppend : { tagName : 'SPAN' }
+                    type : 'appendChild', node : [],
+                    toAppend : { tagName : 'SPAN' }
                 expect( JSON.parse result[1] ).toEqual
-                    node : [ 1 ], toAppend : { tagName : 'SPAN' }
+                    type : 'appendChild', node : [ 1 ],
+                    toAppend : { tagName : 'SPAN' }
 
 Validate the return values, which must be the addresses of the
 appended children within the original div.
@@ -1241,13 +1243,16 @@ along with all return values from calls to `appendChild`.
 Validate the serialized versions of the `insertBefore` events.
 
                 expect( JSON.parse result[0] ).toEqual
-                    node : [], toInsert : { tagName : 'SPAN' },
+                    type : 'insertBefore', node : [],
+                    toInsert : { tagName : 'SPAN' },
                     insertBefore : 0
                 expect( JSON.parse result[1] ).toEqual
-                    node : [], toInsert : { tagName : 'SPAN' },
+                    type : 'insertBefore', node : [],
+                    toInsert : { tagName : 'SPAN' },
                     insertBefore : 2
                 expect( JSON.parse result[2] ).toEqual
-                    node : [ 0 ], toInsert : { tagName : 'SPAN' },
+                    type : 'insertBefore', node : [ 0 ],
+                    toInsert : { tagName : 'SPAN' },
                     insertBefore : 0
 
 Validate the return values, which must be the addresses of the

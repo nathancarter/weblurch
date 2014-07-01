@@ -102,6 +102,10 @@ member will be null.
 
             @tracker = DOMEditTracker.instanceOver node
 
+Also remember the type of action.
+
+            @type = type
+
 The node itself is stored in `@node` as the address within the
 given edit tracker, or within its topmost ancestor if there is no
 tracker.  (But this class is not very useful if there is no edit
@@ -243,7 +247,7 @@ This function is indirectly tested in that many other unit tests
 depend upon it to test other functionality.
 
         toJSON: ->
-            JSON.stringify { @node, @toAppend, @toInsert,
+            JSON.stringify { @type, @node, @toAppend, @toInsert,
                 @insertBefore, @textChildren, @name, @value,
                 @child, @childIndex, @oldChild, @newChild,
                 @oldValue, @newValue }
