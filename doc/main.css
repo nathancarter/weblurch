@@ -116,6 +116,7 @@ img {
 #left {
     position: fixed;
     top: 40px;
+    bottom: 40px;
     left: 0px;
     margin: 0px;
     padding: 10px;
@@ -125,6 +126,7 @@ img {
     voice-family: "\"}\"";
     voice-family:inherit;
     width: 250px;
+    overflow: scroll;
     }
 html>body #left {
     width: 250px; /* ie5win fudge ends */
