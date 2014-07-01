@@ -148,7 +148,7 @@ For type "replaceChild", we store the child's original index within
                     throw Error 'Invalid parameter: ' + data[0]
                 if data[1] not instanceof Node
                     throw Error 'Invalid parameter: ' + data[1]
-                if data[0].parentNode isnt @node
+                if data[0].parentNode isnt node
                     throw Error 'Invalid child: ' + data[0]
                 @childIndex = data[0].indexInParent()
                 @oldChild = data[0].toJSON()

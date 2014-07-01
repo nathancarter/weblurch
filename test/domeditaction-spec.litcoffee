@@ -196,3 +196,45 @@ a serialized version of the removed child.
                     'children' : [ 'span contents, just text' ]
                 done()
 
+### should have "replaceChild" instances
+
+That is, we should be able to construct instances of the class with
+the type "replaceChild", as described [in the documentation for the
+class's constructor](domeditaction.litcoffee.html#constructor).
+These will have an integer `childIndex` member containing the
+index of the child being replaced, an `oldChild` member containing
+a serialized version of the replaced child, and a `newChild`
+member containing a serialization of the replacement child.
+
+        it 'should have "replaceChild" instances',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.innerHTML = 'first child text node'
+                span = document.createElement 'span'
+                span.innerHTML = 'span contents, just text'
+                div.appendChild span
+                div.appendChild document.createTextNode 'more text'
+                repl = document.createElement 'h1'
+                repl.innerHTML = 'Announcement!'
+                T = new DOMEditAction 'replaceChild',
+                    div, span, repl
+                result = [
+                    T.tracker is DOMEditTracker.instances[0]
+                    T.node
+                    T.childIndex
+                    T.oldChild
+                    T.newChild
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toBeTruthy()
+                expect( result[1] ).toEqual []
+                expect( result[2] ).toEqual 1
+                expect( result[3] ).toEqual
+                    'tagName' : 'SPAN',
+                    'children' : [ 'span contents, just text' ]
+                expect( result[4] ).toEqual
+                    'tagName' : 'H1',
+                    'children' : [ 'Announcement!' ]
+                done()
+
