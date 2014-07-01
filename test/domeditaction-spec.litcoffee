@@ -238,3 +238,33 @@ member containing a serialization of the replacement child.
                     'children' : [ 'Announcement!' ]
                 done()
 
+### should have "setAttribute" instances
+
+That is, we should be able to construct instances of the class with
+the type "setAttribute", as described [in the documentation for the
+class's constructor](domeditaction.litcoffee.html#constructor).
+These will have a string `name` member containing the name of the
+attribute being changed, a string `oldValue` member containing the
+value of the attribute before it was set, and a string `newValue`
+member containing the value after the attribute is set.
+
+        it 'should have "setAttribute" instances',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                T = new DOMEditAction 'setAttribute', div, 'id', 1
+                result = [
+                    T.tracker is DOMEditTracker.instances[0]
+                    T.node
+                    T.name
+                    T.oldValue
+                    T.newValue
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toBeTruthy()
+                expect( result[1] ).toEqual []
+                expect( result[2] ).toEqual 'id'
+                expect( result[3] ).toEqual '0'
+                expect( result[4] ).toEqual '1'
+                done()
+

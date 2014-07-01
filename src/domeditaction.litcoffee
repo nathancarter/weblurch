@@ -163,7 +163,7 @@ well as the attribute's original value, in `@oldValue`.
                     throw Error 'Wrong # of parameters: ' + data
                 @name = data[0] + ''
                 @newValue = data[1] + ''
-                @oldValue = @node.getAttribute @name
+                @oldValue = node.getAttribute @name
 
 For type "setAttributeNode", we store the same data as in the
 previous case, and under the same names.
