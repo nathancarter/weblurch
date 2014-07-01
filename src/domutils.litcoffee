@@ -206,3 +206,30 @@ given object, and recur on the child array if there is one.
                 result.appendChild Node.fromJSON child
         result
 
+## Change events
+
+Whenever a change is made to a DOM Node using one of the built-in
+methods of the Node prototype, notifications of that cahnge event
+must be sent to any `DOMEditTracker` instance containing the
+modified node.  To facilitate this, we modify those Node prototype
+methods so that they not only do their original work, but also
+send the notification events in question.
+
+### appendChild
+
+The new version of `N.appendChild(node)` should, as before, return
+the appended `node`, but should also create and propagate a
+`DOMEditAction` instance of type "appendChild" containing `N`'s
+address and a serialized copy of `node`.
+
+    do ->
+        original = Node.prototype.appendChild
+        Node.prototype.appendChild = ( node ) ->
+            tracker = DOMEditTracker.instanceOver this
+            if tracker
+                event = new DOMEditAction 'appendChild', this, node
+            original.call this, node
+            if tracker
+                tracker.nodeEditHappened event
+            node
+
