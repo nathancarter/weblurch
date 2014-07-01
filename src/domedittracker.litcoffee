@@ -60,10 +60,16 @@ intent is that the fields of an object should not be directly
 accessed from outside the class except through getters and
 setters.
 
-So far there is only one, for querying the element passed at
-construction time, over which this object has taken "ownership."
+The first is for querying the element passed at construction time,
+over which this object has taken "ownership."
 
         getElement: -> @element
+
+Then we provide one for querying the stack of edit actions.  A copy
+of the stack is returned, so that the caller may modify it as they
+see fit without harming this object.
+
+        getEditActions: -> @stack[..]
 
 ## Events
 
