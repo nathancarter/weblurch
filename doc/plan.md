@@ -11,58 +11,16 @@ items are more vague than the earlier ones.
 
 ## DOM Edit Tracker
 
- * In the [DOM utilities module](domutils.litcoffee.html), modify
-   all functions in the Node prototype that manipulate the DOM so
-   that, during their completion, they call `nodeEditHappened` in
-   the containing `DOMEditTracker` instance notifying it of which
-   method was called in them, if it was successful in modifying the
-   DOM, by creating and passing a `DOMEditAction` instance.
-   Create unit tests that verify that the data is correctly
+ * Create unit tests that verify that the data is correctly
    recorded in the internal array of the `DOMEditTracker` instance.
-    * N.appendChild(node)
-       * returns node
-       * record with N's address and the serialized node
     * N.insertBefore(node,beforeThisChild)
-       * returns newnode
-       * if beforeThisChild is omitted, it's the same as append
-       * record with N's address, the serialized node, and the
-         index of beforeThisChild (or child node length if absent)
     * N.normalize()
-       * removes empty text nodes
-       * joins adjacent text nodes
-       * no return value
-       * record as N's address together with a mapfrom indices to
-         text content of all current child text nodes of N
     * N.removeAttribute(name)
-       * no return value
-       * record as N's address, name, and original attribute value
     * N.removeAttributeNode(attrNode)
-       * returns attrNode
-       * e.g.: N.removeAttributeNode(N.getAttributeNode('style'))
-       * record as N's address and original attribute name and
-         value
     * N.removeChild(childNode)
-       * returns childNode
-       * record as N's address, the child's original index within
-         N, and a serialization of the child
     * N.replaceChild(newnode,oldnode)
-       * returns oldnode, I think
-       * record as N's address, the child's original index within
-         N, and serializations of both oldnode and newnode
     * N.setAttribute(name,value)
-       * both strings, no return value
-       * record as N's address, name, and value, as well as the
-         original value of the attribute beforehand
     * N.setAttributeNode(attrNode)
-       * returns replaced node if any, otherwise null
-       * e.g.:
-         `var atr=document.createAttribute("class");
-         atr.nodeValue="democlass";
-         myDiv.setAttributeNode(atr);`
-       * record as N's address, the name and value of the attribute
-         after setting, as well as the original value of the
-         attribute beforehand
-    * Note that element.dataset.foo is not supported.
  * Add undo and redo methods to a `LurchEditor` instance that move
    an index pointer up and down the internal list of past actions,
    and that chop off the redo-able actions if an edit comes in that
