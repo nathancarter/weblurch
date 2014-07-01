@@ -109,7 +109,7 @@ in `@name`, together with its original value in `@value`.
                 if data.length isnt 1
                     throw Error 'Wrong # of parameters: ' + data
                 @name = data[0] + ''
-                @value = @node.getAttribute @name
+                @value = node.getAttribute @name
 
 For type "removeAttributeNode", we store the same data as in the
 previous type, under the same names.

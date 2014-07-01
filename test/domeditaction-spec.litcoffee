@@ -107,3 +107,29 @@ content at that time.
                     0 : 'one', 1 : 'two', 3 : 'four'
                 done()
 
+### should have "removeAttribute" instances
+
+That is, we should be able to construct instances of the class with
+the type "removeAttribute", as described [in the documentation for
+the class's constructor](domeditaction.litcoffee.html#constructor).
+These will have a `name` member containing the (string) key of the
+attribute to remove, and a `value` member containing the (string)
+value that the attribute had before removal.
+
+        it 'should have "removeAttribute" instances', ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                T = new DOMEditAction 'removeAttribute', div, 'id'
+                result = [
+                    T.tracker is DOMEditTracker.instances[0]
+                    T.node
+                    T.name
+                    T.value
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toBeTruthy()
+                expect( result[1] ).toEqual []
+                expect( result[2] ).toEqual 'id'
+                expect( result[3] ).toEqual '0'
+                done()
+
