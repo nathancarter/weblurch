@@ -88,7 +88,7 @@ omitted, in `@insertBefore`.
                         throw Error 'Invalid child: ' + data[0]
                     @insertBefore = data[1].indexInParent()
                 else
-                    @insertBefore = @node.childNodes.length
+                    @insertBefore = node.childNodes.length
 
 For type "normalize", we store a map from indices to text content
 for all current child text nodes of `@node`, in `@textChildren`,

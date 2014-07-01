@@ -29,6 +29,8 @@ the browser after loading the main app page.
 That is, we should be able to construct instances of the class with
 the type "appendChild", as described [in the documentation for the
 class's constructor](domeditaction.litcoffee.html#constructor).
+These will have a `toAppend` member that stores the child to be
+appended.
 
         it 'should have "appendChild" instances', ( done ) =>
             @page.evaluate ->
@@ -45,5 +47,32 @@ class's constructor](domeditaction.litcoffee.html#constructor).
                 expect( result[0] ).toBeTruthy()
                 expect( result[1] ).toEqual []
                 expect( result[2] ).toEqual tagName : 'SPAN'
+                done()
+
+### should have "insertBefore" instances
+
+That is, we should be able to construct instances of the class with
+the type "insertBefore", as described [in the documentation for the
+class's constructor](domeditaction.litcoffee.html#constructor).
+These will have a `toInsert` member that stores the child to be
+inserted, as well as an integer member `insertBefore` that is the
+index that the newly inserted child will have after insertion.
+
+        it 'should have "insertBefore" instances', ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                span = document.createElement 'span'
+                T = new DOMEditAction 'insertBefore', div, span
+                result = [
+                    T.tracker is DOMEditTracker.instances[0]
+                    T.node
+                    T.toInsert
+                    T.insertBefore
+                ]
+            , ( err, result ) ->
+                expect( result[0] ).toBeTruthy()
+                expect( result[1] ).toEqual []
+                expect( result[2] ).toEqual tagName : 'SPAN'
+                expect( result[3] ).toEqual 1
                 done()
 
