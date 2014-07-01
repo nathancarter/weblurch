@@ -11,17 +11,6 @@ items are more vague than the earlier ones.
 
 ## DOM Edit Tracker
 
- * Test instantiating the `DOMEditAction` class with each of the
-   following types of data.  (Some are already done; those listed
-   here are what remain.)
-    * N.insertBefore(node,beforeThisChild)
-    * N.normalize()
-    * N.removeAttribute(name)
-    * N.removeAttributeNode(attrNode)
-    * N.removeChild(childNode)
-    * N.replaceChild(newnode,oldnode)
-    * N.setAttribute(name,value)
-    * N.setAttributeNode(attrNode)
  * In the [DOM utilities module](domutils.litcoffee.html), modify
    all functions in the Node prototype that manipulate the DOM so
    that, during their completion, they call `nodeEditHappened` in
@@ -343,4 +332,21 @@ items are more vague than the earlier ones.
    theorems proven based on assumptions that you therefore must
    guarantee hold in your implementation)
  * create unit tests as you go
+
+# Unit tests for later
+
+The following unit tests were skipped earlier in development,
+because they are less important than the ones that were written,
+and yet are included here for the sake of completeness, and so that
+they are not forgotten.  A complete unit testing suite would have
+tests for all of the following cases.
+
+ * [The tests for the DOMEditAction constructor](
+   domeditaction-spec.litcoffee.html) test every constructor by
+   passing it correct parameters.  They do not do any testing to
+   ensure that the constructor throws an error upon receiving
+   incorrect parameters, except one test that ensures that the
+   action type is valid.  In particular, no testing is done to
+   ensure that the node must be valid, nor that for each individual
+   action type, the parameters must be given correctly.
 

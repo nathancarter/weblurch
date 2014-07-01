@@ -327,3 +327,8 @@ in this specification, above.
                     result[3] ).toBeTruthy()
                 done()
 
+Eventually it would also be good to test here every other error
+case in the constructor, but I have not yet written such tests.
+I have added them to [the planning document](plan.md.html),
+however, so they are not forgotten.
+
