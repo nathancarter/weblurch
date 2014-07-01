@@ -296,3 +296,34 @@ member containing the value after the attribute is set.
                 expect( result[4] ).toEqual '1'
                 done()
 
+### should have no other instances
+
+That is, we should get errors if we attempt to construct instances
+of the class with types other than those tested in the other tests
+in this specification, above.
+
+        it 'should have no other instances', ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                result = []
+                result.push try new DOMEditAction 'foo', div \
+                            catch e then e.message
+                result.push try new DOMEditAction div, div \
+                            catch e then e.message
+                result.push try new DOMEditAction 17, div \
+                            catch e then e.message
+                result.push try new DOMEditAction \
+                            'appendChildren', div \
+                            catch e then e.message
+                result
+            , ( err, result ) ->
+                expect( /Invalid DOMEditAction type/.test
+                    result[0] ).toBeTruthy()
+                expect( /Invalid DOMEditAction type/.test
+                    result[1] ).toBeTruthy()
+                expect( /Invalid DOMEditAction type/.test
+                    result[2] ).toBeTruthy()
+                expect( /Invalid DOMEditAction type/.test
+                    result[3] ).toBeTruthy()
+                done()
+
