@@ -234,7 +234,7 @@ provided by `highlight.js`.
         marked.setOptions
             highlight: ( code ) ->
                 require( 'highlight.js' )
-                    .highlightAuto( code ).value
+                    .highlight( 'coffeescript', code ).value
             renderer: renderer
         marked fs.readFileSync infile, 'utf8'
 
