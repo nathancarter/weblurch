@@ -71,6 +71,13 @@ see fit without harming this object.
 
         getEditActions: -> @stack[..]
 
+## Setters
+
+The user can ask to clear out the edit actions stack with the
+following method.
+
+        clearStack: -> @stack = []
+
 ## Events
 
 When any editing takes place inside the DOM tree watched by an
