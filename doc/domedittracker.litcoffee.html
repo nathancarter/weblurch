@@ -15,7 +15,9 @@
     </head>
     <body>
         <div id="left">
-            webLurch source code docs
+            <p align=center>Page contents</p>
+<p><a href='#dom-edit-tracker-class'>DOM Edit Tracker class</a></p><ul>
+<li><a href='#tracking-instances'>Tracking instances</a></li><li><a href='#constructor'>Constructor</a></li><li><a href='#getters'>Getters</a></li><li><a href='#setters'>Setters</a></li><li><a href='#events'>Events</a></li>
         </div>
         <div id="middle">
             <h1><a name='dom-edit-tracker-class'></a>DOM Edit Tracker class &nbsp;  <font size=-1><a href='#dom-edit-tracker-class'><img src="link.png" class="anchor"></a></font></h1><pre class="hljs"><code><span class="hljs-built_in">window</span>.DOMEditTracker = <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DOMEditTracker</span></span>
@@ -62,6 +64,9 @@ over which this object has taken &quot;ownership.&quot;</p>
 of the stack is returned, so that the caller may modify it as they
 see fit without harming this object.</p>
 <pre class="hljs"><code>    <span class="hljs-attribute">getEditActions</span>:<span class="hljs-function"> -&gt;</span> <span class="hljs-property">@stack</span>[..]
+</code></pre><h2><a name='setters'></a>Setters &nbsp;  <font size=-1><a href='#setters'><img src="link.png" class="anchor"></a></font></h2><p>The user can ask to clear out the edit actions stack with the
+following method.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">clearStack</span>:<span class="hljs-function"> -&gt;</span> <span class="hljs-property">@stack</span> = []
 </code></pre><h2><a name='events'></a>Events &nbsp;  <font size=-1><a href='#events'><img src="link.png" class="anchor"></a></font></h2><p>When any editing takes place inside the DOM tree watched by an
 instance of this class, then the instance will want to be notified
 of it.  We therefore provide this method by which it can be
@@ -74,7 +79,7 @@ class.  If it is not, it is ignored.</p>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

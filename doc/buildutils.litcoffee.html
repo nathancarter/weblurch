@@ -15,7 +15,11 @@
     </head>
     <body>
         <div id="left">
-            webLurch source code docs
+            <p align=center>Page contents</p>
+<p><a href='#utility-functions-supporting-the-build-process'>Utility functions supporting the build process</a></p><ul>
+<li><a href='#task-queue'>Task queue</a></li><ul>
+<li><a href='#enqueueing-and-dequeueing-tasks'>Enqueueing and dequeueing tasks</a></li><li><a href='#automatic-dequeueing-and-messaging'>Automatic dequeueing and messaging</a></li></ul>
+<li><a href='#verifying-npm-install-has-been-run'>Verifying npm install has been run</a></li><li><a href='#fetching-filenames-from-a-folder'>Fetching filenames from a folder</a></li><li><a href='#loading-contents-of-text-files'>Loading contents of text files</a></li><li><a href='#compile-literate-coffeescript-files'>Compile literate coffeescript files</a></li><li><a href='#converting-markdown-to-html'>Converting Markdown to HTML</a></li>
         </div>
         <div id="middle">
             <h1><a name='utility-functions-supporting-the-build-process'></a>Utility functions supporting the build process &nbsp;  <font size=-1><a href='#utility-functions-supporting-the-build-process'><img src="link.png" class="anchor"></a></font></h1><p>Several places in this module we access the filesystem, or spawn
@@ -169,8 +173,14 @@ stylehseets is already installed in the <code>doc/</code> output folder.</p>
 </code></pre><p>We install a routine that creates headings in the format we want
 them for our documentation.  This routine makes each heading an
 anchor so that links can point to it.  It also makes headings in
-test files include links to the results of those tests.</p>
+test files include links to the results of those tests.  Finally,
+it remembers all the headings it makes in a file, and returns not
+only the generated HTML but a corresponding table of contents (TOC)
+with links to each of the anchors in each of the generated
+headings.</p>
 <pre class="hljs"><code>    renderer = <span class="hljs-keyword">new</span> marked.Renderer()
+    toc = <span class="hljs-string">''</span>
+    lastlevel = <span class="hljs-number">1</span>
     renderer.<span class="hljs-function"><span class="hljs-title">heading</span> = <span class="hljs-params">( text, level )</span> -&gt;</span>
         <span class="hljs-keyword">if</span> m = <span class="hljs-regexp">/^(.*) \([0-9.]+ ms\)/</span>.exec text
             escapedText = <span class="hljs-built_in">exports</span>.escapeHeading m[<span class="hljs-number">1</span>]
@@ -182,6 +192,15 @@ test files include links to the results of those tests.</p>
                       <span class="hljs-string">"<span class="hljs-subst">#{escapedText}</span>'&gt;see results&lt;/a&gt;&lt;/font&gt;"</span>
         <span class="hljs-keyword">else</span>
             results = <span class="hljs-string">''</span>
+        <span class="hljs-keyword">if</span> level &gt; lastlevel
+            toc += <span class="hljs-string">'&lt;ul&gt;\n'</span>
+            lastlevel = level
+        <span class="hljs-keyword">while</span> level &lt; lastlevel
+            toc += <span class="hljs-string">'&lt;/ul&gt;\n'</span>
+            lastlevel = level
+        toc += <span class="hljs-string">"&lt;<span class="hljs-subst">#{<span class="hljs-keyword">if</span> level &gt; <span class="hljs-number">1</span> <span class="hljs-keyword">then</span> <span class="hljs-string">'li'</span> <span class="hljs-keyword">else</span> <span class="hljs-string">'p'</span>}</span>&gt;"</span> +
+               <span class="hljs-string">"&lt;a href='#<span class="hljs-subst">#{escapedText}</span>'&gt;<span class="hljs-subst">#{text}</span>&lt;/a&gt;"</span> +
+               <span class="hljs-string">"&lt;/<span class="hljs-subst">#{<span class="hljs-keyword">if</span> level &gt; <span class="hljs-number">1</span> <span class="hljs-keyword">then</span> <span class="hljs-string">'li'</span> <span class="hljs-keyword">else</span> <span class="hljs-string">'p'</span>}</span>&gt;"</span>
         <span class="hljs-string">"&lt;h<span class="hljs-subst">#{level}</span>&gt;&lt;a name='<span class="hljs-subst">#{escapedText}</span>'&gt;&lt;/a&gt;<span class="hljs-subst">#{text}</span> "</span> +
         <span class="hljs-string">"&amp;nbsp; <span class="hljs-subst">#{results}</span> &lt;font size=-1&gt;&lt;a href='"</span> +
         <span class="hljs-string">"#<span class="hljs-subst">#{escapedText}</span>'&gt;<span class="hljs-subst">#{linkpng}</span>&lt;/a&gt;&lt;/font&gt;&lt;/h<span class="hljs-subst">#{level}</span>&gt;"</span>
@@ -192,7 +211,10 @@ provided by <code>highlight.js</code>.</p>
             <span class="hljs-built_in">require</span>( <span class="hljs-string">'highlight.js'</span> )
                 .highlight( <span class="hljs-string">'coffeescript'</span>, code ).value
         <span class="hljs-attribute">renderer</span>: renderer
-    marked fs.readFileSync infile, <span class="hljs-string">'utf8'</span>
+    {
+        html : marked fs.readFileSync infile, <span class="hljs-string">'utf8'</span>
+        toc : toc
+    }
 </code></pre><p>This utility function escapes text into lower-case with no spaces,
 and is used in a routine above, as well as other parts of the build
 process.</p>
@@ -201,7 +223,7 @@ process.</p>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

@@ -15,7 +15,9 @@
     </head>
     <body>
         <div id="left">
-            webLurch source code docs
+            <p align=center>Page contents</p>
+<p><a href='#build-process-definitions'>Build process definitions</a></p><ul>
+<li><a href='#easy-way-to-build-all'>Easy way to build all</a></li><li><a href='#requirements'>Requirements</a></li><li><a href='#constants'>Constants</a></li><li><a href='#the-code-app-code-build-process'>The <code>app</code> build process</a></li><li><a href='#the-code-testapp-code-build-process'>The <code>testapp</code> build process</a></li><li><a href='#the-code-doc-code-build-process'>The <code>doc</code> build process</a></li><li><a href='#the-code-test-code-build-process'>The <code>test</code> build process</a></li><li><a href='#the-code-pages-code-build-process'>The <code>pages</code> build process</a></li>
         </div>
         <div id="middle">
             <h1><a name='build-process-definitions'></a>Build process definitions &nbsp;  <font size=-1><a href='#build-process-definitions'><img src="link.png" class="anchor"></a></font></h1><p>This file defines the build processes in this repository.
@@ -104,7 +106,7 @@ and the template HTML output file from the <code>doc/</code> directory.</p>
         end = ( path = file.split <span class="hljs-string">'/'</span> ).pop()
         <span class="hljs-keyword">if</span> end <span class="hljs-keyword">is</span> mainpg
             navtxt += <span class="hljs-string">"&lt;h3&gt;&lt;a href='<span class="hljs-subst">#{mainpg}</span>.html'&gt;"</span> +
-                      <span class="hljs-string">"Main Page&lt;/a&gt;&lt;/h3&gt;"</span>
+                      <span class="hljs-string">"<span class="hljs-subst">#{title}</span> home&lt;/a&gt;&lt;/h3&gt;"</span>
         <span class="hljs-keyword">else</span>
             ( nav[path.join <span class="hljs-string">'/'</span>] ?= [] ).push {
                 file : end, text : end }
@@ -119,15 +121,19 @@ and the template HTML output file from the <code>doc/</code> directory.</p>
                       <span class="hljs-string">"<span class="hljs-subst">#{e.text}</span>&lt;/a&gt;&lt;/li&gt;"</span>
         navtxt += <span class="hljs-string">'&lt;/ul&gt;'</span>
 </code></pre><p>Read each source file and place its marked-down version into the
-HTML template, saving it into the docs directory.</p>
+HTML template, saving it into the docs directory.  The marking-down
+process also generates a table of contents (TOC) for the page,
+which we put in the left frame.</p>
 <pre class="hljs"><code>    <span class="hljs-keyword">for</span> file <span class="hljs-keyword">in</span> all
         end = file.split( <span class="hljs-string">'/'</span> ).pop()
         beginning = end.split( <span class="hljs-string">'.'</span> ).shift()
         <span class="hljs-built_in">console</span>.log <span class="hljs-string">"\tCreating <span class="hljs-subst">#{end}</span>.html..."</span>
-        myhtml = html.replace( <span class="hljs-string">'LEFT'</span>,
-                               <span class="hljs-string">"<span class="hljs-subst">#{title}</span> source code docs"</span> )
+        rendered = build.md2html file
+        toc = <span class="hljs-string">"""&lt;p align=center&gt;Page contents&lt;/p&gt;
+                 <span class="hljs-subst">#{rendered.toc}</span>"""</span>
+        myhtml = html.replace( <span class="hljs-string">'LEFT'</span>, toc )
                      .replace( <span class="hljs-string">'RIGHT'</span>, navtxt )
-                     .replace( <span class="hljs-string">'MIDDLE'</span>, build.md2html file )
+                     .replace( <span class="hljs-string">'MIDDLE'</span>, rendered.html )
                      .replace( <span class="hljs-regexp">/&lt;pre&gt;&lt;code&gt;/g</span>,
                                <span class="hljs-string">'&lt;pre class="hljs"&gt;&lt;code&gt;'</span> )
                      .replace( <span class="hljs-string">'TITLE'</span>,
@@ -274,7 +280,7 @@ we put on the queue.</p>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

@@ -15,7 +15,11 @@
     </head>
     <body>
         <div id="left">
-            webLurch source code docs
+            <p align=center>Page contents</p>
+<p><a href='#utility-functions-for-working-with-the-dom'>Utility functions for working with the DOM</a></p><ul>
+<li><a href='#address'>Address</a></li><li><a href='#index'>Index</a></li><li><a href='#serialization'>Serialization</a></li><ul>
+<li><a href='#from-dom-nodes-to-objects'>From DOM Nodes to objects</a></li><li><a href='#from-objects-to-dom-nodes'>From objects to DOM Nodes</a></li></ul>
+<li><a href='#change-events'>Change events</a></li>
         </div>
         <div id="middle">
             <h1><a name='utility-functions-for-working-with-the-dom'></a>Utility functions for working with the DOM &nbsp;  <font size=-1><a href='#utility-functions-for-working-with-the-dom'><img src="link.png" class="anchor"></a></font></h1><h2><a name='address'></a>Address &nbsp;  <font size=-1><a href='#address'><img src="link.png" class="anchor"></a></font></h2><p>The address of a node <code>N</code> in an ancestor node <code>M</code> is an array <code>a</code>
@@ -172,33 +176,50 @@ given object, and recur on the child array if there is one.</p>
             result.appendChild Node.fromJSON child
     result
 </code></pre><h2><a name='change-events'></a>Change events &nbsp;  <font size=-1><a href='#change-events'><img src="link.png" class="anchor"></a></font></h2><p>Whenever a change is made to a DOM Node using one of the built-in
-methods of the Node prototype, notifications of that cahnge event
+methods of the Node prototype, notifications of that change event
 must be sent to any <code>DOMEditTracker</code> instance containing the
 modified node.  To facilitate this, we modify those Node prototype
 methods so that they not only do their original work, but also
-send the notification events in question.</p>
-<h3><a name='appendchild'></a>appendChild &nbsp;  <font size=-1><a href='#appendchild'><img src="link.png" class="anchor"></a></font></h3><p>The new version of <code>N.appendChild(node)</code> should, as before, return
-the appended <code>node</code>, but should also create and propagate a
-<code>DOMEditAction</code> instance of type &quot;appendChild&quot; containing <code>N</code>&#39;s
-address and a serialized copy of <code>node</code>.</p>
+send the notification events in question.  (Some of the methods in
+question are in the Element prototype rather than the Node
+prototype, so changes happen in both, actually.)</p>
+<p>Each modified version has the same signature and return value as
+before, but with the changes explained below.  The following code
+just performs the modification to each of the methods listed in
+the following string.</p>
 <pre class="hljs"><code><span class="hljs-string">'''
 appendChild insertBefore normalize removeAttribute
 removeAttributeNode removeChild replaceChild
 setAttribute setAttributeNode
-'''</span>.split<span class="hljs-function"><span class="hljs-params">( <span class="hljs-string">' '</span> )</span>.<span class="hljs-title">map</span> <span class="hljs-params">( methodName )</span> -&gt;</span>
-    original = <span class="hljs-attribute">Node</span>::[methodName]
-    <span class="hljs-attribute">Node</span>::[methodName] = <span class="hljs-function"><span class="hljs-params">( args... )</span> -&gt;</span>
-        tracker = DOMEditTracker.instanceOver <span class="hljs-keyword">this</span>
+'''</span>.split<span class="hljs-function"><span class="hljs-params">( <span class="hljs-regexp">/\s+/</span> )</span>.<span class="hljs-title">map</span> <span class="hljs-params">( methodName )</span> -&gt;</span>
+</code></pre><p>Compute whether the modificatio needs to take place in the Node
+prototype or the Element prototype, and then store the original
+value of the method for use from within our modified one.</p>
+<pre class="hljs"><code>    which = <span class="hljs-keyword">if</span> <span class="hljs-attribute">Node</span>::[methodName] <span class="hljs-keyword">then</span> Node <span class="hljs-keyword">else</span> Element
+    original = <span class="hljs-attribute">which</span>::[methodName]
+</code></pre><p>Next, replace the original with our modified version.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">which</span>::[methodName] = <span class="hljs-function"><span class="hljs-params">( args... )</span> -&gt;</span>
+</code></pre><p>If and only if a tracker exists over this node, we create an event
+that we will later propagate to it.  We must create the event now,
+so that if the creation of the event needs to record any data from
+the unmodified state of this node (which is a common occurrence)
+then it has the opportunity to do so.</p>
+<pre class="hljs"><code>        tracker = DOMEditTracker.instanceOver <span class="hljs-keyword">this</span>
         <span class="hljs-keyword">if</span> tracker
             event = <span class="hljs-keyword">new</span> DOMEditAction methodName, <span class="hljs-keyword">this</span>, args...
-        result = original.call <span class="hljs-keyword">this</span>, args...
-        <span class="hljs-keyword">if</span> tracker
+</code></pre><p>Then call the original version of this method.</p>
+<pre class="hljs"><code>        result = original.call <span class="hljs-keyword">this</span>, args...
+</code></pre><p>Now if a tracker was found earlier, and thus a method created to
+send to that tracker, go ahead and send it now.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> tracker
             tracker.nodeEditHappened event
-        result
+</code></pre><p>Return the same return value that would have been returned from the
+original method.</p>
+<pre class="hljs"><code>        result
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

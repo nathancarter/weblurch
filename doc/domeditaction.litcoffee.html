@@ -15,7 +15,9 @@
     </head>
     <body>
         <div id="left">
-            webLurch source code docs
+            <p align=center>Page contents</p>
+<p><a href='#dom-edit-action'>DOM Edit Action</a></p><ul>
+<li><a href='#constructor'>Constructor</a></li>
         </div>
         <div id="middle">
             <h1><a name='dom-edit-action'></a>DOM Edit Action &nbsp;  <font size=-1><a href='#dom-edit-action'><img src="link.png" class="anchor"></a></font></h1><p>This class will embody a single, atomic edit to a DOM tree.  This
@@ -34,9 +36,9 @@ the undo/redo stack for an application.</p>
 </li>
 <li><code>N.insertBefore(node,beforeThisChild)</code><ul>
 <li>returns <code>node</code></li>
-<li>if beforeThisChild is omitted, it&#39;s the same as append</li>
+<li>if <code>beforeThisChild</code> is omitted, it&#39;s the same as append</li>
 <li>event contains <code>N</code>&#39;s address, the serialized node, and the
-index of beforeThisChild (or child node length if absent)</li>
+index of <code>beforeThisChild</code> (or child node length if absent)</li>
 </ul>
 </li>
 <li><code>N.normalize()</code><ul>
@@ -49,15 +51,15 @@ to text content of all current child text nodes of <code>N</code></li>
 </li>
 <li><code>N.removeAttribute(name)</code><ul>
 <li>no return value</li>
-<li>event contains <code>N</code>&#39;s address, name, and original attribute
-value</li>
+<li>event contains <code>N</code>&#39;s address, <code>name</code>, and original attribute
+<code>value</code></li>
 </ul>
 </li>
 <li><code>N.removeAttributeNode(attrNode)</code><ul>
 <li>returns <code>attrNode</code></li>
 <li>e.g.: <code>N.removeAttributeNode(N.getAttributeNode(&#39;style&#39;))</code></li>
-<li>event contains <code>N</code>&#39;s address and original attribute name and
-value</li>
+<li>event contains <code>N</code>&#39;s address and original attribute <code>name</code> and
+<code>value</code></li>
 </ul>
 </li>
 <li><code>N.removeChild(childNode)</code><ul>
@@ -75,8 +77,8 @@ within <code>N</code>, and serializations of both <code>oldnode</code> and <code
 <li><code>N.setAttribute(name,value)</code><ul>
 <li>no return value</li>
 <li>both strings</li>
-<li>event contains <code>N</code>&#39;s address, name, and value, as well as the
-original value of the attribute beforehand</li>
+<li>event contains <code>N</code>&#39;s address, <code>name</code>, and <code>value</code>, as well as
+the original value of the attribute beforehand</li>
 </ul>
 </li>
 <li><code>N.setAttributeNode(attrNode)</code><ul>
@@ -110,8 +112,8 @@ the attribute, and name of the attribute to remove</li>
 remove the attribute, and the attribute node to remove</li>
 <li>type &quot;removeChild&quot;, with data the parent node and the child to
 remove</li>
-<li>type &quot;replaceChild&quot;, with data the parent node, the child to
-replace, and the node with which to replace it</li>
+<li>type &quot;replaceChild&quot;, with data the parent node, the new node to
+replace the child with, and then the child to replace</li>
 <li>type &quot;setAttribute&quot;, with data the node whose attribute should
 be set, the name of the attribute to set, and the value to which
 it should be set</li>
@@ -127,6 +129,8 @@ constructor cannot function.</p>
 stored in the member <code>@tracker</code>.  If there is no such tracker, that
 member will be null.</p>
 <pre class="hljs"><code>        <span class="hljs-property">@tracker</span> = DOMEditTracker.instanceOver node
+</code></pre><p>Also remember the type of action.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@type</span> = type
 </code></pre><p>The node itself is stored in <code>@node</code> as the address within the
 given edit tracker, or within its topmost ancestor if there is no
 tracker.  (But this class is not very useful if there is no edit
@@ -208,20 +212,22 @@ previous type, under the same names.</p>
                 <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid parameter: '</span> + data[<span class="hljs-number">0</span>]
             <span class="hljs-keyword">if</span> data[<span class="hljs-number">1</span>] <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node
                 <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid parameter: '</span> + data[<span class="hljs-number">1</span>]
-            <span class="hljs-keyword">if</span> data[<span class="hljs-number">0</span>].parentNode <span class="hljs-keyword">isnt</span> node
-                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid child: '</span> + data[<span class="hljs-number">0</span>]
-            <span class="hljs-property">@childIndex</span> = data[<span class="hljs-number">0</span>].indexInParent()
-            <span class="hljs-property">@oldChild</span> = data[<span class="hljs-number">0</span>].toJSON()
-            <span class="hljs-property">@newChild</span> = data[<span class="hljs-number">1</span>].toJSON()
+            <span class="hljs-keyword">if</span> data[<span class="hljs-number">1</span>].parentNode <span class="hljs-keyword">isnt</span> node
+                <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid child: '</span> + data[<span class="hljs-number">1</span>]
+            <span class="hljs-property">@childIndex</span> = data[<span class="hljs-number">1</span>].indexInParent()
+            <span class="hljs-property">@oldChild</span> = data[<span class="hljs-number">1</span>].toJSON()
+            <span class="hljs-property">@newChild</span> = data[<span class="hljs-number">0</span>].toJSON()
 </code></pre><p>For type &quot;setAttribute&quot;, we store the name and value to which the
 attribute will be set, in <code>@name</code> and <code>@newValue</code>, respectively, as
-well as the attribute&#39;s original value, in <code>@oldValue</code>.</p>
+well as the attribute&#39;s original value, in <code>@oldValue</code>.  If the
+old value is null, we store the empty string instead, so that
+JSON serialization is possible.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> type <span class="hljs-keyword">is</span> <span class="hljs-string">'setAttribute'</span>
             <span class="hljs-keyword">if</span> data.length <span class="hljs-keyword">isnt</span> <span class="hljs-number">2</span>
                 <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Wrong # of parameters: '</span> + data
             <span class="hljs-property">@name</span> = data[<span class="hljs-number">0</span>] + <span class="hljs-string">''</span>
             <span class="hljs-property">@newValue</span> = data[<span class="hljs-number">1</span>] + <span class="hljs-string">''</span>
-            <span class="hljs-property">@oldValue</span> = node.getAttribute <span class="hljs-property">@name</span>
+            <span class="hljs-property">@oldValue</span> = ( node.getAttribute <span class="hljs-property">@name</span> ) <span class="hljs-keyword">or</span> <span class="hljs-string">''</span>
 </code></pre><p>For type &quot;setAttributeNode&quot;, we store the same data as in the
 previous case, and under the same names.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> type <span class="hljs-keyword">is</span> <span class="hljs-string">'setAttributeNode'</span>
@@ -231,7 +237,7 @@ previous case, and under the same names.</p>
                 <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid parameter: '</span> + data[<span class="hljs-number">0</span>]
             <span class="hljs-property">@name</span> = data[<span class="hljs-number">0</span>].name
             <span class="hljs-property">@newValue</span> = data[<span class="hljs-number">0</span>].value
-            <span class="hljs-property">@oldValue</span> = node.getAttribute <span class="hljs-property">@name</span>
+            <span class="hljs-property">@oldValue</span> = ( node.getAttribute <span class="hljs-property">@name</span> ) <span class="hljs-keyword">or</span> <span class="hljs-string">''</span>
 </code></pre><p>If none of the above types were what the caller was trying to
 construct, throw an error, because they&#39;re the only types
 supported.</p>
@@ -244,7 +250,7 @@ then stringifies it.</p>
 <p>This function is indirectly tested in that many other unit tests
 depend upon it to test other functionality.</p>
 <pre class="hljs"><code>    <span class="hljs-attribute">toJSON</span>:<span class="hljs-function"> -&gt;</span>
-        JSON.stringify { <span class="hljs-property">@node</span>, <span class="hljs-property">@toAppend</span>, <span class="hljs-property">@toInsert</span>,
+        JSON.stringify { <span class="hljs-property">@type</span>, <span class="hljs-property">@node</span>, <span class="hljs-property">@toAppend</span>, <span class="hljs-property">@toInsert</span>,
             <span class="hljs-property">@insertBefore</span>, <span class="hljs-property">@textChildren</span>, <span class="hljs-property">@name</span>, <span class="hljs-property">@value</span>,
             <span class="hljs-property">@child</span>, <span class="hljs-property">@childIndex</span>, <span class="hljs-property">@oldChild</span>, <span class="hljs-property">@newChild</span>,
             <span class="hljs-property">@oldValue</span>, <span class="hljs-property">@newValue</span> }
@@ -252,7 +258,7 @@ depend upon it to test other functionality.</p>
 
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

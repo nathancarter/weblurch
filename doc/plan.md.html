@@ -15,7 +15,16 @@
     </head>
     <body>
         <div id="left">
-            webLurch source code docs
+            <p align=center>Page contents</p>
+<p><a href='#project-plan'>Project Plan</a></p><p><a href='#word-processing-foundation'>Word Processing Foundation</a></p><ul>
+<li><a href='#dom-edit-tracker'>DOM Edit Tracker</a></li></ul>
+<p><a href='#test-environment'>Test environment</a></p><ul>
+<li><a href='#test-app'>Test app</a></li><li><a href='#easy-test-generation'>Easy test generation</a></li><li><a href='#better-access-to-automated-testing-results'>Better access to automated testing results</a></li><li><a href='#later-when-you-put-the-repository-on-a-server'>Later, when you put the repository on a server</a></li></ul>
+<p><a href='#more-word-processing-foundation'>More Word Processing Foundation</a></p><ul>
+<li><a href='#events'>Events</a></li><li><a href='#cursor'>Cursor</a></li><li><a href='#keyboard'>Keyboard</a></li><li><a href='#mouse'>Mouse</a></li><li><a href='#load-and-save'>Load and save</a></li></ul>
+<p><a href='#logical-foundation'>Logical Foundation</a></p><ul>
+<li><a href='#dependencies'>Dependencies</a></li><li><a href='#math'>Math</a></li><li><a href='#groupers'>Groupers</a></li><li><a href='#background-processing'>Background processing</a></li><li><a href='#background-computation-of-the-property-graph'>Background computation of the property graph</a></li><li><a href='#background-computation-of-bubble-meanings'>Background computation of bubble meanings</a></li><li><a href='#background-validation-probably-in-stages'>Background validation, probably in stages</a></li></ul>
+<p><a href='#unit-tests-for-later'>Unit tests for later</a></p>
         </div>
         <div id="middle">
             <h1><a name='project-plan'></a>Project Plan &nbsp;  <font size=-1><a href='#project-plan'><img src="link.png" class="anchor"></a></font></h1><p>This document aims to be a complete plan for what needs to be done
@@ -24,18 +33,6 @@ order, the first items being those that should be done next, and
 the later items those that must come after.  Necessarily, the later
 items are more vague than the earlier ones.</p>
 <h1><a name='word-processing-foundation'></a>Word Processing Foundation &nbsp;  <font size=-1><a href='#word-processing-foundation'><img src="link.png" class="anchor"></a></font></h1><h2><a name='dom-edit-tracker'></a>DOM Edit Tracker &nbsp;  <font size=-1><a href='#dom-edit-tracker'><img src="link.png" class="anchor"></a></font></h2><ul>
-<li>Create unit tests that verify that the data is correctly
-recorded in the internal array of the <code>DOMEditTracker</code> instance.<ul>
-<li>N.insertBefore(node,beforeThisChild)</li>
-<li>N.normalize()</li>
-<li>N.removeAttribute(name)</li>
-<li>N.removeAttributeNode(attrNode)</li>
-<li>N.removeChild(childNode)</li>
-<li>N.replaceChild(newnode,oldnode)</li>
-<li>N.setAttribute(name,value)</li>
-<li>N.setAttributeNode(attrNode)</li>
-</ul>
-</li>
 <li>Add undo and redo methods to a <code>LurchEditor</code> instance that move
 an index pointer up and down the internal list of past actions,
 and that chop off the redo-able actions if an edit comes in that
@@ -313,7 +310,7 @@ action type, the parameters must be given correctly.</li>
 
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

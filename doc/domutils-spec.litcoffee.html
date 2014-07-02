@@ -15,7 +15,18 @@
     </head>
     <body>
         <div id="left">
-            webLurch source code docs
+            <p align=center>Page contents</p>
+<p><a href='#tests-of-dom-utilities-module'>Tests of DOM utilities module</a></p><ul>
+<li><a href='#address-member-function-of-node-class'>address member function of Node class</a></li><ul>
+<li><a href='#should-be-defined'>should be defined</a></li><li><a href='#should-give-null-on-corner-cases'>should give null on corner cases</a></li><li><a href='#should-be-empty-when-argument-is-this'>should be empty when argument is this</a></li><li><a href='#should-be-empty-for-top-level-null'>should be empty for top-level,null</a></li><li><a href='#should-be-length-1-for-a-child'>should be length-1 for a child</a></li><li><a href='#should-work-for-grandchildren-etc-'>should work for grandchildren, etc.</a></li></ul>
+<li><a href='#index-member-function-of-node-class'>index member function of Node class</a></li><ul>
+<li><a href='#should-be-defined'>should be defined</a></li><li><a href='#should-give-errors-for-non-arrays'>should give errors for non-arrays</a></li><li><a href='#should-yield-itself-for-'>should yield itself for []</a></li><li><a href='#should-work-for-descendant-indices'>should work for descendant indices</a></li><li><a href='#should-give-undefined-for-bad-indices'>should give undefined for bad indices</a></li></ul>
+<li><a href='#node-tojson-conversion'>Node toJSON conversion</a></li><ul>
+<li><a href='#should-be-defined'>should be defined</a></li><li><a href='#should-convert-text-nodes-to-strings'>should convert text nodes to strings</a></li><li><a href='#should-convert-comment-nodes-to-objects'>should convert comment nodes to objects</a></li><li><a href='#should-handle-other-no-children-elements'>should handle other no-children elements</a></li><li><a href='#should-handle-spans-correctly'>should handle spans correctly</a></li><li><a href='#should-handle-hierarchies-correctly'>should handle hierarchies correctly</a></li><li><a href='#should-respect-verbosity-setting'>should respect verbosity setting</a></li></ul>
+<li><a href='#node-fromjson-conversion'>Node fromJSON conversion</a></li><ul>
+<li><a href='#should-be-defined'>should be defined</a></li><li><a href='#should-convert-strings-to-text-nodes'>should convert strings to text nodes</a></li><li><a href='#should-handle-comment-objects'>should handle comment objects</a></li><li><a href='#should-be-able-to-create-empty-elements'>should be able to create empty elements</a></li><li><a href='#should-build-depth-one-dom-trees'>should build depth-one DOM trees</a></li><li><a href='#should-build-deep-dom-trees'>should build deep DOM trees</a></li></ul>
+<li><a href='#using-node-prototype-methods'>Using Node prototype methods</a></li><ul>
+<li><a href='#should-send-alerts-on-code-appendchild-code-calls'>should send alerts on <code>appendChild</code> calls</a></li><li><a href='#should-send-alerts-on-code-insertbefore-code-calls'>should send alerts on <code>insertBefore</code> calls</a></li><li><a href='#should-send-alerts-on-code-normalize-code-calls'>should send alerts on <code>normalize</code> calls</a></li><li><a href='#should-send-alerts-on-code-removeattribute-code-calls'>should send alerts on <code>removeAttribute</code> calls</a></li><li><a href='#should-send-alerts-on-code-removeattributenode-code-calls'>should send alerts on <code>removeAttributeNode</code> calls</a></li><li><a href='#should-send-alerts-on-code-removechild-code-calls'>should send alerts on <code>removeChild</code> calls</a></li><li><a href='#should-send-alerts-on-code-replacechild-code-calls'>should send alerts on <code>replaceChild</code> calls</a></li><li><a href='#should-send-alerts-on-code-setattribute-code-calls'>should send alerts on <code>setAttribute</code> calls</a></li><li><a href='#should-send-alerts-on-code-setattributenode-code-calls'>should send alerts on <code>setAttributeNode</code> calls</a></li>
         </div>
         <div id="middle">
             <h1><a name='tests-of-dom-utilities-module'></a>Tests of DOM utilities module &nbsp; <font size=-1><a href='test-results.md.html#tests-of-dom-utilities-module'>see results</a></font> <font size=-1><a href='#tests-of-dom-utilities-module'><img src="link.png" class="anchor"></a></font></h1><p>Pull in the utility functions in <code>phantom-utils</code> that make it
@@ -289,8 +300,10 @@ that are not part of the document.</p>
             done()
 </code></pre><h3><a name='should-work-for-descendant-indices'></a>should work for descendant indices &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-descendant-indices'>see results</a></font> <font size=-1><a href='#should-work-for-descendant-indices'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should work for descendant indices'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
         <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-</code></pre><p>Here we re-use the same hierarchy from [a test above](</p>
-<h1><a name='should-work-for-grandchildren-etc-for-the-same-reasons-'></a>should-work-for-grandchildren-etc-), for the same reasons. &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-grandchildren-etc-for-the-same-reasons-'>see results</a></font> <font size=-1><a href='#should-work-for-grandchildren-etc-for-the-same-reasons-'><img src="link.png" class="anchor"></a></font></h1><pre class="hljs"><code>            hierarchy = <span class="hljs-string">'''
+</code></pre><p>Here we re-use the same hierarchy from
+<a href="#should-work-for-grandchildren-etc-">a test above</a>,
+for the same reasons.</p>
+<pre class="hljs"><code>            hierarchy = <span class="hljs-string">'''
                 &lt;span id="test-0"&gt;foo&lt;/span&gt;
                 &lt;span id="test-1"&gt;bar&lt;/span&gt;
                 &lt;div id="test-2"&gt;
@@ -985,20 +998,21 @@ are used for editing.</p>
 expect to hear a <code>DOMEditAction</code> in response, indicating that the
 span was appended to the root of the tracked tree.</p>
 <p>We then append an empty span inside that span, and expect a
-similar event notification, but this time with an address inside
-the root rather than at the root.</p>
+similar event notification, but this time with an address further
+inside the root.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on appendChild calls'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
         <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            onemore = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
 </code></pre><p>Append the span to the div, then an element to the span.  Since
 the div has a whitespace text node in it, the span will be its
 second child, but the thing added inside the span will be its
 first.</p>
-<pre class="hljs"><code>            result1 = div.appendChild span
-            onemore = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            tracker.clearStack()
+            result1 = div.appendChild span
             result2 = span.appendChild onemore
-            tracker = DOMEditTracker.instanceOver div
 </code></pre><p>Return the serialized versions of the recorded edit actions,
 along with all return values from calls to <code>appendChild</code>.</p>
 <pre class="hljs"><code>            result = tracker.getEditActions().map \
@@ -1010,18 +1024,441 @@ along with all return values from calls to <code>appendChild</code>.</p>
             expect( result.length ).toEqual <span class="hljs-number">4</span>
 </code></pre><p>Validate the serialized versions of the <code>appendChild</code> events.</p>
 <pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
-                node : [], toAppend : { tagName : <span class="hljs-string">'SPAN'</span> }
+                type : <span class="hljs-string">'appendChild'</span>, node : [],
+                toAppend : { tagName : <span class="hljs-string">'SPAN'</span> }
             expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
-                node : [ <span class="hljs-number">1</span> ], toAppend : { tagName : <span class="hljs-string">'SPAN'</span> }
+                type : <span class="hljs-string">'appendChild'</span>, node : [ <span class="hljs-number">1</span> ],
+                toAppend : { tagName : <span class="hljs-string">'SPAN'</span> }
 </code></pre><p>Validate the return values, which must be the addresses of the
 appended children within the original div.</p>
 <pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>] ).toEqual [ <span class="hljs-number">1</span> ]
             expect( result[<span class="hljs-number">3</span>] ).toEqual [ <span class="hljs-number">1</span>, <span class="hljs-number">0</span> ]
             done()
+</code></pre><h3><a name='should-send-alerts-on-code-insertbefore-code-calls'></a>should send alerts on <code>insertBefore</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-insertbefore-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-insertbefore-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>We insert an empty span in a div containing only whitespace,
+before that whitespace node, and expect to hear a <code>DOMEditAction</code>
+in response, indicating that the span was inserted under the root
+of the tracked tree, at index 0.</p>
+<p>We then insert an empty span at index 2, which is equivalent to an
+append call, and expect another event, with index 2.</p>
+<p>We then insert a final empty span, inside the first one, and
+expect a similar event notification, but this time with an
+address further inside the root.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on appendChild calls'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            text = div.childNodes[<span class="hljs-number">0</span>]
+            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            onemore = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            twomore = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+</code></pre><p>Insert the span into the div, at index 0.  Then insert another 
+at index 2.  Then insert the final span into the first span.</p>
+<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            tracker.clearStack()
+            result1 = div.insertBefore span, text
+            result2 = div.insertBefore onemore <span class="hljs-comment"># == append</span>
+            result3 = span.insertBefore twomore <span class="hljs-comment"># == append</span>
+</code></pre><p>Return the serialized versions of the recorded edit actions,
+along with all return values from calls to <code>appendChild</code>.</p>
+<pre class="hljs"><code>            result = tracker.getEditActions().map \
+                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
+            result.push result1.address tracker.getElement()
+            result.push result2.address tracker.getElement()
+            result.push result3.address tracker.getElement()
+            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result.length ).toEqual <span class="hljs-number">6</span>
+</code></pre><p>Validate the serialized versions of the <code>insertBefore</code> events.</p>
+<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+                type : <span class="hljs-string">'insertBefore'</span>, node : [],
+                toInsert : { tagName : <span class="hljs-string">'SPAN'</span> },
+                insertBefore : <span class="hljs-number">0</span>
+            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+                type : <span class="hljs-string">'insertBefore'</span>, node : [],
+                toInsert : { tagName : <span class="hljs-string">'SPAN'</span> },
+                insertBefore : <span class="hljs-number">2</span>
+            expect( JSON.parse result[<span class="hljs-number">2</span>] ).toEqual
+                type : <span class="hljs-string">'insertBefore'</span>, node : [ <span class="hljs-number">0</span> ],
+                toInsert : { tagName : <span class="hljs-string">'SPAN'</span> },
+                insertBefore : <span class="hljs-number">0</span>
+</code></pre><p>Validate the return values, which must be the addresses of the
+appended children within the original div.</p>
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>] ).toEqual [ <span class="hljs-number">0</span> ]
+            expect( result[<span class="hljs-number">4</span>] ).toEqual [ <span class="hljs-number">2</span> ]
+            expect( result[<span class="hljs-number">5</span>] ).toEqual [ <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ]
+            done()
+</code></pre><h3><a name='should-send-alerts-on-code-normalize-code-calls'></a>should send alerts on <code>normalize</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-normalize-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-normalize-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>We insert a text node after the existing whitespace in the div,
+and normalize.  We test that the normalize event is emitted.</p>
+<p>We then insert an empty span after the text, append two text node
+children inside it, with an empty span between.  We then normalize
+that node and repeat the test.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on normalize calls'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'example'</span>
+            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span.innerHTML = <span class="hljs-string">'foo&lt;span&gt;&lt;/span&gt;bar'</span>
+</code></pre><p>Normalize the div, append the span, and normalize the span.</p>
+<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            tracker.clearStack()
+            result1 = div.normalize()
+            div.appendChild span
+            result2 = span.normalize()
+</code></pre><p>Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+<code>normalize</code> were undefined, as they should be.</p>
+<pre class="hljs"><code>            result = tracker.getEditActions().map \
+                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
+            result.push <span class="hljs-keyword">typeof</span> result1
+            result.push <span class="hljs-keyword">typeof</span> result2
+            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+</code></pre><p>We&#39;ll be looking for the two <code>normalize</code> events, plus the one
+<code>appendChild</code> event that isn&#39;t what we&#39;re testing here (but
+certainly did occur during the test, and thus got recorded), plus
+the two return values added to the end of the results array, for
+a total of 5 items.</p>
+<pre class="hljs"><code>            expect( result.length ).toEqual <span class="hljs-number">5</span>
+</code></pre><p>Validate the serialized versions of the various events.
+First, the first of two normalize events that we&#39;re testing, this
+one done on a div with two text children and no other children.</p>
+<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+                type : <span class="hljs-string">'normalize'</span>, node : [],
+                textChildren : {
+                    <span class="hljs-number">0</span> : <span class="hljs-string">'\n        '</span>
+                    <span class="hljs-number">1</span> : <span class="hljs-string">'example'</span>
+                }
+</code></pre><p>Next, an <code>appendChild</code> event that isn&#39;t part of this test, but is
+included for completeness.</p>
+<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+                type : <span class="hljs-string">'appendChild'</span>, node : [],
+                toAppend : {
+                    tagName : <span class="hljs-string">'SPAN'</span>
+                    children : [
+                        <span class="hljs-string">'foo'</span>
+                        { tagName : <span class="hljs-string">'SPAN'</span> }
+                        <span class="hljs-string">'bar'</span>
+                    ]
+                }
+</code></pre><p>Finally, the second normalize event, called on the span inside the
+div, with two text node children, not adjacent.</p>
+<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">2</span>] ).toEqual
+                type : <span class="hljs-string">'normalize'</span>, node : [ <span class="hljs-number">1</span> ],
+                textChildren : {
+                    <span class="hljs-number">0</span> : <span class="hljs-string">'foo'</span>
+                    <span class="hljs-number">2</span> : <span class="hljs-string">'bar'</span>
+                }
+</code></pre><p>Ensure that the return values were both undefined.</p>
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'undefined'</span>
+            expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'undefined'</span>
+            done()
+</code></pre><h3><a name='should-send-alerts-on-code-removeattribute-code-calls'></a>should send alerts on <code>removeAttribute</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-removeattribute-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-removeattribute-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>We place two spans inside the root div, with attributes on each.
+We then remove some of those attributes and ensure that the
+correct events are propagated for each.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on removeAttribute calls'</span>,
+    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            div.innerHTML = <span class="hljs-string">'''
+            &lt;span align="center" class="thing"&gt;hi&lt;/span&gt;
+            &lt;span style="color:blue;"&gt;blue&lt;/span&gt;
+            '''</span>
+            span1 = div.childNodes[<span class="hljs-number">0</span>]
+            span2 = div.childNodes[<span class="hljs-number">2</span>]
+</code></pre><p>Remove an attribute from each span node.</p>
+<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            tracker.clearStack()
+            result1 = span1.removeAttribute <span class="hljs-string">'align'</span>
+            result2 = span2.removeAttribute <span class="hljs-string">'style'</span>
+</code></pre><p>Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+<code>removeAttribute</code> were undefined, as they should be.</p>
+<pre class="hljs"><code>            result = tracker.getEditActions().map \
+                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
+            result.push <span class="hljs-keyword">typeof</span> result1
+            result.push <span class="hljs-keyword">typeof</span> result2
+            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result.length ).toEqual <span class="hljs-number">4</span>
+</code></pre><p>Validate the serialized versions of the two <code>removeAttribute</code>
+events.</p>
+<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+                type : <span class="hljs-string">'removeAttribute'</span>, node : [ <span class="hljs-number">0</span> ],
+                name : <span class="hljs-string">'align'</span>, value : <span class="hljs-string">'center'</span>
+            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+                type : <span class="hljs-string">'removeAttribute'</span>, node : [ <span class="hljs-number">2</span> ],
+                name : <span class="hljs-string">'style'</span>, value : <span class="hljs-string">'color:blue;'</span>
+</code></pre><p>Ensure that the return values were both undefined.</p>
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-string">'undefined'</span>
+            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'undefined'</span>
+            done()
+</code></pre><h3><a name='should-send-alerts-on-code-removeattributenode-code-calls'></a>should send alerts on <code>removeAttributeNode</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-removeattributenode-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-removeattributenode-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>This test imitates the previous one, but uses
+<code>removeAttributeNode</code> rather than <code>removeAttribute</code>.  This adds
+just one new step, of fetching the attribute node to be removed.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on removeAttributeNode calls'</span>,
+    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            div.innerHTML = <span class="hljs-string">'''
+            &lt;span align="center" class="thing"&gt;hi&lt;/span&gt;
+            &lt;span style="color:blue;"&gt;blue&lt;/span&gt;
+            '''</span>
+            span1 = div.childNodes[<span class="hljs-number">0</span>]
+            span2 = div.childNodes[<span class="hljs-number">2</span>]
+</code></pre><p>Remove an attribute from each span node.</p>
+<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            tracker.clearStack()
+            togo = span1.getAttributeNode <span class="hljs-string">'align'</span>
+            result1 = span1.removeAttributeNode togo
+            togo = span2.getAttributeNode <span class="hljs-string">'style'</span>
+            result2 = span2.removeAttributeNode togo
+</code></pre><p>Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+<code>removeAttributeNode</code> were attribute nodes with the correct data.</p>
+<pre class="hljs"><code>            result = tracker.getEditActions().map \
+                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
+            result.push result1
+            result.push result2
+            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result.length ).toEqual <span class="hljs-number">4</span>
+</code></pre><p>Validation of events is exactly as it was in the previous test,
+except for the name of the action.</p>
+<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+                type : <span class="hljs-string">'removeAttributeNode'</span>, node : [ <span class="hljs-number">0</span> ],
+                name : <span class="hljs-string">'align'</span>, value : <span class="hljs-string">'center'</span>
+            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+                type : <span class="hljs-string">'removeAttributeNode'</span>, node : [ <span class="hljs-number">2</span> ],
+                name : <span class="hljs-string">'style'</span>, value : <span class="hljs-string">'color:blue;'</span>
+</code></pre><p>Validation of return types is different; we expect that the return
+types were attribute nodes, and we inspect their defining
+properties.</p>
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>].name ).toEqual <span class="hljs-string">'align'</span>
+            expect( result[<span class="hljs-number">2</span>].value ).toEqual <span class="hljs-string">'center'</span>
+            expect( result[<span class="hljs-number">3</span>].name ).toEqual <span class="hljs-string">'style'</span>
+            expect( result[<span class="hljs-number">3</span>].value ).toEqual <span class="hljs-string">'color:blue;'</span>
+            done()
+</code></pre><h3><a name='should-send-alerts-on-code-removechild-code-calls'></a>should send alerts on <code>removeChild</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-removechild-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-removechild-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>This test creates a hierarchical structure of spans under the root
+div node, then calls <code>removeChild</code> twice in different portions of
+that tree, verifying that the appropriate events are emitted each
+time.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on removeChild calls'</span>,
+    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            div.innerHTML = <span class="hljs-string">'''
+            &lt;span&gt;&lt;span&gt;INNER SPAN!&lt;/span&gt;hi&lt;/span&gt;
+            &lt;span&gt;there&lt;/span&gt;
+            '''</span>
+            span1 = div.childNodes[<span class="hljs-number">0</span>]
+            span2 = div.childNodes[<span class="hljs-number">2</span>]
+            spanI = span1.childNodes[<span class="hljs-number">0</span>]
+</code></pre><p>Remove the inner span, then the second span.</p>
+<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            tracker.clearStack()
+            result1 = span1.removeChild spanI
+            result2 = div.removeChild span2
+</code></pre><p>Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+<code>removeChild</code> were the child nodes that were removed.</p>
+<pre class="hljs"><code>            result = tracker.getEditActions().map \
+                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
+            result.push result1.toJSON()
+            result.push result2.toJSON()
+            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result.length ).toEqual <span class="hljs-number">4</span>
+</code></pre><p>First we expect the two child removal events.</p>
+<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+                type : <span class="hljs-string">'removeChild'</span>,
+                node : [ <span class="hljs-number">0</span> ], childIndex : <span class="hljs-number">0</span>,
+                child : {
+                    tagName : <span class="hljs-string">'SPAN'</span>
+                    children : [ <span class="hljs-string">'INNER SPAN!'</span> ]
+                }
+            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+                type : <span class="hljs-string">'removeChild'</span>,
+                node : [], childIndex : <span class="hljs-number">2</span>,
+                child : {
+                    tagName : <span class="hljs-string">'SPAN'</span>
+                    children : [ <span class="hljs-string">'there'</span> ]
+                }
+</code></pre><p>Then we expect two child nodes to have been returned by those
+<code>removeChild</code> calls, which we serialized for returning here.</p>
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>] ).toEqual {
+                tagName : <span class="hljs-string">'SPAN'</span>
+                children : [ <span class="hljs-string">'INNER SPAN!'</span> ]
+            }
+            expect( result[<span class="hljs-number">3</span>] ).toEqual {
+                tagName : <span class="hljs-string">'SPAN'</span>
+                children : [ <span class="hljs-string">'there'</span> ]
+            }
+            done()
+</code></pre><h3><a name='should-send-alerts-on-code-replacechild-code-calls'></a>should send alerts on <code>replaceChild</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-replacechild-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-replacechild-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>This test operates exactly like the previous, except rather than
+deleting two children, they are simply replaced with new children
+that are measurably different, for the purposes of testing.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on replaceChild calls'</span>,
+    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            div.innerHTML = <span class="hljs-string">'''
+            &lt;span&gt;&lt;span&gt;INNER SPAN!&lt;/span&gt;hi&lt;/span&gt;
+            &lt;span&gt;there&lt;/span&gt;
+            '''</span>
+            span1 = div.childNodes[<span class="hljs-number">0</span>]
+            span2 = div.childNodes[<span class="hljs-number">2</span>]
+            spanI = span1.childNodes[<span class="hljs-number">0</span>]
+            repl1 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'h1'</span>
+            repl1.innerHTML = <span class="hljs-string">'heading'</span>
+            repl2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            repl2.innerHTML = <span class="hljs-string">'some words'</span>
+</code></pre><p>Replace the inner span, then the second span, with <code>repl1</code> and
+<code>repl2</code>, respectively.</p>
+<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            tracker.clearStack()
+            result1 = span1.replaceChild repl1, spanI
+            result2 = div.replaceChild repl2, span2
+</code></pre><p>Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+<code>replaceChild</code> were the original child nodes that were replaced,
+and are thus no longer in the DOM.</p>
+<pre class="hljs"><code>            result = tracker.getEditActions().map \
+                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
+            result.push result1.toJSON()
+            result.push result2.toJSON()
+            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result.length ).toEqual <span class="hljs-number">4</span>
+</code></pre><p>First we expect the two child replacement events.</p>
+<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+                type : <span class="hljs-string">'replaceChild'</span>,
+                node : [ <span class="hljs-number">0</span> ], childIndex : <span class="hljs-number">0</span>,
+                oldChild : {
+                    tagName : <span class="hljs-string">'SPAN'</span>
+                    children : [ <span class="hljs-string">'INNER SPAN!'</span> ]
+                },
+                newChild : {
+                    tagName : <span class="hljs-string">'H1'</span>
+                    children : [ <span class="hljs-string">'heading'</span> ]
+                }
+            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+                type : <span class="hljs-string">'replaceChild'</span>,
+                node : [], childIndex : <span class="hljs-number">2</span>,
+                oldChild : {
+                    tagName : <span class="hljs-string">'SPAN'</span>
+                    children : [ <span class="hljs-string">'there'</span> ]
+                },
+                newChild : {
+                    tagName : <span class="hljs-string">'SPAN'</span>
+                    children : [ <span class="hljs-string">'some words'</span> ]
+                }
+</code></pre><p>Then we expect the replaced nodes to have been returned by those
+<code>replaceChild</code> calls, which we serialized for returning here.</p>
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>] ).toEqual {
+                tagName : <span class="hljs-string">'SPAN'</span>
+                children : [ <span class="hljs-string">'INNER SPAN!'</span> ]
+            }
+            expect( result[<span class="hljs-number">3</span>] ).toEqual {
+                tagName : <span class="hljs-string">'SPAN'</span>
+                children : [ <span class="hljs-string">'there'</span> ]
+            }
+            done()
+</code></pre><h3><a name='should-send-alerts-on-code-setattribute-code-calls'></a>should send alerts on <code>setAttribute</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-setattribute-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-setattribute-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>We create one span inside the root div, set an attribute on that
+span and then do the same on the root div, and ensure that both
+events are correctly emitted.  In one case, we will be creating a
+new attribute, and in the other case, replacing an existing one.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on setAttribute calls'</span>,
+    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            div.innerHTML = <span class="hljs-string">'''
+            &lt;span example="yes"&gt;content&lt;/span&gt;
+            '''</span>
+            span = div.childNodes[<span class="hljs-number">0</span>]
+</code></pre><p>Set an attribute on the div, then change the attribute on the
+span.</p>
+<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            tracker.clearStack()
+            result1 = div.setAttribute <span class="hljs-string">'align'</span>, <span class="hljs-string">'center'</span>
+            result2 = span.setAttribute <span class="hljs-string">'example'</span>, <span class="hljs-string">'no'</span>
+</code></pre><p>Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+<code>setAttribute</code> were undefined, as they should be.</p>
+<pre class="hljs"><code>            result = tracker.getEditActions().map \
+                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
+            result.push <span class="hljs-keyword">typeof</span> result1
+            result.push <span class="hljs-keyword">typeof</span> result2
+            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result.length ).toEqual <span class="hljs-number">4</span>
+</code></pre><p>First we expect the two attribute-setting events.</p>
+<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+                type : <span class="hljs-string">'setAttribute'</span>,
+                node : [], name : <span class="hljs-string">'align'</span>,
+                oldValue : <span class="hljs-string">''</span>, newValue : <span class="hljs-string">'center'</span>
+            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+                type : <span class="hljs-string">'setAttribute'</span>,
+                node : [ <span class="hljs-number">0</span> ], name : <span class="hljs-string">'example'</span>,
+                oldValue : <span class="hljs-string">'yes'</span>, newValue : <span class="hljs-string">'no'</span>
+</code></pre><p>Then we expect the calls to have given no return values.</p>
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-string">'undefined'</span>
+            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'undefined'</span>
+            done()
+</code></pre><h3><a name='should-send-alerts-on-code-setattributenode-code-calls'></a>should send alerts on <code>setAttributeNode</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-setattributenode-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-setattributenode-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>We create one span inside the root div, set an attribute on that
+span and then do the same on the root div, and ensure that both
+events are correctly emitted.  In one case, we will be creating a
+new attribute, and in the other case, replacing an existing one.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on setAttributeNode calls'</span>,
+    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            div.innerHTML = <span class="hljs-string">'''
+            &lt;span example="yes"&gt;content&lt;/span&gt;
+            '''</span>
+            span = div.childNodes[<span class="hljs-number">0</span>]
+</code></pre><p>Set an attribute on the div, then change the attribute on the
+span.</p>
+<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            tracker.clearStack()
+            edit = <span class="hljs-built_in">document</span>.createAttribute <span class="hljs-string">'align'</span>
+            edit.value = <span class="hljs-string">'center'</span>
+            result1 = div.setAttributeNode edit
+            edit = <span class="hljs-built_in">document</span>.createAttribute <span class="hljs-string">'example'</span>
+            edit.value = <span class="hljs-string">'no'</span>
+            result2 = span.setAttributeNode edit
+</code></pre><p>Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+<code>setAttribute</code> were what they should be.  In the first case, the
+result should be undefined, because no node was replaced.  In the
+second case, it should be the replaced attribute node (i.e., the
+old one).</p>
+<pre class="hljs"><code>            result = tracker.getEditActions().map \
+                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
+            result.push result1 <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
+            result.push result2
+            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result.length ).toEqual <span class="hljs-number">4</span>
+</code></pre><p>First we expect the two attribute-setting events.</p>
+<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+                type : <span class="hljs-string">'setAttributeNode'</span>,
+                node : [], name : <span class="hljs-string">'align'</span>,
+                oldValue : <span class="hljs-string">''</span>, newValue : <span class="hljs-string">'center'</span>
+            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+                type : <span class="hljs-string">'setAttributeNode'</span>,
+                node : [ <span class="hljs-number">0</span> ], name : <span class="hljs-string">'example'</span>,
+                oldValue : <span class="hljs-string">'yes'</span>, newValue : <span class="hljs-string">'no'</span>
+</code></pre><p>Then we expect the first call to have given null as the return
+value.</p>
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>] ).toBeTruthy()
+</code></pre><p>But the second call should have returned the original attribute
+node (before the replacement).</p>
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>].name ).toEqual <span class="hljs-string">'example'</span>
+            expect( result[<span class="hljs-number">3</span>].value ).toEqual <span class="hljs-string">'yes'</span>
+            done()
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>Main Page</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

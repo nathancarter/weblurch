@@ -14,6 +14,7 @@
         throw Error('This is not a node: ' + node);
       }
       this.tracker = DOMEditTracker.instanceOver(node);
+      this.type = type;
       this.node = node.address(this.tracker.getElement());
       if (type === 'appendChild') {
         if (data.length !== 1) {
@@ -90,19 +91,19 @@
         if (!(data[1] instanceof Node)) {
           throw Error('Invalid parameter: ' + data[1]);
         }
-        if (data[0].parentNode !== node) {
-          throw Error('Invalid child: ' + data[0]);
+        if (data[1].parentNode !== node) {
+          throw Error('Invalid child: ' + data[1]);
         }
-        this.childIndex = data[0].indexInParent();
-        this.oldChild = data[0].toJSON();
-        this.newChild = data[1].toJSON();
+        this.childIndex = data[1].indexInParent();
+        this.oldChild = data[1].toJSON();
+        this.newChild = data[0].toJSON();
       } else if (type === 'setAttribute') {
         if (data.length !== 2) {
           throw Error('Wrong # of parameters: ' + data);
         }
         this.name = data[0] + '';
         this.newValue = data[1] + '';
-        this.oldValue = node.getAttribute(this.name);
+        this.oldValue = (node.getAttribute(this.name)) || '';
       } else if (type === 'setAttributeNode') {
         if (data.length !== 1) {
           throw Error('Wrong # of parameters: ' + data);
@@ -112,7 +113,7 @@
         }
         this.name = data[0].name;
         this.newValue = data[0].value;
-        this.oldValue = node.getAttribute(this.name);
+        this.oldValue = (node.getAttribute(this.name)) || '';
       } else {
         throw Error('Invalid DOMEditAction type: ' + type);
       }
@@ -120,6 +121,7 @@
 
     DOMEditAction.prototype.toJSON = function() {
       return JSON.stringify({
+        type: this.type,
         node: this.node,
         toAppend: this.toAppend,
         toInsert: this.toInsert,
@@ -174,6 +176,10 @@
 
     DOMEditTracker.prototype.getEditActions = function() {
       return this.stack.slice(0);
+    };
+
+    DOMEditTracker.prototype.clearStack = function() {
+      return this.stack = [];
     };
 
     DOMEditTracker.prototype.nodeEditHappened = function(action) {
@@ -319,10 +325,11 @@
     return result;
   };
 
-  'appendChild insertBefore normalize removeAttribute\nremoveAttributeNode removeChild replaceChild\nsetAttribute setAttributeNode'.split(' ').map(function(methodName) {
-    var original;
-    original = Node.prototype[methodName];
-    return Node.prototype[methodName] = function() {
+  'appendChild insertBefore normalize removeAttribute\nremoveAttributeNode removeChild replaceChild\nsetAttribute setAttributeNode'.split(/\s+/).map(function(methodName) {
+    var original, which;
+    which = Node.prototype[methodName] ? Node : Element;
+    original = which.prototype[methodName];
+    return which.prototype[methodName] = function() {
       var args, event, result, tracker;
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
       tracker = DOMEditTracker.instanceOver(this);

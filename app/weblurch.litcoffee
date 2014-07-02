@@ -16,9 +16,9 @@ The protocol for what data to store in each case is described here.
    * event contains `N`'s address and the serialized node
  * `N.insertBefore(node,beforeThisChild)`
    * returns `node`
-   * if beforeThisChild is omitted, it's the same as append
+   * if `beforeThisChild` is omitted, it's the same as append
    * event contains `N`'s address, the serialized node, and the
-     index of beforeThisChild (or child node length if absent)
+     index of `beforeThisChild` (or child node length if absent)
  * `N.normalize()`
    * no return value
    * removes empty text nodes
@@ -27,13 +27,13 @@ The protocol for what data to store in each case is described here.
      to text content of all current child text nodes of `N`
  * `N.removeAttribute(name)`
    * no return value
-   * event contains `N`'s address, name, and original attribute
-     value
+   * event contains `N`'s address, `name`, and original attribute
+     `value`
  * `N.removeAttributeNode(attrNode)`
    * returns `attrNode`
    * e.g.: `N.removeAttributeNode(N.getAttributeNode('style'))`
-   * event contains `N`'s address and original attribute name and
-     value
+   * event contains `N`'s address and original attribute `name` and
+     `value`
  * `N.removeChild(childNode)`
    * returns `childNode`
    * event contains `N`'s address, the child's original index
@@ -45,8 +45,8 @@ The protocol for what data to store in each case is described here.
  * `N.setAttribute(name,value)`
    * no return value
    * both strings
-   * event contains `N`'s address, name, and value, as well as the
-     original value of the attribute beforehand
+   * event contains `N`'s address, `name`, and `value`, as well as
+     the original value of the attribute beforehand
  * `N.setAttributeNode(attrNode)`
    * returns replaced node if any, otherwise null
    * e.g.:
@@ -79,8 +79,8 @@ They are these:
    remove the attribute, and the attribute node to remove
  * type "removeChild", with data the parent node and the child to
    remove
- * type "replaceChild", with data the parent node, the child to
-   replace, and the node with which to replace it
+ * type "replaceChild", with data the parent node, the new node to
+   replace the child with, and then the child to replace
  * type "setAttribute", with data the node whose attribute should
    be set, the name of the attribute to set, and the value to which
    it should be set
@@ -101,6 +101,10 @@ stored in the member `@tracker`.  If there is no such tracker, that
 member will be null.
 
             @tracker = DOMEditTracker.instanceOver node
+
+Also remember the type of action.
+
+            @type = type
 
 The node itself is stored in `@node` as the address within the
 given edit tracker, or within its topmost ancestor if there is no
@@ -198,22 +202,24 @@ For type "replaceChild", we store the child's original index within
                     throw Error 'Invalid parameter: ' + data[0]
                 if data[1] not instanceof Node
                     throw Error 'Invalid parameter: ' + data[1]
-                if data[0].parentNode isnt node
-                    throw Error 'Invalid child: ' + data[0]
-                @childIndex = data[0].indexInParent()
-                @oldChild = data[0].toJSON()
-                @newChild = data[1].toJSON()
+                if data[1].parentNode isnt node
+                    throw Error 'Invalid child: ' + data[1]
+                @childIndex = data[1].indexInParent()
+                @oldChild = data[1].toJSON()
+                @newChild = data[0].toJSON()
 
 For type "setAttribute", we store the name and value to which the
 attribute will be set, in `@name` and `@newValue`, respectively, as
-well as the attribute's original value, in `@oldValue`.
+well as the attribute's original value, in `@oldValue`.  If the
+old value is null, we store the empty string instead, so that
+JSON serialization is possible.
 
             else if type is 'setAttribute'
                 if data.length isnt 2
                     throw Error 'Wrong # of parameters: ' + data
                 @name = data[0] + ''
                 @newValue = data[1] + ''
-                @oldValue = node.getAttribute @name
+                @oldValue = ( node.getAttribute @name ) or ''
 
 For type "setAttributeNode", we store the same data as in the
 previous case, and under the same names.
@@ -225,7 +231,7 @@ previous case, and under the same names.
                     throw Error 'Invalid parameter: ' + data[0]
                 @name = data[0].name
                 @newValue = data[0].value
-                @oldValue = node.getAttribute @name
+                @oldValue = ( node.getAttribute @name ) or ''
 
 If none of the above types were what the caller was trying to
 construct, throw an error, because they're the only types
@@ -243,7 +249,7 @@ This function is indirectly tested in that many other unit tests
 depend upon it to test other functionality.
 
         toJSON: ->
-            JSON.stringify { @node, @toAppend, @toInsert,
+            JSON.stringify { @type, @node, @toAppend, @toInsert,
                 @insertBefore, @textChildren, @name, @value,
                 @child, @childIndex, @oldChild, @newChild,
                 @oldValue, @newValue }
@@ -324,6 +330,13 @@ of the stack is returned, so that the caller may modify it as they
 see fit without harming this object.
 
         getEditActions: -> @stack[..]
+
+## Setters
+
+The user can ask to clear out the edit actions stack with the
+following method.
+
+        clearStack: -> @stack = []
 
 ## Events
 
@@ -552,32 +565,59 @@ given object, and recur on the child array if there is one.
 ## Change events
 
 Whenever a change is made to a DOM Node using one of the built-in
-methods of the Node prototype, notifications of that cahnge event
+methods of the Node prototype, notifications of that change event
 must be sent to any `DOMEditTracker` instance containing the
 modified node.  To facilitate this, we modify those Node prototype
 methods so that they not only do their original work, but also
-send the notification events in question.
+send the notification events in question.  (Some of the methods in
+question are in the Element prototype rather than the Node
+prototype, so changes happen in both, actually.)
 
-### appendChild
-
-The new version of `N.appendChild(node)` should, as before, return
-the appended `node`, but should also create and propagate a
-`DOMEditAction` instance of type "appendChild" containing `N`'s
-address and a serialized copy of `node`.
+Each modified version has the same signature and return value as
+before, but with the changes explained below.  The following code
+just performs the modification to each of the methods listed in
+the following string.
 
     '''
     appendChild insertBefore normalize removeAttribute
     removeAttributeNode removeChild replaceChild
     setAttribute setAttributeNode
-    '''.split( ' ' ).map ( methodName ) ->
-        original = Node::[methodName]
-        Node::[methodName] = ( args... ) ->
+    '''.split( /\s+/ ).map ( methodName ) ->
+
+Compute whether the modificatio needs to take place in the Node
+prototype or the Element prototype, and then store the original
+value of the method for use from within our modified one.
+
+        which = if Node::[methodName] then Node else Element
+        original = which::[methodName]
+
+Next, replace the original with our modified version.
+
+        which::[methodName] = ( args... ) ->
+
+If and only if a tracker exists over this node, we create an event
+that we will later propagate to it.  We must create the event now,
+so that if the creation of the event needs to record any data from
+the unmodified state of this node (which is a common occurrence)
+then it has the opportunity to do so.
+
             tracker = DOMEditTracker.instanceOver this
             if tracker
                 event = new DOMEditAction methodName, this, args...
+
+Then call the original version of this method.
+
             result = original.call this, args...
+
+Now if a tracker was found earlier, and thus a method created to
+send to that tracker, go ahead and send it now.
+
             if tracker
                 tracker.nodeEditHappened event
+
+Return the same return value that would have been returned from the
+original method.
+
             result
 
 
