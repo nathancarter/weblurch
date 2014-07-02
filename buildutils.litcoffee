@@ -230,13 +230,15 @@ headings.
                           "#{escapedText}'>see results</a></font>"
             else
                 results = ''
-            while level > lastlevel
-                toc += '<ul>'
-                lastlevel++
-            toc += "<li><a href='##{escapedText}'>#{text}</a></li>"
+            if level > lastlevel
+                toc += '<ul>\n'
+                lastlevel = level
             while level < lastlevel
-                toc += '</ul>'
-                lastlevel--
+                toc += '</ul>\n'
+                lastlevel = level
+            toc += "<#{if level > 1 then 'li' else 'p'}>" +
+                   "<a href='##{escapedText}'>#{text}</a>" +
+                   "</#{if level > 1 then 'li' else 'p'}>"
             "<h#{level}><a name='#{escapedText}'></a>#{text} " +
             "&nbsp; #{results} <font size=-1><a href='" +
             "##{escapedText}'>#{linkpng}</a></font></h#{level}>"
