@@ -28,12 +28,12 @@ The protocol for what data to store in each case is described here.
  * `N.removeAttribute(name)`
    * no return value
    * event contains `N`'s address, `name`, and original attribute
-     value
+     `value`
  * `N.removeAttributeNode(attrNode)`
    * returns `attrNode`
    * e.g.: `N.removeAttributeNode(N.getAttributeNode('style'))`
    * event contains `N`'s address and original attribute `name` and
-     value
+     `value`
  * `N.removeChild(childNode)`
    * returns `childNode`
    * event contains `N`'s address, the child's original index
