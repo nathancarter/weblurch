@@ -215,12 +215,10 @@ modified node.  To facilitate this, we modify those Node prototype
 methods so that they not only do their original work, but also
 send the notification events in question.
 
-### appendChild
-
-The new version of `N.appendChild(node)` should, as before, return
-the appended `node`, but should also create and propagate a
-`DOMEditAction` instance of type "appendChild" containing `N`'s
-address and a serialized copy of `node`.
+Each modified version has the same signature and return value as
+before, but with the changes explained below.  The following code
+just performs the modification to each of the methods listed in
+the following string.
 
     '''
     appendChild insertBefore normalize removeAttribute
@@ -229,11 +227,29 @@ address and a serialized copy of `node`.
     '''.split( ' ' ).map ( methodName ) ->
         original = Node::[methodName]
         Node::[methodName] = ( args... ) ->
+
+If and only if a tracker exists over this node, we create an event
+that we will later propagate to it.  We must create the event now,
+so that if the creation of the event needs to record any data from
+the unmodified state of this node (which is a common occurrence)
+then it has the opportunity to do so.
+
             tracker = DOMEditTracker.instanceOver this
             if tracker
                 event = new DOMEditAction methodName, this, args...
+
+Then call the original version of this method.
+
             result = original.call this, args...
+
+Now if a tracker was found earlier, and thus a method created to
+send to that tracker, go ahead and send it now.
+
             if tracker
                 tracker.nodeEditHappened event
+
+Return the same return value that would have been returned from the
+original method.
+
             result
 
