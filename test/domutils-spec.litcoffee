@@ -1662,3 +1662,69 @@ Then we expect the calls to have given no return values.
                 expect( result[3] ).toEqual 'undefined'
                 done()
 
+### should send alerts on `setAttributeNode` calls
+
+We create one span inside the root div, set an attribute on that
+span and then do the same on the root div, and ensure that both
+events are correctly emitted.  In one case, we will be creating a
+new attribute, and in the other case, replacing an existing one.
+
+        it 'should send alerts on setAttributeNode calls',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.innerHTML = '''
+                <span example="yes">content</span>
+                '''
+                span = div.childNodes[0]
+
+Set an attribute on the div, then change the attribute on the
+span.
+
+                tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                edit = document.createAttribute 'align'
+                edit.value = 'center'
+                result1 = div.setAttributeNode edit
+                edit = document.createAttribute 'example'
+                edit.value = 'no'
+                result2 = span.setAttributeNode edit
+
+Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+`setAttribute` were what they should be.  In the first case, the
+result should be undefined, because no node was replaced.  In the
+second case, it should be the replaced attribute node (i.e., the
+old one).
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push result1 is null
+                result.push result2
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 4
+
+First we expect the two attribute-setting events.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'setAttributeNode',
+                    node : [], name : 'align',
+                    oldValue : '', newValue : 'center'
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'setAttributeNode',
+                    node : [ 0 ], name : 'example',
+                    oldValue : 'yes', newValue : 'no'
+
+Then we expect the first call to have given null as the return
+value.
+
+                expect( result[2] ).toBeTruthy()
+
+But the second call should have returned the original attribute
+node (before the replacement).
+
+                expect( result[3].name ).toEqual 'example'
+                expect( result[3].value ).toEqual 'yes'
+                done()
+
