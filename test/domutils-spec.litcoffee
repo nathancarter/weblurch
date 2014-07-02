@@ -1349,5 +1349,56 @@ Ensure that the return values were both undefined.
                 expect( result[3] ).toEqual 'undefined'
                 expect( result[4] ).toEqual 'undefined'
                 done()
+
+### should send alerts on `removeAttribute` calls
+
+We place two spans inside the root div, with attributes on each.
+We then remove some of those attributes and ensure that the
+correct events are propagated for each.
+
+        it 'should send alerts on removeAttribute calls',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.innerHTML = '''
+                <span align="center" class="thing">hi</span>
+                <span style="color:blue;">blue</span>
+                '''
+                span1 = div.childNodes[0]
+                span2 = div.childNodes[2]
+
+Remove an attribute from each span node.
+
+                tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                result1 = span1.removeAttribute 'align'
+                result2 = span2.removeAttribute 'style'
+
+Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+`removeAttribute` were undefined, as they should be.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push typeof result1
+                result.push typeof result2
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 4
+
+Validate the serialized versions of the two `removeAttribute`
+events.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'removeAttribute', node : [ 0 ],
+                    name : 'align', value : 'center'
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'removeAttribute', node : [ 2 ],
+                    name : 'style', value : 'color:blue;'
+
+Ensure that the return values were both undefined.
+
+                expect( result[2] ).toEqual 'undefined'
+                expect( result[3] ).toEqual 'undefined'
                 done()
 
