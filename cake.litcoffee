@@ -130,7 +130,7 @@ Build a file navigation list from those files' names.
             end = ( path = file.split '/' ).pop()
             if end is mainpg
                 navtxt += "<h3><a href='#{mainpg}.html'>" +
-                          "Main Page</a></h3>"
+                          "#{title} home</a></h3>"
             else
                 ( nav[path.join '/'] ?= [] ).push {
                     file : end, text : end }
@@ -146,16 +146,20 @@ Build a file navigation list from those files' names.
             navtxt += '</ul>'
 
 Read each source file and place its marked-down version into the
-HTML template, saving it into the docs directory.
+HTML template, saving it into the docs directory.  The marking-down
+process also generates a table of contents (TOC) for the page,
+which we put in the left frame.
 
         for file in all
             end = file.split( '/' ).pop()
             beginning = end.split( '.' ).shift()
             console.log "\tCreating #{end}.html..."
-            myhtml = html.replace( 'LEFT',
-                                   "#{title} source code docs" )
+            rendered = build.md2html file
+            toc = """<p align=center>Page contents</p>
+                     #{rendered.toc}"""
+            myhtml = html.replace( 'LEFT', toc )
                          .replace( 'RIGHT', navtxt )
-                         .replace( 'MIDDLE', build.md2html file )
+                         .replace( 'MIDDLE', rendered.html )
                          .replace( /<pre><code>/g,
                                    '<pre class="hljs"><code>' )
                          .replace( 'TITLE',

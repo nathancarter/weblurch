@@ -41,12 +41,14 @@ appended.
                     T.tracker is DOMEditTracker.instances[0]
                     T.node
                     T.toAppend
+                    T.type
                 ]
                 result
             , ( err, result ) ->
                 expect( result[0] ).toBeTruthy()
                 expect( result[1] ).toEqual []
                 expect( result[2] ).toEqual tagName : 'SPAN'
+                expect( result[3] ).toEqual 'appendChild'
                 done()
 
 ### should have "insertBefore" instances
@@ -68,12 +70,14 @@ index that the newly inserted child will have after insertion.
                     T.node
                     T.toInsert
                     T.insertBefore
+                    T.type
                 ]
             , ( err, result ) ->
                 expect( result[0] ).toBeTruthy()
                 expect( result[1] ).toEqual []
                 expect( result[2] ).toEqual tagName : 'SPAN'
                 expect( result[3] ).toEqual 1
+                expect( result[4] ).toEqual 'insertBefore'
                 done()
 
 ### should have "normalize" instances
@@ -99,12 +103,14 @@ content at that time.
                     T.tracker is DOMEditTracker.instances[0]
                     T.node
                     T.textChildren
+                    T.type
                 ]
             , ( err, result ) ->
                 expect( result[0] ).toBeTruthy()
                 expect( result[1] ).toEqual []
                 expect( result[2] ).toEqual
                     0 : 'one', 1 : 'two', 3 : 'four'
+                expect( result[3] ).toEqual 'normalize'
                 done()
 
 ### should have "removeAttribute" instances
@@ -125,12 +131,14 @@ value that the attribute had before removal.
                     T.node
                     T.name
                     T.value
+                    T.type
                 ]
             , ( err, result ) ->
                 expect( result[0] ).toBeTruthy()
                 expect( result[1] ).toEqual []
                 expect( result[2] ).toEqual 'id'
                 expect( result[3] ).toEqual '0'
+                expect( result[4] ).toEqual 'removeAttribute'
                 done()
 
 ### should have "removeAttributeNode" instances
@@ -154,12 +162,14 @@ value that the attribute had before removal.
                     T.node
                     T.name
                     T.value
+                    T.type
                 ]
             , ( err, result ) ->
                 expect( result[0] ).toBeTruthy()
                 expect( result[1] ).toEqual []
                 expect( result[2] ).toEqual 'id'
                 expect( result[3] ).toEqual '0'
+                expect( result[4] ).toEqual 'removeAttributeNode'
                 done()
 
 ### should have "removeChild" instances
@@ -185,6 +195,7 @@ a serialized version of the removed child.
                     T.node
                     T.childIndex
                     T.child
+                    T.type
                 ]
             , ( err, result ) ->
                 expect( result[0] ).toBeTruthy()
@@ -193,6 +204,7 @@ a serialized version of the removed child.
                 expect( result[3] ).toEqual
                     'tagName' : 'SPAN',
                     'children' : [ 'span contents, just text' ]
+                expect( result[4] ).toEqual 'removeChild'
                 done()
 
 ### should have "replaceChild" instances
@@ -216,13 +228,14 @@ member containing a serialization of the replacement child.
                 repl = document.createElement 'h1'
                 repl.innerHTML = 'Announcement!'
                 T = new DOMEditAction 'replaceChild',
-                    div, span, repl
+                    div, repl, span
                 result = [
                     T.tracker is DOMEditTracker.instances[0]
                     T.node
                     T.childIndex
                     T.oldChild
                     T.newChild
+                    T.type
                 ]
             , ( err, result ) ->
                 expect( result[0] ).toBeTruthy()
@@ -234,6 +247,7 @@ member containing a serialization of the replacement child.
                 expect( result[4] ).toEqual
                     'tagName' : 'H1',
                     'children' : [ 'Announcement!' ]
+                expect( result[5] ).toEqual 'replaceChild'
                 done()
 
 ### should have "setAttribute" instances
@@ -256,6 +270,7 @@ member containing the value after the attribute is set.
                     T.name
                     T.oldValue
                     T.newValue
+                    T.type
                 ]
             , ( err, result ) ->
                 expect( result[0] ).toBeTruthy()
@@ -263,6 +278,7 @@ member containing the value after the attribute is set.
                 expect( result[2] ).toEqual 'id'
                 expect( result[3] ).toEqual '0'
                 expect( result[4] ).toEqual '1'
+                expect( result[5] ).toEqual 'setAttribute'
                 done()
 
 ### should have "setAttributeNode" instances
@@ -287,6 +303,7 @@ member containing the value after the attribute is set.
                     T.name
                     T.oldValue
                     T.newValue
+                    T.type
                 ]
             , ( err, result ) ->
                 expect( result[0] ).toBeTruthy()
@@ -294,6 +311,7 @@ member containing the value after the attribute is set.
                 expect( result[2] ).toEqual 'id'
                 expect( result[3] ).toEqual '0'
                 expect( result[4] ).toEqual '1'
+                expect( result[5] ).toEqual 'setAttributeNode'
                 done()
 
 ### should have no other instances

@@ -210,9 +210,15 @@ And now, the conversion function.
 We install a routine that creates headings in the format we want
 them for our documentation.  This routine makes each heading an
 anchor so that links can point to it.  It also makes headings in
-test files include links to the results of those tests.
+test files include links to the results of those tests.  Finally,
+it remembers all the headings it makes in a file, and returns not
+only the generated HTML but a corresponding table of contents (TOC)
+with links to each of the anchors in each of the generated
+headings.
 
         renderer = new marked.Renderer()
+        toc = ''
+        lastlevel = 1
         renderer.heading = ( text, level ) ->
             if m = /^(.*) \([0-9.]+ ms\)/.exec text
                 escapedText = exports.escapeHeading m[1]
@@ -224,6 +230,15 @@ test files include links to the results of those tests.
                           "#{escapedText}'>see results</a></font>"
             else
                 results = ''
+            if level > lastlevel
+                toc += '<ul>\n'
+                lastlevel = level
+            while level < lastlevel
+                toc += '</ul>\n'
+                lastlevel = level
+            toc += "<#{if level > 1 then 'li' else 'p'}>" +
+                   "<a href='##{escapedText}'>#{text}</a>" +
+                   "</#{if level > 1 then 'li' else 'p'}>"
             "<h#{level}><a name='#{escapedText}'></a>#{text} " +
             "&nbsp; #{results} <font size=-1><a href='" +
             "##{escapedText}'>#{linkpng}</a></font></h#{level}>"
@@ -236,7 +251,10 @@ provided by `highlight.js`.
                 require( 'highlight.js' )
                     .highlight( 'coffeescript', code ).value
             renderer: renderer
-        marked fs.readFileSync infile, 'utf8'
+        {
+            html : marked fs.readFileSync infile, 'utf8'
+            toc : toc
+        }
 
 This utility function escapes text into lower-case with no spaces,
 and is used in a routine above, as well as other parts of the build

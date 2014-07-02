@@ -209,31 +209,58 @@ given object, and recur on the child array if there is one.
 ## Change events
 
 Whenever a change is made to a DOM Node using one of the built-in
-methods of the Node prototype, notifications of that cahnge event
+methods of the Node prototype, notifications of that change event
 must be sent to any `DOMEditTracker` instance containing the
 modified node.  To facilitate this, we modify those Node prototype
 methods so that they not only do their original work, but also
-send the notification events in question.
+send the notification events in question.  (Some of the methods in
+question are in the Element prototype rather than the Node
+prototype, so changes happen in both, actually.)
 
-### appendChild
-
-The new version of `N.appendChild(node)` should, as before, return
-the appended `node`, but should also create and propagate a
-`DOMEditAction` instance of type "appendChild" containing `N`'s
-address and a serialized copy of `node`.
+Each modified version has the same signature and return value as
+before, but with the changes explained below.  The following code
+just performs the modification to each of the methods listed in
+the following string.
 
     '''
     appendChild insertBefore normalize removeAttribute
     removeAttributeNode removeChild replaceChild
     setAttribute setAttributeNode
-    '''.split( ' ' ).map ( methodName ) ->
-        original = Node::[methodName]
-        Node::[methodName] = ( args... ) ->
+    '''.split( /\s+/ ).map ( methodName ) ->
+
+Compute whether the modificatio needs to take place in the Node
+prototype or the Element prototype, and then store the original
+value of the method for use from within our modified one.
+
+        which = if Node::[methodName] then Node else Element
+        original = which::[methodName]
+
+Next, replace the original with our modified version.
+
+        which::[methodName] = ( args... ) ->
+
+If and only if a tracker exists over this node, we create an event
+that we will later propagate to it.  We must create the event now,
+so that if the creation of the event needs to record any data from
+the unmodified state of this node (which is a common occurrence)
+then it has the opportunity to do so.
+
             tracker = DOMEditTracker.instanceOver this
             if tracker
                 event = new DOMEditAction methodName, this, args...
+
+Then call the original version of this method.
+
             result = original.call this, args...
+
+Now if a tracker was found earlier, and thus a method created to
+send to that tracker, go ahead and send it now.
+
             if tracker
                 tracker.nodeEditHappened event
+
+Return the same return value that would have been returned from the
+original method.
+
             result
 

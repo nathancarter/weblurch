@@ -348,8 +348,9 @@ that are not part of the document.
         it 'should work for descendant indices', ( done ) =>
             @page.evaluate ->
 
-Here we re-use the same hierarchy from [a test above](
-#should-work-for-grandchildren-etc-), for the same reasons.
+Here we re-use the same hierarchy from
+[a test above](#should-work-for-grandchildren-etc-),
+for the same reasons.
 
                 hierarchy = '''
                     <span id="test-0">foo</span>
@@ -1153,23 +1154,24 @@ expect to hear a `DOMEditAction` in response, indicating that the
 span was appended to the root of the tracked tree.
 
 We then append an empty span inside that span, and expect a
-similar event notification, but this time with an address inside
-the root rather than at the root.
+similar event notification, but this time with an address further
+inside the root.
 
         it 'should send alerts on appendChild calls', ( done ) =>
             @page.evaluate ->
                 div = document.getElementById '0'
                 span = document.createElement 'span'
+                onemore = document.createElement 'span'
 
 Append the span to the div, then an element to the span.  Since
 the div has a whitespace text node in it, the span will be its
 second child, but the thing added inside the span will be its
 first.
 
-                result1 = div.appendChild span
-                onemore = document.createElement 'span'
-                result2 = span.appendChild onemore
                 tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                result1 = div.appendChild span
+                result2 = span.appendChild onemore
 
 Return the serialized versions of the recorded edit actions,
 along with all return values from calls to `appendChild`.
@@ -1185,14 +1187,544 @@ along with all return values from calls to `appendChild`.
 Validate the serialized versions of the `appendChild` events.
 
                 expect( JSON.parse result[0] ).toEqual
-                    node : [], toAppend : { tagName : 'SPAN' }
+                    type : 'appendChild', node : [],
+                    toAppend : { tagName : 'SPAN' }
                 expect( JSON.parse result[1] ).toEqual
-                    node : [ 1 ], toAppend : { tagName : 'SPAN' }
+                    type : 'appendChild', node : [ 1 ],
+                    toAppend : { tagName : 'SPAN' }
 
 Validate the return values, which must be the addresses of the
 appended children within the original div.
 
                 expect( result[2] ).toEqual [ 1 ]
                 expect( result[3] ).toEqual [ 1, 0 ]
+                done()
+
+### should send alerts on `insertBefore` calls
+
+We insert an empty span in a div containing only whitespace,
+before that whitespace node, and expect to hear a `DOMEditAction`
+in response, indicating that the span was inserted under the root
+of the tracked tree, at index 0.
+
+We then insert an empty span at index 2, which is equivalent to an
+append call, and expect another event, with index 2.
+
+We then insert a final empty span, inside the first one, and
+expect a similar event notification, but this time with an
+address further inside the root.
+
+        it 'should send alerts on appendChild calls', ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                text = div.childNodes[0]
+                span = document.createElement 'span'
+                onemore = document.createElement 'span'
+                twomore = document.createElement 'span'
+
+Insert the span into the div, at index 0.  Then insert another 
+at index 2.  Then insert the final span into the first span.
+
+                tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                result1 = div.insertBefore span, text
+                result2 = div.insertBefore onemore # == append
+                result3 = span.insertBefore twomore # == append
+
+Return the serialized versions of the recorded edit actions,
+along with all return values from calls to `appendChild`.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push result1.address tracker.getElement()
+                result.push result2.address tracker.getElement()
+                result.push result3.address tracker.getElement()
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 6
+
+Validate the serialized versions of the `insertBefore` events.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'insertBefore', node : [],
+                    toInsert : { tagName : 'SPAN' },
+                    insertBefore : 0
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'insertBefore', node : [],
+                    toInsert : { tagName : 'SPAN' },
+                    insertBefore : 2
+                expect( JSON.parse result[2] ).toEqual
+                    type : 'insertBefore', node : [ 0 ],
+                    toInsert : { tagName : 'SPAN' },
+                    insertBefore : 0
+
+Validate the return values, which must be the addresses of the
+appended children within the original div.
+
+                expect( result[3] ).toEqual [ 0 ]
+                expect( result[4] ).toEqual [ 2 ]
+                expect( result[5] ).toEqual [ 0, 0 ]
+                done()
+
+### should send alerts on `normalize` calls
+
+We insert a text node after the existing whitespace in the div,
+and normalize.  We test that the normalize event is emitted.
+
+We then insert an empty span after the text, append two text node
+children inside it, with an empty span between.  We then normalize
+that node and repeat the test.
+
+        it 'should send alerts on normalize calls', ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.appendChild document.createTextNode 'example'
+                span = document.createElement 'span'
+                span.innerHTML = 'foo<span></span>bar'
+
+Normalize the div, append the span, and normalize the span.
+
+                tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                result1 = div.normalize()
+                div.appendChild span
+                result2 = span.normalize()
+
+Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+`normalize` were undefined, as they should be.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push typeof result1
+                result.push typeof result2
+                result
+            , ( err, result ) ->
+
+We'll be looking for the two `normalize` events, plus the one
+`appendChild` event that isn't what we're testing here (but
+certainly did occur during the test, and thus got recorded), plus
+the two return values added to the end of the results array, for
+a total of 5 items.
+
+                expect( result.length ).toEqual 5
+
+Validate the serialized versions of the various events.
+First, the first of two normalize events that we're testing, this
+one done on a div with two text children and no other children.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'normalize', node : [],
+                    textChildren : {
+                        0 : '\n        '
+                        1 : 'example'
+                    }
+
+Next, an `appendChild` event that isn't part of this test, but is
+included for completeness.
+
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'appendChild', node : [],
+                    toAppend : {
+                        tagName : 'SPAN'
+                        children : [
+                            'foo'
+                            { tagName : 'SPAN' }
+                            'bar'
+                        ]
+                    }
+
+Finally, the second normalize event, called on the span inside the
+div, with two text node children, not adjacent.
+
+                expect( JSON.parse result[2] ).toEqual
+                    type : 'normalize', node : [ 1 ],
+                    textChildren : {
+                        0 : 'foo'
+                        2 : 'bar'
+                    }
+
+Ensure that the return values were both undefined.
+
+                expect( result[3] ).toEqual 'undefined'
+                expect( result[4] ).toEqual 'undefined'
+                done()
+
+### should send alerts on `removeAttribute` calls
+
+We place two spans inside the root div, with attributes on each.
+We then remove some of those attributes and ensure that the
+correct events are propagated for each.
+
+        it 'should send alerts on removeAttribute calls',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.innerHTML = '''
+                <span align="center" class="thing">hi</span>
+                <span style="color:blue;">blue</span>
+                '''
+                span1 = div.childNodes[0]
+                span2 = div.childNodes[2]
+
+Remove an attribute from each span node.
+
+                tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                result1 = span1.removeAttribute 'align'
+                result2 = span2.removeAttribute 'style'
+
+Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+`removeAttribute` were undefined, as they should be.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push typeof result1
+                result.push typeof result2
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 4
+
+Validate the serialized versions of the two `removeAttribute`
+events.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'removeAttribute', node : [ 0 ],
+                    name : 'align', value : 'center'
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'removeAttribute', node : [ 2 ],
+                    name : 'style', value : 'color:blue;'
+
+Ensure that the return values were both undefined.
+
+                expect( result[2] ).toEqual 'undefined'
+                expect( result[3] ).toEqual 'undefined'
+                done()
+
+### should send alerts on `removeAttributeNode` calls
+
+This test imitates the previous one, but uses
+`removeAttributeNode` rather than `removeAttribute`.  This adds
+just one new step, of fetching the attribute node to be removed.
+
+        it 'should send alerts on removeAttributeNode calls',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.innerHTML = '''
+                <span align="center" class="thing">hi</span>
+                <span style="color:blue;">blue</span>
+                '''
+                span1 = div.childNodes[0]
+                span2 = div.childNodes[2]
+
+Remove an attribute from each span node.
+
+                tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                togo = span1.getAttributeNode 'align'
+                result1 = span1.removeAttributeNode togo
+                togo = span2.getAttributeNode 'style'
+                result2 = span2.removeAttributeNode togo
+
+Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+`removeAttributeNode` were attribute nodes with the correct data.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push result1
+                result.push result2
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 4
+
+Validation of events is exactly as it was in the previous test,
+except for the name of the action.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'removeAttributeNode', node : [ 0 ],
+                    name : 'align', value : 'center'
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'removeAttributeNode', node : [ 2 ],
+                    name : 'style', value : 'color:blue;'
+
+Validation of return types is different; we expect that the return
+types were attribute nodes, and we inspect their defining
+properties.
+
+                expect( result[2].name ).toEqual 'align'
+                expect( result[2].value ).toEqual 'center'
+                expect( result[3].name ).toEqual 'style'
+                expect( result[3].value ).toEqual 'color:blue;'
+                done()
+
+### should send alerts on `removeChild` calls
+
+This test creates a hierarchical structure of spans under the root
+div node, then calls `removeChild` twice in different portions of
+that tree, verifying that the appropriate events are emitted each
+time.
+
+        it 'should send alerts on removeChild calls',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.innerHTML = '''
+                <span><span>INNER SPAN!</span>hi</span>
+                <span>there</span>
+                '''
+                span1 = div.childNodes[0]
+                span2 = div.childNodes[2]
+                spanI = span1.childNodes[0]
+
+Remove the inner span, then the second span.
+
+                tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                result1 = span1.removeChild spanI
+                result2 = div.removeChild span2
+
+Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+`removeChild` were the child nodes that were removed.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push result1.toJSON()
+                result.push result2.toJSON()
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 4
+
+First we expect the two child removal events.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'removeChild',
+                    node : [ 0 ], childIndex : 0,
+                    child : {
+                        tagName : 'SPAN'
+                        children : [ 'INNER SPAN!' ]
+                    }
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'removeChild',
+                    node : [], childIndex : 2,
+                    child : {
+                        tagName : 'SPAN'
+                        children : [ 'there' ]
+                    }
+
+Then we expect two child nodes to have been returned by those
+`removeChild` calls, which we serialized for returning here.
+
+                expect( result[2] ).toEqual {
+                    tagName : 'SPAN'
+                    children : [ 'INNER SPAN!' ]
+                }
+                expect( result[3] ).toEqual {
+                    tagName : 'SPAN'
+                    children : [ 'there' ]
+                }
+                done()
+
+### should send alerts on `replaceChild` calls
+
+This test operates exactly like the previous, except rather than
+deleting two children, they are simply replaced with new children
+that are measurably different, for the purposes of testing.
+
+        it 'should send alerts on replaceChild calls',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.innerHTML = '''
+                <span><span>INNER SPAN!</span>hi</span>
+                <span>there</span>
+                '''
+                span1 = div.childNodes[0]
+                span2 = div.childNodes[2]
+                spanI = span1.childNodes[0]
+                repl1 = document.createElement 'h1'
+                repl1.innerHTML = 'heading'
+                repl2 = document.createElement 'span'
+                repl2.innerHTML = 'some words'
+
+Replace the inner span, then the second span, with `repl1` and
+`repl2`, respectively.
+
+                tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                result1 = span1.replaceChild repl1, spanI
+                result2 = div.replaceChild repl2, span2
+
+Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+`replaceChild` were the original child nodes that were replaced,
+and are thus no longer in the DOM.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push result1.toJSON()
+                result.push result2.toJSON()
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 4
+
+First we expect the two child replacement events.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'replaceChild',
+                    node : [ 0 ], childIndex : 0,
+                    oldChild : {
+                        tagName : 'SPAN'
+                        children : [ 'INNER SPAN!' ]
+                    },
+                    newChild : {
+                        tagName : 'H1'
+                        children : [ 'heading' ]
+                    }
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'replaceChild',
+                    node : [], childIndex : 2,
+                    oldChild : {
+                        tagName : 'SPAN'
+                        children : [ 'there' ]
+                    },
+                    newChild : {
+                        tagName : 'SPAN'
+                        children : [ 'some words' ]
+                    }
+
+Then we expect the replaced nodes to have been returned by those
+`replaceChild` calls, which we serialized for returning here.
+
+                expect( result[2] ).toEqual {
+                    tagName : 'SPAN'
+                    children : [ 'INNER SPAN!' ]
+                }
+                expect( result[3] ).toEqual {
+                    tagName : 'SPAN'
+                    children : [ 'there' ]
+                }
+                done()
+
+### should send alerts on `setAttribute` calls
+
+We create one span inside the root div, set an attribute on that
+span and then do the same on the root div, and ensure that both
+events are correctly emitted.  In one case, we will be creating a
+new attribute, and in the other case, replacing an existing one.
+
+        it 'should send alerts on setAttribute calls',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.innerHTML = '''
+                <span example="yes">content</span>
+                '''
+                span = div.childNodes[0]
+
+Set an attribute on the div, then change the attribute on the
+span.
+
+                tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                result1 = div.setAttribute 'align', 'center'
+                result2 = span.setAttribute 'example', 'no'
+
+Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+`setAttribute` were undefined, as they should be.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push typeof result1
+                result.push typeof result2
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 4
+
+First we expect the two attribute-setting events.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'setAttribute',
+                    node : [], name : 'align',
+                    oldValue : '', newValue : 'center'
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'setAttribute',
+                    node : [ 0 ], name : 'example',
+                    oldValue : 'yes', newValue : 'no'
+
+Then we expect the calls to have given no return values.
+
+                expect( result[2] ).toEqual 'undefined'
+                expect( result[3] ).toEqual 'undefined'
+                done()
+
+### should send alerts on `setAttributeNode` calls
+
+We create one span inside the root div, set an attribute on that
+span and then do the same on the root div, and ensure that both
+events are correctly emitted.  In one case, we will be creating a
+new attribute, and in the other case, replacing an existing one.
+
+        it 'should send alerts on setAttributeNode calls',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.innerHTML = '''
+                <span example="yes">content</span>
+                '''
+                span = div.childNodes[0]
+
+Set an attribute on the div, then change the attribute on the
+span.
+
+                tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                edit = document.createAttribute 'align'
+                edit.value = 'center'
+                result1 = div.setAttributeNode edit
+                edit = document.createAttribute 'example'
+                edit.value = 'no'
+                result2 = span.setAttributeNode edit
+
+Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+`setAttribute` were what they should be.  In the first case, the
+result should be undefined, because no node was replaced.  In the
+second case, it should be the replaced attribute node (i.e., the
+old one).
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push result1 is null
+                result.push result2
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 4
+
+First we expect the two attribute-setting events.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'setAttributeNode',
+                    node : [], name : 'align',
+                    oldValue : '', newValue : 'center'
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'setAttributeNode',
+                    node : [ 0 ], name : 'example',
+                    oldValue : 'yes', newValue : 'no'
+
+Then we expect the first call to have given null as the return
+value.
+
+                expect( result[2] ).toBeTruthy()
+
+But the second call should have returned the original attribute
+node (before the replacement).
+
+                expect( result[3].name ).toEqual 'example'
+                expect( result[3].value ).toEqual 'yes'
                 done()
 
