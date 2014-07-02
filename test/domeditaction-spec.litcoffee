@@ -228,7 +228,7 @@ member containing a serialization of the replacement child.
                 repl = document.createElement 'h1'
                 repl.innerHTML = 'Announcement!'
                 T = new DOMEditAction 'replaceChild',
-                    div, span, repl
+                    div, repl, span
                 result = [
                     T.tracker is DOMEditTracker.instances[0]
                     T.node

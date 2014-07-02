@@ -79,8 +79,8 @@ They are these:
    remove the attribute, and the attribute node to remove
  * type "removeChild", with data the parent node and the child to
    remove
- * type "replaceChild", with data the parent node, the child to
-   replace, and the node with which to replace it
+ * type "replaceChild", with data the parent node, the new node to
+   replace the child with, and then the child to replace
  * type "setAttribute", with data the node whose attribute should
    be set, the name of the attribute to set, and the value to which
    it should be set
@@ -202,11 +202,11 @@ For type "replaceChild", we store the child's original index within
                     throw Error 'Invalid parameter: ' + data[0]
                 if data[1] not instanceof Node
                     throw Error 'Invalid parameter: ' + data[1]
-                if data[0].parentNode isnt node
-                    throw Error 'Invalid child: ' + data[0]
-                @childIndex = data[0].indexInParent()
-                @oldChild = data[0].toJSON()
-                @newChild = data[1].toJSON()
+                if data[1].parentNode isnt node
+                    throw Error 'Invalid child: ' + data[1]
+                @childIndex = data[1].indexInParent()
+                @oldChild = data[1].toJSON()
+                @newChild = data[0].toJSON()
 
 For type "setAttribute", we store the name and value to which the
 attribute will be set, in `@name` and `@newValue`, respectively, as
