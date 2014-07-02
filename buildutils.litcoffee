@@ -220,16 +220,28 @@ headings.
         toc = ''
         lastlevel = 1
         renderer.heading = ( text, level ) ->
-            if m = /^(.*) \([0-9.]+ ms\)/.exec text
+
+Remove any instances of XHTML escape characters before creating
+links, to be consistent with anchor names generated elsewhere.
+
+            collapsed = text.replace( /&\w+;/g, ' ' )
+            if m = /^(.*) \([0-9.]+ ms\)/.exec collapsed
                 escapedText = exports.escapeHeading m[1]
             else
-                escapedText = exports.escapeHeading text
+                escapedText = exports.escapeHeading collapsed
+
+If this is a heading in a test suite, create a link to the test
+results.
+
             if /-spec\.litcoffee/.test infile
                 results = "<font size=-1><a href='" +
                           "test-results.md.html#" +
                           "#{escapedText}'>see results</a></font>"
             else
                 results = ''
+
+Accrue headings in the `toc` variable declared above.
+
             if level > lastlevel
                 toc += '<ul>\n'
                 lastlevel = level
@@ -239,6 +251,9 @@ headings.
             toc += "<#{if level > 1 then 'li' else 'p'}>" +
                    "<a href='##{escapedText}'>#{text}</a>" +
                    "</#{if level > 1 then 'li' else 'p'}>"
+
+Return the final HTML string for the heading
+
             "<h#{level}><a name='#{escapedText}'></a>#{text} " +
             "&nbsp; #{results} <font size=-1><a href='" +
             "##{escapedText}'>#{linkpng}</a></font></h#{level}>"
@@ -251,6 +266,10 @@ provided by `highlight.js`.
                 require( 'highlight.js' )
                     .highlight( 'coffeescript', code ).value
             renderer: renderer
+
+The return value is an object, containing both the HTML for the
+page and the HTML for the page's table of contents (`toc`).
+
         {
             html : marked fs.readFileSync infile, 'utf8'
             toc : toc
