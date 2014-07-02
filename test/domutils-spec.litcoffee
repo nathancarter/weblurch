@@ -1460,3 +1460,71 @@ properties.
                 expect( result[3].value ).toEqual 'color:blue;'
                 done()
 
+### should send alerts on `removeChild` calls
+
+This test creates a hierarchical structure of spans under the root
+div node, then calls `removeChild` twice in different portions of
+that tree, verifying that the appropriate events are emitted each
+time.
+
+        it 'should send alerts on removeChild calls',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.innerHTML = '''
+                <span><span>INNER SPAN!</span>hi</span>
+                <span>there</span>
+                '''
+                span1 = div.childNodes[0]
+                span2 = div.childNodes[2]
+                spanI = span1.childNodes[0]
+
+Remove the inner span, then the second span.
+
+                tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                result1 = span1.removeChild spanI
+                result2 = div.removeChild span2
+
+Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+`removeChild` were the child nodes that were removed.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push result1.toJSON()
+                result.push result2.toJSON()
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 4
+
+First we expect the two child removal events.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'removeChild',
+                    node : [ 0 ], childIndex : 0,
+                    child : {
+                        tagName : 'SPAN'
+                        children : [ 'INNER SPAN!' ]
+                    }
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'removeChild',
+                    node : [], childIndex : 2,
+                    child : {
+                        tagName : 'SPAN'
+                        children : [ 'there' ]
+                    }
+
+Then we expect two child nodes to have been returned by those
+`removeChild` calls, which we serialized for returning here.
+
+                expect( result[2] ).toEqual {
+                    tagName : 'SPAN'
+                    children : [ 'INNER SPAN!' ]
+                }
+                expect( result[3] ).toEqual {
+                    tagName : 'SPAN'
+                    children : [ 'there' ]
+                }
+                done()
+
