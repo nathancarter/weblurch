@@ -1402,3 +1402,61 @@ Ensure that the return values were both undefined.
                 expect( result[3] ).toEqual 'undefined'
                 done()
 
+### should send alerts on `removeAttributeNode` calls
+
+This test imitates the previous one, but uses
+`removeAttributeNode` rather than `removeAttribute`.  This adds
+just one new step, of fetching the attribute node to be removed.
+
+        it 'should send alerts on removeAttributeNode calls',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.innerHTML = '''
+                <span align="center" class="thing">hi</span>
+                <span style="color:blue;">blue</span>
+                '''
+                span1 = div.childNodes[0]
+                span2 = div.childNodes[2]
+
+Remove an attribute from each span node.
+
+                tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                togo = span1.getAttributeNode 'align'
+                result1 = span1.removeAttributeNode togo
+                togo = span2.getAttributeNode 'style'
+                result2 = span2.removeAttributeNode togo
+
+Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+`removeAttributeNode` were attribute nodes with the correct data.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push result1
+                result.push result2
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 4
+
+Validation of events is exactly as it was in the previous test,
+except for the name of the action.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'removeAttributeNode', node : [ 0 ],
+                    name : 'align', value : 'center'
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'removeAttributeNode', node : [ 2 ],
+                    name : 'style', value : 'color:blue;'
+
+Validation of return types is different; we expect that the return
+types were attribute nodes, and we inspect their defining
+properties.
+
+                expect( result[2].name ).toEqual 'align'
+                expect( result[2].value ).toEqual 'center'
+                expect( result[3].name ).toEqual 'style'
+                expect( result[3].value ).toEqual 'color:blue;'
+                done()
+
