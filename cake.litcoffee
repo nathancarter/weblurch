@@ -331,7 +331,13 @@ completion to the user.
                                 if stdout + stderr
                                     console.log stdout + stderr
                                 if err then throw err
-                                console.log 'Done.'
+                                console.log '''
+                                Done.
+
+                                If you're happy with the results \
+                                of this process, just type \
+                                "git push" to publish them.
+                                '''
 
 We report that we're done with this task once we enqueue all those
 things, so that the build system will then start processing what
