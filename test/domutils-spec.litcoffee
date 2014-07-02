@@ -1609,3 +1609,56 @@ Then we expect the replaced nodes to have been returned by those
                 }
                 done()
 
+### should send alerts on `setAttribute` calls
+
+We create one span inside the root div, set an attribute on that
+span and then do the same on the root div, and ensure that both
+events are correctly emitted.  In one case, we will be creating a
+new attribute, and in the other case, replacing an existing one.
+
+        it 'should send alerts on setAttribute calls',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.innerHTML = '''
+                <span example="yes">content</span>
+                '''
+                span = div.childNodes[0]
+
+Set an attribute on the div, then change the attribute on the
+span.
+
+                tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                result1 = div.setAttribute 'align', 'center'
+                result2 = span.setAttribute 'example', 'no'
+
+Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+`setAttribute` were undefined, as they should be.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push typeof result1
+                result.push typeof result2
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 4
+
+First we expect the two attribute-setting events.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'setAttribute',
+                    node : [], name : 'align',
+                    oldValue : '', newValue : 'center'
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'setAttribute',
+                    node : [ 0 ], name : 'example',
+                    oldValue : 'yes', newValue : 'no'
+
+Then we expect the calls to have given no return values.
+
+                expect( result[2] ).toEqual 'undefined'
+                expect( result[3] ).toEqual 'undefined'
+                done()
+

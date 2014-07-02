@@ -210,14 +210,16 @@ For type "replaceChild", we store the child's original index within
 
 For type "setAttribute", we store the name and value to which the
 attribute will be set, in `@name` and `@newValue`, respectively, as
-well as the attribute's original value, in `@oldValue`.
+well as the attribute's original value, in `@oldValue`.  If the
+old value is null, we store the empty string instead, so that
+JSON serialization is possible.
 
             else if type is 'setAttribute'
                 if data.length isnt 2
                     throw Error 'Wrong # of parameters: ' + data
                 @name = data[0] + ''
                 @newValue = data[1] + ''
-                @oldValue = node.getAttribute @name
+                @oldValue = ( node.getAttribute @name ) or ''
 
 For type "setAttributeNode", we store the same data as in the
 previous case, and under the same names.
@@ -229,7 +231,7 @@ previous case, and under the same names.
                     throw Error 'Invalid parameter: ' + data[0]
                 @name = data[0].name
                 @newValue = data[0].value
-                @oldValue = node.getAttribute @name
+                @oldValue = ( node.getAttribute @name ) or ''
 
 If none of the above types were what the caller was trying to
 construct, throw an error, because they're the only types
