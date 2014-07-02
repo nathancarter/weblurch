@@ -130,7 +130,7 @@ Build a file navigation list from those files' names.
             end = ( path = file.split '/' ).pop()
             if end is mainpg
                 navtxt += "<h3><a href='#{mainpg}.html'>" +
-                          "Main Page</a></h3>"
+                          "#{title} home</a></h3>"
             else
                 ( nav[path.join '/'] ?= [] ).push {
                     file : end, text : end }
@@ -155,12 +155,8 @@ which we put in the left frame.
             beginning = end.split( '.' ).shift()
             console.log "\tCreating #{end}.html..."
             rendered = build.md2html file
-            toc = """
-            <h3 align=center><a href='#{mainpg}.html'>#{title}
-            source code docs</a></h3>
-            <br>
-            <p align=center>Page contents</p>
-            #{rendered.toc}"""
+            toc = """<p align=center>Page contents</p>
+                     #{rendered.toc}"""
             myhtml = html.replace( 'LEFT', toc )
                          .replace( 'RIGHT', navtxt )
                          .replace( 'MIDDLE', rendered.html )
