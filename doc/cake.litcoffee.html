@@ -272,7 +272,13 @@ completion to the user.</p>
                             <span class="hljs-keyword">if</span> stdout + stderr
                                 <span class="hljs-built_in">console</span>.log stdout + stderr
                             <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> <span class="hljs-keyword">throw</span> err
-                            <span class="hljs-built_in">console</span>.log <span class="hljs-string">'Done.'</span>
+                            <span class="hljs-built_in">console</span>.log <span class="hljs-string">'''
+                            Done.
+
+                            If you're happy with the results \
+                            of this process, just type \
+                            "git push" to publish them.
+                            '''</span>
 </code></pre><p>We report that we&#39;re done with this task once we enqueue all those
 things, so that the build system will then start processing what
 we put on the queue.</p>
