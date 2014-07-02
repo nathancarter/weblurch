@@ -182,17 +182,23 @@ headings.</p>
     toc = <span class="hljs-string">''</span>
     lastlevel = <span class="hljs-number">1</span>
     renderer.<span class="hljs-function"><span class="hljs-title">heading</span> = <span class="hljs-params">( text, level )</span> -&gt;</span>
-        <span class="hljs-keyword">if</span> m = <span class="hljs-regexp">/^(.*) \([0-9.]+ ms\)/</span>.exec text
+</code></pre><p>Remove any instances of XHTML escape characters before creating
+links, to be consistent with anchor names generated elsewhere.</p>
+<pre class="hljs"><code>        collapsed = text.replace( <span class="hljs-regexp">/&amp;\w+;/g</span>, <span class="hljs-string">' '</span> )
+        <span class="hljs-keyword">if</span> m = <span class="hljs-regexp">/^(.*) \([0-9.]+ ms\)/</span>.exec collapsed
             escapedText = <span class="hljs-built_in">exports</span>.escapeHeading m[<span class="hljs-number">1</span>]
         <span class="hljs-keyword">else</span>
-            escapedText = <span class="hljs-built_in">exports</span>.escapeHeading text
-        <span class="hljs-keyword">if</span> <span class="hljs-regexp">/-spec\.litcoffee/</span>.test infile
+            escapedText = <span class="hljs-built_in">exports</span>.escapeHeading collapsed
+</code></pre><p>If this is a heading in a test suite, create a link to the test
+results.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-regexp">/-spec\.litcoffee/</span>.test infile
             results = <span class="hljs-string">"&lt;font size=-1&gt;&lt;a href='"</span> +
                       <span class="hljs-string">"test-results.md.html#"</span> +
                       <span class="hljs-string">"<span class="hljs-subst">#{escapedText}</span>'&gt;see results&lt;/a&gt;&lt;/font&gt;"</span>
         <span class="hljs-keyword">else</span>
             results = <span class="hljs-string">''</span>
-        <span class="hljs-keyword">if</span> level &gt; lastlevel
+</code></pre><p>Accrue headings in the <code>toc</code> variable declared above.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> level &gt; lastlevel
             toc += <span class="hljs-string">'&lt;ul&gt;\n'</span>
             lastlevel = level
         <span class="hljs-keyword">while</span> level &lt; lastlevel
@@ -201,7 +207,8 @@ headings.</p>
         toc += <span class="hljs-string">"&lt;<span class="hljs-subst">#{<span class="hljs-keyword">if</span> level &gt; <span class="hljs-number">1</span> <span class="hljs-keyword">then</span> <span class="hljs-string">'li'</span> <span class="hljs-keyword">else</span> <span class="hljs-string">'p'</span>}</span>&gt;"</span> +
                <span class="hljs-string">"&lt;a href='#<span class="hljs-subst">#{escapedText}</span>'&gt;<span class="hljs-subst">#{text}</span>&lt;/a&gt;"</span> +
                <span class="hljs-string">"&lt;/<span class="hljs-subst">#{<span class="hljs-keyword">if</span> level &gt; <span class="hljs-number">1</span> <span class="hljs-keyword">then</span> <span class="hljs-string">'li'</span> <span class="hljs-keyword">else</span> <span class="hljs-string">'p'</span>}</span>&gt;"</span>
-        <span class="hljs-string">"&lt;h<span class="hljs-subst">#{level}</span>&gt;&lt;a name='<span class="hljs-subst">#{escapedText}</span>'&gt;&lt;/a&gt;<span class="hljs-subst">#{text}</span> "</span> +
+</code></pre><p>Return the final HTML string for the heading</p>
+<pre class="hljs"><code>        <span class="hljs-string">"&lt;h<span class="hljs-subst">#{level}</span>&gt;&lt;a name='<span class="hljs-subst">#{escapedText}</span>'&gt;&lt;/a&gt;<span class="hljs-subst">#{text}</span> "</span> +
         <span class="hljs-string">"&amp;nbsp; <span class="hljs-subst">#{results}</span> &lt;font size=-1&gt;&lt;a href='"</span> +
         <span class="hljs-string">"#<span class="hljs-subst">#{escapedText}</span>'&gt;<span class="hljs-subst">#{linkpng}</span>&lt;/a&gt;&lt;/font&gt;&lt;/h<span class="hljs-subst">#{level}</span>&gt;"</span>
 </code></pre><p>Install the renderer just created, as well as highlighting support
@@ -211,7 +218,9 @@ provided by <code>highlight.js</code>.</p>
             <span class="hljs-built_in">require</span>( <span class="hljs-string">'highlight.js'</span> )
                 .highlight( <span class="hljs-string">'coffeescript'</span>, code ).value
         <span class="hljs-attribute">renderer</span>: renderer
-    {
+</code></pre><p>The return value is an object, containing both the HTML for the
+page and the HTML for the page&#39;s table of contents (<code>toc</code>).</p>
+<pre class="hljs"><code>    {
         html : marked fs.readFileSync infile, <span class="hljs-string">'utf8'</span>
         toc : toc
     }

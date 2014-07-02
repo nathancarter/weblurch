@@ -18,7 +18,7 @@
             <p align=center>Page contents</p>
 <p><a href='#tests-for-the-code-domeditaction-code-class'>Tests for the <code>DOMEditAction</code> class</a></p><ul>
 <li><a href='#domeditaction-class'>DOMEditAction class</a></li><ul>
-<li><a href='#should-exist'>should exist</a></li><li><a href='#should-have-quot-appendchild-quot-instances'>should have &quot;appendChild&quot; instances</a></li><li><a href='#should-have-quot-insertbefore-quot-instances'>should have &quot;insertBefore&quot; instances</a></li><li><a href='#should-have-quot-normalize-quot-instances'>should have &quot;normalize&quot; instances</a></li><li><a href='#should-have-quot-removeattribute-quot-instances'>should have &quot;removeAttribute&quot; instances</a></li><li><a href='#should-have-quot-removeattributenode-quot-instances'>should have &quot;removeAttributeNode&quot; instances</a></li><li><a href='#should-have-quot-removechild-quot-instances'>should have &quot;removeChild&quot; instances</a></li><li><a href='#should-have-quot-replacechild-quot-instances'>should have &quot;replaceChild&quot; instances</a></li><li><a href='#should-have-quot-setattribute-quot-instances'>should have &quot;setAttribute&quot; instances</a></li><li><a href='#should-have-quot-setattributenode-quot-instances'>should have &quot;setAttributeNode&quot; instances</a></li><li><a href='#should-have-no-other-instances'>should have no other instances</a></li>
+<li><a href='#should-exist'>should exist</a></li><li><a href='#should-have-appendchild-instances'>should have &quot;appendChild&quot; instances</a></li><li><a href='#should-have-insertbefore-instances'>should have &quot;insertBefore&quot; instances</a></li><li><a href='#should-have-normalize-instances'>should have &quot;normalize&quot; instances</a></li><li><a href='#should-have-removeattribute-instances'>should have &quot;removeAttribute&quot; instances</a></li><li><a href='#should-have-removeattributenode-instances'>should have &quot;removeAttributeNode&quot; instances</a></li><li><a href='#should-have-removechild-instances'>should have &quot;removeChild&quot; instances</a></li><li><a href='#should-have-replacechild-instances'>should have &quot;replaceChild&quot; instances</a></li><li><a href='#should-have-setattribute-instances'>should have &quot;setAttribute&quot; instances</a></li><li><a href='#should-have-setattributenode-instances'>should have &quot;setAttributeNode&quot; instances</a></li><li><a href='#should-have-no-other-instances'>should have no other instances</a></li>
         </div>
         <div id="middle">
             <h1><a name='tests-for-the-code-domeditaction-code-class'></a>Tests for the <code>DOMEditAction</code> class &nbsp; <font size=-1><a href='test-results.md.html#tests-for-the-code-domeditaction-code-class'>see results</a></font> <font size=-1><a href='#tests-for-the-code-domeditaction-code-class'><img src="link.png" class="anchor"></a></font></h1><p>Pull in the utility functions in
@@ -35,7 +35,7 @@ the browser after loading the main app page.</p>
         <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
             expect( result ).toBeTruthy()
             done()
-</code></pre><h3><a name='should-have-quot-appendchild-quot-instances'></a>should have &quot;appendChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-quot-appendchild-quot-instances'>see results</a></font> <font size=-1><a href='#should-have-quot-appendchild-quot-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+</code></pre><h3><a name='should-have-appendchild-instances'></a>should have &quot;appendChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-appendchild-instances'>see results</a></font> <font size=-1><a href='#should-have-appendchild-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;appendChild&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
 These will have a <code>toAppend</code> member that stores the child to be
@@ -58,7 +58,7 @@ appended.</p>
             expect( result[<span class="hljs-number">2</span>] ).toEqual tagName : <span class="hljs-string">'SPAN'</span>
             expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'appendChild'</span>
             done()
-</code></pre><h3><a name='should-have-quot-insertbefore-quot-instances'></a>should have &quot;insertBefore&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-quot-insertbefore-quot-instances'>see results</a></font> <font size=-1><a href='#should-have-quot-insertbefore-quot-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+</code></pre><h3><a name='should-have-insertbefore-instances'></a>should have &quot;insertBefore&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-insertbefore-instances'>see results</a></font> <font size=-1><a href='#should-have-insertbefore-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;insertBefore&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
 These will have a <code>toInsert</code> member that stores the child to be
@@ -83,7 +83,7 @@ index that the newly inserted child will have after insertion.</p>
             expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-number">1</span>
             expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'insertBefore'</span>
             done()
-</code></pre><h3><a name='should-have-quot-normalize-quot-instances'></a>should have &quot;normalize&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-quot-normalize-quot-instances'>see results</a></font> <font size=-1><a href='#should-have-quot-normalize-quot-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+</code></pre><h3><a name='should-have-normalize-instances'></a>should have &quot;normalize&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-normalize-instances'>see results</a></font> <font size=-1><a href='#should-have-normalize-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;normalize&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
 These will have a <code>textChildren</code> member that maps the indices of
@@ -112,7 +112,7 @@ content at that time.</p>
                 <span class="hljs-number">0</span> : <span class="hljs-string">'one'</span>, <span class="hljs-number">1</span> : <span class="hljs-string">'two'</span>, <span class="hljs-number">3</span> : <span class="hljs-string">'four'</span>
             expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'normalize'</span>
             done()
-</code></pre><h3><a name='should-have-quot-removeattribute-quot-instances'></a>should have &quot;removeAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-quot-removeattribute-quot-instances'>see results</a></font> <font size=-1><a href='#should-have-quot-removeattribute-quot-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+</code></pre><h3><a name='should-have-removeattribute-instances'></a>should have &quot;removeAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-removeattribute-instances'>see results</a></font> <font size=-1><a href='#should-have-removeattribute-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;removeAttribute&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for
 the class&#39;s constructor</a>.
 These will have a <code>name</code> member containing the (string) key of the
@@ -136,7 +136,7 @@ value that the attribute had before removal.</p>
             expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'0'</span>
             expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'removeAttribute'</span>
             done()
-</code></pre><h3><a name='should-have-quot-removeattributenode-quot-instances'></a>should have &quot;removeAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-quot-removeattributenode-quot-instances'>see results</a></font> <font size=-1><a href='#should-have-quot-removeattributenode-quot-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+</code></pre><h3><a name='should-have-removeattributenode-instances'></a>should have &quot;removeAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-removeattributenode-instances'>see results</a></font> <font size=-1><a href='#should-have-removeattributenode-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;removeAttributeNode&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation
 for the class&#39;s constructor</a>.
 These will have a <code>name</code> member containing the (string) key of the
@@ -162,7 +162,7 @@ value that the attribute had before removal.</p>
             expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'0'</span>
             expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'removeAttributeNode'</span>
             done()
-</code></pre><h3><a name='should-have-quot-removechild-quot-instances'></a>should have &quot;removeChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-quot-removechild-quot-instances'>see results</a></font> <font size=-1><a href='#should-have-quot-removechild-quot-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+</code></pre><h3><a name='should-have-removechild-instances'></a>should have &quot;removeChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-removechild-instances'>see results</a></font> <font size=-1><a href='#should-have-removechild-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;removeChild&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
 These will have an integer <code>childIndex</code> member containing the
@@ -193,7 +193,7 @@ a serialized version of the removed child.</p>
                 <span class="hljs-string">'children'</span> : [ <span class="hljs-string">'span contents, just text'</span> ]
             expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'removeChild'</span>
             done()
-</code></pre><h3><a name='should-have-quot-replacechild-quot-instances'></a>should have &quot;replaceChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-quot-replacechild-quot-instances'>see results</a></font> <font size=-1><a href='#should-have-quot-replacechild-quot-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+</code></pre><h3><a name='should-have-replacechild-instances'></a>should have &quot;replaceChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-replacechild-instances'>see results</a></font> <font size=-1><a href='#should-have-replacechild-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;replaceChild&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
 These will have an integer <code>childIndex</code> member containing the
@@ -232,7 +232,7 @@ member containing a serialization of the replacement child.</p>
                 <span class="hljs-string">'children'</span> : [ <span class="hljs-string">'Announcement!'</span> ]
             expect( result[<span class="hljs-number">5</span>] ).toEqual <span class="hljs-string">'replaceChild'</span>
             done()
-</code></pre><h3><a name='should-have-quot-setattribute-quot-instances'></a>should have &quot;setAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-quot-setattribute-quot-instances'>see results</a></font> <font size=-1><a href='#should-have-quot-setattribute-quot-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+</code></pre><h3><a name='should-have-setattribute-instances'></a>should have &quot;setAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-setattribute-instances'>see results</a></font> <font size=-1><a href='#should-have-setattribute-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;setAttribute&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
 These will have a string <code>name</code> member containing the name of the
@@ -259,7 +259,7 @@ member containing the value after the attribute is set.</p>
             expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'1'</span>
             expect( result[<span class="hljs-number">5</span>] ).toEqual <span class="hljs-string">'setAttribute'</span>
             done()
-</code></pre><h3><a name='should-have-quot-setattributenode-quot-instances'></a>should have &quot;setAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-quot-setattributenode-quot-instances'>see results</a></font> <font size=-1><a href='#should-have-quot-setattributenode-quot-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+</code></pre><h3><a name='should-have-setattributenode-instances'></a>should have &quot;setAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-setattributenode-instances'>see results</a></font> <font size=-1><a href='#should-have-setattributenode-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;setAttributeNode&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for
 the class&#39;s constructor</a>.
 These will have a string <code>name</code> member containing the name of the
