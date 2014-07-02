@@ -13,7 +13,6 @@ items are more vague than the earlier ones.
 
  * Create unit tests that verify that the data is correctly
    recorded in the internal array of the `DOMEditTracker` instance.
-    * N.replaceChild(newnode,oldnode)
     * N.setAttribute(name,value)
     * N.setAttributeNode(attrNode)
  * Add undo and redo methods to a `LurchEditor` instance that move

@@ -1528,3 +1528,84 @@ Then we expect two child nodes to have been returned by those
                 }
                 done()
 
+### should send alerts on `replaceChild` calls
+
+This test operates exactly like the previous, except rather than
+deleting two children, they are simply replaced with new children
+that are measurably different, for the purposes of testing.
+
+        it 'should send alerts on replaceChild calls',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.innerHTML = '''
+                <span><span>INNER SPAN!</span>hi</span>
+                <span>there</span>
+                '''
+                span1 = div.childNodes[0]
+                span2 = div.childNodes[2]
+                spanI = span1.childNodes[0]
+                repl1 = document.createElement 'h1'
+                repl1.innerHTML = 'heading'
+                repl2 = document.createElement 'span'
+                repl2.innerHTML = 'some words'
+
+Replace the inner span, then the second span, with `repl1` and
+`repl2`, respectively.
+
+                tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
+                result1 = span1.replaceChild repl1, spanI
+                result2 = div.replaceChild repl2, span2
+
+Return the serialized versions of the recorded edit actions, plus
+checks about whether the return values from the calls to
+`replaceChild` were the original child nodes that were replaced,
+and are thus no longer in the DOM.
+
+                result = tracker.getEditActions().map \
+                    ( x ) -> x.toJSON()
+                result.push result1.toJSON()
+                result.push result2.toJSON()
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 4
+
+First we expect the two child replacement events.
+
+                expect( JSON.parse result[0] ).toEqual
+                    type : 'replaceChild',
+                    node : [ 0 ], childIndex : 0,
+                    oldChild : {
+                        tagName : 'SPAN'
+                        children : [ 'INNER SPAN!' ]
+                    },
+                    newChild : {
+                        tagName : 'H1'
+                        children : [ 'heading' ]
+                    }
+                expect( JSON.parse result[1] ).toEqual
+                    type : 'replaceChild',
+                    node : [], childIndex : 2,
+                    oldChild : {
+                        tagName : 'SPAN'
+                        children : [ 'there' ]
+                    },
+                    newChild : {
+                        tagName : 'SPAN'
+                        children : [ 'some words' ]
+                    }
+
+Then we expect the replaced nodes to have been returned by those
+`replaceChild` calls, which we serialized for returning here.
+
+                expect( result[2] ).toEqual {
+                    tagName : 'SPAN'
+                    children : [ 'INNER SPAN!' ]
+                }
+                expect( result[3] ).toEqual {
+                    tagName : 'SPAN'
+                    children : [ 'there' ]
+                }
+                done()
+
