@@ -1,6 +1,12 @@
 
 # Basic tests of compiled app code
 
+*This file does not have any comments in it right now, but it
+should.  Other test files say that readers should refer to this one
+if they need to understand the basic structure of a test spec file,
+but this one has no helpful comments.  That is a TO-DO that is
+still pending; see the end of [the project plan](plan.md.html).*
+
 Pull in the utility functions in `phantom-utils` that make it
 easier to write the tests below.
 

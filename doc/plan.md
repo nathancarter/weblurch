@@ -11,15 +11,14 @@ items are more vague than the earlier ones.
 
 ## `LurchEditor`
 
- * Create new testing file for undo/redo features of the
-   `DOMEditAction` class, since the existing test suite for that
-   class does not assume that they can be auto-created by edits,
-   and it would be nice to keep it that way.  And the
-   `DOMEditTracker` spec is already a cohesive whole, and large.
- * In the `DOMEditAction` and `DOMEditTracker` test specs,
-   reference this new spec.
  * Add tests for all undo/redo actions of `DOMEditAction` into that
-   new testing suite.
+   new testing suite.  Some are done; here are those that remain:
+    * removeAttribute
+    * removeAttributeNode
+    * removeChild
+    * replaceChild
+    * setAttribute
+    * setAttributeNode
 
 For each of the following features, add tests for them to [the
 `LurchEditor` spec](lurcheditor-spec.litcoffee.html).
@@ -301,7 +300,7 @@ For each of the following features, add tests for them to [the
    guarantee hold in your implementation)
  * create unit tests as you go
 
-# Unit tests for later
+# For later
 
 The following unit tests were skipped earlier in development,
 because they are less important than the ones that were written,
@@ -317,4 +316,12 @@ tests for all of the following cases.
    action type is valid.  In particular, no testing is done to
    ensure that the node must be valid, nor that for each individual
    action type, the parameters must be given correctly.
+
+Documentation in most unit test spec files promises that [the
+basic spec file](basic-spec.litcoffee.html) will provide complete
+documentation on how to read and understand a test spec file.  But
+it does not.
+
+ * Add documentation to that file so that someone who does not know
+   how to read a test spec file could learn it from that file.
 

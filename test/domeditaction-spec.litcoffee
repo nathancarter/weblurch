@@ -1,6 +1,11 @@
 
 # Tests for the `DOMEditAction` class
 
+Those aspects of the `DOMEditAction` class that relate to undoing
+and redoing edit actions can be found in [a different test suite](
+undoredo-spec.litcoffee.html).  This file tests the remainder of
+the class's functionality.
+
 Pull in the utility functions in
 [phantom-utils](phantom-utils.litcoffee.html) that make it
 easier to write the tests below.  Then follow the same structure
