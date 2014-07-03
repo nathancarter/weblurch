@@ -13,7 +13,6 @@ items are more vague than the earlier ones.
 
  * Add tests for all undo/redo actions of `DOMEditAction` into that
    new testing suite.  Some are done; here are those that remain:
-    * removeAttributeNode
     * removeChild
     * replaceChild
     * setAttribute
