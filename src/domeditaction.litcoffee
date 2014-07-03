@@ -309,16 +309,16 @@ The class also provides a serialization method, mostly for use in
 unit testing, because instances of the object can then be sent in
 and out of a headless browser as JSON.  This implementation just
 copies into an object all possibly-relevant fields of the object,
-then stringifies it.
+ready for later JSON stringification, should that be useful.
 
 This function is indirectly tested in that many other unit tests
 depend upon it to test other functionality.
 
-        toJSON: ->
-            JSON.stringify { @type, @node, @toAppend, @toInsert,
-                @insertBefore, @textChildren, @name, @value,
-                @child, @childIndex, @oldChild, @newChild,
-                @oldValue, @newValue }
+        toJSON: -> {
+            @type, @node, @toAppend, @toInsert, @insertBefore,
+            @textChildren, @name, @value, @child, @childIndex,
+            @oldChild, @newChild, @oldValue, @newValue
+        }
 
 ## Undo/redo
 
