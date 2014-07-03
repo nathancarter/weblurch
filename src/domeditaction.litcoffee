@@ -370,12 +370,12 @@ In the case of "insertBefore", we simply unserialize the stored
 child and either insert or append it, depending on the index.
 
             else if @type is 'insertBefore'
-                newnode = Node.fromJSON @toAppend
+                newnode = Node.fromJSON @toInsert
                 if @insertBefore is original.childNodes.length
                     original.appendChild newnode
                 else
-                    original.insertBefore \
-                        original.childNodes[@insertBefore], newnode
+                    original.insertBefore newnode,
+                        original.childNodes[@insertBefore]
 
 Normalization is simple because it takes no parameters.
 
