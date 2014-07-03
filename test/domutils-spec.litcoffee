@@ -1315,9 +1315,8 @@ one done on a div with two text children and no other children.
 
                 expect( result[0] ).toEqual
                     type : 'normalize', node : [],
-                    textChildren : {
-                        0 : '\n        '
-                        1 : 'example'
+                    sequences : {
+                        '[0]' : [ '\n        ', 'example' ]
                     }
 
 Next, an `appendChild` event that isn't part of this test, but is
@@ -1339,10 +1338,7 @@ div, with two text node children, not adjacent.
 
                 expect( result[2] ).toEqual
                     type : 'normalize', node : [ 1 ],
-                    textChildren : {
-                        0 : 'foo'
-                        2 : 'bar'
-                    }
+                    sequences : { }
 
 Ensure that the return values were both undefined.
 

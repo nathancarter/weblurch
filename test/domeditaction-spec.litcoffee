@@ -130,21 +130,23 @@ content at that time.
                 div.appendChild document.createTextNode 'two'
                 span = document.createElement 'span'
                 span.appendChild document.createTextNode 'three'
+                span.appendChild document.createTextNode 'four'
                 div.appendChild span
-                div.appendChild document.createTextNode 'four'
+                div.appendChild document.createTextNode 'five'
                 T = new DOMEditAction 'normalize', div
                 result = [
                     T.tracker is DOMEditTracker.instances[0]
-                    T.node
-                    T.textChildren
-                    T.type
+                    T.toJSON()
                 ]
             , ( err, result ) ->
                 expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toEqual []
-                expect( result[2] ).toEqual
-                    0 : 'one', 1 : 'two', 3 : 'four'
-                expect( result[3] ).toEqual 'normalize'
+                expect( result[1] ).toEqual {
+                    node : [], type : 'normalize',
+                    sequences : {
+                        '[0]' : [ 'one', 'two' ]
+                        '[1,0]' : [ 'three', 'four' ]
+                    }
+                }
                 done()
 
 ### should correctly describe "normalize" instances

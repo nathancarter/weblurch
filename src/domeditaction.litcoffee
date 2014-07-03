@@ -22,9 +22,13 @@ The protocol for what data to store in each case is described here.
  * `N.normalize()`
    * no return value
    * removes empty text nodes
-   * joins adjacent text nodes
-   * event contains `N`'s address together with a map from indices
-     to text content of all current child text nodes of `N`
+   * joins adjacent text nodes, recursively
+   * event contains `N`'s address together with a map from
+     addresses within a normalized `N` to the sequences of text
+     nodes that went together to form the normalized ones, i.e.,
+     address `A` is mapped to the array of 2 or more strings that
+     combined to form the text node at the new `N.index A`.
+     `A` is stored as a JSON string, so `[0,1]` becomes `"[0,1]"`.
  * `N.removeAttribute(name)`
    * no return value
    * event contains `N`'s address, `name`, and original attribute
@@ -144,17 +148,52 @@ omitted, in `@insertBefore`.
                 else
                     @insertBefore = node.childNodes.length
 
-For type "normalize", we store a map from indices to text content
-for all current child text nodes of `node`, in `@textChildren`,
-thus making this edit action invertible later if necessary.
+For type "normalize", we store a map from addresses in the
+normalized version (which isn't even yet computed) to sequences of
+strings that will be amalgamated to appear at those addresses.
+We store it in `@sequences`, thus making this edit action
+invertible later if necessary.
 
             else if type is 'normalize'
                 if data.length isnt 0
                     throw Error 'Wrong # of parameters: ' + data
-                @textChildren = {}
-                for child, i in node.childNodes
-                    if child instanceof Text
-                        @textChildren[i] = child.textContent
+                @sequences = {}
+
+We create a function that recursively processes the DOM tree from
+any node `N` downward, then call it on our `node`.  The variable
+`index` in the following code walks one step at a time, even when
+`child` jumps many sequential text nodes at once, so that we build
+addresses that the text nodes will have after normalization.
+
+                that = this
+                process = ( N, address = [] ) =>
+                    child = N.childNodes[0]
+                    index = 0
+                    while child
+
+If we've found a sequence of two or more adjacent text nodes, build
+an array of them and record it in the `sequences` field.
+
+                        nextAddr = address.concat [ index ]
+                        if child instanceof Text and
+                           child.nextSibling instanceof Text
+                            strings = []
+                            while child instanceof Text
+                                strings.push child.textContent
+                                child = child.nextSibling
+                            key = JSON.stringify nextAddr
+                            @sequences[key] = strings
+
+Otherwise, just move on to the next child.
+
+                        else
+                            process child, nextAddr
+                            child = child.nextSibling
+
+In either case, advance `index` by just one step.
+
+                        index++
+                process node
 
 For type "removeAttribute", we store the name of the attribute
 in `@name`, together with its original value in `@value`.
@@ -316,7 +355,7 @@ depend upon it to test other functionality.
 
         toJSON: -> {
             @type, @node, @toAppend, @toInsert, @insertBefore,
-            @textChildren, @name, @value, @child, @childIndex,
+            @sequences, @name, @value, @child, @childIndex,
             @oldChild, @newChild, @oldValue, @newValue
         }
 
@@ -450,63 +489,31 @@ The inverse of normalization is to break up any text fragments that
 were adjacent before the normalization, but which got united
 because of it.
 
-We walk through the list of child nodes, and upon encountering any
-text node, we check to see if there were two or more adjacent text
-nodes corresponding to it originally.  If so, we break it up.
-
-This requires keeping two separate counters, one to walk through
-each set of child indices--those before and those after the
-normalization--and keeping them in sync.
+For each key in the sequences object, we use it as an address to
+look up the descendant of `original` that resulted from
+amalgamating the sequence into one text node.  After all these
+lookups, we then take each and break them up using the `splitText`
+method of the `Text` prototype.
 
             else if @type is 'normalize'
-                normIdx = otherIdx = 0
-                while normIdx < original.childNodes.length
-                    child = original.childNodes[normIdx]
 
-If this is not a text node, we need not process it here; just move
-on, incrementing both indices in concert.
+First look up all the descendants in advance, before expanding any,
+so that all addresses are valid throughout this process.
 
-                    if child not instanceof Text
-                        normIdx++
-                        otherIdx++
-                        continue
+                descendants = {}
+                for own key of @sequences
+                    descendants[key] = \
+                        original.index JSON.parse key
 
-So it is a text node.  But if it was not collapsed by the
-normalization process, we need to make no changes.  So do the same
-increment-and-skip process.
+Next split each such descendant into pieces, based on the lengths
+of the strings stored in the `sequences` object.
 
-                    if otherIdx + 1 not of @textChildren
-                        normIdx++
-                        otherIdx++
-                        continue
-
-So now we know:  There was a sequence of two or more text nodes
-that got collapsed into just one.  We must expand back to the old
-form.  We begin by replacing the normalized text chunk with just
-the first piece of its broken-up version.
-
-                    text = @textChildren[otherIdx++]
-                    text = document.createTextNode text
-                    original.replaceChild text,
-                        original.childNodes[normIdx++]
-
-Then we prepare to insert all the other pieces after the first,  by
-finding a place to do the insertion, or null if we'll be appending.
-
-                    insertBefore = original.childNodes[normIdx] or
-                        null
-
-Then as long as there are more text nodes in the sequence, we keep
-inserting them.
-
-                    while otherIdx of @textChildren
-                        text = @textChildren[otherIdx++]
-                        text = document.createTextNode text
-                        if insertBefore
-                            original.insertBefore text,
-                                insertBefore
-                        else
-                            original.appendChild text
+                for own key of @sequences
+                    d = descendants[key]
+                    for string in @sequences[key]
+                        if string.length < d.textContent.length
+                            d.splitText string.length
+                            d = d.nextSibling
 
 The inverse of removing an attribute to put it back in, with both
 the key and value we recorded for this purpose, before its removal.
