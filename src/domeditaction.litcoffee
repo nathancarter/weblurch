@@ -239,6 +239,49 @@ supported.
 
             else throw Error 'Invalid DOMEditAction type: ' + type
 
+## Description
+
+Instance of the class need to be able to provide descriptions of
+themselves, for use on undo/redo stacks.  We provide this
+functionality with a `toString` method.
+
+        toString: ->
+            if type is 'appendChild'
+                text = Node.fromJSON( @toAppend ).textContent()
+                if text.length > 50 then text = text[..50] + '...'
+                if text.length is 0 then text = 'a node'
+                "Add #{text}"
+            else if type is 'insertBefore'
+                text = Node.fromJSON( @toInsert ).textContent()
+                if text.length > 50 then text = text[..50] + '...'
+                if text.length is 0 then text = 'a node'
+                "Insert #{text}"
+            else if type is 'normalize'
+                "Normalize text"
+            else if type is 'removeAttribute' or
+                    type is 'removeAttributeNode'
+                "Remove #{@name} attribute"
+            else if type is 'removeChild'
+                text = Node.fromJSON( @child ).textContent()
+                if text.length > 50 then text = text[..50] + '...'
+                if text.length is 0 then text = 'a node'
+                "Remove #{text}"
+            else if type is 'replaceChild'
+                orig = Node.fromJSON( @oldChild ).textContent()
+                if orig.length > 50 then orig = orig[..50] + '...'
+                if orig.length is 0 then orig = 'a node'
+                repl = Node.fromJSON( @newChild ).textContent()
+                if repl.length > 50 then repl = repl[..50] + '...'
+                if repl.length is 0 then repl = 'a node'
+                "Replace #{orig} with #{repl}"
+            else if type is 'setAttribute' or
+                    type is 'setAttributeNode'
+                "Set attribute #{@name} to #{@value}"
+            else
+                "Error, unknown edit action type: #{type}"
+
+## Serialization
+
 The class also provides a serialization method, mostly for use in
 unit testing, because instances of the object can then be sent in
 and out of a headless browser as JSON.  This implementation just
@@ -253,6 +296,4 @@ depend upon it to test other functionality.
                 @insertBefore, @textChildren, @name, @value,
                 @child, @childIndex, @oldChild, @newChild,
                 @oldValue, @newValue }
-
-Additional member functions of this class will be added later.
 
