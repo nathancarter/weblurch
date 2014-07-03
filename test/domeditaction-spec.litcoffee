@@ -51,6 +51,23 @@ appended.
                 expect( result[3] ).toEqual 'appendChild'
                 done()
 
+### should correctly describe "appendChild" instances
+
+That is, we instances constructed as above should have a sensible
+description provided when their `toString` method is called.
+
+        it 'should correctly describe "appendChild" instances',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                span = document.createElement 'span'
+                span.innerHTML = 'Hello, <b>friend.</b>'
+                T = new DOMEditAction 'appendChild', div, span
+                T.toString()
+            , ( err, result ) ->
+                expect( result ).toEqual 'Add Hello, friend.'
+                done()
+
 ### should have "insertBefore" instances
 
 That is, we should be able to construct instances of the class with
