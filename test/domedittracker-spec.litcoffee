@@ -1,6 +1,12 @@
 
 # Tests for the `DOMEditTracker` class
 
+This file contains the specifications for tests of the
+`DOMEditTracker` class.  One of its aspects is that it manages an
+undo/redo stack.  Testing of foundational undo/redo functionality
+of `DOMEditActions` cannot, however, be found in this file; for
+that, see [a different test suite](undoredo-spec.litcoffee.html).
+
 Pull in the utility functions in
 [phantom-utils](phantom-utils.litcoffee.html) that make it
 easier to write the tests below.  Then follow the same structure

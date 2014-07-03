@@ -1186,10 +1186,10 @@ along with all return values from calls to `appendChild`.
 
 Validate the serialized versions of the `appendChild` events.
 
-                expect( JSON.parse result[0] ).toEqual
+                expect( result[0] ).toEqual
                     type : 'appendChild', node : [],
                     toAppend : { tagName : 'SPAN' }
-                expect( JSON.parse result[1] ).toEqual
+                expect( result[1] ).toEqual
                     type : 'appendChild', node : [ 1 ],
                     toAppend : { tagName : 'SPAN' }
 
@@ -1245,15 +1245,15 @@ along with all return values from calls to `appendChild`.
 
 Validate the serialized versions of the `insertBefore` events.
 
-                expect( JSON.parse result[0] ).toEqual
+                expect( result[0] ).toEqual
                     type : 'insertBefore', node : [],
                     toInsert : { tagName : 'SPAN' },
                     insertBefore : 0
-                expect( JSON.parse result[1] ).toEqual
+                expect( result[1] ).toEqual
                     type : 'insertBefore', node : [],
                     toInsert : { tagName : 'SPAN' },
                     insertBefore : 2
-                expect( JSON.parse result[2] ).toEqual
+                expect( result[2] ).toEqual
                     type : 'insertBefore', node : [ 0 ],
                     toInsert : { tagName : 'SPAN' },
                     insertBefore : 0
@@ -1313,17 +1313,16 @@ Validate the serialized versions of the various events.
 First, the first of two normalize events that we're testing, this
 one done on a div with two text children and no other children.
 
-                expect( JSON.parse result[0] ).toEqual
+                expect( result[0] ).toEqual
                     type : 'normalize', node : [],
-                    textChildren : {
-                        0 : '\n        '
-                        1 : 'example'
+                    sequences : {
+                        '[0]' : [ '\n        ', 'example' ]
                     }
 
 Next, an `appendChild` event that isn't part of this test, but is
 included for completeness.
 
-                expect( JSON.parse result[1] ).toEqual
+                expect( result[1] ).toEqual
                     type : 'appendChild', node : [],
                     toAppend : {
                         tagName : 'SPAN'
@@ -1337,12 +1336,9 @@ included for completeness.
 Finally, the second normalize event, called on the span inside the
 div, with two text node children, not adjacent.
 
-                expect( JSON.parse result[2] ).toEqual
+                expect( result[2] ).toEqual
                     type : 'normalize', node : [ 1 ],
-                    textChildren : {
-                        0 : 'foo'
-                        2 : 'bar'
-                    }
+                    sequences : { }
 
 Ensure that the return values were both undefined.
 
@@ -1389,10 +1385,10 @@ checks about whether the return values from the calls to
 Validate the serialized versions of the two `removeAttribute`
 events.
 
-                expect( JSON.parse result[0] ).toEqual
+                expect( result[0] ).toEqual
                     type : 'removeAttribute', node : [ 0 ],
                     name : 'align', value : 'center'
-                expect( JSON.parse result[1] ).toEqual
+                expect( result[1] ).toEqual
                     type : 'removeAttribute', node : [ 2 ],
                     name : 'style', value : 'color:blue;'
 
@@ -1443,10 +1439,10 @@ checks about whether the return values from the calls to
 Validation of events is exactly as it was in the previous test,
 except for the name of the action.
 
-                expect( JSON.parse result[0] ).toEqual
+                expect( result[0] ).toEqual
                     type : 'removeAttributeNode', node : [ 0 ],
                     name : 'align', value : 'center'
-                expect( JSON.parse result[1] ).toEqual
+                expect( result[1] ).toEqual
                     type : 'removeAttributeNode', node : [ 2 ],
                     name : 'style', value : 'color:blue;'
 
@@ -1500,14 +1496,14 @@ checks about whether the return values from the calls to
 
 First we expect the two child removal events.
 
-                expect( JSON.parse result[0] ).toEqual
+                expect( result[0] ).toEqual
                     type : 'removeChild',
                     node : [ 0 ], childIndex : 0,
                     child : {
                         tagName : 'SPAN'
                         children : [ 'INNER SPAN!' ]
                     }
-                expect( JSON.parse result[1] ).toEqual
+                expect( result[1] ).toEqual
                     type : 'removeChild',
                     node : [], childIndex : 2,
                     child : {
@@ -1573,7 +1569,7 @@ and are thus no longer in the DOM.
 
 First we expect the two child replacement events.
 
-                expect( JSON.parse result[0] ).toEqual
+                expect( result[0] ).toEqual
                     type : 'replaceChild',
                     node : [ 0 ], childIndex : 0,
                     oldChild : {
@@ -1584,7 +1580,7 @@ First we expect the two child replacement events.
                         tagName : 'H1'
                         children : [ 'heading' ]
                     }
-                expect( JSON.parse result[1] ).toEqual
+                expect( result[1] ).toEqual
                     type : 'replaceChild',
                     node : [], childIndex : 2,
                     oldChild : {
@@ -1647,11 +1643,11 @@ checks about whether the return values from the calls to
 
 First we expect the two attribute-setting events.
 
-                expect( JSON.parse result[0] ).toEqual
+                expect( result[0] ).toEqual
                     type : 'setAttribute',
                     node : [], name : 'align',
                     oldValue : '', newValue : 'center'
-                expect( JSON.parse result[1] ).toEqual
+                expect( result[1] ).toEqual
                     type : 'setAttribute',
                     node : [ 0 ], name : 'example',
                     oldValue : 'yes', newValue : 'no'
@@ -1707,11 +1703,11 @@ old one).
 
 First we expect the two attribute-setting events.
 
-                expect( JSON.parse result[0] ).toEqual
+                expect( result[0] ).toEqual
                     type : 'setAttributeNode',
                     node : [], name : 'align',
                     oldValue : '', newValue : 'center'
-                expect( JSON.parse result[1] ).toEqual
+                expect( result[1] ).toEqual
                     type : 'setAttributeNode',
                     node : [ 0 ], name : 'example',
                     oldValue : 'yes', newValue : 'no'

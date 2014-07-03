@@ -9,18 +9,28 @@ items are more vague than the earlier ones.
 
 # Word Processing Foundation
 
-## DOM Edit Tracker
+## `LurchEditor`
 
- * Add undo and redo methods to a `LurchEditor` instance that move
-   an index pointer up and down the internal list of past actions,
-   and that chop off the redo-able actions if an edit comes in that
-   is not from an undo/redo action.  Thorough unit tests as well.
+For each of the following features, add tests for them to [the
+`LurchEditor` spec](lurcheditor-spec.litcoffee.html).
+
+ * Add to the `LurchEditor` class a pointer that indexes into the
+   `DOMEditAction` stack, pointing to the last-undone action.  If
+   no actions have been undone, then it will equal the stack size.
+   Override `nodeEditHappened` so that before the original version
+   is called, if the pointer is not the stack size, then the stack
+   is truncated to make it so.
  * Add canUndo() and canRedo() methods to the `LurchEditor` class
    that just report whether the index pointer isn't at the top or
-   bottom of the stack.  Test.
- * Add a `toString()` method to `DOMEditAction` that can describe
-   it.  Add methods to `LurchEditor` that can describe the actions
-   that would take place if undo or redo were invoked.  Test.
+   bottom of the stack.
+ * Add methods to `LurchEditor` that can describe the actions that
+   would take place if undo or redo were invoked, by calling the
+   appropriate methods in the `DOMEditAction` instances.  Return
+   the empty string if the right one of canUndo()/canRedo() says
+   no.
+ * Add undo and redo methods to the `LurchEditor` class that move
+   the index pointer up and down the stack, calling undo/redo in
+   each action as they do so.
 
 # Test environment
 
@@ -281,7 +291,7 @@ items are more vague than the earlier ones.
    guarantee hold in your implementation)
  * create unit tests as you go
 
-# Unit tests for later
+# For later
 
 The following unit tests were skipped earlier in development,
 because they are less important than the ones that were written,
@@ -297,4 +307,12 @@ tests for all of the following cases.
    action type is valid.  In particular, no testing is done to
    ensure that the node must be valid, nor that for each individual
    action type, the parameters must be given correctly.
+
+Documentation in most unit test spec files promises that [the
+basic spec file](basic-spec.litcoffee.html) will provide complete
+documentation on how to read and understand a test spec file.  But
+it does not.
+
+ * Add documentation to that file so that someone who does not know
+   how to read a test spec file could learn it from that file.
 
