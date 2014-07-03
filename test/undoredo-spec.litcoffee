@@ -225,7 +225,8 @@ the DOM at each step to ensure it's as expected.
                 tracker = DOMEditTracker.instanceOver div
                 div.appendChild document.createTextNode 'one'
                 span = document.createElement 'span'
-                span.innerHTML = 'one and a half'
+                span.innerHTML = 'one and'
+                span.appendChild document.createTextNode ' a half'
                 div.appendChild span
                 div.appendChild document.createTextNode 'two'
 
@@ -275,7 +276,7 @@ this does not test undo/redo functionality.
                         'one'
                         {
                             tagName : 'SPAN'
-                            children : [ 'one and a half' ]
+                            children : [ 'one and', ' a half' ]
                         }
                         'two'
                     ]
@@ -284,6 +285,7 @@ this does not test undo/redo functionality.
                     node : [], type : 'normalize',
                     sequences : {
                         '[0]' : [ '\n        ', 'one' ]
+                        '[1,0]' : [ 'one and', ' a half' ]
                     }
                 }
                 expect( result[2] ).toEqual {
