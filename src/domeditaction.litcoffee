@@ -246,14 +246,32 @@ themselves, for use on undo/redo stacks.  We provide this
 functionality with a `toString` method.
 
         toString: ->
+
+We simply check each of the nine valid action types, and create a
+sensible string representation for each.  Sections of quoted text
+are capped at 50 characters, but that can easily be changed here:
+
+            max = 50
+
+I do not document each of the individual parts of the following
+simple `if`-`else` code, but suffice it to say that the forms of
+the output are on the following list.
+ * Add [text appended]
+ * Insert [text inserted]
+ * Normalize text
+ * Remove [name] attribute
+ * Remove [text removed]
+ * Replace [text] with [text]
+ * Change [attribute name] from [old value] to [new value]
+
             if @type is 'appendChild'
                 text = Node.fromJSON( @toAppend ).textContent
-                if text.length > 50 then text = text[..50] + '...'
+                if text.length > max then text = text[..max]+'...'
                 if text.length is 0 then text = 'a node'
                 "Add #{text}"
             else if @type is 'insertBefore'
                 text = Node.fromJSON( @toInsert ).textContent
-                if text.length > 50 then text = text[..50] + '...'
+                if text.length > max then text = text[..max]+'...'
                 if text.length is 0 then text = 'a node'
                 "Insert #{text}"
             else if @type is 'normalize'
@@ -263,20 +281,25 @@ functionality with a `toString` method.
                 "Remove #{@name} attribute"
             else if @type is 'removeChild'
                 text = Node.fromJSON( @child ).textContent
-                if text.length > 50 then text = text[..50] + '...'
+                if text.length > max then text = text[..max]+'...'
                 if text.length is 0 then text = 'a node'
                 "Remove #{text}"
             else if @type is 'replaceChild'
                 orig = Node.fromJSON( @oldChild ).textContent
-                if orig.length > 50 then orig = orig[..50] + '...'
+                if orig.length > max then orig = orig[..max]+'...'
                 if orig.length is 0 then orig = 'a node'
                 repl = Node.fromJSON( @newChild ).textContent
-                if repl.length > 50 then repl = repl[..50] + '...'
+                if repl.length > max then repl = repl[..max]+'...'
                 if repl.length is 0 then repl = 'a node'
                 "Replace #{orig} with #{repl}"
             else if @type is 'setAttribute' or
                     @type is 'setAttributeNode'
                 "Change #{@name} from #{@oldValue} to #{@newValue}"
+
+An error message is returned as a string if none of the nine valid
+action types is stored in this object (i.e., the object is
+corrupt).
+
             else
                 "Error, unknown edit action type: #{@type}"
 

@@ -11,6 +11,9 @@ items are more vague than the earlier ones.
 
 ## `LurchEditor`
 
+ * Add undo and redo methods to a `DOMEditAction` instance that
+   execute or undo the action (without checking first to see if it
+   actually makes sense to do it, just trusting).
  * Create new testing file for undo/redo features of the
    `DOMEditAction` class, since the existing test suite for that
    class does not assume that they can be auto-created by edits,
@@ -18,9 +21,8 @@ items are more vague than the earlier ones.
    `DOMEditTracker` spec is already a cohesive whole, and large.
  * In the `DOMEditAction` and `DOMEditTracker` test specs,
    reference this new spec.
- * Add undo and redo methods to a `DOMEditAction` instance that
-   execute or undo the action (without checking first to see if it
-   actually makes sense to do it, just trusting).
+ * Add tests for all undo/redo actions of `DOMEditAction` into that
+   new testing suite.
 
 For each of the following features, add tests for them to [the
 `LurchEditor` spec](lurcheditor-spec.litcoffee.html).
