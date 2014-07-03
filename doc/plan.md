@@ -18,7 +18,6 @@ items are more vague than the earlier ones.
    `DOMEditTracker` spec is already a cohesive whole, and large.
  * In the `DOMEditAction` and `DOMEditTracker` test specs,
    reference this new spec.
- * Test the `toString()` method of `DOMEditAction`.
  * Add undo and redo methods to a `DOMEditAction` instance that
    execute or undo the action (without checking first to see if it
    actually makes sense to do it, just trusting).

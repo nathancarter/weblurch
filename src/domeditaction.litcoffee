@@ -276,7 +276,7 @@ functionality with a `toString` method.
                 "Replace #{orig} with #{repl}"
             else if @type is 'setAttribute' or
                     @type is 'setAttributeNode'
-                "Set attribute #{@name} to #{@value}"
+                "Change #{@name} from #{@oldValue} to #{@newValue}"
             else
                 "Error, unknown edit action type: #{@type}"
 

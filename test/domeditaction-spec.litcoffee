@@ -53,7 +53,7 @@ appended.
 
 ### should correctly describe "appendChild" instances
 
-That is, we instances constructed as above should have a sensible
+That is, instances constructed as above should have a sensible
 description provided when their `toString` method is called.
 
         it 'should correctly describe "appendChild" instances',
@@ -97,6 +97,23 @@ index that the newly inserted child will have after insertion.
                 expect( result[4] ).toEqual 'insertBefore'
                 done()
 
+### should correctly describe "insertBefore" instances
+
+That is, instances constructed as above should have a sensible
+description provided when their `toString` method is called.
+
+        it 'should correctly describe "insertBefore" instances',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                span = document.createElement 'span'
+                span.innerHTML = 'Hello, <b>friend.</b>'
+                T = new DOMEditAction 'insertBefore', div, span
+                T.toString()
+            , ( err, result ) ->
+                expect( result ).toEqual 'Insert Hello, friend.'
+                done()
+
 ### should have "normalize" instances
 
 That is, we should be able to construct instances of the class with
@@ -130,6 +147,23 @@ content at that time.
                 expect( result[3] ).toEqual 'normalize'
                 done()
 
+### should correctly describe "normalize" instances
+
+That is, instances constructed as above should have a sensible
+description provided when their `toString` method is called.
+
+        it 'should correctly describe "normalize" instances',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                div.appendChild document.createTextNode 'one'
+                div.appendChild document.createTextNode 'two'
+                T = new DOMEditAction 'normalize', div
+                T.toString()
+            , ( err, result ) ->
+                expect( result ).toEqual 'Normalize text'
+                done()
+
 ### should have "removeAttribute" instances
 
 That is, we should be able to construct instances of the class with
@@ -156,6 +190,21 @@ value that the attribute had before removal.
                 expect( result[2] ).toEqual 'id'
                 expect( result[3] ).toEqual '0'
                 expect( result[4] ).toEqual 'removeAttribute'
+                done()
+
+### should correctly describe "removeAttribute" instances
+
+That is, instances constructed as above should have a sensible
+description provided when their `toString` method is called.
+
+        it 'should correctly describe "removeAttribute" instances',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                T = new DOMEditAction 'removeAttribute', div, 'id'
+                T.toString()
+            , ( err, result ) ->
+                expect( result ).toEqual 'Remove id attribute'
                 done()
 
 ### should have "removeAttributeNode" instances
@@ -187,6 +236,23 @@ value that the attribute had before removal.
                 expect( result[2] ).toEqual 'id'
                 expect( result[3] ).toEqual '0'
                 expect( result[4] ).toEqual 'removeAttributeNode'
+                done()
+
+### should correctly describe "removeAttributeNode" instances
+
+That is, instances constructed as above should have a sensible
+description provided when their `toString` method is called.
+
+        it 'should correctly describe "removeAttributeNode" ' +
+           'instances', ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                togo = document.createAttribute 'id'
+                T = new DOMEditAction 'removeAttributeNode', div,
+                    togo
+                T.toString()
+            , ( err, result ) ->
+                expect( result ).toEqual 'Remove id attribute'
                 done()
 
 ### should have "removeChild" instances
@@ -222,6 +288,24 @@ a serialized version of the removed child.
                     'tagName' : 'SPAN',
                     'children' : [ 'span contents, just text' ]
                 expect( result[4] ).toEqual 'removeChild'
+                done()
+
+### should correctly describe "removeChild" instances
+
+That is, instances constructed as above should have a sensible
+description provided when their `toString` method is called.
+
+        it 'should correctly describe "removeChild" instances',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                span = document.createElement 'span'
+                span.innerHTML = 'Hello, <b>friend.</b>'
+                div.appendChild span
+                T = new DOMEditAction 'removeChild', div, span
+                T.toString()
+            , ( err, result ) ->
+                expect( result ).toEqual 'Remove Hello, friend.'
                 done()
 
 ### should have "replaceChild" instances
@@ -267,6 +351,28 @@ member containing a serialization of the replacement child.
                 expect( result[5] ).toEqual 'replaceChild'
                 done()
 
+### should correctly describe "replaceChild" instances
+
+That is, instances constructed as above should have a sensible
+description provided when their `toString` method is called.
+
+        it 'should correctly describe "replaceChild" instances',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                span = document.createElement 'span'
+                span.innerHTML = 'Hello, <b>friend.</b>'
+                div.appendChild span
+                span2 = document.createElement 'span'
+                span2.innerHTML = '<h1>Heading</h1>'
+                T = new DOMEditAction 'replaceChild', div, span2,
+                    span
+                T.toString()
+            , ( err, result ) ->
+                expect( result ).toEqual \
+                    'Replace Hello, friend. with Heading'
+                done()
+
 ### should have "setAttribute" instances
 
 That is, we should be able to construct instances of the class with
@@ -296,6 +402,21 @@ member containing the value after the attribute is set.
                 expect( result[3] ).toEqual '0'
                 expect( result[4] ).toEqual '1'
                 expect( result[5] ).toEqual 'setAttribute'
+                done()
+
+### should correctly describe "setAttribute" instances
+
+That is, instances constructed as above should have a sensible
+description provided when their `toString` method is called.
+
+        it 'should correctly describe "setAttribute" instances',
+        ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                T = new DOMEditAction 'setAttribute', div, 'id', 17
+                T.toString()
+            , ( err, result ) ->
+                expect( result ).toEqual 'Change id from 0 to 17'
                 done()
 
 ### should have "setAttributeNode" instances
@@ -329,6 +450,24 @@ member containing the value after the attribute is set.
                 expect( result[3] ).toEqual '0'
                 expect( result[4] ).toEqual '1'
                 expect( result[5] ).toEqual 'setAttributeNode'
+                done()
+
+### should correctly describe "setAttributeNode" instances
+
+That is, instances constructed as above should have a sensible
+description provided when their `toString` method is called.
+
+        it 'should correctly describe "setAttributeNode" ' +
+           'instances', ( done ) =>
+            @page.evaluate ->
+                div = document.getElementById '0'
+                change = document.createAttribute 'id'
+                change.value = 17
+                T = new DOMEditAction 'setAttributeNode', div,
+                    change
+                T.toString()
+            , ( err, result ) ->
+                expect( result ).toEqual 'Change id from 0 to 17'
                 done()
 
 ### should have no other instances
