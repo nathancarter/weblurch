@@ -17,14 +17,14 @@
         <div id="left">
             <p align=center>Page contents</p>
 <p><a href='#project-plan'>Project Plan</a></p><p><a href='#word-processing-foundation'>Word Processing Foundation</a></p><ul>
-<li><a href='#dom-edit-tracker'>DOM Edit Tracker</a></li></ul>
+<li><a href='#-code-lurcheditor-code-'><code>LurchEditor</code></a></li></ul>
 <p><a href='#test-environment'>Test environment</a></p><ul>
 <li><a href='#test-app'>Test app</a></li><li><a href='#easy-test-generation'>Easy test generation</a></li><li><a href='#better-access-to-automated-testing-results'>Better access to automated testing results</a></li><li><a href='#later-when-you-put-the-repository-on-a-server'>Later, when you put the repository on a server</a></li></ul>
 <p><a href='#more-word-processing-foundation'>More Word Processing Foundation</a></p><ul>
 <li><a href='#events'>Events</a></li><li><a href='#cursor'>Cursor</a></li><li><a href='#keyboard'>Keyboard</a></li><li><a href='#mouse'>Mouse</a></li><li><a href='#load-and-save'>Load and save</a></li></ul>
 <p><a href='#logical-foundation'>Logical Foundation</a></p><ul>
 <li><a href='#dependencies'>Dependencies</a></li><li><a href='#math'>Math</a></li><li><a href='#groupers'>Groupers</a></li><li><a href='#background-processing'>Background processing</a></li><li><a href='#background-computation-of-the-property-graph'>Background computation of the property graph</a></li><li><a href='#background-computation-of-bubble-meanings'>Background computation of bubble meanings</a></li><li><a href='#background-validation-probably-in-stages'>Background validation, probably in stages</a></li></ul>
-<p><a href='#unit-tests-for-later'>Unit tests for later</a></p>
+<p><a href='#for-later'>For later</a></p>
         </div>
         <div id="middle">
             <h1><a name='project-plan'></a>Project Plan &nbsp;  <font size=-1><a href='#project-plan'><img src="link.png" class="anchor"></a></font></h1><p>This document aims to be a complete plan for what needs to be done
@@ -32,17 +32,26 @@ on this project.  It can be viewed as a to-do list in chronological
 order, the first items being those that should be done next, and
 the later items those that must come after.  Necessarily, the later
 items are more vague than the earlier ones.</p>
-<h1><a name='word-processing-foundation'></a>Word Processing Foundation &nbsp;  <font size=-1><a href='#word-processing-foundation'><img src="link.png" class="anchor"></a></font></h1><h2><a name='dom-edit-tracker'></a>DOM Edit Tracker &nbsp;  <font size=-1><a href='#dom-edit-tracker'><img src="link.png" class="anchor"></a></font></h2><ul>
-<li>Add undo and redo methods to a <code>LurchEditor</code> instance that move
-an index pointer up and down the internal list of past actions,
-and that chop off the redo-able actions if an edit comes in that
-is not from an undo/redo action.  Thorough unit tests as well.</li>
+<h1><a name='word-processing-foundation'></a>Word Processing Foundation &nbsp;  <font size=-1><a href='#word-processing-foundation'><img src="link.png" class="anchor"></a></font></h1><h2><a name='-code-lurcheditor-code-'></a><code>LurchEditor</code> &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-'><img src="link.png" class="anchor"></a></font></h2><p>For each of the following features, add tests for them to <a href="lurcheditor-spec.litcoffee.html">the
+<code>LurchEditor</code> spec</a>.</p>
+<ul>
+<li>Add to the <code>LurchEditor</code> class a pointer that indexes into the
+<code>DOMEditAction</code> stack, pointing to the last-undone action.  If
+no actions have been undone, then it will equal the stack size.
+Override <code>nodeEditHappened</code> so that before the original version
+is called, if the pointer is not the stack size, then the stack
+is truncated to make it so.</li>
 <li>Add canUndo() and canRedo() methods to the <code>LurchEditor</code> class
 that just report whether the index pointer isn&#39;t at the top or
-bottom of the stack.  Test.</li>
-<li>Add a <code>toString()</code> method to <code>DOMEditAction</code> that can describe
-it.  Add methods to <code>LurchEditor</code> that can describe the actions
-that would take place if undo or redo were invoked.  Test.</li>
+bottom of the stack.</li>
+<li>Add methods to <code>LurchEditor</code> that can describe the actions that
+would take place if undo or redo were invoked, by calling the
+appropriate methods in the <code>DOMEditAction</code> instances.  Return
+the empty string if the right one of canUndo()/canRedo() says
+no.</li>
+<li>Add undo and redo methods to the <code>LurchEditor</code> class that move
+the index pointer up and down the stack, calling undo/redo in
+each action as they do so.</li>
 </ul>
 <h1><a name='test-environment'></a>Test environment &nbsp;  <font size=-1><a href='#test-environment'><img src="link.png" class="anchor"></a></font></h1><h2><a name='test-app'></a>Test app &nbsp;  <font size=-1><a href='#test-app'><img src="link.png" class="anchor"></a></font></h2><ul>
 <li>Import into the project a UI toolkit such as
@@ -293,7 +302,7 @@ theorems proven based on assumptions that you therefore must
 guarantee hold in your implementation)</li>
 <li>create unit tests as you go</li>
 </ul>
-<h1><a name='unit-tests-for-later'></a>Unit tests for later &nbsp;  <font size=-1><a href='#unit-tests-for-later'><img src="link.png" class="anchor"></a></font></h1><p>The following unit tests were skipped earlier in development,
+<h1><a name='for-later'></a>For later &nbsp;  <font size=-1><a href='#for-later'><img src="link.png" class="anchor"></a></font></h1><p>The following unit tests were skipped earlier in development,
 because they are less important than the ones that were written,
 and yet are included here for the sake of completeness, and so that
 they are not forgotten.  A complete unit testing suite would have
@@ -307,10 +316,18 @@ action type is valid.  In particular, no testing is done to
 ensure that the node must be valid, nor that for each individual
 action type, the parameters must be given correctly.</li>
 </ul>
+<p>Documentation in most unit test spec files promises that <a href="basic-spec.litcoffee.html">the
+basic spec file</a> will provide complete
+documentation on how to read and understand a test spec file.  But
+it does not.</p>
+<ul>
+<li>Add documentation to that file so that someone who does not know
+how to read a test spec file could learn it from that file.</li>
+</ul>
 
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

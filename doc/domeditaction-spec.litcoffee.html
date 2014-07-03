@@ -18,10 +18,13 @@
             <p align=center>Page contents</p>
 <p><a href='#tests-for-the-code-domeditaction-code-class'>Tests for the <code>DOMEditAction</code> class</a></p><ul>
 <li><a href='#domeditaction-class'>DOMEditAction class</a></li><ul>
-<li><a href='#should-exist'>should exist</a></li><li><a href='#should-have-appendchild-instances'>should have &quot;appendChild&quot; instances</a></li><li><a href='#should-have-insertbefore-instances'>should have &quot;insertBefore&quot; instances</a></li><li><a href='#should-have-normalize-instances'>should have &quot;normalize&quot; instances</a></li><li><a href='#should-have-removeattribute-instances'>should have &quot;removeAttribute&quot; instances</a></li><li><a href='#should-have-removeattributenode-instances'>should have &quot;removeAttributeNode&quot; instances</a></li><li><a href='#should-have-removechild-instances'>should have &quot;removeChild&quot; instances</a></li><li><a href='#should-have-replacechild-instances'>should have &quot;replaceChild&quot; instances</a></li><li><a href='#should-have-setattribute-instances'>should have &quot;setAttribute&quot; instances</a></li><li><a href='#should-have-setattributenode-instances'>should have &quot;setAttributeNode&quot; instances</a></li><li><a href='#should-have-no-other-instances'>should have no other instances</a></li>
+<li><a href='#should-exist'>should exist</a></li><li><a href='#should-have-appendchild-instances'>should have &quot;appendChild&quot; instances</a></li><li><a href='#should-correctly-describe-appendchild-instances'>should correctly describe &quot;appendChild&quot; instances</a></li><li><a href='#should-have-insertbefore-instances'>should have &quot;insertBefore&quot; instances</a></li><li><a href='#should-correctly-describe-insertbefore-instances'>should correctly describe &quot;insertBefore&quot; instances</a></li><li><a href='#should-have-normalize-instances'>should have &quot;normalize&quot; instances</a></li><li><a href='#should-correctly-describe-normalize-instances'>should correctly describe &quot;normalize&quot; instances</a></li><li><a href='#should-have-removeattribute-instances'>should have &quot;removeAttribute&quot; instances</a></li><li><a href='#should-correctly-describe-removeattribute-instances'>should correctly describe &quot;removeAttribute&quot; instances</a></li><li><a href='#should-have-removeattributenode-instances'>should have &quot;removeAttributeNode&quot; instances</a></li><li><a href='#should-correctly-describe-removeattributenode-instances'>should correctly describe &quot;removeAttributeNode&quot; instances</a></li><li><a href='#should-have-removechild-instances'>should have &quot;removeChild&quot; instances</a></li><li><a href='#should-correctly-describe-removechild-instances'>should correctly describe &quot;removeChild&quot; instances</a></li><li><a href='#should-have-replacechild-instances'>should have &quot;replaceChild&quot; instances</a></li><li><a href='#should-correctly-describe-replacechild-instances'>should correctly describe &quot;replaceChild&quot; instances</a></li><li><a href='#should-have-setattribute-instances'>should have &quot;setAttribute&quot; instances</a></li><li><a href='#should-correctly-describe-setattribute-instances'>should correctly describe &quot;setAttribute&quot; instances</a></li><li><a href='#should-have-setattributenode-instances'>should have &quot;setAttributeNode&quot; instances</a></li><li><a href='#should-correctly-describe-setattributenode-instances'>should correctly describe &quot;setAttributeNode&quot; instances</a></li><li><a href='#should-have-no-other-instances'>should have no other instances</a></li>
         </div>
         <div id="middle">
-            <h1><a name='tests-for-the-code-domeditaction-code-class'></a>Tests for the <code>DOMEditAction</code> class &nbsp; <font size=-1><a href='test-results.md.html#tests-for-the-code-domeditaction-code-class'>see results</a></font> <font size=-1><a href='#tests-for-the-code-domeditaction-code-class'><img src="link.png" class="anchor"></a></font></h1><p>Pull in the utility functions in
+            <h1><a name='tests-for-the-code-domeditaction-code-class'></a>Tests for the <code>DOMEditAction</code> class &nbsp; <font size=-1><a href='test-results.md.html#tests-for-the-code-domeditaction-code-class'>see results</a></font> <font size=-1><a href='#tests-for-the-code-domeditaction-code-class'><img src="link.png" class="anchor"></a></font></h1><p>Those aspects of the <code>DOMEditAction</code> class that relate to undoing
+and redoing edit actions can be found in <a href="undoredo-spec.litcoffee.html">a different test suite</a>.  This file tests the remainder of
+the class&#39;s functionality.</p>
+<p>Pull in the utility functions in
 <a href="phantom-utils.litcoffee.html">phantom-utils</a> that make it
 easier to write the tests below.  Then follow the same structure
 for setting up tests as documented more thoroughly in
@@ -58,6 +61,19 @@ appended.</p>
             expect( result[<span class="hljs-number">2</span>] ).toEqual tagName : <span class="hljs-string">'SPAN'</span>
             expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'appendChild'</span>
             done()
+</code></pre><h3><a name='should-correctly-describe-appendchild-instances'></a>should correctly describe &quot;appendChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-appendchild-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-appendchild-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+description provided when their <code>toString</code> method is called.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "appendChild" instances'</span>,
+    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span.innerHTML = <span class="hljs-string">'Hello, &lt;b&gt;friend.&lt;/b&gt;'</span>
+            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'appendChild'</span>, div, span
+            T.toString()
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toEqual <span class="hljs-string">'Add Hello, friend.'</span>
+            done()
 </code></pre><h3><a name='should-have-insertbefore-instances'></a>should have &quot;insertBefore&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-insertbefore-instances'>see results</a></font> <font size=-1><a href='#should-have-insertbefore-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;insertBefore&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
@@ -83,6 +99,19 @@ index that the newly inserted child will have after insertion.</p>
             expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-number">1</span>
             expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'insertBefore'</span>
             done()
+</code></pre><h3><a name='should-correctly-describe-insertbefore-instances'></a>should correctly describe &quot;insertBefore&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-insertbefore-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-insertbefore-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+description provided when their <code>toString</code> method is called.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "insertBefore" instances'</span>,
+    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span.innerHTML = <span class="hljs-string">'Hello, &lt;b&gt;friend.&lt;/b&gt;'</span>
+            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'insertBefore'</span>, div, span
+            T.toString()
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toEqual <span class="hljs-string">'Insert Hello, friend.'</span>
+            done()
 </code></pre><h3><a name='should-have-normalize-instances'></a>should have &quot;normalize&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-normalize-instances'>see results</a></font> <font size=-1><a href='#should-have-normalize-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;normalize&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
@@ -96,21 +125,36 @@ content at that time.</p>
             div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'two'</span>
             span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             span.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'three'</span>
+            span.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'four'</span>
             div.appendChild span
-            div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'four'</span>
+            div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'five'</span>
             T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'normalize'</span>, div
             result = [
                 T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>]
-                T.node
-                T.textChildren
-                T.type
+                T.toJSON()
             ]
         , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
             expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toEqual []
-            expect( result[<span class="hljs-number">2</span>] ).toEqual
-                <span class="hljs-number">0</span> : <span class="hljs-string">'one'</span>, <span class="hljs-number">1</span> : <span class="hljs-string">'two'</span>, <span class="hljs-number">3</span> : <span class="hljs-string">'four'</span>
-            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'normalize'</span>
+            expect( result[<span class="hljs-number">1</span>] ).toEqual {
+                node : [], type : <span class="hljs-string">'normalize'</span>,
+                sequences : {
+                    <span class="hljs-string">'[0]'</span> : [ <span class="hljs-string">'one'</span>, <span class="hljs-string">'two'</span> ]
+                    <span class="hljs-string">'[1,0]'</span> : [ <span class="hljs-string">'three'</span>, <span class="hljs-string">'four'</span> ]
+                }
+            }
+            done()
+</code></pre><h3><a name='should-correctly-describe-normalize-instances'></a>should correctly describe &quot;normalize&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-normalize-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-normalize-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+description provided when their <code>toString</code> method is called.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "normalize" instances'</span>,
+    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'one'</span>
+            div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'two'</span>
+            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'normalize'</span>, div
+            T.toString()
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toEqual <span class="hljs-string">'Normalize text'</span>
             done()
 </code></pre><h3><a name='should-have-removeattribute-instances'></a>should have &quot;removeAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-removeattribute-instances'>see results</a></font> <font size=-1><a href='#should-have-removeattribute-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;removeAttribute&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for
@@ -135,6 +179,17 @@ value that the attribute had before removal.</p>
             expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-string">'id'</span>
             expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'0'</span>
             expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'removeAttribute'</span>
+            done()
+</code></pre><h3><a name='should-correctly-describe-removeattribute-instances'></a>should correctly describe &quot;removeAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-removeattribute-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-removeattribute-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+description provided when their <code>toString</code> method is called.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "removeAttribute" instances'</span>,
+    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeAttribute'</span>, div, <span class="hljs-string">'id'</span>
+            T.toString()
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toEqual <span class="hljs-string">'Remove id attribute'</span>
             done()
 </code></pre><h3><a name='should-have-removeattributenode-instances'></a>should have &quot;removeAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-removeattributenode-instances'>see results</a></font> <font size=-1><a href='#should-have-removeattributenode-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;removeAttributeNode&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation
@@ -161,6 +216,19 @@ value that the attribute had before removal.</p>
             expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-string">'id'</span>
             expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'0'</span>
             expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'removeAttributeNode'</span>
+            done()
+</code></pre><h3><a name='should-correctly-describe-removeattributenode-instances'></a>should correctly describe &quot;removeAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-removeattributenode-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-removeattributenode-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+description provided when their <code>toString</code> method is called.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "removeAttributeNode" '</span> +
+       <span class="hljs-string">'instances'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            togo = <span class="hljs-built_in">document</span>.createAttribute <span class="hljs-string">'id'</span>
+            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeAttributeNode'</span>, div,
+                togo
+            T.toString()
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toEqual <span class="hljs-string">'Remove id attribute'</span>
             done()
 </code></pre><h3><a name='should-have-removechild-instances'></a>should have &quot;removeChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-removechild-instances'>see results</a></font> <font size=-1><a href='#should-have-removechild-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;removeChild&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
@@ -192,6 +260,20 @@ a serialized version of the removed child.</p>
                 <span class="hljs-string">'tagName'</span> : <span class="hljs-string">'SPAN'</span>,
                 <span class="hljs-string">'children'</span> : [ <span class="hljs-string">'span contents, just text'</span> ]
             expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'removeChild'</span>
+            done()
+</code></pre><h3><a name='should-correctly-describe-removechild-instances'></a>should correctly describe &quot;removeChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-removechild-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-removechild-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+description provided when their <code>toString</code> method is called.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "removeChild" instances'</span>,
+    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span.innerHTML = <span class="hljs-string">'Hello, &lt;b&gt;friend.&lt;/b&gt;'</span>
+            div.appendChild span
+            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeChild'</span>, div, span
+            T.toString()
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toEqual <span class="hljs-string">'Remove Hello, friend.'</span>
             done()
 </code></pre><h3><a name='should-have-replacechild-instances'></a>should have &quot;replaceChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-replacechild-instances'>see results</a></font> <font size=-1><a href='#should-have-replacechild-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;replaceChild&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
@@ -232,6 +314,24 @@ member containing a serialization of the replacement child.</p>
                 <span class="hljs-string">'children'</span> : [ <span class="hljs-string">'Announcement!'</span> ]
             expect( result[<span class="hljs-number">5</span>] ).toEqual <span class="hljs-string">'replaceChild'</span>
             done()
+</code></pre><h3><a name='should-correctly-describe-replacechild-instances'></a>should correctly describe &quot;replaceChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-replacechild-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-replacechild-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+description provided when their <code>toString</code> method is called.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "replaceChild" instances'</span>,
+    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span.innerHTML = <span class="hljs-string">'Hello, &lt;b&gt;friend.&lt;/b&gt;'</span>
+            div.appendChild span
+            span2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span2.innerHTML = <span class="hljs-string">'&lt;h1&gt;Heading&lt;/h1&gt;'</span>
+            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'replaceChild'</span>, div, span2,
+                span
+            T.toString()
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toEqual \
+                <span class="hljs-string">'Replace Hello, friend. with Heading'</span>
+            done()
 </code></pre><h3><a name='should-have-setattribute-instances'></a>should have &quot;setAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-setattribute-instances'>see results</a></font> <font size=-1><a href='#should-have-setattribute-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;setAttribute&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
@@ -258,6 +358,17 @@ member containing the value after the attribute is set.</p>
             expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'0'</span>
             expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'1'</span>
             expect( result[<span class="hljs-number">5</span>] ).toEqual <span class="hljs-string">'setAttribute'</span>
+            done()
+</code></pre><h3><a name='should-correctly-describe-setattribute-instances'></a>should correctly describe &quot;setAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-setattribute-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-setattribute-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+description provided when their <code>toString</code> method is called.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "setAttribute" instances'</span>,
+    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'setAttribute'</span>, div, <span class="hljs-string">'id'</span>, <span class="hljs-number">17</span>
+            T.toString()
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toEqual <span class="hljs-string">'Change id from 0 to 17'</span>
             done()
 </code></pre><h3><a name='should-have-setattributenode-instances'></a>should have &quot;setAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-setattributenode-instances'>see results</a></font> <font size=-1><a href='#should-have-setattributenode-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;setAttributeNode&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for
@@ -287,6 +398,20 @@ member containing the value after the attribute is set.</p>
             expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'0'</span>
             expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'1'</span>
             expect( result[<span class="hljs-number">5</span>] ).toEqual <span class="hljs-string">'setAttributeNode'</span>
+            done()
+</code></pre><h3><a name='should-correctly-describe-setattributenode-instances'></a>should correctly describe &quot;setAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-setattributenode-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-setattributenode-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+description provided when their <code>toString</code> method is called.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "setAttributeNode" '</span> +
+       <span class="hljs-string">'instances'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            change = <span class="hljs-built_in">document</span>.createAttribute <span class="hljs-string">'id'</span>
+            change.value = <span class="hljs-number">17</span>
+            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'setAttributeNode'</span>, div,
+                change
+            T.toString()
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toEqual <span class="hljs-string">'Change id from 0 to 17'</span>
             done()
 </code></pre><h3><a name='should-have-no-other-instances'></a>should have no other instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-no-other-instances'>see results</a></font> <font size=-1><a href='#should-have-no-other-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should get errors if we attempt to construct instances
 of the class with types other than those tested in the other tests
@@ -322,7 +447,7 @@ however, so they are not forgotten.</p>
 
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

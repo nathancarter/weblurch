@@ -1023,10 +1023,10 @@ along with all return values from calls to <code>appendChild</code>.</p>
         , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
             expect( result.length ).toEqual <span class="hljs-number">4</span>
 </code></pre><p>Validate the serialized versions of the <code>appendChild</code> events.</p>
-<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
                 type : <span class="hljs-string">'appendChild'</span>, node : [],
                 toAppend : { tagName : <span class="hljs-string">'SPAN'</span> }
-            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+            expect( result[<span class="hljs-number">1</span>] ).toEqual
                 type : <span class="hljs-string">'appendChild'</span>, node : [ <span class="hljs-number">1</span> ],
                 toAppend : { tagName : <span class="hljs-string">'SPAN'</span> }
 </code></pre><p>Validate the return values, which must be the addresses of the
@@ -1068,15 +1068,15 @@ along with all return values from calls to <code>appendChild</code>.</p>
         , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
             expect( result.length ).toEqual <span class="hljs-number">6</span>
 </code></pre><p>Validate the serialized versions of the <code>insertBefore</code> events.</p>
-<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
                 type : <span class="hljs-string">'insertBefore'</span>, node : [],
                 toInsert : { tagName : <span class="hljs-string">'SPAN'</span> },
                 insertBefore : <span class="hljs-number">0</span>
-            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+            expect( result[<span class="hljs-number">1</span>] ).toEqual
                 type : <span class="hljs-string">'insertBefore'</span>, node : [],
                 toInsert : { tagName : <span class="hljs-string">'SPAN'</span> },
                 insertBefore : <span class="hljs-number">2</span>
-            expect( JSON.parse result[<span class="hljs-number">2</span>] ).toEqual
+            expect( result[<span class="hljs-number">2</span>] ).toEqual
                 type : <span class="hljs-string">'insertBefore'</span>, node : [ <span class="hljs-number">0</span> ],
                 toInsert : { tagName : <span class="hljs-string">'SPAN'</span> },
                 insertBefore : <span class="hljs-number">0</span>
@@ -1121,15 +1121,14 @@ a total of 5 items.</p>
 </code></pre><p>Validate the serialized versions of the various events.
 First, the first of two normalize events that we&#39;re testing, this
 one done on a div with two text children and no other children.</p>
-<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
                 type : <span class="hljs-string">'normalize'</span>, node : [],
-                textChildren : {
-                    <span class="hljs-number">0</span> : <span class="hljs-string">'\n        '</span>
-                    <span class="hljs-number">1</span> : <span class="hljs-string">'example'</span>
+                sequences : {
+                    <span class="hljs-string">'[0]'</span> : [ <span class="hljs-string">'\n        '</span>, <span class="hljs-string">'example'</span> ]
                 }
 </code></pre><p>Next, an <code>appendChild</code> event that isn&#39;t part of this test, but is
 included for completeness.</p>
-<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">1</span>] ).toEqual
                 type : <span class="hljs-string">'appendChild'</span>, node : [],
                 toAppend : {
                     tagName : <span class="hljs-string">'SPAN'</span>
@@ -1141,12 +1140,9 @@ included for completeness.</p>
                 }
 </code></pre><p>Finally, the second normalize event, called on the span inside the
 div, with two text node children, not adjacent.</p>
-<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">2</span>] ).toEqual
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>] ).toEqual
                 type : <span class="hljs-string">'normalize'</span>, node : [ <span class="hljs-number">1</span> ],
-                textChildren : {
-                    <span class="hljs-number">0</span> : <span class="hljs-string">'foo'</span>
-                    <span class="hljs-number">2</span> : <span class="hljs-string">'bar'</span>
-                }
+                sequences : { }
 </code></pre><p>Ensure that the return values were both undefined.</p>
 <pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'undefined'</span>
             expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'undefined'</span>
@@ -1181,10 +1177,10 @@ checks about whether the return values from the calls to
             expect( result.length ).toEqual <span class="hljs-number">4</span>
 </code></pre><p>Validate the serialized versions of the two <code>removeAttribute</code>
 events.</p>
-<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
                 type : <span class="hljs-string">'removeAttribute'</span>, node : [ <span class="hljs-number">0</span> ],
                 name : <span class="hljs-string">'align'</span>, value : <span class="hljs-string">'center'</span>
-            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+            expect( result[<span class="hljs-number">1</span>] ).toEqual
                 type : <span class="hljs-string">'removeAttribute'</span>, node : [ <span class="hljs-number">2</span> ],
                 name : <span class="hljs-string">'style'</span>, value : <span class="hljs-string">'color:blue;'</span>
 </code></pre><p>Ensure that the return values were both undefined.</p>
@@ -1223,10 +1219,10 @@ checks about whether the return values from the calls to
             expect( result.length ).toEqual <span class="hljs-number">4</span>
 </code></pre><p>Validation of events is exactly as it was in the previous test,
 except for the name of the action.</p>
-<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
                 type : <span class="hljs-string">'removeAttributeNode'</span>, node : [ <span class="hljs-number">0</span> ],
                 name : <span class="hljs-string">'align'</span>, value : <span class="hljs-string">'center'</span>
-            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+            expect( result[<span class="hljs-number">1</span>] ).toEqual
                 type : <span class="hljs-string">'removeAttributeNode'</span>, node : [ <span class="hljs-number">2</span> ],
                 name : <span class="hljs-string">'style'</span>, value : <span class="hljs-string">'color:blue;'</span>
 </code></pre><p>Validation of return types is different; we expect that the return
@@ -1268,14 +1264,14 @@ checks about whether the return values from the calls to
         , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
             expect( result.length ).toEqual <span class="hljs-number">4</span>
 </code></pre><p>First we expect the two child removal events.</p>
-<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
                 type : <span class="hljs-string">'removeChild'</span>,
                 node : [ <span class="hljs-number">0</span> ], childIndex : <span class="hljs-number">0</span>,
                 child : {
                     tagName : <span class="hljs-string">'SPAN'</span>
                     children : [ <span class="hljs-string">'INNER SPAN!'</span> ]
                 }
-            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+            expect( result[<span class="hljs-number">1</span>] ).toEqual
                 type : <span class="hljs-string">'removeChild'</span>,
                 node : [], childIndex : <span class="hljs-number">2</span>,
                 child : {
@@ -1329,7 +1325,7 @@ and are thus no longer in the DOM.</p>
         , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
             expect( result.length ).toEqual <span class="hljs-number">4</span>
 </code></pre><p>First we expect the two child replacement events.</p>
-<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
                 type : <span class="hljs-string">'replaceChild'</span>,
                 node : [ <span class="hljs-number">0</span> ], childIndex : <span class="hljs-number">0</span>,
                 oldChild : {
@@ -1340,7 +1336,7 @@ and are thus no longer in the DOM.</p>
                     tagName : <span class="hljs-string">'H1'</span>
                     children : [ <span class="hljs-string">'heading'</span> ]
                 }
-            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+            expect( result[<span class="hljs-number">1</span>] ).toEqual
                 type : <span class="hljs-string">'replaceChild'</span>,
                 node : [], childIndex : <span class="hljs-number">2</span>,
                 oldChild : {
@@ -1391,11 +1387,11 @@ checks about whether the return values from the calls to
         , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
             expect( result.length ).toEqual <span class="hljs-number">4</span>
 </code></pre><p>First we expect the two attribute-setting events.</p>
-<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
                 type : <span class="hljs-string">'setAttribute'</span>,
                 node : [], name : <span class="hljs-string">'align'</span>,
                 oldValue : <span class="hljs-string">''</span>, newValue : <span class="hljs-string">'center'</span>
-            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+            expect( result[<span class="hljs-number">1</span>] ).toEqual
                 type : <span class="hljs-string">'setAttribute'</span>,
                 node : [ <span class="hljs-number">0</span> ], name : <span class="hljs-string">'example'</span>,
                 oldValue : <span class="hljs-string">'yes'</span>, newValue : <span class="hljs-string">'no'</span>
@@ -1439,11 +1435,11 @@ old one).</p>
         , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
             expect( result.length ).toEqual <span class="hljs-number">4</span>
 </code></pre><p>First we expect the two attribute-setting events.</p>
-<pre class="hljs"><code>            expect( JSON.parse result[<span class="hljs-number">0</span>] ).toEqual
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
                 type : <span class="hljs-string">'setAttributeNode'</span>,
                 node : [], name : <span class="hljs-string">'align'</span>,
                 oldValue : <span class="hljs-string">''</span>, newValue : <span class="hljs-string">'center'</span>
-            expect( JSON.parse result[<span class="hljs-number">1</span>] ).toEqual
+            expect( result[<span class="hljs-number">1</span>] ).toEqual
                 type : <span class="hljs-string">'setAttributeNode'</span>,
                 node : [ <span class="hljs-number">0</span> ], name : <span class="hljs-string">'example'</span>,
                 oldValue : <span class="hljs-string">'yes'</span>, newValue : <span class="hljs-string">'no'</span>
@@ -1458,7 +1454,7 @@ node (before the replacement).</p>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

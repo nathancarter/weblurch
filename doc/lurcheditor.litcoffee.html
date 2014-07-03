@@ -61,6 +61,12 @@ of nonnegative integer ids found by <code>cleanIds</code>.</p>
 </code></pre><p>Last, for every HTMLElement under the DIV without an id, the
 constructor gives it the next available id.</p>
 <pre class="hljs"><code>        <span class="hljs-property">@assignIds</span> div
+</code></pre><p>Because all the actions about dealing with ids often change the
+DOM starting at the given <code>div</code> and going down, they generate
+change events that the superclass records.  We do not wish to have
+those changes recorded here, because we do not wish to allow the
+user to undo them.  Thus at this point, we clear the changes stack.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@clearStack</span>()
 </code></pre><h2><a name='functions-used-by-the-constructor'></a>Functions used by the constructor &nbsp;  <font size=-1><a href='#functions-used-by-the-constructor'><img src="link.png" class="anchor"></a></font></h2><p>Collect a list of all used ids in the given node, removing any
 ids that aren&#39;t just nonnegative integers.  This routine is used
 by the class&#39;s constructor as part of the procedure for
@@ -106,7 +112,7 @@ prototype.</p>
 
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

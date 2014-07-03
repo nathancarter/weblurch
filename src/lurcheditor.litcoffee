@@ -62,6 +62,14 @@ constructor gives it the next available id.
 
             @assignIds div
 
+Because all the actions about dealing with ids often change the
+DOM starting at the given `div` and going down, they generate
+change events that the superclass records.  We do not wish to have
+those changes recorded here, because we do not wish to allow the
+user to undo them.  Thus at this point, we clear the changes stack.
+
+            @clearStack()
+
 ## Functions used by the constructor
 
 Collect a list of all used ids in the given node, removing any

@@ -8,7 +8,7 @@
 
   window.DOMEditAction = DOMEditAction = (function() {
     function DOMEditAction() {
-      var child, data, i, node, type, _i, _len, _ref, _ref1;
+      var data, node, process, that, type, _ref;
       type = arguments[0], node = arguments[1], data = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
       if (!(node instanceof Node)) {
         throw Error('This is not a node: ' + node);
@@ -47,14 +47,37 @@
         if (data.length !== 0) {
           throw Error('Wrong # of parameters: ' + data);
         }
-        this.textChildren = {};
-        _ref = node.childNodes;
-        for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
-          child = _ref[i];
-          if (child instanceof Text) {
-            this.textChildren[i] = child.textContent;
-          }
-        }
+        this.sequences = {};
+        that = this;
+        process = (function(_this) {
+          return function(N, address) {
+            var child, index, key, nextAddr, strings, _results;
+            if (address == null) {
+              address = [];
+            }
+            child = N.childNodes[0];
+            index = 0;
+            _results = [];
+            while (child) {
+              nextAddr = address.concat([index]);
+              if (child instanceof Text && child.nextSibling instanceof Text) {
+                strings = [];
+                while (child instanceof Text) {
+                  strings.push(child.textContent);
+                  child = child.nextSibling;
+                }
+                key = JSON.stringify(nextAddr);
+                _this.sequences[key] = strings;
+              } else {
+                process(child, nextAddr);
+                child = child.nextSibling;
+              }
+              _results.push(index++);
+            }
+            return _results;
+          };
+        })(this);
+        process(node);
       } else if (type === 'removeAttribute') {
         if (data.length !== 1) {
           throw Error('Wrong # of parameters: ' + data);
@@ -68,7 +91,7 @@
         if (!(data[0] instanceof Attr)) {
           throw Error('Invalid attribute node: ' + data[0]);
         }
-        _ref1 = data[0], this.name = _ref1.name, this.value = _ref1.value;
+        _ref = data[0], this.name = _ref.name, this.value = _ref.value;
       } else if (type === 'removeChild') {
         if (data.length !== 1) {
           throw Error('Wrong # of parameters: ' + data);
@@ -119,14 +142,71 @@
       }
     }
 
+    DOMEditAction.prototype.toString = function() {
+      var max, orig, repl, text;
+      max = 50;
+      if (this.type === 'appendChild') {
+        text = Node.fromJSON(this.toAppend).textContent;
+        if (text.length > max) {
+          text = text.slice(0, +max + 1 || 9e9) + '...';
+        }
+        if (text.length === 0) {
+          text = 'a node';
+        }
+        return "Add " + text;
+      } else if (this.type === 'insertBefore') {
+        text = Node.fromJSON(this.toInsert).textContent;
+        if (text.length > max) {
+          text = text.slice(0, +max + 1 || 9e9) + '...';
+        }
+        if (text.length === 0) {
+          text = 'a node';
+        }
+        return "Insert " + text;
+      } else if (this.type === 'normalize') {
+        return "Normalize text";
+      } else if (this.type === 'removeAttribute' || this.type === 'removeAttributeNode') {
+        return "Remove " + this.name + " attribute";
+      } else if (this.type === 'removeChild') {
+        text = Node.fromJSON(this.child).textContent;
+        if (text.length > max) {
+          text = text.slice(0, +max + 1 || 9e9) + '...';
+        }
+        if (text.length === 0) {
+          text = 'a node';
+        }
+        return "Remove " + text;
+      } else if (this.type === 'replaceChild') {
+        orig = Node.fromJSON(this.oldChild).textContent;
+        if (orig.length > max) {
+          orig = orig.slice(0, +max + 1 || 9e9) + '...';
+        }
+        if (orig.length === 0) {
+          orig = 'a node';
+        }
+        repl = Node.fromJSON(this.newChild).textContent;
+        if (repl.length > max) {
+          repl = repl.slice(0, +max + 1 || 9e9) + '...';
+        }
+        if (repl.length === 0) {
+          repl = 'a node';
+        }
+        return "Replace " + orig + " with " + repl;
+      } else if (this.type === 'setAttribute' || this.type === 'setAttributeNode') {
+        return "Change " + this.name + " from " + this.oldValue + " to " + this.newValue;
+      } else {
+        return "Error, unknown edit action type: " + this.type;
+      }
+    };
+
     DOMEditAction.prototype.toJSON = function() {
-      return JSON.stringify({
+      return {
         type: this.type,
         node: this.node,
         toAppend: this.toAppend,
         toInsert: this.toInsert,
         insertBefore: this.insertBefore,
-        textChildren: this.textChildren,
+        sequences: this.sequences,
         name: this.name,
         value: this.value,
         child: this.child,
@@ -135,7 +215,90 @@
         newChild: this.newChild,
         oldValue: this.oldValue,
         newValue: this.newValue
-      });
+      };
+    };
+
+    DOMEditAction.prototype.redo = function() {
+      var newnode, original, replacement;
+      original = this.tracker.index(this.node);
+      if (this.type === 'appendChild') {
+        return original.appendChild(Node.fromJSON(this.toAppend));
+      } else if (this.type === 'insertBefore') {
+        newnode = Node.fromJSON(this.toInsert);
+        if (this.insertBefore === original.childNodes.length) {
+          return original.appendChild(newnode);
+        } else {
+          return original.insertBefore(newnode, original.childNodes[this.insertBefore]);
+        }
+      } else if (this.type === 'normalize') {
+        return original.normalize();
+      } else if (this.type === 'removeAttribute' || this.type === 'removeAttributeNode') {
+        return original.removeAttribute(this.name);
+      } else if (this.type === 'removeChild') {
+        return original.removeChild(original.childNodes[this.childIndex]);
+      } else if (this.type === 'replaceChild') {
+        replacement = Node.fromJSON(this.newChild);
+        return original.replaceChild(replacement, original.childNodes[this.childIndex]);
+      } else if (this.type === 'setAttribute' || this.type === 'setAttributeNode') {
+        return original.setAttribute(this.name, this.newValue);
+      }
+    };
+
+    DOMEditAction.prototype.undo = function() {
+      var addBack, d, descendants, key, original, replacement, string, _ref, _ref1, _results;
+      original = this.tracker.index(this.node);
+      if (this.type === 'appendChild') {
+        return original.removeChild(original.childNodes[original.childNodes.length - 1]);
+      } else if (this.type === 'insertBefore') {
+        return original.removeChild(original.childNodes[this.insertBefore]);
+      } else if (this.type === 'normalize') {
+        descendants = {};
+        _ref = this.sequences;
+        for (key in _ref) {
+          if (!__hasProp.call(_ref, key)) continue;
+          descendants[key] = original.index(JSON.parse(key));
+        }
+        _ref1 = this.sequences;
+        _results = [];
+        for (key in _ref1) {
+          if (!__hasProp.call(_ref1, key)) continue;
+          d = descendants[key];
+          _results.push((function() {
+            var _i, _len, _ref2, _results1;
+            _ref2 = this.sequences[key];
+            _results1 = [];
+            for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+              string = _ref2[_i];
+              if (string.length < d.textContent.length) {
+                d.splitText(string.length);
+                _results1.push(d = d.nextSibling);
+              } else {
+                _results1.push(void 0);
+              }
+            }
+            return _results1;
+          }).call(this));
+        }
+        return _results;
+      } else if (this.type === 'removeAttribute' || this.type === 'removeAttributeNode') {
+        return original.setAttribute(this.name, this.value);
+      } else if (this.type === 'removeChild') {
+        addBack = Node.fromJSON(this.child);
+        if (this.childIndex === original.childNodes.length) {
+          return original.appendChild(addBack);
+        } else {
+          return original.insertBefore(addBack, original.childNodes[this.childIndex]);
+        }
+      } else if (this.type === 'replaceChild') {
+        replacement = Node.fromJSON(this.oldChild);
+        return original.replaceChild(replacement, original.childNodes[this.childIndex]);
+      } else if (this.type === 'setAttribute' || this.type === 'setAttributeNode') {
+        if (this.oldValue !== '') {
+          return original.setAttribute(this.name, this.oldValue);
+        } else {
+          return original.removeAttribute(this.name);
+        }
+      }
     };
 
     return DOMEditAction;
@@ -383,6 +546,7 @@
         return _results;
       })();
       this.assignIds(div);
+      this.clearStack();
     }
 
     LurchEditor.prototype.cleanIds = function(node) {
