@@ -11,9 +11,6 @@ items are more vague than the earlier ones.
 
 ## `LurchEditor`
 
- * Add undo and redo methods to a `DOMEditAction` instance that
-   execute or undo the action (without checking first to see if it
-   actually makes sense to do it, just trusting).
  * Create new testing file for undo/redo features of the
    `DOMEditAction` class, since the existing test suite for that
    class does not assume that they can be auto-created by edits,

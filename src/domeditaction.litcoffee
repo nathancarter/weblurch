@@ -320,3 +320,238 @@ depend upon it to test other functionality.
                 @child, @childIndex, @oldChild, @newChild,
                 @oldValue, @newValue }
 
+## Undo/redo
+
+Edit actions, because they are actions, will sit on an undo/redo
+stack, and thus must be able to be applied, either forwards or
+backwards.  The following two methods support this need.
+
+Each method assumes that it is being called at a time that makes
+sense.  E.g., an undo is being performed right after the action
+was performed, or with the `DOMEditTracker` element in a state
+equivalent to such a time.  And a redo should only be performed if
+the action was just undone, or an equivalent state (such as doing
+one further undo, then redoing that action).
+
+Furthermore, these methods make changes to the DOM, and thus will
+generate more `DOMEditAction` events, which will propagate to the
+`DOMEditTracker` stored in this object's `tracker` field.  Thus it
+is the business of the tracker, before asking one of the actions on
+its undo/redo stack to perform an undo/redo, to temporarily pause
+its own recording of such actions.  This will prevent corruption of
+the undo/redo stack in question.
+
+First, we consider the forward case.  It could be named simply
+`do` but the action is almost never created in order to be applied;
+rather, it is created as an event that records an action that was
+done via the ordinary DOM API, and can thus be undone/redone later.
+Hence, we call this `redo` since it is almost always called for
+that purpose.  Also, it gives a nice symmetry with `undo`.
+
+        redo: ->
+
+In every case, we need to know what object was "`this`" when the
+event was created.  Its address within the containing
+`DOMEditTracker` is stored in our `node` field, so we find it that
+way.
+
+            original = @tracker.index @node
+
+Now we consider each possible action type separately, in a big
+`if`-`else` clause, as in the `toString` method, above.
+
+In the case of "appendChild", we simply unserialize the stored
+child and append it.
+
+            if @type is 'appendChild'
+                original.appendChild Node.fromJSON @toAppend
+
+In the case of "insertBefore", we simply unserialize the stored
+child and either insert or append it, depending on the index.
+
+            else if @type is 'insertBefore'
+                newnode = Node.fromJSON @toAppend
+                if @insertBefore is original.childNodes.length
+                    original.appendChild newnode
+                else
+                    original.insertBefore \
+                        original.childNodes[@insertBefore], newnode
+
+Normalization is simple because it takes no parameters.
+
+            else if @type is 'normalize'
+                original.normalize()
+
+Removing an attribute is also straightforward, because the only
+parameter we need is the attribute name, stored in our `name`
+field.
+
+I handle both the attribute and attribute-node cases in the same
+manner, because we are only concerned here with final results, not
+with the specific events generated along the way.
+
+            else if @type is 'removeAttribute' or
+                    @type is 'removeAttributeNode'
+                original.removeAttribute @name
+
+Removing a child is straightforward because we have the only
+parameter we need, its index, stored in our `childIndex` field.
+
+            else if @type is 'removeChild'
+                original.removeChild \
+                    original.childNodes[@childIndex]
+
+Replacing a child requires first unserializing the replacement from
+our `newChild` field, then calling doing the replacement using the
+usual DOM API.
+
+            else if @type is 'replaceChild'
+                replacement = Node.fromJSON @newChild
+                original.replaceChild replacement,
+                    original.childNodes[@childIndex]
+
+Changing an attribute is easy, because the key-value pair is stored
+in this object under the `name` and `newValue` fields.
+
+I handle both the attribute and attribute-node cases in the same
+manner, because we are only concerned here with final results, not
+with the specific events generated along the way.
+
+            else if @type is 'setAttribute' or
+                    @type is 'setAttributeNode'
+                original.setAttribute @name, @newValue
+
+Next, we consider the backward case.  I provide fewer comments in
+the code below, because it is simply the inverse of the routine
+just built above, which is liberally commented.  Refer to the
+routine above for more detailed explanations of each part below.
+
+        undo: ->
+
+As above, compute the original "`this`" node.
+
+            original = @tracker.index @node
+
+The inverse of "appendChild" is to remove the last child.
+
+            if @type is 'appendChild'
+                original.removeChild original.childNodes[ \
+                    original.childNodes.length - 1]
+
+The inverse of "insertBefore" is to remove the inserted child node.
+The insertion index stored in `insertBefore` is the index of the
+child to remove.
+
+            else if @type is 'insertBefore'
+                original.removeChild \
+                    original.childNodes[@insertBefore]
+
+The inverse of normalization is to break up any text fragments that
+were adjacent before the normalization, but which got united
+because of it.
+
+We walk through the list of child nodes, and upon encountering any
+text node, we check to see if there were two or more adjacent text
+nodes corresponding to it originally.  If so, we break it up.
+
+This requires keeping two separate counters, one to walk through
+each set of child indices--those before and those after the
+normalization--and keeping them in sync.
+
+            else if @type is 'normalize'
+                normIdx = otherIdx = 0
+                while normIdx < original.childNodes.length
+                    child = original.childNodes[normIdx]
+
+If this is not a text node, we need not process it here; just move
+on, incrementing both indices in concert.
+
+                    if child not instanceof Text
+                        normIdx++
+                        otherIdx++
+                        continue
+
+So it is a text node.  But if it was not collapsed by the
+normalization process, we need to make no changes.  So do the same
+increment-and-skip process.
+
+                    if otherIdx + 1 not of @textChildren
+                        normIdx++
+                        otherIdx++
+                        continue
+
+So now we know:  There was a sequence of two or more text nodes
+that got collapsed into just one.  We must expand back to the old
+form.  We begin by replacing the normalized text chunk with just
+the first piece of its broken-up version.
+
+                    text = @textChildren[otherIdx++]
+                    text = document.createTextNode text
+                    original.replaceChild text,
+                        original.childNodes[normIdx++]
+
+Then we prepare to insert all the other pieces after the first,  by
+finding a place to do the insertion, or null if we'll be appending.
+
+                    insertBefore = original.childNodes[normIdx] or
+                        null
+
+Then as long as there are more text nodes in the sequence, we keep
+inserting them.
+
+                    while otherIdx of @textChildren
+                        text = @textChildren[otherIdx++]
+                        text = document.createTextNode text
+                        if insertBefore
+                            original.insertBefore text,
+                                insertBefore
+                        else
+                            original.appendChild text
+
+The inverse of removing an attribute to put it back in, with both
+the key and value we recorded for this purpose, before its removal.
+
+I handle both the attribute and attribute-node cases in the same
+manner, because we are only concerned here with final results, not
+with the specific events generated along the way.
+
+            else if @type is 'removeAttribute' or
+                    @type is 'removeAttributeNode'
+                original.setAttribute @name, @value
+
+The inverse of removing a child is to add the child back in, which
+we can do because we stored a serialized version of the child in
+this object.  We take care to differentiate the cases of insertion
+vs. appending.
+
+            else if @type is 'removeChild'
+                addBack = Node.fromJSON @child
+                if @childIndex is original.childNodes.length
+                    original.appendChild addback
+                else
+                    original.insertBefore addBack,
+                        original.childNodes[@childIndex]
+
+The inverse of replacing a child is actually still replacing a
+child, just with the old and new reversed.
+
+            else if @type is 'replaceChild'
+                replacement = Node.fromJSON @oldChild
+                original.replaceChild replacement,
+                    original.childNodes[@childIndex]
+
+The inverse of changing an attribute is to change it back to its
+former value, if it had one, but if it did not, then remove the
+attribute entirely.
+
+I handle both the attribute and attribute-node cases in the same
+manner, because we are only concerned here with final results, not
+with the specific events generated along the way.
+
+            else if @type is 'setAttribute' or
+                    @type is 'setAttributeNode'
+                if @oldValue isnt ''
+                    original.setAttribute @name, @oldValue
+                else
+                    original.removeAttribute @name
+
