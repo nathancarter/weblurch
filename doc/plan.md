@@ -11,10 +11,6 @@ items are more vague than the earlier ones.
 
 ## `LurchEditor`
 
- * Add tests for all undo/redo actions of `DOMEditAction` into that
-   new testing suite.  Some are done; here are those that remain:
-    * setAttributeNode
-
 For each of the following features, add tests for them to [the
 `LurchEditor` spec](lurcheditor-spec.litcoffee.html).
 
