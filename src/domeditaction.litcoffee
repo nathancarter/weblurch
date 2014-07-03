@@ -534,7 +534,7 @@ vs. appending.
             else if @type is 'removeChild'
                 addBack = Node.fromJSON @child
                 if @childIndex is original.childNodes.length
-                    original.appendChild addback
+                    original.appendChild addBack
                 else
                     original.insertBefore addBack,
                         original.childNodes[@childIndex]
