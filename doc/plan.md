@@ -1,11 +1,17 @@
 
 # Project Plan
 
+Readers unfamiliar with this project may wish to first read what's
+already been accomplished, on the [Project Progress](
+progress.md.html) page.  This page is a complement to that one,
+stating what remains to be done.
+
 This document aims to be a complete plan for what needs to be done
-on this project.  It can be viewed as a to-do list in chronological
-order, the first items being those that should be done next, and
-the later items those that must come after.  Necessarily, the later
-items are more vague than the earlier ones.
+on this project, readable by developers.  It can therefore be
+viewed as a to-do list in chronological order, the first items
+being those that should be done next, and the later items those
+that must come after.  Necessarily, the later items are more vague
+than the earlier ones.
 
 ## Documentation
 
