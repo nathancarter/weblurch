@@ -16,23 +16,40 @@
     <body>
         <div id="left">
             <p align=center>Page contents</p>
-<p><a href='#project-plan'>Project Plan</a></p><p><a href='#word-processing-foundation'>Word Processing Foundation</a></p><ul>
+<p><a href='#project-plan'>Project Plan</a></p><ul>
+<li><a href='#documentation'>Documentation</a></li><li><a href='#word-processing-foundation'>Word Processing Foundation</a></li><ul>
 <li><a href='#-code-lurcheditor-code-'><code>LurchEditor</code></a></li></ul>
-<p><a href='#test-environment'>Test environment</a></p><ul>
+<li><a href='#test-environment'>Test environment</a></li><ul>
 <li><a href='#test-app'>Test app</a></li><li><a href='#easy-test-generation'>Easy test generation</a></li><li><a href='#better-access-to-automated-testing-results'>Better access to automated testing results</a></li><li><a href='#later-when-you-put-the-repository-on-a-server'>Later, when you put the repository on a server</a></li></ul>
-<p><a href='#more-word-processing-foundation'>More Word Processing Foundation</a></p><ul>
+<li><a href='#more-word-processing-foundation'>More Word Processing Foundation</a></li><ul>
 <li><a href='#events'>Events</a></li><li><a href='#cursor'>Cursor</a></li><li><a href='#keyboard'>Keyboard</a></li><li><a href='#mouse'>Mouse</a></li><li><a href='#load-and-save'>Load and save</a></li></ul>
-<p><a href='#logical-foundation'>Logical Foundation</a></p><ul>
+<li><a href='#logical-foundation'>Logical Foundation</a></li><ul>
 <li><a href='#dependencies'>Dependencies</a></li><li><a href='#math'>Math</a></li><li><a href='#groupers'>Groupers</a></li><li><a href='#background-processing'>Background processing</a></li><li><a href='#background-computation-of-the-property-graph'>Background computation of the property graph</a></li><li><a href='#background-computation-of-bubble-meanings'>Background computation of bubble meanings</a></li><li><a href='#background-validation-probably-in-stages'>Background validation, probably in stages</a></li></ul>
-<p><a href='#for-later'>For later</a></p>
+<li><a href='#for-later'>For later</a></li>
         </div>
         <div id="middle">
-            <h1><a name='project-plan'></a>Project Plan &nbsp;  <font size=-1><a href='#project-plan'><img src="link.png" class="anchor"></a></font></h1><p>This document aims to be a complete plan for what needs to be done
-on this project.  It can be viewed as a to-do list in chronological
-order, the first items being those that should be done next, and
-the later items those that must come after.  Necessarily, the later
-items are more vague than the earlier ones.</p>
-<h1><a name='word-processing-foundation'></a>Word Processing Foundation &nbsp;  <font size=-1><a href='#word-processing-foundation'><img src="link.png" class="anchor"></a></font></h1><h2><a name='-code-lurcheditor-code-'></a><code>LurchEditor</code> &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-'><img src="link.png" class="anchor"></a></font></h2><p>For each of the following features, add tests for them to <a href="lurcheditor-spec.litcoffee.html">the
+            <h1><a name='project-plan'></a>Project Plan &nbsp;  <font size=-1><a href='#project-plan'><img src="link.png" class="anchor"></a></font></h1><p>Readers unfamiliar with this project may wish to first read what&#39;s
+already been accomplished, on the <a href="progress.md.html">Project Progress</a> page.  This page is a complement to that one,
+stating what remains to be done.</p>
+<p>This document aims to be a complete plan for what needs to be done
+on this project, readable by developers.  It can therefore be
+viewed as a to-do list in chronological order, the first items
+being those that should be done next, and the later items those
+that must come after.  Necessarily, the later items are more vague
+than the earlier ones.</p>
+<h2><a name='documentation'></a>Documentation &nbsp;  <font size=-1><a href='#documentation'><img src="link.png" class="anchor"></a></font></h2><ul>
+<li>Create a new document called &quot;Project Progress&quot;
+(<code>doc/progress.md</code>) to go along with
+this one, as a complement to it.</li>
+<li>Link to both from the main page, and from each to the other.</li>
+<li>Make the Progress document describe, in plain English,
+everything that <em>has</em> been built already, and why, with links
+to the source code for the classes that implement the
+functionality described.</li>
+<li>It can end with a quick description of the next steps, as a
+very quick overview of what&#39;s in this document, then link to it.</li>
+</ul>
+<h2><a name='word-processing-foundation'></a>Word Processing Foundation &nbsp;  <font size=-1><a href='#word-processing-foundation'><img src="link.png" class="anchor"></a></font></h2><h3><a name='-code-lurcheditor-code-'></a><code>LurchEditor</code> &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-'><img src="link.png" class="anchor"></a></font></h3><p>For each of the following features, add tests for them to <a href="lurcheditor-spec.litcoffee.html">the
 <code>LurchEditor</code> spec</a>.</p>
 <ul>
 <li>Add to the <code>LurchEditor</code> class a pointer that indexes into the
@@ -53,7 +70,7 @@ no.</li>
 the index pointer up and down the stack, calling undo/redo in
 each action as they do so.</li>
 </ul>
-<h1><a name='test-environment'></a>Test environment &nbsp;  <font size=-1><a href='#test-environment'><img src="link.png" class="anchor"></a></font></h1><h2><a name='test-app'></a>Test app &nbsp;  <font size=-1><a href='#test-app'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h2><a name='test-environment'></a>Test environment &nbsp;  <font size=-1><a href='#test-environment'><img src="link.png" class="anchor"></a></font></h2><h3><a name='test-app'></a>Test app &nbsp;  <font size=-1><a href='#test-app'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>Import into the project a UI toolkit such as
 <a href="http://getbootstrap.com">Bootstrap</a>.
 (If you use bootstrap, replace your link png with its link
@@ -67,7 +84,7 @@ editing API calls on any Node in the <code>LurchEditor</code>&#39;s main HTML
 element (could be just a JS eval of the code in an input box).</li>
 <li>Update the source view after every API call.</li>
 </ul>
-<h2><a name='easy-test-generation'></a>Easy test generation &nbsp;  <font size=-1><a href='#easy-test-generation'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h3><a name='easy-test-generation'></a>Easy test generation &nbsp;  <font size=-1><a href='#easy-test-generation'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>Have test app save the state of the model at the start and
 after every API call, as well as storing all API calls, thus
 keeping a full history.  API calls are recorded as the actual
@@ -89,7 +106,7 @@ in <a href="https://daringfireball.net/projects/markdown/">Markdown</a>.</li>
 <li>Categorize the outputs with section headers, etc., imitating
 the structure of the folder hierarchy.</li>
 </ul>
-<h2><a name='better-access-to-automated-testing-results'></a>Better access to automated testing results &nbsp;  <font size=-1><a href='#better-access-to-automated-testing-results'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h3><a name='better-access-to-automated-testing-results'></a>Better access to automated testing results &nbsp;  <font size=-1><a href='#better-access-to-automated-testing-results'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>As part of the <code>cake test</code> procedure, unite the JSON of all
 the saved test histories into one big JSON object and create a
 <code>.js</code> file that assigns that object to a global variable.</li>
@@ -100,7 +117,7 @@ list generated from that variable&#39;s value.</li>
 step at a time and show the expected vs. the actual, with
 differences highlighted.</li>
 </ul>
-<h2><a name='later-when-you-put-the-repository-on-a-server'></a>Later, when you put the repository on a server &nbsp;  <font size=-1><a href='#later-when-you-put-the-repository-on-a-server'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h3><a name='later-when-you-put-the-repository-on-a-server'></a>Later, when you put the repository on a server &nbsp;  <font size=-1><a href='#later-when-you-put-the-repository-on-a-server'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>Have the server nightly do a git pull of the latest version.
 Once that&#39;s working, have it run a shell script that does the
 following.<ul>
@@ -112,7 +129,7 @@ but results).</li>
 </ul>
 </li>
 </ul>
-<h1><a name='more-word-processing-foundation'></a>More Word Processing Foundation &nbsp;  <font size=-1><a href='#more-word-processing-foundation'><img src="link.png" class="anchor"></a></font></h1><h2><a name='events'></a>Events &nbsp;  <font size=-1><a href='#events'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h2><a name='more-word-processing-foundation'></a>More Word Processing Foundation &nbsp;  <font size=-1><a href='#more-word-processing-foundation'><img src="link.png" class="anchor"></a></font></h2><h3><a name='events'></a>Events &nbsp;  <font size=-1><a href='#events'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>Make each call to <code>nodeEditHappened</code> (as well as each call to
 undo or redo in a <code>DOMEditTracker</code>) fire events about which
 address(es) in the DOM (below the tracker&#39;s main HTML element)
@@ -121,7 +138,7 @@ validation features.</li>
 <li>Have the test app update the HTML source view when it hears
 one of those events, rather than after every API call.</li>
 </ul>
-<h2><a name='cursor'></a>Cursor &nbsp;  <font size=-1><a href='#cursor'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h3><a name='cursor'></a>Cursor &nbsp;  <font size=-1><a href='#cursor'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>Build the <code>LurchEditor</code> API for placing a cursor in the
 document, or nowhere, depending on whether the document has
 focus.</li>
@@ -155,7 +172,7 @@ when there is a selection is just delete-then-paste</li>
 <li>As you create each, create tests for it as well, and save
 them in the repository</li>
 </ul>
-<h2><a name='keyboard'></a>Keyboard &nbsp;  <font size=-1><a href='#keyboard'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h3><a name='keyboard'></a>Keyboard &nbsp;  <font size=-1><a href='#keyboard'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>Layer on top of the cursor functions a set of keyboard event
 handlers, which call the cursor functions under the hood.<ul>
 <li>text character = insert text before cursor or replace
@@ -185,7 +202,7 @@ should record the calls it&#39;s sending to that API.
 This may require extending the test
 runner to also use that same API.</li>
 </ul>
-<h2><a name='mouse'></a>Mouse &nbsp;  <font size=-1><a href='#mouse'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h3><a name='mouse'></a>Mouse &nbsp;  <font size=-1><a href='#mouse'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>Should be handled similarly to Up, Home, etc. keys:
 Create an API that sits on top of the low-level cursor API
 and can accept mouse clicks and drags, translating them into
@@ -197,7 +214,7 @@ user clicked</a></li>
 <li><a href="http://stackoverflow.com/a/3710561/670492">How to find the particular character on which the user
 clicked</a></li>
 </ul>
-<h2><a name='load-and-save'></a>Load and save &nbsp;  <font size=-1><a href='#load-and-save'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h3><a name='load-and-save'></a>Load and save &nbsp;  <font size=-1><a href='#load-and-save'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>Add to the main app the ability to load and save documents
 from web storage</li>
 <li>Add the ability to upload and download documents from the
@@ -206,14 +223,14 @@ local machine into/out of web storage</li>
 storage with the world using something like
 <a href="https://www.firebase.com/">Firebase</a> or a custom server.</li>
 </ul>
-<h1><a name='logical-foundation'></a>Logical Foundation &nbsp;  <font size=-1><a href='#logical-foundation'><img src="link.png" class="anchor"></a></font></h1><h2><a name='dependencies'></a>Dependencies &nbsp;  <font size=-1><a href='#dependencies'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h2><a name='logical-foundation'></a>Logical Foundation &nbsp;  <font size=-1><a href='#logical-foundation'><img src="link.png" class="anchor"></a></font></h2><h3><a name='dependencies'></a>Dependencies &nbsp;  <font size=-1><a href='#dependencies'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>Create a way to give a document a title, author, language,
 and version, like we did before.  But perhaps we can drop
 language?  Version?</li>
 <li>Create a way to find a document in the user&#39;s web storage
 based on its URN.</li>
 </ul>
-<h2><a name='math'></a>Math &nbsp;  <font size=-1><a href='#math'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h3><a name='math'></a>Math &nbsp;  <font size=-1><a href='#math'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>Create a button or keystroke that allows you to insert a
 <a href="http://mathquill.com/">MathQuill</a> instance in your document,
 and stores it as a special kind of content.</li>
@@ -230,7 +247,7 @@ to get prettier results.</li>
 MathJax-rendered LaTeX source, with a popup text box, like
 in the Simple Math Editor in the desktop Lurch.</li>
 </ul>
-<h2><a name='groupers'></a>Groupers &nbsp;  <font size=-1><a href='#groupers'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h3><a name='groupers'></a>Groupers &nbsp;  <font size=-1><a href='#groupers'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>(throughout all the to-dos in this category, be sure to
 create unit tests and verify that the test script can handle
 them, to keep all of this honest and solid)</li>
@@ -248,7 +265,7 @@ compute their meanings, don&#39;t modify one another, nothing
 except store a record of the user&#39;s choices for later
 computation by background workers.</li>
 </ul>
-<h2><a name='background-processing'></a>Background processing &nbsp;  <font size=-1><a href='#background-processing'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h3><a name='background-processing'></a>Background processing &nbsp;  <font size=-1><a href='#background-processing'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>Create the structure for running computations in the
 background.  I think it will work like this:<ul>
 <li>Add to the <code>LurchEditor</code> class a list of computations
@@ -284,25 +301,25 @@ still computing stuff or not.<ul>
 </ul>
 </li>
 </ul>
-<h2><a name='background-computation-of-the-property-graph'></a>Background computation of the property graph &nbsp;  <font size=-1><a href='#background-computation-of-the-property-graph'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h3><a name='background-computation-of-the-property-graph'></a>Background computation of the property graph &nbsp;  <font size=-1><a href='#background-computation-of-the-property-graph'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>more detail needed here later</li>
 <li>create unit tests as you go</li>
 </ul>
-<h2><a name='background-computation-of-bubble-meanings'></a>Background computation of bubble meanings &nbsp;  <font size=-1><a href='#background-computation-of-bubble-meanings'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h3><a name='background-computation-of-bubble-meanings'></a>Background computation of bubble meanings &nbsp;  <font size=-1><a href='#background-computation-of-bubble-meanings'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>(yes, that is a huge task that is contingent upon decisions
 about parsing, etc., but simple defaults could be put in
 place to start, such as a sensible interpretation of
 MathQuill content, or simpleLob notation only, or whatever)</li>
 <li>create unit tests as you go</li>
 </ul>
-<h2><a name='background-validation-probably-in-stages'></a>Background validation, probably in stages &nbsp;  <font size=-1><a href='#background-validation-probably-in-stages'><img src="link.png" class="anchor"></a></font></h2><ul>
+<h3><a name='background-validation-probably-in-stages'></a>Background validation, probably in stages &nbsp;  <font size=-1><a href='#background-validation-probably-in-stages'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>(again, first we should check to see if validation was
 redesigned in any important way, including any relevant
 theorems proven based on assumptions that you therefore must
 guarantee hold in your implementation)</li>
 <li>create unit tests as you go</li>
 </ul>
-<h1><a name='for-later'></a>For later &nbsp;  <font size=-1><a href='#for-later'><img src="link.png" class="anchor"></a></font></h1><p>The following unit tests were skipped earlier in development,
+<h2><a name='for-later'></a>For later &nbsp;  <font size=-1><a href='#for-later'><img src="link.png" class="anchor"></a></font></h2><p>The following unit tests were skipped earlier in development,
 because they are less important than the ones that were written,
 and yet are included here for the sake of completeness, and so that
 they are not forgotten.  A complete unit testing suite would have
@@ -327,7 +344,7 @@ how to read a test spec file could learn it from that file.</li>
 
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>
