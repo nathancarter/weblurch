@@ -9,12 +9,12 @@ the same time.  So far the main development on *Lurch* is still in
 the desktop app, at the website just linked to.  If this project
 becomes more promising later, then more development efforts will
 be focused here.
-
-To try any of this code out, see
-[Getting Started](#getting-started), below.
-
-To know what some vague plans are for this repository, see
-[the project plan](plan.md.html).
+ * To know what parts have already been built, see
+   [the Project Progress page](progress.md.html).
+ * To know what parts remain to be done, see
+   [the Project Plan](plan.md.html).
+ * To try any of this code out, see
+   [Getting Started](#getting-started), below.
 
 ## Structure of this repository
 

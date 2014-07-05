@@ -1,15 +1,34 @@
 
 # Project Plan
 
+Readers unfamiliar with this project may wish to first read what's
+already been accomplished, on the [Project Progress](
+progress.md.html) page.  This page is a complement to that one,
+stating what remains to be done.
+
 This document aims to be a complete plan for what needs to be done
-on this project.  It can be viewed as a to-do list in chronological
-order, the first items being those that should be done next, and
-the later items those that must come after.  Necessarily, the later
-items are more vague than the earlier ones.
+on this project, readable by developers.  It can therefore be
+viewed as a to-do list in chronological order, the first items
+being those that should be done next, and the later items those
+that must come after.  Necessarily, the later items are more vague
+than the earlier ones.
 
-# Word Processing Foundation
+## Documentation
 
-## `LurchEditor`
+ * Create a new document called "Project Progress"
+   (`doc/progress.md`) to go along with
+   this one, as a complement to it.
+ * Link to both from the main page, and from each to the other.
+ * Make the Progress document describe, in plain English,
+   everything that *has* been built already, and why, with links
+   to the source code for the classes that implement the
+   functionality described.
+ * It can end with a quick description of the next steps, as a
+   very quick overview of what's in this document, then link to it.
+
+## Word Processing Foundation
+
+### `LurchEditor`
 
 For each of the following features, add tests for them to [the
 `LurchEditor` spec](lurcheditor-spec.litcoffee.html).
@@ -32,9 +51,9 @@ For each of the following features, add tests for them to [the
    the index pointer up and down the stack, calling undo/redo in
    each action as they do so.
 
-# Test environment
+## Test environment
 
-## Test app
+### Test app
 
  * Import into the project a UI toolkit such as
    [Bootstrap](http://getbootstrap.com).
@@ -49,7 +68,7 @@ For each of the following features, add tests for them to [the
    element (could be just a JS eval of the code in an input box).
  * Update the source view after every API call.
 
-## Easy test generation
+### Easy test generation
 
  * Have test app save the state of the model at the start and
    after every API call, as well as storing all API calls, thus
@@ -72,7 +91,7 @@ For each of the following features, add tests for them to [the
  * Categorize the outputs with section headers, etc., imitating
    the structure of the folder hierarchy.
 
-## Better access to automated testing results
+### Better access to automated testing results
 
  * As part of the `cake test` procedure, unite the JSON of all
    the saved test histories into one big JSON object and create a
@@ -84,7 +103,7 @@ For each of the following features, add tests for them to [the
    step at a time and show the expected vs. the actual, with
    differences highlighted.
 
-## Later, when you put the repository on a server
+### Later, when you put the repository on a server
 
  * Have the server nightly do a git pull of the latest version.
    Once that's working, have it run a shell script that does the
@@ -95,9 +114,9 @@ For each of the following features, add tests for them to [the
       from the old in an important way (i.e., not just timings,
       but results).
 
-# More Word Processing Foundation
+## More Word Processing Foundation
 
-## Events
+### Events
 
  * Make each call to `nodeEditHappened` (as well as each call to
    undo or redo in a `DOMEditTracker`) fire events about which
@@ -107,7 +126,7 @@ For each of the following features, add tests for them to [the
  * Have the test app update the HTML source view when it hears
    one of those events, rather than after every API call.
 
-## Cursor
+### Cursor
 
  * Build the `LurchEditor` API for placing a cursor in the
    document, or nowhere, depending on whether the document has
@@ -139,7 +158,7 @@ For each of the following features, add tests for them to [the
  * As you create each, create tests for it as well, and save
    them in the repository
 
-## Keyboard
+### Keyboard
 
  * Layer on top of the cursor functions a set of keyboard event
    handlers, which call the cursor functions under the hood.
@@ -169,7 +188,7 @@ For each of the following features, add tests for them to [the
    This may require extending the test
    runner to also use that same API.
 
-## Mouse
+### Mouse
 
  * Should be handled similarly to Up, Home, etc. keys:
    Create an API that sits on top of the low-level cursor API
@@ -182,7 +201,7 @@ For each of the following features, add tests for them to [the
  * [How to find the particular character on which the user
    clicked](http://stackoverflow.com/a/3710561/670492)
 
-## Load and save
+### Load and save
 
  * Add to the main app the ability to load and save documents
    from web storage
@@ -192,9 +211,9 @@ For each of the following features, add tests for them to [the
    storage with the world using something like
    [Firebase](https://www.firebase.com/) or a custom server.
 
-# Logical Foundation
+## Logical Foundation
 
-## Dependencies
+### Dependencies
 
  * Create a way to give a document a title, author, language,
    and version, like we did before.  But perhaps we can drop
@@ -202,7 +221,7 @@ For each of the following features, add tests for them to [the
  * Create a way to find a document in the user's web storage
    based on its URN.
 
-## Math
+### Math
 
  * Create a button or keystroke that allows you to insert a
    [MathQuill](http://mathquill.com/) instance in your document,
@@ -220,7 +239,7 @@ For each of the following features, add tests for them to [the
    MathJax-rendered LaTeX source, with a popup text box, like
    in the Simple Math Editor in the desktop Lurch.
 
-## Groupers
+### Groupers
 
  * (throughout all the to-dos in this category, be sure to
    create unit tests and verify that the test script can handle
@@ -239,7 +258,7 @@ For each of the following features, add tests for them to [the
    except store a record of the user's choices for later
    computation by background workers.
 
-## Background processing
+### Background processing
 
  * Create the structure for running computations in the
    background.  I think it will work like this:
@@ -270,12 +289,12 @@ For each of the following features, add tests for them to [the
     * web-based test generator
     * web-based test replayer
 
-## Background computation of the property graph
+### Background computation of the property graph
 
  * more detail needed here later
  * create unit tests as you go
 
-## Background computation of bubble meanings
+### Background computation of bubble meanings
 
  * (yes, that is a huge task that is contingent upon decisions
    about parsing, etc., but simple defaults could be put in
@@ -283,7 +302,7 @@ For each of the following features, add tests for them to [the
    MathQuill content, or simpleLob notation only, or whatever)
  * create unit tests as you go
 
-## Background validation, probably in stages
+### Background validation, probably in stages
 
  * (again, first we should check to see if validation was
    redesigned in any important way, including any relevant
@@ -291,7 +310,7 @@ For each of the following features, add tests for them to [the
    guarantee hold in your implementation)
  * create unit tests as you go
 
-# For later
+## For later
 
 The following unit tests were skipped earlier in development,
 because they are less important than the ones that were written,
