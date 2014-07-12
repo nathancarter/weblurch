@@ -13,19 +13,6 @@ being those that should be done next, and the later items those
 that must come after.  Necessarily, the later items are more vague
 than the earlier ones.
 
-## Documentation
-
- * Create a new document called "Project Progress"
-   (`doc/progress.md`) to go along with
-   this one, as a complement to it.
- * Link to both from the main page, and from each to the other.
- * Make the Progress document describe, in plain English,
-   everything that *has* been built already, and why, with links
-   to the source code for the classes that implement the
-   functionality described.
- * It can end with a quick description of the next steps, as a
-   very quick overview of what's in this document, then link to it.
-
 ## Word Processing Foundation
 
 ### `LurchEditor`
