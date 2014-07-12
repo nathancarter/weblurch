@@ -162,7 +162,8 @@ We add `canUndo` and `canRedo` methods to the class that just
 report whether the index pointer isn't at the top or bottom of the
 stack.
 
-(not yet implemented)
+        canUndo: -> @undoRedoStackPointer > 0
+        canRedo: -> @undoRedoStackPointer < @stack.length
 
 We add methods that can describe teh atcions that would take place
 if undo or redo were invoked, returning the empty string if one

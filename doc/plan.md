@@ -26,9 +26,10 @@ For each of the following features, add tests for them to [the
      are completed.
    * If stack pointer is set to middle/start of stack and an edit
      action performed, the stack is appropriately truncated.
- * Add canUndo() and canRedo() methods to the `LurchEditor` class
-   that just report whether the index pointer isn't at the top or
-   bottom of the stack.
+   * `canUndo` method returns true if and only if the stack
+     pointer is above zero.
+   * `canRedo` method returns true if and only if the stack
+     pointer is less than the stack size.`
  * Add methods to `LurchEditor` that can describe the actions that
    would take place if undo or redo were invoked, by calling the
    appropriate methods in the `DOMEditAction` instances.  Return
