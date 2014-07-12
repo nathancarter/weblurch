@@ -48,7 +48,7 @@ domedittracker.litcoffee.html) for more information on the call to
 It initializes the following member variable, discussed below in
 the [undo/redo stack section](#undo-redo-stack).
 
-            @undoRedoStackPointer = 0
+            @stackPointer = 0
 
 It calls `cleanIds` on that DIV to remove from it any ids that
 aren't nonnegative integers.
@@ -153,17 +153,17 @@ equal the stack length, thus preserving the invariant that the
 final action on the stack was the most recently completed one.
 
         nodeEditHappened: ( args... ) ->
-            if @undoRedoStackPointer < @stack.length
-                @stack = @stack[..@undoRedoStackPointer]
+            if @stackPointer < @stack.length
+                @stack = @stack[..@stackPointer]
             super args...
-            @undoRedoStackPointer = @stack.length
+            @stackPointer = @stack.length
 
 We add `canUndo` and `canRedo` methods to the class that just
 report whether the index pointer isn't at the top or bottom of the
 stack.
 
-        canUndo: -> @undoRedoStackPointer > 0
-        canRedo: -> @undoRedoStackPointer < @stack.length
+        canUndo: -> @stackPointer > 0
+        canRedo: -> @stackPointer < @stack.length
 
 We add methods that can describe teh atcions that would take place
 if undo or redo were invoked, returning the empty string if one
