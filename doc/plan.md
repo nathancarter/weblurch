@@ -30,11 +30,14 @@ For each of the following features, add tests for them to [the
      pointer is above zero.
    * `canRedo` method returns true if and only if the stack
      pointer is less than the stack size.`
- * Add methods to `LurchEditor` that can describe the actions that
-   would take place if undo or redo were invoked, by calling the
-   appropriate methods in the `DOMEditAction` instances.  Return
-   the empty string if the right one of canUndo()/canRedo() says
-   no.
+   * `undoDescription` returns a string indicating the undoing of
+     the action before the stack pointer, if one exists
+   * `undoDescription` returns the empty string if there is no
+     action before the stack pointer
+   * `redoDescription` returns a string indicating the redoing of
+     the action at the stack pointer, if one exists
+   * `redoDescription` returns the empty string if there is no
+     action at the stack pointer
  * Add undo and redo methods to the `LurchEditor` class that move
    the index pointer up and down the stack, calling undo/redo in
    each action as they do so.
