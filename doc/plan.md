@@ -20,12 +20,12 @@ than the earlier ones.
 For each of the following features, add tests for them to [the
 `LurchEditor` spec](lurcheditor-spec.litcoffee.html).
 
- * Add to the `LurchEditor` class a pointer that indexes into the
-   `DOMEditAction` stack, pointing to the last-undone action.  If
-   no actions have been undone, then it will equal the stack size.
-   Override `nodeEditHappened` so that before the original version
-   is called, if the pointer is not the stack size, then the stack
-   is truncated to make it so.
+ * Create tests in the [`LurchEditor` spec](
+   lurcheditor-spec.litcoffe.html) for the following features.
+   * Undo/redo stack pointer stays at end of stack as new actions
+     are completed.
+   * If stack pointer is set to middle/start of stack and an edit
+     action performed, the stack is appropriately truncated.
  * Add canUndo() and canRedo() methods to the `LurchEditor` class
    that just report whether the index pointer isn't at the top or
    bottom of the stack.

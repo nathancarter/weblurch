@@ -45,6 +45,11 @@ domedittracker.litcoffee.html) for more information on the call to
         constructor: ( div ) ->
             super div
 
+It initializes the following member variable, discussed below in
+the [undo/redo stack section](#undo-redo-stack).
+
+            @undoRedoStackPointer = 0
+
 It calls `cleanIds` on that DIV to remove from it any ids that
 aren't nonnegative integers.
 
@@ -119,4 +124,55 @@ But if we have no main HTML element, return null.
 We therefore have the guarantee `N == LE.index LE.address N`
 inherited from the address and index functions defined in the Node
 prototype.
+
+## Undo/redo stack
+
+The [DOMEditTracker](domedittracker.litcoffee.html) class (from
+which this class derives) provides an undo/redo stack, but here we
+add some functionality to it.
+
+We add a pointer into the stack, an integer that is one greater
+than the last performed action.  That pointer was initialized in
+[the constructor](#-code-lurcheditor-code-constructor), above.  It
+satisfies the following criteria.
+ * When it equals the stack length, then the last action done is
+   the last action on the stack, and was *not* an "undo."  It was
+   either an action done for teh first time, or was a "redo."
+ * When it is less than the stack length, then the last action
+   done was either an "undo" or a "redo," as the user navigated
+   the undo/redo stack with buttons/keyboard shortcuts/etc.
+
+To preserve these two properties, we implement the following
+features.
+
+We override the `nodeEditHappened` method so that, if needed, it
+truncates the stack to have length equal to the stack pointer
+before using the superclass's implementation to append the latest
+action to that stack.  After doing so, it updates the pointer to
+equal the stack length, thus preserving the invariant that the
+final action on the stack was the most recently completed one.
+
+        nodeEditHappened: ( args... ) ->
+            if @undoRedoStackPointer < @stack.length
+                @stack = @stack[..@undoRedoStackPointer]
+            super args...
+            @undoRedoStackPointer = @stack.length
+
+We add `canUndo` and `canRedo` methods to the class that just
+report whether the index pointer isn't at the top or bottom of the
+stack.
+
+(not yet implemented)
+
+We add methods that can describe teh atcions that would take place
+if undo or redo were invoked, returning the empty string if one
+cannot undo/redo.
+
+(not yet implemented)
+
+We add `undo` and `redo` methods that move the stack pointer while
+calling the `undo` and `redo` methods in the appropriate actions on
+the stack.
+
+(not yet implemented)
 
