@@ -177,9 +177,16 @@ cannot undo/redo.
                 if @stackPointer is @stack.length then '' else
                 @stack[@stackPointer].toString()
 
-We add `undo` and `redo` methods that move the stack pointer while
+We add `undo` and `redo` methods that move the stack pointer after
 calling the `undo` and `redo` methods in the appropriate actions on
 the stack.
 
-(not yet implemented)
+        undo: ->
+            if @stackPointer > 0
+                @stack[@stackPointer - 1].undo()
+                @stackPointer--
+        redo: ->
+            if @stackPointer < @stack.length
+                @stack[@stackPointer].redo()
+                @stackPointer++
 

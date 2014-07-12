@@ -17,30 +17,30 @@ than the earlier ones.
 
 ### `LurchEditor`
 
-For each of the following features, add tests for them to [the
-`LurchEditor` spec](lurcheditor-spec.litcoffee.html).
-
- * Create tests in the [`LurchEditor` spec](
-   lurcheditor-spec.litcoffe.html) for the following features.
-   * Undo/redo stack pointer stays at end of stack as new actions
-     are completed.
-   * If stack pointer is set to middle/start of stack and an edit
-     action performed, the stack is appropriately truncated.
-   * `canUndo` method returns true if and only if the stack
-     pointer is above zero.
-   * `canRedo` method returns true if and only if the stack
-     pointer is less than the stack size.`
-   * `undoDescription` returns a string indicating the undoing of
-     the action before the stack pointer, if one exists
-   * `undoDescription` returns the empty string if there is no
-     action before the stack pointer
-   * `redoDescription` returns a string indicating the redoing of
-     the action at the stack pointer, if one exists
-   * `redoDescription` returns the empty string if there is no
-     action at the stack pointer
- * Add undo and redo methods to the `LurchEditor` class that move
-   the index pointer up and down the stack, calling undo/redo in
-   each action as they do so.
+Create tests in the [`LurchEditor` spec](
+lurcheditor-spec.litcoffe.html) for the following features.
+ * Undo/redo stack pointer stays at end of stack as new actions
+   are completed.
+ * If stack pointer is set to middle/start of stack and an edit
+   action performed, the stack is appropriately truncated.
+ * `canUndo` method returns true if and only if the stack
+   pointer is above zero.
+ * `canRedo` method returns true if and only if the stack
+   pointer is less than the stack size.`
+ * `undoDescription` returns a string indicating the undoing of
+   the action before the stack pointer, if one exists
+ * `undoDescription` returns the empty string if there is no
+   action before the stack pointer
+ * `redoDescription` returns a string indicating the redoing of
+   the action at the stack pointer, if one exists
+ * `redoDescription` returns the empty string if there is no
+   action at the stack pointer
+ * `undo` functions if and only if there is an action to undo
+ * When `undo` applies, it undoes the action before the stack
+   pointer and decrements that pointer.
+ * `redo` functions if and only if there is an action to redo
+ * When `redo` applies, it redoes the action at the stack
+   pointer and increments that pointer.
 
 ## Test environment
 
