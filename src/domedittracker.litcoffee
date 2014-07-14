@@ -114,7 +114,7 @@ class.  If it is not, it is ignored.
         nodeEditHappened: ( action ) ->
             if action not instanceof DOMEditAction then return
             if @stackPointer < @stack.length
-                @stack = @stack[..@stackPointer]
+                @stack = @stack[...@stackPointer]
             @stack.push action
             @stackPointer = @stack.length
 

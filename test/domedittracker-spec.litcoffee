@@ -284,3 +284,53 @@ nothing happens.
                     [ 0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 3, 3 ]
                 done()
 
+### should truncate if needed
+
+        it 'should truncate if needed', ( done ) =>
+
+When we call `nodeEditHappened` in the `DOMEditTracker` instance,
+if the stack pointer is *not* at the end of the stack, then the
+stack should be truncated to make the stack pointer equal to the
+stack size before appending the new edit actions.
+
+            @page.evaluate ->
+
+Create the objects needed to run the test.
+
+                div = document.createElement 'div'
+                document.body.appendChild div
+                D = new DOMEditTracker div
+
+Set up the stack with three actions in it, and add to a results
+array the size of the stack and value of the pointer, to verify
+that all three were added successfully.  Also record the type of
+the most recent action on the stack.
+
+                D.nodeEditHappened new DOMEditAction \
+                    'setAttribute', div, 'key', 'value'
+                D.nodeEditHappened new DOMEditAction \
+                    'setAttribute', div, 'key2', 'value2'
+                span = document.createElement 'span'
+                D.nodeEditHappened new DOMEditAction 'appendChild',
+                    div, span
+                result = []
+                result.push D.stack.length
+                result.push D.stackPointer
+                result.push D.stack[D.stack.length - 1].type
+
+Push the stack pointer back by one, then record a new action, and
+verify that the stack has not grown, but that the new most recent
+action is of the new type.
+
+                D.stackPointer--
+                D.nodeEditHappened new DOMEditAction 'normalize',
+                    div
+                result.push D.stack.length
+                result.push D.stackPointer
+                result.push D.stack[D.stack.length - 1].type
+                result
+            , ( err, result ) ->
+                expect( result ).toEqual \
+                    [ 3, 3, 'appendChild', 3, 3, 'normalize' ]
+                done()
+
