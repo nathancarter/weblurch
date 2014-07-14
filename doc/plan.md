@@ -194,13 +194,48 @@ lurcheditor-spec.litcoffe.html) for the following features.
 
 ### Load and save
 
- * Add to the main app the ability to load and save documents
-   from web storage
- * Add the ability to upload and download documents from the
-   local machine into/out of web storage
- * Add the ability to share documents that are in your web
-   storage with the world using something like
-   [Firebase](https://www.firebase.com/) or a custom server.
+ * Before executing any of the tasks in this section, first look
+   ahead to the [Dependencies](#dependencies) section, below.  It
+   has requirements that will require you to be careful *here*
+   about your design decisions.  Ensure that a sensible design for
+   loading, saving, sharing, and dependency loading is in place
+   before proceeding to implement any of the load/save features in
+   this section.
+ * Research the notion of using Dropbox as a data storage
+   location; it may impact how you proceed with the other tasks in
+   this section, below.  Here are some details:
+   * [You can use ready-made open and save dialogs.](
+     https://www.dropbox.com/developers/dropins)
+     This may be the best for us, since it's minimally invasive
+     and may handle what we need.  Not sure how it would work with
+     (a) the settings file or (b) dependencies.
+   * [You can store tables that are a JSON-SQL hybrid.](
+     https://www.dropbox.com/developers/datastore)
+     This is quite general, but also comes with increased
+     complexity over the previous option.  It is not, however,
+     really that complex.
+   * A bonus on top of the previous bullet point is that
+     [recent, bleeding-edge changes in the API](
+     https://www.dropbox.com/developers/blog/99/using-the-new-local-datastores-feature)
+     make it possible to use one codebase for both local storage
+     and Dropbox storage, a very attractive option.
+ * Implement the following needs.
+   * The main app must be able to load and save documents at least
+     locally (e.g.,
+     [Web Storage](http://www.w3schools.com/html/html5_webstorage.asp))
+     but preferably everywhere (e.g., Dropbox, as described above)
+   * If Dropbox is not used, and thus the user's files are not
+     present on their own local machine, provide a way for the
+     user to load/save files into/out of web storage?
+ * Add the ability to share documents with the world, using
+   something like [Firebase](https://www.firebase.com/), or making
+   Dropbox files shared, if the API supports that.
+ * Make there be a way to share files as webpages as well,
+   read-only pages that contain full meaning information.  This way
+   instructors can post on their websites (or Lurch can post on its
+   project web space) core dependencies that anyone can use, and
+   the integrity of a course (or the whole Lurch project!) is not
+   dependent on the state of any individual's Dropbox folder.
 
 ## Logical Foundation
 
@@ -209,8 +244,11 @@ lurcheditor-spec.litcoffe.html) for the following features.
  * Create a way to give a document a title, author, language,
    and version, like we did before.  But perhaps we can drop
    language?  Version?
- * Create a way to find a document in the user's web storage
+ * Create a way to find a document in the user's web storage or
+   anywhere online (Firebase, web, Dropbox public folder, etc.)
    based on its URN.
+ * Cache such files in local/Dropbox storage, so that Lurch is
+   usable offline.
 
 ### Math
 
