@@ -45,9 +45,12 @@ Otherwise, store the DIV they passed for later reference.
             @element = div
 
 In either case, initialize the internal undo/redo stack of
-`DOMEditAction` instances to be empty.
+`DOMEditAction` instances to be empty, with a stack pointer of
+zero.  (Documentation on how this stack pointer behaves appears in
+the [undo/redo stack section](#undo-redo-stack), below.)
 
             @stack = []
+            @stackPointer = 0
 
 And add this newly created instance to the list of all instances.
 
@@ -78,17 +81,72 @@ following method.
 
         clearStack: -> @stack = []
 
-## Events
+## Undo/redo stack
+
+The stack pointer initialized in the [constructor](#constructor) is
+an integer that is one greater than the index of the last performed
+action.  It satisfies the following criteria.
+ * When it equals the stack length, then the last action done is
+   the last action on the stack, and was *not* an "undo."  It was
+   either an action done for the first time, or was a "redo."
+ * When it is less than the stack length, then the last action
+   done was either an "undo" or a "redo," as the user navigated
+   the undo/redo stack with buttons/keyboard shortcuts/etc.
+
+To preserve these two properties, we implement the following
+features.
 
 When any editing takes place inside the DOM tree watched by an
-instance of this class, then the instance will want to be notified
-of it.  We therefore provide this method by which it can be
-notified.
+instance of this class, the instance needs to be notified of it.
+We therefore provide this method by which it can be notified.
+
+It not only pushes the action onto the undo/redo stack, but,
+if needed, it also truncates the stack to have length equal to the
+stack pointer before using the superclass's implementation to
+append the latest action to that stack.  After doing so, it updates
+the pointer to equal the stack length, thus preserving the
+invariant that the final action on the stack was the most recently
+completed one.
 
 The one parameter should be an instance of the `DOMEditAction`
 class.  If it is not, it is ignored.
 
         nodeEditHappened: ( action ) ->
-            if action instanceof DOMEditAction
-                @stack.push action
+            if action not instanceof DOMEditAction then return
+            if @stackPointer < @stack.length
+                @stack = @stack[..@stackPointer]
+            @stack.push action
+            @stackPointer = @stack.length
+
+We add `canUndo` and `canRedo` methods to the class that just
+report whether the stack pointer isn't at the top or bottom of the
+stack.
+
+        canUndo: -> @stackPointer > 0
+        canRedo: -> @stackPointer < @stack.length
+
+We add methods that can describe the atcions that would take place
+if undo or redo were invoked, returning the empty string if one
+cannot undo/redo.
+
+        undoDescription: ->
+            return 'Undo' + if @stackPointer is 0 then '' else
+                @stack[@stackPointer - 1].toString()
+        redoDescription: ->
+            return 'Redo ' +
+                if @stackPointer is @stack.length then '' else
+                @stack[@stackPointer].toString()
+
+We add `undo` and `redo` methods that move the stack pointer after
+calling the `undo` and `redo` methods in the appropriate actions on
+the stack.
+
+        undo: ->
+            if @stackPointer > 0
+                @stack[@stackPointer - 1].undo()
+                @stackPointer--
+        redo: ->
+            if @stackPointer < @stack.length
+                @stack[@stackPointer].redo()
+                @stackPointer++
 

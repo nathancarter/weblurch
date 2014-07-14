@@ -15,10 +15,10 @@ than the earlier ones.
 
 ## Word Processing Foundation
 
-### `LurchEditor`
+### Undo/redo stack
 
-Create tests in the [`LurchEditor` spec](
-lurcheditor-spec.litcoffe.html) for the following features.
+Create tests in the [`DOMEditTracker` spec](
+domedittracker-spec.litcoffe.html) for the following features.
  * Undo/redo stack pointer stays at end of stack as new actions
    are completed.
  * If stack pointer is set to middle/start of stack and an edit
