@@ -19,8 +19,6 @@ than the earlier ones.
 
 Create tests in the [`DOMEditTracker` spec](
 domedittracker-spec.litcoffe.html) for the following features.
- * Undo/redo stack pointer stays at end of stack as new actions
-   are completed.
  * If stack pointer is set to middle/start of stack and an edit
    action performed, the stack is appropriately truncated.
  * `canUndo` method returns true if and only if the stack

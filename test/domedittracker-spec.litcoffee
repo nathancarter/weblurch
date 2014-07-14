@@ -215,3 +215,72 @@ Construct the `DOMEditTracker` instance around the div, as before.
                 expect( result ).toBeTruthy()
                 done()
 
+## The undo/redo stack
+
+The tests in this section concern all functions related to the
+undo/redo stack maintained by a `DOMEditTracker` instance.
+See the documentation in [the DOMEditTracker source code](
+domedittracker.litcoffee.html#undo-redo-stack) for information
+about each function to be tested below, or just read the tests
+themselves.
+
+    phantomDescribe 'The undo/redo stack', './app/index.html', ->
+
+### should grow when nodeEditHappened
+
+        it 'should grow when nodeEditHappened', ( done ) =>
+
+When we call `nodeEditHappened` in the `DOMEditTracker` instance,
+we require the undo/redo stack to grow, and the stack pointer to
+continue to be equal to the size of the stack.
+
+            @page.evaluate ->
+
+Create the objects needed to run the test.
+
+                div = document.createElement 'div'
+                document.body.appendChild div
+                span1 = document.createElement 'span'
+                span2 = document.createElement 'span'
+                span3 = document.createElement 'span'
+                D = new DOMEditTracker div
+
+Build a result array that will record the stack length and stack
+pointer value at various steps throughout the test.  Add the
+initial values of those data.
+
+                result = []
+                result.push D.stack.length
+                result.push D.stackPointer
+
+Create a few editing actions and add them to the stack, recording
+the new stack size and pointer value each time.
+
+                D.nodeEditHappened new DOMEditAction 'appendChild',
+                    div, span1
+                result.push D.stack.length
+                result.push D.stackPointer
+                D.nodeEditHappened new DOMEditAction 'appendChild',
+                    div, span2
+                result.push D.stack.length
+                result.push D.stackPointer
+                D.nodeEditHappened new DOMEditAction 'appendChild',
+                    div, span3
+                result.push D.stack.length
+                result.push D.stackPointer
+
+Now try to add two invalid actions, so that we can test that
+nothing happens.
+
+                D.nodeEditHappened null
+                result.push D.stack.length
+                result.push D.stackPointer
+                D.nodeEditHappened 'not an edit action'
+                result.push D.stack.length
+                result.push D.stackPointer
+                result
+            , ( err, result ) ->
+                expect( result ).toEqual \
+                    [ 0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 3, 3 ]
+                done()
+
