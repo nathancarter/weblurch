@@ -87,10 +87,10 @@ the original value of the attribute beforehand</li>
 </li>
 <li><code>N.setAttributeNode(attrNode)</code><ul>
 <li>returns replaced node if any, otherwise null</li>
-<li>e.g.:
-<code>var atr=document.createAttribute(&quot;class&quot;);
-atr.nodeValue=&quot;democlass&quot;;
-myDiv.setAttributeNode(atr);</code></li>
+<li>E.g.: <br>
+<code>atr = document.createAttribute &#39;class&#39;</code> <br>
+<code>atr.nodeValue = &#39;democlass&#39;</code> <br>
+<code>myDiv.setAttributeNode atr</code></li>
 <li>event contains <code>N</code>&#39;s address, the name and value of the
 attribute after setting, as well as the original value of the
 attribute beforehand</li>
@@ -322,7 +322,9 @@ the output are on the following list.</p>
          <span class="hljs-string">"Replace <span class="hljs-subst">#{orig}</span> with <span class="hljs-subst">#{repl}</span>"</span>
      <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'setAttribute'</span> <span class="hljs-keyword">or</span>
              <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'setAttributeNode'</span>
-         <span class="hljs-string">"Change <span class="hljs-subst">#{<span class="hljs-property">@name</span>}</span> from <span class="hljs-subst">#{<span class="hljs-property">@oldValue</span>}</span> to <span class="hljs-subst">#{<span class="hljs-property">@newValue</span>}</span>"</span>
+         oldv = <span class="hljs-property">@oldValue</span> <span class="hljs-keyword">or</span> <span class="hljs-string">'empty'</span>
+         newv = <span class="hljs-property">@newValue</span> <span class="hljs-keyword">or</span> <span class="hljs-string">'empty'</span>
+         <span class="hljs-string">"Change <span class="hljs-subst">#{<span class="hljs-property">@name</span>}</span> from <span class="hljs-subst">#{oldv}</span> to <span class="hljs-subst">#{newv}</span>"</span>
 </code></pre></li>
 </ul>
 <p>An error message is returned as a string if none of the nine valid
@@ -369,7 +371,7 @@ that purpose.  Also, it gives a nice symmetry with <code>undo</code>.</p>
 event was created.  Its address within the containing
 <code>DOMEditTracker</code> is stored in our <code>node</code> field, so we find it that
 way.</p>
-<pre class="hljs"><code>        original = <span class="hljs-property">@tracker</span>.index <span class="hljs-property">@node</span>
+<pre class="hljs"><code>        original = <span class="hljs-property">@tracker</span>.getElement().index <span class="hljs-property">@node</span>
 </code></pre><p>Now we consider each possible action type separately, in a big
 <code>if</code>-<code>else</code> clause, as in the <code>toString</code> method, above.</p>
 <p>In the case of &quot;appendChild&quot;, we simply unserialize the stored
@@ -423,7 +425,7 @@ just built above, which is liberally commented.  Refer to the
 routine above for more detailed explanations of each part below.</p>
 <pre class="hljs"><code>    <span class="hljs-attribute">undo</span>:<span class="hljs-function"> -&gt;</span>
 </code></pre><p>As above, compute the original &quot;<code>this</code>&quot; node.</p>
-<pre class="hljs"><code>        original = <span class="hljs-property">@tracker</span>.index <span class="hljs-property">@node</span>
+<pre class="hljs"><code>        original = <span class="hljs-property">@tracker</span>.getElement().index <span class="hljs-property">@node</span>
 </code></pre><p>The inverse of &quot;appendChild&quot; is to remove the last child.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'appendChild'</span>
             original.removeChild original.childNodes[ \

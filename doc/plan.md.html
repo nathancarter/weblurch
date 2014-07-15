@@ -17,8 +17,6 @@
         <div id="left">
             <p align=center>Page contents</p>
 <p><a href='#project-plan'>Project Plan</a></p><ul>
-<li><a href='#documentation'>Documentation</a></li><li><a href='#word-processing-foundation'>Word Processing Foundation</a></li><ul>
-<li><a href='#-code-lurcheditor-code-'><code>LurchEditor</code></a></li></ul>
 <li><a href='#test-environment'>Test environment</a></li><ul>
 <li><a href='#test-app'>Test app</a></li><li><a href='#easy-test-generation'>Easy test generation</a></li><li><a href='#better-access-to-automated-testing-results'>Better access to automated testing results</a></li><li><a href='#later-when-you-put-the-repository-on-a-server'>Later, when you put the repository on a server</a></li></ul>
 <li><a href='#more-word-processing-foundation'>More Word Processing Foundation</a></li><ul>
@@ -37,39 +35,6 @@ viewed as a to-do list in chronological order, the first items
 being those that should be done next, and the later items those
 that must come after.  Necessarily, the later items are more vague
 than the earlier ones.</p>
-<h2><a name='documentation'></a>Documentation &nbsp;  <font size=-1><a href='#documentation'><img src="link.png" class="anchor"></a></font></h2><ul>
-<li>Create a new document called &quot;Project Progress&quot;
-(<code>doc/progress.md</code>) to go along with
-this one, as a complement to it.</li>
-<li>Link to both from the main page, and from each to the other.</li>
-<li>Make the Progress document describe, in plain English,
-everything that <em>has</em> been built already, and why, with links
-to the source code for the classes that implement the
-functionality described.</li>
-<li>It can end with a quick description of the next steps, as a
-very quick overview of what&#39;s in this document, then link to it.</li>
-</ul>
-<h2><a name='word-processing-foundation'></a>Word Processing Foundation &nbsp;  <font size=-1><a href='#word-processing-foundation'><img src="link.png" class="anchor"></a></font></h2><h3><a name='-code-lurcheditor-code-'></a><code>LurchEditor</code> &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-'><img src="link.png" class="anchor"></a></font></h3><p>For each of the following features, add tests for them to <a href="lurcheditor-spec.litcoffee.html">the
-<code>LurchEditor</code> spec</a>.</p>
-<ul>
-<li>Add to the <code>LurchEditor</code> class a pointer that indexes into the
-<code>DOMEditAction</code> stack, pointing to the last-undone action.  If
-no actions have been undone, then it will equal the stack size.
-Override <code>nodeEditHappened</code> so that before the original version
-is called, if the pointer is not the stack size, then the stack
-is truncated to make it so.</li>
-<li>Add canUndo() and canRedo() methods to the <code>LurchEditor</code> class
-that just report whether the index pointer isn&#39;t at the top or
-bottom of the stack.</li>
-<li>Add methods to <code>LurchEditor</code> that can describe the actions that
-would take place if undo or redo were invoked, by calling the
-appropriate methods in the <code>DOMEditAction</code> instances.  Return
-the empty string if the right one of canUndo()/canRedo() says
-no.</li>
-<li>Add undo and redo methods to the <code>LurchEditor</code> class that move
-the index pointer up and down the stack, calling undo/redo in
-each action as they do so.</li>
-</ul>
 <h2><a name='test-environment'></a>Test environment &nbsp;  <font size=-1><a href='#test-environment'><img src="link.png" class="anchor"></a></font></h2><h3><a name='test-app'></a>Test app &nbsp;  <font size=-1><a href='#test-app'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>Import into the project a UI toolkit such as
 <a href="http://getbootstrap.com">Bootstrap</a>.
@@ -215,20 +180,59 @@ user clicked</a></li>
 clicked</a></li>
 </ul>
 <h3><a name='load-and-save'></a>Load and save &nbsp;  <font size=-1><a href='#load-and-save'><img src="link.png" class="anchor"></a></font></h3><ul>
-<li>Add to the main app the ability to load and save documents
-from web storage</li>
-<li>Add the ability to upload and download documents from the
-local machine into/out of web storage</li>
-<li>Add the ability to share documents that are in your web
-storage with the world using something like
-<a href="https://www.firebase.com/">Firebase</a> or a custom server.</li>
+<li>Before executing any of the tasks in this section, first look
+ahead to the <a href="#dependencies">Dependencies</a> section, below.  It
+has requirements that will require you to be careful <em>here</em>
+about your design decisions.  Ensure that a sensible design for
+loading, saving, sharing, and dependency loading is in place
+before proceeding to implement any of the load/save features in
+this section.</li>
+<li>Research the notion of using Dropbox as a data storage
+location; it may impact how you proceed with the other tasks in
+this section, below.  Here are some details:<ul>
+<li><a href="https://www.dropbox.com/developers/dropins">You can use ready-made open and save dialogs.</a>
+This may be the best for us, since it&#39;s minimally invasive
+and may handle what we need.  Not sure how it would work with
+(a) the settings file or (b) dependencies.</li>
+<li><a href="https://www.dropbox.com/developers/datastore">You can store tables that are a JSON-SQL hybrid.</a>
+This is quite general, but also comes with increased
+complexity over the previous option.  It is not, however,
+really that complex.</li>
+<li>A bonus on top of the previous bullet point is that
+<a href="https://www.dropbox.com/developers/blog/99/using-the-new-local-datastores-feature">recent, bleeding-edge changes in the API</a>
+make it possible to use one codebase for both local storage
+and Dropbox storage, a very attractive option.</li>
+</ul>
+</li>
+<li>Implement the following needs.<ul>
+<li>The main app must be able to load and save documents at least
+locally (e.g.,
+<a href="http://www.w3schools.com/html/html5_webstorage.asp">Web Storage</a>)
+but preferably everywhere (e.g., Dropbox, as described above)</li>
+<li>If Dropbox is not used, and thus the user&#39;s files are not
+present on their own local machine, provide a way for the
+user to load/save files into/out of web storage?</li>
+</ul>
+</li>
+<li>Add the ability to share documents with the world, using
+something like <a href="https://www.firebase.com/">Firebase</a>, or making
+Dropbox files shared, if the API supports that.</li>
+<li>Make there be a way to share files as webpages as well,
+read-only pages that contain full meaning information.  This way
+instructors can post on their websites (or Lurch can post on its
+project web space) core dependencies that anyone can use, and
+the integrity of a course (or the whole Lurch project!) is not
+dependent on the state of any individual&#39;s Dropbox folder.</li>
 </ul>
 <h2><a name='logical-foundation'></a>Logical Foundation &nbsp;  <font size=-1><a href='#logical-foundation'><img src="link.png" class="anchor"></a></font></h2><h3><a name='dependencies'></a>Dependencies &nbsp;  <font size=-1><a href='#dependencies'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>Create a way to give a document a title, author, language,
 and version, like we did before.  But perhaps we can drop
 language?  Version?</li>
-<li>Create a way to find a document in the user&#39;s web storage
+<li>Create a way to find a document in the user&#39;s web storage or
+anywhere online (Firebase, web, Dropbox public folder, etc.)
 based on its URN.</li>
+<li>Cache such files in local/Dropbox storage, so that Lurch is
+usable offline.</li>
 </ul>
 <h3><a name='math'></a>Math &nbsp;  <font size=-1><a href='#math'><img src="link.png" class="anchor"></a></font></h3><ul>
 <li>Create a button or keystroke that allows you to insert a

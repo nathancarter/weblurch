@@ -22,7 +22,9 @@
 <li><a href='#domedittracker-instances-without-divs'>DOMEditTracker instances without DIVs</a></li><ul>
 <li><a href='#should-return-a-null-element'>should return a null element</a></li></ul>
 <li><a href='#domedittracker-instances-with-divs'>DOMEditTracker instances with DIVs</a></li><ul>
-<li><a href='#should-return-the-correct-div'>should return the correct div</a></li>
+<li><a href='#should-return-the-correct-div'>should return the correct div</a></li></ul>
+<li><a href='#the-undo-redo-stack'>The undo/redo stack</a></li><ul>
+<li><a href='#should-grow-when-nodeedithappened'>should grow when nodeEditHappened</a></li><li><a href='#should-truncate-if-needed'>should truncate if needed</a></li><li><a href='#handles-canundo-canredo-correctly'>handles canUndo/canRedo correctly</a></li><li><a href='#gives-good-undo-redo-descriptions'>gives good undo/redo descriptions</a></li><li><a href='#performs-undo-redo-in-the-correct-order'>performs undo/redo in the correct order</a></li>
         </div>
         <div id="middle">
             <h1><a name='tests-for-the-code-domedittracker-code-class'></a>Tests for the <code>DOMEditTracker</code> class &nbsp; <font size=-1><a href='test-results.md.html#tests-for-the-code-domedittracker-code-class'>see results</a></font> <font size=-1><a href='#tests-for-the-code-domedittracker-code-class'><img src="link.png" class="anchor"></a></font></h1><p>This file contains the specifications for tests of the
@@ -182,6 +184,308 @@ return null from its <code>getElement</code> method.</p>
             div <span class="hljs-keyword">is</span> D.getElement()
         , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
             expect( result ).toBeTruthy()
+            done()
+</code></pre><h2><a name='the-undo-redo-stack'></a>The undo/redo stack &nbsp; <font size=-1><a href='test-results.md.html#the-undo-redo-stack'>see results</a></font> <font size=-1><a href='#the-undo-redo-stack'><img src="link.png" class="anchor"></a></font></h2><p>The tests in this section concern all functions related to the
+undo/redo stack maintained by a <code>DOMEditTracker</code> instance.
+See the documentation in <a href="domedittracker.litcoffee.html#undo-redo-stack">the DOMEditTracker source code</a> for information
+about each function to be tested below, or just read the tests
+themselves.</p>
+<pre class="hljs"><code>phantomDescribe <span class="hljs-string">'The undo/redo stack'</span>, <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
+</code></pre><h3><a name='should-grow-when-nodeedithappened'></a>should grow when nodeEditHappened &nbsp; <font size=-1><a href='test-results.md.html#should-grow-when-nodeedithappened'>see results</a></font> <font size=-1><a href='#should-grow-when-nodeedithappened'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should grow when nodeEditHappened'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+</code></pre><p>When we call <code>nodeEditHappened</code> in the <code>DOMEditTracker</code> instance,
+we require the undo/redo stack to grow, and the stack pointer to
+continue to be equal to the size of the stack.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Create the objects needed to run the test.</p>
+<pre class="hljs"><code>            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">document</span>.body.appendChild div
+            span1 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span3 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            D = <span class="hljs-keyword">new</span> DOMEditTracker div
+</code></pre><p>Build a result array that will record the stack length and stack
+pointer value at various steps throughout the test.  Add the
+initial values of those data.</p>
+<pre class="hljs"><code>            result = []
+            result.push D.stack.length
+            result.push D.stackPointer
+</code></pre><p>Create a few editing actions and add them to the stack, recording
+the new stack size and pointer value each time.</p>
+<pre class="hljs"><code>            D.nodeEditHappened <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'appendChild'</span>,
+                div, span1
+            result.push D.stack.length
+            result.push D.stackPointer
+            D.nodeEditHappened <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'appendChild'</span>,
+                div, span2
+            result.push D.stack.length
+            result.push D.stackPointer
+            D.nodeEditHappened <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'appendChild'</span>,
+                div, span3
+            result.push D.stack.length
+            result.push D.stackPointer
+</code></pre><p>Now try to add two invalid actions, so that we can test that
+nothing happens.</p>
+<pre class="hljs"><code>            D.nodeEditHappened <span class="hljs-literal">null</span>
+            result.push D.stack.length
+            result.push D.stackPointer
+            D.nodeEditHappened <span class="hljs-string">'not an edit action'</span>
+            result.push D.stack.length
+            result.push D.stackPointer
+            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toEqual \
+                [ <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">3</span>, <span class="hljs-number">3</span>, <span class="hljs-number">3</span>, <span class="hljs-number">3</span>, <span class="hljs-number">3</span> ]
+            done()
+</code></pre><h3><a name='should-truncate-if-needed'></a>should truncate if needed &nbsp; <font size=-1><a href='test-results.md.html#should-truncate-if-needed'>see results</a></font> <font size=-1><a href='#should-truncate-if-needed'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should truncate if needed'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+</code></pre><p>When we call <code>nodeEditHappened</code> in the <code>DOMEditTracker</code> instance,
+if the stack pointer is <em>not</em> at the end of the stack, then the
+stack should be truncated to make the stack pointer equal to the
+stack size before appending the new edit actions.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Create the objects needed to run the test.</p>
+<pre class="hljs"><code>            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">document</span>.body.appendChild div
+            D = <span class="hljs-keyword">new</span> DOMEditTracker div
+</code></pre><p>Set up the stack with three actions in it, and add to a results
+array the size of the stack and value of the pointer, to verify
+that all three were added successfully.  Also record the type of
+the most recent action on the stack.</p>
+<pre class="hljs"><code>            D.nodeEditHappened <span class="hljs-keyword">new</span> DOMEditAction \
+                <span class="hljs-string">'setAttribute'</span>, div, <span class="hljs-string">'key'</span>, <span class="hljs-string">'value'</span>
+            D.nodeEditHappened <span class="hljs-keyword">new</span> DOMEditAction \
+                <span class="hljs-string">'setAttribute'</span>, div, <span class="hljs-string">'key2'</span>, <span class="hljs-string">'value2'</span>
+            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            D.nodeEditHappened <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'appendChild'</span>,
+                div, span
+            result = []
+            result.push D.stack.length
+            result.push D.stackPointer
+            result.push D.stack[D.stack.length - <span class="hljs-number">1</span>].type
+</code></pre><p>Push the stack pointer back by one, then record a new action, and
+verify that the stack has not grown, but that the new most recent
+action is of the new type.</p>
+<pre class="hljs"><code>            D.stackPointer--
+            D.nodeEditHappened <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'normalize'</span>,
+                div
+            result.push D.stack.length
+            result.push D.stackPointer
+            result.push D.stack[D.stack.length - <span class="hljs-number">1</span>].type
+            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toEqual \
+                [ <span class="hljs-number">3</span>, <span class="hljs-number">3</span>, <span class="hljs-string">'appendChild'</span>, <span class="hljs-number">3</span>, <span class="hljs-number">3</span>, <span class="hljs-string">'normalize'</span> ]
+            done()
+</code></pre><h3><a name='handles-canundo-canredo-correctly'></a>handles canUndo/canRedo correctly &nbsp; <font size=-1><a href='test-results.md.html#handles-canundo-canredo-correctly'>see results</a></font> <font size=-1><a href='#handles-canundo-canredo-correctly'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'handles canUndo/canRedo correctly'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+</code></pre><p>The <code>canUndo</code> and <code>canRedo</code> member functions of a <code>DOMEditTracker</code>
+instance should return true if and only if the stack pointer is at
+a location that permits undo/redo, respectively.  In particular,
+one can call undo if and only if the stack pointer is not at the
+bottom (zero) and can call redo if and only if it is not at the end
+(the stack size).  This test verifies this if-and-only-ifs.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Create the objects needed to run the test.</p>
+<pre class="hljs"><code>            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">document</span>.body.appendChild div
+            D = <span class="hljs-keyword">new</span> DOMEditTracker div
+</code></pre><p>Set up the stack with three actions in it.</p>
+<pre class="hljs"><code>            D.nodeEditHappened <span class="hljs-keyword">new</span> DOMEditAction \
+                <span class="hljs-string">'setAttribute'</span>, div, <span class="hljs-string">'key'</span>, <span class="hljs-string">'value'</span>
+            D.nodeEditHappened <span class="hljs-keyword">new</span> DOMEditAction \
+                <span class="hljs-string">'setAttribute'</span>, div, <span class="hljs-string">'key2'</span>, <span class="hljs-string">'value2'</span>
+            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            D.nodeEditHappened <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'appendChild'</span>,
+                div, span
+</code></pre><p>Verify that the stack pointer is at the end, and that we cannot
+&quot;redo&quot; from there, but we can &quot;undo.&quot;  (Here we just push the
+return values of <code>canUndo</code> and <code>canRedo</code> onto the results array,
+and will check their values below.)</p>
+<pre class="hljs"><code>            result = []
+            result.push D.stackPointer
+            result.push D.canRedo()
+            result.push D.canUndo()
+</code></pre><p>Move the stack pointer down the stack, and verify that at each of
+its next two locations, both undo and redo are available.</p>
+<pre class="hljs"><code>            D.stackPointer--
+            result.push D.stackPointer
+            result.push D.canRedo()
+            result.push D.canUndo()
+            D.stackPointer--
+            result.push D.stackPointer
+            result.push D.canRedo()
+            result.push D.canUndo()
+</code></pre><p>Move the stack pointer down one more step, which should be to the
+bottom, and verify that we can redo but cannot undo.</p>
+<pre class="hljs"><code>            D.stackPointer--
+            result.push D.stackPointer
+            result.push D.canRedo()
+            result.push D.canUndo()
+            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toEqual \
+                [ <span class="hljs-number">3</span>, <span class="hljs-literal">false</span>, <span class="hljs-literal">true</span>, <span class="hljs-number">2</span>, <span class="hljs-literal">true</span>, <span class="hljs-literal">true</span>,
+                  <span class="hljs-number">1</span>, <span class="hljs-literal">true</span>, <span class="hljs-literal">true</span>, <span class="hljs-number">0</span>, <span class="hljs-literal">true</span>, <span class="hljs-literal">false</span> ]
+            done()
+</code></pre><h3><a name='gives-good-undo-redo-descriptions'></a>gives good undo/redo descriptions &nbsp; <font size=-1><a href='test-results.md.html#gives-good-undo-redo-descriptions'>see results</a></font> <font size=-1><a href='#gives-good-undo-redo-descriptions'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'gives good undo/redo descriptions'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+</code></pre><p>The <code>undoDescription</code> and <code>redoDescription</code> member functions of a
+<code>DOMEditTracker</code> instance should return descriptions of the actions
+that would be taken if undo/redo were called (respectively).  This
+test verifies, for various locations of the stack pointer in a
+stack of three different types of actions, that the undo and redo
+descriptiosn are as they should be.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Create the objects needed to run the test.</p>
+<pre class="hljs"><code>            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">document</span>.body.appendChild div
+            D = <span class="hljs-keyword">new</span> DOMEditTracker div
+            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+</code></pre><p>Set up the stack with three actions in it.</p>
+<pre class="hljs"><code>            D.nodeEditHappened <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'appendChild'</span>,
+                div, span
+            D.nodeEditHappened <span class="hljs-keyword">new</span> DOMEditAction \
+                <span class="hljs-string">'setAttribute'</span>, div, <span class="hljs-string">'key'</span>, <span class="hljs-string">'value'</span>
+            D.nodeEditHappened <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'normalize'</span>,
+                div
+</code></pre><p>Store on the results array, for later checking against expected
+values, the stack pointer value and the undo/redo descriptions.</p>
+<pre class="hljs"><code>            result = []
+            result.push D.stackPointer
+            result.push D.undoDescription()
+            result.push D.redoDescription()
+</code></pre><p>Move the stack pointer down the stack three times (which should put
+it at the bottom) and at each position, record the same data as
+above.</p>
+<pre class="hljs"><code>            D.stackPointer--
+            result.push D.stackPointer
+            result.push D.undoDescription()
+            result.push D.redoDescription()
+            D.stackPointer--
+            result.push D.stackPointer
+            result.push D.undoDescription()
+            result.push D.redoDescription()
+            D.stackPointer--
+            result.push D.stackPointer
+            result.push D.undoDescription()
+            result.push D.redoDescription()
+            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result ).toEqual [
+                <span class="hljs-number">3</span>
+                <span class="hljs-string">'Undo Normalize text'</span>
+                <span class="hljs-string">''</span>
+                <span class="hljs-number">2</span>
+                <span class="hljs-string">'Undo Change key from empty to value'</span>
+                <span class="hljs-string">'Redo Normalize text'</span>
+                <span class="hljs-number">1</span>
+                <span class="hljs-string">'Undo Add a node'</span>
+                <span class="hljs-string">'Redo Change key from empty to value'</span>
+                <span class="hljs-number">0</span>
+                <span class="hljs-string">''</span>
+                <span class="hljs-string">'Redo Add a node'</span>
+            ]
+            done()
+</code></pre><h3><a name='performs-undo-redo-in-the-correct-order'></a>performs undo/redo in the correct order &nbsp; <font size=-1><a href='test-results.md.html#performs-undo-redo-in-the-correct-order'>see results</a></font> <font size=-1><a href='#performs-undo-redo-in-the-correct-order'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'performs undo/redo in the correct order'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+</code></pre><p>Although undo/redo are already tested for individual actions in
+<a href="domeditaction-spec.litcoffee.html">the tests for the <code>DOMEditAction</code> class</a>, we must still test that this
+class manages the stack correctly, so that we can call the <code>undo</code>
+and <code>redo</code> member functions of a <code>DOMEditTracker</code> instance
+repeatedly and expect them to behave correctly in sequence.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">document</span>.body.appendChild div
+            D = <span class="hljs-keyword">new</span> DOMEditTracker div
+</code></pre><p>Record the current state of the div as a string in the results
+array, for testing further below.</p>
+<pre class="hljs"><code>            result = []
+            result.push div.toJSON()
+</code></pre><p>Perform three actions, recording the state of the same div after
+each one, for later comparison after undo/redo actions take place.</p>
+<pre class="hljs"><code>            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span.textContent = <span class="hljs-string">'some text'</span>
+            div.appendChild span
+            result.push div.toJSON()
+            text = <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'other text'</span>
+            span.appendChild text
+            result.push div.toJSON()
+            div.normalize()
+            result.push div.toJSON()
+</code></pre><p>Undo all three actions, recording the state of the same div after
+each call to <code>undo</code>.  We ask it to call <code>undo</code> four times, just to
+be sure that the fourth one has no effect.  We also record the
+stack pointer after each undo, to be sure it&#39;s being decremented.</p>
+<pre class="hljs"><code>            <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>]
+                D.undo()
+                result.push div.toJSON()
+                result.push D.stackPointer
+</code></pre><p>Redo all three actions, recording the state of the same div after
+each call to <code>redo</code>.  We ask it to call <code>redo</code> four times, just to
+be sure that the fourth one has no effect.  We also record the
+stack pointer after each redo, to be sure it&#39;s being incremented.</p>
+<pre class="hljs"><code>            <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">4</span>]
+                D.redo()
+                result.push div.toJSON()
+                result.push D.stackPointer
+            result
+        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
+            expect( result.length ).toEqual <span class="hljs-number">20</span>
+</code></pre><p>The first result should be the initial state of the div, empty.</p>
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual tagName : <span class="hljs-string">'DIV'</span>
+</code></pre><p>The next three results should be the results of the three
+successive editing actions we performed: Adding a span with some
+text in it, adding more text, and normalizing to unite the texts.</p>
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">1</span>] ).toEqual {
+                tagName : <span class="hljs-string">'DIV'</span>
+                children : [
+                    {
+                        tagName : <span class="hljs-string">'SPAN'</span>
+                        children : [ <span class="hljs-string">'some text'</span> ]
+                    }
+                ]
+            }
+            expect( result[<span class="hljs-number">2</span>] ).toEqual {
+                tagName : <span class="hljs-string">'DIV'</span>
+                children : [
+                    {
+                        tagName : <span class="hljs-string">'SPAN'</span>
+                        children : [ <span class="hljs-string">'some text'</span>,
+                                     <span class="hljs-string">'other text'</span> ]
+                    }
+                ]
+            }
+            expect( result[<span class="hljs-number">3</span>] ).toEqual {
+                tagName : <span class="hljs-string">'DIV'</span>
+                children : [
+                    {
+                        tagName : <span class="hljs-string">'SPAN'</span>
+                        children : [ <span class="hljs-string">'some textother text'</span> ]
+                    }
+                ]
+            }
+</code></pre><p>The three calls to <code>undo</code> should simply walk us back down the list
+of document states in reverse.  Then the next element in result
+should be the same as the previous, because the fourth undo we
+performed should have had no effect.  We check the stack pointer in
+each case as well, to be sure it&#39;s decreasing with each undo.</p>
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">4</span>] ).toEqual result[<span class="hljs-number">2</span>]
+            expect( result[<span class="hljs-number">5</span>] ).toEqual <span class="hljs-number">2</span>
+            expect( result[<span class="hljs-number">6</span>] ).toEqual result[<span class="hljs-number">1</span>]
+            expect( result[<span class="hljs-number">7</span>] ).toEqual <span class="hljs-number">1</span>
+            expect( result[<span class="hljs-number">8</span>] ).toEqual result[<span class="hljs-number">0</span>]
+            expect( result[<span class="hljs-number">9</span>] ).toEqual <span class="hljs-number">0</span>
+            expect( result[<span class="hljs-number">10</span>] ).toEqual result[<span class="hljs-number">0</span>]
+            expect( result[<span class="hljs-number">11</span>] ).toEqual <span class="hljs-number">0</span>
+</code></pre><p>The three calls to <code>redo</code> should simply walk us back up the list
+of document states forwards.  Then the next element in result
+should be the same as the previous, because the fourth redo we
+performed should have had no effect.  We check the stack pointer in
+each case as well, to be sure it&#39;s decreasing with each redo.</p>
+<pre class="hljs"><code>            expect( result[<span class="hljs-number">12</span>] ).toEqual result[<span class="hljs-number">1</span>]
+            expect( result[<span class="hljs-number">13</span>] ).toEqual <span class="hljs-number">1</span>
+            expect( result[<span class="hljs-number">14</span>] ).toEqual result[<span class="hljs-number">2</span>]
+            expect( result[<span class="hljs-number">15</span>] ).toEqual <span class="hljs-number">2</span>
+            expect( result[<span class="hljs-number">16</span>] ).toEqual result[<span class="hljs-number">3</span>]
+            expect( result[<span class="hljs-number">17</span>] ).toEqual <span class="hljs-number">3</span>
+            expect( result[<span class="hljs-number">18</span>] ).toEqual result[<span class="hljs-number">3</span>]
+            expect( result[<span class="hljs-number">19</span>] ).toEqual <span class="hljs-number">3</span>
             done()
 </code></pre>
         </div>

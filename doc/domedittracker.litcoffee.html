@@ -17,7 +17,7 @@
         <div id="left">
             <p align=center>Page contents</p>
 <p><a href='#dom-edit-tracker-class'>DOM Edit Tracker class</a></p><ul>
-<li><a href='#tracking-instances'>Tracking instances</a></li><li><a href='#constructor'>Constructor</a></li><li><a href='#getters'>Getters</a></li><li><a href='#setters'>Setters</a></li><li><a href='#events'>Events</a></li>
+<li><a href='#tracking-instances'>Tracking instances</a></li><li><a href='#constructor'>Constructor</a></li><li><a href='#getters'>Getters</a></li><li><a href='#setters'>Setters</a></li><li><a href='#undo-redo-stack'>Undo/redo stack</a></li>
         </div>
         <div id="middle">
             <h1><a name='dom-edit-tracker-class'></a>DOM Edit Tracker class &nbsp;  <font size=-1><a href='#dom-edit-tracker-class'><img src="link.png" class="anchor"></a></font></h1><pre class="hljs"><code><span class="hljs-built_in">window</span>.DOMEditTracker = <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DOMEditTracker</span></span>
@@ -49,8 +49,16 @@ but it wasn&#39;t a DIV, then throw an Error.</p>
 </code></pre><p>Otherwise, store the DIV they passed for later reference.</p>
 <pre class="hljs"><code>        <span class="hljs-property">@element</span> = div
 </code></pre><p>In either case, initialize the internal undo/redo stack of
-<code>DOMEditAction</code> instances to be empty.</p>
+<code>DOMEditAction</code> instances to be empty, with a stack pointer of
+zero.  (Documentation on how this stack pointer behaves appears in
+the <a href="#undo-redo-stack">undo/redo stack section</a>, below.)</p>
 <pre class="hljs"><code>        <span class="hljs-property">@stack</span> = []
+        <span class="hljs-property">@stackPointer</span> = <span class="hljs-number">0</span>
+</code></pre><p>Furthermore, we keep a boolean about whether we&#39;re supposed to add
+actions to that stack or not as they occur.  By default it is
+always on, but is disabled briefly when undo/redo actions take
+place.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">true</span>
 </code></pre><p>And add this newly created instance to the list of all instances.</p>
 <pre class="hljs"><code>        DOMEditTracker.instances.push <span class="hljs-keyword">this</span>
 </code></pre><h2><a name='getters'></a>Getters &nbsp;  <font size=-1><a href='#getters'><img src="link.png" class="anchor"></a></font></h2><p>Although in CoffeeScript, no members are truly private, the
@@ -67,15 +75,67 @@ see fit without harming this object.</p>
 </code></pre><h2><a name='setters'></a>Setters &nbsp;  <font size=-1><a href='#setters'><img src="link.png" class="anchor"></a></font></h2><p>The user can ask to clear out the edit actions stack with the
 following method.</p>
 <pre class="hljs"><code>    <span class="hljs-attribute">clearStack</span>:<span class="hljs-function"> -&gt;</span> <span class="hljs-property">@stack</span> = []
-</code></pre><h2><a name='events'></a>Events &nbsp;  <font size=-1><a href='#events'><img src="link.png" class="anchor"></a></font></h2><p>When any editing takes place inside the DOM tree watched by an
-instance of this class, then the instance will want to be notified
-of it.  We therefore provide this method by which it can be
-notified.</p>
+</code></pre><h2><a name='undo-redo-stack'></a>Undo/redo stack &nbsp;  <font size=-1><a href='#undo-redo-stack'><img src="link.png" class="anchor"></a></font></h2><p>The stack pointer initialized in the <a href="#constructor">constructor</a> is
+an integer that is one greater than the index of the last performed
+action.  It satisfies the following criteria.</p>
+<ul>
+<li>When it equals the stack length, then the last action done is
+the last action on the stack, and was <em>not</em> an &quot;undo.&quot;  It was
+either an action done for the first time, or was a &quot;redo.&quot;</li>
+<li>When it is less than the stack length, then the last action
+done was either an &quot;undo&quot; or a &quot;redo,&quot; as the user navigated
+the undo/redo stack with buttons/keyboard shortcuts/etc.</li>
+</ul>
+<p>To preserve these two properties, we implement the following
+features.</p>
+<p>When any editing takes place inside the DOM tree watched by an
+instance of this class, the instance needs to be notified of it.
+We therefore provide this method by which it can be notified.</p>
+<p>It not only pushes the action onto the undo/redo stack, but,
+if needed, it also truncates the stack to have length equal to the
+stack pointer before using the superclass&#39;s implementation to
+append the latest action to that stack.  After doing so, it updates
+the pointer to equal the stack length, thus preserving the
+invariant that the final action on the stack was the most recently
+completed one.</p>
 <p>The one parameter should be an instance of the <code>DOMEditAction</code>
 class.  If it is not, it is ignored.</p>
 <pre class="hljs"><code>    <span class="hljs-attribute">nodeEditHappened</span>: <span class="hljs-function"><span class="hljs-params">( action )</span> -&gt;</span>
-        <span class="hljs-keyword">if</span> action <span class="hljs-keyword">instanceof</span> DOMEditAction
-            <span class="hljs-property">@stack</span>.push action
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-property">@stackRecording</span> <span class="hljs-keyword">or</span>
+           action <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> DOMEditAction <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> &lt; <span class="hljs-property">@stack</span>.length
+            <span class="hljs-property">@stack</span> = <span class="hljs-property">@stack</span>[...<span class="hljs-property">@stackPointer</span>]
+        <span class="hljs-property">@stack</span>.push action
+        <span class="hljs-property">@stackPointer</span> = <span class="hljs-property">@stack</span>.length
+</code></pre><p>We add <code>canUndo</code> and <code>canRedo</code> methods to the class that just
+report whether the stack pointer isn&#39;t at the top or bottom of the
+stack.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">canUndo</span>:<span class="hljs-function"> -&gt;</span> <span class="hljs-property">@stackPointer</span> &gt; <span class="hljs-number">0</span>
+    <span class="hljs-attribute">canRedo</span>:<span class="hljs-function"> -&gt;</span> <span class="hljs-property">@stackPointer</span> &lt; <span class="hljs-property">@stack</span>.length
+</code></pre><p>We add methods that can describe the atcions that would take place
+if undo or redo were invoked, returning the empty string if one
+cannot undo/redo.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">undoDescription</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> <span class="hljs-keyword">is</span> <span class="hljs-number">0</span> <span class="hljs-keyword">then</span> <span class="hljs-string">''</span> <span class="hljs-keyword">else</span>
+            <span class="hljs-string">"Undo <span class="hljs-subst">#{<span class="hljs-property">@stack</span>[<span class="hljs-property">@stackPointer</span> - <span class="hljs-number">1</span>].toString()}</span>"</span>
+    <span class="hljs-attribute">redoDescription</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> <span class="hljs-keyword">is</span> <span class="hljs-property">@stack</span>.length <span class="hljs-keyword">then</span> <span class="hljs-string">''</span> <span class="hljs-keyword">else</span>
+            <span class="hljs-string">"Redo <span class="hljs-subst">#{<span class="hljs-property">@stack</span>[<span class="hljs-property">@stackPointer</span>].toString()}</span>"</span>
+</code></pre><p>We add <code>undo</code> and <code>redo</code> methods that move the stack pointer after
+calling the <code>undo</code> and <code>redo</code> methods in the appropriate actions on
+the stack.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">undo</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> &gt; <span class="hljs-number">0</span>
+            <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">false</span>
+            <span class="hljs-property">@stack</span>[<span class="hljs-property">@stackPointer</span> - <span class="hljs-number">1</span>].undo()
+            <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">true</span>
+            <span class="hljs-property">@stackPointer</span>--
+    <span class="hljs-attribute">redo</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> &lt; <span class="hljs-property">@stack</span>.length
+            <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">false</span>
+            <span class="hljs-property">@stack</span>[<span class="hljs-property">@stackPointer</span>].redo()
+            <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">true</span>
+            <span class="hljs-property">@stackPointer</span>++
 </code></pre>
         </div>
         <div id="right">

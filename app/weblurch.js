@@ -143,7 +143,7 @@
     }
 
     DOMEditAction.prototype.toString = function() {
-      var max, orig, repl, text;
+      var max, newv, oldv, orig, repl, text;
       max = 50;
       if (this.type === 'appendChild') {
         text = Node.fromJSON(this.toAppend).textContent;
@@ -193,7 +193,9 @@
         }
         return "Replace " + orig + " with " + repl;
       } else if (this.type === 'setAttribute' || this.type === 'setAttributeNode') {
-        return "Change " + this.name + " from " + this.oldValue + " to " + this.newValue;
+        oldv = this.oldValue || 'empty';
+        newv = this.newValue || 'empty';
+        return "Change " + this.name + " from " + oldv + " to " + newv;
       } else {
         return "Error, unknown edit action type: " + this.type;
       }
@@ -220,7 +222,7 @@
 
     DOMEditAction.prototype.redo = function() {
       var newnode, original, replacement;
-      original = this.tracker.index(this.node);
+      original = this.tracker.getElement().index(this.node);
       if (this.type === 'appendChild') {
         return original.appendChild(Node.fromJSON(this.toAppend));
       } else if (this.type === 'insertBefore') {
@@ -246,7 +248,7 @@
 
     DOMEditAction.prototype.undo = function() {
       var addBack, d, descendants, key, original, replacement, string, _ref, _ref1, _results;
-      original = this.tracker.index(this.node);
+      original = this.tracker.getElement().index(this.node);
       if (this.type === 'appendChild') {
         return original.removeChild(original.childNodes[original.childNodes.length - 1]);
       } else if (this.type === 'insertBefore') {
@@ -330,6 +332,8 @@
       }
       this.element = div;
       this.stack = [];
+      this.stackPointer = 0;
+      this.stackRecording = true;
       DOMEditTracker.instances.push(this);
     }
 
@@ -346,8 +350,55 @@
     };
 
     DOMEditTracker.prototype.nodeEditHappened = function(action) {
-      if (action instanceof DOMEditAction) {
-        return this.stack.push(action);
+      if (!this.stackRecording || !(action instanceof DOMEditAction)) {
+        return;
+      }
+      if (this.stackPointer < this.stack.length) {
+        this.stack = this.stack.slice(0, this.stackPointer);
+      }
+      this.stack.push(action);
+      return this.stackPointer = this.stack.length;
+    };
+
+    DOMEditTracker.prototype.canUndo = function() {
+      return this.stackPointer > 0;
+    };
+
+    DOMEditTracker.prototype.canRedo = function() {
+      return this.stackPointer < this.stack.length;
+    };
+
+    DOMEditTracker.prototype.undoDescription = function() {
+      if (this.stackPointer === 0) {
+        return '';
+      } else {
+        return "Undo " + (this.stack[this.stackPointer - 1].toString());
+      }
+    };
+
+    DOMEditTracker.prototype.redoDescription = function() {
+      if (this.stackPointer === this.stack.length) {
+        return '';
+      } else {
+        return "Redo " + (this.stack[this.stackPointer].toString());
+      }
+    };
+
+    DOMEditTracker.prototype.undo = function() {
+      if (this.stackPointer > 0) {
+        this.stackRecording = false;
+        this.stack[this.stackPointer - 1].undo();
+        this.stackRecording = true;
+        return this.stackPointer--;
+      }
+    };
+
+    DOMEditTracker.prototype.redo = function() {
+      if (this.stackPointer < this.stack.length) {
+        this.stackRecording = false;
+        this.stack[this.stackPointer].redo();
+        this.stackRecording = true;
+        return this.stackPointer++;
       }
     };
 
