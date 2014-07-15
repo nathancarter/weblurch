@@ -52,6 +52,13 @@ the [undo/redo stack section](#undo-redo-stack), below.)
             @stack = []
             @stackPointer = 0
 
+Furthermore, we keep a boolean about whether we're supposed to add
+actions to that stack or not as they occur.  By default it is
+always on, but is disabled briefly when undo/redo actions take
+place.
+
+            @stackRecording = true
+
 And add this newly created instance to the list of all instances.
 
             DOMEditTracker.instances.push this
@@ -112,7 +119,8 @@ The one parameter should be an instance of the `DOMEditAction`
 class.  If it is not, it is ignored.
 
         nodeEditHappened: ( action ) ->
-            if action not instanceof DOMEditAction then return
+            if not @stackRecording or
+               action not instanceof DOMEditAction then return
             if @stackPointer < @stack.length
                 @stack = @stack[...@stackPointer]
             @stack.push action
@@ -142,10 +150,14 @@ the stack.
 
         undo: ->
             if @stackPointer > 0
+                @stackRecording = false
                 @stack[@stackPointer - 1].undo()
+                @stackRecording = true
                 @stackPointer--
         redo: ->
             if @stackPointer < @stack.length
+                @stackRecording = false
                 @stack[@stackPointer].redo()
+                @stackRecording = true
                 @stackPointer++
 

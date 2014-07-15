@@ -470,3 +470,129 @@ above.
                 ]
                 done()
 
+### performs undo/redo in the correct order
+
+        it 'performs undo/redo in the correct order', ( done ) =>
+
+Although undo/redo are already tested for individual actions in
+[the tests for the `DOMEditAction` class](
+domeditaction-spec.litcoffee.html), we must still test that this
+class manages the stack correctly, so that we can call the `undo`
+and `redo` member functions of a `DOMEditTracker` instance
+repeatedly and expect them to behave correctly in sequence.
+
+            @page.evaluate ->
+                div = document.createElement 'div'
+                document.body.appendChild div
+                D = new DOMEditTracker div
+
+Record the current state of the div as a string in the results
+array, for testing further below.
+
+                result = []
+                result.push div.toJSON()
+
+Perform three actions, recording the state of the same div after
+each one, for later comparison after undo/redo actions take place.
+
+                span = document.createElement 'span'
+                span.textContent = 'some text'
+                div.appendChild span
+                result.push div.toJSON()
+                text = document.createTextNode 'other text'
+                span.appendChild text
+                result.push div.toJSON()
+                div.normalize()
+                result.push div.toJSON()
+
+Undo all three actions, recording the state of the same div after
+each call to `undo`.  We ask it to call `undo` four times, just to
+be sure that the fourth one has no effect.  We also record the
+stack pointer after each undo, to be sure it's being decremented.
+
+                for i in [1,2,3,4]
+                    D.undo()
+                    result.push div.toJSON()
+                    result.push D.stackPointer
+
+Redo all three actions, recording the state of the same div after
+each call to `redo`.  We ask it to call `redo` four times, just to
+be sure that the fourth one has no effect.  We also record the
+stack pointer after each redo, to be sure it's being incremented.
+
+                for i in [1,2,3,4]
+                    D.redo()
+                    result.push div.toJSON()
+                    result.push D.stackPointer
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 20
+
+The first result should be the initial state of the div, empty.
+
+                expect( result[0] ).toEqual tagName : 'DIV'
+
+The next three results should be the results of the three
+successive editing actions we performed: Adding a span with some
+text in it, adding more text, and normalizing to unite the texts.
+
+                expect( result[1] ).toEqual {
+                    tagName : 'DIV'
+                    children : [
+                        {
+                            tagName : 'SPAN'
+                            children : [ 'some text' ]
+                        }
+                    ]
+                }
+                expect( result[2] ).toEqual {
+                    tagName : 'DIV'
+                    children : [
+                        {
+                            tagName : 'SPAN'
+                            children : [ 'some text',
+                                         'other text' ]
+                        }
+                    ]
+                }
+                expect( result[3] ).toEqual {
+                    tagName : 'DIV'
+                    children : [
+                        {
+                            tagName : 'SPAN'
+                            children : [ 'some textother text' ]
+                        }
+                    ]
+                }
+
+The three calls to `undo` should simply walk us back down the list
+of document states in reverse.  Then the next element in result
+should be the same as the previous, because the fourth undo we
+performed should have had no effect.  We check the stack pointer in
+each case as well, to be sure it's decreasing with each undo.
+
+                expect( result[4] ).toEqual result[2]
+                expect( result[5] ).toEqual 2
+                expect( result[6] ).toEqual result[1]
+                expect( result[7] ).toEqual 1
+                expect( result[8] ).toEqual result[0]
+                expect( result[9] ).toEqual 0
+                expect( result[10] ).toEqual result[0]
+                expect( result[11] ).toEqual 0
+
+The three calls to `redo` should simply walk us back up the list
+of document states forwards.  Then the next element in result
+should be the same as the previous, because the fourth redo we
+performed should have had no effect.  We check the stack pointer in
+each case as well, to be sure it's decreasing with each redo.
+
+                expect( result[12] ).toEqual result[1]
+                expect( result[13] ).toEqual 1
+                expect( result[14] ).toEqual result[2]
+                expect( result[15] ).toEqual 2
+                expect( result[16] ).toEqual result[3]
+                expect( result[17] ).toEqual 3
+                expect( result[18] ).toEqual result[3]
+                expect( result[19] ).toEqual 3
+                done()
+

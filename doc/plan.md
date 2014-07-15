@@ -13,19 +13,6 @@ being those that should be done next, and the later items those
 that must come after.  Necessarily, the later items are more vague
 than the earlier ones.
 
-## Word Processing Foundation
-
-### Undo/redo stack
-
-Create tests in the [`DOMEditTracker` spec](
-domedittracker-spec.litcoffe.html) for the following features.
- * `undo` functions if and only if there is an action to undo
- * When `undo` applies, it undoes the action before the stack
-   pointer and decrements that pointer.
- * `redo` functions if and only if there is an action to redo
- * When `redo` applies, it redoes the action at the stack
-   pointer and increments that pointer.
-
 ## Test environment
 
 ### Test app
