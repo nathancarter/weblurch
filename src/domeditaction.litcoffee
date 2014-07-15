@@ -53,10 +53,10 @@ The protocol for what data to store in each case is described here.
      the original value of the attribute beforehand
  * `N.setAttributeNode(attrNode)`
    * returns replaced node if any, otherwise null
-   * e.g.:
-     `var atr=document.createAttribute("class");
-     atr.nodeValue="democlass";
-     myDiv.setAttributeNode(atr);`
+   * E.g.: <br>
+     `atr = document.createAttribute 'class'` <br>
+     `atr.nodeValue = 'democlass'` <br>
+     `myDiv.setAttributeNode atr`
    * event contains `N`'s address, the name and value of the
      attribute after setting, as well as the original value of the
      attribute beforehand
@@ -333,7 +333,9 @@ the output are on the following list.
                 "Replace #{orig} with #{repl}"
             else if @type is 'setAttribute' or
                     @type is 'setAttributeNode'
-                "Change #{@name} from #{@oldValue} to #{@newValue}"
+                oldv = @oldValue or 'empty'
+                newv = @newValue or 'empty'
+                "Change #{@name} from #{oldv} to #{newv}"
 
 An error message is returned as a string if none of the nine valid
 action types is stored in this object (i.e., the object is
@@ -394,7 +396,7 @@ event was created.  Its address within the containing
 `DOMEditTracker` is stored in our `node` field, so we find it that
 way.
 
-            original = @tracker.index @node
+            original = @tracker.getElement().index @node
 
 Now we consider each possible action type separately, in a big
 `if`-`else` clause, as in the `toString` method, above.
@@ -469,7 +471,7 @@ routine above for more detailed explanations of each part below.
 
 As above, compute the original "`this`" node.
 
-            original = @tracker.index @node
+            original = @tracker.getElement().index @node
 
 The inverse of "appendChild" is to remove the last child.
 

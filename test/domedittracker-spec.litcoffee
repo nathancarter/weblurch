@@ -215,3 +215,384 @@ Construct the `DOMEditTracker` instance around the div, as before.
                 expect( result ).toBeTruthy()
                 done()
 
+## The undo/redo stack
+
+The tests in this section concern all functions related to the
+undo/redo stack maintained by a `DOMEditTracker` instance.
+See the documentation in [the DOMEditTracker source code](
+domedittracker.litcoffee.html#undo-redo-stack) for information
+about each function to be tested below, or just read the tests
+themselves.
+
+    phantomDescribe 'The undo/redo stack', './app/index.html', ->
+
+### should grow when nodeEditHappened
+
+        it 'should grow when nodeEditHappened', ( done ) =>
+
+When we call `nodeEditHappened` in the `DOMEditTracker` instance,
+we require the undo/redo stack to grow, and the stack pointer to
+continue to be equal to the size of the stack.
+
+            @page.evaluate ->
+
+Create the objects needed to run the test.
+
+                div = document.createElement 'div'
+                document.body.appendChild div
+                span1 = document.createElement 'span'
+                span2 = document.createElement 'span'
+                span3 = document.createElement 'span'
+                D = new DOMEditTracker div
+
+Build a result array that will record the stack length and stack
+pointer value at various steps throughout the test.  Add the
+initial values of those data.
+
+                result = []
+                result.push D.stack.length
+                result.push D.stackPointer
+
+Create a few editing actions and add them to the stack, recording
+the new stack size and pointer value each time.
+
+                D.nodeEditHappened new DOMEditAction 'appendChild',
+                    div, span1
+                result.push D.stack.length
+                result.push D.stackPointer
+                D.nodeEditHappened new DOMEditAction 'appendChild',
+                    div, span2
+                result.push D.stack.length
+                result.push D.stackPointer
+                D.nodeEditHappened new DOMEditAction 'appendChild',
+                    div, span3
+                result.push D.stack.length
+                result.push D.stackPointer
+
+Now try to add two invalid actions, so that we can test that
+nothing happens.
+
+                D.nodeEditHappened null
+                result.push D.stack.length
+                result.push D.stackPointer
+                D.nodeEditHappened 'not an edit action'
+                result.push D.stack.length
+                result.push D.stackPointer
+                result
+            , ( err, result ) ->
+                expect( result ).toEqual \
+                    [ 0, 0, 1, 1, 2, 2, 3, 3, 3, 3, 3, 3 ]
+                done()
+
+### should truncate if needed
+
+        it 'should truncate if needed', ( done ) =>
+
+When we call `nodeEditHappened` in the `DOMEditTracker` instance,
+if the stack pointer is *not* at the end of the stack, then the
+stack should be truncated to make the stack pointer equal to the
+stack size before appending the new edit actions.
+
+            @page.evaluate ->
+
+Create the objects needed to run the test.
+
+                div = document.createElement 'div'
+                document.body.appendChild div
+                D = new DOMEditTracker div
+
+Set up the stack with three actions in it, and add to a results
+array the size of the stack and value of the pointer, to verify
+that all three were added successfully.  Also record the type of
+the most recent action on the stack.
+
+                D.nodeEditHappened new DOMEditAction \
+                    'setAttribute', div, 'key', 'value'
+                D.nodeEditHappened new DOMEditAction \
+                    'setAttribute', div, 'key2', 'value2'
+                span = document.createElement 'span'
+                D.nodeEditHappened new DOMEditAction 'appendChild',
+                    div, span
+                result = []
+                result.push D.stack.length
+                result.push D.stackPointer
+                result.push D.stack[D.stack.length - 1].type
+
+Push the stack pointer back by one, then record a new action, and
+verify that the stack has not grown, but that the new most recent
+action is of the new type.
+
+                D.stackPointer--
+                D.nodeEditHappened new DOMEditAction 'normalize',
+                    div
+                result.push D.stack.length
+                result.push D.stackPointer
+                result.push D.stack[D.stack.length - 1].type
+                result
+            , ( err, result ) ->
+                expect( result ).toEqual \
+                    [ 3, 3, 'appendChild', 3, 3, 'normalize' ]
+                done()
+
+### handles canUndo/canRedo correctly
+
+        it 'handles canUndo/canRedo correctly', ( done ) =>
+
+The `canUndo` and `canRedo` member functions of a `DOMEditTracker`
+instance should return true if and only if the stack pointer is at
+a location that permits undo/redo, respectively.  In particular,
+one can call undo if and only if the stack pointer is not at the
+bottom (zero) and can call redo if and only if it is not at the end
+(the stack size).  This test verifies this if-and-only-ifs.
+
+            @page.evaluate ->
+
+Create the objects needed to run the test.
+
+                div = document.createElement 'div'
+                document.body.appendChild div
+                D = new DOMEditTracker div
+
+Set up the stack with three actions in it.
+
+                D.nodeEditHappened new DOMEditAction \
+                    'setAttribute', div, 'key', 'value'
+                D.nodeEditHappened new DOMEditAction \
+                    'setAttribute', div, 'key2', 'value2'
+                span = document.createElement 'span'
+                D.nodeEditHappened new DOMEditAction 'appendChild',
+                    div, span
+
+Verify that the stack pointer is at the end, and that we cannot
+"redo" from there, but we can "undo."  (Here we just push the
+return values of `canUndo` and `canRedo` onto the results array,
+and will check their values below.)
+
+                result = []
+                result.push D.stackPointer
+                result.push D.canRedo()
+                result.push D.canUndo()
+
+Move the stack pointer down the stack, and verify that at each of
+its next two locations, both undo and redo are available.
+
+                D.stackPointer--
+                result.push D.stackPointer
+                result.push D.canRedo()
+                result.push D.canUndo()
+                D.stackPointer--
+                result.push D.stackPointer
+                result.push D.canRedo()
+                result.push D.canUndo()
+
+Move the stack pointer down one more step, which should be to the
+bottom, and verify that we can redo but cannot undo.
+
+                D.stackPointer--
+                result.push D.stackPointer
+                result.push D.canRedo()
+                result.push D.canUndo()
+                result
+            , ( err, result ) ->
+                expect( result ).toEqual \
+                    [ 3, false, true, 2, true, true,
+                      1, true, true, 0, true, false ]
+                done()
+
+### gives good undo/redo descriptions
+
+        it 'gives good undo/redo descriptions', ( done ) =>
+
+The `undoDescription` and `redoDescription` member functions of a
+`DOMEditTracker` instance should return descriptions of the actions
+that would be taken if undo/redo were called (respectively).  This
+test verifies, for various locations of the stack pointer in a
+stack of three different types of actions, that the undo and redo
+descriptiosn are as they should be.
+
+            @page.evaluate ->
+
+Create the objects needed to run the test.
+
+                div = document.createElement 'div'
+                document.body.appendChild div
+                D = new DOMEditTracker div
+                span = document.createElement 'span'
+
+Set up the stack with three actions in it.
+
+                D.nodeEditHappened new DOMEditAction 'appendChild',
+                    div, span
+                D.nodeEditHappened new DOMEditAction \
+                    'setAttribute', div, 'key', 'value'
+                D.nodeEditHappened new DOMEditAction 'normalize',
+                    div
+
+Store on the results array, for later checking against expected
+values, the stack pointer value and the undo/redo descriptions.
+
+                result = []
+                result.push D.stackPointer
+                result.push D.undoDescription()
+                result.push D.redoDescription()
+
+Move the stack pointer down the stack three times (which should put
+it at the bottom) and at each position, record the same data as
+above.
+
+                D.stackPointer--
+                result.push D.stackPointer
+                result.push D.undoDescription()
+                result.push D.redoDescription()
+                D.stackPointer--
+                result.push D.stackPointer
+                result.push D.undoDescription()
+                result.push D.redoDescription()
+                D.stackPointer--
+                result.push D.stackPointer
+                result.push D.undoDescription()
+                result.push D.redoDescription()
+                result
+            , ( err, result ) ->
+                expect( result ).toEqual [
+                    3
+                    'Undo Normalize text'
+                    ''
+                    2
+                    'Undo Change key from empty to value'
+                    'Redo Normalize text'
+                    1
+                    'Undo Add a node'
+                    'Redo Change key from empty to value'
+                    0
+                    ''
+                    'Redo Add a node'
+                ]
+                done()
+
+### performs undo/redo in the correct order
+
+        it 'performs undo/redo in the correct order', ( done ) =>
+
+Although undo/redo are already tested for individual actions in
+[the tests for the `DOMEditAction` class](
+domeditaction-spec.litcoffee.html), we must still test that this
+class manages the stack correctly, so that we can call the `undo`
+and `redo` member functions of a `DOMEditTracker` instance
+repeatedly and expect them to behave correctly in sequence.
+
+            @page.evaluate ->
+                div = document.createElement 'div'
+                document.body.appendChild div
+                D = new DOMEditTracker div
+
+Record the current state of the div as a string in the results
+array, for testing further below.
+
+                result = []
+                result.push div.toJSON()
+
+Perform three actions, recording the state of the same div after
+each one, for later comparison after undo/redo actions take place.
+
+                span = document.createElement 'span'
+                span.textContent = 'some text'
+                div.appendChild span
+                result.push div.toJSON()
+                text = document.createTextNode 'other text'
+                span.appendChild text
+                result.push div.toJSON()
+                div.normalize()
+                result.push div.toJSON()
+
+Undo all three actions, recording the state of the same div after
+each call to `undo`.  We ask it to call `undo` four times, just to
+be sure that the fourth one has no effect.  We also record the
+stack pointer after each undo, to be sure it's being decremented.
+
+                for i in [1,2,3,4]
+                    D.undo()
+                    result.push div.toJSON()
+                    result.push D.stackPointer
+
+Redo all three actions, recording the state of the same div after
+each call to `redo`.  We ask it to call `redo` four times, just to
+be sure that the fourth one has no effect.  We also record the
+stack pointer after each redo, to be sure it's being incremented.
+
+                for i in [1,2,3,4]
+                    D.redo()
+                    result.push div.toJSON()
+                    result.push D.stackPointer
+                result
+            , ( err, result ) ->
+                expect( result.length ).toEqual 20
+
+The first result should be the initial state of the div, empty.
+
+                expect( result[0] ).toEqual tagName : 'DIV'
+
+The next three results should be the results of the three
+successive editing actions we performed: Adding a span with some
+text in it, adding more text, and normalizing to unite the texts.
+
+                expect( result[1] ).toEqual {
+                    tagName : 'DIV'
+                    children : [
+                        {
+                            tagName : 'SPAN'
+                            children : [ 'some text' ]
+                        }
+                    ]
+                }
+                expect( result[2] ).toEqual {
+                    tagName : 'DIV'
+                    children : [
+                        {
+                            tagName : 'SPAN'
+                            children : [ 'some text',
+                                         'other text' ]
+                        }
+                    ]
+                }
+                expect( result[3] ).toEqual {
+                    tagName : 'DIV'
+                    children : [
+                        {
+                            tagName : 'SPAN'
+                            children : [ 'some textother text' ]
+                        }
+                    ]
+                }
+
+The three calls to `undo` should simply walk us back down the list
+of document states in reverse.  Then the next element in result
+should be the same as the previous, because the fourth undo we
+performed should have had no effect.  We check the stack pointer in
+each case as well, to be sure it's decreasing with each undo.
+
+                expect( result[4] ).toEqual result[2]
+                expect( result[5] ).toEqual 2
+                expect( result[6] ).toEqual result[1]
+                expect( result[7] ).toEqual 1
+                expect( result[8] ).toEqual result[0]
+                expect( result[9] ).toEqual 0
+                expect( result[10] ).toEqual result[0]
+                expect( result[11] ).toEqual 0
+
+The three calls to `redo` should simply walk us back up the list
+of document states forwards.  Then the next element in result
+should be the same as the previous, because the fourth redo we
+performed should have had no effect.  We check the stack pointer in
+each case as well, to be sure it's decreasing with each redo.
+
+                expect( result[12] ).toEqual result[1]
+                expect( result[13] ).toEqual 1
+                expect( result[14] ).toEqual result[2]
+                expect( result[15] ).toEqual 2
+                expect( result[16] ).toEqual result[3]
+                expect( result[17] ).toEqual 3
+                expect( result[18] ).toEqual result[3]
+                expect( result[19] ).toEqual 3
+                done()
+
