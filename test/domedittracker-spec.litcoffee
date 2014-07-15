@@ -399,3 +399,74 @@ bottom, and verify that we can redo but cannot undo.
                       1, true, true, 0, true, false ]
                 done()
 
+### gives good undo/redo descriptions
+
+        it 'gives good undo/redo descriptions', ( done ) =>
+
+The `undoDescription` and `redoDescription` member functions of a
+`DOMEditTracker` instance should return descriptions of the actions
+that would be taken if undo/redo were called (respectively).  This
+test verifies, for various locations of the stack pointer in a
+stack of three different types of actions, that the undo and redo
+descriptiosn are as they should be.
+
+            @page.evaluate ->
+
+Create the objects needed to run the test.
+
+                div = document.createElement 'div'
+                document.body.appendChild div
+                D = new DOMEditTracker div
+                span = document.createElement 'span'
+
+Set up the stack with three actions in it.
+
+                D.nodeEditHappened new DOMEditAction 'appendChild',
+                    div, span
+                D.nodeEditHappened new DOMEditAction \
+                    'setAttribute', div, 'key', 'value'
+                D.nodeEditHappened new DOMEditAction 'normalize',
+                    div
+
+Store on the results array, for later checking against expected
+values, the stack pointer value and the undo/redo descriptions.
+
+                result = []
+                result.push D.stackPointer
+                result.push D.undoDescription()
+                result.push D.redoDescription()
+
+Move the stack pointer down the stack three times (which should put
+it at the bottom) and at each position, record the same data as
+above.
+
+                D.stackPointer--
+                result.push D.stackPointer
+                result.push D.undoDescription()
+                result.push D.redoDescription()
+                D.stackPointer--
+                result.push D.stackPointer
+                result.push D.undoDescription()
+                result.push D.redoDescription()
+                D.stackPointer--
+                result.push D.stackPointer
+                result.push D.undoDescription()
+                result.push D.redoDescription()
+                result
+            , ( err, result ) ->
+                expect( result ).toEqual [
+                    3
+                    'Undo Normalize text'
+                    ''
+                    2
+                    'Undo Change key from empty to value'
+                    'Redo Normalize text'
+                    1
+                    'Undo Add a node'
+                    'Redo Change key from empty to value'
+                    0
+                    ''
+                    'Redo Add a node'
+                ]
+                done()
+

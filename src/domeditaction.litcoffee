@@ -333,7 +333,9 @@ the output are on the following list.
                 "Replace #{orig} with #{repl}"
             else if @type is 'setAttribute' or
                     @type is 'setAttributeNode'
-                "Change #{@name} from #{@oldValue} to #{@newValue}"
+                oldv = @oldValue or 'empty'
+                newv = @newValue or 'empty'
+                "Change #{@name} from #{oldv} to #{newv}"
 
 An error message is returned as a string if none of the nine valid
 action types is stored in this object (i.e., the object is

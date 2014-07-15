@@ -130,12 +130,11 @@ if undo or redo were invoked, returning the empty string if one
 cannot undo/redo.
 
         undoDescription: ->
-            return 'Undo' + if @stackPointer is 0 then '' else
-                @stack[@stackPointer - 1].toString()
+            return if @stackPointer is 0 then '' else
+                "Undo #{@stack[@stackPointer - 1].toString()}"
         redoDescription: ->
-            return 'Redo ' +
-                if @stackPointer is @stack.length then '' else
-                @stack[@stackPointer].toString()
+            return if @stackPointer is @stack.length then '' else
+                "Redo #{@stack[@stackPointer].toString()}"
 
 We add `undo` and `redo` methods that move the stack pointer after
 calling the `undo` and `redo` methods in the appropriate actions on

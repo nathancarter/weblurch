@@ -19,14 +19,6 @@ than the earlier ones.
 
 Create tests in the [`DOMEditTracker` spec](
 domedittracker-spec.litcoffe.html) for the following features.
- * `undoDescription` returns a string indicating the undoing of
-   the action before the stack pointer, if one exists
- * `undoDescription` returns the empty string if there is no
-   action before the stack pointer
- * `redoDescription` returns a string indicating the redoing of
-   the action at the stack pointer, if one exists
- * `redoDescription` returns the empty string if there is no
-   action at the stack pointer
  * `undo` functions if and only if there is an action to undo
  * When `undo` applies, it undoes the action before the stack
    pointer and decrements that pointer.
