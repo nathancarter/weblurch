@@ -334,3 +334,68 @@ action is of the new type.
                     [ 3, 3, 'appendChild', 3, 3, 'normalize' ]
                 done()
 
+### handles canUndo/canRedo correctly
+
+        it 'handles canUndo/canRedo correctly', ( done ) =>
+
+The `canUndo` and `canRedo` member functions of a `DOMEditTracker`
+instance should return true if and only if the stack pointer is at
+a location that permits undo/redo, respectively.  In particular,
+one can call undo if and only if the stack pointer is not at the
+bottom (zero) and can call redo if and only if it is not at the end
+(the stack size).  This test verifies this if-and-only-ifs.
+
+            @page.evaluate ->
+
+Create the objects needed to run the test.
+
+                div = document.createElement 'div'
+                document.body.appendChild div
+                D = new DOMEditTracker div
+
+Set up the stack with three actions in it.
+
+                D.nodeEditHappened new DOMEditAction \
+                    'setAttribute', div, 'key', 'value'
+                D.nodeEditHappened new DOMEditAction \
+                    'setAttribute', div, 'key2', 'value2'
+                span = document.createElement 'span'
+                D.nodeEditHappened new DOMEditAction 'appendChild',
+                    div, span
+
+Verify that the stack pointer is at the end, and that we cannot
+"redo" from there, but we can "undo."  (Here we just push the
+return values of `canUndo` and `canRedo` onto the results array,
+and will check their values below.)
+
+                result = []
+                result.push D.stackPointer
+                result.push D.canRedo()
+                result.push D.canUndo()
+
+Move the stack pointer down the stack, and verify that at each of
+its next two locations, both undo and redo are available.
+
+                D.stackPointer--
+                result.push D.stackPointer
+                result.push D.canRedo()
+                result.push D.canUndo()
+                D.stackPointer--
+                result.push D.stackPointer
+                result.push D.canRedo()
+                result.push D.canUndo()
+
+Move the stack pointer down one more step, which should be to the
+bottom, and verify that we can redo but cannot undo.
+
+                D.stackPointer--
+                result.push D.stackPointer
+                result.push D.canRedo()
+                result.push D.canUndo()
+                result
+            , ( err, result ) ->
+                expect( result ).toEqual \
+                    [ 3, false, true, 2, true, true,
+                      1, true, true, 0, true, false ]
+                done()
+

@@ -19,10 +19,6 @@ than the earlier ones.
 
 Create tests in the [`DOMEditTracker` spec](
 domedittracker-spec.litcoffe.html) for the following features.
- * `canUndo` method returns true if and only if the stack
-   pointer is above zero.
- * `canRedo` method returns true if and only if the stack
-   pointer is less than the stack size.`
  * `undoDescription` returns a string indicating the undoing of
    the action before the stack pointer, if one exists
  * `undoDescription` returns the empty string if there is no
