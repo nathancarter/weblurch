@@ -10,8 +10,24 @@
         <script src='testapp.js'></script>
     </head>
     <body>
-        <h1>For now this page is a stub</h1>
-        <div id='editor'>
+        <div class='container'>
+            <!-- Bootstrap styles the following list as tabs -->
+            <ul class='nav nav-tabs' role='tablist'>
+                <li class='active'
+                   ><a href='#html' role='tab'
+                    data-toggle='tab'>HTML</a></li>
+                <li><a href='#source' role='tab'
+                    data-toggle='tab'>Source</a></li>
+            </ul>
+            <!-- Bootstrap shows the following divs when their
+                 corresponding tabs (above) are clicked -->
+            <div class='tab-content'>
+                <div class='tab-pane active' id='html'>
+                    <div id='editor'></div>
+                </div>
+                <div class='tab-pane' id='source'>
+                </div>
+            </div>
         </div>
     </body>
     <script language=javascript>

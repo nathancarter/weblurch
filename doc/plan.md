@@ -17,8 +17,6 @@ than the earlier ones.
 
 ### Test app
 
- * Split the test app into tabs, one containing a view that shows
-   the document as HTML source.
  * Add to the test app a user interface for making any of the
    editing API calls on any Node in the `LurchEditor`'s main HTML
    element (could be just a JS eval of the code in an input box).
