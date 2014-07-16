@@ -17,12 +17,7 @@ than the earlier ones.
 
 ### Test app
 
- * Import into the project a UI toolkit such as
-   [Bootstrap](http://getbootstrap.com).
-   (If you use bootstrap, replace your link png with its link
-   glyphicon.)
- * Import that UI into both the app and test app pages, rewriting
-   them to fit its format if necessary.
+ * Replace my link png with Bootstrap's link glyphicon.
  * Split the test app into tabs, one containing a view that shows
    the document as HTML source.
  * Add to the test app a user interface for making any of the
