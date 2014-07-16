@@ -4,6 +4,7 @@
               href='../bootstrap/css/bootstrap.min.css'/>
         <link rel='stylesheet'
               href='../bootstrap/css/bootstrap-theme.min.css'/>
+        <link rel='stylesheet' href='testapp.css'/>
         <script src='../bootstrap/js/jquery-2.1.1.min.js'></script>
         <script src='../bootstrap/js/bootstrap.min.js'></script>
         <script src='../app/weblurch.js'></script>
@@ -11,6 +12,19 @@
     </head>
     <body>
         <div class='container'>
+            <h1>webLurch Test App</h1>
+            <!-- Input box and button for executing JS code -->
+            <div class='row gap-before-3 gap-after-2'>
+                <div class='col-md-11'>
+                    <input type='text' class='form-control'
+                           id='codeInput'
+                           placeholder='enter code to evaluate'/>
+                </div>
+                <div class='col-md-1'>
+                    <button type='button' class='btn btn-default'
+                            id='runButton'>Run</button>
+                </div>
+            </div>
             <!-- Bootstrap styles the following list as tabs -->
             <ul class='nav nav-tabs' role='tablist'>
                 <li class='active'
@@ -22,7 +36,8 @@
             <!-- Bootstrap shows the following divs when their
                  corresponding tabs (above) are clicked -->
             <div class='tab-content'>
-                <div class='tab-pane active' id='html'>
+                <div class='tab-pane active panel panel-default'
+                     id='html'>
                     <div id='editor'></div>
                 </div>
                 <div class='tab-pane' id='source'>

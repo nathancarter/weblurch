@@ -13,19 +13,33 @@ Create a `LurchEditor` instance in the page itself.
         window.LE =
             new LurchEditor document.getElementById 'editor'
 
-Store in a global variable the div that will show the source code
-for the `LurchEditor`'s element.
+Store in global variables the important UI elements on the page.
 
-        window.srcdiv = document.getElementById 'source'
+        'source codeInput runButton'.split( ' ' ).map ( id ) ->
+            window[id] = document.getElementById id
+        window.maindiv = LE.getElement()
+
+Install the event handler for the run button, and make it happen
+whenever the user presses the enter key in the code input.
+
+        ( $ runButton ).on 'click', runButtonClicked
+        ( $ codeInput ).on 'keyup', ( event ) ->
+            if event.keyCode is 13 then runButtonClicked()
 
 Run [the routine](#source-synchronizer) that updates the source div
 with the HTML source of the `LurchEditor`'s element.
 
         updateSourceTab()
 
-## Source synchronizer
+Place the user's keyboard focus into the code input box.
 
-The following routine fills the sourve div with the HTML source of
+        codeInput.focus()
+
+## Event handlers
+
+### Source synchronizer
+
+The following routine fills the source div with the HTML source of
 the `LurchEditor`'s element.
 
     window.updateSourceTab = ->
@@ -34,5 +48,16 @@ the `LurchEditor`'s element.
                                         .replace( /</g, '&lt;' )
                                         .replace( /'/g, '&apos;' )
                                         .replace( /"/g, '&quot;' )
-        srcdiv.innerHTML = "<pre>#{code}</pre>"
+        source.innerHTML = "<pre>#{code}</pre>"
+
+### Code runner
+
+The event handler on the "Run" button that evaluates the code the
+user enters in the code input box.
+
+    window.runButtonClicked = ( event ) ->
+        eval codeInput.value
+        updateSourceTab()
+        codeInput.value = ''
+        codeInput.focus()
 

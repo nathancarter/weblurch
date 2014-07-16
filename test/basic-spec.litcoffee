@@ -49,6 +49,10 @@ easier to write the tests below.
 
 ### should initialize main div to id 0
 
+Note that this assumes that the main div has been assigned to the
+global variable `LE`, which is a rather arbitrary choice in the
+[app](../app/index.html) and [testapp](../testapp/index.html) code.
+
         it 'should initialize main div to id 0', ( done ) =>
             @page.evaluate ( -> LE.getElement().id ),
             ( err, result ) ->

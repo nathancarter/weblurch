@@ -15,12 +15,6 @@ than the earlier ones.
 
 ## Test environment
 
-### Test app
-
- * Add to the test app a user interface for making any of the
-   editing API calls on any Node in the `LurchEditor`'s main HTML
-   element (could be just a JS eval of the code in an input box).
- * Update the source view after every API call.
 
 ### Easy test generation
 
