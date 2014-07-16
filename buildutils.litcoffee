@@ -200,7 +200,7 @@ stylehseets is already installed in the `doc/` output folder.
 
 The following image is used to indicate an anchor.
 
-    linkpng = '<img src="link.png" class="anchor">'
+    linkcode = '<span class="glyphicon glyphicon-link"></span>'
 
 And now, the conversion function.
 
@@ -256,7 +256,7 @@ Return the final HTML string for the heading
 
             "<h#{level}><a name='#{escapedText}'></a>#{text} " +
             "&nbsp; #{results} <font size=-1><a href='" +
-            "##{escapedText}'>#{linkpng}</a></font></h#{level}>"
+            "##{escapedText}'>#{linkcode}</a></font></h#{level}>"
 
 Install the renderer just created, as well as highlighting support
 provided by `highlight.js`.

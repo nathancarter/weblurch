@@ -17,7 +17,6 @@ than the earlier ones.
 
 ### Test app
 
- * Replace my link png with Bootstrap's link glyphicon.
  * Split the test app into tabs, one containing a view that shows
    the document as HTML source.
  * Add to the test app a user interface for making any of the
@@ -329,4 +328,10 @@ it does not.
 
  * Add documentation to that file so that someone who does not know
    how to read a test spec file could learn it from that file.
+
+The glyph icons that come with Bootstrap were provided free by
+[Glyphicons](http://glyphicons.com/).  Bootstrap requests that if
+you use them, you provide a link back to that site.  When my apps
+are further along in production, such a link should be provided
+somewhere on the site where it makes sense to do so.
 

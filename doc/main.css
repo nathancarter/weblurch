@@ -49,6 +49,14 @@ pre {
 }
 code {
     font-size: 115%;
+    font-family: monospace;
+    /*padding: 2px 4px;*/
+    color: #ccc; /* must override from Bootstrap */
+    background-color: transparent; /* must override from Bootstrap */
+    /*border-radius: @border-radius-base;*/
+}
+a code {
+    color:  #9c6;
 }
 
 /* weird ie5win bug: all line-height to font-size ratios must agree or box gets pushed around. UPDATE: this has turned out to be very rare. my current recommendation is IGNORE this warning. at the moment i'm leaving it in only in case the issue turns up again. possibly the original bug in march 2001 was caused by an unusual combination of factors, although this solved it at the time.*/
