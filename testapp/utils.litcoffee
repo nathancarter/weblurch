@@ -13,6 +13,17 @@ Create a `LurchEditor` instance in the page itself.
         window.LE =
             new LurchEditor document.getElementById 'editor'
 
+Create global arrays in which we will store the history of all the
+states of the model (i.e., `LE`'s element), as well as all lines of
+code executed to cause changes of state.
+
+        window.testHistory = [
+            {
+                code : ''
+                state : LE.getElement().toJSON()
+            }
+        ]
+
 Store in global variables the important UI elements on the page.
 
         'source codeInput runButton'.split( ' ' ).map ( id ) ->
@@ -57,6 +68,10 @@ user enters in the code input box.
 
     window.runButtonClicked = ( event ) ->
         eval codeInput.value
+        testHistory.push {
+            code : codeInput.value
+            state : LE.getElement().toJSON()
+        }
         updateSourceTab()
         codeInput.value = ''
         codeInput.focus()

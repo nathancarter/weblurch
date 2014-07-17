@@ -15,13 +15,8 @@ than the earlier ones.
 
 ## Test environment
 
-
 ### Easy test generation
 
- * Have test app save the state of the model at the start and
-   after every API call, as well as storing all API calls, thus
-   keeping a full history.  API calls are recorded as the actual
-   code that was evaluated, easy to replay later (and objective).
  * Add buttons to the test app for marking points in the history
    as correct or incorrect (with optional comments) and store
    that data in the history as well
