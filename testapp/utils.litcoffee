@@ -27,8 +27,9 @@ code executed to cause changes of state.
 Store in global variables the important UI elements on the page.
 
         '''
-        source history historyBody historyTab codeInput
-        runButton yesButton noButton
+        source history historyBody historyTab
+        codeInput testNameInput
+        runButton yesButton noButton downloadButton
         ''' \
         .split( ' ' ).map ( id ) ->
             window[id] = document.getElementById id
@@ -39,6 +40,7 @@ Install event handlers for the buttons.
         ( $ runButton ).on 'click', runButtonClicked
         ( $ yesButton ).on 'click', yesButtonClicked
         ( $ noButton ).on 'click', noButtonClicked
+        ( $ downloadButton ).on 'click', downloadButtonClicked
 
 Make the code input respond to the Enter key by auto-clicking the
 run button.
@@ -119,6 +121,17 @@ edit the last item pushed onto the `testHistory` stack.
     window.noButtonClicked = ( event ) ->
         testHistory[testHistory.length - 1].correct = no
         updateDispatcher()
+
+### Download button
+
+    window.downloadButtonClicked = ( event ) ->
+        data = JSON.stringify testHistory
+        blob = new Blob [ data ], type : 'application/json'
+        link = document.createElement 'a'
+        link.setAttribute 'href', URL.createObjectURL blob
+        link.setAttribute 'download',
+            "#{testNameInput.value or 'test-history'}.json"
+        link.click()
 
 ### Representation of the test history
 

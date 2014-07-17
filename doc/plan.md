@@ -17,12 +17,10 @@ than the earlier ones.
 
 ### Easy test generation
 
- * Make it possible to give test histories names and download them
-   as JSON files, `putTestNameHere.json`.
  * Create a method in [phantom-utils](phantom-utils.litcoffee.html)
    (possibly rename to `test-utils`?) that can run such a test
    history inside a jasmine test (i.e., one `describe` with a bunch
-   of `it`s and `expect`s in it.
+   of `it`s and `expect`s in it).
  * Create a folder in the repository for holding such test JSON
    files and organize it hierarchically by topic
  * Add to the `cake test` procedure the running of all test
