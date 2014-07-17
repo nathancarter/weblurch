@@ -15,7 +15,7 @@
             <h1>webLurch Test App</h1>
             <!-- Input box and button for executing JS code -->
             <div class='row gap-before-3 gap-after-2'>
-                <div class='col-md-11'>
+                <div class='col-md-9'>
                     <input type='text' class='form-control'
                            id='codeInput'
                            placeholder='enter code to evaluate'/>
@@ -24,14 +24,24 @@
                     <button type='button' class='btn btn-default'
                             id='runButton'>Run</button>
                 </div>
+                <div class='col-md-1'>
+                    <button type='button' class='btn btn-success'
+                            id='yesButton'>Mark right</button>
+                </div>
+                <div class='col-md-1'>
+                    <button type='button' class='btn btn-danger'
+                            id='noButton'>Mark wrong</button>
+                </div>
             </div>
             <!-- Bootstrap styles the following list as tabs -->
             <ul class='nav nav-tabs' role='tablist'>
                 <li class='active'
                    ><a href='#html' role='tab'
                     data-toggle='tab'>HTML</a></li>
-                <li><a href='#source' role='tab'
+                <li><a href='#source' role='tab' id='sourceTab'
                     data-toggle='tab'>Source</a></li>
+                <li><a href='#history' role='tab' id='historyTab'
+                    data-toggle='tab'>History</a></li>
             </ul>
             <!-- Bootstrap shows the following divs when their
                  corresponding tabs (above) are clicked -->
@@ -41,6 +51,10 @@
                     <div id='editor'></div>
                 </div>
                 <div class='tab-pane' id='source'>
+                </div>
+                <div class='tab-pane' id='history'>
+                    <div id='historyBody'>
+                    </div>
                 </div>
             </div>
         </div>

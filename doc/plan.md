@@ -17,11 +17,8 @@ than the earlier ones.
 
 ### Easy test generation
 
- * Add buttons to the test app for marking points in the history
-   as correct or incorrect (with optional comments) and store
-   that data in the history as well
- * Create a UI for viewing that history, giving it a name, and
-   downloading it as a JSON file `putTestNameHere.json`.
+ * Make it possible to give test histories names and download them
+   as JSON files, `putTestNameHere.json`.
  * Create a method in [phantom-utils](phantom-utils.litcoffee.html)
    (possibly rename to `test-utils`?) that can run such a test
    history inside a jasmine test (i.e., one `describe` with a bunch
@@ -31,8 +28,13 @@ than the earlier ones.
  * Add to the `cake test` procedure the running of all test
    histories, verifying each step, and outputting a report,
    in [Markdown](https://daringfireball.net/projects/markdown/).
- * Categorize the outputs with section headers, etc., imitating
-   the structure of the folder hierarchy.
+   Or it may even be possible to create a single spec file in the
+   tests folder of the repository that loops through these JSON
+   files itself.  Either way, ensure that the output is categorized
+   with section headers, etc., imitating the structure of the
+   folder hierarchy.
+ * Create unit tests for as much of the functionality of this
+   growing test app as is reasonable.
 
 ### Better access to automated testing results
 
@@ -46,17 +48,6 @@ than the earlier ones.
    step at a time and show the expected vs. the actual, with
    differences highlighted.
 
-### Later, when you put the repository on a server
-
- * Have the server nightly do a git pull of the latest version.
-   Once that's working, have it run a shell script that does the
-   following.
-    * Back up the old HTML version of the test suite output.
-    * Run the test suite.
-    * Email the developers if and only if the new output differs
-      from the old in an important way (i.e., not just timings,
-      but results).
-
 ## More Word Processing Foundation
 
 ### Events
@@ -67,15 +58,27 @@ than the earlier ones.
    changed.  These events can be listened to by later bubbling and
    validation features.
  * Have the test app update the HTML source view when it hears
-   one of those events, rather than after every API call.
+   one of those events, even if no code was just run from the test
+   app code input.
+ * Create a new type of `DOMEditAction`, a compound one that's just
+   a sequence of non-compound ones.  Create undo, redo, and
+   representation support for it, and let it have a writable name
+   (i.e., string representation).
+ * Give `DOMEditTracker` support for declaring the start and end of
+   a block of edits, and any calls to `nodeEditHappened` in between
+   will just queue up a sequence of edit actions that get bundled
+   into one compound action when the block completes.  The start
+   event should give the block a name.
 
 ### Cursor
 
- * Build the `LurchEditor` API for placing a cursor in the
-   document, or nowhere, depending on whether the document has
+ * Design and build the `LurchEditor` API for placing a cursor in
+   the document, or nowhere, depending on whether the document has
    focus.
  * Add all the functions for dealing with that cursor as if it
-   were a real cursor
+   were a real cursor.  Each of these may make several edits to the
+   document, and so should use the new block-of-edits support
+   mentioned above.
     * insert a cursor before/after a given sub-node of the
       editable DOM element (iff one isn’t already in the element
       somewhere).
@@ -321,4 +324,13 @@ The glyph icons that come with Bootstrap were provided free by
 you use them, you provide a link back to that site.  When my apps
 are further along in production, such a link should be provided
 somewhere on the site where it makes sense to do so.
+
+Someday, when regular, automated testing becomes important, have
+a server do a nightly git pull of the latest version.  Once that's
+working, have it run a shell script that does the following.
+ * Back up the old HTML version of the test suite output.
+ * Run the test suite.
+ * Email the developers if and only if the new output differs from
+   the old in an important way (i.e., not just timings, but
+   results).
 
