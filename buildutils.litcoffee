@@ -231,9 +231,10 @@ links, to be consistent with anchor names generated elsewhere.
                 escapedText = exports.escapeHeading collapsed
 
 If this is a heading in a test suite, create a link to the test
-results.
+results.  The only exception is top-level headings, which do not
+have corresponding entries in the test suite resutls page.
 
-            if /-spec\.litcoffee/.test infile
+            if level > 1 and /-spec\.litcoffee/.test infile
                 results = "<font size=-1><a href='" +
                           "test-results.md.html#" +
                           "#{escapedText}'>see results</a></font>"
