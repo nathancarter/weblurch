@@ -92,10 +92,12 @@ Later we will also add tests that use `page.get 'content'`,
                 {
                     address : Node::address
                     lurchEditor : LurchEditor
+                    maindiv : maindiv instanceof HTMLElement
                 }
             , ( err, result ) ->
                 expect( result.address ).toBeTruthy()
                 expect( result.lurchEditor ).toBeTruthy()
+                expect( result.maindiv ).toBeTruthy()
                 done()
 
 ### should initialize main div to id 0
