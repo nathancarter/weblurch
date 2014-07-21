@@ -17,20 +17,12 @@ than the earlier ones.
 
 ### Easy test generation
 
- * Create a method in [phantom-utils](phantom-utils.litcoffee.html)
-   (possibly rename to `test-utils`?) that can run such a test
-   history inside a jasmine test (i.e., one `describe` with a bunch
-   of `it`s and `expect`s in it).
  * Create a folder in the repository for holding such test JSON
    files and organize it hierarchically by topic
- * Add to the `cake test` procedure the running of all test
-   histories, verifying each step, and outputting a report,
-   in [Markdown](https://daringfireball.net/projects/markdown/).
-   Or it may even be possible to create a single spec file in the
-   tests folder of the repository that loops through these JSON
-   files itself.  Either way, ensure that the output is categorized
-   with section headers, etc., imitating the structure of the
-   folder hierarchy.
+ * Enhance [all-histories-spec.litcoffee](
+   all-histories-spec.litcoffee.html) so that it loops through
+   the JSON files in the hierarchy.  Use section headers that
+   imitate the structure of the folder hierarchy.
  * Create unit tests for as much of the functionality of this
    growing test app as is reasonable.
 

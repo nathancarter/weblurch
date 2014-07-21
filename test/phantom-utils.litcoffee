@@ -144,3 +144,96 @@ the test reports directory.
                                  JSON.stringify mapping, null, 2
                 break
 
+# Running test app histories
+
+This is incomplete.  The body of the main loop is a stub.
+
+    exports.runTestHistory = ( filename ) ->
+
+Start a test for the given filename, whether or not it even exists.
+
+        exports.phantomDescribe "Test history in #{filename}", \
+        './testapp/index.html', ->
+
+The first test it must pass is that the file must exist and be
+readable as the JSON data for an array.
+
+            fs = require 'fs'
+            canLoad = yes
+            try
+                testHistory = JSON.parse fs.readFileSync filename
+            catch error
+                canLoad = error
+            it 'exists on disk', ( done ) =>
+                expect( canLoad ).toEqual yes
+                done()
+            it 'contains an array', ( done ) =>
+                expect( testHistory instanceof Array ).toBeTruthy()
+                done()
+
+Now we re-run, in the page, the entire test history.
+
+            it 'passes the test history', ( done ) =>
+                @page.evaluate ( history ) ->
+                    result = []
+                    for step, index in history
+
+For each step, if there is code to run (i.e., it's not the
+initialization step) then run it and be sure there are no errors.
+We include the index in the output so that if a test fails later,
+it will be obvious which step of the test failed.
+
+                        if step.code.length > 0
+                            try
+                                eval step.code
+                                result.push \
+                                    "no error in command #{index}"
+                            catch error
+                                result.push error
+                        else
+                            result.push \
+                                "no error in command #{index}"
+
+Now in case there is any comparison to do with the main div's
+state, we record that state here as a JSON string.
+
+                        result.push LE.getElement().toJSON()
+                    result
+                , ( err, result ) ->
+
+Now we repeat the same loop through the test history after we've
+obtained the page results, and verify that they're what they
+should be.  The first two lines pick out the two relelvant elements
+from the results array, one the result of running any code at that
+step and the other the DOM state achieved by that code.
+
+                    for step, index in testHistory
+                        codeResult = result[index*2]
+                        state = result[index*2+1]
+
+Verify that no errors occurred when the code ran.
+
+                        expect( codeResult ).toEqual \
+                            "no error in command #{index}"
+
+Now, in case one of the tests below fails, we'll want its index in
+the output, so we place that index in the objects here, just as a
+convenience to the reader.
+
+                        state.index = step.state.index = index
+
+Verify that the states match or do not match, whichever the test
+data requires.
+
+                        if step.correct is yes
+                            expect( state ).toEqual step.state
+                        else if step.correct is no
+                            expect( state ).not.toEqual step.state
+                    done()
+
+This is the additional (optional) parameter passed to the function
+that `@page.evaluate` will run, the test history as a big, JSONable
+object.
+
+                , testHistory
+
