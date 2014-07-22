@@ -4,7 +4,7 @@
 Pull in the utility functions in `phantom-utils` that make it
 easier to write the tests below.
 
-    { phantomDescribe, pageSetup, pageExpects, inPage,
+    { phantomDescribe, pageDo, pageExpects, inPage,
       pageExpectsError } = require './phantom-utils'
 
 ## address member function of Node class
@@ -33,7 +33,7 @@ The corner cases to be tested here are these:
 
 Although there are others we could test, these are enough for now.
 
-            pageSetup ->
+            pageDo ->
                 window.pardiv = document.createElement 'div'
                 document.body.appendChild pardiv
                 window.chidiv1 = document.createElement 'div'
@@ -56,7 +56,7 @@ Although there are others we could test, these are enough for now.
 We will test a few cases where the argument is the node it's being
 called on, for various nodes.
 
-            pageSetup ->
+            pageDo ->
                 window.pardiv = document.createElement 'div'
                 document.body.appendChild pardiv
                 window.chidiv1 = document.createElement 'div'
@@ -98,7 +98,7 @@ We will need to run tests on a variety of parent-child pairs of
 nodes, so we need to create such pairs as structures in the
 document first.
 
-            pageSetup ->
+            pageDo ->
                 window.pardiv = document.createElement 'div'
                 document.body.appendChild pardiv
                 window.chidiv1 = document.createElement 'div'
@@ -145,7 +145,7 @@ ask questions across those various levels.  This also ensures that
 we know exactly what the child indices are, because we designed
 the hierarchy in the first place.
 
-            pageSetup ->
+            pageDo ->
                 hierarchy = '''
                     <span id="test-0">foo</span>
                     <span id="test-1">bar</span>
@@ -267,7 +267,7 @@ We test a variety of type of nodes, including the document, the
 body, some DIVs and SPANs inside, as well as some DIVs and SPANs
 that are not part of the document.
 
-            pageSetup ->
+            pageDo ->
                 window.divInPage = document.createElement 'div'
                 document.body.appendChild divInPage
                 window.spanInPage = document.createElement 'span'
@@ -297,7 +297,7 @@ Here we re-use the same hierarchy from
 [a test above](#should-work-for-grandchildren-etc-),
 for the same reasons.
 
-            pageSetup ->
+            pageDo ->
                 hierarchy = '''
                     <span id="test-0">foo</span>
                     <span id="test-1">bar</span>
@@ -376,7 +376,7 @@ First we re-create the same hierarchy from
 [a test above](#should-work-for-grandchildren-etc-),
 for the same reasons.
 
-            pageSetup ->
+            pageDo ->
                 hierarchy = '''
                     <span id="test-0">foo</span>
                     <span id="test-1">bar</span>
@@ -467,7 +467,7 @@ First, just verify that the function itself is present.
 HTML text nodes should serialize as ordinary strings.
 We test a variety of ways they might occur.
 
-            pageSetup ->
+            pageDo ->
                 window.textNode = document.createTextNode 'foo'
                 window.div = document.createElement 'div'
                 div.innerHTML = '<i>italic</i> not italic'
@@ -502,7 +502,7 @@ Other no-children elements include images, horizontal rules, and
 line breaks.  We verify that in each case the object is encoded
 with the correct tag name and attributes, but no children.
 
-            pageSetup ->
+            pageDo ->
                 window.div = document.createElement 'div'
                 div.innerHTML = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAYCAIAAACNybHWAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA63pUWHRYTUw6Y29tLmFkb2JlLnhtcAAAGJVtULsOwiAU3fsVBOdy+9ChhHaxcTNpnHSsikoUaAqm+PcWWx9Rmbj3vOAwR51sJLc1cvKiDHU5rvd6y2l/92vA6EGx5xyvlxWa65ajGZmSCBcBQoi1+wNdlYtR3k85PlnbUICu60iXEt0eIc6yDKIEkiTsGaG5KVu7UJnJYPL0KbnZtaKxQivk53qrrzbHeOQMZwjiTryTlCGPR5OdluARiEkEL29v77e0Eo5f1qWQXJk+o0hjBn+Bv8LNG0+mn8LNj5DB13eGrmAsqwgYvIovgjseJHia4Qg7sAAAAV5JREFUSIntlL9rwkAUx18uPQttvICSmqjn5pDi4BJHwdm/VzI6xFEHsWSyBWtOUxSbqks8yHVwsWdRA7WT3/H9+PB9946nzGYzuJruhBD/Tf+az8eet2Jst9mc7s9ks7lSqdpsEtM8zirT6VQKvQ8GvusmaWZSEKq127Rel70fu/ZdFyFUo9QkJIPxae6O8zCK/CB46XR0yyKFwmEWiZ967fUSIZ4preTzZ9EAkMG4Yhg2pSJJxp4n0WT6ijEAMAk5/xwHMnUdAD4Zk2jyVvdrvMT1oe4xBoB4vZZof/wjb/Qb/Ua/El2+M1jTAGDHeSpozDkAYE2Tr5hUtz+hYRSlou/r9WJRisveaaOhIOQHwWS5jC+YIOZ8slj4jIGqlh1Hoimj0Uhq+PD9t25XJEkK86pabbUM25bCv2z1ybYfDYP1++sw5NvtaSzWNGJZZcd5yOWOUcpwOEzhMaW+AXrrPiceQvueAAAAAElFTkSuQmCC" width="31" height="24"><hr><br>'
             pageExpects ( -> div.childNodes[0].toJSON() ),
@@ -581,7 +581,7 @@ height 1 or 2.  Now we consider situations in which there are
 many levels to the Node tree.  I choose three examples, and mix in
 a diversity of depths, attributes, tag names, comments, etc.
 
-            pageSetup ->
+            pageDo ->
                 window.div1 = document.createElement 'div'
                 div1.innerHTML = '<span class="outermost" id=0>' +
                                  '<span class="middleman" id=1>' +
@@ -743,7 +743,7 @@ Here we do only one, brief test of each of the types tested above.
             pageExpects ( ->
                 node = document.createElement 'hr'
                 node.toJSON no ), 'toEqual', t : 'HR'
-            pageSetup ->
+            pageDo ->
                 window.div = document.createElement 'div'
                 div.innerHTML = '<p align="left">paragraph</p>' +
                                 '<p><span id="foo">bar</span>' +
@@ -801,7 +801,7 @@ It verifies that two strings, one empty and one nonempty, both get
 converted correctly into `Text` instances with the appropriate
 content.
 
-            pageSetup ->
+            pageDo ->
                 window.node1 = Node.fromJSON 'just a string'
                 window.node2 = Node.fromJSON ''
             pageExpects ( -> node1 instanceof Node ), 'toBeTruthy'
@@ -830,7 +830,7 @@ non-verbose notation, one empty and one nonempty, both get
 converted correctly into `Comment` instances with the appropriate
 content.
 
-            pageSetup ->
+            pageDo ->
                 window.node1 = Node.fromJSON \
                     m : yes, n : 'some comment'
                 window.node2 = Node.fromJSON \
@@ -861,7 +861,7 @@ non-verbose notation, both get converted correctly into `Element`
 instances with no children but the appropriate tags and
 attributes.
 
-            pageSetup ->
+            pageDo ->
                 window.node1 = Node.fromJSON \
                     tagName : 'hr',
                     attributes : class : 'y', whatever : 'dude'
@@ -1036,7 +1036,7 @@ similar event notification, but this time with an address further
 inside the root.
 
         it 'should send alerts on appendChild calls', inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 span = document.createElement 'span'
                 onemore = document.createElement 'span'
@@ -1094,7 +1094,7 @@ expect a similar event notification, but this time with an
 address further inside the root.
 
         it 'should send alerts on appendChild calls', inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 text = div.childNodes[0]
                 span = document.createElement 'span'
@@ -1161,7 +1161,7 @@ children inside it, with an empty span between.  We then normalize
 that node and repeat the test.
 
         it 'should send alerts on normalize calls', inPage ->
-            pageSetup ->
+            pageDo ->
                 window.div = document.getElementById '0'
                 div.appendChild document.createTextNode 'example'
                 window.span = document.createElement 'span'
@@ -1174,7 +1174,7 @@ we do so, we verify that each of the normalize calls returns
 undefined.
 
             pageExpects ( -> div.normalize() ), 'toBeUndefined'
-            pageSetup -> div.appendChild span
+            pageDo -> div.appendChild span
             pageExpects ( -> span.normalize() ), 'toBeUndefined'
 
 Now we validate the serialized versions of the edit actions that
@@ -1233,7 +1233,7 @@ correct events are propagated for each.
 
         it 'should send alerts on removeAttribute calls',
         inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 div.innerHTML = '''
                 <span align="center" class="thing">hi</span>
@@ -1277,7 +1277,7 @@ just one new step, of fetching the attribute node to be removed.
 
         it 'should send alerts on removeAttributeNode calls',
         inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 div.innerHTML = '''
                 <span align="center" class="thing">hi</span>
@@ -1292,7 +1292,7 @@ Remove an attribute from each span node, and verify that the
 return value of `removeAttributeNode` in each case is an attribute
 node, the one removed.
 
-            pageSetup ->
+            pageDo ->
                 togo = span1.getAttributeNode 'align'
                 window.result1 = span1.removeAttributeNode togo
                 togo = span2.getAttributeNode 'style'
@@ -1328,7 +1328,7 @@ that tree, verifying that the appropriate events are emitted each
 time.
 
         it 'should send alerts on removeChild calls', inPage ->
-            pageSetup ->
+            pageDo ->
                 window.div = document.getElementById '0'
                 div.innerHTML = '''
                 <span><span>INNER SPAN!</span>hi</span>
@@ -1392,7 +1392,7 @@ deleting two children, they are simply replaced with new children
 that are measurably different, for the purposes of testing.
 
         it 'should send alerts on replaceChild calls', inPage ->
-            pageSetup ->
+            pageDo ->
                 window.div = document.getElementById '0'
                 div.innerHTML = '''
                 <span><span>INNER SPAN!</span>hi</span>
@@ -1468,7 +1468,7 @@ events are correctly emitted.  In one case, we will be creating a
 new attribute, and in the other case, replacing an existing one.
 
         it 'should send alerts on setAttribute calls', inPage ->
-            pageSetup ->
+            pageDo ->
                 window.div = document.getElementById '0'
                 div.innerHTML = '''
                 <span example="yes">content</span>
@@ -1514,7 +1514,7 @@ new attribute, and in the other case, replacing an existing one.
 
         it 'should send alerts on setAttributeNode calls',
         inPage ->
-            pageSetup ->
+            pageDo ->
                 window.div = document.getElementById '0'
                 window.div.innerHTML = '''
                 <span example="yes">content</span>
@@ -1528,12 +1528,12 @@ span.  As we do so, validate that the return values of the calls
 to `setAttributeNode` are as they should be, the attribute node
 being replaced, or null if there was none.
 
-            pageSetup ->
+            pageDo ->
                 edit = document.createAttribute 'align'
                 edit.value = 'center'
                 window.result1 = div.setAttributeNode edit
             pageExpects ( -> result1 ), 'toBeNull'
-            pageSetup ->
+            pageDo ->
                 edit = document.createAttribute 'example'
                 edit.value = 'no'
                 window.result2 = span.setAttributeNode edit

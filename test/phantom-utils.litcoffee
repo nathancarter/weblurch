@@ -334,7 +334,7 @@ Furthermore, if some setup code needs to be run in the page, which
 does not require any tests to be called on it, but still needs to
 run without errors, then the following may be useful.
 
-    exports.pageSetup = ( func ) ->
+    exports.pageDo = ( func ) ->
         P.page.evaluate func, ( err, result ) ->
             expect( err ).toBeNull()
             P.done()
@@ -342,7 +342,7 @@ run without errors, then the following may be useful.
 One can then do the following.
 
     # it 'name of test here', inPage ->
-    #     pageSetup ->
+    #     pageDo ->
     #         ...put a lot of code here, and if assigning to any
     #         variables, be sure to use window.varName...
     #     pageExpects ( -> back to more tests here ),

@@ -14,7 +14,7 @@ for setting up tests as documented more thoroughly in
 [the basic unit test](basic-spec.litcoffee.html).
 
     { phantomDescribe, pageExpects, pageExpectsError,
-      inPage, pageSetup } = require './phantom-utils'
+      inPage, pageDo } = require './phantom-utils'
 
 ## DOMEditTracker class
 
@@ -50,7 +50,7 @@ desired id.
 Create an edit tracker and check to be sure the instances array
 has length 2 and contains the new instance.
 
-            pageSetup -> window.T1 = new DOMEditTracker
+            pageDo -> window.T1 = new DOMEditTracker
             pageExpects ( -> DOMEditTracker.instances.length ),
                 'toEqual', 2
             pageExpects ( -> DOMEditTracker.instances[1] is T1 ),
@@ -60,7 +60,7 @@ Create another, this one around an element outside the document,
 and check to be sure the instances array has length 3 and contains
 the two new instances in the appropriate order.
 
-            pageSetup ->
+            pageDo ->
                 div = document.createElement 'div'
                 window.T2 = new DOMEditTracker div
             pageExpects ( -> DOMEditTracker.instances.length ),
@@ -86,7 +86,7 @@ the document.
 Here is the new div to add to the document, with some inner
 elements and a `DOMEditTracker` instance around it.
 
-            pageSetup ->
+            pageDo ->
                 window.div = document.createElement 'div'
                 document.body.appendChild div
                 div.innerHTML = '''
@@ -123,7 +123,7 @@ grandchild nodes?
 Now create an instance around a div outside the document, and do
 similar tests on it.
 
-            pageSetup ->
+            pageDo ->
                 window.outside = document.createElement 'div'
                 window.child = document.createElement 'p'
                 outside.appendChild child
@@ -177,7 +177,7 @@ An instance of the `LurchEditor` class created without a div should
 return null from its `getElement` method.  Here we construct the
 `DOMEditTracker` instance around the div, as before.
 
-            pageSetup ->
+            pageDo ->
                 window.div = document.createElement 'div'
                 document.body.appendChild div
                 window.D = new DOMEditTracker div
@@ -204,7 +204,7 @@ continue to be equal to the size of the stack.
 
 Create the objects needed to run the test.
 
-            pageSetup ->
+            pageDo ->
                 window.div = document.createElement 'div'
                 document.body.appendChild div
                 window.span1 = document.createElement 'span'
@@ -221,15 +221,15 @@ are both zero.
 Create three editing actions and add them to the stack, verifying
 that the stack size and pointer increase with each addition.
 
-            pageSetup -> D.nodeEditHappened \
+            pageDo -> D.nodeEditHappened \
                 new DOMEditAction 'appendChild', div, span1
             pageExpects ( -> D.stack.length ), 'toEqual', 1
             pageExpects ( -> D.stackPointer ), 'toEqual', 1
-            pageSetup -> D.nodeEditHappened \
+            pageDo -> D.nodeEditHappened \
                 new DOMEditAction 'appendChild', div, span2
             pageExpects ( -> D.stack.length ), 'toEqual', 2
             pageExpects ( -> D.stackPointer ), 'toEqual', 2
-            pageSetup -> D.nodeEditHappened \
+            pageDo -> D.nodeEditHappened \
                 new DOMEditAction 'appendChild', div, span3
             pageExpects ( -> D.stack.length ), 'toEqual', 3
             pageExpects ( -> D.stackPointer ), 'toEqual', 3
@@ -237,10 +237,10 @@ that the stack size and pointer increase with each addition.
 Now try to add two invalid actions, and verify that neither the
 stack size nor stack pointer changes.
 
-            pageSetup -> D.nodeEditHappened null
+            pageDo -> D.nodeEditHappened null
             pageExpects ( -> D.stack.length ), 'toEqual', 3
             pageExpects ( -> D.stackPointer ), 'toEqual', 3
-            pageSetup -> D.nodeEditHappened 'not an edit action'
+            pageDo -> D.nodeEditHappened 'not an edit action'
             pageExpects ( -> D.stack.length ), 'toEqual', 3
             pageExpects ( -> D.stackPointer ), 'toEqual', 3
 
@@ -255,7 +255,7 @@ stack size before appending the new edit actions.
 
 Create the objects needed to run the test.
 
-            pageSetup ->
+            pageDo ->
                 window.div = document.createElement 'div'
                 document.body.appendChild div
                 window.D = new DOMEditTracker div
@@ -285,7 +285,7 @@ Push the stack pointer back by one, then record a new action, which
 should cause the edit tracker to remove the old third action from
 the stack before recording the new action.
 
-            pageSetup ->
+            pageDo ->
                 D.stackPointer--
                 D.nodeEditHappened new DOMEditAction 'normalize',
                     div
@@ -311,7 +311,7 @@ bottom (zero) and can call redo if and only if it is not at the end
 
 Create the objects needed to run the test.
 
-            pageSetup ->
+            pageDo ->
                 div = document.createElement 'div'
                 document.body.appendChild div
                 window.D = new DOMEditTracker div
@@ -336,11 +336,11 @@ Verify that the stack pointer is at the end, and that we cannot
 Move the stack pointer down the stack, and verify that at each of
 its next two locations, both undo and redo are available.
 
-            pageSetup -> D.stackPointer--
+            pageDo -> D.stackPointer--
             pageExpects ( -> D.stackPointer ), 'toEqual', 2
             pageExpects ( -> D.canRedo() ), 'toEqual', yes
             pageExpects ( -> D.canUndo() ), 'toEqual', yes
-            pageSetup -> D.stackPointer--
+            pageDo -> D.stackPointer--
             pageExpects ( -> D.stackPointer ), 'toEqual', 1
             pageExpects ( -> D.canRedo() ), 'toEqual', yes
             pageExpects ( -> D.canUndo() ), 'toEqual', yes
@@ -348,7 +348,7 @@ its next two locations, both undo and redo are available.
 Move the stack pointer down one more step, which should be to the
 bottom, and verify that we can redo but cannot undo.
 
-            pageSetup -> D.stackPointer--
+            pageDo -> D.stackPointer--
             pageExpects ( -> D.stackPointer ), 'toEqual', 0
             pageExpects ( -> D.canRedo() ), 'toEqual', yes
             pageExpects ( -> D.canUndo() ), 'toEqual', no
@@ -366,7 +366,7 @@ descriptiosn are as they should be.
 
 Create the objects needed to run the test.
 
-            pageSetup ->
+            pageDo ->
                 div = document.createElement 'div'
                 document.body.appendChild div
                 window.D = new DOMEditTracker div
@@ -393,19 +393,19 @@ Move the stack pointer down the stack three times (which should put
 it at the bottom) and at each position, check the same data as
 above.
 
-            pageSetup -> D.stackPointer--
+            pageDo -> D.stackPointer--
             pageExpects ( -> D.stackPointer ), 'toEqual', 2
             pageExpects ( -> D.undoDescription() ),
                 'toEqual', 'Undo Change key from empty to value'
             pageExpects ( -> D.redoDescription() ),
                 'toEqual', 'Redo Normalize text'
-            pageSetup -> D.stackPointer--
+            pageDo -> D.stackPointer--
             pageExpects ( -> D.stackPointer ), 'toEqual', 1
             pageExpects ( -> D.undoDescription() ),
                 'toEqual', 'Undo Add a node'
             pageExpects ( -> D.redoDescription() ),
                 'toEqual', 'Redo Change key from empty to value'
-            pageSetup -> D.stackPointer--
+            pageDo -> D.stackPointer--
             pageExpects ( -> D.stackPointer ), 'toEqual', 0
             pageExpects ( -> D.undoDescription() ), 'toEqual', ''
             pageExpects ( -> D.redoDescription() ),
@@ -422,7 +422,7 @@ class manages the stack correctly, so that we can call the `undo`
 and `redo` member functions of a `DOMEditTracker` instance
 repeatedly and expect them to behave correctly in sequence.
 
-            pageSetup ->
+            pageDo ->
                 window.div = document.createElement 'div'
                 document.body.appendChild div
                 window.D = new DOMEditTracker div
@@ -487,18 +487,18 @@ Perform three actions, checking the state of the same div after
 each one, to be sure we get descriptions of adding a span with some
 text in it, adding more text, and normalizing to unite the texts.
 
-            pageSetup ->
+            pageDo ->
                 window.span = document.createElement 'span'
                 span.textContent = 'some text'
                 div.appendChild span
             pageExpects ( -> div.toJSON() ),
                 'toEqual', stateHistory[1]
-            pageSetup ->
+            pageDo ->
                 text = document.createTextNode 'other text'
                 span.appendChild text
             pageExpects ( -> div.toJSON() ),
                 'toEqual', stateHistory[2]
-            pageSetup -> div.normalize()
+            pageDo -> div.normalize()
             pageExpects ( -> div.toJSON() ),
                 'toEqual', stateHistory[3]
 
@@ -510,7 +510,7 @@ Note that when the index is zero, we must test to see if it is
 false, since the test framework replaces zero and false with null.
 
             for index in [2,1,0,0]
-                pageSetup -> D.undo()
+                pageDo -> D.undo()
                 if index > 0
                     pageExpects ( -> D.stackPointer ),
                         'toEqual', index
@@ -525,7 +525,7 @@ be sure that the fourth one has no effect.  We also check the
 stack pointer after each redo, to be sure it's being incremented.
 
             for index in [1,2,3,3]
-                pageSetup -> D.redo()
+                pageDo -> D.redo()
                 if index > 0
                     pageExpects ( -> D.stackPointer ),
                         'toEqual', index

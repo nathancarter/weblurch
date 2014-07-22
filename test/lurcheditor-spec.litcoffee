@@ -7,7 +7,7 @@ easier to write the tests below.  Then follow the same structure
 for setting up tests as documented more thoroughly in
 [the basic unit test](basic-spec.litcoffee.html).
 
-    { phantomDescribe, pageSetup, pageExpects,
+    { phantomDescribe, pageDo, pageExpects,
       pageExpectsError, inPage } = require './phantom-utils'
 
 ## LurchEditor class
@@ -46,7 +46,7 @@ the next integer.
 ### nextFreeId() should count 0,1,2,...
 
         it 'nextFreeId() should count 0,1,2,...', inPage ->
-            pageSetup -> window.L = new LurchEditor()
+            pageDo -> window.L = new LurchEditor()
             pageExpects ( -> L.nextFreeId() ), 'toEqual', 0
             pageExpects ( -> L.nextFreeId() ), 'toEqual', 1
             pageExpects ( -> L.nextFreeId() ), 'toEqual', 2
@@ -60,7 +60,7 @@ the next integer.
 Create a new instance and put it through the same sequence of
 `nextFreeId()` calls as above.  We should get the same result.
 
-            pageSetup ->
+            pageDo ->
                 window.L = new LurchEditor()
                 L.nextFreeId() for i in [1..4]
             pageExpects ( -> L.freeIds ), 'toEqual', [ 4 ]
@@ -68,14 +68,15 @@ Create a new instance and put it through the same sequence of
 Then restoring the id 2 should put it back on the `freeIds` list in
 the correct spot.
 
-            pageSetup -> L.addFreeId 2
+            pageDo -> L.addFreeId 2
             pageExpects ( -> L.freeIds ), 'toEqual', [ 2, 4 ]
 
 But restoring any id 4 or higher should do nothing.
 
-            pageSetup -> L.addFreeId 4
-            pageSetup -> L.addFreeId 10
-            pageSetup -> L.addFreeId 100
+            pageDo ->
+                L.addFreeId 4
+                L.addFreeId 10
+                L.addFreeId 100
             pageExpects ( -> L.freeIds ), 'toEqual', [ 2, 4 ]
 
 Then calls to `nextFreeId` should yield 2, 4, 5, 6, ...
@@ -104,7 +105,7 @@ situations, or read each test description below.
 When constructed in an empty DIV, it should give that DIV the id 0,
 and thus have a free ids list of `[ 1 ]` aftewards.
 
-            pageSetup ->
+            pageDo ->
                 window.div = document.createElement 'div'
                 document.body.appendChild div
                 window.L = new LurchEditor div
@@ -121,7 +122,7 @@ all of their old ids, and assign them each a new, unique,
 nonnegative integer id.  In this test, we verify only that it
 removed all of their old ids.
 
-            pageSetup ->
+            pageDo ->
                 window.div = document.createElement 'div'
                 document.body.appendChild div
                 div.innerHTML =
@@ -167,7 +168,7 @@ is not null.
 
 Install the Lurch Editor in the DIV in question.
 
-            pageSetup -> new LurchEditor div
+            pageDo -> new LurchEditor div
 
 For each id that used to be in the document, verify that it is no
 longer present in the document.
@@ -201,7 +202,7 @@ has also assigned unique non-negative integer ids to each element
 in the DOM tree beneath that DIV, starting with 0 and proceeding
 upwards sequentially.
 
-            pageSetup ->
+            pageDo ->
                 div = document.createElement 'div'
                 document.body.appendChild div
                 div.innerHTML =
@@ -254,7 +255,7 @@ proceeding upwards sequentially, but keeping the existing valid
 integer ids unchanged.
 
         it 'should work with existing integer ids', inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.createElement 'div'
                 document.body.appendChild div
                 div.innerHTML =
@@ -325,7 +326,7 @@ elements.  We verify here briefly that those functions work, but
 do not test them extensively, since that is already done in
 [the unit test for DOM utilities](domutils-spec.litcoffee.html).
 
-            pageSetup ->
+            pageDo ->
                 window.div = document.createElement 'div'
                 div.id = '0'
                 document.body.appendChild div
@@ -361,7 +362,7 @@ The shortuct address and index functions in the `LurchEditor` class
 should function correctly (returning null) if the main HTML element
 of the instance is empty.
 
-            pageSetup ->
+            pageDo ->
                 window.div = document.createElement 'div'
                 document.body.appendChild div
                 window.LE = new LurchEditor()

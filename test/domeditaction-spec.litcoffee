@@ -13,7 +13,7 @@ for setting up tests as documented more thoroughly in
 [the basic unit test](basic-spec.litcoffee.html).
 
     { phantomDescribe, pageExpects, pageExpectsError,
-      inPage, pageSetup } = require './phantom-utils'
+      inPage, pageDo } = require './phantom-utils'
 
 ## DOMEditAction class
 
@@ -36,7 +36,7 @@ These will have a `toAppend` member that stores the child to be
 appended.
 
         it 'should have "appendChild" instances', inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 window.T = new DOMEditAction 'appendChild', div,
                     document.createElement 'span'
@@ -55,7 +55,7 @@ description provided when their `toString` method is called.
 
         it 'should correctly describe "appendChild" instances',
         inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 span = document.createElement 'span'
                 span.innerHTML = 'Hello, <b>friend.</b>'
@@ -74,7 +74,7 @@ inserted, as well as an integer member `insertBefore` that is the
 index that the newly inserted child will have after insertion.
 
         it 'should have "insertBefore" instances', inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 window.T = new DOMEditAction 'insertBefore', div,
                     document.createElement 'span'
@@ -94,7 +94,7 @@ description provided when their `toString` method is called.
 
         it 'should correctly describe "insertBefore" instances',
         inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 span = document.createElement 'span'
                 span.innerHTML = 'Hello, <b>friend.</b>'
@@ -113,7 +113,7 @@ child text elements (before the normalization) to their text
 content at that time.
 
         it 'should have "normalize" instances', inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 div.innerHTML = 'one'
                 div.appendChild document.createTextNode 'two'
@@ -141,7 +141,7 @@ description provided when their `toString` method is called.
 
         it 'should correctly describe "normalize" instances',
         inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 div.appendChild document.createTextNode 'one'
                 div.appendChild document.createTextNode 'two'
@@ -159,7 +159,7 @@ attribute to remove, and a `value` member containing the (string)
 value that the attribute had before removal.
 
         it 'should have "removeAttribute" instances', inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 window.T = new DOMEditAction 'removeAttribute',
                     div, 'id'
@@ -178,7 +178,7 @@ description provided when their `toString` method is called.
 
         it 'should correctly describe "removeAttribute" instances',
         inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 window.T = new DOMEditAction 'removeAttribute',
                     div, 'id'
@@ -197,7 +197,7 @@ value that the attribute had before removal.
 
         it 'should have "removeAttributeNode" instances',
         inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 window.T = new DOMEditAction 'removeAttributeNode',
                     div, div.getAttributeNode 'id'
@@ -217,7 +217,7 @@ description provided when their `toString` method is called.
 
         it 'should correctly describe "removeAttributeNode" ' +
            'instances', inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 togo = document.createAttribute 'id'
                 window.T = new DOMEditAction 'removeAttributeNode',
@@ -235,7 +235,7 @@ index of the child before removal, and a `child` member containing
 a serialized version of the removed child.
 
         it 'should have "removeChild" instances', inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 div.innerHTML = 'first child text node'
                 span = document.createElement 'span'
@@ -262,7 +262,7 @@ description provided when their `toString` method is called.
 
         it 'should correctly describe "removeChild" instances',
         inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 span = document.createElement 'span'
                 span.innerHTML = 'Hello, <b>friend.</b>'
@@ -283,7 +283,7 @@ a serialized version of the replaced child, and a `newChild`
 member containing a serialization of the replacement child.
 
         it 'should have "replaceChild" instances', inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 div.innerHTML = 'first child text node'
                 span = document.createElement 'span'
@@ -316,7 +316,7 @@ description provided when their `toString` method is called.
 
         it 'should correctly describe "replaceChild" instances',
         inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 span = document.createElement 'span'
                 span.innerHTML = 'Hello, <b>friend.</b>'
@@ -339,7 +339,7 @@ value of the attribute before it was set, and a string `newValue`
 member containing the value after the attribute is set.
 
         it 'should have "setAttribute" instances', inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 window.T = new DOMEditAction 'setAttribute', div,
                     'id', 1
@@ -359,7 +359,7 @@ description provided when their `toString` method is called.
 
         it 'should correctly describe "setAttribute" instances',
         inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 window.T = new DOMEditAction 'setAttribute', div,
                     'id', 17
@@ -377,7 +377,7 @@ value of the attribute before it was set, and a string `newValue`
 member containing the value after the attribute is set.
 
         it 'should have "setAttributeNode" instances', inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 attr = document.createAttribute 'id'
                 attr.value = 1
@@ -400,7 +400,7 @@ description provided when their `toString` method is called.
 
         it 'should correctly describe "setAttributeNode" ' +
            'instances', inPage ->
-            pageSetup ->
+            pageDo ->
                 div = document.getElementById '0'
                 change = document.createAttribute 'id'
                 change.value = 17
@@ -416,7 +416,7 @@ of the class with types other than those tested in the other tests
 in this specification, above.
 
         it 'should have no other instances', inPage ->
-            pageSetup ->
+            pageDo ->
                 window.div = document.getElementById '0'
             pageExpectsError ( -> new DOMEditAction 'foo', div )
             pageExpectsError ( -> new DOMEditAction div, div )
