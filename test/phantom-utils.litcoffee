@@ -292,7 +292,10 @@ checks we desire, and cause `done` to be called for us.
                 result = result[1]
             else
                 result = undefined
-            expect( result )[check](args...)
+            if typeof result isnt 'undefined'
+                expect( result )[check](args...)
+            else
+                expect( undefined )[check](args...)
             P.done()
         , "(#{func.toString()})()"
 
