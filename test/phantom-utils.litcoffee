@@ -242,3 +242,51 @@ object.
 
                 , testHistory
 
+# Convenience function for tests
+
+In order to make writing tests shorter, we provide the following
+convenience function.  Consider the following idiom.
+
+    # it 'name of test here', ( done ) =>
+    #     @page.evaluate =>
+    #         result = []
+    #         result.push( statement1 we want to test )
+    #         result.push( statement2 we want to test )
+    #         result.push( statement3 we want to test )
+    #         result
+    #     , ( err, result ) ->
+    #         expect( err ).toBeNull()
+    #         expect( result[0] ).toBeSuchAndSuch()
+    #         expect( result[1] ).toBeSuchAndSuch()
+    #         expect( result[2] ).toEqual soAndSo
+    #         done()
+
+This pattern would appear throughout our testing suite, and thus
+can be made shorter by defining the following functions.  This one
+can be used as in the example below to store the `done` function
+in the global object `P` for later use.
+
+    exports.inPage = ( func ) ->
+        ( done ) ->
+            P.done = done
+            func()
+
+This one can be used in place of `expect` to provide the extra
+checks we desire, and cause `done` to be called for us.
+
+    exports.pageExpects = ( func, check, args... ) =>
+        P.page.evaluate func, ( err, result ) ->
+            expect( err ).toBeNull()
+            expect( result )[check](args...)
+            P.done()
+
+The new idiom that can replace the old is therefore the following.
+
+    # it 'name of test here', inPage ->
+    #     pageExpects ( -> statement1 we want to test ),
+    #         'toBeSuchAndSuch'
+    #     pageExpects ( -> statement2 we want to test ),
+    #         'toBeSuchAndSuch'
+    #     pageExpects ( -> statement3 we want to test ),
+    #         'toEqual', soAndSo
+
