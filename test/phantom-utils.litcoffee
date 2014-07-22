@@ -146,7 +146,12 @@ the test reports directory.
 
 # Running test app histories
 
-This is incomplete.  The body of the main loop is a stub.
+Load [the testapp page](../testapp/index.html) and execute in it
+all the commands contained in the JSON data stored in the given
+file.  After each command, if the recorded state of the editor is
+marked as correct (or incorrect) in the JSON data, test to verify
+that the result in the page equals (or does not equal) that
+recorded state.
 
     exports.runTestHistory = ( filename ) ->
 
