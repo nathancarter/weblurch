@@ -10,9 +10,9 @@ This test suite will eventually traverse a folder hierarchy of many
 such tests, running them all.  For now, it just runs one example
 test history file.
 
-First, we load the necessary tools.
+First, we load the necessary tool.
 
-    { phantomDescribe, runTestHistory } = require './phantom-utils'
+    { runTestHistory } = require './phantom-utils'
 
 Next, we run the single test in question.
 
