@@ -275,10 +275,26 @@ This one can be used in place of `expect` to provide the extra
 checks we desire, and cause `done` to be called for us.
 
     exports.pageExpects = ( func, check, args... ) ->
-        P.page.evaluate func, ( err, result ) ->
+        P.page.evaluate ( evaluateThis ) ->
+            result = try eval evaluateThis catch e then e
+            if typeof result is 'undefined'
+                result = [ 'undefined' ]
+            else if result is null
+                result = [ 'null' ]
+            else
+                result = [ 'value', result ]
+            result
+        , ( err, result ) ->
             expect( err ).toBeNull()
+            if result?[0] is 'null'
+                result = null
+            else if result?[0] is 'value'
+                result = result[1]
+            else
+                result = undefined
             expect( result )[check](args...)
             P.done()
+        , "(#{func.toString()})()"
 
 The new idiom that can replace the old is therefore the following.
 
@@ -300,7 +316,7 @@ error object (if one exists) if and only if they're provided.
         , ( err, result ) ->
             expect( err ).toBeNull()
             expect( result ).not.toBeNull()
-            if check then expect( result )[check](args...)
+            if check then expect( result.message )[check](args...)
             P.done()
         , "(#{func.toString()})()"
 

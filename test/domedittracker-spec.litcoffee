@@ -211,16 +211,12 @@ Create the objects needed to run the test.
                 window.span2 = document.createElement 'span'
                 window.span3 = document.createElement 'span'
                 window.D = new DOMEditTracker div
-                console.log D.stack.length, D.stackPointer
 
 Verify that the inital values of the stack length and stack pointer
-are both zero.  (I had some trouble, when writing this test, in
-returning zero values from the page and having them converted to
-null by the JSON mechanism, hence these comparisons happen on the
-page side to sidestep that uniquely JavaScript annoyance.)
+are both zero.
 
-            pageExpects ( -> D.stack.length is 0 ), 'toBeTruthy'
-            pageExpects ( -> D.stackPointer is 0 ), 'toBeTruthy'
+            pageExpects ( -> D.stack.length ), 'toEqual', 0
+            pageExpects ( -> D.stackPointer ), 'toEqual', 0
 
 Create three editing actions and add them to the stack, verifying
 that the stack size and pointer increase with each addition.
@@ -331,33 +327,31 @@ Set up the stack with three actions in it.
                     div, span
 
 Verify that the stack pointer is at the end, and that we cannot
-"redo" from there, but we can "undo."  Note the use of truthy and
-falsy here, rather than equality comparisons to true and false,
-because the test framework converts 0 and false to null.
+"redo" from there, but we can "undo."
 
             pageExpects ( -> D.stackPointer ), 'toEqual', 3
-            pageExpects ( -> D.canRedo() ), 'toBeFalsy'
-            pageExpects ( -> D.canUndo() ), 'toBeTruthy'
+            pageExpects ( -> D.canRedo() ), 'toEqual', no
+            pageExpects ( -> D.canUndo() ), 'toEqual', yes
 
 Move the stack pointer down the stack, and verify that at each of
 its next two locations, both undo and redo are available.
 
             pageSetup -> D.stackPointer--
             pageExpects ( -> D.stackPointer ), 'toEqual', 2
-            pageExpects ( -> D.canRedo() ), 'toBeTruthy'
-            pageExpects ( -> D.canUndo() ), 'toBeTruthy'
+            pageExpects ( -> D.canRedo() ), 'toEqual', yes
+            pageExpects ( -> D.canUndo() ), 'toEqual', yes
             pageSetup -> D.stackPointer--
             pageExpects ( -> D.stackPointer ), 'toEqual', 1
-            pageExpects ( -> D.canRedo() ), 'toBeTruthy'
-            pageExpects ( -> D.canUndo() ), 'toBeTruthy'
+            pageExpects ( -> D.canRedo() ), 'toEqual', yes
+            pageExpects ( -> D.canUndo() ), 'toEqual', yes
 
 Move the stack pointer down one more step, which should be to the
 bottom, and verify that we can redo but cannot undo.
 
             pageSetup -> D.stackPointer--
-            pageExpects ( -> D.stackPointer is 0 ), 'toBeTruthy'
-            pageExpects ( -> D.canRedo() ), 'toBeTruthy'
-            pageExpects ( -> D.canUndo() ), 'toBeFalsy'
+            pageExpects ( -> D.stackPointer ), 'toEqual', 0
+            pageExpects ( -> D.canRedo() ), 'toEqual', yes
+            pageExpects ( -> D.canUndo() ), 'toEqual', no
 
 ### gives good undo/redo descriptions
 
@@ -393,8 +387,7 @@ descriptions.
             pageExpects ( -> D.stackPointer ), 'toEqual', 3
             pageExpects ( -> D.undoDescription() ),
                 'toEqual', 'Undo Normalize text'
-            pageExpects ( -> D.redoDescription() is '' ),
-                'toBeTruthy'
+            pageExpects ( -> D.redoDescription() ), 'toEqual', ''
 
 Move the stack pointer down the stack three times (which should put
 it at the bottom) and at each position, check the same data as
@@ -413,9 +406,8 @@ above.
             pageExpects ( -> D.redoDescription() ),
                 'toEqual', 'Redo Change key from empty to value'
             pageSetup -> D.stackPointer--
-            pageExpects ( -> D.stackPointer is 0 ), 'toBeTruthy'
-            pageExpects ( -> D.undoDescription() is '' ),
-                'toBeTruthy'
+            pageExpects ( -> D.stackPointer ), 'toEqual', 0
+            pageExpects ( -> D.undoDescription() ), 'toEqual', ''
             pageExpects ( -> D.redoDescription() ),
                 'toEqual', 'Redo Add a node'
 
