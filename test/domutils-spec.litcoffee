@@ -4,7 +4,8 @@
 Pull in the utility functions in `phantom-utils` that make it
 easier to write the tests below.
 
-    { phantomDescribe } = require './phantom-utils'
+    { phantomDescribe, pageSetup, pageExpects, inPage,
+      pageExpectsError } = require './phantom-utils'
 
 ## address member function of Node class
 
@@ -17,18 +18,14 @@ the `Node` prototype.
 
 ### should be defined
 
-        it 'should be defined', ( done ) =>
-
 First, just verify that it's present.
 
-            @page.evaluate ( -> Node::address ),
-            ( err, result ) ->
-                expect( result ).toBeTruthy()
-                done()
+        it 'should be defined', inPage ->
+            pageExpects ( -> Node::address ), 'toBeTruthy'
 
 ### should give null on corner cases
 
-        it 'should give null on corner cases', ( done ) =>
+        it 'should give null on corner cases', inPage ->
 
 The corner cases to be tested here are these:
  * The address of a DOM node within one of its children.
@@ -36,97 +33,85 @@ The corner cases to be tested here are these:
 
 Although there are others we could test, these are enough for now.
 
-            @page.evaluate ->
-                pardiv = document.createElement 'div'
+            pageSetup ->
+                window.pardiv = document.createElement 'div'
                 document.body.appendChild pardiv
-                chidiv1 = document.createElement 'div'
+                window.chidiv1 = document.createElement 'div'
                 pardiv.appendChild chidiv1
-                chidiv2 = document.createElement 'div'
+                window.chidiv2 = document.createElement 'div'
                 pardiv.appendChild chidiv2
-                [
-                    pardiv.address( chidiv1 ) is null
-                    pardiv.address( chidiv2 ) is null
-                    chidiv1.address( chidiv2 ) is null
-                    chidiv2.address( chidiv1 ) is null
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toBeTruthy()
-                expect( result[2] ).toBeTruthy()
-                expect( result[3] ).toBeTruthy()
-                done()
+            pageExpects ( -> pardiv.address( chidiv1 ) ),
+                'toBeNull'
+            pageExpects ( -> pardiv.address( chidiv2 ) ),
+                'toBeNull'
+            pageExpects ( -> chidiv1.address( chidiv2 ) ),
+                'toBeNull'
+            pageExpects ( -> chidiv2.address( chidiv1 ) ),
+                'toBeNull'
 
 ### should be empty when argument is this
 
-        it 'should be empty when argument is this', ( done ) =>
+        it 'should be empty when argument is this', inPage ->
 
 We will test a few cases where the argument is the node it's being
 called on, for various nodes.
 
-            @page.evaluate ->
-                pardiv = document.createElement 'div'
+            pageSetup ->
+                window.pardiv = document.createElement 'div'
                 document.body.appendChild pardiv
-                chidiv1 = document.createElement 'div'
+                window.chidiv1 = document.createElement 'div'
                 pardiv.appendChild chidiv1
-                chidiv2 = document.createElement 'div'
+                window.chidiv2 = document.createElement 'div'
                 pardiv.appendChild chidiv2
-                [
-                    pardiv.address( pardiv )
-                    chidiv1.address( chidiv1 )
-                    chidiv2.address( chidiv2 )
-                    document.address( document )
-                    document.body.address( document.body )
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toEqual [ ]
-                expect( result[1] ).toEqual [ ]
-                expect( result[2] ).toEqual [ ]
-                expect( result[3] ).toEqual [ ]
-                expect( result[4] ).toEqual [ ]
-                done()
+            pageExpects ( -> pardiv.address( pardiv ) ),
+                'toEqual', [ ]
+            pageExpects ( -> chidiv1.address( chidiv1 ) ),
+                'toEqual', [ ]
+            pageExpects ( -> chidiv2.address( chidiv2 ) ),
+                'toEqual', [ ]
+            pageExpects ( -> document.address( document ) ),
+                'toEqual', [ ]
+            pageExpects ( ->
+                document.body.address document.body ),
+                'toEqual', [ ]
 
 ### should be empty for top-level,null
 
-        it 'should be empty for top-level,null', ( done ) =>
+        it 'should be empty for top-level,null', inPage ->
 
 The simplest way to test this is to compute the address of the
 document, and expect it to be the empty array.  But we also make
 the document create an empty div and not put it inside any other
 node, and we expect that its address will also be the empty array.
 
-            @page.evaluate ->
-                [
-                    document.address()
-                    document.createElement( 'div' ).address()
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toEqual [ ]
-                expect( result[1] ).toEqual [ ]
-                done()
+            pageExpects ( -> document.address() ), 'toEqual', [ ]
+            pageExpects ( ->
+                document.createElement( 'div' ).address() ),
+                'toEqual', [ ]
 
 ### should be length-1 for a child
 
-        it 'should be length-1 for a child', ( done ) =>
-            @page.evaluate ->
+        it 'should be length-1 for a child', inPage ->
 
 First, add some structure to the document.
 We will need to run tests on a variety of parent-child pairs of
 nodes, so we need to create such pairs as structures in the
 document first.
 
-                pardiv = document.createElement 'div'
+            pageSetup ->
+                window.pardiv = document.createElement 'div'
                 document.body.appendChild pardiv
-                chidiv1 = document.createElement 'div'
+                window.chidiv1 = document.createElement 'div'
                 pardiv.appendChild chidiv1
-                chidiv2 = document.createElement 'div'
+                window.chidiv2 = document.createElement 'div'
                 pardiv.appendChild chidiv2
 
 Next, create some structure *outside* the document.
 We want to verify that our routines work outside the page's
 document as well.
 
-                outer = document.createElement 'div'
-                inner = document.createElement 'span'
+                window.outer = document.createElement 'div'
+                window.inner = document.createElement 'span'
                 outer.appendChild inner
 
 We call the `address` function in several different ways, but each
@@ -135,39 +120,32 @@ immediate child of the document, with no argument).  Sometimes we
 compute the same result in both of those ways to verify that they
 are equal.
 
-                [
-                    document.childNodes[0].address document
-                    document.childNodes[0].address()
-                    chidiv1.address pardiv
-                    chidiv2.address pardiv
-                    pardiv.address document.body
-                    document.body.childNodes.length
-                    inner.address outer
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toEqual [ 0 ]
-                expect( result[1] ).toEqual [ 0 ]
-                expect( result[2] ).toEqual [ 0 ]
-                expect( result[3] ).toEqual [ 1 ]
-
-The next line verifies that `pardiv` was the last element in the
-list of child nodes of the document body.
-
-                expect( result[4] ).toEqual [ result[5]-1 ]
-                expect( result[6] ).toEqual [ 0 ]
-                done()
-
+            pageExpects ( ->
+                document.childNodes[0].address document ),
+                'toEqual', [ 0 ]
+            pageExpects ( -> document.childNodes[0].address() ),
+                'toEqual', [ 0 ]
+            pageExpects ( -> chidiv1.address pardiv ),
+                'toEqual', [ 0 ]
+            pageExpects ( -> chidiv2.address pardiv ),
+                'toEqual', [ 1 ]
+            pageExpects ( -> document.body.childNodes.length ),
+                'toEqual', 8
+            pageExpects ( -> pardiv.address document.body ),
+                'toEqual', [ 7 ]
+            pageExpects ( -> inner.address outer ),
+                'toEqual', [ 0 ]
 
 ### should work for grandchildren, etc.
 
-        it 'should work for grandchildren, etc.', ( done ) =>
-            @page.evaluate ->
+        it 'should work for grandchildren, etc.', inPage ->
 
 First, we construct a hierarchy with several levels so that we can
 ask questions across those various levels.  This also ensures that
 we know exactly what the child indices are, because we designed
 the hierarchy in the first place.
 
+            pageSetup ->
                 hierarchy = '''
                     <span id="test-0">foo</span>
                     <span id="test-1">bar</span>
@@ -189,72 +167,63 @@ the hierarchy in the first place.
                     '''
 
 In order to ensure that we do not insert any text nodes that would
-change the expected indices of the elements in the HTML code above,
-we remove whitespace between tags before creating a DOM structure
-from that code.
+change the expected indices of the elements in the HTML code
+above, we remove whitespace between tags before creating a DOM
+structure from that code.
 
                 hierarchy = hierarchy.replace( /^\s*|\s*$/g, '' )
                                      .replace( />\s*</g, '><' )
 
 Now create that hierarchy inside our page, for testing.
 
-                div = document.createElement 'div'
+                window.div = document.createElement 'div'
                 document.body.appendChild div
                 div.innerHTML = hierarchy
-                elts = ( document.getElementById "test-#{i}" \
-                    for i in [0..8] )
+                window.elts = ( document.getElementById \
+                    "test-#{i}" for i in [0..8] )
 
 We check the address of each test element inside the div we just
 created, as well as its address relative to the div with id
 `test-2`.
 
-                [
-                    elts[0].address div
-                    elts[1].address div
-                    elts[2].address div
-                    elts[3].address div
-                    elts[4].address div
-                    elts[5].address div
-                    elts[6].address div
-                    elts[7].address div
-                    elts[8].address div
-                    elts[2].address elts[2]
-                    elts[3].address elts[2]
-                    elts[4].address elts[2]
-                    elts[5].address elts[2]
-                    elts[6].address elts[2]
-                    elts[7].address elts[2]
-                    elts[8].address elts[2]
-                ]
-
-When checking addresses, note that `result[i]` corresponds to the
-node with id "test-i", for any $i\in\{0,1,\ldots,7,8\}$.
-
-            , ( err, result ) ->
-
 First, check all descendants of the main div.
 
-                expect( result[0] ).toEqual [ 0 ]
-                expect( result[1] ).toEqual [ 1 ]
-                expect( result[2] ).toEqual [ 2 ]
-                expect( result[3] ).toEqual [ 2, 0 ]
-                expect( result[4] ).toEqual [ 2, 1 ]
-                expect( result[5] ).toEqual [ 2, 1, 0 ]
-                expect( result[6] ).toEqual [ 2, 1, 0, 0 ]
-                expect( result[7] ).toEqual [ 2, 1, 0, 1 ]
-                expect( result[8] ).toEqual [ 2, 1, 1 ]
+            pageExpects ( -> elts[0].address div ),
+                'toEqual', [ 0 ]
+            pageExpects ( -> elts[1].address div ),
+                'toEqual', [ 1 ]
+            pageExpects ( -> elts[2].address div ),
+                'toEqual', [ 2 ]
+            pageExpects ( -> elts[3].address div ),
+                'toEqual', [ 2, 0 ]
+            pageExpects ( -> elts[4].address div ),
+                'toEqual', [ 2, 1 ]
+            pageExpects ( -> elts[5].address div ),
+                'toEqual', [ 2, 1, 0 ]
+            pageExpects ( -> elts[6].address div ),
+                'toEqual', [ 2, 1, 0, 0 ]
+            pageExpects ( -> elts[7].address div ),
+                'toEqual', [ 2, 1, 0, 1 ]
+            pageExpects ( -> elts[8].address div ),
+                'toEqual', [ 2, 1, 1 ]
 
 Next, check the descendants of the element with id `test-2` for
 their addresses relative to that element.
 
-                expect( result[9] ).toEqual [ ]
-                expect( result[10] ).toEqual [ 0 ]
-                expect( result[11] ).toEqual [ 1 ]
-                expect( result[12] ).toEqual [ 1, 0 ]
-                expect( result[13] ).toEqual [ 1, 0, 0 ]
-                expect( result[14] ).toEqual [ 1, 0, 1 ]
-                expect( result[15] ).toEqual [ 1, 1 ]
-                done()
+            pageExpects ( -> elts[2].address elts[2] ),
+                'toEqual', [ ]
+            pageExpects ( -> elts[3].address elts[2] ),
+                'toEqual', [ 0 ]
+            pageExpects ( -> elts[4].address elts[2] ),
+                'toEqual', [ 1 ]
+            pageExpects ( -> elts[5].address elts[2] ),
+                'toEqual', [ 1, 0 ]
+            pageExpects ( -> elts[6].address elts[2] ),
+                'toEqual', [ 1, 0, 0 ]
+            pageExpects ( -> elts[7].address elts[2] ),
+                'toEqual', [ 1, 0, 1 ]
+            pageExpects ( -> elts[8].address elts[2] ),
+                'toEqual', [ 1, 1 ]
 
 ## index member function of Node class
 
@@ -267,91 +236,68 @@ The tests in this section test the `index` member function in the
 
 ### should be defined
 
-        it 'should be defined', ( done ) =>
-            @page.evaluate ( -> Node::index ),
-            ( err, result ) ->
-                expect( result ).toBeTruthy()
-                done()
+        it 'should be defined', inPage ->
+            pageExpects ( -> Node::index ), 'toBeTruthy'
 
 ### should give errors for non-arrays
 
-        it 'should give errors for non-arrays', ( done ) =>
+        it 'should give errors for non-arrays', inPage ->
 
 Verify that calls to the function throw errors if anything but an
-array is passed as the argument.
+array is passed as the argument, and that the error messages
+contain the relevant portion of the expected error message.
 
-            @page.evaluate ->
-                result = []
-                result.push try document.index 0 \
-                            catch e then e.message
-                result.push try document.index { 0: 0 } \
-                            catch e then e.message
-                result.push try document.index document \
-                            catch e then e.message
-                result.push try document.index ( -> ) \
-                            catch e then e.message
-                result.push try document.index '[0,0]' \
-                            catch e then e.message
-                result
-            , ( err, result ) ->
-
-Now verify that each of the items in the resulting array contains
-the relevant portion of the expected error message.
-
-                expect( /requires an array/.test result[0] )
-                    .toBeTruthy()
-                expect( /requires an array/.test result[1] )
-                    .toBeTruthy()
-                expect( /requires an array/.test result[2] )
-                    .toBeTruthy()
-                expect( /requires an array/.test result[3] )
-                    .toBeTruthy()
-                expect( /requires an array/.test result[4] )
-                    .toBeTruthy()
-                done()
+            pageExpectsError ( -> document.index 0 ),
+                'toMatch', /requires an array/
+            pageExpectsError ( -> document.index 0: 0 ),
+                'toMatch', /requires an array/
+            pageExpectsError ( -> document.index document ),
+                'toMatch', /requires an array/
+            pageExpectsError ( -> document.index -> ),
+                'toMatch', /requires an array/
+            pageExpectsError ( -> document.index '[0,0]' ),
+                'toMatch', /requires an array/
 
 ### should yield itself for []
 
-        it 'should yield itself for []', ( done ) =>
+        it 'should yield itself for []', inPage ->
 
 Verify that `N.index []` yields `N`, for any node `N`.
 We test a variety of type of nodes, including the document, the
 body, some DIVs and SPANs inside, as well as some DIVs and SPANs
 that are not part of the document.
 
-            @page.evaluate ->
-                divInPage = document.createElement 'div'
+            pageSetup ->
+                window.divInPage = document.createElement 'div'
                 document.body.appendChild divInPage
-                spanInPage = document.createElement 'span'
+                window.spanInPage = document.createElement 'span'
                 document.body.appendChild spanInPage
-                divOutside = document.createElement 'div'
-                spanOutside = document.createElement 'span'
-                [
-                    divInPage is divInPage.index []
-                    spanInPage is spanInPage.index []
-                    divOutside is divOutside.index []
-                    spanOutside is spanOutside.index []
-                    document is document.index []
-                    document.body is document.body.index []
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toBeTruthy()
-                expect( result[2] ).toBeTruthy()
-                expect( result[3] ).toBeTruthy()
-                expect( result[4] ).toBeTruthy()
-                expect( result[5] ).toBeTruthy()
-                done()
+                window.divOutside = document.createElement 'div'
+                window.spanOutside = document.createElement 'span'
+            pageExpects ( -> divInPage is divInPage.index [] ),
+                'toBeTruthy'
+            pageExpects ( -> spanInPage is spanInPage.index [] ),
+                'toBeTruthy'
+            pageExpects ( -> divOutside is divOutside.index [] ),
+                'toBeTruthy'
+            pageExpects ( ->
+                spanOutside is spanOutside.index [] ),
+                'toBeTruthy'
+            pageExpects ( -> document is document.index [] ),
+                'toBeTruthy'
+            pageExpects ( ->
+                document.body is document.body.index [] ),
+                'toBeTruthy'
 
 ### should work for descendant indices
 
-        it 'should work for descendant indices', ( done ) =>
-            @page.evaluate ->
+        it 'should work for descendant indices', inPage ->
 
 Here we re-use the same hierarchy from
 [a test above](#should-work-for-grandchildren-etc-),
 for the same reasons.
 
+            pageSetup ->
                 hierarchy = '''
                     <span id="test-0">foo</span>
                     <span id="test-1">bar</span>
@@ -380,51 +326,45 @@ before creating a DOM structure from that code.
 
 Now create that hierarchy inside our page, for testing.
 
-                div = document.createElement 'div'
+                window.div = document.createElement 'div'
                 document.body.appendChild div
                 div.innerHTML = hierarchy
 
-Look up a lot of addresses, and store their ids (if they are
+Look up a lot of addresses, and verify their ids (if they are
 elements with ids) or their text content (if they are text nodes).
 
-                [
-                    div.index( [ 0 ] ).id
-                    div.index( [ 1 ] ).id
-                    div.index( [ 2 ] ).id
-                    div.index( [ 0, 0 ] ).textContent
-                    div.index( [ 1, 0 ] ).textContent
-                    div.index( [ 2, 0 ] ).id
-                    div.index( [ 2, 0, 0 ] ).textContent
-                    div.index( [ 2, 1 ] ).id
-                    div.index( [ 2, 1, 0 ] ).id
-                    div.index( [ 2, 1, 0, 0 ] ).id
-                    div.index( [ 2, 1, 0, 0, 1 ] ).textContent
-                    div.index( [ 2, 1, 0, 1 ] ).id
-                    div.index( [ 2, 1, 1 ] ).id
-                ]
-
-Verify the ids and text contents computed above match the
-hierarchy and indices given.
-
-            , ( err, result ) ->
-                expect( result[0] ).toEqual 'test-0'
-                expect( result[1] ).toEqual 'test-1'
-                expect( result[2] ).toEqual 'test-2'
-                expect( result[3] ).toEqual 'foo'
-                expect( result[4] ).toEqual 'bar'
-                expect( result[5] ).toEqual 'test-3'
-                expect( result[6] ).toEqual 'baz'
-                expect( result[7] ).toEqual 'test-4'
-                expect( result[8] ).toEqual 'test-5'
-                expect( result[9] ).toEqual 'test-6'
-                expect( result[10] ).toEqual 'x'
-                expect( result[11] ).toEqual 'test-7'
-                expect( result[12] ).toEqual 'test-8'
-                done()
+            pageExpects ( -> div.index( [ 0 ] ).id ),
+                'toEqual', 'test-0'
+            pageExpects ( -> div.index( [ 1 ] ).id ),
+                'toEqual', 'test-1'
+            pageExpects ( -> div.index( [ 2 ] ).id ),
+                'toEqual', 'test-2'
+            pageExpects ( -> div.index( [ 0, 0 ] ).textContent ),
+                'toEqual', 'foo'
+            pageExpects ( -> div.index( [ 1, 0 ] ).textContent ),
+                'toEqual', 'bar'
+            pageExpects ( -> div.index( [ 2, 0 ] ).id ),
+                'toEqual', 'test-3'
+            pageExpects ( ->
+                div.index( [ 2, 0, 0 ] ).textContent ),
+                'toEqual', 'baz'
+            pageExpects ( -> div.index( [ 2, 1 ] ).id ),
+                'toEqual', 'test-4'
+            pageExpects ( -> div.index( [ 2, 1, 0 ] ).id ),
+                'toEqual', 'test-5'
+            pageExpects ( -> div.index( [ 2, 1, 0, 0 ] ).id ),
+                'toEqual', 'test-6'
+            pageExpects ( ->
+                div.index( [ 2, 1, 0, 0, 1 ] ).textContent ),
+                'toEqual', 'x'
+            pageExpects ( -> div.index( [ 2, 1, 0, 1 ] ).id ),
+                'toEqual', 'test-7'
+            pageExpects ( -> div.index( [ 2, 1, 1 ] ).id ),
+                'toEqual', 'test-8'
 
 ### should give undefined for bad indices
 
-        it 'should give undefined for bad indices', ( done ) =>
+        it 'should give undefined for bad indices', inPage ->
 
 Verify that calls to the function return undefined if any step in
 the address array is invalid.  There are many ways for this to
@@ -432,12 +372,11 @@ happen (entry less than zero, entry larger than number of children
 at that level, entry not an integer, entry not a number at all).
 We test each of these cases below.
 
-            @page.evaluate ->
-
 First we re-create the same hierarchy from
 [a test above](#should-work-for-grandchildren-etc-),
 for the same reasons.
 
+            pageSetup ->
                 hierarchy = '''
                     <span id="test-0">foo</span>
                     <span id="test-1">bar</span>
@@ -466,7 +405,7 @@ before creating a DOM structure from that code.
 
 Now create that hierarchy inside our page, for testing.
 
-                div = document.createElement 'div'
+                window.div = document.createElement 'div'
                 document.body.appendChild div
                 div.innerHTML = hierarchy
 
@@ -477,40 +416,32 @@ undefined in each case, and we wish to populate our array with
 that information in string form, so that it can be returned from
 the page as valid JSON.
 
-                [
-                    typeof div.index [ -1 ]
-                    typeof div.index [ 3 ]
-                    typeof div.index [ 300000 ]
-                    typeof div.index [ 0.2 ]
-                    typeof div.index [ 'something' ]
-                    typeof div.index [ 'childNodes' ]
-                    typeof div.index [ [ 0 ] ]
-                    typeof div.index [ [ ] ]
-                    typeof div.index [ { } ]
-                    typeof div.index [ div ]
-                    typeof div.index [ 0, -1 ]
-                    typeof div.index [ 0, 1 ]
-                    typeof div.index [ 0, 'ponies' ]
-                ]
-            , ( err, result ) ->
-
-Now verify that each of the items in the resulting array contains
-the relevant portion of the expected error message.
-
-                expect( result[0] ).toEqual 'undefined'
-                expect( result[1] ).toEqual 'undefined'
-                expect( result[2] ).toEqual 'undefined'
-                expect( result[3] ).toEqual 'undefined'
-                expect( result[4] ).toEqual 'undefined'
-                expect( result[5] ).toEqual 'undefined'
-                expect( result[6] ).toEqual 'undefined'
-                expect( result[7] ).toEqual 'undefined'
-                expect( result[8] ).toEqual 'undefined'
-                expect( result[9] ).toEqual 'undefined'
-                expect( result[10] ).toEqual 'undefined'
-                expect( result[11] ).toEqual 'undefined'
-                expect( result[12] ).toEqual 'undefined'
-                done()
+            pageExpects ( -> typeof div.index [ -1 ] ),
+                'toEqual', 'undefined'
+            pageExpects ( -> typeof div.index [ 3 ] ),
+                'toEqual', 'undefined'
+            pageExpects ( -> typeof div.index [ 300000 ] ),
+                'toEqual', 'undefined'
+            pageExpects ( -> typeof div.index [ 0.2 ] ),
+                'toEqual', 'undefined'
+            pageExpects ( -> typeof div.index [ 'something' ] ),
+                'toEqual', 'undefined'
+            pageExpects ( -> typeof div.index [ 'childNodes' ] ),
+                'toEqual', 'undefined'
+            pageExpects ( -> typeof div.index [ [ 0 ] ] ),
+                'toEqual', 'undefined'
+            pageExpects ( -> typeof div.index [ [ ] ] ),
+                'toEqual', 'undefined'
+            pageExpects ( -> typeof div.index [ { } ] ),
+                'toEqual', 'undefined'
+            pageExpects ( -> typeof div.index [ div ] ),
+                'toEqual', 'undefined'
+            pageExpects ( -> typeof div.index [ 0, -1 ] ),
+                'toEqual', 'undefined'
+            pageExpects ( -> typeof div.index [ 0, 1 ] ),
+                'toEqual', 'undefined'
+            pageExpects ( -> typeof div.index [ 0, 'ponies' ] ),
+                'toEqual', 'undefined'
 
 ## Node toJSON conversion
 
@@ -523,73 +454,59 @@ The tests in this section test the `toJSON` member function in the
 
 ### should be defined
 
-        it 'should be defined', ( done ) =>
+        it 'should be defined', inPage ->
 
 First, just verify that the function itself is present.
 
-            @page.evaluate ( -> Node::toJSON ),
-            ( err, result ) ->
-                expect( result ).toBeTruthy()
-                done()
+            pageExpects ( -> Node::toJSON ), 'toBeTruthy'
 
 ### should convert text nodes to strings
 
-        it 'should convert text nodes to strings', ( done ) =>
+        it 'should convert text nodes to strings', inPage ->
 
 HTML text nodes should serialize as ordinary strings.
 We test a variety of ways they might occur.
 
-            @page.evaluate ->
-                textNode = document.createTextNode 'foo'
-                div = document.createElement 'div'
+            pageSetup ->
+                window.textNode = document.createTextNode 'foo'
+                window.div = document.createElement 'div'
                 div.innerHTML = '<i>italic</i> not italic'
-                [
-                    textNode.toJSON()
-                    div.childNodes[0].childNodes[0].toJSON()
-                    div.childNodes[1].toJSON()
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toEqual 'foo'
-                expect( result[1] ).toEqual 'italic'
-                expect( result[2] ).toEqual ' not italic'
-                done()
+            pageExpects ( -> textNode.toJSON() ), 'toEqual', 'foo'
+            pageExpects ( ->
+                div.childNodes[0].childNodes[0].toJSON() ),
+                'toEqual', 'italic'
+            pageExpects ( -> div.childNodes[1].toJSON() ),
+                'toEqual', ' not italic'
 
 ### should convert comment nodes to objects
 
-        it 'should convert comment nodes to objects', ( done ) =>
+        it 'should convert comment nodes to objects', inPage ->
 
 HTML comment nodes should serialize as objects with the comment
 flag and the comment's text content as well.
 
-            @page.evaluate ->
-                comment1 = document.createComment 'comment content'
-                comment2 = document.createComment ''
-                [
-                    comment1.toJSON()
-                    comment2.toJSON()
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toEqual \
-                    comment : yes, content : 'comment content'
-                expect( result[1] ).toEqual \
-                    comment : yes, content : ''
-                done()
+            pageExpects ( ->
+                comment = document.createComment 'comment content'
+                comment.toJSON() ), 'toEqual',
+                comment : yes, content : 'comment content'
+            pageExpects ( ->
+                comment = document.createComment ''
+                comment.toJSON() ), 'toEqual',
+                comment : yes, content : ''
 
 ### should handle other no-children elements
 
-        it 'should handle other no-children elements', ( done ) =>
+        it 'should handle other no-children elements', inPage ->
 
 Other no-children elements include images, horizontal rules, and
 line breaks.  We verify that in each case the object is encoded
 with the correct tag name and attributes, but no children.
 
-            @page.evaluate ->
-                div = document.createElement 'div'
-                div.innerHTML = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAYCAIAAACNybHWAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA63pUWHRYTUw6Y29tLmFkb2JlLnhtcAAAGJVtULsOwiAU3fsVBOdy+9ChhHaxcTNpnHSsikoUaAqm+PcWWx9Rmbj3vOAwR51sJLc1cvKiDHU5rvd6y2l/92vA6EGx5xyvlxWa65ajGZmSCBcBQoi1+wNdlYtR3k85PlnbUICu60iXEt0eIc6yDKIEkiTsGaG5KVu7UJnJYPL0KbnZtaKxQivk53qrrzbHeOQMZwjiTryTlCGPR5OdluARiEkEL29v77e0Eo5f1qWQXJk+o0hjBn+Bv8LNG0+mn8LNj5DB13eGrmAsqwgYvIovgjseJHia4Qg7sAAAAV5JREFUSIntlL9rwkAUx18uPQttvICSmqjn5pDi4BJHwdm/VzI6xFEHsWSyBWtOUxSbqks8yHVwsWdRA7WT3/H9+PB9946nzGYzuJruhBD/Tf+az8eet2Jst9mc7s9ks7lSqdpsEtM8zirT6VQKvQ8GvusmaWZSEKq127Rel70fu/ZdFyFUo9QkJIPxae6O8zCK/CB46XR0yyKFwmEWiZ967fUSIZ4preTzZ9EAkMG4Yhg2pSJJxp4n0WT6ijEAMAk5/xwHMnUdAD4Zk2jyVvdrvMT1oe4xBoB4vZZof/wjb/Qb/Ua/El2+M1jTAGDHeSpozDkAYE2Tr5hUtz+hYRSlou/r9WJRisveaaOhIOQHwWS5jC+YIOZ8slj4jIGqlh1Hoimj0Uhq+PD9t25XJEkK86pabbUM25bCv2z1ybYfDYP1++sw5NvtaSzWNGJZZcd5yOWOUcpwOEzhMaW+AXrrPiceQvueAAAAAElFTkSuQmCC" width="31" height="24">' +
-                                '<hr><br>'
-                div.childNodes[i].toJSON() for i in [0..2]
-            , ( err, result ) ->
-                expect( result[0] ).toEqual {
+            pageSetup ->
+                window.div = document.createElement 'div'
+                div.innerHTML = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAYCAIAAACNybHWAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA63pUWHRYTUw6Y29tLmFkb2JlLnhtcAAAGJVtULsOwiAU3fsVBOdy+9ChhHaxcTNpnHSsikoUaAqm+PcWWx9Rmbj3vOAwR51sJLc1cvKiDHU5rvd6y2l/92vA6EGx5xyvlxWa65ajGZmSCBcBQoi1+wNdlYtR3k85PlnbUICu60iXEt0eIc6yDKIEkiTsGaG5KVu7UJnJYPL0KbnZtaKxQivk53qrrzbHeOQMZwjiTryTlCGPR5OdluARiEkEL29v77e0Eo5f1qWQXJk+o0hjBn+Bv8LNG0+mn8LNj5DB13eGrmAsqwgYvIovgjseJHia4Qg7sAAAAV5JREFUSIntlL9rwkAUx18uPQttvICSmqjn5pDi4BJHwdm/VzI6xFEHsWSyBWtOUxSbqks8yHVwsWdRA7WT3/H9+PB9946nzGYzuJruhBD/Tf+az8eet2Jst9mc7s9ks7lSqdpsEtM8zirT6VQKvQ8GvusmaWZSEKq127Rel70fu/ZdFyFUo9QkJIPxae6O8zCK/CB46XR0yyKFwmEWiZ967fUSIZ4preTzZ9EAkMG4Yhg2pSJJxp4n0WT6ijEAMAk5/xwHMnUdAD4Zk2jyVvdrvMT1oe4xBoB4vZZof/wjb/Qb/Ua/El2+M1jTAGDHeSpozDkAYE2Tr5hUtz+hYRSlou/r9WJRisveaaOhIOQHwWS5jC+YIOZ8slj4jIGqlh1Hoimj0Uhq+PD9t25XJEkK86pabbUM25bCv2z1ybYfDYP1++sw5NvtaSzWNGJZZcd5yOWOUcpwOEzhMaW+AXrrPiceQvueAAAAAElFTkSuQmCC" width="31" height="24"><hr><br>'
+            pageExpects ( -> div.childNodes[0].toJSON() ),
+                'toEqual', {
                     tagName : 'IMG'
                     attributes : {
                         width : '31'
@@ -597,75 +514,82 @@ with the correct tag name and attributes, but no children.
                         src : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAYCAIAAACNybHWAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA63pUWHRYTUw6Y29tLmFkb2JlLnhtcAAAGJVtULsOwiAU3fsVBOdy+9ChhHaxcTNpnHSsikoUaAqm+PcWWx9Rmbj3vOAwR51sJLc1cvKiDHU5rvd6y2l/92vA6EGx5xyvlxWa65ajGZmSCBcBQoi1+wNdlYtR3k85PlnbUICu60iXEt0eIc6yDKIEkiTsGaG5KVu7UJnJYPL0KbnZtaKxQivk53qrrzbHeOQMZwjiTryTlCGPR5OdluARiEkEL29v77e0Eo5f1qWQXJk+o0hjBn+Bv8LNG0+mn8LNj5DB13eGrmAsqwgYvIovgjseJHia4Qg7sAAAAV5JREFUSIntlL9rwkAUx18uPQttvICSmqjn5pDi4BJHwdm/VzI6xFEHsWSyBWtOUxSbqks8yHVwsWdRA7WT3/H9+PB9946nzGYzuJruhBD/Tf+az8eet2Jst9mc7s9ks7lSqdpsEtM8zirT6VQKvQ8GvusmaWZSEKq127Rel70fu/ZdFyFUo9QkJIPxae6O8zCK/CB46XR0yyKFwmEWiZ967fUSIZ4preTzZ9EAkMG4Yhg2pSJJxp4n0WT6ijEAMAk5/xwHMnUdAD4Zk2jyVvdrvMT1oe4xBoB4vZZof/wjb/Qb/Ua/El2+M1jTAGDHeSpozDkAYE2Tr5hUtz+hYRSlou/r9WJRisveaaOhIOQHwWS5jC+YIOZ8slj4jIGqlh1Hoimj0Uhq+PD9t25XJEkK86pabbUM25bCv2z1ybYfDYP1++sw5NvtaSzWNGJZZcd5yOWOUcpwOEzhMaW+AXrrPiceQvueAAAAAElFTkSuQmCC'
                     }
                 }
-                expect( result[1] ).toEqual tagName : 'HR'
-                expect( result[2] ).toEqual tagName : 'BR'
-                done()
+            pageExpects ( -> div.childNodes[1].toJSON() ),
+                'toEqual', tagName : 'HR'
+            pageExpects ( -> div.childNodes[2].toJSON() ),
+                'toEqual', tagName : 'BR'
 
 ### should handle spans correctly
 
-        it 'should handle spans correctly', ( done ) =>
+        it 'should handle spans correctly', inPage ->
 
 Must correctly convert things of the form `<span>text</span>` or
 `<i>text</i>` or any other simple, non-nested tag.  Three simple
 tests are done, plus one with two different attributes.
 
-            @page.evaluate ->
-                # <span>hello</span>, created this way:
+First, a span created by appendign a text node child to a new
+span element.
+
+            pageExpects ( ->
                 span1 = document.createElement 'span'
                 span1.appendChild document.createTextNode 'hello'
-                # <span>world</span>, created this way:
-                span2 = document.createElement 'span'
-                span2.innerHTML = 'world'
-                # <i>The Great Gatsby</i>, lifted out of a div:
-                div1 = document.createElement 'div'
-                div1.innerHTML = '<i>The Great Gatsby</i>'
-                # one with attributes, also lifted out of a div:
-                div2 = document.createElement 'div'
-                div2.innerHTML = '<i class="X" id="Y">Z</i>'
-                [
-                    span1.toJSON()
-                    span2.toJSON()
-                    div1.childNodes[0].toJSON()
-                    div2.childNodes[0].toJSON()
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toEqual {
+                span1.toJSON() ), 'toEqual', {
                     tagName : 'SPAN'
                     children : [ 'hello' ]
                 }
-                expect( result[1] ).toEqual {
+
+Next, a span created by assigning to the innerHTML property of a
+new span element.
+
+            pageExpects ( ->
+                span2 = document.createElement 'span'
+                span2.innerHTML = 'world'
+                span2.toJSON() ), 'toEqual', {
                     tagName : 'SPAN'
                     children : [ 'world' ]
                 }
-                expect( result[2] ).toEqual {
+
+Next, an italic element lifted out of a div, where it was created
+using the innerHTML property of the div.
+
+            pageExpects ( ->
+                div1 = document.createElement 'div'
+                div1.innerHTML = '<i>The Great Gatsby</i>'
+                div1.childNodes[0].toJSON() ), 'toEqual', {
                     tagName : 'I'
                     children : [ 'The Great Gatsby' ]
                 }
-                expect( result[3] ).toEqual {
+
+Same as the previous, but this time with some attributes on the
+element.
+
+            pageExpects ( ->
+                div2 = document.createElement 'div'
+                div2.innerHTML = '<i class="X" id="Y">Z</i>'
+                div2.childNodes[0].toJSON() ), 'toEqual', {
                     tagName : 'I'
                     attributes : class : 'X', id : 'Y'
                     children : [ 'Z' ]
                 }
-                done()
 
 ### should handle hierarchies correctly
 
-        it 'should handle hierarchies correctly', ( done ) =>
+        it 'should handle hierarchies correctly', inPage ->
 
 The above tests cover simple situations, either DOM trees of
 height 1 or 2.  Now we consider situations in which there are
 many levels to the Node tree.  I choose three examples, and mix in
 a diversity of depths, attributes, tag names, comments, etc.
 
-            @page.evaluate ->
-                div1 = document.createElement 'div'
+            pageSetup ->
+                window.div1 = document.createElement 'div'
                 div1.innerHTML = '<span class="outermost" id=0>' +
                                  '<span class="middleman" id=1>' +
                                  '<span class="innermost" id=2>' +
                                  'finally, the text' +
                                  '</span></span></span>'
                 document.body.appendChild div1
-                div2 = document.createElement 'div'
+                window.div2 = document.createElement 'div'
                 div2.innerHTML = '<p>Some paragraph.</p>' +
                                  '<p>Another paragraph, this ' +
                                  'one with some ' +
@@ -676,176 +600,164 @@ a diversity of depths, attributes, tag names, comments, etc.
                                  '</td><td width=50%>Age</td>' +
                                  '</tr></table>'
                 document.body.appendChild div2
-                div3 = document.createElement 'div'
+                window.div3 = document.createElement 'div'
                 div3.innerHTML = 'start with a text node' +
                                  '<!-- then a comment -->' +
                                  '<p>then <i>MORE</i></p>'
                 document.body.appendChild div3
-                [
-                    div1.toJSON()
-                    div2.toJSON()
-                    div3.toJSON()
-                ]
-            , ( err, result ) ->
-                expectedAnswer1 = {
-                    tagName : 'DIV'
-                    children : [
-                        {
-                            tagName : 'SPAN'
-                            attributes : {
-                                class : 'outermost'
-                                id : '0'
-                            }
-                            children : [
-                                {
-                                    tagName : 'SPAN'
-                                    attributes : {
-                                        class : 'middleman'
-                                        id : '1'
+            pageExpects ( -> div1.toJSON() ), 'toEqual', {
+                tagName : 'DIV'
+                children : [
+                    {
+                        tagName : 'SPAN'
+                        attributes : {
+                            class : 'outermost'
+                            id : '0'
+                        }
+                        children : [
+                            {
+                                tagName : 'SPAN'
+                                attributes : {
+                                    class : 'middleman'
+                                    id : '1'
+                                }
+                                children : [
+                                    {
+                                        tagName : 'SPAN'
+                                        attributes : {
+                                            class : 'innermost'
+                                            id : '2'
+                                        }
+                                        children : [
+                                            'finally, the text'
+                                        ]
                                     }
-                                    children : [
-                                        {
-                                            tagName : 'SPAN'
-                                            attributes : {
-                                                class : 'innermost'
-                                                id : '2'
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+            pageExpects ( -> div2.toJSON() ), 'toEqual', {
+                tagName : 'DIV'
+                children : [
+                    {
+                        tagName : 'P'
+                        children : [ 'Some paragraph.' ]
+                    }
+                    {
+                        tagName : 'P'
+                        children : [
+                            'Another paragraph, ' +
+                            'this one with some '
+                            {
+                                tagName : 'B'
+                                children : [ 'force!' ]
+                            }
+                        ]
+                    }
+                    {
+                        tagName : 'TABLE'
+                        attributes : { border : '1' }
+                        children : [
+                            {
+                                tagName : 'TBODY'
+                                children : [
+                                    {
+                                        tagName : 'TR'
+                                        children : [
+                                            {
+                                                tagName : 'TD'
+                                                attributes : {
+                                                    width : '50%'
+                                                }
+                                                children :
+                                                    [ 'Name' ]
                                             }
-                                            children : [
-                                                'finally, the text'
-                                                
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                }
-                expectedAnswer2 = {
-                    tagName : 'DIV'
-                    children : [
-                        {
-                            tagName : 'P'
-                            children : [ 'Some paragraph.' ]
-                        }
-                        {
-                            tagName : 'P'
-                            children : [
-                                'Another paragraph, ' +
-                                'this one with some '
-                                {
-                                    tagName : 'B'
-                                    children : [ 'force!' ]
-                                }
-                            ]
-                        }
-                        {
-                            tagName : 'TABLE'
-                            attributes : { border : '1' }
-                            children : [
-                                {
-                                    tagName : 'TBODY'
-                                    children : [
-                                        {
-                                            tagName : 'TR'
-                                            children : [
-                                                {
-                                                    tagName : 'TD'
-                                                    attributes : {
-                                                        width :
-                                                            '50%'
-                                                    }
-                                                    children :
-                                                        [ 'Name' ]
+                                            {
+                                                comment : yes
+                                                content :
+                                                    'random ' +
+                                                    'comment'
+                                            }
+                                            {
+                                                tagName : 'TD'
+                                                attributes : {
+                                                    width : '50%'
                                                 }
-                                                {
-                                                    comment : yes
-                                                    content :
-                                                        'random ' +
-                                                        'comment'
-                                                }
-                                                {
-                                                    tagName : 'TD'
-                                                    attributes : {
-                                                        width :
-                                                            '50%'
-                                                    }
-                                                    children :
-                                                        [ 'Age' ]
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                }
-                expectedAnswer3 = {
-                    tagName : 'DIV'
-                    children : [
-                        'start with a text node'
-                        {
-                            comment : yes
-                            content : ' then a comment '
-                        }
-                        {
-                            tagName : 'P'
-                            children : [
-                                'then '
-                                {
-                                    tagName : 'I'
-                                    children : [ 'MORE' ]
-                                }
-                            ]
-                        }
-                    ]
-                }
-                expect( result[0] ).toEqual expectedAnswer1
-                expect( result[1] ).toEqual expectedAnswer2
-                expect( result[2] ).toEqual expectedAnswer3
-                done()
+                                                children :
+                                                    [ 'Age' ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+            pageExpects ( -> div3.toJSON() ), 'toEqual', {
+                tagName : 'DIV'
+                children : [
+                    'start with a text node'
+                    {
+                        comment : yes
+                        content : ' then a comment '
+                    }
+                    {
+                        tagName : 'P'
+                        children : [
+                            'then '
+                            {
+                                tagName : 'I'
+                                children : [ 'MORE' ]
+                            }
+                        ]
+                    }
+                ]
+            }
 
 ### should respect verbosity setting
 
-        it 'should respect verbosity setting', ( done ) =>
+        it 'should respect verbosity setting', inPage ->
 
-The verbosity setting of the serializer defaults to true, and gives
-results like those shown in the tests above, whose object keys are
-human-readable.  If verbosity is disabled, as in the tests below,
-then each key is shrunk to a unique one-letter abbreviation, as
-documented [in the module where the serialization is implemented](
+The verbosity setting of the serializer defaults to true, and
+gives results like those shown in the tests above, whose object
+keys are human-readable.  If verbosity is disabled, as in the
+tests below, then each key is shrunk to a unique one-letter
+abbreviation, as documented
+[in the module where the serialization is implemented](
 domutils.litcoffee.html#serialization).
 
 Here we do only one, brief test of each of the types tested above.
 
-            @page.evaluate ->
-                node1 = document.createTextNode 'text node'
-                node2 = document.createComment 'swish'
-                node3 = document.createElement 'hr'
-                div = document.createElement 'div'
+            pageExpects ( ->
+                node = document.createTextNode 'text node'
+                node.toJSON no ), 'toEqual', 'text node'
+            pageExpects ( ->
+                node = document.createComment 'swish'
+                node.toJSON no ), 'toEqual', {
+                    m : yes
+                    n : 'swish'
+                }
+            pageExpects ( ->
+                node = document.createElement 'hr'
+                node.toJSON no ), 'toEqual', t : 'HR'
+            pageSetup ->
+                window.div = document.createElement 'div'
                 div.innerHTML = '<p align="left">paragraph</p>' +
                                 '<p><span id="foo">bar</span>' +
                                 ' <i class="baz">quux</i></p>'
-                node4 = div.childNodes[0]
-                node5 = div.childNodes[1]
-                [
-                    node1.toJSON no
-                    node2.toJSON no
-                    node3.toJSON no
-                    node4.toJSON no
-                    node5.toJSON no
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toEqual 'text node'
-                expect( result[1] ).toEqual m : yes, n : 'swish'
-                expect( result[2] ).toEqual t : 'HR'
-                expect( result[3] ).toEqual {
+            pageExpects ( ->
+                node = div.childNodes[0]
+                node.toJSON no ), 'toEqual', {
                     t : 'P'
                     a : align : 'left'
                     c : [ 'paragraph' ]
                 }
-                expect( result[4] ).toEqual {
+            pageExpects ( ->
+                node = div.childNodes[1]
+                node.toJSON no ), 'toEqual', {
                     t : 'P'
                     c : [
                         {
@@ -861,7 +773,6 @@ Here we do only one, brief test of each of the types tested above.
                         }
                     ]
                 }
-                done()
 
 ## Node fromJSON conversion
 
@@ -875,55 +786,43 @@ domutils.litcoffee.html#from-objects-to-dom-nodes)
 
 ### should be defined
 
-        it 'should be defined', ( done ) =>
+        it 'should be defined', inPage ->
 
 First, just verify that the function itself is present.
 
-            @page.evaluate ( -> Node.fromJSON ),
-            ( err, result ) ->
-                expect( result ).toBeTruthy()
-                done()
+            pageExpects ( -> Node.fromJSON ), 'toBeTruthy'
 
 ### should convert strings to text nodes
 
-        it 'should convert strings to text nodes', ( done ) =>
+        it 'should convert strings to text nodes', inPage ->
 
 This test is simply the inverse of the analogous test earlier.
 It verifies that two strings, one empty and one nonempty, both get
 converted correctly into `Text` instances with the appropriate
 content.
 
-            @page.evaluate ->
-                node1 = Node.fromJSON 'just a string'
-                node2 = Node.fromJSON ''
-                [
-                    node1 instanceof Node
-                    node1 instanceof Text
-                    node1 instanceof Comment
-                    node1 instanceof Element
-                    node1.textContent
-                    node2 instanceof Node
-                    node2 instanceof Text
-                    node2 instanceof Comment
-                    node2 instanceof Element
-                    node2.textContent
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toBeTruthy()
-                expect( result[2] ).toBeFalsy()
-                expect( result[3] ).toBeFalsy()
-                expect( result[4] ).toEqual 'just a string'
-                expect( result[5] ).toBeTruthy()
-                expect( result[6] ).toBeTruthy()
-                expect( result[7] ).toBeFalsy()
-                expect( result[8] ).toBeFalsy()
-                expect( result[9] ).toEqual ''
-                done()
+            pageSetup ->
+                window.node1 = Node.fromJSON 'just a string'
+                window.node2 = Node.fromJSON ''
+            pageExpects ( -> node1 instanceof Node ), 'toBeTruthy'
+            pageExpects ( -> node1 instanceof Text ), 'toBeTruthy'
+            pageExpects ( -> node1 instanceof Comment ),
+                'toBeFalsy'
+            pageExpects ( -> node1 instanceof Element ),
+                'toBeFalsy'
+            pageExpects ( -> node1.textContent ),
+                'toEqual', 'just a string'
+            pageExpects ( -> node2 instanceof Node ), 'toBeTruthy'
+            pageExpects ( -> node2 instanceof Text ), 'toBeTruthy'
+            pageExpects ( -> node2 instanceof Comment ),
+                'toBeFalsy'
+            pageExpects ( -> node2 instanceof Element ),
+                'toBeFalsy'
+            pageExpects ( -> node2.textContent ), 'toEqual', ''
 
 ### should handle comment objects
 
-        it 'should handle comment objects', ( done ) =>
+        it 'should handle comment objects', inPage ->
 
 This test is simply the inverse of the analogous test earlier.
 It verifies that two objects, one in verbose and one in
@@ -931,37 +830,30 @@ non-verbose notation, one empty and one nonempty, both get
 converted correctly into `Comment` instances with the appropriate
 content.
 
-            @page.evaluate ->
-                node1 = Node.fromJSON m : yes, n : 'some comment'
-                node2 = Node.fromJSON comment : yes, content : ''
-                [
-                    node1 instanceof Node
-                    node1 instanceof Text
-                    node1 instanceof Comment
-                    node1 instanceof Element
-                    node1.textContent
-                    node2 instanceof Node
-                    node2 instanceof Text
-                    node2 instanceof Comment
-                    node2 instanceof Element
-                    node2.textContent
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toBeFalsy()
-                expect( result[2] ).toBeTruthy()
-                expect( result[3] ).toBeFalsy()
-                expect( result[4] ).toEqual 'some comment'
-                expect( result[5] ).toBeTruthy()
-                expect( result[6] ).toBeFalsy()
-                expect( result[7] ).toBeTruthy()
-                expect( result[8] ).toBeFalsy()
-                expect( result[9] ).toEqual ''
-                done()
+            pageSetup ->
+                window.node1 = Node.fromJSON \
+                    m : yes, n : 'some comment'
+                window.node2 = Node.fromJSON \
+                    comment : yes, content : ''
+            pageExpects ( -> node1 instanceof Node ), 'toBeTruthy'
+            pageExpects ( -> node1 instanceof Text ), 'toBeFalsy'
+            pageExpects ( -> node1 instanceof Comment ),
+                'toBeTruthy'
+            pageExpects ( -> node1 instanceof Element ),
+                'toBeFalsy'
+            pageExpects ( -> node1.textContent ),
+                'toEqual', 'some comment'
+            pageExpects ( -> node2 instanceof Node ), 'toBeTruthy'
+            pageExpects ( -> node2 instanceof Text ), 'toBeFalsy'
+            pageExpects ( -> node2 instanceof Comment ),
+                'toBeTruthy'
+            pageExpects ( -> node2 instanceof Element ),
+                'toBeFalsy'
+            pageExpects ( -> node2.textContent ), 'toEqual', ''
 
 ### should be able to create empty elements
 
-        it 'should be able to create empty elements', ( done ) =>
+        it 'should be able to create empty elements', inPage ->
 
 This test is simply the inverse of the analogous test earlier.
 It verifies that two objects, one in verbose and one in
@@ -969,59 +861,50 @@ non-verbose notation, both get converted correctly into `Element`
 instances with no children but the appropriate tags and
 attributes.
 
-            @page.evaluate ->
-                node1 = Node.fromJSON \
+            pageSetup ->
+                window.node1 = Node.fromJSON \
                     tagName : 'hr',
                     attributes : class : 'y', whatever : 'dude'
-                node2 = Node.fromJSON t : 'br', a : id : '24601'
-                [
-                    node1 instanceof Node
-                    node1 instanceof Text
-                    node1 instanceof Comment
-                    node1 instanceof Element
-                    node1.tagName
-                    node1.childNodes.length
-                    node1.attributes.length
-                    node1.attributes[0].name
-                    node1.attributes[0].value
-                    node1.attributes[1].name
-                    node1.attributes[1].value
-                    node2 instanceof Node
-                    node2 instanceof Text
-                    node2 instanceof Comment
-                    node2 instanceof Element
-                    node2.tagName
-                    node2.childNodes.length
-                    node2.attributes.length
-                    node2.attributes[0].name
-                    node2.attributes[0].value
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toBeFalsy()
-                expect( result[2] ).toBeFalsy()
-                expect( result[3] ).toBeTruthy()
-                expect( result[4] ).toEqual 'HR'
-                expect( result[5] ).toEqual 0
-                expect( result[6] ).toEqual 2
-                expect( result[7] ).toEqual 'class'
-                expect( result[8] ).toEqual 'y'
-                expect( result[9] ).toEqual 'whatever'
-                expect( result[10] ).toEqual 'dude'
-                expect( result[11] ).toBeTruthy()
-                expect( result[12] ).toBeFalsy()
-                expect( result[13] ).toBeFalsy()
-                expect( result[14] ).toBeTruthy()
-                expect( result[15] ).toEqual 'BR'
-                expect( result[16] ).toEqual 0
-                expect( result[17] ).toEqual 1
-                expect( result[18] ).toEqual 'id'
-                expect( result[19] ).toEqual '24601'
-                done()
+                window.node2 = Node.fromJSON \
+                    t : 'br', a : id : '24601'
+            pageExpects ( -> node1 instanceof Node ), 'toBeTruthy'
+            pageExpects ( -> node1 instanceof Text ), 'toBeFalsy'
+            pageExpects ( -> node1 instanceof Comment ),
+                'toBeFalsy'
+            pageExpects ( -> node1 instanceof Element ),
+                'toBeTruthy'
+            pageExpects ( -> node1.tagName ), 'toEqual', 'HR'
+            pageExpects ( -> node1.childNodes.length ),
+                'toEqual', 0
+            pageExpects ( -> node1.attributes.length ),
+                'toEqual', 2
+            pageExpects ( -> node1.attributes[0].name ),
+                'toEqual', 'class'
+            pageExpects ( -> node1.attributes[0].value ),
+                'toEqual', 'y'
+            pageExpects ( -> node1.attributes[1].name ),
+                'toEqual', 'whatever'
+            pageExpects ( -> node1.attributes[1].value ),
+                'toEqual', 'dude'
+            pageExpects ( -> node2 instanceof Node ), 'toBeTruthy'
+            pageExpects ( -> node2 instanceof Text ), 'toBeFalsy'
+            pageExpects ( -> node2 instanceof Comment ),
+                'toBeFalsy'
+            pageExpects ( -> node2 instanceof Element ),
+                'toBeTruthy'
+            pageExpects ( -> node2.tagName ), 'toEqual', 'BR'
+            pageExpects ( -> node2.childNodes.length ),
+                'toEqual', 0
+            pageExpects ( -> node2.attributes.length ),
+                'toEqual', 1
+            pageExpects ( -> node2.attributes[0].name ),
+                'toEqual', 'id'
+            pageExpects ( -> node2.attributes[0].value ),
+                'toEqual', '24601'
 
 ### should build depth-one DOM trees
 
-        it 'should build depth-one DOM trees', ( done ) =>
+        it 'should build depth-one DOM trees', inPage ->
 
 This test is simply the inverse of the analogous test earlier.
 Depth-one trees are those that are objects with a children array,
@@ -1029,8 +912,8 @@ no child of which has any children itself.  We test with one that
 uses verbose notation and one using non-verbose.  In each case,
 some of the parts have attributes and some don't.
 
-            @page.evaluate ->
-                node1 = Node.fromJSON {
+            pageExpects ( ->
+                node = Node.fromJSON {
                     t : 'I'
                     c : [
                         'non-bold stuff, followed by '
@@ -1041,7 +924,12 @@ some of the parts have attributes and some don't.
                         }
                     ]
                 }
-                node2 = Node.fromJSON {
+                node.outerHTML
+            ), 'toEqual',
+                '<i>non-bold stuff, followed by ' +
+                '<b class="C" id="123">bold stuff</b></i>'
+            pageExpects ( ->
+                node = Node.fromJSON {
                     tagName : 'p'
                     attributes : {
                         style : 'border: 1px solid gray;'
@@ -1058,23 +946,15 @@ some of the parts have attributes and some don't.
                         }
                     ]
                 }
-                [
-                    node1.outerHTML
-                    node2.outerHTML
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toEqual \
-                    '<i>non-bold stuff, followed by ' +
-                    '<b class="C" id="123">bold stuff</b></i>'
-                expect( result[1] ).toEqual \
-                    '<p style="border: 1px solid gray;" ' +
-                    'width="100%"><span>some text</span>' +
-                    '<span>yup, more text</span></p>'
-                done()
+                node.outerHTML
+            ), 'toEqual',
+                '<p style="border: 1px solid gray;" ' +
+                'width="100%"><span>some text</span>' +
+                '<span>yup, more text</span></p>'
 
 ### should build deep DOM trees
 
-        it 'should build depth-one DOM trees', ( done ) =>
+        it 'should build depth-one DOM trees', inPage ->
 
 This test is simply the inverse of the analogous test earlier.
 The routines for building DOM trees from JSON objects should be
@@ -1082,7 +962,7 @@ able to create many-level, nested structures.  Here I mix
 verbose and non-verbose notation in one, large test, to be sure
 that this works.
 
-            @page.evaluate ->
+            pageExpects ( ->
                 node = Node.fromJSON {
                     t : 'div'
                     a : class : 'navigation', width : '600'
@@ -1126,17 +1006,15 @@ that this works.
                     ]
                 }
                 node.outerHTML
-            , ( err, result ) ->
-                expect( result ).toEqual \
-                    '<div class="navigation" width="600">' +
-                    '<div id="paragraph1">' +
-                    '<span>Start paragraph 1.</span>' +
-                    '<span>Middle paragraph 1.</span>' +
-                    '<span>End paragraph 1.</span></div>' +
-                    '<div id="paragraph2" ' +
-                    'style="padding : 5px;"><span><span>' +
-                    'way inside</span></span></div></div>'
-                done()
+            ), 'toEqual',
+                '<div class="navigation" width="600">' +
+                '<div id="paragraph1">' +
+                '<span>Start paragraph 1.</span>' +
+                '<span>Middle paragraph 1.</span>' +
+                '<span>End paragraph 1.</span></div>' +
+                '<div id="paragraph2" ' +
+                'style="padding : 5px;"><span><span>' +
+                'way inside</span></span></div></div>'
 
 ## Using Node prototype methods
 
@@ -1157,8 +1035,8 @@ We then append an empty span inside that span, and expect a
 similar event notification, but this time with an address further
 inside the root.
 
-        it 'should send alerts on appendChild calls', ( done ) =>
-            @page.evaluate ->
+        it 'should send alerts on appendChild calls', inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 span = document.createElement 'span'
                 onemore = document.createElement 'span'
@@ -1168,37 +1046,38 @@ the div has a whitespace text node in it, the span will be its
 second child, but the thing added inside the span will be its
 first.
 
-                tracker = DOMEditTracker.instanceOver div
+                window.tracker = DOMEditTracker.instanceOver div
                 tracker.clearStack()
-                result1 = div.appendChild span
-                result2 = span.appendChild onemore
+                window.result1 = div.appendChild span
+                window.result2 = span.appendChild onemore
 
-Return the serialized versions of the recorded edit actions,
+Validate the serialized versions of the recorded edit actions,
 along with all return values from calls to `appendChild`.
 
-                result = tracker.getEditActions().map \
-                    ( x ) -> x.toJSON()
-                result.push result1.address tracker.getElement()
-                result.push result2.address tracker.getElement()
-                result
-            , ( err, result ) ->
-                expect( result.length ).toEqual 4
-
-Validate the serialized versions of the `appendChild` events.
-
-                expect( result[0] ).toEqual
+            pageExpects ( -> tracker.getEditActions().length ),
+                'toEqual', 2
+            pageExpects ( ->
+                tracker.getEditActions()[0].toJSON() ),
+                'toEqual', {
                     type : 'appendChild', node : [],
                     toAppend : { tagName : 'SPAN' }
-                expect( result[1] ).toEqual
+                }
+            pageExpects ( ->
+                tracker.getEditActions()[1].toJSON() ),
+                'toEqual', {
                     type : 'appendChild', node : [ 1 ],
                     toAppend : { tagName : 'SPAN' }
+                }
 
-Validate the return values, which must be the addresses of the
-appended children within the original div.
+Validate the addresses of the appended children within the
+original div.
 
-                expect( result[2] ).toEqual [ 1 ]
-                expect( result[3] ).toEqual [ 1, 0 ]
-                done()
+            pageExpects ( ->
+                result1.address tracker.getElement() ),
+                'toEqual', [ 1 ]
+            pageExpects ( ->
+                result2.address tracker.getElement() ),
+                'toEqual', [ 1, 0 ]
 
 ### should send alerts on `insertBefore` calls
 
@@ -1214,8 +1093,8 @@ We then insert a final empty span, inside the first one, and
 expect a similar event notification, but this time with an
 address further inside the root.
 
-        it 'should send alerts on appendChild calls', ( done ) =>
-            @page.evaluate ->
+        it 'should send alerts on appendChild calls', inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 text = div.childNodes[0]
                 span = document.createElement 'span'
@@ -1225,46 +1104,52 @@ address further inside the root.
 Insert the span into the div, at index 0.  Then insert another 
 at index 2.  Then insert the final span into the first span.
 
-                tracker = DOMEditTracker.instanceOver div
+                window.tracker = DOMEditTracker.instanceOver div
                 tracker.clearStack()
-                result1 = div.insertBefore span, text
-                result2 = div.insertBefore onemore # == append
-                result3 = span.insertBefore twomore # == append
+                window.result1 = div.insertBefore span, text
+                # the next two are actually appends
+                window.result2 = div.insertBefore onemore
+                window.result3 = span.insertBefore twomore
 
-Return the serialized versions of the recorded edit actions,
+Validate the serialized versions of the recorded edit actions,
 along with all return values from calls to `appendChild`.
 
-                result = tracker.getEditActions().map \
-                    ( x ) -> x.toJSON()
-                result.push result1.address tracker.getElement()
-                result.push result2.address tracker.getElement()
-                result.push result3.address tracker.getElement()
-                result
-            , ( err, result ) ->
-                expect( result.length ).toEqual 6
-
-Validate the serialized versions of the `insertBefore` events.
-
-                expect( result[0] ).toEqual
+            pageExpects ( -> tracker.getEditActions().length ),
+                'toEqual', 3
+            pageExpects ( ->
+                tracker.getEditActions()[0].toJSON() ),
+                'toEqual', {
                     type : 'insertBefore', node : [],
                     toInsert : { tagName : 'SPAN' },
                     insertBefore : 0
-                expect( result[1] ).toEqual
+                }
+            pageExpects ( ->
+                tracker.getEditActions()[1].toJSON() ),
+                'toEqual', {
                     type : 'insertBefore', node : [],
                     toInsert : { tagName : 'SPAN' },
                     insertBefore : 2
-                expect( result[2] ).toEqual
+                }
+            pageExpects ( ->
+                tracker.getEditActions()[2].toJSON() ),
+                'toEqual', {
                     type : 'insertBefore', node : [ 0 ],
                     toInsert : { tagName : 'SPAN' },
                     insertBefore : 0
+                }
 
-Validate the return values, which must be the addresses of the
-appended children within the original div.
+Validate the addresses of the appended children within the
+original div.
 
-                expect( result[3] ).toEqual [ 0 ]
-                expect( result[4] ).toEqual [ 2 ]
-                expect( result[5] ).toEqual [ 0, 0 ]
-                done()
+            pageExpects ( ->
+                result1.address tracker.getElement() ),
+                'toEqual', [ 0 ]
+            pageExpects ( ->
+                result2.address tracker.getElement() ),
+                'toEqual', [ 2 ]
+            pageExpects ( ->
+                result3.address tracker.getElement() ),
+                'toEqual', [ 0, 0 ]
 
 ### should send alerts on `normalize` calls
 
@@ -1275,54 +1160,50 @@ We then insert an empty span after the text, append two text node
 children inside it, with an empty span between.  We then normalize
 that node and repeat the test.
 
-        it 'should send alerts on normalize calls', ( done ) =>
-            @page.evaluate ->
-                div = document.getElementById '0'
+        it 'should send alerts on normalize calls', inPage ->
+            pageSetup ->
+                window.div = document.getElementById '0'
                 div.appendChild document.createTextNode 'example'
-                span = document.createElement 'span'
+                window.span = document.createElement 'span'
                 span.innerHTML = 'foo<span></span>bar'
-
-Normalize the div, append the span, and normalize the span.
-
-                tracker = DOMEditTracker.instanceOver div
+                window.tracker = DOMEditTracker.instanceOver div
                 tracker.clearStack()
-                result1 = div.normalize()
-                div.appendChild span
-                result2 = span.normalize()
 
-Return the serialized versions of the recorded edit actions, plus
-checks about whether the return values from the calls to
-`normalize` were undefined, as they should be.
+Normalize the div, append the span, and normalize the span.  As
+we do so, we verify that each of the normalize calls returns
+undefined.
 
-                result = tracker.getEditActions().map \
-                    ( x ) -> x.toJSON()
-                result.push typeof result1
-                result.push typeof result2
-                result
-            , ( err, result ) ->
+            pageExpects ( -> div.normalize() ), 'toBeUndefined'
+            pageSetup -> div.appendChild span
+            pageExpects ( -> span.normalize() ), 'toBeUndefined'
+
+Now we validate the serialized versions of the edit actions that
+got recorded by the edit tracker.
 
 We'll be looking for the two `normalize` events, plus the one
 `appendChild` event that isn't what we're testing here (but
-certainly did occur during the test, and thus got recorded), plus
-the two return values added to the end of the results array, for
-a total of 5 items.
+certainly did occur during the test, and thus got recorded).
 
-                expect( result.length ).toEqual 5
-
-Validate the serialized versions of the various events.
 First, the first of two normalize events that we're testing, this
 one done on a div with two text children and no other children.
 
-                expect( result[0] ).toEqual
+            pageExpects ( -> tracker.getEditActions().length ),
+                'toEqual', 3
+            pageExpects ( ->
+                tracker.getEditActions()[0].toJSON() ),
+                'toEqual', {
                     type : 'normalize', node : [],
                     sequences : {
                         '[0]' : [ '\n        ', 'example' ]
                     }
+                }
 
 Next, an `appendChild` event that isn't part of this test, but is
 included for completeness.
 
-                expect( result[1] ).toEqual
+            pageExpects ( ->
+                tracker.getEditActions()[1].toJSON() ),
+                'toEqual', {
                     type : 'appendChild', node : [],
                     toAppend : {
                         tagName : 'SPAN'
@@ -1332,19 +1213,17 @@ included for completeness.
                             'bar'
                         ]
                     }
+                }
 
 Finally, the second normalize event, called on the span inside the
 div, with two text node children, not adjacent.
 
-                expect( result[2] ).toEqual
+            pageExpects ( ->
+                tracker.getEditActions()[2].toJSON() ),
+                'toEqual', {
                     type : 'normalize', node : [ 1 ],
                     sequences : { }
-
-Ensure that the return values were both undefined.
-
-                expect( result[3] ).toEqual 'undefined'
-                expect( result[4] ).toEqual 'undefined'
-                done()
+                }
 
 ### should send alerts on `removeAttribute` calls
 
@@ -1353,50 +1232,42 @@ We then remove some of those attributes and ensure that the
 correct events are propagated for each.
 
         it 'should send alerts on removeAttribute calls',
-        ( done ) =>
-            @page.evaluate ->
+        inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 div.innerHTML = '''
                 <span align="center" class="thing">hi</span>
                 <span style="color:blue;">blue</span>
                 '''
-                span1 = div.childNodes[0]
-                span2 = div.childNodes[2]
-
-Remove an attribute from each span node.
-
-                tracker = DOMEditTracker.instanceOver div
+                window.span1 = div.childNodes[0]
+                window.span2 = div.childNodes[2]
+                window.tracker = DOMEditTracker.instanceOver div
                 tracker.clearStack()
-                result1 = span1.removeAttribute 'align'
-                result2 = span2.removeAttribute 'style'
 
-Return the serialized versions of the recorded edit actions, plus
-checks about whether the return values from the calls to
-`removeAttribute` were undefined, as they should be.
+Remove an attribute from each span node, and verify that the
+return value of `removeAttribute` in each case is undefined.
 
-                result = tracker.getEditActions().map \
-                    ( x ) -> x.toJSON()
-                result.push typeof result1
-                result.push typeof result2
-                result
-            , ( err, result ) ->
-                expect( result.length ).toEqual 4
+            pageExpects ( -> span1.removeAttribute 'align' ),
+                'toBeUndefined'
+            pageExpects ( -> span2.removeAttribute 'style' ),
+                'toBeUndefined'
 
-Validate the serialized versions of the two `removeAttribute`
-events.
+Validate the recorded edit actions.
 
-                expect( result[0] ).toEqual
-                    type : 'removeAttribute', node : [ 0 ],
-                    name : 'align', value : 'center'
-                expect( result[1] ).toEqual
-                    type : 'removeAttribute', node : [ 2 ],
-                    name : 'style', value : 'color:blue;'
-
-Ensure that the return values were both undefined.
-
-                expect( result[2] ).toEqual 'undefined'
-                expect( result[3] ).toEqual 'undefined'
-                done()
+            pageExpects ( -> tracker.getEditActions().length ),
+                'toEqual', 2
+            pageExpects ( ->
+                tracker.getEditActions()[0].toJSON() ),
+                    'toEqual', {
+                        type : 'removeAttribute', node : [ 0 ],
+                        name : 'align', value : 'center'
+                    }
+            pageExpects ( ->
+                tracker.getEditActions()[1].toJSON() ),
+                    'toEqual', {
+                        type : 'removeAttribute', node : [ 2 ],
+                        name : 'style', value : 'color:blue;'
+                    }
 
 ### should send alerts on `removeAttributeNode` calls
 
@@ -1405,56 +1276,49 @@ This test imitates the previous one, but uses
 just one new step, of fetching the attribute node to be removed.
 
         it 'should send alerts on removeAttributeNode calls',
-        ( done ) =>
-            @page.evaluate ->
+        inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 div.innerHTML = '''
                 <span align="center" class="thing">hi</span>
                 <span style="color:blue;">blue</span>
                 '''
-                span1 = div.childNodes[0]
-                span2 = div.childNodes[2]
-
-Remove an attribute from each span node.
-
-                tracker = DOMEditTracker.instanceOver div
+                window.span1 = div.childNodes[0]
+                window.span2 = div.childNodes[2]
+                window.tracker = DOMEditTracker.instanceOver div
                 tracker.clearStack()
+
+Remove an attribute from each span node, and verify that the
+return value of `removeAttributeNode` in each case is an attribute
+node, the one removed.
+
+            pageSetup ->
                 togo = span1.getAttributeNode 'align'
-                result1 = span1.removeAttributeNode togo
+                window.result1 = span1.removeAttributeNode togo
                 togo = span2.getAttributeNode 'style'
-                result2 = span2.removeAttributeNode togo
+                window.result2 = span2.removeAttributeNode togo
+            pageExpects ( -> result1.name ), 'toEqual', 'align'
+            pageExpects ( -> result1.value ), 'toEqual', 'center'
+            pageExpects ( -> result2.name ), 'toEqual', 'style'
+            pageExpects ( -> result2.value ),
+                'toEqual', 'color:blue;'
 
-Return the serialized versions of the recorded edit actions, plus
-checks about whether the return values from the calls to
-`removeAttributeNode` were attribute nodes with the correct data.
+Validate the recorded edit actions.
 
-                result = tracker.getEditActions().map \
-                    ( x ) -> x.toJSON()
-                result.push result1
-                result.push result2
-                result
-            , ( err, result ) ->
-                expect( result.length ).toEqual 4
-
-Validation of events is exactly as it was in the previous test,
-except for the name of the action.
-
-                expect( result[0] ).toEqual
+            pageExpects ( -> tracker.getEditActions().length ),
+                'toEqual', 2
+            pageExpects ( ->
+                tracker.getEditActions()[0].toJSON() ),
+                'toEqual', {
                     type : 'removeAttributeNode', node : [ 0 ],
                     name : 'align', value : 'center'
-                expect( result[1] ).toEqual
+                }
+            pageExpects ( ->
+                tracker.getEditActions()[1].toJSON() ),
+                'toEqual', {
                     type : 'removeAttributeNode', node : [ 2 ],
                     name : 'style', value : 'color:blue;'
-
-Validation of return types is different; we expect that the return
-types were attribute nodes, and we inspect their defining
-properties.
-
-                expect( result[2].name ).toEqual 'align'
-                expect( result[2].value ).toEqual 'center'
-                expect( result[3].name ).toEqual 'style'
-                expect( result[3].value ).toEqual 'color:blue;'
-                done()
+                }
 
 ### should send alerts on `removeChild` calls
 
@@ -1463,66 +1327,63 @@ div node, then calls `removeChild` twice in different portions of
 that tree, verifying that the appropriate events are emitted each
 time.
 
-        it 'should send alerts on removeChild calls',
-        ( done ) =>
-            @page.evaluate ->
-                div = document.getElementById '0'
+        it 'should send alerts on removeChild calls', inPage ->
+            pageSetup ->
+                window.div = document.getElementById '0'
                 div.innerHTML = '''
                 <span><span>INNER SPAN!</span>hi</span>
                 <span>there</span>
                 '''
-                span1 = div.childNodes[0]
-                span2 = div.childNodes[2]
-                spanI = span1.childNodes[0]
-
-Remove the inner span, then the second span.
-
-                tracker = DOMEditTracker.instanceOver div
+                window.span1 = div.childNodes[0]
+                window.span2 = div.childNodes[2]
+                window.spanI = span1.childNodes[0]
+                window.tracker = DOMEditTracker.instanceOver div
                 tracker.clearStack()
-                result1 = span1.removeChild spanI
-                result2 = div.removeChild span2
+
+Remove the inner span, then the second span.  In each case,
+verify that the result of the remove operation is the child node
+removed.  We use serialization in order to transport the nodes
+from the test page to this environment safely, via JSON.
+
+            pageExpects ( ->
+                span1.removeChild( spanI ).toJSON() ),
+                'toEqual', {
+                    tagName : 'SPAN'
+                    children : [ 'INNER SPAN!' ]
+                }
+            pageExpects ( ->
+                div.removeChild( span2 ).toJSON() ),
+                'toEqual', {
+                    tagName : 'SPAN'
+                    children : [ 'there' ]
+                }
 
 Return the serialized versions of the recorded edit actions, plus
 checks about whether the return values from the calls to
 `removeChild` were the child nodes that were removed.
 
-                result = tracker.getEditActions().map \
-                    ( x ) -> x.toJSON()
-                result.push result1.toJSON()
-                result.push result2.toJSON()
-                result
-            , ( err, result ) ->
-                expect( result.length ).toEqual 4
-
-First we expect the two child removal events.
-
-                expect( result[0] ).toEqual
+            pageExpects ( -> tracker.getEditActions().length ),
+                'toEqual', 2
+            pageExpects ( ->
+                tracker.getEditActions()[0].toJSON() ),
+                'toEqual', {
                     type : 'removeChild',
                     node : [ 0 ], childIndex : 0,
                     child : {
                         tagName : 'SPAN'
                         children : [ 'INNER SPAN!' ]
                     }
-                expect( result[1] ).toEqual
+                }
+            pageExpects ( ->
+                tracker.getEditActions()[1].toJSON() ),
+                'toEqual', {
                     type : 'removeChild',
                     node : [], childIndex : 2,
                     child : {
                         tagName : 'SPAN'
                         children : [ 'there' ]
                     }
-
-Then we expect two child nodes to have been returned by those
-`removeChild` calls, which we serialized for returning here.
-
-                expect( result[2] ).toEqual {
-                    tagName : 'SPAN'
-                    children : [ 'INNER SPAN!' ]
                 }
-                expect( result[3] ).toEqual {
-                    tagName : 'SPAN'
-                    children : [ 'there' ]
-                }
-                done()
 
 ### should send alerts on `replaceChild` calls
 
@@ -1530,46 +1391,49 @@ This test operates exactly like the previous, except rather than
 deleting two children, they are simply replaced with new children
 that are measurably different, for the purposes of testing.
 
-        it 'should send alerts on replaceChild calls',
-        ( done ) =>
-            @page.evaluate ->
-                div = document.getElementById '0'
+        it 'should send alerts on replaceChild calls', inPage ->
+            pageSetup ->
+                window.div = document.getElementById '0'
                 div.innerHTML = '''
                 <span><span>INNER SPAN!</span>hi</span>
                 <span>there</span>
                 '''
-                span1 = div.childNodes[0]
-                span2 = div.childNodes[2]
-                spanI = span1.childNodes[0]
-                repl1 = document.createElement 'h1'
+                window.span1 = div.childNodes[0]
+                window.span2 = div.childNodes[2]
+                window.spanI = span1.childNodes[0]
+                window.repl1 = document.createElement 'h1'
                 repl1.innerHTML = 'heading'
-                repl2 = document.createElement 'span'
+                window.repl2 = document.createElement 'span'
                 repl2.innerHTML = 'some words'
+                window.tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
 
 Replace the inner span, then the second span, with `repl1` and
-`repl2`, respectively.
+`repl2`, respectively.  In each case, verify that the return value
+is what it ought to be, the replaced node.  We serialize that
+return value here, for transport between the test page and this
+environment.
 
-                tracker = DOMEditTracker.instanceOver div
-                tracker.clearStack()
-                result1 = span1.replaceChild repl1, spanI
-                result2 = div.replaceChild repl2, span2
+            pageExpects ( ->
+                span1.replaceChild( repl1, spanI ).toJSON() ),
+                'toEqual', {
+                    tagName : 'SPAN'
+                    children : [ 'INNER SPAN!' ]
+                }
+            pageExpects ( ->
+                div.replaceChild( repl2, span2 ).toJSON() ),
+                'toEqual', {
+                    tagName : 'SPAN'
+                    children : [ 'there' ]
+                }
 
-Return the serialized versions of the recorded edit actions, plus
-checks about whether the return values from the calls to
-`replaceChild` were the original child nodes that were replaced,
-and are thus no longer in the DOM.
+Validate the recorded edit actions.
 
-                result = tracker.getEditActions().map \
-                    ( x ) -> x.toJSON()
-                result.push result1.toJSON()
-                result.push result2.toJSON()
-                result
-            , ( err, result ) ->
-                expect( result.length ).toEqual 4
-
-First we expect the two child replacement events.
-
-                expect( result[0] ).toEqual
+            pageExpects ( -> tracker.getEditActions().length ),
+                'toEqual', 2
+            pageExpects ( ->
+                tracker.getEditActions()[0].toJSON() ),
+                'toEqual', {
                     type : 'replaceChild',
                     node : [ 0 ], childIndex : 0,
                     oldChild : {
@@ -1580,7 +1444,10 @@ First we expect the two child replacement events.
                         tagName : 'H1'
                         children : [ 'heading' ]
                     }
-                expect( result[1] ).toEqual
+                }
+            pageExpects ( ->
+                tracker.getEditActions()[1].toJSON() ),
+                'toEqual', {
                     type : 'replaceChild',
                     node : [], childIndex : 2,
                     oldChild : {
@@ -1591,19 +1458,7 @@ First we expect the two child replacement events.
                         tagName : 'SPAN'
                         children : [ 'some words' ]
                     }
-
-Then we expect the replaced nodes to have been returned by those
-`replaceChild` calls, which we serialized for returning here.
-
-                expect( result[2] ).toEqual {
-                    tagName : 'SPAN'
-                    children : [ 'INNER SPAN!' ]
                 }
-                expect( result[3] ).toEqual {
-                    tagName : 'SPAN'
-                    children : [ 'there' ]
-                }
-                done()
 
 ### should send alerts on `setAttribute` calls
 
@@ -1612,51 +1467,43 @@ span and then do the same on the root div, and ensure that both
 events are correctly emitted.  In one case, we will be creating a
 new attribute, and in the other case, replacing an existing one.
 
-        it 'should send alerts on setAttribute calls',
-        ( done ) =>
-            @page.evaluate ->
-                div = document.getElementById '0'
+        it 'should send alerts on setAttribute calls', inPage ->
+            pageSetup ->
+                window.div = document.getElementById '0'
                 div.innerHTML = '''
                 <span example="yes">content</span>
                 '''
-                span = div.childNodes[0]
+                window.span = div.childNodes[0]
+                window.tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
 
 Set an attribute on the div, then change the attribute on the
-span.
+span.  As we do so, validate that the return values from the
+`setAttribute` calls are undefined, as they should be.
 
-                tracker = DOMEditTracker.instanceOver div
-                tracker.clearStack()
-                result1 = div.setAttribute 'align', 'center'
-                result2 = span.setAttribute 'example', 'no'
+            pageExpects ( -> div.setAttribute 'align', 'center' ),
+                'toBeUndefined'
+            pageExpects ( ->  span.setAttribute 'example', 'no' ),
+                'toBeUndefined'
 
-Return the serialized versions of the recorded edit actions, plus
-checks about whether the return values from the calls to
-`setAttribute` were undefined, as they should be.
+Validate the recorded edit actions.
 
-                result = tracker.getEditActions().map \
-                    ( x ) -> x.toJSON()
-                result.push typeof result1
-                result.push typeof result2
-                result
-            , ( err, result ) ->
-                expect( result.length ).toEqual 4
-
-First we expect the two attribute-setting events.
-
-                expect( result[0] ).toEqual
+            pageExpects ( -> tracker.getEditActions().length ),
+                'toEqual', 2
+            pageExpects ( ->
+                tracker.getEditActions()[0].toJSON() ),
+                'toEqual', {
                     type : 'setAttribute',
                     node : [], name : 'align',
                     oldValue : '', newValue : 'center'
-                expect( result[1] ).toEqual
+                }
+            pageExpects ( ->
+                tracker.getEditActions()[1].toJSON() ),
+                'toEqual', {
                     type : 'setAttribute',
                     node : [ 0 ], name : 'example',
                     oldValue : 'yes', newValue : 'no'
-
-Then we expect the calls to have given no return values.
-
-                expect( result[2] ).toEqual 'undefined'
-                expect( result[3] ).toEqual 'undefined'
-                done()
+                }
 
 ### should send alerts on `setAttributeNode` calls
 
@@ -1666,61 +1513,49 @@ events are correctly emitted.  In one case, we will be creating a
 new attribute, and in the other case, replacing an existing one.
 
         it 'should send alerts on setAttributeNode calls',
-        ( done ) =>
-            @page.evaluate ->
-                div = document.getElementById '0'
-                div.innerHTML = '''
+        inPage ->
+            pageSetup ->
+                window.div = document.getElementById '0'
+                window.div.innerHTML = '''
                 <span example="yes">content</span>
                 '''
-                span = div.childNodes[0]
+                window.span = div.childNodes[0]
+                window.tracker = DOMEditTracker.instanceOver div
+                tracker.clearStack()
 
 Set an attribute on the div, then change the attribute on the
-span.
+span.  As we do so, validate that the return values of the calls
+to `setAttributeNode` are as they should be, the attribute node
+being replaced, or null if there was none.
 
-                tracker = DOMEditTracker.instanceOver div
-                tracker.clearStack()
+            pageSetup ->
                 edit = document.createAttribute 'align'
                 edit.value = 'center'
-                result1 = div.setAttributeNode edit
+                window.result1 = div.setAttributeNode edit
+            pageExpects ( -> result1 ), 'toBeNull'
+            pageSetup ->
                 edit = document.createAttribute 'example'
                 edit.value = 'no'
-                result2 = span.setAttributeNode edit
+                window.result2 = span.setAttributeNode edit
+            pageExpects ( -> result2.name ), 'toEqual', 'example'
+            pageExpects ( -> result2.value ), 'toEqual', 'yes'
 
-Return the serialized versions of the recorded edit actions, plus
-checks about whether the return values from the calls to
-`setAttribute` were what they should be.  In the first case, the
-result should be undefined, because no node was replaced.  In the
-second case, it should be the replaced attribute node (i.e., the
-old one).
+Validate the recorded edit actions.
 
-                result = tracker.getEditActions().map \
-                    ( x ) -> x.toJSON()
-                result.push result1 is null
-                result.push result2
-                result
-            , ( err, result ) ->
-                expect( result.length ).toEqual 4
-
-First we expect the two attribute-setting events.
-
-                expect( result[0] ).toEqual
+            pageExpects ( -> tracker.getEditActions().length ),
+                'toEqual', 2
+            pageExpects ( ->
+                tracker.getEditActions()[0].toJSON() ),
+                'toEqual', {
                     type : 'setAttributeNode',
                     node : [], name : 'align',
                     oldValue : '', newValue : 'center'
-                expect( result[1] ).toEqual
+                }
+            pageExpects ( ->
+                tracker.getEditActions()[1].toJSON() ),
+                'toEqual', {
                     type : 'setAttributeNode',
                     node : [ 0 ], name : 'example',
                     oldValue : 'yes', newValue : 'no'
-
-Then we expect the first call to have given null as the return
-value.
-
-                expect( result[2] ).toBeTruthy()
-
-But the second call should have returned the original attribute
-node (before the replacement).
-
-                expect( result[3].name ).toEqual 'example'
-                expect( result[3].value ).toEqual 'yes'
-                done()
+                }
 
