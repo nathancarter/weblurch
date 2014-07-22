@@ -274,7 +274,7 @@ in the global object `P` for later use.
 This one can be used in place of `expect` to provide the extra
 checks we desire, and cause `done` to be called for us.
 
-    exports.pageExpects = ( func, check, args... ) =>
+    exports.pageExpects = ( func, check, args... ) ->
         P.page.evaluate func, ( err, result ) ->
             expect( err ).toBeNull()
             expect( result )[check](args...)
@@ -289,4 +289,43 @@ The new idiom that can replace the old is therefore the following.
     #         'toBeSuchAndSuch'
     #     pageExpects ( -> statement3 we want to test ),
     #         'toEqual', soAndSo
+
+If you expect an error, you can do so with this routine.  The
+`check` and `args` parameters are optional, and will be used on the
+error object (if one exists) if and only if they're provided.
+
+    exports.pageExpectsError = ( func, check, args... ) ->
+        P.page.evaluate ( evaluateThis ) ->
+            try eval evaluateThis ; null catch e then e
+        , ( err, result ) ->
+            expect( err ).toBeNull()
+            expect( result ).not.toBeNull()
+            if check then expect( result )[check](args...)
+            P.done()
+        , "(#{func.toString()})()"
+
+Use it as per the following examples.
+
+    # it 'name of test here', inPage ->
+    #     pageExpectsError ( -> undefinedVar )
+    #     pageExpectsError ( -> foo('hello') ),
+    #         'toMatch', /parameter must be an integer/
+
+Furthermore, if some setup code needs to be run in the page, which
+does not require any tests to be called on it, but still needs to
+run without errors, then the following may be useful.
+
+    exports.pageSetup = ( func ) ->
+        P.page.evaluate func, ( err, result ) ->
+            expect( err ).toBeNull()
+            P.done()
+
+One can then do the following.
+
+    # it 'name of test here', inPage ->
+    #     pageSetup ->
+    #         ...put a lot of code here, and if assigning to any
+    #         variables, be sure to use window.varName...
+    #     pageExpects ( -> back to more tests here ),
+    #         'toBeTruthyOrWhatever'
 

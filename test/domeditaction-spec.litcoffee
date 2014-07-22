@@ -12,7 +12,8 @@ easier to write the tests below.  Then follow the same structure
 for setting up tests as documented more thoroughly in
 [the basic unit test](basic-spec.litcoffee.html).
 
-    { phantomDescribe } = require './phantom-utils'
+    { phantomDescribe, pageExpects, pageExpectsError,
+      inPage, pageSetup } = require './phantom-utils'
 
 ## DOMEditAction class
 
@@ -23,11 +24,8 @@ for setting up tests as documented more thoroughly in
 That is, the class should be defined in the global namespace of
 the browser after loading the main app page.
 
-        it 'should exist', ( done ) =>
-            @page.evaluate ( -> DOMEditAction ),
-            ( err, result ) ->
-                expect( result ).toBeTruthy()
-                done()
+        it 'should exist', inPage ->
+            pageExpects ( -> DOMEditAction ), 'toBeTruthy'
 
 ### should have "appendChild" instances
 
@@ -37,24 +35,18 @@ class's constructor](domeditaction.litcoffee.html#constructor).
 These will have a `toAppend` member that stores the child to be
 appended.
 
-        it 'should have "appendChild" instances', ( done ) =>
-            @page.evaluate ->
+        it 'should have "appendChild" instances', inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
-                span = document.createElement 'span'
-                T = new DOMEditAction 'appendChild', div, span
-                result = [
-                    T.tracker is DOMEditTracker.instances[0]
-                    T.node
-                    T.toAppend
-                    T.type
-                ]
-                result
-            , ( err, result ) ->
-                expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toEqual []
-                expect( result[2] ).toEqual tagName : 'SPAN'
-                expect( result[3] ).toEqual 'appendChild'
-                done()
+                window.T = new DOMEditAction 'appendChild', div,
+                    document.createElement 'span'
+            pageExpects ( ->
+                T.tracker is DOMEditTracker.instances[0] ),
+                'toBeTruthy'
+            pageExpects ( -> T.node ), 'toEqual', []
+            pageExpects ( -> T.toAppend ),
+                'toEqual', tagName : 'SPAN'
+            pageExpects ( -> T.type ), 'toEqual', 'appendChild'
 
 ### should correctly describe "appendChild" instances
 
@@ -62,16 +54,15 @@ That is, instances constructed as above should have a sensible
 description provided when their `toString` method is called.
 
         it 'should correctly describe "appendChild" instances',
-        ( done ) =>
-            @page.evaluate ->
+        inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 span = document.createElement 'span'
                 span.innerHTML = 'Hello, <b>friend.</b>'
-                T = new DOMEditAction 'appendChild', div, span
-                T.toString()
-            , ( err, result ) ->
-                expect( result ).toEqual 'Add Hello, friend.'
-                done()
+                window.T = new DOMEditAction 'appendChild', div,
+                    span
+            pageExpects ( -> T.toString() ),
+                'toEqual', 'Add Hello, friend.'
 
 ### should have "insertBefore" instances
 
@@ -82,25 +73,19 @@ These will have a `toInsert` member that stores the child to be
 inserted, as well as an integer member `insertBefore` that is the
 index that the newly inserted child will have after insertion.
 
-        it 'should have "insertBefore" instances', ( done ) =>
-            @page.evaluate ->
+        it 'should have "insertBefore" instances', inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
-                span = document.createElement 'span'
-                T = new DOMEditAction 'insertBefore', div, span
-                result = [
-                    T.tracker is DOMEditTracker.instances[0]
-                    T.node
-                    T.toInsert
-                    T.insertBefore
-                    T.type
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toEqual []
-                expect( result[2] ).toEqual tagName : 'SPAN'
-                expect( result[3] ).toEqual 1
-                expect( result[4] ).toEqual 'insertBefore'
-                done()
+                window.T = new DOMEditAction 'insertBefore', div,
+                    document.createElement 'span'
+            pageExpects ( ->
+                T.tracker is DOMEditTracker.instances[0] ),
+                'toBeTruthy'
+            pageExpects ( -> T.node ), 'toEqual', []
+            pageExpects ( -> T.toInsert ),
+                'toEqual', tagName : 'SPAN'
+            pageExpects ( -> T.insertBefore ), 'toEqual', 1
+            pageExpects ( -> T.type ), 'toEqual', 'insertBefore'
 
 ### should correctly describe "insertBefore" instances
 
@@ -108,16 +93,15 @@ That is, instances constructed as above should have a sensible
 description provided when their `toString` method is called.
 
         it 'should correctly describe "insertBefore" instances',
-        ( done ) =>
-            @page.evaluate ->
+        inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 span = document.createElement 'span'
                 span.innerHTML = 'Hello, <b>friend.</b>'
-                T = new DOMEditAction 'insertBefore', div, span
-                T.toString()
-            , ( err, result ) ->
-                expect( result ).toEqual 'Insert Hello, friend.'
-                done()
+                window.T = new DOMEditAction 'insertBefore', div,
+                    span
+            pageExpects ( -> T.toString() ),
+                'toEqual', 'Insert Hello, friend.'
 
 ### should have "normalize" instances
 
@@ -128,8 +112,8 @@ These will have a `textChildren` member that maps the indices of
 child text elements (before the normalization) to their text
 content at that time.
 
-        it 'should have "normalize" instances', ( done ) =>
-            @page.evaluate ->
+        it 'should have "normalize" instances', inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 div.innerHTML = 'one'
                 div.appendChild document.createTextNode 'two'
@@ -138,21 +122,17 @@ content at that time.
                 span.appendChild document.createTextNode 'four'
                 div.appendChild span
                 div.appendChild document.createTextNode 'five'
-                T = new DOMEditAction 'normalize', div
-                result = [
-                    T.tracker is DOMEditTracker.instances[0]
-                    T.toJSON()
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toEqual {
-                    node : [], type : 'normalize',
-                    sequences : {
-                        '[0]' : [ 'one', 'two' ]
-                        '[1,0]' : [ 'three', 'four' ]
-                    }
+                window.T = new DOMEditAction 'normalize', div
+            pageExpects ( ->
+                T.tracker is DOMEditTracker.instances[0] ),
+                'toBeTruthy'
+            pageExpects ( -> T.toJSON() ), 'toEqual', {
+                node : [], type : 'normalize',
+                sequences : {
+                    '[0]' : [ 'one', 'two' ]
+                    '[1,0]' : [ 'three', 'four' ]
                 }
-                done()
+            }
 
 ### should correctly describe "normalize" instances
 
@@ -160,16 +140,14 @@ That is, instances constructed as above should have a sensible
 description provided when their `toString` method is called.
 
         it 'should correctly describe "normalize" instances',
-        ( done ) =>
-            @page.evaluate ->
+        inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 div.appendChild document.createTextNode 'one'
                 div.appendChild document.createTextNode 'two'
-                T = new DOMEditAction 'normalize', div
-                T.toString()
-            , ( err, result ) ->
-                expect( result ).toEqual 'Normalize text'
-                done()
+                window.T = new DOMEditAction 'normalize', div
+            pageExpects ( -> T.toString() ),
+                'toEqual', 'Normalize text'
 
 ### should have "removeAttribute" instances
 
@@ -180,24 +158,18 @@ These will have a `name` member containing the (string) key of the
 attribute to remove, and a `value` member containing the (string)
 value that the attribute had before removal.
 
-        it 'should have "removeAttribute" instances', ( done ) =>
-            @page.evaluate ->
+        it 'should have "removeAttribute" instances', inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
-                T = new DOMEditAction 'removeAttribute', div, 'id'
-                result = [
-                    T.tracker is DOMEditTracker.instances[0]
-                    T.node
-                    T.name
-                    T.value
-                    T.type
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toEqual []
-                expect( result[2] ).toEqual 'id'
-                expect( result[3] ).toEqual '0'
-                expect( result[4] ).toEqual 'removeAttribute'
-                done()
+                window.T = new DOMEditAction 'removeAttribute',
+                    div, 'id'
+            pageExpects ( ->
+                T.tracker is DOMEditTracker.instances[0] ),
+                'toBeTruthy'
+            pageExpects ( -> T.node ), 'toEqual', []
+            pageExpects ( -> T.name ), 'toEqual', 'id'
+            pageExpects ( -> T.value ), 'toEqual', '0'
+            pageExpects ( -> T.type ), 'toEqual', 'removeAttribute'
 
 ### should correctly describe "removeAttribute" instances
 
@@ -205,14 +177,13 @@ That is, instances constructed as above should have a sensible
 description provided when their `toString` method is called.
 
         it 'should correctly describe "removeAttribute" instances',
-        ( done ) =>
-            @page.evaluate ->
+        inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
-                T = new DOMEditAction 'removeAttribute', div, 'id'
-                T.toString()
-            , ( err, result ) ->
-                expect( result ).toEqual 'Remove id attribute'
-                done()
+                window.T = new DOMEditAction 'removeAttribute',
+                    div, 'id'
+            pageExpects ( -> T.toString() ),
+                'toEqual', 'Remove id attribute'
 
 ### should have "removeAttributeNode" instances
 
@@ -225,25 +196,19 @@ attribute to remove, and a `value` member containing the (string)
 value that the attribute had before removal.
 
         it 'should have "removeAttributeNode" instances',
-        ( done ) =>
-            @page.evaluate ->
+        inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
-                T = new DOMEditAction 'removeAttributeNode', div,
-                    div.getAttributeNode 'id'
-                result = [
-                    T.tracker is DOMEditTracker.instances[0]
-                    T.node
-                    T.name
-                    T.value
-                    T.type
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toEqual []
-                expect( result[2] ).toEqual 'id'
-                expect( result[3] ).toEqual '0'
-                expect( result[4] ).toEqual 'removeAttributeNode'
-                done()
+                window.T = new DOMEditAction 'removeAttributeNode',
+                    div, div.getAttributeNode 'id'
+            pageExpects ( ->
+                T.tracker is DOMEditTracker.instances[0] ),
+                'toBeTruthy'
+            pageExpects ( -> T.node ), 'toEqual', []
+            pageExpects ( -> T.name ), 'toEqual', 'id'
+            pageExpects ( -> T.value ), 'toEqual', '0'
+            pageExpects ( -> T.type ),
+                'toEqual', 'removeAttributeNode'
 
 ### should correctly describe "removeAttributeNode" instances
 
@@ -251,16 +216,14 @@ That is, instances constructed as above should have a sensible
 description provided when their `toString` method is called.
 
         it 'should correctly describe "removeAttributeNode" ' +
-           'instances', ( done ) =>
-            @page.evaluate ->
+           'instances', inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 togo = document.createAttribute 'id'
-                T = new DOMEditAction 'removeAttributeNode', div,
-                    togo
-                T.toString()
-            , ( err, result ) ->
-                expect( result ).toEqual 'Remove id attribute'
-                done()
+                window.T = new DOMEditAction 'removeAttributeNode',
+                    div, togo
+            pageExpects ( -> T.toString() ),
+                'toEqual', 'Remove id attribute'
 
 ### should have "removeChild" instances
 
@@ -271,31 +234,26 @@ These will have an integer `childIndex` member containing the
 index of the child before removal, and a `child` member containing
 a serialized version of the removed child.
 
-        it 'should have "removeChild" instances', ( done ) =>
-            @page.evaluate ->
+        it 'should have "removeChild" instances', inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 div.innerHTML = 'first child text node'
                 span = document.createElement 'span'
                 span.innerHTML = 'span contents, just text'
                 div.appendChild span
                 div.appendChild document.createTextNode 'more text'
-                T = new DOMEditAction 'removeChild', div, span
-                result = [
-                    T.tracker is DOMEditTracker.instances[0]
-                    T.node
-                    T.childIndex
-                    T.child
-                    T.type
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toEqual []
-                expect( result[2] ).toEqual 1
-                expect( result[3] ).toEqual
-                    'tagName' : 'SPAN',
-                    'children' : [ 'span contents, just text' ]
-                expect( result[4] ).toEqual 'removeChild'
-                done()
+                window.T = new DOMEditAction 'removeChild', div,
+                    span
+            pageExpects ( ->
+                T.tracker is DOMEditTracker.instances[0] ),
+                'toBeTruthy'
+            pageExpects ( -> T.node ), 'toEqual', []
+            pageExpects ( -> T.childIndex ), 'toEqual', 1
+            pageExpects ( -> T.child ), 'toEqual', {
+                'tagName' : 'SPAN'
+                'children' : [ 'span contents, just text' ]
+            }
+            pageExpects ( -> T.type ), 'toEqual', 'removeChild'
 
 ### should correctly describe "removeChild" instances
 
@@ -303,17 +261,16 @@ That is, instances constructed as above should have a sensible
 description provided when their `toString` method is called.
 
         it 'should correctly describe "removeChild" instances',
-        ( done ) =>
-            @page.evaluate ->
+        inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 span = document.createElement 'span'
                 span.innerHTML = 'Hello, <b>friend.</b>'
                 div.appendChild span
-                T = new DOMEditAction 'removeChild', div, span
-                T.toString()
-            , ( err, result ) ->
-                expect( result ).toEqual 'Remove Hello, friend.'
-                done()
+                window.T = new DOMEditAction 'removeChild', div,
+                    span
+            pageExpects ( -> T.toString() ),
+                'toEqual', 'Remove Hello, friend.'
 
 ### should have "replaceChild" instances
 
@@ -325,8 +282,8 @@ index of the child being replaced, an `oldChild` member containing
 a serialized version of the replaced child, and a `newChild`
 member containing a serialization of the replacement child.
 
-        it 'should have "replaceChild" instances', ( done ) =>
-            @page.evaluate ->
+        it 'should have "replaceChild" instances', inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 div.innerHTML = 'first child text node'
                 span = document.createElement 'span'
@@ -335,28 +292,22 @@ member containing a serialization of the replacement child.
                 div.appendChild document.createTextNode 'more text'
                 repl = document.createElement 'h1'
                 repl.innerHTML = 'Announcement!'
-                T = new DOMEditAction 'replaceChild',
+                window.T = new DOMEditAction 'replaceChild',
                     div, repl, span
-                result = [
-                    T.tracker is DOMEditTracker.instances[0]
-                    T.node
-                    T.childIndex
-                    T.oldChild
-                    T.newChild
-                    T.type
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toEqual []
-                expect( result[2] ).toEqual 1
-                expect( result[3] ).toEqual
-                    'tagName' : 'SPAN',
-                    'children' : [ 'span contents, just text' ]
-                expect( result[4] ).toEqual
-                    'tagName' : 'H1',
-                    'children' : [ 'Announcement!' ]
-                expect( result[5] ).toEqual 'replaceChild'
-                done()
+            pageExpects ( ->
+                T.tracker is DOMEditTracker.instances[0] ),
+                'toBeTruthy'
+            pageExpects ( -> T.node ), 'toEqual', []
+            pageExpects ( -> T.childIndex ), 'toEqual', 1
+            pageExpects ( -> T.oldChild ), 'toEqual', {
+                'tagName' : 'SPAN'
+                'children' : [ 'span contents, just text' ]
+            }
+            pageExpects ( -> T.newChild ), 'toEqual', {
+                'tagName' : 'H1'
+                'children' : [ 'Announcement!' ]
+            }
+            pageExpects ( -> T.type ), 'toEqual', 'replaceChild'
 
 ### should correctly describe "replaceChild" instances
 
@@ -364,21 +315,18 @@ That is, instances constructed as above should have a sensible
 description provided when their `toString` method is called.
 
         it 'should correctly describe "replaceChild" instances',
-        ( done ) =>
-            @page.evaluate ->
+        inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 span = document.createElement 'span'
                 span.innerHTML = 'Hello, <b>friend.</b>'
                 div.appendChild span
                 span2 = document.createElement 'span'
                 span2.innerHTML = '<h1>Heading</h1>'
-                T = new DOMEditAction 'replaceChild', div, span2,
-                    span
-                T.toString()
-            , ( err, result ) ->
-                expect( result ).toEqual \
-                    'Replace Hello, friend. with Heading'
-                done()
+                window.T = new DOMEditAction 'replaceChild', div,
+                    span2, span
+            pageExpects ( -> T.toString() ),
+                'toEqual', 'Replace Hello, friend. with Heading'
 
 ### should have "setAttribute" instances
 
@@ -390,26 +338,19 @@ attribute being changed, a string `oldValue` member containing the
 value of the attribute before it was set, and a string `newValue`
 member containing the value after the attribute is set.
 
-        it 'should have "setAttribute" instances', ( done ) =>
-            @page.evaluate ->
+        it 'should have "setAttribute" instances', inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
-                T = new DOMEditAction 'setAttribute', div, 'id', 1
-                result = [
-                    T.tracker is DOMEditTracker.instances[0]
-                    T.node
-                    T.name
-                    T.oldValue
-                    T.newValue
-                    T.type
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toEqual []
-                expect( result[2] ).toEqual 'id'
-                expect( result[3] ).toEqual '0'
-                expect( result[4] ).toEqual '1'
-                expect( result[5] ).toEqual 'setAttribute'
-                done()
+                window.T = new DOMEditAction 'setAttribute', div,
+                    'id', 1
+            pageExpects ( ->
+                T.tracker is DOMEditTracker.instances[0] ),
+                'toBeTruthy'
+            pageExpects ( -> T.node ), 'toEqual', []
+            pageExpects ( -> T.name ), 'toEqual', 'id'
+            pageExpects ( -> T.oldValue ), 'toEqual', '0'
+            pageExpects ( -> T.newValue ), 'toEqual', '1'
+            pageExpects ( -> T.type ), 'toEqual', 'setAttribute'
 
 ### should correctly describe "setAttribute" instances
 
@@ -417,14 +358,13 @@ That is, instances constructed as above should have a sensible
 description provided when their `toString` method is called.
 
         it 'should correctly describe "setAttribute" instances',
-        ( done ) =>
-            @page.evaluate ->
+        inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
-                T = new DOMEditAction 'setAttribute', div, 'id', 17
-                T.toString()
-            , ( err, result ) ->
-                expect( result ).toEqual 'Change id from 0 to 17'
-                done()
+                window.T = new DOMEditAction 'setAttribute', div,
+                    'id', 17
+            pageExpects ( -> T.toString() ),
+                'toEqual', 'Change id from 0 to 17'
 
 ### should have "setAttributeNode" instances
 
@@ -436,28 +376,22 @@ attribute being changed, a string `oldValue` member containing the
 value of the attribute before it was set, and a string `newValue`
 member containing the value after the attribute is set.
 
-        it 'should have "setAttributeNode" instances', ( done ) =>
-            @page.evaluate ->
+        it 'should have "setAttributeNode" instances', inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 attr = document.createAttribute 'id'
                 attr.value = 1
-                T = new DOMEditAction 'setAttributeNode', div, attr
-                result = [
-                    T.tracker is DOMEditTracker.instances[0]
-                    T.node
-                    T.name
-                    T.oldValue
-                    T.newValue
-                    T.type
-                ]
-            , ( err, result ) ->
-                expect( result[0] ).toBeTruthy()
-                expect( result[1] ).toEqual []
-                expect( result[2] ).toEqual 'id'
-                expect( result[3] ).toEqual '0'
-                expect( result[4] ).toEqual '1'
-                expect( result[5] ).toEqual 'setAttributeNode'
-                done()
+                window.T = new DOMEditAction 'setAttributeNode',
+                    div, attr
+            pageExpects ( ->
+                T.tracker is DOMEditTracker.instances[0] ),
+                'toBeTruthy'
+            pageExpects ( -> T.node ), 'toEqual', []
+            pageExpects ( -> T.name ), 'toEqual', 'id'
+            pageExpects ( -> T.oldValue ), 'toEqual', '0'
+            pageExpects ( -> T.newValue ), 'toEqual', '1'
+            pageExpects ( -> T.type ),
+                'toEqual', 'setAttributeNode'
 
 ### should correctly describe "setAttributeNode" instances
 
@@ -465,17 +399,15 @@ That is, instances constructed as above should have a sensible
 description provided when their `toString` method is called.
 
         it 'should correctly describe "setAttributeNode" ' +
-           'instances', ( done ) =>
-            @page.evaluate ->
+           'instances', inPage ->
+            pageSetup ->
                 div = document.getElementById '0'
                 change = document.createAttribute 'id'
                 change.value = 17
-                T = new DOMEditAction 'setAttributeNode', div,
-                    change
-                T.toString()
-            , ( err, result ) ->
-                expect( result ).toEqual 'Change id from 0 to 17'
-                done()
+                window.T = new DOMEditAction 'setAttributeNode',
+                    div, change
+            pageExpects ( -> T.toString() ),
+                'toEqual', 'Change id from 0 to 17'
 
 ### should have no other instances
 
@@ -483,30 +415,14 @@ That is, we should get errors if we attempt to construct instances
 of the class with types other than those tested in the other tests
 in this specification, above.
 
-        it 'should have no other instances', ( done ) =>
-            @page.evaluate ->
-                div = document.getElementById '0'
-                result = []
-                result.push try new DOMEditAction 'foo', div \
-                            catch e then e.message
-                result.push try new DOMEditAction div, div \
-                            catch e then e.message
-                result.push try new DOMEditAction 17, div \
-                            catch e then e.message
-                result.push try new DOMEditAction \
-                            'appendChildren', div \
-                            catch e then e.message
-                result
-            , ( err, result ) ->
-                expect( /Invalid DOMEditAction type/.test
-                    result[0] ).toBeTruthy()
-                expect( /Invalid DOMEditAction type/.test
-                    result[1] ).toBeTruthy()
-                expect( /Invalid DOMEditAction type/.test
-                    result[2] ).toBeTruthy()
-                expect( /Invalid DOMEditAction type/.test
-                    result[3] ).toBeTruthy()
-                done()
+        it 'should have no other instances', inPage ->
+            pageSetup ->
+                window.div = document.getElementById '0'
+            pageExpectsError ( -> new DOMEditAction 'foo', div )
+            pageExpectsError ( -> new DOMEditAction div, div )
+            pageExpectsError ( -> new DOMEditAction 17, div )
+            pageExpectsError ( ->
+                new DOMEditAction 'appendChildren', div )
 
 Eventually it would also be good to test here every other error
 case in the constructor, but I have not yet written such tests.
