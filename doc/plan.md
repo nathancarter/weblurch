@@ -18,8 +18,6 @@ than the earlier ones.
 ### Better access to automated testing results
 
  * Improve test app UI
-   * Make test history scrollable without the top panel (tabs)
-     moving.
    * Create an undo button that pops the last step off the history
      and reverts the document to its previous state.
    * Remove the red and green marking buttons, instead placing a

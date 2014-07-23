@@ -30,6 +30,7 @@ Store in global variables the important UI elements on the page.
         source history historyBody historyTab
         codeInput testNameInput
         runButton yesButton noButton downloadButton
+        mainContainer
         ''' \
         .split( ' ' ).map ( id ) ->
             window[id] = document.getElementById id
@@ -53,6 +54,12 @@ so we're not always recomputing their contents.
 
         ( $ sourceTab ).on 'click', updateSourceTab
         ( $ historyTab ).on 'click', updateHistoryTab
+
+Make the history body the right size for scrolling independently,
+and have this update every time the page is resized.
+
+        resizeHistoryHeight()
+        ( $ window ).resize resizeHistoryHeight
 
 Run [the routine](#source-synchronizer) that updates the source div
 with the HTML source of the `LurchEditor`'s element.
@@ -208,4 +215,28 @@ the result of executing some JavaScript code.
 Populate the history tab.
 
         historyBody.innerHTML = representation
+
+### Resizing the test history div
+
+Because the test history div should be scrollable without the rest
+of the page being scrollable, it must have a fixed height.  This is
+unfortunate, especially since it requires estimating how tall the
+rest of the page will be, and subtracting.  Furthermore, it must be
+updated every time the window resizes.  Hence the following
+function, which I wish I could do in CSS, but I don't think I can.
+
+    resizeHistoryHeight = ->
+
+First figure out the total height of all children of the main
+container excluding the tab bodies, which we're about to resize.
+
+        theRest = 75 # padding
+        for child in Array::slice.apply mainContainer.childNodes
+            if child instanceof HTMLElement and not
+               ( $ child ).hasClass 'tab-content'
+                theRest += ( $ child ).outerHeight true
+
+Then subtract to determine the appropriate resize height.
+
+        ( $ historyBody ).height ( $ window ).height() - theRest
 

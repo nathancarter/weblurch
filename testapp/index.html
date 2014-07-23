@@ -12,10 +12,12 @@
         <script src='testapp.js'></script>
     </head>
     <body>
-        <div class='container'>
-            <h1>webLurch Test App</h1>
+        <div class='container' id='mainContainer'>
+            <div class='page-header'>
+                <h1>webLurch Test App</h1>
+            </div>
             <!-- Input box and button for executing JS code -->
-            <div class='row gap-before-3 gap-after-2'>
+            <div class='row'>
                 <div class='col-md-9'>
                     <input type='text' class='form-control'
                            id='codeInput'
@@ -35,15 +37,17 @@
                 </div>
             </div>
             <!-- Bootstrap styles the following list as tabs -->
-            <ul class='nav nav-tabs' role='tablist'>
-                <li class='active'
-                   ><a href='#html' role='tab'
-                    data-toggle='tab'>HTML</a></li>
-                <li><a href='#source' role='tab' id='sourceTab'
-                    data-toggle='tab'>Source</a></li>
-                <li><a href='#history' role='tab' id='historyTab'
-                    data-toggle='tab'>History</a></li>
-            </ul>
+            <div class='gap-before-2'>
+                <ul class='nav nav-tabs' role='tablist'>
+                    <li class='active'><a href='#html' role='tab'
+                        data-toggle='tab'>HTML</a></li>
+                    <li><a href='#source' role='tab' id='sourceTab'
+                        data-toggle='tab'>Source</a></li>
+                    <li><a href='#history' role='tab'
+                           id='historyTab'
+                           data-toggle='tab'>History</a></li>
+                </ul>
+            </div>
             <!-- Bootstrap shows the following divs when their
                  corresponding tabs (above) are clicked -->
             <div class='tab-content'>
@@ -73,7 +77,8 @@
                              >Download history as JSON</button>
                         </div>
                     </div>
-                    <div id='historyBody'>
+                    <div id='historyBody'
+                         style='overflow: scroll;'>
                     </div>
                 </div>
             </div>
