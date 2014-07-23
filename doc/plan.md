@@ -17,11 +17,30 @@ than the earlier ones.
 
 ### Better access to automated testing results
 
- * Create a UI for choosing a test to run from a hierarchical
-   list generated from that variable's value.
- * Create functionality that can replay the chosen test one
-   step at a time and show the expected vs. the actual, with
-   differences highlighted.
+ * Improve test app UI
+   * Make test history scrollable without the top panel (tabs)
+     moving.
+   * Create an undo button that pops the last step off the history
+     and reverts the document to its previous state.
+   * Remove the red and green marking buttons, instead placing a
+     pair of thumb up/down buttons (glyphicon-thumbs-up/down) on
+     *each* state.  Re-clicking the active one toggles it off.
+   * Add a Restart button after the Run button that puts the page
+     back in the initial state stored in the test history, and
+     clears every action out of the undo/redo stack.
+ * Move the name-and-download controls to the left side, and add on
+   the right side a drop-down menu for what test history to compare
+   to this one.  If none is chosen, show as now.  If one is chosen,
+   line them up side-by-side.
+ * Highlight states in the loaded history that don't match the
+   corresponding points in the active test history.
+ * Add Run buttons to each command panel in the loaded history,
+   so that it can be executed immediately in the document (thus
+   updating the active test history).
+ * Add a Run All button (up next to the drop-down list?) that runs
+   all commands from the loaded history, in succession, one at a
+   time, in the current document.  This is useful for re-running
+   the test from scratch.
  * Link to the test app page from the [history spec file](
    all-histories-spec.litcoffee.html), so that when people follow
    links from test results to code, and hit that cryptically
