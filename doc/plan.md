@@ -23,9 +23,6 @@ than the earlier ones.
    * Remove the red and green marking buttons, instead placing a
      pair of thumb up/down buttons (glyphicon-thumbs-up/down) on
      *each* state.  Re-clicking the active one toggles it off.
-   * Add a Restart button after the Run button that puts the page
-     back in the initial state stored in the test history, and
-     clears every action out of the undo/redo stack.
  * Move the name-and-download controls to the left side, and add on
    the right side a drop-down menu for what test history to compare
    to this one.  If none is chosen, show as now.  If one is chosen,

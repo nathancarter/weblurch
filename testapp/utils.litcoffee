@@ -13,16 +13,11 @@ Create a `LurchEditor` instance in the page itself.
         window.LE =
             new LurchEditor document.getElementById 'editor'
 
-Create global arrays in which we will store the history of all the
+Create global datum in which we will store the history of all the
 states of the model (i.e., `LE`'s element), as well as all lines of
 code executed to cause changes of state.
 
-        window.testHistory = [
-            {
-                code : ''
-                state : LE.getElement().toJSON()
-            }
-        ]
+        initializeHistory()
 
 Store in global variables the important UI elements on the page.
 
@@ -39,6 +34,7 @@ Store in global variables the important UI elements on the page.
 Install event handlers for the buttons.
 
         ( $ runButton ).on 'click', runButtonClicked
+        ( $ resetButton ).on 'click', resetButtonClicked
         ( $ yesButton ).on 'click', yesButtonClicked
         ( $ noButton ).on 'click', noButtonClicked
         ( $ downloadButton ).on 'click', downloadButtonClicked
@@ -140,6 +136,36 @@ edit the last item pushed onto the `testHistory` stack.
             "#{testNameInput.value or 'test-history'}.json"
         link.click()
 
+### Reset button
+
+This method resets the document (and the editor over it) to their
+initial states, by replacing them with fresh ones.  The process is
+described in the comments interleaved in the code below.
+
+    window.resetButtonClicked = ( event ) ->
+
+Then recreate a new div that's exactly like the document was when
+it was initialized.
+
+        freshDocument = Node.fromJSON testHistory[0].state
+
+Replace the existing document in the DOM hierarchy with this new
+one.
+
+        current = window.LE.getElement()
+        current.parentNode.replaceChild freshDocument, current
+
+Throw away the old `LurchEditor` and replace it with a new one,
+whose element is this newly created document.
+
+        window.LE = new LurchEditor freshDocument
+
+Clear out the test history and refresh all views.
+
+        initializeHistory()
+        updateSourceTab()
+        updateHistoryTab()
+
 ### Representation of the test history
 
 This routine is the event handler for the display of the History
@@ -239,4 +265,17 @@ container excluding the tab bodies, which we're about to resize.
 Then subtract to determine the appropriate resize height.
 
         ( $ historyBody ).height ( $ window ).height() - theRest
+
+## Utility functions
+
+Set up the initial test history by reading it from the current
+document state.
+
+    window.initializeHistory = ->
+        window.testHistory = [
+            {
+                code : ''
+                state : LE.getElement().toJSON()
+            }
+        ]
 
