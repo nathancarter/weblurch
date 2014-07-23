@@ -172,13 +172,13 @@ readable as the JSON data for an array.
             it 'exists on disk', ( done ) =>
                 expect( canLoad ).toEqual yes
                 done()
-            it 'contains an array', ( done ) =>
+            it 'contains a JSON array', ( done ) =>
                 expect( testHistory instanceof Array ).toBeTruthy()
                 done()
 
 Now we re-run, in the page, the entire test history.
 
-            it 'passes the test history', ( done ) =>
+            it 'was correctly replayed (in full)', ( done ) =>
                 @page.evaluate ( history ) ->
                     result = []
                     for step, index in history

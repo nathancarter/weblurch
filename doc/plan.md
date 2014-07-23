@@ -26,6 +26,10 @@ than the earlier ones.
  * Create functionality that can replay the chosen test one
    step at a time and show the expected vs. the actual, with
    differences highlighted.
+ * Link to the test app page from the [history spec file](
+   all-histories-spec.litcoffee.html), so that when people follow
+   links from test results to code, and hit that cryptically
+   general page, they have some place to go to see test details.
 
 ## More Word Processing Foundation
 
