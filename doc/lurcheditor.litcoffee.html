@@ -1,5 +1,7 @@
 <html>
     <head>
+        <link rel="stylesheet"
+              href="../bootstrap/css/bootstrap.min.css"/>
         <link rel="stylesheet" href="./main.css"/>
         <link rel="stylesheet" href="./obsidian.css"/>
         <link rel="shortcut icon" href="favicon.png"/>
@@ -20,11 +22,11 @@
 <li><a href='#functions-related-to-ids'>Functions related to ids</a></li><li><a href='#-code-lurcheditor-code-constructor'><code>LurchEditor</code> constructor</a></li><li><a href='#functions-used-by-the-constructor'>Functions used by the constructor</a></li><li><a href='#convenience-methods'>Convenience methods</a></li>
         </div>
         <div id="middle">
-            <h1><a name='-code-lurcheditor-code-class'></a><code>LurchEditor</code> class &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-class'><img src="link.png" class="anchor"></a></font></h1><p>A Lurch Editor is an HTML DIV (that has <em>not</em> been marked as
+            <h1><a name='-code-lurcheditor-code-class'></a><code>LurchEditor</code> class &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-class'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>A Lurch Editor is an HTML DIV (that has <em>not</em> been marked as
 <code>content-editable</code> in the browser) but that will be made editable
 by the user through the functionality of this class.</p>
 <pre class="hljs"><code><span class="hljs-built_in">window</span>.LurchEditor = <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LurchEditor</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">DOMEditTracker</span></span>
-</code></pre><h2><a name='functions-related-to-ids'></a>Functions related to ids &nbsp;  <font size=-1><a href='#functions-related-to-ids'><img src="link.png" class="anchor"></a></font></h2><p>The object maintains a list of unique integer ids for assigning to
+</code></pre><h2><a name='functions-related-to-ids'></a>Functions related to ids &nbsp;  <font size=-1><a href='#functions-related-to-ids'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The object maintains a list of unique integer ids for assigning to
 elements in the HTML DOM, from that DIV on downwards in the tree.
 The list <code>@freeIds</code> is a list $[a_1,\ldots,a_n]$ such that an id
 is available if and only if it&#39;s one of the $a_i$ or is greater
@@ -44,7 +46,7 @@ by numerical order, not dictionary (string) order.</p>
         <span class="hljs-keyword">if</span> id &lt; <span class="hljs-property">@freeIds</span>[<span class="hljs-property">@freeIds</span>.length-<span class="hljs-number">1</span>]
             <span class="hljs-property">@freeIds</span>.push id
             <span class="hljs-property">@freeIds</span>.sort <span class="hljs-function"><span class="hljs-params">( a, b )</span> -&gt;</span> a - b
-</code></pre><h2><a name='-code-lurcheditor-code-constructor'></a><code>LurchEditor</code> constructor &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-constructor'><img src="link.png" class="anchor"></a></font></h2><p>The constructor takes any DIV from the browser&#39;s HTML DOM, or no
+</code></pre><h2><a name='-code-lurcheditor-code-constructor'></a><code>LurchEditor</code> constructor &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-constructor'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The constructor takes any DIV from the browser&#39;s HTML DOM, or no
 argument if the instance is not to be made visible in a webpage.
 See the constructor of <a href="domedittracker.litcoffee.html">the ancestor <code>DOMEditTracker</code> class</a> for more information on the call to
 <code>super</code>.</p>
@@ -67,7 +69,7 @@ change events that the superclass records.  We do not wish to have
 those changes recorded here, because we do not wish to allow the
 user to undo them.  Thus at this point, we clear the changes stack.</p>
 <pre class="hljs"><code>        <span class="hljs-property">@clearStack</span>()
-</code></pre><h2><a name='functions-used-by-the-constructor'></a>Functions used by the constructor &nbsp;  <font size=-1><a href='#functions-used-by-the-constructor'><img src="link.png" class="anchor"></a></font></h2><p>Collect a list of all used ids in the given node, removing any
+</code></pre><h2><a name='functions-used-by-the-constructor'></a>Functions used by the constructor &nbsp;  <font size=-1><a href='#functions-used-by-the-constructor'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Collect a list of all used ids in the given node, removing any
 ids that aren&#39;t just nonnegative integers.  This routine is used
 by the class&#39;s constructor as part of the procedure for
 initializing the node in the DOM in which the LurchEditor will
@@ -92,7 +94,7 @@ not given ids.</p>
         <span class="hljs-keyword">if</span> node <span class="hljs-keyword">instanceof</span> HTMLElement <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span> node.id
             node.id = <span class="hljs-property">@nextFreeId</span>()
         <span class="hljs-property">@assignIds</span> child <span class="hljs-keyword">for</span> child <span class="hljs-keyword">in</span> node.childNodes
-</code></pre><h2><a name='convenience-methods'></a>Convenience methods &nbsp;  <font size=-1><a href='#convenience-methods'><img src="link.png" class="anchor"></a></font></h2><p>DOM Nodes have the methods <code>address</code> and <code>index</code> implemented in
+</code></pre><h2><a name='convenience-methods'></a>Convenience methods &nbsp;  <font size=-1><a href='#convenience-methods'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>DOM Nodes have the methods <code>address</code> and <code>index</code> implemented in
 them; see <a href="domutils.litcoffee.html#address">the documentation on those functions</a> for more information.</p>
 <p>It will be convenient to be able to call such methods in a
 <code>LurchEditor</code>, thereby having its main element provided as the
@@ -112,7 +114,7 @@ prototype.</p>
 
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

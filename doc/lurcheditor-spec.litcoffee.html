@@ -1,5 +1,7 @@
 <html>
     <head>
+        <link rel="stylesheet"
+              href="../bootstrap/css/bootstrap.min.css"/>
         <link rel="stylesheet" href="./main.css"/>
         <link rel="stylesheet" href="./obsidian.css"/>
         <link rel="shortcut icon" href="favicon.png"/>
@@ -25,76 +27,61 @@
 <li><a href='#should-give-an-empty-div-id-0'>should give an empty DIV id 0</a></li><li><a href='#should-remove-all-invalid-ids'>should remove all invalid ids</a></li><li><a href='#should-assign-unique-integer-ids'>should assign unique integer ids</a></li><li><a href='#should-work-with-existing-integer-ids'>should work with existing integer ids</a></li><li><a href='#should-have-working-address-and-index'>should have working address and index</a></li><li><a href='#should-give-no-address-and-index-if-empty'>should give no address and index if empty</a></li>
         </div>
         <div id="middle">
-            <h1><a name='tests-for-the-code-lurcheditor-code-class'></a>Tests for the <code>LurchEditor</code> class &nbsp; <font size=-1><a href='test-results.md.html#tests-for-the-code-lurcheditor-code-class'>see results</a></font> <font size=-1><a href='#tests-for-the-code-lurcheditor-code-class'><img src="link.png" class="anchor"></a></font></h1><p>Pull in the utility functions in
+            <h1><a name='tests-for-the-code-lurcheditor-code-class'></a>Tests for the <code>LurchEditor</code> class &nbsp;  <font size=-1><a href='#tests-for-the-code-lurcheditor-code-class'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>Pull in the utility functions in
 <a href="phantom-utils.litcoffee.html">phantom-utils</a> that make it
 easier to write the tests below.  Then follow the same structure
 for setting up tests as documented more thoroughly in
 <a href="basic-spec.litcoffee.html">the basic unit test</a>.</p>
-<pre class="hljs"><code>{ phantomDescribe } = <span class="hljs-built_in">require</span> <span class="hljs-string">'./phantom-utils'</span>
-</code></pre><h2><a name='lurcheditor-class'></a>LurchEditor class &nbsp; <font size=-1><a href='test-results.md.html#lurcheditor-class'>see results</a></font> <font size=-1><a href='#lurcheditor-class'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'LurchEditor class'</span>, <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
-</code></pre><h3><a name='should-exist'></a>should exist &nbsp; <font size=-1><a href='test-results.md.html#should-exist'>see results</a></font> <font size=-1><a href='#should-exist'><img src="link.png" class="anchor"></a></font></h3><p>That is, the class should be defined in the global namespace of
+<pre class="hljs"><code>{ phantomDescribe, pageDo, pageExpects,
+  pageExpectsError, inPage } = <span class="hljs-built_in">require</span> <span class="hljs-string">'./phantom-utils'</span>
+</code></pre><h2><a name='lurcheditor-class'></a>LurchEditor class &nbsp; <font size=-1><a href='test-results.md.html#lurcheditor-class'>see results</a></font> <font size=-1><a href='#lurcheditor-class'><span class="glyphicon glyphicon-link"></span></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'LurchEditor class'</span>, <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
+</code></pre><h3><a name='should-exist'></a>should exist &nbsp; <font size=-1><a href='test-results.md.html#should-exist'>see results</a></font> <font size=-1><a href='#should-exist'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, the class should be defined in the global namespace of
 the browser after loading the main app page.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should exist'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate <span class="hljs-function"><span class="hljs-params">( -&gt; LurchEditor )</span>, <span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toBeTruthy()
-            done()
-</code></pre><h2><a name='lurcheditor-instances-without-divs'></a>LurchEditor instances without DIVs &nbsp; <font size=-1><a href='test-results.md.html#lurcheditor-instances-without-divs'>see results</a></font> <font size=-1><a href='#lurcheditor-instances-without-divs'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'LurchEditor instances without DIVs'</span>,
+<pre class="hljs"><code>    it <span class="hljs-string">'should exist'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> LurchEditor ), <span class="hljs-string">'toBeTruthy'</span>
+</code></pre><h2><a name='lurcheditor-instances-without-divs'></a>LurchEditor instances without DIVs &nbsp; <font size=-1><a href='test-results.md.html#lurcheditor-instances-without-divs'>see results</a></font> <font size=-1><a href='#lurcheditor-instances-without-divs'><span class="glyphicon glyphicon-link"></span></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'LurchEditor instances without DIVs'</span>,
 <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
-</code></pre><h3><a name='should-initialize-freeids'></a>should initialize freeIds &nbsp; <font size=-1><a href='test-results.md.html#should-initialize-freeids'>see results</a></font> <font size=-1><a href='#should-initialize-freeids'><img src="link.png" class="anchor"></a></font></h3><p>A newly created <code>LurchEditor</code> instance should have a <code>freeIds</code>
+</code></pre><h3><a name='should-initialize-freeids'></a>should initialize freeIds &nbsp; <font size=-1><a href='test-results.md.html#should-initialize-freeids'>see results</a></font> <font size=-1><a href='#should-initialize-freeids'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>A newly created <code>LurchEditor</code> instance should have a <code>freeIds</code>
 array containing only zero.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should initialize freeIds'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should initialize freeIds'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
             L = <span class="hljs-keyword">new</span> LurchEditor()
             L.freeIds
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toEqual [ <span class="hljs-number">0</span> ]
-            done()
+        ), <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">0</span> ]
 </code></pre><p>Calling <code>nextFreeId()</code> on a newly created instance should keep
 yielding nonnegative integers starting with zero and counting
 upwards.  The resulting <code>freeIds</code> array should have in it just
 the next integer.</p>
-<h3><a name='nextfreeid-should-count-0-1-2-'></a>nextFreeId() should count 0,1,2,... &nbsp; <font size=-1><a href='test-results.md.html#nextfreeid-should-count-0-1-2-'>see results</a></font> <font size=-1><a href='#nextfreeid-should-count-0-1-2-'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'nextFreeId() should count 0,1,2,...'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            L = <span class="hljs-keyword">new</span> LurchEditor()
-            result = []
-            result.push L.nextFreeId()
-            result.push L.nextFreeId()
-            result.push L.nextFreeId()
-            result.push L.nextFreeId()
-            result.push L.freeIds
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toEqual [ <span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, [ <span class="hljs-number">4</span> ] ]
-            done()
-</code></pre><h3><a name='addfreeid-re-inserts-in-order'></a>addFreeId() re-inserts in order &nbsp; <font size=-1><a href='test-results.md.html#addfreeid-re-inserts-in-order'>see results</a></font> <font size=-1><a href='#addfreeid-re-inserts-in-order'><img src="link.png" class="anchor"></a></font></h3><p>After a newly created instance has undergone the same sequence of
-<code>nextFreeId()</code> calls as above, then restoring the id 2 should put
-it back on the <code>freeIds</code> list in the correct spot, but restoring
-any id 4 or higher should do nothing.  Then calls to <code>nextFreeId</code>
-should yield 2, 4, 5, 6, ...</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'addfreeId() re-inserts in order'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            L = <span class="hljs-keyword">new</span> LurchEditor()
-            result = []
-            L.nextFreeId() <span class="hljs-comment"># four calls to nextFreeId()</span>
-            L.nextFreeId()
-            L.nextFreeId()
-            L.nextFreeId()
-            result.push L.freeIds[..] <span class="hljs-comment"># save current array</span>
-            L.addFreeId <span class="hljs-number">2</span> <span class="hljs-comment"># one call to addFreeId()</span>
-            result.push L.freeIds[..] <span class="hljs-comment"># save current array</span>
-            result.push L.nextFreeId() <span class="hljs-comment"># four more</span>
-            result.push L.nextFreeId()
-            result.push L.nextFreeId()
-            result.push L.nextFreeId()
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toEqual [
-                [ <span class="hljs-number">4</span> ] <span class="hljs-comment"># first saved freeIds array</span>
-                [ <span class="hljs-number">2</span>, <span class="hljs-number">4</span> ] <span class="hljs-comment"># second saved freeIds array</span>
-                <span class="hljs-number">2</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span> <span class="hljs-comment"># last four generated ids</span>
-            ]
-            done()
-</code></pre><h2><a name='lurcheditor-instances-with-divs'></a>LurchEditor instances with DIVs &nbsp; <font size=-1><a href='test-results.md.html#lurcheditor-instances-with-divs'>see results</a></font> <font size=-1><a href='#lurcheditor-instances-with-divs'><img src="link.png" class="anchor"></a></font></h2><p>We now test constructing a new <code>LurchEditor</code> instance around an
+<h3><a name='nextfreeid-should-count-0-1-2-'></a>nextFreeId() should count 0,1,2,... &nbsp; <font size=-1><a href='test-results.md.html#nextfreeid-should-count-0-1-2-'>see results</a></font> <font size=-1><a href='#nextfreeid-should-count-0-1-2-'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'nextFreeId() should count 0,1,2,...'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">window</span>.L = <span class="hljs-keyword">new</span> LurchEditor()
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.nextFreeId() ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">0</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.nextFreeId() ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">1</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.nextFreeId() ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">2</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.nextFreeId() ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">3</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.freeIds ), <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">4</span> ]
+</code></pre><h3><a name='addfreeid-re-inserts-in-order'></a>addFreeId() re-inserts in order &nbsp; <font size=-1><a href='test-results.md.html#addfreeid-re-inserts-in-order'>see results</a></font> <font size=-1><a href='#addfreeid-re-inserts-in-order'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'addfreeId() re-inserts in order'</span>, inPage<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Create a new instance and put it through the same sequence of
+<code>nextFreeId()</code> calls as above.  We should get the same result.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.L = <span class="hljs-keyword">new</span> LurchEditor()
+            L.nextFreeId() <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">1.</span><span class="hljs-number">.4</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.freeIds ), <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">4</span> ]
+</code></pre><p>Then restoring the id 2 should put it back on the <code>freeIds</code> list in
+the correct spot.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> L.addFreeId <span class="hljs-number">2</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.freeIds ), <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">2</span>, <span class="hljs-number">4</span> ]
+</code></pre><p>But restoring any id 4 or higher should do nothing.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            L.addFreeId <span class="hljs-number">4</span>
+            L.addFreeId <span class="hljs-number">10</span>
+            L.addFreeId <span class="hljs-number">100</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.freeIds ), <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">2</span>, <span class="hljs-number">4</span> ]
+</code></pre><p>Then calls to <code>nextFreeId</code> should yield 2, 4, 5, 6, ...</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> L.nextFreeId() ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">2</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.nextFreeId() ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">4</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.nextFreeId() ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">5</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.nextFreeId() ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">6</span>
+</code></pre><h2><a name='lurcheditor-instances-with-divs'></a>LurchEditor instances with DIVs &nbsp; <font size=-1><a href='test-results.md.html#lurcheditor-instances-with-divs'>see results</a></font> <font size=-1><a href='#lurcheditor-instances-with-divs'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>We now test constructing a new <code>LurchEditor</code> instance around an
 existing DOM element, and verify that it does the correct things
 with ids.  See the documentation in
 <a href="lurcheditor.litcoffee.html">the Lurch Editor class itself</a> for
@@ -102,25 +89,23 @@ details on what the constructor is expected to do in these
 situations, or read each test description below.</p>
 <pre class="hljs"><code>phantomDescribe <span class="hljs-string">'LurchEditor instances with DIVs'</span>,
 <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
-</code></pre><h3><a name='should-give-an-empty-div-id-0'></a>should give an empty DIV id 0 &nbsp; <font size=-1><a href='test-results.md.html#should-give-an-empty-div-id-0'>see results</a></font> <font size=-1><a href='#should-give-an-empty-div-id-0'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should give an empty DIV id 0'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+</code></pre><h3><a name='should-give-an-empty-div-id-0'></a>should give an empty DIV id 0 &nbsp; <font size=-1><a href='test-results.md.html#should-give-an-empty-div-id-0'>see results</a></font> <font size=-1><a href='#should-give-an-empty-div-id-0'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should give an empty DIV id 0'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>When constructed in an empty DIV, it should give that DIV the id 0,
 and thus have a free ids list of <code>[ 1 ]</code> aftewards.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">document</span>.body.appendChild div
-            L = <span class="hljs-keyword">new</span> LurchEditor div
-            [ parseInt( div.id ), L.freeIds ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toEqual [ <span class="hljs-number">0</span>, [ <span class="hljs-number">1</span> ] ]
-            done()
-</code></pre><h3><a name='should-remove-all-invalid-ids'></a>should remove all invalid ids &nbsp; <font size=-1><a href='test-results.md.html#should-remove-all-invalid-ids'>see results</a></font> <font size=-1><a href='#should-remove-all-invalid-ids'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should remove all invalid ids'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+            <span class="hljs-built_in">window</span>.L = <span class="hljs-keyword">new</span> LurchEditor div
+        pageExpects (<span class="hljs-function"> -&gt;</span> parseInt( div.id ) ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">0</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.freeIds ), <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">1</span> ]
+</code></pre><h3><a name='should-remove-all-invalid-ids'></a>should remove all invalid ids &nbsp; <font size=-1><a href='test-results.md.html#should-remove-all-invalid-ids'>see results</a></font> <font size=-1><a href='#should-remove-all-invalid-ids'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should remove all invalid ids'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>When constructed in a DIV containing a hierarchy of nested spans,
 some of which have ids, all of which are invalid, it should remove
 all of their old ids, and assign them each a new, unique,
 nonnegative integer id.  In this test, we verify only that it
 removed all of their old ids.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">document</span>.body.appendChild div
             div.innerHTML =
                 <span class="hljs-string">'''
@@ -138,47 +123,57 @@ removed all of their old ids.</p>
                     &lt;i&gt;italic&lt;/i&gt;
                 &lt;/span&gt;
                 '''</span>
-            oldids = <span class="hljs-string">'yo inner -1 -0 1.0 hank'</span>.split <span class="hljs-string">' '</span>
 </code></pre><p>For each id we expect to be in the document (because it&#39;s mentioned
-in the HTML code given above), record whether it was actually
-present in the document.  (We record &quot;is null&quot; for each, and expect
-all false results.)</p>
-<pre class="hljs"><code>            result = <span class="hljs-attribute">before</span>: { }, <span class="hljs-attribute">after</span>: { }
-            <span class="hljs-keyword">for</span> key <span class="hljs-keyword">in</span> oldids
-                result.before[key] =
-                    <span class="hljs-built_in">document</span>.getElementById( key ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
+in the HTML code given above), verify that it is actually present
+in the document by looking up the id and verifying that the result
+is not null.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'yo'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span> ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'inner'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span> ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'-1'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span> ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'-0'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span> ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'1.0'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span> ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'hank'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span> ),
+            <span class="hljs-string">'toBeTruthy'</span>
 </code></pre><p>Install the Lurch Editor in the DIV in question.</p>
-<pre class="hljs"><code>            L = <span class="hljs-keyword">new</span> LurchEditor div
-</code></pre><p>For each id that used to be in the document, record whether it is
-still present in the document.  (We expect it to <em>not</em> be; we
-record &quot;is null&quot; for each, and expect all true results.)</p>
-<pre class="hljs"><code>            <span class="hljs-keyword">for</span> key <span class="hljs-keyword">in</span> oldids
-                result.after[key] =
-                    <span class="hljs-built_in">document</span>.getElementById( key ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>Verify that all the &quot;before&quot;s were not null.</p>
-<pre class="hljs"><code>            expect( result.before[<span class="hljs-string">'yo'</span>] ).toBeFalsy()
-            expect( result.before[<span class="hljs-string">'inner'</span>] ).toBeFalsy()
-            expect( result.before[<span class="hljs-string">'-1'</span>] ).toBeFalsy()
-            expect( result.before[<span class="hljs-string">'-0'</span>] ).toBeFalsy()
-            expect( result.before[<span class="hljs-string">'1.0'</span>] ).toBeFalsy()
-            expect( result.before[<span class="hljs-string">'hank'</span>] ).toBeFalsy()
-</code></pre><p>Verify that all the &quot;after&quot;s were null.</p>
-<pre class="hljs"><code>            expect( result.after[<span class="hljs-string">'yo'</span>] ).toBeTruthy()
-            expect( result.after[<span class="hljs-string">'inner'</span>] ).toBeTruthy()
-            expect( result.after[<span class="hljs-string">'-1'</span>] ).toBeTruthy()
-            expect( result.after[<span class="hljs-string">'-0'</span>] ).toBeTruthy()
-            expect( result.after[<span class="hljs-string">'1.0'</span>] ).toBeTruthy()
-            expect( result.after[<span class="hljs-string">'hank'</span>] ).toBeTruthy()
-            done()
-</code></pre><h3><a name='should-assign-unique-integer-ids'></a>should assign unique integer ids &nbsp; <font size=-1><a href='test-results.md.html#should-assign-unique-integer-ids'>see results</a></font> <font size=-1><a href='#should-assign-unique-integer-ids'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should assign unique integer ids'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">new</span> LurchEditor div
+</code></pre><p>For each id that used to be in the document, verify that it is no
+longer present in the document.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'yo'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'inner'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'-1'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'-0'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'1.0'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'hank'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> ),
+            <span class="hljs-string">'toBeTruthy'</span>
+</code></pre><h3><a name='should-assign-unique-integer-ids'></a>should assign unique integer ids &nbsp; <font size=-1><a href='test-results.md.html#should-assign-unique-integer-ids'>see results</a></font> <font size=-1><a href='#should-assign-unique-integer-ids'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should assign unique integer ids'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>If we re-run the same test as the previous (creating a
 <code>LurchEditor</code> class around the same DIV) we should find that it
 has also assigned unique non-negative integer ids to each element
 in the DOM tree beneath that DIV, starting with 0 and proceeding
 upwards sequentially.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">document</span>.body.appendChild div
             div.innerHTML =
@@ -198,46 +193,28 @@ upwards sequentially.</p>
                 &lt;/span&gt;
                 '''</span>
 </code></pre><p>Construct the <code>LurchEditor</code> instance around the div, as before.</p>
-<pre class="hljs"><code>            LE = <span class="hljs-keyword">new</span> LurchEditor div
-</code></pre><p>Now find all ids of all nodes under that div.</p>
+<pre class="hljs"><code>            <span class="hljs-built_in">window</span>.LE = <span class="hljs-keyword">new</span> LurchEditor div
+</code></pre><p>Now find all ids of all nodes under that div, and sort numerically.</p>
 <pre class="hljs"><code>            <span class="hljs-function"><span class="hljs-title">allNodesUnder</span> = <span class="hljs-params">( node )</span> -&gt;</span>
                 result = [ node ]
                 <span class="hljs-keyword">for</span> child <span class="hljs-keyword">in</span> node.childNodes
                     result = result.concat allNodesUnder child
                 result
-            {
-                <span class="hljs-attribute">ids</span>: ( parseInt node.id <span class="hljs-keyword">for</span> node <span class="hljs-keyword">in</span> \
-                        allNodesUnder div <span class="hljs-keyword">when</span> node.id )
-                <span class="hljs-attribute">freeIds</span>: LE.freeIds[..]
-            }
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>Sort the ids and verify that the list is <code>[ 0, 1, ..., 10 ]</code>.
-(There are nine tags in the HTML code above, plus the DIV
-containing them.)</p>
-<pre class="hljs"><code>            result.ids.sort <span class="hljs-function"><span class="hljs-params">( a, b )</span> -&gt;</span> a - b
-            expect( result.ids[<span class="hljs-number">0</span>] ).toEqual <span class="hljs-number">0</span>
-            expect( result.ids[<span class="hljs-number">1</span>] ).toEqual <span class="hljs-number">1</span>
-            expect( result.ids[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-number">2</span>
-            expect( result.ids[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-number">3</span>
-            expect( result.ids[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-number">4</span>
-            expect( result.ids[<span class="hljs-number">5</span>] ).toEqual <span class="hljs-number">5</span>
-            expect( result.ids[<span class="hljs-number">6</span>] ).toEqual <span class="hljs-number">6</span>
-            expect( result.ids[<span class="hljs-number">7</span>] ).toEqual <span class="hljs-number">7</span>
-            expect( result.ids[<span class="hljs-number">8</span>] ).toEqual <span class="hljs-number">8</span>
-            expect( result.ids[<span class="hljs-number">9</span>] ).toEqual <span class="hljs-number">9</span>
-            expect( result.ids[<span class="hljs-number">10</span>] ).toEqual <span class="hljs-number">10</span>
-            expect( result.ids.length ).toEqual <span class="hljs-number">11</span>
+            <span class="hljs-built_in">window</span>.ids = ( parseInt node.id <span class="hljs-keyword">for</span> node <span class="hljs-keyword">in</span> \
+                allNodesUnder div <span class="hljs-keyword">when</span> node.id )
+            ids.sort <span class="hljs-function"><span class="hljs-params">( a, b )</span> -&gt;</span> a - b
+</code></pre><p>Verify that the list is <code>[ 0, 1, ..., 10 ]</code>.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> ids ), <span class="hljs-string">'toEqual'</span>, [<span class="hljs-number">0.</span><span class="hljs-number">.10</span>]
 </code></pre><p>Verify that the list of free ids is &quot;everything 11 and above.&quot;</p>
-<pre class="hljs"><code>            expect( result.freeIds ).toEqual [ <span class="hljs-number">11</span> ]
-            done()
-</code></pre><h3><a name='should-work-with-existing-integer-ids'></a>should work with existing integer ids &nbsp; <font size=-1><a href='test-results.md.html#should-work-with-existing-integer-ids'>see results</a></font> <font size=-1><a href='#should-work-with-existing-integer-ids'><img src="link.png" class="anchor"></a></font></h3><p>If we run a similar test to the previous two, but with the DIV
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> LE.freeIds ), <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">11</span> ]
+</code></pre><h3><a name='should-work-with-existing-integer-ids'></a>should work with existing integer ids &nbsp; <font size=-1><a href='test-results.md.html#should-work-with-existing-integer-ids'>see results</a></font> <font size=-1><a href='#should-work-with-existing-integer-ids'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>If we run a similar test to the previous two, but with the DIV
 slightly altered to include a few valid integer ids, we should
 find that it has also assigned unique non-negative integer ids to
 each element in the DOM tree beneath that DIV, starting with 0 and
 proceeding upwards sequentially, but keeping the existing valid
 integer ids unchanged.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should work with existing integer ids'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should work with existing integer ids'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">document</span>.body.appendChild div
             div.innerHTML =
@@ -257,109 +234,79 @@ integer ids unchanged.</p>
                 &lt;/span&gt;
                 '''</span>
 </code></pre><p>Construct the <code>LurchEditor</code> instance around the div, as before.</p>
-<pre class="hljs"><code>            LE = <span class="hljs-keyword">new</span> LurchEditor div
-</code></pre><p>Now find all ids of all nodes under that div.</p>
+<pre class="hljs"><code>            <span class="hljs-built_in">window</span>.LE = <span class="hljs-keyword">new</span> LurchEditor div
+</code></pre><p>Now find all ids of all nodes under that div, and sort them.</p>
 <pre class="hljs"><code>            <span class="hljs-function"><span class="hljs-title">allNodesUnder</span> = <span class="hljs-params">( node )</span> -&gt;</span>
                 result = [ node ]
                 <span class="hljs-keyword">for</span> child <span class="hljs-keyword">in</span> node.childNodes
                     result = result.concat allNodesUnder child
                 result
-            result =
-                <span class="hljs-attribute">ids</span>: ( parseInt node.id <span class="hljs-keyword">for</span> node <span class="hljs-keyword">in</span> \
-                        allNodesUnder div <span class="hljs-keyword">when</span> node.id )
-                <span class="hljs-attribute">freeIds</span>: LE.freeIds[..]
-                <span class="hljs-attribute">texts</span>: { }
-            <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">0.</span><span class="hljs-number">.9</span>].concat [ <span class="hljs-number">20</span> ]
-                result.texts[i] =
-                    <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">"<span class="hljs-subst">#{i}</span>"</span> ) \
-                        .textContent.replace <span class="hljs-regexp">/^\s+|\s+$/g</span>, <span class="hljs-string">''</span>
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>Sort the ids and verify that the list is <code>[ 0, 1, ..., 9, 20 ]</code>.
-(There are nine tags in the HTML code above, plus the DIV
-containing them.)</p>
-<pre class="hljs"><code>            result.ids.sort <span class="hljs-function"><span class="hljs-params">( a, b )</span> -&gt;</span> a - b
-            expect( result.ids[<span class="hljs-number">0</span>] ).toEqual <span class="hljs-number">0</span>
-            expect( result.ids[<span class="hljs-number">1</span>] ).toEqual <span class="hljs-number">1</span>
-            expect( result.ids[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-number">2</span>
-            expect( result.ids[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-number">3</span>
-            expect( result.ids[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-number">4</span>
-            expect( result.ids[<span class="hljs-number">5</span>] ).toEqual <span class="hljs-number">5</span>
-            expect( result.ids[<span class="hljs-number">6</span>] ).toEqual <span class="hljs-number">6</span>
-            expect( result.ids[<span class="hljs-number">7</span>] ).toEqual <span class="hljs-number">7</span>
-            expect( result.ids[<span class="hljs-number">8</span>] ).toEqual <span class="hljs-number">8</span>
-            expect( result.ids[<span class="hljs-number">9</span>] ).toEqual <span class="hljs-number">9</span>
-            expect( result.ids[<span class="hljs-number">10</span>] ).toEqual <span class="hljs-number">20</span>
-            expect( result.ids.length ).toEqual <span class="hljs-number">11</span>
+            <span class="hljs-built_in">window</span>.ids = ( parseInt node.id <span class="hljs-keyword">for</span> node <span class="hljs-keyword">in</span> \
+                allNodesUnder div <span class="hljs-keyword">when</span> node.id )
+            ids.sort <span class="hljs-function"><span class="hljs-params">( a, b )</span> -&gt;</span> a - b
+</code></pre><p>Verify that the list is <code>[ 0, 1, ..., 9, 20 ]</code>.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> ids ), <span class="hljs-string">'toEqual'</span>, [<span class="hljs-number">0.</span><span class="hljs-number">.9</span>].concat [ <span class="hljs-number">20</span> ]
 </code></pre><p>Verify that the list of free ids is &quot;everything 10 and above,
 except 20.&quot;</p>
-<pre class="hljs"><code>            expect( result.freeIds ).toEqual \
-                [ <span class="hljs-number">10</span>, <span class="hljs-number">11</span>, <span class="hljs-number">12</span>, <span class="hljs-number">13</span>, <span class="hljs-number">14</span>, <span class="hljs-number">15</span>, <span class="hljs-number">16</span>, <span class="hljs-number">17</span>, <span class="hljs-number">18</span>, <span class="hljs-number">19</span>, <span class="hljs-number">21</span> ]
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> LE.freeIds ),
+            <span class="hljs-string">'toEqual'</span>, [<span class="hljs-number">10.</span><span class="hljs-number">.19</span>].concat [ <span class="hljs-number">21</span> ]
 </code></pre><p>Verify that the ids for the nodes that already had valid integer
 ids were left unchanged.</p>
-<pre class="hljs"><code>            expect( result.texts[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'italic'</span>
-            expect( result.texts[<span class="hljs-number">1</span>] ).toEqual <span class="hljs-string">'pos number'</span>
-            expect( result.texts[<span class="hljs-number">20</span>] ).toEqual <span class="hljs-string">'big-ish number'</span>
-            done()
-</code></pre><h3><a name='should-have-working-address-and-index'></a>should have working address and index &nbsp; <font size=-1><a href='test-results.md.html#should-have-working-address-and-index'>see results</a></font> <font size=-1><a href='#should-have-working-address-and-index'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should have working address and index'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-number">1</span> ).textContent \
+                .replace <span class="hljs-regexp">/^\s+|\s+$/g</span>, <span class="hljs-string">''</span> ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'pos number'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-number">4</span> ).textContent \
+                .replace <span class="hljs-regexp">/^\s+|\s+$/g</span>, <span class="hljs-string">''</span> ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'italic'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-number">20</span> ).textContent \
+                .replace <span class="hljs-regexp">/^\s+|\s+$/g</span>, <span class="hljs-string">''</span> ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'big-ish number'</span>
+</code></pre><h3><a name='should-have-working-address-and-index'></a>should have working address and index &nbsp; <font size=-1><a href='test-results.md.html#should-have-working-address-and-index'>see results</a></font> <font size=-1><a href='#should-have-working-address-and-index'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should have working address and index'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>The <code>LurchEditor</code> class defines shortuct address and index
 functions that just make the calls relative to their main HTML
 elements.  We verify here briefly that those functions work, but
 do not test them extensively, since that is already done in
 <a href="domutils-spec.litcoffee.html">the unit test for DOM utilities</a>.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             div.id = <span class="hljs-string">'0'</span>
             <span class="hljs-built_in">document</span>.body.appendChild div
-            span1 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            <span class="hljs-built_in">window</span>.span1 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             span1.id = <span class="hljs-string">'1'</span>
             div.appendChild span1
-            span2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            <span class="hljs-built_in">window</span>.span2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             span2.id = <span class="hljs-string">'2'</span>
             div.appendChild span2
-            LE = <span class="hljs-keyword">new</span> LurchEditor div
-</code></pre><p>Four address queries followed by four index queries, the last of
-which we expect to be undefined.</p>
-<pre class="hljs"><code>            [
-                LE.address div
-                LE.address span1
-                LE.address span2
-                <span class="hljs-literal">null</span> <span class="hljs-keyword">is</span> LE.address <span class="hljs-built_in">document</span>
-                LE.index( [] ).id
-                LE.index( [ <span class="hljs-number">0</span> ] ).id
-                LE.index( [ <span class="hljs-number">1</span> ] ).id
-                <span class="hljs-keyword">typeof</span> LE.index [ <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ]
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toEqual []
-            expect( result[<span class="hljs-number">1</span>] ).toEqual [ <span class="hljs-number">0</span> ]
-            expect( result[<span class="hljs-number">2</span>] ).toEqual [ <span class="hljs-number">1</span> ]
-            expect( result[<span class="hljs-number">3</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'0'</span>
-            expect( result[<span class="hljs-number">5</span>] ).toEqual <span class="hljs-string">'1'</span>
-            expect( result[<span class="hljs-number">6</span>] ).toEqual <span class="hljs-string">'2'</span>
-            expect( result[<span class="hljs-number">7</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            done()
-</code></pre><h3><a name='should-give-no-address-and-index-if-empty'></a>should give no address and index if empty &nbsp; <font size=-1><a href='test-results.md.html#should-give-no-address-and-index-if-empty'>see results</a></font> <font size=-1><a href='#should-give-no-address-and-index-if-empty'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should give no address and index if empty'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+            <span class="hljs-built_in">window</span>.LE = <span class="hljs-keyword">new</span> LurchEditor div
+</code></pre><p>Four address queries.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> LE.address div ), <span class="hljs-string">'toEqual'</span>, []
+        pageExpects (<span class="hljs-function"> -&gt;</span> LE.address span1 ), <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">0</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> LE.address span2 ), <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">1</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-literal">null</span> <span class="hljs-keyword">is</span> LE.address <span class="hljs-built_in">document</span> ),
+            <span class="hljs-string">'toBeTruthy'</span>
+</code></pre><p>Four index queries, the last of which we expect to be undefined.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> LE.index( [] ).id ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'0'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> LE.index( [ <span class="hljs-number">0</span> ] ).id ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'1'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> LE.index( [ <span class="hljs-number">1</span> ] ).id ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'2'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> LE.index [ <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ] ),
+            <span class="hljs-string">'toBeUndefined'</span>
+</code></pre><h3><a name='should-give-no-address-and-index-if-empty'></a>should give no address and index if empty &nbsp; <font size=-1><a href='test-results.md.html#should-give-no-address-and-index-if-empty'>see results</a></font> <font size=-1><a href='#should-give-no-address-and-index-if-empty'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should give no address and index if empty'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>The shortuct address and index functions in the <code>LurchEditor</code> class
 should function correctly (returning null) if the main HTML element
 of the instance is empty.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">document</span>.body.appendChild div
-            LE = <span class="hljs-keyword">new</span> LurchEditor()
-            [
-                <span class="hljs-literal">null</span> <span class="hljs-keyword">is</span> LE.address div
-                <span class="hljs-literal">null</span> <span class="hljs-keyword">is</span> LE.index div
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toBeTruthy()
-            done()
+            <span class="hljs-built_in">window</span>.LE = <span class="hljs-keyword">new</span> LurchEditor()
+        pageExpects (<span class="hljs-function"> -&gt;</span> LE.address div ), <span class="hljs-string">'toBeNull'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> LE.index div ), <span class="hljs-string">'toBeNull'</span>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

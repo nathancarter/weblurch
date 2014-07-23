@@ -13,13 +13,21 @@
         <script type="text/javascript"
                 src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
         </script>
-        <title>webLurch docs: domeditaction</title>
+        <title>webLurch docs: weblurch</title>
     </head>
     <body>
         <div id="left">
             <p align=center>Page contents</p>
 <p><a href='#dom-edit-action'>DOM Edit Action</a></p><ul>
-<li><a href='#constructor'>Constructor</a></li><li><a href='#description'>Description</a></li><li><a href='#serialization'>Serialization</a></li><li><a href='#undo-redo'>Undo/redo</a></li>
+<li><a href='#constructor'>Constructor</a></li><li><a href='#description'>Description</a></li><li><a href='#serialization'>Serialization</a></li><li><a href='#undo-redo'>Undo/redo</a></li></ul>
+<p><a href='#dom-edit-tracker-class'>DOM Edit Tracker class</a></p><ul>
+<li><a href='#tracking-instances'>Tracking instances</a></li><li><a href='#constructor'>Constructor</a></li><li><a href='#getters'>Getters</a></li><li><a href='#setters'>Setters</a></li><li><a href='#undo-redo-stack'>Undo/redo stack</a></li></ul>
+<p><a href='#utility-functions-for-working-with-the-dom'>Utility functions for working with the DOM</a></p><ul>
+<li><a href='#address'>Address</a></li><li><a href='#index'>Index</a></li><li><a href='#serialization'>Serialization</a></li><ul>
+<li><a href='#from-dom-nodes-to-objects'>From DOM Nodes to objects</a></li><li><a href='#from-objects-to-dom-nodes'>From objects to DOM Nodes</a></li></ul>
+<li><a href='#change-events'>Change events</a></li></ul>
+<p><a href='#-code-lurcheditor-code-class'><code>LurchEditor</code> class</a></p><ul>
+<li><a href='#functions-related-to-ids'>Functions related to ids</a></li><li><a href='#-code-lurcheditor-code-constructor'><code>LurchEditor</code> constructor</a></li><li><a href='#functions-used-by-the-constructor'>Functions used by the constructor</a></li><li><a href='#convenience-methods'>Convenience methods</a></li>
         </div>
         <div id="middle">
             <h1><a name='dom-edit-action'></a>DOM Edit Action &nbsp;  <font size=-1><a href='#dom-edit-action'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>This class will embody a single, atomic edit to a DOM tree.  This
@@ -498,10 +506,403 @@ with the specific events generated along the way.</p>
                 original.setAttribute <span class="hljs-property">@name</span>, <span class="hljs-property">@oldValue</span>
             <span class="hljs-keyword">else</span>
                 original.removeAttribute <span class="hljs-property">@name</span>
-</code></pre>
+</code></pre><h1><a name='dom-edit-tracker-class'></a>DOM Edit Tracker class &nbsp;  <font size=-1><a href='#dom-edit-tracker-class'><span class="glyphicon glyphicon-link"></span></a></font></h1><pre class="hljs"><code><span class="hljs-built_in">window</span>.DOMEditTracker = <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DOMEditTracker</span></span>
+</code></pre><p>A <code>DOMEditTracker</code> is responsible for watching the edits to the
+DOM within a single HTML DIV element, and thus it takes such a DIV
+at construction time.</p>
+<h2><a name='tracking-instances'></a>Tracking instances &nbsp;  <font size=-1><a href='#tracking-instances'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The class itself also tracks all instances thereof currently in
+memory, so that it can find the one whose DIV contains any given
+DOM Node.  This way when changes take place in a DOM Node, the
+corresponding edit tracker, if any, can be notified.</p>
+<pre class="hljs"><code>    <span class="hljs-property">@instances</span> = []
+</code></pre><p>Here is the class method taht finds the edit tracker instance in
+charge of an ancestor of any given DOM Node.  It returns the
+<code>DOMEditTracker</code> instance if there is one, and null otherwise.</p>
+<pre class="hljs"><code>    <span class="hljs-property">@instanceOver</span> = <span class="hljs-function"><span class="hljs-params">( node )</span> -&gt;</span>
+        <span class="hljs-keyword">if</span> node <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>
+        <span class="hljs-keyword">for</span> tracker <span class="hljs-keyword">in</span> <span class="hljs-property">@instances</span>
+            <span class="hljs-keyword">if</span> tracker.getElement() <span class="hljs-keyword">is</span> node
+                <span class="hljs-keyword">return</span> tracker
+        <span class="hljs-property">@instanceOver</span> node.parentNode
+</code></pre><h2><a name='constructor'></a>Constructor &nbsp;  <font size=-1><a href='#constructor'><span class="glyphicon glyphicon-link"></span></a></font></h2><pre class="hljs"><code>    <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">( div )</span> -&gt;</span>
+</code></pre><p>If they did not pass a valid DIV, then store null in the member
+variable reserved for that purpose.  If they passed <em>something</em>
+but it wasn&#39;t a DIV, then throw an Error.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@element</span> = <span class="hljs-literal">null</span>
+        <span class="hljs-keyword">if</span> div <span class="hljs-keyword">and</span> div?.tagName <span class="hljs-keyword">isnt</span> <span class="hljs-string">'DIV'</span>
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error <span class="hljs-string">'DOMEditTracker can only be '</span> +
+                            <span class="hljs-string">'constructed in a DIV node'</span>
+</code></pre><p>Otherwise, store the DIV they passed for later reference.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@element</span> = div
+</code></pre><p>In either case, initialize the internal undo/redo stack of
+<code>DOMEditAction</code> instances to be empty, with a stack pointer of
+zero.  (Documentation on how this stack pointer behaves appears in
+the <a href="#undo-redo-stack">undo/redo stack section</a>, below.)</p>
+<pre class="hljs"><code>        <span class="hljs-property">@stack</span> = []
+        <span class="hljs-property">@stackPointer</span> = <span class="hljs-number">0</span>
+</code></pre><p>Furthermore, we keep a boolean about whether we&#39;re supposed to add
+actions to that stack or not as they occur.  By default it is
+always on, but is disabled briefly when undo/redo actions take
+place.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">true</span>
+</code></pre><p>And add this newly created instance to the list of all instances.</p>
+<pre class="hljs"><code>        DOMEditTracker.instances.push <span class="hljs-keyword">this</span>
+</code></pre><h2><a name='getters'></a>Getters &nbsp;  <font size=-1><a href='#getters'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Although in CoffeeScript, no members are truly private, the
+intent is that the fields of an object should not be directly
+accessed from outside the class except through getters and
+setters.</p>
+<p>The first is for querying the element passed at construction time,
+over which this object has taken &quot;ownership.&quot;</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">getElement</span>:<span class="hljs-function"> -&gt;</span> <span class="hljs-property">@element</span>
+</code></pre><p>Then we provide one for querying the stack of edit actions.  A copy
+of the stack is returned, so that the caller may modify it as they
+see fit without harming this object.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">getEditActions</span>:<span class="hljs-function"> -&gt;</span> <span class="hljs-property">@stack</span>[..]
+</code></pre><h2><a name='setters'></a>Setters &nbsp;  <font size=-1><a href='#setters'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The user can ask to clear out the edit actions stack with the
+following method.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">clearStack</span>:<span class="hljs-function"> -&gt;</span> <span class="hljs-property">@stack</span> = []
+</code></pre><h2><a name='undo-redo-stack'></a>Undo/redo stack &nbsp;  <font size=-1><a href='#undo-redo-stack'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The stack pointer initialized in the <a href="#constructor">constructor</a> is
+an integer that is one greater than the index of the last performed
+action.  It satisfies the following criteria.</p>
+<ul>
+<li>When it equals the stack length, then the last action done is
+the last action on the stack, and was <em>not</em> an &quot;undo.&quot;  It was
+either an action done for the first time, or was a &quot;redo.&quot;</li>
+<li>When it is less than the stack length, then the last action
+done was either an &quot;undo&quot; or a &quot;redo,&quot; as the user navigated
+the undo/redo stack with buttons/keyboard shortcuts/etc.</li>
+</ul>
+<p>To preserve these two properties, we implement the following
+features.</p>
+<p>When any editing takes place inside the DOM tree watched by an
+instance of this class, the instance needs to be notified of it.
+We therefore provide this method by which it can be notified.</p>
+<p>It not only pushes the action onto the undo/redo stack, but,
+if needed, it also truncates the stack to have length equal to the
+stack pointer before using the superclass&#39;s implementation to
+append the latest action to that stack.  After doing so, it updates
+the pointer to equal the stack length, thus preserving the
+invariant that the final action on the stack was the most recently
+completed one.</p>
+<p>The one parameter should be an instance of the <code>DOMEditAction</code>
+class.  If it is not, it is ignored.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">nodeEditHappened</span>: <span class="hljs-function"><span class="hljs-params">( action )</span> -&gt;</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-property">@stackRecording</span> <span class="hljs-keyword">or</span>
+           action <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> DOMEditAction <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> &lt; <span class="hljs-property">@stack</span>.length
+            <span class="hljs-property">@stack</span> = <span class="hljs-property">@stack</span>[...<span class="hljs-property">@stackPointer</span>]
+        <span class="hljs-property">@stack</span>.push action
+        <span class="hljs-property">@stackPointer</span> = <span class="hljs-property">@stack</span>.length
+</code></pre><p>We add <code>canUndo</code> and <code>canRedo</code> methods to the class that just
+report whether the stack pointer isn&#39;t at the top or bottom of the
+stack.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">canUndo</span>:<span class="hljs-function"> -&gt;</span> <span class="hljs-property">@stackPointer</span> &gt; <span class="hljs-number">0</span>
+    <span class="hljs-attribute">canRedo</span>:<span class="hljs-function"> -&gt;</span> <span class="hljs-property">@stackPointer</span> &lt; <span class="hljs-property">@stack</span>.length
+</code></pre><p>We add methods that can describe the atcions that would take place
+if undo or redo were invoked, returning the empty string if one
+cannot undo/redo.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">undoDescription</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> <span class="hljs-keyword">is</span> <span class="hljs-number">0</span> <span class="hljs-keyword">then</span> <span class="hljs-string">''</span> <span class="hljs-keyword">else</span>
+            <span class="hljs-string">"Undo <span class="hljs-subst">#{<span class="hljs-property">@stack</span>[<span class="hljs-property">@stackPointer</span> - <span class="hljs-number">1</span>].toString()}</span>"</span>
+    <span class="hljs-attribute">redoDescription</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> <span class="hljs-keyword">is</span> <span class="hljs-property">@stack</span>.length <span class="hljs-keyword">then</span> <span class="hljs-string">''</span> <span class="hljs-keyword">else</span>
+            <span class="hljs-string">"Redo <span class="hljs-subst">#{<span class="hljs-property">@stack</span>[<span class="hljs-property">@stackPointer</span>].toString()}</span>"</span>
+</code></pre><p>We add <code>undo</code> and <code>redo</code> methods that move the stack pointer after
+calling the <code>undo</code> and <code>redo</code> methods in the appropriate actions on
+the stack.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">undo</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> &gt; <span class="hljs-number">0</span>
+            <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">false</span>
+            <span class="hljs-property">@stack</span>[<span class="hljs-property">@stackPointer</span> - <span class="hljs-number">1</span>].undo()
+            <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">true</span>
+            <span class="hljs-property">@stackPointer</span>--
+    <span class="hljs-attribute">redo</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> &lt; <span class="hljs-property">@stack</span>.length
+            <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">false</span>
+            <span class="hljs-property">@stack</span>[<span class="hljs-property">@stackPointer</span>].redo()
+            <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">true</span>
+            <span class="hljs-property">@stackPointer</span>++
+</code></pre><h1><a name='utility-functions-for-working-with-the-dom'></a>Utility functions for working with the DOM &nbsp;  <font size=-1><a href='#utility-functions-for-working-with-the-dom'><span class="glyphicon glyphicon-link"></span></a></font></h1><h2><a name='address'></a>Address &nbsp;  <font size=-1><a href='#address'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The address of a node <code>N</code> in an ancestor node <code>M</code> is an array <code>a</code>
+of non-negative integer indices such that
+<code>M.childNodes[a[0]].childNodes[a[1]]. ...
+.childNodes[a[a.length-1]] == N</code>.  Think of it as the path one must
+walk through children to get from <code>M</code> down to <code>N</code>.  Special cases:</p>
+<ul>
+<li>If the array is of length 1, then <code>M == N.parentNode</code>.</li>
+<li>If the array is empty, <code>[]</code>, then <code>M == N</code>.</li>
+<li>If <code>M</code> is not an ancestor of <code>N</code>, then we say the address of <code>N</code>
+within <code>M</code> is null (not an array at all).</li>
+</ul>
+<p>The following member function of the <code>Node</code> class adds the address
+function to that class.  Using the <code>M</code> and <code>N</code> from above, one
+would call it like <code>N.address M</code>.  <a href="#index">See below</a> for its
+inverse function, <code>index</code>.</p>
+<p>It computes the address of any one DOM node within any other.
+If the parameter (the ancestor, called <code>M</code> above) is not supplied,
+then it defaults to the top-level Node above <code>N</code>
+(i.e., the furthest-up ancestor, with no <code>.parentNode</code>,
+which usually means it&#39;s the global variable <code>document</code>).</p>
+<pre class="hljs"><code><span class="hljs-attribute">Node</span>::<span class="hljs-function"><span class="hljs-title">address</span> = <span class="hljs-params">( ancestor = <span class="hljs-literal">null</span> )</span> -&gt;</span>
+</code></pre><p>The base case comes in two flavors.
+First, if the parameter is this node, then the correct result is
+the empty array.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">this</span> <span class="hljs-keyword">is</span> ancestor <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> []
+</code></pre><p>Second, if we&#39;ve reached the top level then we must consider the
+second parameter.  Were we restricted to a specific ancestor?  If
+so, we didn&#39;t find it, so return null.  If not, return the empty
+array, because we have reached the top level.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-property">@parentNode</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">if</span> ancestor <span class="hljs-keyword">then</span> <span class="hljs-literal">null</span> <span class="hljs-keyword">else</span> []
+</code></pre><p>Otherwise, recur up the ancestor tree, and concatenate our own
+index in our parent with the array we compute there, if there is
+one.</p>
+<pre class="hljs"><code>    recur = <span class="hljs-property">@parentNode</span>.address ancestor
+    <span class="hljs-keyword">if</span> recur <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>
+    recur.concat [ <span class="hljs-property">@indexInParent</span>() ]
+</code></pre><p>You&#39;ll notice that the final line of code above depends on the
+as-yet-undefined helper function <code>indexInParent()</code>.  We therefore
+create that simple helper function now, which is also a useful
+member of the <code>Node</code> prototype.</p>
+<pre class="hljs"><code><span class="hljs-attribute">Node</span>::<span class="hljs-function"><span class="hljs-title">indexInParent</span> = -&gt;</span>
+    <span class="hljs-keyword">if</span> <span class="hljs-property">@parentNode</span>
+        <span class="hljs-attribute">Array</span>::slice.apply(
+            <span class="hljs-property">@parentNode</span>.childNodes ).indexOf <span class="hljs-keyword">this</span>
+    <span class="hljs-keyword">else</span>
+        -<span class="hljs-number">1</span>
+</code></pre><h2><a name='index'></a>Index &nbsp;  <font size=-1><a href='#index'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>This function is an inverse for <code>address</code>,
+<a href="#address">defined above</a>.</p>
+<p>The node at index <code>I</code> in node <code>N</code> is the descendant <code>M</code> of <code>N</code> in
+the node hierarchy such that <code>M.address N</code> is <code>I</code>.
+In short, if <code>N</code> is any ancestor of <code>M</code>, then
+<code>N.index(M.address(N)) == M</code>.</p>
+<p>Keeping in mind that an address is simply an array of nonnegative
+integers, the implementation is simply repeated lookups in some
+<code>childNodes</code> arrays.  It is therefore quite short, with most of
+the code going to type safety.</p>
+<pre class="hljs"><code><span class="hljs-attribute">Node</span>::<span class="hljs-function"><span class="hljs-title">index</span> = <span class="hljs-params">( address )</span> -&gt;</span>
+</code></pre><p>Require that the parameter be an array.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> address <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Array
+        <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Node address function requires an array'</span>
+</code></pre><p>If the array is empty, we&#39;ve hit the base case of this recursion.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> address.length <span class="hljs-keyword">is</span> <span class="hljs-number">0</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>
+</code></pre><p>Othwerise, recur on the child whose index is the first element of
+the given address.  There are two safety checks here.  First, we
+verify that the index we&#39;re about to look up is a number (otherwise
+things like <code>[0]</code> will be treated as zero, which is probably
+erroneous).  Second, the <code>?.</code> syntax below ensures that that index
+is valid, so that we do not attempt to call this function
+recursively on something other than a node.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">typeof</span> address[<span class="hljs-number">0</span>] <span class="hljs-keyword">isnt</span> <span class="hljs-string">'number'</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-literal">undefined</span>
+    <span class="hljs-property">@childNodes</span>[address[<span class="hljs-number">0</span>]]?.index address[<span class="hljs-number">1.</span>.]
+</code></pre><h2><a name='serialization'></a>Serialization &nbsp;  <font size=-1><a href='#serialization'><span class="glyphicon glyphicon-link"></span></a></font></h2><h3><a name='from-dom-nodes-to-objects'></a>From DOM Nodes to objects &nbsp;  <font size=-1><a href='#from-dom-nodes-to-objects'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>These methods are for serializing and unserializing DOM nodes to
+objects that are amenable to JSON processing.</p>
+<p>First, the function for converting a DOM Node to an object that
+can be serialized with <code>JSON.stringify</code>.  After this function is
+defined, one can take any node <code>N</code> and call <code>N.toJSON()</code>.</p>
+<pre class="hljs"><code><span class="hljs-attribute">Node</span>::<span class="hljs-function"><span class="hljs-title">toJSON</span> = <span class="hljs-params">( verbose = <span class="hljs-literal">yes</span> )</span> -&gt;</span>
+</code></pre><p>The <code>verbose</code> parameter uses human-readable object keys, and is the
+default.  A more compact version can be obtained by setting that
+value to false.  The inverse function below can handle either
+format.  The shrinking of keys follows the following convention.</p>
+<ul>
+<li>tagName becomes t</li>
+<li>attributes becomes a</li>
+<li>children becomes c</li>
+<li>comment becomes m</li>
+<li>content becomes n</li>
+</ul>
+<p>Text nodes are simply returned as strings.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">this</span> <span class="hljs-keyword">instanceof</span> Text <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-property">@textContent</span>
+</code></pre><p>Comment nodes are returned as objects with a comment flag and a
+text content attribute.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">this</span> <span class="hljs-keyword">instanceof</span> Comment
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">if</span> verbose
+            comment : <span class="hljs-literal">yes</span>, content : <span class="hljs-property">@textContent</span>
+        <span class="hljs-keyword">else</span>
+            m : <span class="hljs-literal">yes</span>, n : <span class="hljs-property">@textContent</span>
+</code></pre><p>All other types of nodes must be elements in order to be serialized
+by this routine.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">this</span> <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Element
+        <span class="hljs-keyword">throw</span> Error <span class="hljs-string">"Cannot serialize this node: <span class="hljs-subst">#{<span class="hljs-keyword">this</span>}</span>"</span>
+</code></pre><p>A serialized Element is an object with up to three properties, tag
+name, attribute dictionary, and child nodes array.  We create that
+object, then add the attributes dictionary and children array if
+and only if they are nonempty.</p>
+<pre class="hljs"><code>    result = tagName : <span class="hljs-property">@tagName</span>
+    <span class="hljs-keyword">if</span> <span class="hljs-property">@attributes</span>.length
+        result.attributes = { }
+        <span class="hljs-keyword">for</span> attribute <span class="hljs-keyword">in</span> <span class="hljs-property">@attributes</span>
+            result.attributes[attribute.name] = attribute.value
+    <span class="hljs-keyword">if</span> <span class="hljs-property">@childNodes</span>.length
+        result.children =
+            chi.toJSON verbose <span class="hljs-keyword">for</span> chi <span class="hljs-keyword">in</span> <span class="hljs-property">@childNodes</span>
+</code></pre><p>If verbosity is disabled, change all the object keys to one-letter
+abbreviations.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> verbose
+        result.t = result.tagName ; <span class="hljs-keyword">delete</span> result.tagName
+        result.a = result.attributes ; <span class="hljs-keyword">delete</span> result.attributes
+        result.c = result.children ; <span class="hljs-keyword">delete</span> result.children
+    result
+</code></pre><h3><a name='from-objects-to-dom-nodes'></a>From objects to DOM Nodes &nbsp;  <font size=-1><a href='#from-objects-to-dom-nodes'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>Next, the function for converting an object produced with
+<code>N.toJSON()</code> back into an actual DOM Node.  This function requires
+its one parameter to be one of two types, either a string (meaning
+that a text node should be returned) or an object with the three
+properties given above (tagName, attributes, children, meaning that
+an Element should be returned).  One calls it by writing
+<code>Node.toJSON object</code>.</p>
+<pre class="hljs"><code>Node.<span class="hljs-function"><span class="hljs-title">fromJSON</span> = <span class="hljs-params">( json )</span> -&gt;</span>
+</code></pre><p>Handle the easy case first:  strings yield text nodes.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">typeof</span> json <span class="hljs-keyword">is</span> <span class="hljs-string">'string'</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">document</span>.createTextNode json
+</code></pre><p>Next, if we can find a comment flag in the object, then we create
+and return a comment.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-string">'comment'</span> <span class="hljs-keyword">of</span> json <span class="hljs-keyword">and</span> json.comment
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">document</span>.createComment json.content
+    <span class="hljs-keyword">if</span> <span class="hljs-string">'m'</span> <span class="hljs-keyword">of</span> json <span class="hljs-keyword">and</span> json.m
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">document</span>.createComment json.n
+</code></pre><p>The only other possibility is that the object encodes an Element.
+So if we can&#39;t get a tag name from the object, we cannot proceed,
+and thus the input was invalid.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-string">'tagName'</span> <span class="hljs-keyword">of</span> json <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span> <span class="hljs-string">'t'</span> <span class="hljs-keyword">of</span> json
+        <span class="hljs-keyword">throw</span> Error <span class="hljs-string">"Object has no t[agName]: <span class="hljs-subst">#{<span class="hljs-keyword">this</span>}</span>"</span>
+</code></pre><p>Create an element using the tag name, add any attributes from the
+given object, and recur on the child array if there is one.</p>
+<pre class="hljs"><code>    result = <span class="hljs-built_in">document</span>.createElement json.tagName <span class="hljs-keyword">or</span> json.t
+    <span class="hljs-keyword">if</span> attributes = json.attributes <span class="hljs-keyword">or</span> json.a
+        <span class="hljs-keyword">for</span> own key, value <span class="hljs-keyword">of</span> attributes
+            result.setAttribute key, value
+    <span class="hljs-keyword">if</span> children = json.children <span class="hljs-keyword">or</span> json.c
+        <span class="hljs-keyword">for</span> child <span class="hljs-keyword">in</span> children
+            result.appendChild Node.fromJSON child
+    result
+</code></pre><h2><a name='change-events'></a>Change events &nbsp;  <font size=-1><a href='#change-events'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Whenever a change is made to a DOM Node using one of the built-in
+methods of the Node prototype, notifications of that change event
+must be sent to any <code>DOMEditTracker</code> instance containing the
+modified node.  To facilitate this, we modify those Node prototype
+methods so that they not only do their original work, but also
+send the notification events in question.  (Some of the methods in
+question are in the Element prototype rather than the Node
+prototype, so changes happen in both, actually.)</p>
+<p>Each modified version has the same signature and return value as
+before, but with the changes explained below.  The following code
+just performs the modification to each of the methods listed in
+the following string.</p>
+<pre class="hljs"><code><span class="hljs-string">'''
+appendChild insertBefore normalize removeAttribute
+removeAttributeNode removeChild replaceChild
+setAttribute setAttributeNode
+'''</span>.split<span class="hljs-function"><span class="hljs-params">( <span class="hljs-regexp">/\s+/</span> )</span>.<span class="hljs-title">map</span> <span class="hljs-params">( methodName )</span> -&gt;</span>
+</code></pre><p>Compute whether the modificatio needs to take place in the Node
+prototype or the Element prototype, and then store the original
+value of the method for use from within our modified one.</p>
+<pre class="hljs"><code>    which = <span class="hljs-keyword">if</span> <span class="hljs-attribute">Node</span>::[methodName] <span class="hljs-keyword">then</span> Node <span class="hljs-keyword">else</span> Element
+    original = <span class="hljs-attribute">which</span>::[methodName]
+</code></pre><p>Next, replace the original with our modified version.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">which</span>::[methodName] = <span class="hljs-function"><span class="hljs-params">( args... )</span> -&gt;</span>
+</code></pre><p>If and only if a tracker exists over this node, we create an event
+that we will later propagate to it.  We must create the event now,
+so that if the creation of the event needs to record any data from
+the unmodified state of this node (which is a common occurrence)
+then it has the opportunity to do so.</p>
+<pre class="hljs"><code>        tracker = DOMEditTracker.instanceOver <span class="hljs-keyword">this</span>
+        <span class="hljs-keyword">if</span> tracker
+            event = <span class="hljs-keyword">new</span> DOMEditAction methodName, <span class="hljs-keyword">this</span>, args...
+</code></pre><p>Then call the original version of this method.</p>
+<pre class="hljs"><code>        result = original.call <span class="hljs-keyword">this</span>, args...
+</code></pre><p>Now if a tracker was found earlier, and thus a method created to
+send to that tracker, go ahead and send it now.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> tracker
+            tracker.nodeEditHappened event
+</code></pre><p>Return the same return value that would have been returned from the
+original method.</p>
+<pre class="hljs"><code>        result
+</code></pre><h1><a name='-code-lurcheditor-code-class'></a><code>LurchEditor</code> class &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-class'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>A Lurch Editor is an HTML DIV (that has <em>not</em> been marked as
+<code>content-editable</code> in the browser) but that will be made editable
+by the user through the functionality of this class.</p>
+<pre class="hljs"><code><span class="hljs-built_in">window</span>.LurchEditor = <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LurchEditor</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">DOMEditTracker</span></span>
+</code></pre><h2><a name='functions-related-to-ids'></a>Functions related to ids &nbsp;  <font size=-1><a href='#functions-related-to-ids'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The object maintains a list of unique integer ids for assigning to
+elements in the HTML DOM, from that DIV on downwards in the tree.
+The list <code>@freeIds</code> is a list $[a_1,\ldots,a_n]$ such that an id
+is available if and only if it&#39;s one of the $a_i$ or is greater
+than $a_n$.  For this reason, the list begins as <code>[ 0 ]</code>, in the
+constructor, below.</p>
+<p>When a free id is needed, we need a function that will give the
+next such free id and then mark that id as consumed from the list.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">nextFreeId</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-property">@freeIds</span>.length &gt; <span class="hljs-number">1</span>
+            <span class="hljs-property">@freeIds</span>.shift()
+        <span class="hljs-keyword">else</span>
+            <span class="hljs-property">@freeIds</span>[<span class="hljs-number">0</span>]++
+</code></pre><p>When an id in use becomes free, we need a function that will put
+it back into the list of free ids.  The sort in the code below is
+by numerical order, not dictionary (string) order.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">addFreeId</span>: <span class="hljs-function"><span class="hljs-params">( id )</span> -&gt;</span>
+        <span class="hljs-keyword">if</span> id &lt; <span class="hljs-property">@freeIds</span>[<span class="hljs-property">@freeIds</span>.length-<span class="hljs-number">1</span>]
+            <span class="hljs-property">@freeIds</span>.push id
+            <span class="hljs-property">@freeIds</span>.sort <span class="hljs-function"><span class="hljs-params">( a, b )</span> -&gt;</span> a - b
+</code></pre><h2><a name='-code-lurcheditor-code-constructor'></a><code>LurchEditor</code> constructor &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-constructor'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The constructor takes any DIV from the browser&#39;s HTML DOM, or no
+argument if the instance is not to be made visible in a webpage.
+See the constructor of <a href="domedittracker.litcoffee.html">the ancestor <code>DOMEditTracker</code> class</a> for more information on the call to
+<code>super</code>.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">( div )</span> -&gt;</span>
+        <span class="hljs-keyword">super</span> div
+</code></pre><p>It calls <code>cleanIds</code> on that DIV to remove from it any ids that
+aren&#39;t nonnegative integers.</p>
+<pre class="hljs"><code>        usedIds = <span class="hljs-property">@cleanIds</span> div
+</code></pre><p>Then it computes the list of <code>freeIds</code> as the complement of the set
+of nonnegative integer ids found by <code>cleanIds</code>.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@freeIds</span> = <span class="hljs-keyword">if</span> usedIds.length <span class="hljs-keyword">is</span> <span class="hljs-number">0</span> <span class="hljs-keyword">then</span> [ <span class="hljs-number">0</span> ] <span class="hljs-keyword">else</span>
+            ( i <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">0.</span>.(Math.max usedIds...)+<span class="hljs-number">1</span>] \
+                <span class="hljs-keyword">when</span> i <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> usedIds )
+</code></pre><p>Last, for every HTMLElement under the DIV without an id, the
+constructor gives it the next available id.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@assignIds</span> div
+</code></pre><h2><a name='functions-used-by-the-constructor'></a>Functions used by the constructor &nbsp;  <font size=-1><a href='#functions-used-by-the-constructor'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Collect a list of all used ids in the given node, removing any
+ids that aren&#39;t just nonnegative integers.  This routine is used
+by the class&#39;s constructor as part of the procedure for
+initializing the node in the DOM in which the LurchEditor will
+reside.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">cleanIds</span>: <span class="hljs-function"><span class="hljs-params">( node )</span> -&gt;</span>
+        result = []
+        <span class="hljs-keyword">if</span> node <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> result
+        <span class="hljs-keyword">if</span> node.id
+            <span class="hljs-keyword">if</span> <span class="hljs-regexp">/^\d+$/</span>.test node.id
+                result.push parseInt node.id
+            <span class="hljs-keyword">else</span>
+                node.removeAttribute <span class="hljs-string">'id'</span>
+        <span class="hljs-keyword">for</span> child <span class="hljs-keyword">in</span> node.childNodes
+            result = result.concat ( id <span class="hljs-keyword">for</span> id <span class="hljs-keyword">in</span> \
+                <span class="hljs-property">@cleanIds</span> child <span class="hljs-keyword">when</span> id <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> result )
+        result
+</code></pre><p>Assign ids to every HTMLElement under the given node, using this
+object&#39;s <code>nextFreeId</code> function to do so.  Non-HTMLElement nodes are
+not given ids.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">assignIds</span>: <span class="hljs-function"><span class="hljs-params">( node )</span> -&gt;</span>
+        <span class="hljs-keyword">if</span> node <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span>
+        <span class="hljs-keyword">if</span> node <span class="hljs-keyword">instanceof</span> HTMLElement <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span> node.id
+            node.id = <span class="hljs-property">@nextFreeId</span>()
+        <span class="hljs-property">@assignIds</span> child <span class="hljs-keyword">for</span> child <span class="hljs-keyword">in</span> node.childNodes
+</code></pre><h2><a name='convenience-methods'></a>Convenience methods &nbsp;  <font size=-1><a href='#convenience-methods'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>DOM Nodes have the methods <code>address</code> and <code>index</code> implemented in
+them; see <a href="domutils.litcoffee.html#address">the documentation on those functions</a> for more information.</p>
+<p>It will be convenient to be able to call such methods in a
+<code>LurchEditor</code>, thereby having its main element provided as the
+default arguments.  We therefore define the following two shortcut
+functions.</p>
+<p>Let <code>LE.address N</code> be shorthand for <code>N.address LE.getElement()</code>.
+But if we have no main HTML element, return null.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">address</span>: <span class="hljs-function"><span class="hljs-params">( node )</span> -&gt;</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-property">@element</span> <span class="hljs-keyword">then</span> node?.address <span class="hljs-property">@element</span> <span class="hljs-keyword">else</span> <span class="hljs-literal">null</span>
+</code></pre><p>Let <code>LE.index A</code> be shorthand for <code>LE.getElement().index A</code>.
+But if we have no main HTML element, return null.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">index</span>: <span class="hljs-function"><span class="hljs-params">( address )</span> -&gt;</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-property">@element</span> <span class="hljs-keyword">then</span> <span class="hljs-property">@element</span>.index address <span class="hljs-keyword">else</span> <span class="hljs-literal">null</span>
+</code></pre><p>We therefore have the guarantee <code>N == LE.index LE.address N</code>
+inherited from the address and index functions defined in the Node
+prototype.</p>
+
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='app.litcoffee.html'>app.litcoffee</a></li><li><a href='appsetup.litcoffee.html'>appsetup.litcoffee</a></li><li><a href='weblurch.litcoffee.html'>weblurch.litcoffee</a></li><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='testapp.litcoffee.html'>testapp.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

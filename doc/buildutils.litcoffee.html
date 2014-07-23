@@ -1,5 +1,7 @@
 <html>
     <head>
+        <link rel="stylesheet"
+              href="../bootstrap/css/bootstrap.min.css"/>
         <link rel="stylesheet" href="./main.css"/>
         <link rel="stylesheet" href="./obsidian.css"/>
         <link rel="shortcut icon" href="favicon.png"/>
@@ -22,11 +24,11 @@
 <li><a href='#verifying-npm-install-has-been-run'>Verifying npm install has been run</a></li><li><a href='#fetching-filenames-from-a-folder'>Fetching filenames from a folder</a></li><li><a href='#loading-contents-of-text-files'>Loading contents of text files</a></li><li><a href='#compile-literate-coffeescript-files'>Compile literate coffeescript files</a></li><li><a href='#converting-markdown-to-html'>Converting Markdown to HTML</a></li>
         </div>
         <div id="middle">
-            <h1><a name='utility-functions-supporting-the-build-process'></a>Utility functions supporting the build process &nbsp;  <font size=-1><a href='#utility-functions-supporting-the-build-process'><img src="link.png" class="anchor"></a></font></h1><p>Several places in this module we access the filesystem, or spawn
+            <h1><a name='utility-functions-supporting-the-build-process'></a>Utility functions supporting the build process &nbsp;  <font size=-1><a href='#utility-functions-supporting-the-build-process'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>Several places in this module we access the filesystem, or spawn
 child processes with <code>exec</code>.  So import those modules up front.</p>
 <pre class="hljs"><code>fs = <span class="hljs-built_in">require</span> <span class="hljs-string">'fs'</span>
 { exec } = <span class="hljs-built_in">require</span> <span class="hljs-string">'child_process'</span>
-</code></pre><h2><a name='task-queue'></a>Task queue &nbsp;  <font size=-1><a href='#task-queue'><img src="link.png" class="anchor"></a></font></h2><h3><a name='enqueueing-and-dequeueing-tasks'></a>Enqueueing and dequeueing tasks &nbsp;  <font size=-1><a href='#enqueueing-and-dequeueing-tasks'><img src="link.png" class="anchor"></a></font></h3><p>The next few functions make it possible to add tasks to a queue and
+</code></pre><h2><a name='task-queue'></a>Task queue &nbsp;  <font size=-1><a href='#task-queue'><span class="glyphicon glyphicon-link"></span></a></font></h2><h3><a name='enqueueing-and-dequeueing-tasks'></a>Enqueueing and dequeueing tasks &nbsp;  <font size=-1><a href='#enqueueing-and-dequeueing-tasks'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>The next few functions make it possible to add tasks to a queue and
 dequeue them later into active duty.  Enqueueing any string stores
 it for later execution, which happens when you dequeue; that passes
 the string to <code>cake</code>&#39;s <code>invoke</code>.  Such strings should be names of
@@ -45,7 +47,7 @@ but instead is a function, then we just call it.</p>
     <span class="hljs-keyword">if</span> queue.length &gt; <span class="hljs-number">0</span>
         next = queue.shift()
         <span class="hljs-keyword">if</span> <span class="hljs-keyword">typeof</span> next <span class="hljs-keyword">is</span> <span class="hljs-string">'string'</span> <span class="hljs-keyword">then</span> invoke next <span class="hljs-keyword">else</span> next()
-</code></pre><h3><a name='automatic-dequeueing-and-messaging'></a>Automatic dequeueing and messaging &nbsp;  <font size=-1><a href='#automatic-dequeueing-and-messaging'><img src="link.png" class="anchor"></a></font></h3><p>Each task function would therefore have to end with a call to
+</code></pre><h3><a name='automatic-dequeueing-and-messaging'></a>Automatic dequeueing and messaging &nbsp;  <font size=-1><a href='#automatic-dequeueing-and-messaging'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>Each task function would therefore have to end with a call to
 <code>dequeue</code>, so that after each task is completed, if there are more
 tasks still in the queue, the next one gets run.  But that is
 undesirable.  It would be better if the task definer provided by
@@ -76,7 +78,7 @@ function that you should call when the task is done.</p>
 </code></pre><p>Those last lines mean that your asynchronous task function needs to
 take a <code>done</code> function as parameter, and call it when the task is
 finally complete.  It will then print done and do a dequeue.</p>
-<h2><a name='verifying-npm-install-has-been-run'></a>Verifying npm install has been run &nbsp;  <font size=-1><a href='#verifying-npm-install-has-been-run'><img src="link.png" class="anchor"></a></font></h2><p>It is useful to verify that <code>npm install</code> has been run in this
+<h2><a name='verifying-npm-install-has-been-run'></a>Verifying npm install has been run &nbsp;  <font size=-1><a href='#verifying-npm-install-has-been-run'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>It is useful to verify that <code>npm install</code> has been run in this
 folder before attempting to load <code>node</code> modules mentioned in the
 <code>package.json</code> file.</p>
 <p>This is because the build process relies on a few such modules, and
@@ -97,7 +99,7 @@ message if any are not.</p>
                     To fix this, run: npm install
                     """</span>
         process.exit <span class="hljs-number">1</span>
-</code></pre><h2><a name='fetching-filenames-from-a-folder'></a>Fetching filenames from a folder &nbsp;  <font size=-1><a href='#fetching-filenames-from-a-folder'><img src="link.png" class="anchor"></a></font></h2><p>Often during the build process, we need a list of all files of a
+</code></pre><h2><a name='fetching-filenames-from-a-folder'></a>Fetching filenames from a folder &nbsp;  <font size=-1><a href='#fetching-filenames-from-a-folder'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Often during the build process, we need a list of all files of a
 certain type in a certain directory.  This simple function does
 that for us, returning the result as an array.</p>
 <p>It takes parameters in pairs, a folder as a string, then a regexp
@@ -114,7 +116,7 @@ that begins with the folder name it belongs in (e.g.,
             <span class="hljs-keyword">if</span> args[i+<span class="hljs-number">1</span>].test file
                 result.push args[i]+file
     result
-</code></pre><h2><a name='loading-contents-of-text-files'></a>Loading contents of text files &nbsp;  <font size=-1><a href='#loading-contents-of-text-files'><img src="link.png" class="anchor"></a></font></h2><p>It is convenient to be able to load the contents of many text files
+</code></pre><h2><a name='loading-contents-of-text-files'></a>Loading contents of text files &nbsp;  <font size=-1><a href='#loading-contents-of-text-files'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>It is convenient to be able to load the contents of many text files
 at once, and this function does so.  Pass it an array of filenames,
 and you get back an object whose keys are those filenames and whose
 values are the text contents of the files.</p>
@@ -126,7 +128,7 @@ For a reasonable number of text files, there is no problem.</p>
         <span class="hljs-built_in">console</span>.log <span class="hljs-string">"\tReading <span class="hljs-subst">#{name}</span>..."</span>
         result[name] = fs.readFileSync name, <span class="hljs-string">'utf8'</span>
     result
-</code></pre><h2><a name='compile-literate-coffeescript-files'></a>Compile literate coffeescript files &nbsp;  <font size=-1><a href='#compile-literate-coffeescript-files'><img src="link.png" class="anchor"></a></font></h2><p>Call this function with an input filename and a callback function.
+</code></pre><h2><a name='compile-literate-coffeescript-files'></a>Compile literate coffeescript files &nbsp;  <font size=-1><a href='#compile-literate-coffeescript-files'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Call this function with an input filename and a callback function.
 The input filename should contain the path also, unless it is the
 current directory.</p>
 <p>The input file should be a <code>.litcoffee</code> file, and this function
@@ -158,7 +160,7 @@ because <code>uglify</code> dumps a bit of spam I&#39;m suppressing.)</p>
         <span class="hljs-function"><span class="hljs-params">( err, stdout, stderr )</span> -&gt;</span>
             <span class="hljs-keyword">if</span> err <span class="hljs-keyword">then</span> <span class="hljs-built_in">console</span>.log stdout + stderr ; <span class="hljs-keyword">throw</span> err
             callback()
-</code></pre><h2><a name='converting-markdown-to-html'></a>Converting Markdown to HTML &nbsp;  <font size=-1><a href='#converting-markdown-to-html'><img src="link.png" class="anchor"></a></font></h2><p>The following function uses the
+</code></pre><h2><a name='converting-markdown-to-html'></a>Converting Markdown to HTML &nbsp;  <font size=-1><a href='#converting-markdown-to-html'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The following function uses the
 <a href="http://github.com/chjj/marked">marked</a> module to parse
 <a href="http://daringfireball.net/projects/markdown">Markdown</a>, including
 syntax highlighting of indented code blocks as
@@ -166,7 +168,7 @@ syntax highlighting of indented code blocks as
 by <a href="http://highlightjs.org">highlight.js</a>, and one of its
 stylehseets is already installed in the <code>doc/</code> output folder.</p>
 <p>The following image is used to indicate an anchor.</p>
-<pre class="hljs"><code>linkpng = <span class="hljs-string">'&lt;img src="link.png" class="anchor"&gt;'</span>
+<pre class="hljs"><code>linkcode = <span class="hljs-string">'&lt;span class="glyphicon glyphicon-link"&gt;&lt;/span&gt;'</span>
 </code></pre><p>And now, the conversion function.</p>
 <pre class="hljs"><code><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">md2html</span> = <span class="hljs-params">( infile )</span> -&gt;</span>
     marked = <span class="hljs-built_in">require</span> <span class="hljs-string">'marked'</span>
@@ -190,8 +192,9 @@ links, to be consistent with anchor names generated elsewhere.</p>
         <span class="hljs-keyword">else</span>
             escapedText = <span class="hljs-built_in">exports</span>.escapeHeading collapsed
 </code></pre><p>If this is a heading in a test suite, create a link to the test
-results.</p>
-<pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-regexp">/-spec\.litcoffee/</span>.test infile
+results.  The only exception is top-level headings, which do not
+have corresponding entries in the test suite resutls page.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> level &gt; <span class="hljs-number">1</span> <span class="hljs-keyword">and</span> <span class="hljs-regexp">/-spec\.litcoffee/</span>.test infile
             results = <span class="hljs-string">"&lt;font size=-1&gt;&lt;a href='"</span> +
                       <span class="hljs-string">"test-results.md.html#"</span> +
                       <span class="hljs-string">"<span class="hljs-subst">#{escapedText}</span>'&gt;see results&lt;/a&gt;&lt;/font&gt;"</span>
@@ -210,7 +213,7 @@ results.</p>
 </code></pre><p>Return the final HTML string for the heading</p>
 <pre class="hljs"><code>        <span class="hljs-string">"&lt;h<span class="hljs-subst">#{level}</span>&gt;&lt;a name='<span class="hljs-subst">#{escapedText}</span>'&gt;&lt;/a&gt;<span class="hljs-subst">#{text}</span> "</span> +
         <span class="hljs-string">"&amp;nbsp; <span class="hljs-subst">#{results}</span> &lt;font size=-1&gt;&lt;a href='"</span> +
-        <span class="hljs-string">"#<span class="hljs-subst">#{escapedText}</span>'&gt;<span class="hljs-subst">#{linkpng}</span>&lt;/a&gt;&lt;/font&gt;&lt;/h<span class="hljs-subst">#{level}</span>&gt;"</span>
+        <span class="hljs-string">"#<span class="hljs-subst">#{escapedText}</span>'&gt;<span class="hljs-subst">#{linkcode}</span>&lt;/a&gt;&lt;/font&gt;&lt;/h<span class="hljs-subst">#{level}</span>&gt;"</span>
 </code></pre><p>Install the renderer just created, as well as highlighting support
 provided by <code>highlight.js</code>.</p>
 <pre class="hljs"><code>    marked.setOptions
@@ -232,7 +235,7 @@ process.</p>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

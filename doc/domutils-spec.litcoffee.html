@@ -1,5 +1,7 @@
 <html>
     <head>
+        <link rel="stylesheet"
+              href="../bootstrap/css/bootstrap.min.css"/>
         <link rel="stylesheet" href="./main.css"/>
         <link rel="stylesheet" href="./obsidian.css"/>
         <link rel="shortcut icon" href="favicon.png"/>
@@ -29,133 +31,115 @@
 <li><a href='#should-send-alerts-on-code-appendchild-code-calls'>should send alerts on <code>appendChild</code> calls</a></li><li><a href='#should-send-alerts-on-code-insertbefore-code-calls'>should send alerts on <code>insertBefore</code> calls</a></li><li><a href='#should-send-alerts-on-code-normalize-code-calls'>should send alerts on <code>normalize</code> calls</a></li><li><a href='#should-send-alerts-on-code-removeattribute-code-calls'>should send alerts on <code>removeAttribute</code> calls</a></li><li><a href='#should-send-alerts-on-code-removeattributenode-code-calls'>should send alerts on <code>removeAttributeNode</code> calls</a></li><li><a href='#should-send-alerts-on-code-removechild-code-calls'>should send alerts on <code>removeChild</code> calls</a></li><li><a href='#should-send-alerts-on-code-replacechild-code-calls'>should send alerts on <code>replaceChild</code> calls</a></li><li><a href='#should-send-alerts-on-code-setattribute-code-calls'>should send alerts on <code>setAttribute</code> calls</a></li><li><a href='#should-send-alerts-on-code-setattributenode-code-calls'>should send alerts on <code>setAttributeNode</code> calls</a></li>
         </div>
         <div id="middle">
-            <h1><a name='tests-of-dom-utilities-module'></a>Tests of DOM utilities module &nbsp; <font size=-1><a href='test-results.md.html#tests-of-dom-utilities-module'>see results</a></font> <font size=-1><a href='#tests-of-dom-utilities-module'><img src="link.png" class="anchor"></a></font></h1><p>Pull in the utility functions in <code>phantom-utils</code> that make it
+            <h1><a name='tests-of-dom-utilities-module'></a>Tests of DOM utilities module &nbsp;  <font size=-1><a href='#tests-of-dom-utilities-module'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>Pull in the utility functions in <code>phantom-utils</code> that make it
 easier to write the tests below.</p>
-<pre class="hljs"><code>{ phantomDescribe } = <span class="hljs-built_in">require</span> <span class="hljs-string">'./phantom-utils'</span>
-</code></pre><h2><a name='address-member-function-of-node-class'></a>address member function of Node class &nbsp; <font size=-1><a href='test-results.md.html#address-member-function-of-node-class'>see results</a></font> <font size=-1><a href='#address-member-function-of-node-class'><img src="link.png" class="anchor"></a></font></h2><p>The tests in this section test the <code>address</code> member function in
+<pre class="hljs"><code>{ phantomDescribe, pageDo, pageExpects, inPage,
+  pageExpectsError } = <span class="hljs-built_in">require</span> <span class="hljs-string">'./phantom-utils'</span>
+</code></pre><h2><a name='address-member-function-of-node-class'></a>address member function of Node class &nbsp; <font size=-1><a href='test-results.md.html#address-member-function-of-node-class'>see results</a></font> <font size=-1><a href='#address-member-function-of-node-class'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The tests in this section test the <code>address</code> member function in
 the <code>Node</code> prototype.
 <a href="domutils.litcoffee.html#address">See its definition here.</a>.</p>
 <pre class="hljs"><code>phantomDescribe <span class="hljs-string">'address member function of Node class'</span>,
 <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
-</code></pre><h3><a name='should-be-defined'></a>should be defined &nbsp; <font size=-1><a href='test-results.md.html#should-be-defined'>see results</a></font> <font size=-1><a href='#should-be-defined'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be defined'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-</code></pre><p>First, just verify that it&#39;s present.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate (<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">Node</span>::address ),
-        <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toBeTruthy()
-            done()
-</code></pre><h3><a name='should-give-null-on-corner-cases'></a>should give null on corner cases &nbsp; <font size=-1><a href='test-results.md.html#should-give-null-on-corner-cases'>see results</a></font> <font size=-1><a href='#should-give-null-on-corner-cases'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should give null on corner cases'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+</code></pre><h3><a name='should-be-defined'></a>should be defined &nbsp; <font size=-1><a href='test-results.md.html#should-be-defined'>see results</a></font> <font size=-1><a href='#should-be-defined'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>First, just verify that it&#39;s present.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should be defined'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">Node</span>::address ), <span class="hljs-string">'toBeTruthy'</span>
+</code></pre><h3><a name='should-give-null-on-corner-cases'></a>should give null on corner cases &nbsp; <font size=-1><a href='test-results.md.html#should-give-null-on-corner-cases'>see results</a></font> <font size=-1><a href='#should-give-null-on-corner-cases'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should give null on corner cases'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>The corner cases to be tested here are these:</p>
 <ul>
 <li>The address of a DOM node within one of its children.</li>
 <li>The address of a DOM node within one of its siblings.</li>
 </ul>
 <p>Although there are others we could test, these are enough for now.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            pardiv = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.pardiv = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">document</span>.body.appendChild pardiv
-            chidiv1 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">window</span>.chidiv1 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             pardiv.appendChild chidiv1
-            chidiv2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">window</span>.chidiv2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             pardiv.appendChild chidiv2
-            [
-                pardiv.address( chidiv1 ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
-                pardiv.address( chidiv2 ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
-                chidiv1.address( chidiv2 ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
-                chidiv2.address( chidiv1 ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">2</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">3</span>] ).toBeTruthy()
-            done()
-</code></pre><h3><a name='should-be-empty-when-argument-is-this'></a>should be empty when argument is this &nbsp; <font size=-1><a href='test-results.md.html#should-be-empty-when-argument-is-this'>see results</a></font> <font size=-1><a href='#should-be-empty-when-argument-is-this'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be empty when argument is this'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> pardiv.address( chidiv1 ) ),
+            <span class="hljs-string">'toBeNull'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> pardiv.address( chidiv2 ) ),
+            <span class="hljs-string">'toBeNull'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> chidiv1.address( chidiv2 ) ),
+            <span class="hljs-string">'toBeNull'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> chidiv2.address( chidiv1 ) ),
+            <span class="hljs-string">'toBeNull'</span>
+</code></pre><h3><a name='should-be-empty-when-argument-is-this'></a>should be empty when argument is this &nbsp; <font size=-1><a href='test-results.md.html#should-be-empty-when-argument-is-this'>see results</a></font> <font size=-1><a href='#should-be-empty-when-argument-is-this'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be empty when argument is this'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>We will test a few cases where the argument is the node it&#39;s being
 called on, for various nodes.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            pardiv = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.pardiv = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">document</span>.body.appendChild pardiv
-            chidiv1 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">window</span>.chidiv1 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             pardiv.appendChild chidiv1
-            chidiv2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">window</span>.chidiv2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             pardiv.appendChild chidiv2
-            [
-                pardiv.address( pardiv )
-                chidiv1.address( chidiv1 )
-                chidiv2.address( chidiv2 )
-                <span class="hljs-built_in">document</span>.address( <span class="hljs-built_in">document</span> )
-                <span class="hljs-built_in">document</span>.body.address( <span class="hljs-built_in">document</span>.body )
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toEqual [ ]
-            expect( result[<span class="hljs-number">1</span>] ).toEqual [ ]
-            expect( result[<span class="hljs-number">2</span>] ).toEqual [ ]
-            expect( result[<span class="hljs-number">3</span>] ).toEqual [ ]
-            expect( result[<span class="hljs-number">4</span>] ).toEqual [ ]
-            done()
-</code></pre><h3><a name='should-be-empty-for-top-level-null'></a>should be empty for top-level,null &nbsp; <font size=-1><a href='test-results.md.html#should-be-empty-for-top-level-null'>see results</a></font> <font size=-1><a href='#should-be-empty-for-top-level-null'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be empty for top-level,null'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> pardiv.address( pardiv ) ),
+            <span class="hljs-string">'toEqual'</span>, [ ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> chidiv1.address( chidiv1 ) ),
+            <span class="hljs-string">'toEqual'</span>, [ ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> chidiv2.address( chidiv2 ) ),
+            <span class="hljs-string">'toEqual'</span>, [ ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span>.address( <span class="hljs-built_in">document</span> ) ),
+            <span class="hljs-string">'toEqual'</span>, [ ]
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.body.address <span class="hljs-built_in">document</span>.body ),
+            <span class="hljs-string">'toEqual'</span>, [ ]
+</code></pre><h3><a name='should-be-empty-for-top-level-null'></a>should be empty for top-level,null &nbsp; <font size=-1><a href='test-results.md.html#should-be-empty-for-top-level-null'>see results</a></font> <font size=-1><a href='#should-be-empty-for-top-level-null'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be empty for top-level,null'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>The simplest way to test this is to compute the address of the
 document, and expect it to be the empty array.  But we also make
 the document create an empty div and not put it inside any other
 node, and we expect that its address will also be the empty array.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            [
-                <span class="hljs-built_in">document</span>.address()
-                <span class="hljs-built_in">document</span>.createElement( <span class="hljs-string">'div'</span> ).address()
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toEqual [ ]
-            expect( result[<span class="hljs-number">1</span>] ).toEqual [ ]
-            done()
-</code></pre><h3><a name='should-be-length-1-for-a-child'></a>should be length-1 for a child &nbsp; <font size=-1><a href='test-results.md.html#should-be-length-1-for-a-child'>see results</a></font> <font size=-1><a href='#should-be-length-1-for-a-child'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be length-1 for a child'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span>.address() ), <span class="hljs-string">'toEqual'</span>, [ ]
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.createElement( <span class="hljs-string">'div'</span> ).address() ),
+            <span class="hljs-string">'toEqual'</span>, [ ]
+</code></pre><h3><a name='should-be-length-1-for-a-child'></a>should be length-1 for a child &nbsp; <font size=-1><a href='test-results.md.html#should-be-length-1-for-a-child'>see results</a></font> <font size=-1><a href='#should-be-length-1-for-a-child'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be length-1 for a child'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>First, add some structure to the document.
 We will need to run tests on a variety of parent-child pairs of
 nodes, so we need to create such pairs as structures in the
 document first.</p>
-<pre class="hljs"><code>            pardiv = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.pardiv = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">document</span>.body.appendChild pardiv
-            chidiv1 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">window</span>.chidiv1 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             pardiv.appendChild chidiv1
-            chidiv2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">window</span>.chidiv2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             pardiv.appendChild chidiv2
 </code></pre><p>Next, create some structure <em>outside</em> the document.
 We want to verify that our routines work outside the page&#39;s
 document as well.</p>
-<pre class="hljs"><code>            outer = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
-            inner = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+<pre class="hljs"><code>            <span class="hljs-built_in">window</span>.outer = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">window</span>.inner = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             outer.appendChild inner
 </code></pre><p>We call the <code>address</code> function in several different ways, but each
 time we call it on an immediate child of the argument (or an
 immediate child of the document, with no argument).  Sometimes we
 compute the same result in both of those ways to verify that they
 are equal.</p>
-<pre class="hljs"><code>            [
-                <span class="hljs-built_in">document</span>.childNodes[<span class="hljs-number">0</span>].address <span class="hljs-built_in">document</span>
-                <span class="hljs-built_in">document</span>.childNodes[<span class="hljs-number">0</span>].address()
-                chidiv1.address pardiv
-                chidiv2.address pardiv
-                pardiv.address <span class="hljs-built_in">document</span>.body
-                <span class="hljs-built_in">document</span>.body.childNodes.length
-                inner.address outer
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toEqual [ <span class="hljs-number">0</span> ]
-            expect( result[<span class="hljs-number">1</span>] ).toEqual [ <span class="hljs-number">0</span> ]
-            expect( result[<span class="hljs-number">2</span>] ).toEqual [ <span class="hljs-number">0</span> ]
-            expect( result[<span class="hljs-number">3</span>] ).toEqual [ <span class="hljs-number">1</span> ]
-</code></pre><p>The next line verifies that <code>pardiv</code> was the last element in the
-list of child nodes of the document body.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">4</span>] ).toEqual [ result[<span class="hljs-number">5</span>]-<span class="hljs-number">1</span> ]
-            expect( result[<span class="hljs-number">6</span>] ).toEqual [ <span class="hljs-number">0</span> ]
-            done()
-</code></pre><h3><a name='should-work-for-grandchildren-etc-'></a>should work for grandchildren, etc. &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-grandchildren-etc-'>see results</a></font> <font size=-1><a href='#should-work-for-grandchildren-etc-'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should work for grandchildren, etc.'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.childNodes[<span class="hljs-number">0</span>].address <span class="hljs-built_in">document</span> ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">0</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span>.childNodes[<span class="hljs-number">0</span>].address() ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">0</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> chidiv1.address pardiv ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">0</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> chidiv2.address pardiv ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">1</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span>.body.childNodes.length ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">8</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> pardiv.address <span class="hljs-built_in">document</span>.body ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">7</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> inner.address outer ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">0</span> ]
+</code></pre><h3><a name='should-work-for-grandchildren-etc-'></a>should work for grandchildren, etc. &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-grandchildren-etc-'>see results</a></font> <font size=-1><a href='#should-work-for-grandchildren-etc-'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should work for grandchildren, etc.'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>First, we construct a hierarchy with several levels so that we can
 ask questions across those various levels.  This also ensures that
 we know exactly what the child indices are, because we designed
 the hierarchy in the first place.</p>
-<pre class="hljs"><code>            hierarchy = <span class="hljs-string">'''
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            hierarchy = <span class="hljs-string">'''
                 &lt;span id="test-0"&gt;foo&lt;/span&gt;
                 &lt;span id="test-1"&gt;bar&lt;/span&gt;
                 &lt;div id="test-2"&gt;
@@ -175,135 +159,108 @@ the hierarchy in the first place.</p>
                 &lt;/div&gt;
                 '''</span>
 </code></pre><p>In order to ensure that we do not insert any text nodes that would
-change the expected indices of the elements in the HTML code above,
-we remove whitespace between tags before creating a DOM structure
-from that code.</p>
+change the expected indices of the elements in the HTML code
+above, we remove whitespace between tags before creating a DOM
+structure from that code.</p>
 <pre class="hljs"><code>            hierarchy = hierarchy.replace( <span class="hljs-regexp">/^\s*|\s*$/g</span>, <span class="hljs-string">''</span> )
                                  .replace( <span class="hljs-regexp">/&gt;\s*&lt;/g</span>, <span class="hljs-string">'&gt;&lt;'</span> )
 </code></pre><p>Now create that hierarchy inside our page, for testing.</p>
-<pre class="hljs"><code>            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+<pre class="hljs"><code>            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">document</span>.body.appendChild div
             div.innerHTML = hierarchy
-            elts = ( <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">"test-<span class="hljs-subst">#{i}</span>"</span> \
-                <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">0.</span><span class="hljs-number">.8</span>] )
+            <span class="hljs-built_in">window</span>.elts = ( <span class="hljs-built_in">document</span>.getElementById \
+                <span class="hljs-string">"test-<span class="hljs-subst">#{i}</span>"</span> <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">0.</span><span class="hljs-number">.8</span>] )
 </code></pre><p>We check the address of each test element inside the div we just
 created, as well as its address relative to the div with id
 <code>test-2</code>.</p>
-<pre class="hljs"><code>            [
-                elts[<span class="hljs-number">0</span>].address div
-                elts[<span class="hljs-number">1</span>].address div
-                elts[<span class="hljs-number">2</span>].address div
-                elts[<span class="hljs-number">3</span>].address div
-                elts[<span class="hljs-number">4</span>].address div
-                elts[<span class="hljs-number">5</span>].address div
-                elts[<span class="hljs-number">6</span>].address div
-                elts[<span class="hljs-number">7</span>].address div
-                elts[<span class="hljs-number">8</span>].address div
-                elts[<span class="hljs-number">2</span>].address elts[<span class="hljs-number">2</span>]
-                elts[<span class="hljs-number">3</span>].address elts[<span class="hljs-number">2</span>]
-                elts[<span class="hljs-number">4</span>].address elts[<span class="hljs-number">2</span>]
-                elts[<span class="hljs-number">5</span>].address elts[<span class="hljs-number">2</span>]
-                elts[<span class="hljs-number">6</span>].address elts[<span class="hljs-number">2</span>]
-                elts[<span class="hljs-number">7</span>].address elts[<span class="hljs-number">2</span>]
-                elts[<span class="hljs-number">8</span>].address elts[<span class="hljs-number">2</span>]
-            ]
-</code></pre><p>When checking addresses, note that <code>result[i]</code> corresponds to the
-node with id &quot;test-i&quot;, for any $i\in{0,1,\ldots,7,8}$.</p>
-<pre class="hljs"><code>        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>First, check all descendants of the main div.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual [ <span class="hljs-number">0</span> ]
-            expect( result[<span class="hljs-number">1</span>] ).toEqual [ <span class="hljs-number">1</span> ]
-            expect( result[<span class="hljs-number">2</span>] ).toEqual [ <span class="hljs-number">2</span> ]
-            expect( result[<span class="hljs-number">3</span>] ).toEqual [ <span class="hljs-number">2</span>, <span class="hljs-number">0</span> ]
-            expect( result[<span class="hljs-number">4</span>] ).toEqual [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span> ]
-            expect( result[<span class="hljs-number">5</span>] ).toEqual [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span> ]
-            expect( result[<span class="hljs-number">6</span>] ).toEqual [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ]
-            expect( result[<span class="hljs-number">7</span>] ).toEqual [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span> ]
-            expect( result[<span class="hljs-number">8</span>] ).toEqual [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span> ]
+<p>First, check all descendants of the main div.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">0</span>].address div ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">0</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">1</span>].address div ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">1</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">2</span>].address div ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">2</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">3</span>].address div ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">2</span>, <span class="hljs-number">0</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">4</span>].address div ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">5</span>].address div ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">6</span>].address div ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">7</span>].address div ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">8</span>].address div ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span> ]
 </code></pre><p>Next, check the descendants of the element with id <code>test-2</code> for
 their addresses relative to that element.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">9</span>] ).toEqual [ ]
-            expect( result[<span class="hljs-number">10</span>] ).toEqual [ <span class="hljs-number">0</span> ]
-            expect( result[<span class="hljs-number">11</span>] ).toEqual [ <span class="hljs-number">1</span> ]
-            expect( result[<span class="hljs-number">12</span>] ).toEqual [ <span class="hljs-number">1</span>, <span class="hljs-number">0</span> ]
-            expect( result[<span class="hljs-number">13</span>] ).toEqual [ <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ]
-            expect( result[<span class="hljs-number">14</span>] ).toEqual [ <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span> ]
-            expect( result[<span class="hljs-number">15</span>] ).toEqual [ <span class="hljs-number">1</span>, <span class="hljs-number">1</span> ]
-            done()
-</code></pre><h2><a name='index-member-function-of-node-class'></a>index member function of Node class &nbsp; <font size=-1><a href='test-results.md.html#index-member-function-of-node-class'>see results</a></font> <font size=-1><a href='#index-member-function-of-node-class'><img src="link.png" class="anchor"></a></font></h2><p>The tests in this section test the <code>index</code> member function in the
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">2</span>].address elts[<span class="hljs-number">2</span>] ),
+            <span class="hljs-string">'toEqual'</span>, [ ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">3</span>].address elts[<span class="hljs-number">2</span>] ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">0</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">4</span>].address elts[<span class="hljs-number">2</span>] ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">1</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">5</span>].address elts[<span class="hljs-number">2</span>] ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">1</span>, <span class="hljs-number">0</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">6</span>].address elts[<span class="hljs-number">2</span>] ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">7</span>].address elts[<span class="hljs-number">2</span>] ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span> elts[<span class="hljs-number">8</span>].address elts[<span class="hljs-number">2</span>] ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">1</span>, <span class="hljs-number">1</span> ]
+</code></pre><h2><a name='index-member-function-of-node-class'></a>index member function of Node class &nbsp; <font size=-1><a href='test-results.md.html#index-member-function-of-node-class'>see results</a></font> <font size=-1><a href='#index-member-function-of-node-class'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The tests in this section test the <code>index</code> member function in the
 <code>Node</code> prototype.  This function is like the inverse of <code>address</code>.
 <a href="domutils.litcoffee.html#index">See its definition here.</a>.</p>
 <pre class="hljs"><code>phantomDescribe <span class="hljs-string">'index member function of Node class'</span>,
 <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
-</code></pre><h3><a name='should-be-defined'></a>should be defined &nbsp; <font size=-1><a href='test-results.md.html#should-be-defined'>see results</a></font> <font size=-1><a href='#should-be-defined'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be defined'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate (<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">Node</span>::index ),
-        <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toBeTruthy()
-            done()
-</code></pre><h3><a name='should-give-errors-for-non-arrays'></a>should give errors for non-arrays &nbsp; <font size=-1><a href='test-results.md.html#should-give-errors-for-non-arrays'>see results</a></font> <font size=-1><a href='#should-give-errors-for-non-arrays'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should give errors for non-arrays'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+</code></pre><h3><a name='should-be-defined'></a>should be defined &nbsp; <font size=-1><a href='test-results.md.html#should-be-defined'>see results</a></font> <font size=-1><a href='#should-be-defined'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be defined'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">Node</span>::index ), <span class="hljs-string">'toBeTruthy'</span>
+</code></pre><h3><a name='should-give-errors-for-non-arrays'></a>should give errors for non-arrays &nbsp; <font size=-1><a href='test-results.md.html#should-give-errors-for-non-arrays'>see results</a></font> <font size=-1><a href='#should-give-errors-for-non-arrays'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should give errors for non-arrays'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>Verify that calls to the function throw errors if anything but an
-array is passed as the argument.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            result = []
-            result.push <span class="hljs-keyword">try</span> <span class="hljs-built_in">document</span>.index <span class="hljs-number">0</span> \
-                        <span class="hljs-keyword">catch</span> e <span class="hljs-keyword">then</span> e.message
-            result.push <span class="hljs-keyword">try</span> <span class="hljs-built_in">document</span>.index { <span class="hljs-number">0</span>: <span class="hljs-number">0</span> } \
-                        <span class="hljs-keyword">catch</span> e <span class="hljs-keyword">then</span> e.message
-            result.push <span class="hljs-keyword">try</span> <span class="hljs-built_in">document</span>.index <span class="hljs-built_in">document</span> \
-                        <span class="hljs-keyword">catch</span> e <span class="hljs-keyword">then</span> e.message
-            result.push <span class="hljs-keyword">try</span> <span class="hljs-built_in">document</span>.index (<span class="hljs-function"> -&gt;</span> ) \
-                        <span class="hljs-keyword">catch</span> e <span class="hljs-keyword">then</span> e.message
-            result.push <span class="hljs-keyword">try</span> <span class="hljs-built_in">document</span>.index <span class="hljs-string">'[0,0]'</span> \
-                        <span class="hljs-keyword">catch</span> e <span class="hljs-keyword">then</span> e.message
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>Now verify that each of the items in the resulting array contains
-the relevant portion of the expected error message.</p>
-<pre class="hljs"><code>            expect( <span class="hljs-regexp">/requires an array/</span>.test result[<span class="hljs-number">0</span>] )
-                .toBeTruthy()
-            expect( <span class="hljs-regexp">/requires an array/</span>.test result[<span class="hljs-number">1</span>] )
-                .toBeTruthy()
-            expect( <span class="hljs-regexp">/requires an array/</span>.test result[<span class="hljs-number">2</span>] )
-                .toBeTruthy()
-            expect( <span class="hljs-regexp">/requires an array/</span>.test result[<span class="hljs-number">3</span>] )
-                .toBeTruthy()
-            expect( <span class="hljs-regexp">/requires an array/</span>.test result[<span class="hljs-number">4</span>] )
-                .toBeTruthy()
-            done()
-</code></pre><h3><a name='should-yield-itself-for-'></a>should yield itself for [] &nbsp; <font size=-1><a href='test-results.md.html#should-yield-itself-for-'>see results</a></font> <font size=-1><a href='#should-yield-itself-for-'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should yield itself for []'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+array is passed as the argument, and that the error messages
+contain the relevant portion of the expected error message.</p>
+<pre class="hljs"><code>        pageExpectsError (<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span>.index <span class="hljs-number">0</span> ),
+            <span class="hljs-string">'toMatch'</span>, <span class="hljs-regexp">/requires an array/</span>
+        pageExpectsError (<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span>.index <span class="hljs-number">0</span>: <span class="hljs-number">0</span> ),
+            <span class="hljs-string">'toMatch'</span>, <span class="hljs-regexp">/requires an array/</span>
+        pageExpectsError (<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span>.index <span class="hljs-built_in">document</span> ),
+            <span class="hljs-string">'toMatch'</span>, <span class="hljs-regexp">/requires an array/</span>
+        pageExpectsError (<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span>.index<span class="hljs-function"> -&gt;</span> ),
+            <span class="hljs-string">'toMatch'</span>, <span class="hljs-regexp">/requires an array/</span>
+        pageExpectsError (<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span>.index <span class="hljs-string">'[0,0]'</span> ),
+            <span class="hljs-string">'toMatch'</span>, <span class="hljs-regexp">/requires an array/</span>
+</code></pre><h3><a name='should-yield-itself-for-'></a>should yield itself for [] &nbsp; <font size=-1><a href='test-results.md.html#should-yield-itself-for-'>see results</a></font> <font size=-1><a href='#should-yield-itself-for-'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should yield itself for []'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>Verify that <code>N.index []</code> yields <code>N</code>, for any node <code>N</code>.
 We test a variety of type of nodes, including the document, the
 body, some DIVs and SPANs inside, as well as some DIVs and SPANs
 that are not part of the document.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            divInPage = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.divInPage = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">document</span>.body.appendChild divInPage
-            spanInPage = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            <span class="hljs-built_in">window</span>.spanInPage = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             <span class="hljs-built_in">document</span>.body.appendChild spanInPage
-            divOutside = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
-            spanOutside = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
-            [
-                divInPage <span class="hljs-keyword">is</span> divInPage.index []
-                spanInPage <span class="hljs-keyword">is</span> spanInPage.index []
-                divOutside <span class="hljs-keyword">is</span> divOutside.index []
-                spanOutside <span class="hljs-keyword">is</span> spanOutside.index []
-                <span class="hljs-built_in">document</span> <span class="hljs-keyword">is</span> <span class="hljs-built_in">document</span>.index []
-                <span class="hljs-built_in">document</span>.body <span class="hljs-keyword">is</span> <span class="hljs-built_in">document</span>.body.index []
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">2</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">3</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">4</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">5</span>] ).toBeTruthy()
-            done()
-</code></pre><h3><a name='should-work-for-descendant-indices'></a>should work for descendant indices &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-descendant-indices'>see results</a></font> <font size=-1><a href='#should-work-for-descendant-indices'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should work for descendant indices'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.divOutside = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">window</span>.spanOutside = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> divInPage <span class="hljs-keyword">is</span> divInPage.index [] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> spanInPage <span class="hljs-keyword">is</span> spanInPage.index [] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> divOutside <span class="hljs-keyword">is</span> divOutside.index [] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            spanOutside <span class="hljs-keyword">is</span> spanOutside.index [] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span> <span class="hljs-keyword">is</span> <span class="hljs-built_in">document</span>.index [] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.body <span class="hljs-keyword">is</span> <span class="hljs-built_in">document</span>.body.index [] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+</code></pre><h3><a name='should-work-for-descendant-indices'></a>should work for descendant indices &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-descendant-indices'>see results</a></font> <font size=-1><a href='#should-work-for-descendant-indices'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should work for descendant indices'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>Here we re-use the same hierarchy from
 <a href="#should-work-for-grandchildren-etc-">a test above</a>,
 for the same reasons.</p>
-<pre class="hljs"><code>            hierarchy = <span class="hljs-string">'''
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            hierarchy = <span class="hljs-string">'''
                 &lt;span id="test-0"&gt;foo&lt;/span&gt;
                 &lt;span id="test-1"&gt;bar&lt;/span&gt;
                 &lt;div id="test-2"&gt;
@@ -327,54 +284,50 @@ before creating a DOM structure from that code.</p>
 <pre class="hljs"><code>            hierarchy = hierarchy.replace( <span class="hljs-regexp">/^\s*|\s*$/g</span>, <span class="hljs-string">''</span> )
                                  .replace( <span class="hljs-regexp">/&gt;\s*&lt;/g</span>, <span class="hljs-string">'&gt;&lt;'</span> )
 </code></pre><p>Now create that hierarchy inside our page, for testing.</p>
-<pre class="hljs"><code>            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+<pre class="hljs"><code>            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">document</span>.body.appendChild div
             div.innerHTML = hierarchy
-</code></pre><p>Look up a lot of addresses, and store their ids (if they are
+</code></pre><p>Look up a lot of addresses, and verify their ids (if they are
 elements with ids) or their text content (if they are text nodes).</p>
-<pre class="hljs"><code>            [
-                div.index( [ <span class="hljs-number">0</span> ] ).id
-                div.index( [ <span class="hljs-number">1</span> ] ).id
-                div.index( [ <span class="hljs-number">2</span> ] ).id
-                div.index( [ <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ] ).textContent
-                div.index( [ <span class="hljs-number">1</span>, <span class="hljs-number">0</span> ] ).textContent
-                div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">0</span> ] ).id
-                div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ] ).textContent
-                div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span> ] ).id
-                div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span> ] ).id
-                div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ] ).id
-                div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span> ] ).textContent
-                div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span> ] ).id
-                div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span> ] ).id
-            ]
-</code></pre><p>Verify the ids and text contents computed above match the
-hierarchy and indices given.</p>
-<pre class="hljs"><code>        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toEqual <span class="hljs-string">'test-0'</span>
-            expect( result[<span class="hljs-number">1</span>] ).toEqual <span class="hljs-string">'test-1'</span>
-            expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-string">'test-2'</span>
-            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'foo'</span>
-            expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'bar'</span>
-            expect( result[<span class="hljs-number">5</span>] ).toEqual <span class="hljs-string">'test-3'</span>
-            expect( result[<span class="hljs-number">6</span>] ).toEqual <span class="hljs-string">'baz'</span>
-            expect( result[<span class="hljs-number">7</span>] ).toEqual <span class="hljs-string">'test-4'</span>
-            expect( result[<span class="hljs-number">8</span>] ).toEqual <span class="hljs-string">'test-5'</span>
-            expect( result[<span class="hljs-number">9</span>] ).toEqual <span class="hljs-string">'test-6'</span>
-            expect( result[<span class="hljs-number">10</span>] ).toEqual <span class="hljs-string">'x'</span>
-            expect( result[<span class="hljs-number">11</span>] ).toEqual <span class="hljs-string">'test-7'</span>
-            expect( result[<span class="hljs-number">12</span>] ).toEqual <span class="hljs-string">'test-8'</span>
-            done()
-</code></pre><h3><a name='should-give-undefined-for-bad-indices'></a>should give undefined for bad indices &nbsp; <font size=-1><a href='test-results.md.html#should-give-undefined-for-bad-indices'>see results</a></font> <font size=-1><a href='#should-give-undefined-for-bad-indices'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should give undefined for bad indices'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> div.index( [ <span class="hljs-number">0</span> ] ).id ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'test-0'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.index( [ <span class="hljs-number">1</span> ] ).id ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'test-1'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.index( [ <span class="hljs-number">2</span> ] ).id ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'test-2'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.index( [ <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ] ).textContent ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'foo'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.index( [ <span class="hljs-number">1</span>, <span class="hljs-number">0</span> ] ).textContent ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'bar'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">0</span> ] ).id ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'test-3'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ] ).textContent ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'baz'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span> ] ).id ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'test-4'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span> ] ).id ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'test-5'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ] ).id ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'test-6'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span> ] ).textContent ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'x'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span> ] ).id ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'test-7'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.index( [ <span class="hljs-number">2</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span> ] ).id ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'test-8'</span>
+</code></pre><h3><a name='should-give-undefined-for-bad-indices'></a>should give undefined for bad indices &nbsp; <font size=-1><a href='test-results.md.html#should-give-undefined-for-bad-indices'>see results</a></font> <font size=-1><a href='#should-give-undefined-for-bad-indices'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should give undefined for bad indices'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>Verify that calls to the function return undefined if any step in
 the address array is invalid.  There are many ways for this to
 happen (entry less than zero, entry larger than number of children
 at that level, entry not an integer, entry not a number at all).
 We test each of these cases below.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-</code></pre><p>First we re-create the same hierarchy from
+<p>First we re-create the same hierarchy from
 <a href="#should-work-for-grandchildren-etc-">a test above</a>,
 for the same reasons.</p>
-<pre class="hljs"><code>            hierarchy = <span class="hljs-string">'''
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            hierarchy = <span class="hljs-string">'''
                 &lt;span id="test-0"&gt;foo&lt;/span&gt;
                 &lt;span id="test-1"&gt;bar&lt;/span&gt;
                 &lt;div id="test-2"&gt;
@@ -398,7 +351,7 @@ before creating a DOM structure from that code.</p>
 <pre class="hljs"><code>            hierarchy = hierarchy.replace( <span class="hljs-regexp">/^\s*|\s*$/g</span>, <span class="hljs-string">''</span> )
                                  .replace( <span class="hljs-regexp">/&gt;\s*&lt;/g</span>, <span class="hljs-string">'&gt;&lt;'</span> )
 </code></pre><p>Now create that hierarchy inside our page, for testing.</p>
-<pre class="hljs"><code>            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+<pre class="hljs"><code>            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">document</span>.body.appendChild div
             div.innerHTML = hierarchy
 </code></pre><p>Now call <code>div.index</code> with addresses that contain each of the
@@ -407,93 +360,73 @@ of the return values, because we expect that they will be
 undefined in each case, and we wish to populate our array with
 that information in string form, so that it can be returned from
 the page as valid JSON.</p>
-<pre class="hljs"><code>            [
-                <span class="hljs-keyword">typeof</span> div.index [ -<span class="hljs-number">1</span> ]
-                <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-number">3</span> ]
-                <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-number">300000</span> ]
-                <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-number">0.2</span> ]
-                <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-string">'something'</span> ]
-                <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-string">'childNodes'</span> ]
-                <span class="hljs-keyword">typeof</span> div.index [ [ <span class="hljs-number">0</span> ] ]
-                <span class="hljs-keyword">typeof</span> div.index [ [ ] ]
-                <span class="hljs-keyword">typeof</span> div.index [ { } ]
-                <span class="hljs-keyword">typeof</span> div.index [ div ]
-                <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-number">0</span>, -<span class="hljs-number">1</span> ]
-                <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-number">0</span>, <span class="hljs-number">1</span> ]
-                <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-number">0</span>, <span class="hljs-string">'ponies'</span> ]
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>Now verify that each of the items in the resulting array contains
-the relevant portion of the expected error message.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">1</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">5</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">6</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">7</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">8</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">9</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">10</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">11</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">12</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            done()
-</code></pre><h2><a name='node-tojson-conversion'></a>Node toJSON conversion &nbsp; <font size=-1><a href='test-results.md.html#node-tojson-conversion'>see results</a></font> <font size=-1><a href='#node-tojson-conversion'><img src="link.png" class="anchor"></a></font></h2><p>The tests in this section test the <code>toJSON</code> member function in the
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">typeof</span> div.index [ -<span class="hljs-number">1</span> ] ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'undefined'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-number">3</span> ] ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'undefined'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-number">300000</span> ] ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'undefined'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-number">0.2</span> ] ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'undefined'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-string">'something'</span> ] ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'undefined'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-string">'childNodes'</span> ] ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'undefined'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">typeof</span> div.index [ [ <span class="hljs-number">0</span> ] ] ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'undefined'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">typeof</span> div.index [ [ ] ] ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'undefined'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">typeof</span> div.index [ { } ] ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'undefined'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">typeof</span> div.index [ div ] ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'undefined'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-number">0</span>, -<span class="hljs-number">1</span> ] ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'undefined'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-number">0</span>, <span class="hljs-number">1</span> ] ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'undefined'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">typeof</span> div.index [ <span class="hljs-number">0</span>, <span class="hljs-string">'ponies'</span> ] ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'undefined'</span>
+</code></pre><h2><a name='node-tojson-conversion'></a>Node toJSON conversion &nbsp; <font size=-1><a href='test-results.md.html#node-tojson-conversion'>see results</a></font> <font size=-1><a href='#node-tojson-conversion'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The tests in this section test the <code>toJSON</code> member function in the
 <code>Node</code> prototype.
 <a href="domutils.litcoffee.html#serialization">See its definition here.</a></p>
 <pre class="hljs"><code>phantomDescribe <span class="hljs-string">'Node toJSON conversion'</span>,
 <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
-</code></pre><h3><a name='should-be-defined'></a>should be defined &nbsp; <font size=-1><a href='test-results.md.html#should-be-defined'>see results</a></font> <font size=-1><a href='#should-be-defined'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be defined'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+</code></pre><h3><a name='should-be-defined'></a>should be defined &nbsp; <font size=-1><a href='test-results.md.html#should-be-defined'>see results</a></font> <font size=-1><a href='#should-be-defined'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be defined'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>First, just verify that the function itself is present.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate (<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">Node</span>::toJSON ),
-        <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toBeTruthy()
-            done()
-</code></pre><h3><a name='should-convert-text-nodes-to-strings'></a>should convert text nodes to strings &nbsp; <font size=-1><a href='test-results.md.html#should-convert-text-nodes-to-strings'>see results</a></font> <font size=-1><a href='#should-convert-text-nodes-to-strings'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should convert text nodes to strings'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">Node</span>::toJSON ), <span class="hljs-string">'toBeTruthy'</span>
+</code></pre><h3><a name='should-convert-text-nodes-to-strings'></a>should convert text nodes to strings &nbsp; <font size=-1><a href='test-results.md.html#should-convert-text-nodes-to-strings'>see results</a></font> <font size=-1><a href='#should-convert-text-nodes-to-strings'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should convert text nodes to strings'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>HTML text nodes should serialize as ordinary strings.
 We test a variety of ways they might occur.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            textNode = <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'foo'</span>
-            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.textNode = <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'foo'</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             div.innerHTML = <span class="hljs-string">'&lt;i&gt;italic&lt;/i&gt; not italic'</span>
-            [
-                textNode.toJSON()
-                div.childNodes[<span class="hljs-number">0</span>].childNodes[<span class="hljs-number">0</span>].toJSON()
-                div.childNodes[<span class="hljs-number">1</span>].toJSON()
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toEqual <span class="hljs-string">'foo'</span>
-            expect( result[<span class="hljs-number">1</span>] ).toEqual <span class="hljs-string">'italic'</span>
-            expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-string">' not italic'</span>
-            done()
-</code></pre><h3><a name='should-convert-comment-nodes-to-objects'></a>should convert comment nodes to objects &nbsp; <font size=-1><a href='test-results.md.html#should-convert-comment-nodes-to-objects'>see results</a></font> <font size=-1><a href='#should-convert-comment-nodes-to-objects'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should convert comment nodes to objects'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> textNode.toJSON() ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'foo'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            div.childNodes[<span class="hljs-number">0</span>].childNodes[<span class="hljs-number">0</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'italic'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.childNodes[<span class="hljs-number">1</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">' not italic'</span>
+</code></pre><h3><a name='should-convert-comment-nodes-to-objects'></a>should convert comment nodes to objects &nbsp; <font size=-1><a href='test-results.md.html#should-convert-comment-nodes-to-objects'>see results</a></font> <font size=-1><a href='#should-convert-comment-nodes-to-objects'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should convert comment nodes to objects'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>HTML comment nodes should serialize as objects with the comment
 flag and the comment&#39;s text content as well.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            comment1 = <span class="hljs-built_in">document</span>.createComment <span class="hljs-string">'comment content'</span>
-            comment2 = <span class="hljs-built_in">document</span>.createComment <span class="hljs-string">''</span>
-            [
-                comment1.toJSON()
-                comment2.toJSON()
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toEqual \
-                comment : <span class="hljs-literal">yes</span>, content : <span class="hljs-string">'comment content'</span>
-            expect( result[<span class="hljs-number">1</span>] ).toEqual \
-                comment : <span class="hljs-literal">yes</span>, content : <span class="hljs-string">''</span>
-            done()
-</code></pre><h3><a name='should-handle-other-no-children-elements'></a>should handle other no-children elements &nbsp; <font size=-1><a href='test-results.md.html#should-handle-other-no-children-elements'>see results</a></font> <font size=-1><a href='#should-handle-other-no-children-elements'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should handle other no-children elements'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            comment = <span class="hljs-built_in">document</span>.createComment <span class="hljs-string">'comment content'</span>
+            comment.toJSON() ), <span class="hljs-string">'toEqual'</span>,
+            comment : <span class="hljs-literal">yes</span>, content : <span class="hljs-string">'comment content'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            comment = <span class="hljs-built_in">document</span>.createComment <span class="hljs-string">''</span>
+            comment.toJSON() ), <span class="hljs-string">'toEqual'</span>,
+            comment : <span class="hljs-literal">yes</span>, content : <span class="hljs-string">''</span>
+</code></pre><h3><a name='should-handle-other-no-children-elements'></a>should handle other no-children elements &nbsp; <font size=-1><a href='test-results.md.html#should-handle-other-no-children-elements'>see results</a></font> <font size=-1><a href='#should-handle-other-no-children-elements'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should handle other no-children elements'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>Other no-children elements include images, horizontal rules, and
 line breaks.  We verify that in each case the object is encoded
 with the correct tag name and attributes, but no children.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
-            div.innerHTML = <span class="hljs-string">'&lt;img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAYCAIAAACNybHWAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA63pUWHRYTUw6Y29tLmFkb2JlLnhtcAAAGJVtULsOwiAU3fsVBOdy+9ChhHaxcTNpnHSsikoUaAqm+PcWWx9Rmbj3vOAwR51sJLc1cvKiDHU5rvd6y2l/92vA6EGx5xyvlxWa65ajGZmSCBcBQoi1+wNdlYtR3k85PlnbUICu60iXEt0eIc6yDKIEkiTsGaG5KVu7UJnJYPL0KbnZtaKxQivk53qrrzbHeOQMZwjiTryTlCGPR5OdluARiEkEL29v77e0Eo5f1qWQXJk+o0hjBn+Bv8LNG0+mn8LNj5DB13eGrmAsqwgYvIovgjseJHia4Qg7sAAAAV5JREFUSIntlL9rwkAUx18uPQttvICSmqjn5pDi4BJHwdm/VzI6xFEHsWSyBWtOUxSbqks8yHVwsWdRA7WT3/H9+PB9946nzGYzuJruhBD/Tf+az8eet2Jst9mc7s9ks7lSqdpsEtM8zirT6VQKvQ8GvusmaWZSEKq127Rel70fu/ZdFyFUo9QkJIPxae6O8zCK/CB46XR0yyKFwmEWiZ967fUSIZ4preTzZ9EAkMG4Yhg2pSJJxp4n0WT6ijEAMAk5/xwHMnUdAD4Zk2jyVvdrvMT1oe4xBoB4vZZof/wjb/Qb/Ua/El2+M1jTAGDHeSpozDkAYE2Tr5hUtz+hYRSlou/r9WJRisveaaOhIOQHwWS5jC+YIOZ8slj4jIGqlh1Hoimj0Uhq+PD9t25XJEkK86pabbUM25bCv2z1ybYfDYP1++sw5NvtaSzWNGJZZcd5yOWOUcpwOEzhMaW+AXrrPiceQvueAAAAAElFTkSuQmCC" width="31" height="24"&gt;'</span> +
-                            <span class="hljs-string">'&lt;hr&gt;&lt;br&gt;'</span>
-            div.childNodes[i].toJSON() <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">0.</span><span class="hljs-number">.2</span>]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toEqual {
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            div.innerHTML = <span class="hljs-string">'&lt;img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAYCAIAAACNybHWAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA63pUWHRYTUw6Y29tLmFkb2JlLnhtcAAAGJVtULsOwiAU3fsVBOdy+9ChhHaxcTNpnHSsikoUaAqm+PcWWx9Rmbj3vOAwR51sJLc1cvKiDHU5rvd6y2l/92vA6EGx5xyvlxWa65ajGZmSCBcBQoi1+wNdlYtR3k85PlnbUICu60iXEt0eIc6yDKIEkiTsGaG5KVu7UJnJYPL0KbnZtaKxQivk53qrrzbHeOQMZwjiTryTlCGPR5OdluARiEkEL29v77e0Eo5f1qWQXJk+o0hjBn+Bv8LNG0+mn8LNj5DB13eGrmAsqwgYvIovgjseJHia4Qg7sAAAAV5JREFUSIntlL9rwkAUx18uPQttvICSmqjn5pDi4BJHwdm/VzI6xFEHsWSyBWtOUxSbqks8yHVwsWdRA7WT3/H9+PB9946nzGYzuJruhBD/Tf+az8eet2Jst9mc7s9ks7lSqdpsEtM8zirT6VQKvQ8GvusmaWZSEKq127Rel70fu/ZdFyFUo9QkJIPxae6O8zCK/CB46XR0yyKFwmEWiZ967fUSIZ4preTzZ9EAkMG4Yhg2pSJJxp4n0WT6ijEAMAk5/xwHMnUdAD4Zk2jyVvdrvMT1oe4xBoB4vZZof/wjb/Qb/Ua/El2+M1jTAGDHeSpozDkAYE2Tr5hUtz+hYRSlou/r9WJRisveaaOhIOQHwWS5jC+YIOZ8slj4jIGqlh1Hoimj0Uhq+PD9t25XJEkK86pabbUM25bCv2z1ybYfDYP1++sw5NvtaSzWNGJZZcd5yOWOUcpwOEzhMaW+AXrrPiceQvueAAAAAElFTkSuQmCC" width="31" height="24"&gt;&lt;hr&gt;&lt;br&gt;'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.childNodes[<span class="hljs-number">0</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 tagName : <span class="hljs-string">'IMG'</span>
                 attributes : {
                     width : <span class="hljs-string">'31'</span>
@@ -501,65 +434,65 @@ with the correct tag name and attributes, but no children.</p>
                     src : <span class="hljs-string">'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAYCAIAAACNybHWAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA63pUWHRYTUw6Y29tLmFkb2JlLnhtcAAAGJVtULsOwiAU3fsVBOdy+9ChhHaxcTNpnHSsikoUaAqm+PcWWx9Rmbj3vOAwR51sJLc1cvKiDHU5rvd6y2l/92vA6EGx5xyvlxWa65ajGZmSCBcBQoi1+wNdlYtR3k85PlnbUICu60iXEt0eIc6yDKIEkiTsGaG5KVu7UJnJYPL0KbnZtaKxQivk53qrrzbHeOQMZwjiTryTlCGPR5OdluARiEkEL29v77e0Eo5f1qWQXJk+o0hjBn+Bv8LNG0+mn8LNj5DB13eGrmAsqwgYvIovgjseJHia4Qg7sAAAAV5JREFUSIntlL9rwkAUx18uPQttvICSmqjn5pDi4BJHwdm/VzI6xFEHsWSyBWtOUxSbqks8yHVwsWdRA7WT3/H9+PB9946nzGYzuJruhBD/Tf+az8eet2Jst9mc7s9ks7lSqdpsEtM8zirT6VQKvQ8GvusmaWZSEKq127Rel70fu/ZdFyFUo9QkJIPxae6O8zCK/CB46XR0yyKFwmEWiZ967fUSIZ4preTzZ9EAkMG4Yhg2pSJJxp4n0WT6ijEAMAk5/xwHMnUdAD4Zk2jyVvdrvMT1oe4xBoB4vZZof/wjb/Qb/Ua/El2+M1jTAGDHeSpozDkAYE2Tr5hUtz+hYRSlou/r9WJRisveaaOhIOQHwWS5jC+YIOZ8slj4jIGqlh1Hoimj0Uhq+PD9t25XJEkK86pabbUM25bCv2z1ybYfDYP1++sw5NvtaSzWNGJZZcd5yOWOUcpwOEzhMaW+AXrrPiceQvueAAAAAElFTkSuQmCC'</span>
                 }
             }
-            expect( result[<span class="hljs-number">1</span>] ).toEqual tagName : <span class="hljs-string">'HR'</span>
-            expect( result[<span class="hljs-number">2</span>] ).toEqual tagName : <span class="hljs-string">'BR'</span>
-            done()
-</code></pre><h3><a name='should-handle-spans-correctly'></a>should handle spans correctly &nbsp; <font size=-1><a href='test-results.md.html#should-handle-spans-correctly'>see results</a></font> <font size=-1><a href='#should-handle-spans-correctly'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should handle spans correctly'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.childNodes[<span class="hljs-number">1</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, tagName : <span class="hljs-string">'HR'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.childNodes[<span class="hljs-number">2</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, tagName : <span class="hljs-string">'BR'</span>
+</code></pre><h3><a name='should-handle-spans-correctly'></a>should handle spans correctly &nbsp; <font size=-1><a href='test-results.md.html#should-handle-spans-correctly'>see results</a></font> <font size=-1><a href='#should-handle-spans-correctly'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should handle spans correctly'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>Must correctly convert things of the form <code>&lt;span&gt;text&lt;/span&gt;</code> or
 <code>&lt;i&gt;text&lt;/i&gt;</code> or any other simple, non-nested tag.  Three simple
 tests are done, plus one with two different attributes.</p>
-<pre class="hljs"><code>        @page.evaluate -&gt;
-            # &lt;span&gt;hello&lt;/span&gt;, created this way:
-            span1 = document.createElement 'span'
-            span1.appendChild document.createTextNode 'hello'
-            # &lt;span&gt;world&lt;/span&gt;, created this way:
-            span2 = document.createElement 'span'
-            span2.innerHTML = 'world'
-            # &lt;i&gt;The Great Gatsby&lt;/i&gt;, lifted out of a div:
-            div1 = document.createElement 'div'
-            div1.innerHTML = '&lt;i&gt;The Great Gatsby&lt;/i&gt;'
-            # one with attributes, also lifted out of a div:
+<p>First, a span created by appendign a text node child to a new
+span element.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            span1 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span1.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'hello'</span>
+            span1.toJSON() ), <span class="hljs-string">'toEqual'</span>, {
+                tagName : <span class="hljs-string">'SPAN'</span>
+                children : [ <span class="hljs-string">'hello'</span> ]
+            }
+</code></pre><p>Next, a span created by assigning to the innerHTML property of a
+new span element.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            span2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span2.innerHTML = <span class="hljs-string">'world'</span>
+            span2.toJSON() ), <span class="hljs-string">'toEqual'</span>, {
+                tagName : <span class="hljs-string">'SPAN'</span>
+                children : [ <span class="hljs-string">'world'</span> ]
+            }
+</code></pre><p>Next, an italic element lifted out of a div, where it was created
+using the innerHTML property of the div.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            div1 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            div1.innerHTML = <span class="hljs-string">'&lt;i&gt;The Great Gatsby&lt;/i&gt;'</span>
+            div1.childNodes[<span class="hljs-number">0</span>].toJSON() ), <span class="hljs-string">'toEqual'</span>, {
+                tagName : <span class="hljs-string">'I'</span>
+                children : [ <span class="hljs-string">'The Great Gatsby'</span> ]
+            }
+</code></pre><p>Same as the previous, but this time with some attributes on the
+element.</p>
+<pre class="hljs"><code>        pageExpects ( -&gt;
             div2 = document.createElement 'div'
             div2.innerHTML = '&lt;i class="X" id="Y"&gt;Z&lt;/i&gt;'
-            [
-                span1.toJSON()
-                span2.toJSON()
-                div1.childNodes[0].toJSON()
-                div2.childNodes[0].toJSON()
-            ]
-        , ( err, result ) -&gt;
-            expect( result[0] ).toEqual {
-                tagName : 'SPAN'
-                children : [ 'hello' ]
-            }
-            expect( result[1] ).toEqual {
-                tagName : 'SPAN'
-                children : [ 'world' ]
-            }
-            expect( result[2] ).toEqual {
-                tagName : 'I'
-                children : [ 'The Great Gatsby' ]
-            }
-            expect( result[3] ).toEqual {
+            div2.childNodes[0].toJSON() ), 'toEqual', {
                 tagName : 'I'
                 attributes : class : 'X', id : 'Y'
                 children : [ 'Z' ]
             }
-            done()
-</code></pre><h3><a name='should-handle-hierarchies-correctly'></a>should handle hierarchies correctly &nbsp; <font size=-1><a href='test-results.md.html#should-handle-hierarchies-correctly'>see results</a></font> <font size=-1><a href='#should-handle-hierarchies-correctly'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should handle hierarchies correctly'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+</code></pre><h3><a name='should-handle-hierarchies-correctly'></a>should handle hierarchies correctly &nbsp; <font size=-1><a href='test-results.md.html#should-handle-hierarchies-correctly'>see results</a></font> <font size=-1><a href='#should-handle-hierarchies-correctly'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should handle hierarchies correctly'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>The above tests cover simple situations, either DOM trees of
 height 1 or 2.  Now we consider situations in which there are
 many levels to the Node tree.  I choose three examples, and mix in
 a diversity of depths, attributes, tag names, comments, etc.</p>
-<pre class="hljs"><code>        @page.evaluate -&gt;
-            div1 = document.createElement 'div'
+<pre class="hljs"><code>        pageDo -&gt;
+            window.div1 = document.createElement 'div'
             div1.innerHTML = '&lt;span class="outermost" id=0&gt;' +
                              '&lt;span class="middleman" id=1&gt;' +
                              '&lt;span class="innermost" id=2&gt;' +
                              'finally, the text' +
                              '&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;'
             document.body.appendChild div1
-            div2 = document.createElement 'div'
+            window.div2 = document.createElement 'div'
             div2.innerHTML = '&lt;p&gt;Some paragraph.&lt;/p&gt;' +
                              '&lt;p&gt;Another paragraph, this ' +
                              'one with some ' +
@@ -570,169 +503,157 @@ a diversity of depths, attributes, tag names, comments, etc.</p>
                              '&lt;/td&gt;&lt;td width=50%&gt;Age&lt;/td&gt;' +
                              '&lt;/tr&gt;&lt;/table&gt;'
             document.body.appendChild div2
-            div3 = document.createElement 'div'
+            window.div3 = document.createElement 'div'
             div3.innerHTML = 'start with a text node' +
                              '&lt;!-- then a comment --&gt;' +
                              '&lt;p&gt;then &lt;i&gt;MORE&lt;/i&gt;&lt;/p&gt;'
             document.body.appendChild div3
-            [
-                div1.toJSON()
-                div2.toJSON()
-                div3.toJSON()
-            ]
-        , ( err, result ) -&gt;
-            expectedAnswer1 = {
-                tagName : 'DIV'
-                children : [
-                    {
-                        tagName : 'SPAN'
-                        attributes : {
-                            class : 'outermost'
-                            id : '0'
-                        }
-                        children : [
-                            {
-                                tagName : 'SPAN'
-                                attributes : {
-                                    class : 'middleman'
-                                    id : '1'
+        pageExpects ( -&gt; div1.toJSON() ), 'toEqual', {
+            tagName : 'DIV'
+            children : [
+                {
+                    tagName : 'SPAN'
+                    attributes : {
+                        class : 'outermost'
+                        id : '0'
+                    }
+                    children : [
+                        {
+                            tagName : 'SPAN'
+                            attributes : {
+                                class : 'middleman'
+                                id : '1'
+                            }
+                            children : [
+                                {
+                                    tagName : 'SPAN'
+                                    attributes : {
+                                        class : 'innermost'
+                                        id : '2'
+                                    }
+                                    children : [
+                                        'finally, the text'
+                                    ]
                                 }
-                                children : [
-                                    {
-                                        tagName : 'SPAN'
-                                        attributes : {
-                                            class : 'innermost'
-                                            id : '2'
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+        pageExpects ( -&gt; div2.toJSON() ), 'toEqual', {
+            tagName : 'DIV'
+            children : [
+                {
+                    tagName : 'P'
+                    children : [ 'Some paragraph.' ]
+                }
+                {
+                    tagName : 'P'
+                    children : [
+                        'Another paragraph, ' +
+                        'this one with some '
+                        {
+                            tagName : 'B'
+                            children : [ 'force!' ]
+                        }
+                    ]
+                }
+                {
+                    tagName : 'TABLE'
+                    attributes : { border : '1' }
+                    children : [
+                        {
+                            tagName : 'TBODY'
+                            children : [
+                                {
+                                    tagName : 'TR'
+                                    children : [
+                                        {
+                                            tagName : 'TD'
+                                            attributes : {
+                                                width : '50%'
+                                            }
+                                            children :
+                                                [ 'Name' ]
                                         }
-                                        children : [
-                                            'finally, the text'
-
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-            expectedAnswer2 = {
-                tagName : 'DIV'
-                children : [
-                    {
-                        tagName : 'P'
-                        children : [ 'Some paragraph.' ]
-                    }
-                    {
-                        tagName : 'P'
-                        children : [
-                            'Another paragraph, ' +
-                            'this one with some '
-                            {
-                                tagName : 'B'
-                                children : [ 'force!' ]
-                            }
-                        ]
-                    }
-                    {
-                        tagName : 'TABLE'
-                        attributes : { border : '1' }
-                        children : [
-                            {
-                                tagName : 'TBODY'
-                                children : [
-                                    {
-                                        tagName : 'TR'
-                                        children : [
-                                            {
-                                                tagName : 'TD'
-                                                attributes : {
-                                                    width :
-                                                        '50%'
-                                                }
-                                                children :
-                                                    [ 'Name' ]
+                                        {
+                                            comment : yes
+                                            content :
+                                                'random ' +
+                                                'comment'
+                                        }
+                                        {
+                                            tagName : 'TD'
+                                            attributes : {
+                                                width : '50%'
                                             }
-                                            {
-                                                comment : yes
-                                                content :
-                                                    'random ' +
-                                                    'comment'
-                                            }
-                                            {
-                                                tagName : 'TD'
-                                                attributes : {
-                                                    width :
-                                                        '50%'
-                                                }
-                                                children :
-                                                    [ 'Age' ]
-                                            }
-                                        ]
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-            expectedAnswer3 = {
-                tagName : 'DIV'
-                children : [
-                    'start with a text node'
-                    {
-                        comment : yes
-                        content : ' then a comment '
-                    }
-                    {
-                        tagName : 'P'
-                        children : [
-                            'then '
-                            {
-                                tagName : 'I'
-                                children : [ 'MORE' ]
-                            }
-                        ]
-                    }
-                ]
-            }
-            expect( result[0] ).toEqual expectedAnswer1
-            expect( result[1] ).toEqual expectedAnswer2
-            expect( result[2] ).toEqual expectedAnswer3
-            done()
-</code></pre><h3><a name='should-respect-verbosity-setting'></a>should respect verbosity setting &nbsp; <font size=-1><a href='test-results.md.html#should-respect-verbosity-setting'>see results</a></font> <font size=-1><a href='#should-respect-verbosity-setting'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should respect verbosity setting'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-</code></pre><p>The verbosity setting of the serializer defaults to true, and gives
-results like those shown in the tests above, whose object keys are
-human-readable.  If verbosity is disabled, as in the tests below,
-then each key is shrunk to a unique one-letter abbreviation, as
-documented <a href="domutils.litcoffee.html#serialization">in the module where the serialization is implemented</a>.</p>
+                                            children :
+                                                [ 'Age' ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+        pageExpects ( -&gt; div3.toJSON() ), 'toEqual', {
+            tagName : 'DIV'
+            children : [
+                'start with a text node'
+                {
+                    comment : yes
+                    content : ' then a comment '
+                }
+                {
+                    tagName : 'P'
+                    children : [
+                        'then '
+                        {
+                            tagName : 'I'
+                            children : [ 'MORE' ]
+                        }
+                    ]
+                }
+            ]
+        }
+</code></pre><h3><a name='should-respect-verbosity-setting'></a>should respect verbosity setting &nbsp; <font size=-1><a href='test-results.md.html#should-respect-verbosity-setting'>see results</a></font> <font size=-1><a href='#should-respect-verbosity-setting'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should respect verbosity setting'</span>, inPage<span class="hljs-function"> -&gt;</span>
+</code></pre><p>The verbosity setting of the serializer defaults to true, and
+gives results like those shown in the tests above, whose object
+keys are human-readable.  If verbosity is disabled, as in the
+tests below, then each key is shrunk to a unique one-letter
+abbreviation, as documented
+<a href="domutils.litcoffee.html#serialization">in the module where the serialization is implemented</a>.</p>
 <p>Here we do only one, brief test of each of the types tested above.</p>
-<pre class="hljs"><code>        @page.evaluate -&gt;
-            node1 = document.createTextNode 'text node'
-            node2 = document.createComment 'swish'
-            node3 = document.createElement 'hr'
-            div = document.createElement 'div'
+<pre class="hljs"><code>        pageExpects ( -&gt;
+            node = document.createTextNode 'text node'
+            node.toJSON no ), 'toEqual', 'text node'
+        pageExpects ( -&gt;
+            node = document.createComment 'swish'
+            node.toJSON no ), 'toEqual', {
+                m : yes
+                n : 'swish'
+            }
+        pageExpects ( -&gt;
+            node = document.createElement 'hr'
+            node.toJSON no ), 'toEqual', t : 'HR'
+        pageDo -&gt;
+            window.div = document.createElement 'div'
             div.innerHTML = '&lt;p align="left"&gt;paragraph&lt;/p&gt;' +
                             '&lt;p&gt;&lt;span id="foo"&gt;bar&lt;/span&gt;' +
                             ' &lt;i class="baz"&gt;quux&lt;/i&gt;&lt;/p&gt;'
-            node4 = div.childNodes[0]
-            node5 = div.childNodes[1]
-            [
-                node1.toJSON no
-                node2.toJSON no
-                node3.toJSON no
-                node4.toJSON no
-                node5.toJSON no
-            ]
-        , ( err, result ) -&gt;
-            expect( result[0] ).toEqual 'text node'
-            expect( result[1] ).toEqual m : yes, n : 'swish'
-            expect( result[2] ).toEqual t : 'HR'
-            expect( result[3] ).toEqual {
+        pageExpects ( -&gt;
+            node = div.childNodes[0]
+            node.toJSON no ), 'toEqual', {
                 t : 'P'
                 a : align : 'left'
                 c : [ 'paragraph' ]
             }
-            expect( result[4] ).toEqual {
+        pageExpects ( -&gt;
+            node = div.childNodes[1]
+            node.toJSON no ), 'toEqual', {
                 t : 'P'
                 c : [
                     {
@@ -748,146 +669,117 @@ documented <a href="domutils.litcoffee.html#serialization">in the module where t
                     }
                 ]
             }
-            done()
-</code></pre><h2><a name='node-fromjson-conversion'></a>Node fromJSON conversion &nbsp; <font size=-1><a href='test-results.md.html#node-fromjson-conversion'>see results</a></font> <font size=-1><a href='#node-fromjson-conversion'><img src="link.png" class="anchor"></a></font></h2><p>The tests in this section test the <code>fromJSON</code> member function in
+</code></pre><h2><a name='node-fromjson-conversion'></a>Node fromJSON conversion &nbsp; <font size=-1><a href='test-results.md.html#node-fromjson-conversion'>see results</a></font> <font size=-1><a href='#node-fromjson-conversion'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The tests in this section test the <code>fromJSON</code> member function in
 the <code>Node</code> object.
 <a href="domutils.litcoffee.html#from-objects-to-dom-nodes">See its definition here.</a></p>
 <pre class="hljs"><code>phantomDescribe <span class="hljs-string">'Node fromJSON conversion'</span>,
 <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
-</code></pre><h3><a name='should-be-defined'></a>should be defined &nbsp; <font size=-1><a href='test-results.md.html#should-be-defined'>see results</a></font> <font size=-1><a href='#should-be-defined'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be defined'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+</code></pre><h3><a name='should-be-defined'></a>should be defined &nbsp; <font size=-1><a href='test-results.md.html#should-be-defined'>see results</a></font> <font size=-1><a href='#should-be-defined'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be defined'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>First, just verify that the function itself is present.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate (<span class="hljs-function"> -&gt;</span> Node.fromJSON ),
-        <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toBeTruthy()
-            done()
-</code></pre><h3><a name='should-convert-strings-to-text-nodes'></a>should convert strings to text nodes &nbsp; <font size=-1><a href='test-results.md.html#should-convert-strings-to-text-nodes'>see results</a></font> <font size=-1><a href='#should-convert-strings-to-text-nodes'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should convert strings to text nodes'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> Node.fromJSON ), <span class="hljs-string">'toBeTruthy'</span>
+</code></pre><h3><a name='should-convert-strings-to-text-nodes'></a>should convert strings to text nodes &nbsp; <font size=-1><a href='test-results.md.html#should-convert-strings-to-text-nodes'>see results</a></font> <font size=-1><a href='#should-convert-strings-to-text-nodes'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should convert strings to text nodes'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>This test is simply the inverse of the analogous test earlier.
 It verifies that two strings, one empty and one nonempty, both get
 converted correctly into <code>Text</code> instances with the appropriate
 content.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            node1 = Node.fromJSON <span class="hljs-string">'just a string'</span>
-            node2 = Node.fromJSON <span class="hljs-string">''</span>
-            [
-                node1 <span class="hljs-keyword">instanceof</span> Node
-                node1 <span class="hljs-keyword">instanceof</span> Text
-                node1 <span class="hljs-keyword">instanceof</span> Comment
-                node1 <span class="hljs-keyword">instanceof</span> Element
-                node1.textContent
-                node2 <span class="hljs-keyword">instanceof</span> Node
-                node2 <span class="hljs-keyword">instanceof</span> Text
-                node2 <span class="hljs-keyword">instanceof</span> Comment
-                node2 <span class="hljs-keyword">instanceof</span> Element
-                node2.textContent
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">2</span>] ).toBeFalsy()
-            expect( result[<span class="hljs-number">3</span>] ).toBeFalsy()
-            expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'just a string'</span>
-            expect( result[<span class="hljs-number">5</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">6</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">7</span>] ).toBeFalsy()
-            expect( result[<span class="hljs-number">8</span>] ).toBeFalsy()
-            expect( result[<span class="hljs-number">9</span>] ).toEqual <span class="hljs-string">''</span>
-            done()
-</code></pre><h3><a name='should-handle-comment-objects'></a>should handle comment objects &nbsp; <font size=-1><a href='test-results.md.html#should-handle-comment-objects'>see results</a></font> <font size=-1><a href='#should-handle-comment-objects'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should handle comment objects'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.node1 = Node.fromJSON <span class="hljs-string">'just a string'</span>
+            <span class="hljs-built_in">window</span>.node2 = Node.fromJSON <span class="hljs-string">''</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Node ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Text ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Comment ),
+            <span class="hljs-string">'toBeFalsy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Element ),
+            <span class="hljs-string">'toBeFalsy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node1.textContent ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'just a string'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Node ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Text ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Comment ),
+            <span class="hljs-string">'toBeFalsy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Element ),
+            <span class="hljs-string">'toBeFalsy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node2.textContent ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">''</span>
+</code></pre><h3><a name='should-handle-comment-objects'></a>should handle comment objects &nbsp; <font size=-1><a href='test-results.md.html#should-handle-comment-objects'>see results</a></font> <font size=-1><a href='#should-handle-comment-objects'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should handle comment objects'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>This test is simply the inverse of the analogous test earlier.
 It verifies that two objects, one in verbose and one in
 non-verbose notation, one empty and one nonempty, both get
 converted correctly into <code>Comment</code> instances with the appropriate
 content.</p>
-<pre class="hljs"><code>        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            node1 = Node.fromJSON m : <span class="hljs-literal">yes</span>, n : <span class="hljs-string">'some comment'</span>
-            node2 = Node.fromJSON comment : <span class="hljs-literal">yes</span>, content : <span class="hljs-string">''</span>
-            [
-                node1 <span class="hljs-keyword">instanceof</span> Node
-                node1 <span class="hljs-keyword">instanceof</span> Text
-                node1 <span class="hljs-keyword">instanceof</span> Comment
-                node1 <span class="hljs-keyword">instanceof</span> Element
-                node1.textContent
-                node2 <span class="hljs-keyword">instanceof</span> Node
-                node2 <span class="hljs-keyword">instanceof</span> Text
-                node2 <span class="hljs-keyword">instanceof</span> Comment
-                node2 <span class="hljs-keyword">instanceof</span> Element
-                node2.textContent
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toBeFalsy()
-            expect( result[<span class="hljs-number">2</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">3</span>] ).toBeFalsy()
-            expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'some comment'</span>
-            expect( result[<span class="hljs-number">5</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">6</span>] ).toBeFalsy()
-            expect( result[<span class="hljs-number">7</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">8</span>] ).toBeFalsy()
-            expect( result[<span class="hljs-number">9</span>] ).toEqual <span class="hljs-string">''</span>
-            done()
-</code></pre><h3><a name='should-be-able-to-create-empty-elements'></a>should be able to create empty elements &nbsp; <font size=-1><a href='test-results.md.html#should-be-able-to-create-empty-elements'>see results</a></font> <font size=-1><a href='#should-be-able-to-create-empty-elements'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be able to create empty elements'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.node1 = Node.fromJSON \
+                m : <span class="hljs-literal">yes</span>, n : <span class="hljs-string">'some comment'</span>
+            <span class="hljs-built_in">window</span>.node2 = Node.fromJSON \
+                comment : <span class="hljs-literal">yes</span>, content : <span class="hljs-string">''</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Node ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Text ), <span class="hljs-string">'toBeFalsy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Comment ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Element ),
+            <span class="hljs-string">'toBeFalsy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node1.textContent ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'some comment'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Node ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Text ), <span class="hljs-string">'toBeFalsy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Comment ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Element ),
+            <span class="hljs-string">'toBeFalsy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> node2.textContent ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">''</span>
+</code></pre><h3><a name='should-be-able-to-create-empty-elements'></a>should be able to create empty elements &nbsp; <font size=-1><a href='test-results.md.html#should-be-able-to-create-empty-elements'>see results</a></font> <font size=-1><a href='#should-be-able-to-create-empty-elements'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be able to create empty elements'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>This test is simply the inverse of the analogous test earlier.
 It verifies that two objects, one in verbose and one in
 non-verbose notation, both get converted correctly into <code>Element</code>
 instances with no children but the appropriate tags and
 attributes.</p>
-<pre class="hljs"><code>        @page.evaluate -&gt;
-            node1 = Node.fromJSON \
+<pre class="hljs"><code>        pageDo -&gt;
+            window.node1 = Node.fromJSON \
                 tagName : 'hr',
                 attributes : class : 'y', whatever : 'dude'
-            node2 = Node.fromJSON t : 'br', a : id : '24601'
-            [
-                node1 instanceof Node
-                node1 instanceof Text
-                node1 instanceof Comment
-                node1 instanceof Element
-                node1.tagName
-                node1.childNodes.length
-                node1.attributes.length
-                node1.attributes[0].name
-                node1.attributes[0].value
-                node1.attributes[1].name
-                node1.attributes[1].value
-                node2 instanceof Node
-                node2 instanceof Text
-                node2 instanceof Comment
-                node2 instanceof Element
-                node2.tagName
-                node2.childNodes.length
-                node2.attributes.length
-                node2.attributes[0].name
-                node2.attributes[0].value
-            ]
-        , ( err, result ) -&gt;
-            expect( result[0] ).toBeTruthy()
-            expect( result[1] ).toBeFalsy()
-            expect( result[2] ).toBeFalsy()
-            expect( result[3] ).toBeTruthy()
-            expect( result[4] ).toEqual 'HR'
-            expect( result[5] ).toEqual 0
-            expect( result[6] ).toEqual 2
-            expect( result[7] ).toEqual 'class'
-            expect( result[8] ).toEqual 'y'
-            expect( result[9] ).toEqual 'whatever'
-            expect( result[10] ).toEqual 'dude'
-            expect( result[11] ).toBeTruthy()
-            expect( result[12] ).toBeFalsy()
-            expect( result[13] ).toBeFalsy()
-            expect( result[14] ).toBeTruthy()
-            expect( result[15] ).toEqual 'BR'
-            expect( result[16] ).toEqual 0
-            expect( result[17] ).toEqual 1
-            expect( result[18] ).toEqual 'id'
-            expect( result[19] ).toEqual '24601'
-            done()
-</code></pre><h3><a name='should-build-depth-one-dom-trees'></a>should build depth-one DOM trees &nbsp; <font size=-1><a href='test-results.md.html#should-build-depth-one-dom-trees'>see results</a></font> <font size=-1><a href='#should-build-depth-one-dom-trees'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should build depth-one DOM trees'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+            window.node2 = Node.fromJSON \
+                t : 'br', a : id : '24601'
+        pageExpects ( -&gt; node1 instanceof Node ), 'toBeTruthy'
+        pageExpects ( -&gt; node1 instanceof Text ), 'toBeFalsy'
+        pageExpects ( -&gt; node1 instanceof Comment ),
+            'toBeFalsy'
+        pageExpects ( -&gt; node1 instanceof Element ),
+            'toBeTruthy'
+        pageExpects ( -&gt; node1.tagName ), 'toEqual', 'HR'
+        pageExpects ( -&gt; node1.childNodes.length ),
+            'toEqual', 0
+        pageExpects ( -&gt; node1.attributes.length ),
+            'toEqual', 2
+        pageExpects ( -&gt; node1.attributes[0].name ),
+            'toEqual', 'class'
+        pageExpects ( -&gt; node1.attributes[0].value ),
+            'toEqual', 'y'
+        pageExpects ( -&gt; node1.attributes[1].name ),
+            'toEqual', 'whatever'
+        pageExpects ( -&gt; node1.attributes[1].value ),
+            'toEqual', 'dude'
+        pageExpects ( -&gt; node2 instanceof Node ), 'toBeTruthy'
+        pageExpects ( -&gt; node2 instanceof Text ), 'toBeFalsy'
+        pageExpects ( -&gt; node2 instanceof Comment ),
+            'toBeFalsy'
+        pageExpects ( -&gt; node2 instanceof Element ),
+            'toBeTruthy'
+        pageExpects ( -&gt; node2.tagName ), 'toEqual', 'BR'
+        pageExpects ( -&gt; node2.childNodes.length ),
+            'toEqual', 0
+        pageExpects ( -&gt; node2.attributes.length ),
+            'toEqual', 1
+        pageExpects ( -&gt; node2.attributes[0].name ),
+            'toEqual', 'id'
+        pageExpects ( -&gt; node2.attributes[0].value ),
+            'toEqual', '24601'
+</code></pre><h3><a name='should-build-depth-one-dom-trees'></a>should build depth-one DOM trees &nbsp; <font size=-1><a href='test-results.md.html#should-build-depth-one-dom-trees'>see results</a></font> <font size=-1><a href='#should-build-depth-one-dom-trees'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should build depth-one DOM trees'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>This test is simply the inverse of the analogous test earlier.
 Depth-one trees are those that are objects with a children array,
 no child of which has any children itself.  We test with one that
 uses verbose notation and one using non-verbose.  In each case,
 some of the parts have attributes and some don&#39;t.</p>
-<pre class="hljs"><code>        @page.evaluate -&gt;
-            node1 = Node.fromJSON {
+<pre class="hljs"><code>        pageExpects ( -&gt;
+            node = Node.fromJSON {
                 t : 'I'
                 c : [
                     'non-bold stuff, followed by '
@@ -898,7 +790,12 @@ some of the parts have attributes and some don&#39;t.</p>
                     }
                 ]
             }
-            node2 = Node.fromJSON {
+            node.outerHTML
+        ), 'toEqual',
+            '&lt;i&gt;non-bold stuff, followed by ' +
+            '&lt;b class="C" id="123"&gt;bold stuff&lt;/b&gt;&lt;/i&gt;'
+        pageExpects ( -&gt;
+            node = Node.fromJSON {
                 tagName : 'p'
                 attributes : {
                     style : 'border: 1px solid gray;'
@@ -915,26 +812,18 @@ some of the parts have attributes and some don&#39;t.</p>
                     }
                 ]
             }
-            [
-                node1.outerHTML
-                node2.outerHTML
-            ]
-        , ( err, result ) -&gt;
-            expect( result[0] ).toEqual \
-                '&lt;i&gt;non-bold stuff, followed by ' +
-                '&lt;b class="C" id="123"&gt;bold stuff&lt;/b&gt;&lt;/i&gt;'
-            expect( result[1] ).toEqual \
-                '&lt;p style="border: 1px solid gray;" ' +
-                'width="100%"&gt;&lt;span&gt;some text&lt;/span&gt;' +
-                '&lt;span&gt;yup, more text&lt;/span&gt;&lt;/p&gt;'
-            done()
-</code></pre><h3><a name='should-build-deep-dom-trees'></a>should build deep DOM trees &nbsp; <font size=-1><a href='test-results.md.html#should-build-deep-dom-trees'>see results</a></font> <font size=-1><a href='#should-build-deep-dom-trees'><img src="link.png" class="anchor"></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should build depth-one DOM trees'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
+            node.outerHTML
+        ), 'toEqual',
+            '&lt;p style="border: 1px solid gray;" ' +
+            'width="100%"&gt;&lt;span&gt;some text&lt;/span&gt;' +
+            '&lt;span&gt;yup, more text&lt;/span&gt;&lt;/p&gt;'
+</code></pre><h3><a name='should-build-deep-dom-trees'></a>should build deep DOM trees &nbsp; <font size=-1><a href='test-results.md.html#should-build-deep-dom-trees'>see results</a></font> <font size=-1><a href='#should-build-deep-dom-trees'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should build depth-one DOM trees'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>This test is simply the inverse of the analogous test earlier.
 The routines for building DOM trees from JSON objects should be
 able to create many-level, nested structures.  Here I mix
 verbose and non-verbose notation in one, large test, to be sure
 that this works.</p>
-<pre class="hljs"><code>        @page.evaluate -&gt;
+<pre class="hljs"><code>        pageExpects ( -&gt;
             node = Node.fromJSON {
                 t : 'div'
                 a : class : 'navigation', width : '600'
@@ -978,30 +867,28 @@ that this works.</p>
                 ]
             }
             node.outerHTML
-        , ( err, result ) -&gt;
-            expect( result ).toEqual \
-                '&lt;div class="navigation" width="600"&gt;' +
-                '&lt;div id="paragraph1"&gt;' +
-                '&lt;span&gt;Start paragraph 1.&lt;/span&gt;' +
-                '&lt;span&gt;Middle paragraph 1.&lt;/span&gt;' +
-                '&lt;span&gt;End paragraph 1.&lt;/span&gt;&lt;/div&gt;' +
-                '&lt;div id="paragraph2" ' +
-                'style="padding : 5px;"&gt;&lt;span&gt;&lt;span&gt;' +
-                'way inside&lt;/span&gt;&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;'
-            done()
-</code></pre><h2><a name='using-node-prototype-methods'></a>Using Node prototype methods &nbsp; <font size=-1><a href='test-results.md.html#using-node-prototype-methods'>see results</a></font> <font size=-1><a href='#using-node-prototype-methods'><img src="link.png" class="anchor"></a></font></h2><p>The tests in this section test the modifications made to the Node
+        ), 'toEqual',
+            '&lt;div class="navigation" width="600"&gt;' +
+            '&lt;div id="paragraph1"&gt;' +
+            '&lt;span&gt;Start paragraph 1.&lt;/span&gt;' +
+            '&lt;span&gt;Middle paragraph 1.&lt;/span&gt;' +
+            '&lt;span&gt;End paragraph 1.&lt;/span&gt;&lt;/div&gt;' +
+            '&lt;div id="paragraph2" ' +
+            'style="padding : 5px;"&gt;&lt;span&gt;&lt;span&gt;' +
+            'way inside&lt;/span&gt;&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;'
+</code></pre><h2><a name='using-node-prototype-methods'></a>Using Node prototype methods &nbsp; <font size=-1><a href='test-results.md.html#using-node-prototype-methods'>see results</a></font> <font size=-1><a href='#using-node-prototype-methods'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The tests in this section test the modifications made to the Node
 prototype that emit events when methods defined in that prototype
 are used for editing.</p>
 <pre class="hljs"><code>phantomDescribe <span class="hljs-string">'using Node prototype methods'</span>,
 <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
-</code></pre><h3><a name='should-send-alerts-on-code-appendchild-code-calls'></a>should send alerts on <code>appendChild</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-appendchild-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-appendchild-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>We append an empty span to a div containing only whitespace, and
+</code></pre><h3><a name='should-send-alerts-on-code-appendchild-code-calls'></a>should send alerts on <code>appendChild</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-appendchild-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-appendchild-code-calls'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We append an empty span to a div containing only whitespace, and
 expect to hear a <code>DOMEditAction</code> in response, indicating that the
 span was appended to the root of the tracked tree.</p>
 <p>We then append an empty span inside that span, and expect a
 similar event notification, but this time with an address further
 inside the root.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on appendChild calls'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on appendChild calls'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             onemore = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
@@ -1009,32 +896,35 @@ inside the root.</p>
 the div has a whitespace text node in it, the span will be its
 second child, but the thing added inside the span will be its
 first.</p>
-<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+<pre class="hljs"><code>            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
             tracker.clearStack()
-            result1 = div.appendChild span
-            result2 = span.appendChild onemore
-</code></pre><p>Return the serialized versions of the recorded edit actions,
+            <span class="hljs-built_in">window</span>.result1 = div.appendChild span
+            <span class="hljs-built_in">window</span>.result2 = span.appendChild onemore
+</code></pre><p>Validate the serialized versions of the recorded edit actions,
 along with all return values from calls to <code>appendChild</code>.</p>
-<pre class="hljs"><code>            result = tracker.getEditActions().map \
-                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
-            result.push result1.address tracker.getElement()
-            result.push result2.address tracker.getElement()
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result.length ).toEqual <span class="hljs-number">4</span>
-</code></pre><p>Validate the serialized versions of the <code>appendChild</code> events.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> tracker.getEditActions().length ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">2</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">0</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'appendChild'</span>, node : [],
                 toAppend : { tagName : <span class="hljs-string">'SPAN'</span> }
-            expect( result[<span class="hljs-number">1</span>] ).toEqual
+            }
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">1</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'appendChild'</span>, node : [ <span class="hljs-number">1</span> ],
                 toAppend : { tagName : <span class="hljs-string">'SPAN'</span> }
-</code></pre><p>Validate the return values, which must be the addresses of the
-appended children within the original div.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>] ).toEqual [ <span class="hljs-number">1</span> ]
-            expect( result[<span class="hljs-number">3</span>] ).toEqual [ <span class="hljs-number">1</span>, <span class="hljs-number">0</span> ]
-            done()
-</code></pre><h3><a name='should-send-alerts-on-code-insertbefore-code-calls'></a>should send alerts on <code>insertBefore</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-insertbefore-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-insertbefore-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>We insert an empty span in a div containing only whitespace,
+            }
+</code></pre><p>Validate the addresses of the appended children within the
+original div.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            result1.address tracker.getElement() ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">1</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            result2.address tracker.getElement() ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">1</span>, <span class="hljs-number">0</span> ]
+</code></pre><h3><a name='should-send-alerts-on-code-insertbefore-code-calls'></a>should send alerts on <code>insertBefore</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-insertbefore-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-insertbefore-code-calls'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We insert an empty span in a div containing only whitespace,
 before that whitespace node, and expect to hear a <code>DOMEditAction</code>
 in response, indicating that the span was inserted under the root
 of the tracked tree, at index 0.</p>
@@ -1043,8 +933,8 @@ append call, and expect another event, with index 2.</p>
 <p>We then insert a final empty span, inside the first one, and
 expect a similar event notification, but this time with an
 address further inside the root.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on appendChild calls'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on appendChild calls'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             text = div.childNodes[<span class="hljs-number">0</span>]
             span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
@@ -1052,83 +942,89 @@ address further inside the root.</p>
             twomore = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
 </code></pre><p>Insert the span into the div, at index 0.  Then insert another 
 at index 2.  Then insert the final span into the first span.</p>
-<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+<pre class="hljs"><code>            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
             tracker.clearStack()
-            result1 = div.insertBefore span, text
-            result2 = div.insertBefore onemore <span class="hljs-comment"># == append</span>
-            result3 = span.insertBefore twomore <span class="hljs-comment"># == append</span>
-</code></pre><p>Return the serialized versions of the recorded edit actions,
+            <span class="hljs-built_in">window</span>.result1 = div.insertBefore span, text
+            <span class="hljs-comment"># the next two are actually appends</span>
+            <span class="hljs-built_in">window</span>.result2 = div.insertBefore onemore
+            <span class="hljs-built_in">window</span>.result3 = span.insertBefore twomore
+</code></pre><p>Validate the serialized versions of the recorded edit actions,
 along with all return values from calls to <code>appendChild</code>.</p>
-<pre class="hljs"><code>            result = tracker.getEditActions().map \
-                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
-            result.push result1.address tracker.getElement()
-            result.push result2.address tracker.getElement()
-            result.push result3.address tracker.getElement()
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result.length ).toEqual <span class="hljs-number">6</span>
-</code></pre><p>Validate the serialized versions of the <code>insertBefore</code> events.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> tracker.getEditActions().length ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">3</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">0</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'insertBefore'</span>, node : [],
                 toInsert : { tagName : <span class="hljs-string">'SPAN'</span> },
                 insertBefore : <span class="hljs-number">0</span>
-            expect( result[<span class="hljs-number">1</span>] ).toEqual
+            }
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">1</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'insertBefore'</span>, node : [],
                 toInsert : { tagName : <span class="hljs-string">'SPAN'</span> },
                 insertBefore : <span class="hljs-number">2</span>
-            expect( result[<span class="hljs-number">2</span>] ).toEqual
+            }
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">2</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'insertBefore'</span>, node : [ <span class="hljs-number">0</span> ],
                 toInsert : { tagName : <span class="hljs-string">'SPAN'</span> },
                 insertBefore : <span class="hljs-number">0</span>
-</code></pre><p>Validate the return values, which must be the addresses of the
-appended children within the original div.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>] ).toEqual [ <span class="hljs-number">0</span> ]
-            expect( result[<span class="hljs-number">4</span>] ).toEqual [ <span class="hljs-number">2</span> ]
-            expect( result[<span class="hljs-number">5</span>] ).toEqual [ <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ]
-            done()
-</code></pre><h3><a name='should-send-alerts-on-code-normalize-code-calls'></a>should send alerts on <code>normalize</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-normalize-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-normalize-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>We insert a text node after the existing whitespace in the div,
+            }
+</code></pre><p>Validate the addresses of the appended children within the
+original div.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            result1.address tracker.getElement() ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">0</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            result2.address tracker.getElement() ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">2</span> ]
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            result3.address tracker.getElement() ),
+            <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">0</span>, <span class="hljs-number">0</span> ]
+</code></pre><h3><a name='should-send-alerts-on-code-normalize-code-calls'></a>should send alerts on <code>normalize</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-normalize-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-normalize-code-calls'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We insert a text node after the existing whitespace in the div,
 and normalize.  We test that the normalize event is emitted.</p>
 <p>We then insert an empty span after the text, append two text node
 children inside it, with an empty span between.  We then normalize
 that node and repeat the test.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on normalize calls'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on normalize calls'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'example'</span>
-            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            <span class="hljs-built_in">window</span>.span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             span.innerHTML = <span class="hljs-string">'foo&lt;span&gt;&lt;/span&gt;bar'</span>
-</code></pre><p>Normalize the div, append the span, and normalize the span.</p>
-<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
             tracker.clearStack()
-            result1 = div.normalize()
-            div.appendChild span
-            result2 = span.normalize()
-</code></pre><p>Return the serialized versions of the recorded edit actions, plus
-checks about whether the return values from the calls to
-<code>normalize</code> were undefined, as they should be.</p>
-<pre class="hljs"><code>            result = tracker.getEditActions().map \
-                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
-            result.push <span class="hljs-keyword">typeof</span> result1
-            result.push <span class="hljs-keyword">typeof</span> result2
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>We&#39;ll be looking for the two <code>normalize</code> events, plus the one
+</code></pre><p>Normalize the div, append the span, and normalize the span.  As
+we do so, we verify that each of the normalize calls returns
+undefined.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> div.normalize() ), <span class="hljs-string">'toBeUndefined'</span>
+        pageDo<span class="hljs-function"> -&gt;</span> div.appendChild span
+        pageExpects (<span class="hljs-function"> -&gt;</span> span.normalize() ), <span class="hljs-string">'toBeUndefined'</span>
+</code></pre><p>Now we validate the serialized versions of the edit actions that
+got recorded by the edit tracker.</p>
+<p>We&#39;ll be looking for the two <code>normalize</code> events, plus the one
 <code>appendChild</code> event that isn&#39;t what we&#39;re testing here (but
-certainly did occur during the test, and thus got recorded), plus
-the two return values added to the end of the results array, for
-a total of 5 items.</p>
-<pre class="hljs"><code>            expect( result.length ).toEqual <span class="hljs-number">5</span>
-</code></pre><p>Validate the serialized versions of the various events.
-First, the first of two normalize events that we&#39;re testing, this
+certainly did occur during the test, and thus got recorded).</p>
+<p>First, the first of two normalize events that we&#39;re testing, this
 one done on a div with two text children and no other children.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> tracker.getEditActions().length ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">3</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">0</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'normalize'</span>, node : [],
                 sequences : {
                     <span class="hljs-string">'[0]'</span> : [ <span class="hljs-string">'\n        '</span>, <span class="hljs-string">'example'</span> ]
                 }
+            }
 </code></pre><p>Next, an <code>appendChild</code> event that isn&#39;t part of this test, but is
 included for completeness.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">1</span>] ).toEqual
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">1</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'appendChild'</span>, node : [],
                 toAppend : {
                     tagName : <span class="hljs-string">'SPAN'</span>
@@ -1138,194 +1034,193 @@ included for completeness.</p>
                         <span class="hljs-string">'bar'</span>
                     ]
                 }
+            }
 </code></pre><p>Finally, the second normalize event, called on the span inside the
 div, with two text node children, not adjacent.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>] ).toEqual
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">2</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'normalize'</span>, node : [ <span class="hljs-number">1</span> ],
                 sequences : { }
-</code></pre><p>Ensure that the return values were both undefined.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            done()
-</code></pre><h3><a name='should-send-alerts-on-code-removeattribute-code-calls'></a>should send alerts on <code>removeAttribute</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-removeattribute-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-removeattribute-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>We place two spans inside the root div, with attributes on each.
+            }
+</code></pre><h3><a name='should-send-alerts-on-code-removeattribute-code-calls'></a>should send alerts on <code>removeAttribute</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-removeattribute-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-removeattribute-code-calls'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We place two spans inside the root div, with attributes on each.
 We then remove some of those attributes and ensure that the
 correct events are propagated for each.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on removeAttribute calls'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+    inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             div.innerHTML = <span class="hljs-string">'''
             &lt;span align="center" class="thing"&gt;hi&lt;/span&gt;
             &lt;span style="color:blue;"&gt;blue&lt;/span&gt;
             '''</span>
-            span1 = div.childNodes[<span class="hljs-number">0</span>]
-            span2 = div.childNodes[<span class="hljs-number">2</span>]
-</code></pre><p>Remove an attribute from each span node.</p>
-<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            <span class="hljs-built_in">window</span>.span1 = div.childNodes[<span class="hljs-number">0</span>]
+            <span class="hljs-built_in">window</span>.span2 = div.childNodes[<span class="hljs-number">2</span>]
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
             tracker.clearStack()
-            result1 = span1.removeAttribute <span class="hljs-string">'align'</span>
-            result2 = span2.removeAttribute <span class="hljs-string">'style'</span>
-</code></pre><p>Return the serialized versions of the recorded edit actions, plus
-checks about whether the return values from the calls to
-<code>removeAttribute</code> were undefined, as they should be.</p>
-<pre class="hljs"><code>            result = tracker.getEditActions().map \
-                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
-            result.push <span class="hljs-keyword">typeof</span> result1
-            result.push <span class="hljs-keyword">typeof</span> result2
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result.length ).toEqual <span class="hljs-number">4</span>
-</code></pre><p>Validate the serialized versions of the two <code>removeAttribute</code>
-events.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
-                type : <span class="hljs-string">'removeAttribute'</span>, node : [ <span class="hljs-number">0</span> ],
-                name : <span class="hljs-string">'align'</span>, value : <span class="hljs-string">'center'</span>
-            expect( result[<span class="hljs-number">1</span>] ).toEqual
-                type : <span class="hljs-string">'removeAttribute'</span>, node : [ <span class="hljs-number">2</span> ],
-                name : <span class="hljs-string">'style'</span>, value : <span class="hljs-string">'color:blue;'</span>
-</code></pre><p>Ensure that the return values were both undefined.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            done()
-</code></pre><h3><a name='should-send-alerts-on-code-removeattributenode-code-calls'></a>should send alerts on <code>removeAttributeNode</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-removeattributenode-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-removeattributenode-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>This test imitates the previous one, but uses
+</code></pre><p>Remove an attribute from each span node, and verify that the
+return value of <code>removeAttribute</code> in each case is undefined.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> span1.removeAttribute <span class="hljs-string">'align'</span> ),
+            <span class="hljs-string">'toBeUndefined'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> span2.removeAttribute <span class="hljs-string">'style'</span> ),
+            <span class="hljs-string">'toBeUndefined'</span>
+</code></pre><p>Validate the recorded edit actions.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> tracker.getEditActions().length ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">2</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">0</span>].toJSON() ),
+                <span class="hljs-string">'toEqual'</span>, {
+                    type : <span class="hljs-string">'removeAttribute'</span>, node : [ <span class="hljs-number">0</span> ],
+                    name : <span class="hljs-string">'align'</span>, value : <span class="hljs-string">'center'</span>
+                }
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">1</span>].toJSON() ),
+                <span class="hljs-string">'toEqual'</span>, {
+                    type : <span class="hljs-string">'removeAttribute'</span>, node : [ <span class="hljs-number">2</span> ],
+                    name : <span class="hljs-string">'style'</span>, value : <span class="hljs-string">'color:blue;'</span>
+                }
+</code></pre><h3><a name='should-send-alerts-on-code-removeattributenode-code-calls'></a>should send alerts on <code>removeAttributeNode</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-removeattributenode-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-removeattributenode-code-calls'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>This test imitates the previous one, but uses
 <code>removeAttributeNode</code> rather than <code>removeAttribute</code>.  This adds
 just one new step, of fetching the attribute node to be removed.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on removeAttributeNode calls'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+    inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             div.innerHTML = <span class="hljs-string">'''
             &lt;span align="center" class="thing"&gt;hi&lt;/span&gt;
             &lt;span style="color:blue;"&gt;blue&lt;/span&gt;
             '''</span>
-            span1 = div.childNodes[<span class="hljs-number">0</span>]
-            span2 = div.childNodes[<span class="hljs-number">2</span>]
-</code></pre><p>Remove an attribute from each span node.</p>
-<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            <span class="hljs-built_in">window</span>.span1 = div.childNodes[<span class="hljs-number">0</span>]
+            <span class="hljs-built_in">window</span>.span2 = div.childNodes[<span class="hljs-number">2</span>]
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
             tracker.clearStack()
+</code></pre><p>Remove an attribute from each span node, and verify that the
+return value of <code>removeAttributeNode</code> in each case is an attribute
+node, the one removed.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
             togo = span1.getAttributeNode <span class="hljs-string">'align'</span>
-            result1 = span1.removeAttributeNode togo
+            <span class="hljs-built_in">window</span>.result1 = span1.removeAttributeNode togo
             togo = span2.getAttributeNode <span class="hljs-string">'style'</span>
-            result2 = span2.removeAttributeNode togo
-</code></pre><p>Return the serialized versions of the recorded edit actions, plus
-checks about whether the return values from the calls to
-<code>removeAttributeNode</code> were attribute nodes with the correct data.</p>
-<pre class="hljs"><code>            result = tracker.getEditActions().map \
-                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
-            result.push result1
-            result.push result2
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result.length ).toEqual <span class="hljs-number">4</span>
-</code></pre><p>Validation of events is exactly as it was in the previous test,
-except for the name of the action.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
+            <span class="hljs-built_in">window</span>.result2 = span2.removeAttributeNode togo
+        pageExpects (<span class="hljs-function"> -&gt;</span> result1.name ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'align'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> result1.value ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'center'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> result2.name ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'style'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> result2.value ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'color:blue;'</span>
+</code></pre><p>Validate the recorded edit actions.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> tracker.getEditActions().length ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">2</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">0</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'removeAttributeNode'</span>, node : [ <span class="hljs-number">0</span> ],
                 name : <span class="hljs-string">'align'</span>, value : <span class="hljs-string">'center'</span>
-            expect( result[<span class="hljs-number">1</span>] ).toEqual
+            }
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">1</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'removeAttributeNode'</span>, node : [ <span class="hljs-number">2</span> ],
                 name : <span class="hljs-string">'style'</span>, value : <span class="hljs-string">'color:blue;'</span>
-</code></pre><p>Validation of return types is different; we expect that the return
-types were attribute nodes, and we inspect their defining
-properties.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>].name ).toEqual <span class="hljs-string">'align'</span>
-            expect( result[<span class="hljs-number">2</span>].value ).toEqual <span class="hljs-string">'center'</span>
-            expect( result[<span class="hljs-number">3</span>].name ).toEqual <span class="hljs-string">'style'</span>
-            expect( result[<span class="hljs-number">3</span>].value ).toEqual <span class="hljs-string">'color:blue;'</span>
-            done()
-</code></pre><h3><a name='should-send-alerts-on-code-removechild-code-calls'></a>should send alerts on <code>removeChild</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-removechild-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-removechild-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>This test creates a hierarchical structure of spans under the root
+            }
+</code></pre><h3><a name='should-send-alerts-on-code-removechild-code-calls'></a>should send alerts on <code>removeChild</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-removechild-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-removechild-code-calls'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>This test creates a hierarchical structure of spans under the root
 div node, then calls <code>removeChild</code> twice in different portions of
 that tree, verifying that the appropriate events are emitted each
 time.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on removeChild calls'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on removeChild calls'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             div.innerHTML = <span class="hljs-string">'''
             &lt;span&gt;&lt;span&gt;INNER SPAN!&lt;/span&gt;hi&lt;/span&gt;
             &lt;span&gt;there&lt;/span&gt;
             '''</span>
-            span1 = div.childNodes[<span class="hljs-number">0</span>]
-            span2 = div.childNodes[<span class="hljs-number">2</span>]
-            spanI = span1.childNodes[<span class="hljs-number">0</span>]
-</code></pre><p>Remove the inner span, then the second span.</p>
-<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            <span class="hljs-built_in">window</span>.span1 = div.childNodes[<span class="hljs-number">0</span>]
+            <span class="hljs-built_in">window</span>.span2 = div.childNodes[<span class="hljs-number">2</span>]
+            <span class="hljs-built_in">window</span>.spanI = span1.childNodes[<span class="hljs-number">0</span>]
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
             tracker.clearStack()
-            result1 = span1.removeChild spanI
-            result2 = div.removeChild span2
+</code></pre><p>Remove the inner span, then the second span.  In each case,
+verify that the result of the remove operation is the child node
+removed.  We use serialization in order to transport the nodes
+from the test page to this environment safely, via JSON.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            span1.removeChild( spanI ).toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
+                tagName : <span class="hljs-string">'SPAN'</span>
+                children : [ <span class="hljs-string">'INNER SPAN!'</span> ]
+            }
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            div.removeChild( span2 ).toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
+                tagName : <span class="hljs-string">'SPAN'</span>
+                children : [ <span class="hljs-string">'there'</span> ]
+            }
 </code></pre><p>Return the serialized versions of the recorded edit actions, plus
 checks about whether the return values from the calls to
 <code>removeChild</code> were the child nodes that were removed.</p>
-<pre class="hljs"><code>            result = tracker.getEditActions().map \
-                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
-            result.push result1.toJSON()
-            result.push result2.toJSON()
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result.length ).toEqual <span class="hljs-number">4</span>
-</code></pre><p>First we expect the two child removal events.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> tracker.getEditActions().length ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">2</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">0</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'removeChild'</span>,
                 node : [ <span class="hljs-number">0</span> ], childIndex : <span class="hljs-number">0</span>,
                 child : {
                     tagName : <span class="hljs-string">'SPAN'</span>
                     children : [ <span class="hljs-string">'INNER SPAN!'</span> ]
                 }
-            expect( result[<span class="hljs-number">1</span>] ).toEqual
+            }
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">1</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'removeChild'</span>,
                 node : [], childIndex : <span class="hljs-number">2</span>,
                 child : {
                     tagName : <span class="hljs-string">'SPAN'</span>
                     children : [ <span class="hljs-string">'there'</span> ]
                 }
-</code></pre><p>Then we expect two child nodes to have been returned by those
-<code>removeChild</code> calls, which we serialized for returning here.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>] ).toEqual {
-                tagName : <span class="hljs-string">'SPAN'</span>
-                children : [ <span class="hljs-string">'INNER SPAN!'</span> ]
             }
-            expect( result[<span class="hljs-number">3</span>] ).toEqual {
-                tagName : <span class="hljs-string">'SPAN'</span>
-                children : [ <span class="hljs-string">'there'</span> ]
-            }
-            done()
-</code></pre><h3><a name='should-send-alerts-on-code-replacechild-code-calls'></a>should send alerts on <code>replaceChild</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-replacechild-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-replacechild-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>This test operates exactly like the previous, except rather than
+</code></pre><h3><a name='should-send-alerts-on-code-replacechild-code-calls'></a>should send alerts on <code>replaceChild</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-replacechild-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-replacechild-code-calls'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>This test operates exactly like the previous, except rather than
 deleting two children, they are simply replaced with new children
 that are measurably different, for the purposes of testing.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on replaceChild calls'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on replaceChild calls'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             div.innerHTML = <span class="hljs-string">'''
             &lt;span&gt;&lt;span&gt;INNER SPAN!&lt;/span&gt;hi&lt;/span&gt;
             &lt;span&gt;there&lt;/span&gt;
             '''</span>
-            span1 = div.childNodes[<span class="hljs-number">0</span>]
-            span2 = div.childNodes[<span class="hljs-number">2</span>]
-            spanI = span1.childNodes[<span class="hljs-number">0</span>]
-            repl1 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'h1'</span>
+            <span class="hljs-built_in">window</span>.span1 = div.childNodes[<span class="hljs-number">0</span>]
+            <span class="hljs-built_in">window</span>.span2 = div.childNodes[<span class="hljs-number">2</span>]
+            <span class="hljs-built_in">window</span>.spanI = span1.childNodes[<span class="hljs-number">0</span>]
+            <span class="hljs-built_in">window</span>.repl1 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'h1'</span>
             repl1.innerHTML = <span class="hljs-string">'heading'</span>
-            repl2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            <span class="hljs-built_in">window</span>.repl2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             repl2.innerHTML = <span class="hljs-string">'some words'</span>
-</code></pre><p>Replace the inner span, then the second span, with <code>repl1</code> and
-<code>repl2</code>, respectively.</p>
-<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
             tracker.clearStack()
-            result1 = span1.replaceChild repl1, spanI
-            result2 = div.replaceChild repl2, span2
-</code></pre><p>Return the serialized versions of the recorded edit actions, plus
-checks about whether the return values from the calls to
-<code>replaceChild</code> were the original child nodes that were replaced,
-and are thus no longer in the DOM.</p>
-<pre class="hljs"><code>            result = tracker.getEditActions().map \
-                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
-            result.push result1.toJSON()
-            result.push result2.toJSON()
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result.length ).toEqual <span class="hljs-number">4</span>
-</code></pre><p>First we expect the two child replacement events.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
+</code></pre><p>Replace the inner span, then the second span, with <code>repl1</code> and
+<code>repl2</code>, respectively.  In each case, verify that the return value
+is what it ought to be, the replaced node.  We serialize that
+return value here, for transport between the test page and this
+environment.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            span1.replaceChild( repl1, spanI ).toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
+                tagName : <span class="hljs-string">'SPAN'</span>
+                children : [ <span class="hljs-string">'INNER SPAN!'</span> ]
+            }
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            div.replaceChild( repl2, span2 ).toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
+                tagName : <span class="hljs-string">'SPAN'</span>
+                children : [ <span class="hljs-string">'there'</span> ]
+            }
+</code></pre><p>Validate the recorded edit actions.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> tracker.getEditActions().length ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">2</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">0</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'replaceChild'</span>,
                 node : [ <span class="hljs-number">0</span> ], childIndex : <span class="hljs-number">0</span>,
                 oldChild : {
@@ -1336,7 +1231,10 @@ and are thus no longer in the DOM.</p>
                     tagName : <span class="hljs-string">'H1'</span>
                     children : [ <span class="hljs-string">'heading'</span> ]
                 }
-            expect( result[<span class="hljs-number">1</span>] ).toEqual
+            }
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">1</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'replaceChild'</span>,
                 node : [], childIndex : <span class="hljs-number">2</span>,
                 oldChild : {
@@ -1347,114 +1245,94 @@ and are thus no longer in the DOM.</p>
                     tagName : <span class="hljs-string">'SPAN'</span>
                     children : [ <span class="hljs-string">'some words'</span> ]
                 }
-</code></pre><p>Then we expect the replaced nodes to have been returned by those
-<code>replaceChild</code> calls, which we serialized for returning here.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>] ).toEqual {
-                tagName : <span class="hljs-string">'SPAN'</span>
-                children : [ <span class="hljs-string">'INNER SPAN!'</span> ]
             }
-            expect( result[<span class="hljs-number">3</span>] ).toEqual {
-                tagName : <span class="hljs-string">'SPAN'</span>
-                children : [ <span class="hljs-string">'there'</span> ]
-            }
-            done()
-</code></pre><h3><a name='should-send-alerts-on-code-setattribute-code-calls'></a>should send alerts on <code>setAttribute</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-setattribute-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-setattribute-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>We create one span inside the root div, set an attribute on that
+</code></pre><h3><a name='should-send-alerts-on-code-setattribute-code-calls'></a>should send alerts on <code>setAttribute</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-setattribute-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-setattribute-code-calls'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We create one span inside the root div, set an attribute on that
 span and then do the same on the root div, and ensure that both
 events are correctly emitted.  In one case, we will be creating a
 new attribute, and in the other case, replacing an existing one.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on setAttribute calls'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on setAttribute calls'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             div.innerHTML = <span class="hljs-string">'''
             &lt;span example="yes"&gt;content&lt;/span&gt;
             '''</span>
-            span = div.childNodes[<span class="hljs-number">0</span>]
-</code></pre><p>Set an attribute on the div, then change the attribute on the
-span.</p>
-<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            <span class="hljs-built_in">window</span>.span = div.childNodes[<span class="hljs-number">0</span>]
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
             tracker.clearStack()
-            result1 = div.setAttribute <span class="hljs-string">'align'</span>, <span class="hljs-string">'center'</span>
-            result2 = span.setAttribute <span class="hljs-string">'example'</span>, <span class="hljs-string">'no'</span>
-</code></pre><p>Return the serialized versions of the recorded edit actions, plus
-checks about whether the return values from the calls to
-<code>setAttribute</code> were undefined, as they should be.</p>
-<pre class="hljs"><code>            result = tracker.getEditActions().map \
-                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
-            result.push <span class="hljs-keyword">typeof</span> result1
-            result.push <span class="hljs-keyword">typeof</span> result2
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result.length ).toEqual <span class="hljs-number">4</span>
-</code></pre><p>First we expect the two attribute-setting events.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
+</code></pre><p>Set an attribute on the div, then change the attribute on the
+span.  As we do so, validate that the return values from the
+<code>setAttribute</code> calls are undefined, as they should be.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> div.setAttribute <span class="hljs-string">'align'</span>, <span class="hljs-string">'center'</span> ),
+            <span class="hljs-string">'toBeUndefined'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>  span.setAttribute <span class="hljs-string">'example'</span>, <span class="hljs-string">'no'</span> ),
+            <span class="hljs-string">'toBeUndefined'</span>
+</code></pre><p>Validate the recorded edit actions.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> tracker.getEditActions().length ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">2</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">0</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'setAttribute'</span>,
                 node : [], name : <span class="hljs-string">'align'</span>,
                 oldValue : <span class="hljs-string">''</span>, newValue : <span class="hljs-string">'center'</span>
-            expect( result[<span class="hljs-number">1</span>] ).toEqual
+            }
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">1</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'setAttribute'</span>,
                 node : [ <span class="hljs-number">0</span> ], name : <span class="hljs-string">'example'</span>,
                 oldValue : <span class="hljs-string">'yes'</span>, newValue : <span class="hljs-string">'no'</span>
-</code></pre><p>Then we expect the calls to have given no return values.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'undefined'</span>
-            done()
-</code></pre><h3><a name='should-send-alerts-on-code-setattributenode-code-calls'></a>should send alerts on <code>setAttributeNode</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-setattributenode-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-setattributenode-code-calls'><img src="link.png" class="anchor"></a></font></h3><p>We create one span inside the root div, set an attribute on that
+            }
+</code></pre><h3><a name='should-send-alerts-on-code-setattributenode-code-calls'></a>should send alerts on <code>setAttributeNode</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-setattributenode-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-setattributenode-code-calls'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We create one span inside the root div, set an attribute on that
 span and then do the same on the root div, and ensure that both
 events are correctly emitted.  In one case, we will be creating a
 new attribute, and in the other case, replacing an existing one.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on setAttributeNode calls'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            div.innerHTML = <span class="hljs-string">'''
+    inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            <span class="hljs-built_in">window</span>.div.innerHTML = <span class="hljs-string">'''
             &lt;span example="yes"&gt;content&lt;/span&gt;
             '''</span>
-            span = div.childNodes[<span class="hljs-number">0</span>]
-</code></pre><p>Set an attribute on the div, then change the attribute on the
-span.</p>
-<pre class="hljs"><code>            tracker = DOMEditTracker.instanceOver div
+            <span class="hljs-built_in">window</span>.span = div.childNodes[<span class="hljs-number">0</span>]
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
             tracker.clearStack()
+</code></pre><p>Set an attribute on the div, then change the attribute on the
+span.  As we do so, validate that the return values of the calls
+to <code>setAttributeNode</code> are as they should be, the attribute node
+being replaced, or null if there was none.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
             edit = <span class="hljs-built_in">document</span>.createAttribute <span class="hljs-string">'align'</span>
             edit.value = <span class="hljs-string">'center'</span>
-            result1 = div.setAttributeNode edit
+            <span class="hljs-built_in">window</span>.result1 = div.setAttributeNode edit
+        pageExpects (<span class="hljs-function"> -&gt;</span> result1 ), <span class="hljs-string">'toBeNull'</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             edit = <span class="hljs-built_in">document</span>.createAttribute <span class="hljs-string">'example'</span>
             edit.value = <span class="hljs-string">'no'</span>
-            result2 = span.setAttributeNode edit
-</code></pre><p>Return the serialized versions of the recorded edit actions, plus
-checks about whether the return values from the calls to
-<code>setAttribute</code> were what they should be.  In the first case, the
-result should be undefined, because no node was replaced.  In the
-second case, it should be the replaced attribute node (i.e., the
-old one).</p>
-<pre class="hljs"><code>            result = tracker.getEditActions().map \
-                <span class="hljs-function"><span class="hljs-params">( x )</span> -&gt;</span> x.toJSON()
-            result.push result1 <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
-            result.push result2
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result.length ).toEqual <span class="hljs-number">4</span>
-</code></pre><p>First we expect the two attribute-setting events.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual
+            <span class="hljs-built_in">window</span>.result2 = span.setAttributeNode edit
+        pageExpects (<span class="hljs-function"> -&gt;</span> result2.name ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'example'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> result2.value ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'yes'</span>
+</code></pre><p>Validate the recorded edit actions.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> tracker.getEditActions().length ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">2</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">0</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'setAttributeNode'</span>,
                 node : [], name : <span class="hljs-string">'align'</span>,
                 oldValue : <span class="hljs-string">''</span>, newValue : <span class="hljs-string">'center'</span>
-            expect( result[<span class="hljs-number">1</span>] ).toEqual
+            }
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            tracker.getEditActions()[<span class="hljs-number">1</span>].toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'setAttributeNode'</span>,
                 node : [ <span class="hljs-number">0</span> ], name : <span class="hljs-string">'example'</span>,
                 oldValue : <span class="hljs-string">'yes'</span>, newValue : <span class="hljs-string">'no'</span>
-</code></pre><p>Then we expect the first call to have given null as the return
-value.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">2</span>] ).toBeTruthy()
-</code></pre><p>But the second call should have returned the original attribute
-node (before the replacement).</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>].name ).toEqual <span class="hljs-string">'example'</span>
-            expect( result[<span class="hljs-number">3</span>].value ).toEqual <span class="hljs-string">'yes'</span>
-            done()
+            }
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

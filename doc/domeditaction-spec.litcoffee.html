@@ -1,5 +1,7 @@
 <html>
     <head>
+        <link rel="stylesheet"
+              href="../bootstrap/css/bootstrap.min.css"/>
         <link rel="stylesheet" href="./main.css"/>
         <link rel="stylesheet" href="./obsidian.css"/>
         <link rel="shortcut icon" href="favicon.png"/>
@@ -21,7 +23,7 @@
 <li><a href='#should-exist'>should exist</a></li><li><a href='#should-have-appendchild-instances'>should have &quot;appendChild&quot; instances</a></li><li><a href='#should-correctly-describe-appendchild-instances'>should correctly describe &quot;appendChild&quot; instances</a></li><li><a href='#should-have-insertbefore-instances'>should have &quot;insertBefore&quot; instances</a></li><li><a href='#should-correctly-describe-insertbefore-instances'>should correctly describe &quot;insertBefore&quot; instances</a></li><li><a href='#should-have-normalize-instances'>should have &quot;normalize&quot; instances</a></li><li><a href='#should-correctly-describe-normalize-instances'>should correctly describe &quot;normalize&quot; instances</a></li><li><a href='#should-have-removeattribute-instances'>should have &quot;removeAttribute&quot; instances</a></li><li><a href='#should-correctly-describe-removeattribute-instances'>should correctly describe &quot;removeAttribute&quot; instances</a></li><li><a href='#should-have-removeattributenode-instances'>should have &quot;removeAttributeNode&quot; instances</a></li><li><a href='#should-correctly-describe-removeattributenode-instances'>should correctly describe &quot;removeAttributeNode&quot; instances</a></li><li><a href='#should-have-removechild-instances'>should have &quot;removeChild&quot; instances</a></li><li><a href='#should-correctly-describe-removechild-instances'>should correctly describe &quot;removeChild&quot; instances</a></li><li><a href='#should-have-replacechild-instances'>should have &quot;replaceChild&quot; instances</a></li><li><a href='#should-correctly-describe-replacechild-instances'>should correctly describe &quot;replaceChild&quot; instances</a></li><li><a href='#should-have-setattribute-instances'>should have &quot;setAttribute&quot; instances</a></li><li><a href='#should-correctly-describe-setattribute-instances'>should correctly describe &quot;setAttribute&quot; instances</a></li><li><a href='#should-have-setattributenode-instances'>should have &quot;setAttributeNode&quot; instances</a></li><li><a href='#should-correctly-describe-setattributenode-instances'>should correctly describe &quot;setAttributeNode&quot; instances</a></li><li><a href='#should-have-no-other-instances'>should have no other instances</a></li>
         </div>
         <div id="middle">
-            <h1><a name='tests-for-the-code-domeditaction-code-class'></a>Tests for the <code>DOMEditAction</code> class &nbsp; <font size=-1><a href='test-results.md.html#tests-for-the-code-domeditaction-code-class'>see results</a></font> <font size=-1><a href='#tests-for-the-code-domeditaction-code-class'><img src="link.png" class="anchor"></a></font></h1><p>Those aspects of the <code>DOMEditAction</code> class that relate to undoing
+            <h1><a name='tests-for-the-code-domeditaction-code-class'></a>Tests for the <code>DOMEditAction</code> class &nbsp;  <font size=-1><a href='#tests-for-the-code-domeditaction-code-class'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>Those aspects of the <code>DOMEditAction</code> class that relate to undoing
 and redoing edit actions can be found in <a href="undoredo-spec.litcoffee.html">a different test suite</a>.  This file tests the remainder of
 the class&#39;s functionality.</p>
 <p>Pull in the utility functions in
@@ -29,97 +31,81 @@ the class&#39;s functionality.</p>
 easier to write the tests below.  Then follow the same structure
 for setting up tests as documented more thoroughly in
 <a href="basic-spec.litcoffee.html">the basic unit test</a>.</p>
-<pre class="hljs"><code>{ phantomDescribe } = <span class="hljs-built_in">require</span> <span class="hljs-string">'./phantom-utils'</span>
-</code></pre><h2><a name='domeditaction-class'></a>DOMEditAction class &nbsp; <font size=-1><a href='test-results.md.html#domeditaction-class'>see results</a></font> <font size=-1><a href='#domeditaction-class'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'DOMEditAction class'</span>, <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
-</code></pre><h3><a name='should-exist'></a>should exist &nbsp; <font size=-1><a href='test-results.md.html#should-exist'>see results</a></font> <font size=-1><a href='#should-exist'><img src="link.png" class="anchor"></a></font></h3><p>That is, the class should be defined in the global namespace of
+<pre class="hljs"><code>{ phantomDescribe, pageExpects, pageExpectsError,
+  inPage, pageDo } = <span class="hljs-built_in">require</span> <span class="hljs-string">'./phantom-utils'</span>
+</code></pre><h2><a name='domeditaction-class'></a>DOMEditAction class &nbsp; <font size=-1><a href='test-results.md.html#domeditaction-class'>see results</a></font> <font size=-1><a href='#domeditaction-class'><span class="glyphicon glyphicon-link"></span></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'DOMEditAction class'</span>, <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
+</code></pre><h3><a name='should-exist'></a>should exist &nbsp; <font size=-1><a href='test-results.md.html#should-exist'>see results</a></font> <font size=-1><a href='#should-exist'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, the class should be defined in the global namespace of
 the browser after loading the main app page.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should exist'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate (<span class="hljs-function"> -&gt;</span> DOMEditAction ),
-        <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toBeTruthy()
-            done()
-</code></pre><h3><a name='should-have-appendchild-instances'></a>should have &quot;appendChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-appendchild-instances'>see results</a></font> <font size=-1><a href='#should-have-appendchild-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+<pre class="hljs"><code>    it <span class="hljs-string">'should exist'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> DOMEditAction ), <span class="hljs-string">'toBeTruthy'</span>
+</code></pre><h3><a name='should-have-appendchild-instances'></a>should have &quot;appendChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-appendchild-instances'>see results</a></font> <font size=-1><a href='#should-have-appendchild-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;appendChild&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
 These will have a <code>toAppend</code> member that stores the child to be
 appended.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should have "appendChild" instances'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should have "appendChild" instances'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'appendChild'</span>, div, span
-            result = [
-                T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>]
-                T.node
-                T.toAppend
-                T.type
-            ]
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toEqual []
-            expect( result[<span class="hljs-number">2</span>] ).toEqual tagName : <span class="hljs-string">'SPAN'</span>
-            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'appendChild'</span>
-            done()
-</code></pre><h3><a name='should-correctly-describe-appendchild-instances'></a>should correctly describe &quot;appendChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-appendchild-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-appendchild-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'appendChild'</span>, div,
+                <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.node ), <span class="hljs-string">'toEqual'</span>, []
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.toAppend ),
+            <span class="hljs-string">'toEqual'</span>, tagName : <span class="hljs-string">'SPAN'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.type ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'appendChild'</span>
+</code></pre><h3><a name='should-correctly-describe-appendchild-instances'></a>should correctly describe &quot;appendChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-appendchild-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-appendchild-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, instances constructed as above should have a sensible
 description provided when their <code>toString</code> method is called.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "appendChild" instances'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+    inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             span.innerHTML = <span class="hljs-string">'Hello, &lt;b&gt;friend.&lt;/b&gt;'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'appendChild'</span>, div, span
-            T.toString()
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toEqual <span class="hljs-string">'Add Hello, friend.'</span>
-            done()
-</code></pre><h3><a name='should-have-insertbefore-instances'></a>should have &quot;insertBefore&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-insertbefore-instances'>see results</a></font> <font size=-1><a href='#should-have-insertbefore-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'appendChild'</span>, div,
+                span
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.toString() ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'Add Hello, friend.'</span>
+</code></pre><h3><a name='should-have-insertbefore-instances'></a>should have &quot;insertBefore&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-insertbefore-instances'>see results</a></font> <font size=-1><a href='#should-have-insertbefore-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;insertBefore&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
 These will have a <code>toInsert</code> member that stores the child to be
 inserted, as well as an integer member <code>insertBefore</code> that is the
 index that the newly inserted child will have after insertion.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should have "insertBefore" instances'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should have "insertBefore" instances'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'insertBefore'</span>, div, span
-            result = [
-                T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>]
-                T.node
-                T.toInsert
-                T.insertBefore
-                T.type
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toEqual []
-            expect( result[<span class="hljs-number">2</span>] ).toEqual tagName : <span class="hljs-string">'SPAN'</span>
-            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-number">1</span>
-            expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'insertBefore'</span>
-            done()
-</code></pre><h3><a name='should-correctly-describe-insertbefore-instances'></a>should correctly describe &quot;insertBefore&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-insertbefore-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-insertbefore-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'insertBefore'</span>, div,
+                <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.node ), <span class="hljs-string">'toEqual'</span>, []
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.toInsert ),
+            <span class="hljs-string">'toEqual'</span>, tagName : <span class="hljs-string">'SPAN'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.insertBefore ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">1</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.type ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'insertBefore'</span>
+</code></pre><h3><a name='should-correctly-describe-insertbefore-instances'></a>should correctly describe &quot;insertBefore&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-insertbefore-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-insertbefore-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, instances constructed as above should have a sensible
 description provided when their <code>toString</code> method is called.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "insertBefore" instances'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+    inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             span.innerHTML = <span class="hljs-string">'Hello, &lt;b&gt;friend.&lt;/b&gt;'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'insertBefore'</span>, div, span
-            T.toString()
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toEqual <span class="hljs-string">'Insert Hello, friend.'</span>
-            done()
-</code></pre><h3><a name='should-have-normalize-instances'></a>should have &quot;normalize&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-normalize-instances'>see results</a></font> <font size=-1><a href='#should-have-normalize-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'insertBefore'</span>, div,
+                span
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.toString() ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'Insert Hello, friend.'</span>
+</code></pre><h3><a name='should-have-normalize-instances'></a>should have &quot;normalize&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-normalize-instances'>see results</a></font> <font size=-1><a href='#should-have-normalize-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;normalize&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
 These will have a <code>textChildren</code> member that maps the indices of
 child text elements (before the normalization) to their text
 content at that time.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should have "normalize" instances'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should have "normalize" instances'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             div.innerHTML = <span class="hljs-string">'one'</span>
             div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'two'</span>
@@ -128,162 +114,135 @@ content at that time.</p>
             span.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'four'</span>
             div.appendChild span
             div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'five'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'normalize'</span>, div
-            result = [
-                T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>]
-                T.toJSON()
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toEqual {
-                node : [], type : <span class="hljs-string">'normalize'</span>,
-                sequences : {
-                    <span class="hljs-string">'[0]'</span> : [ <span class="hljs-string">'one'</span>, <span class="hljs-string">'two'</span> ]
-                    <span class="hljs-string">'[1,0]'</span> : [ <span class="hljs-string">'three'</span>, <span class="hljs-string">'four'</span> ]
-                }
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'normalize'</span>, div
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.toJSON() ), <span class="hljs-string">'toEqual'</span>, {
+            node : [], type : <span class="hljs-string">'normalize'</span>,
+            sequences : {
+                <span class="hljs-string">'[0]'</span> : [ <span class="hljs-string">'one'</span>, <span class="hljs-string">'two'</span> ]
+                <span class="hljs-string">'[1,0]'</span> : [ <span class="hljs-string">'three'</span>, <span class="hljs-string">'four'</span> ]
             }
-            done()
-</code></pre><h3><a name='should-correctly-describe-normalize-instances'></a>should correctly describe &quot;normalize&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-normalize-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-normalize-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+        }
+</code></pre><h3><a name='should-correctly-describe-normalize-instances'></a>should correctly describe &quot;normalize&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-normalize-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-normalize-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, instances constructed as above should have a sensible
 description provided when their <code>toString</code> method is called.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "normalize" instances'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+    inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'one'</span>
             div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'two'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'normalize'</span>, div
-            T.toString()
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toEqual <span class="hljs-string">'Normalize text'</span>
-            done()
-</code></pre><h3><a name='should-have-removeattribute-instances'></a>should have &quot;removeAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-removeattribute-instances'>see results</a></font> <font size=-1><a href='#should-have-removeattribute-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'normalize'</span>, div
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.toString() ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'Normalize text'</span>
+</code></pre><h3><a name='should-have-removeattribute-instances'></a>should have &quot;removeAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-removeattribute-instances'>see results</a></font> <font size=-1><a href='#should-have-removeattribute-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;removeAttribute&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for
 the class&#39;s constructor</a>.
 These will have a <code>name</code> member containing the (string) key of the
 attribute to remove, and a <code>value</code> member containing the (string)
 value that the attribute had before removal.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should have "removeAttribute" instances'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should have "removeAttribute" instances'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeAttribute'</span>, div, <span class="hljs-string">'id'</span>
-            result = [
-                T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>]
-                T.node
-                T.name
-                T.value
-                T.type
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toEqual []
-            expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-string">'id'</span>
-            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'0'</span>
-            expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'removeAttribute'</span>
-            done()
-</code></pre><h3><a name='should-correctly-describe-removeattribute-instances'></a>should correctly describe &quot;removeAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-removeattribute-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-removeattribute-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeAttribute'</span>,
+                div, <span class="hljs-string">'id'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.node ), <span class="hljs-string">'toEqual'</span>, []
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.name ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'id'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.value ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'0'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.type ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'removeAttribute'</span>
+</code></pre><h3><a name='should-correctly-describe-removeattribute-instances'></a>should correctly describe &quot;removeAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-removeattribute-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-removeattribute-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, instances constructed as above should have a sensible
 description provided when their <code>toString</code> method is called.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "removeAttribute" instances'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+    inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeAttribute'</span>, div, <span class="hljs-string">'id'</span>
-            T.toString()
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toEqual <span class="hljs-string">'Remove id attribute'</span>
-            done()
-</code></pre><h3><a name='should-have-removeattributenode-instances'></a>should have &quot;removeAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-removeattributenode-instances'>see results</a></font> <font size=-1><a href='#should-have-removeattributenode-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeAttribute'</span>,
+                div, <span class="hljs-string">'id'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.toString() ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'Remove id attribute'</span>
+</code></pre><h3><a name='should-have-removeattributenode-instances'></a>should have &quot;removeAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-removeattributenode-instances'>see results</a></font> <font size=-1><a href='#should-have-removeattributenode-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;removeAttributeNode&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation
 for the class&#39;s constructor</a>.
 These will have a <code>name</code> member containing the (string) key of the
 attribute to remove, and a <code>value</code> member containing the (string)
 value that the attribute had before removal.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should have "removeAttributeNode" instances'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+    inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeAttributeNode'</span>, div,
-                div.getAttributeNode <span class="hljs-string">'id'</span>
-            result = [
-                T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>]
-                T.node
-                T.name
-                T.value
-                T.type
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toEqual []
-            expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-string">'id'</span>
-            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'0'</span>
-            expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'removeAttributeNode'</span>
-            done()
-</code></pre><h3><a name='should-correctly-describe-removeattributenode-instances'></a>should correctly describe &quot;removeAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-removeattributenode-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-removeattributenode-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeAttributeNode'</span>,
+                div, div.getAttributeNode <span class="hljs-string">'id'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.node ), <span class="hljs-string">'toEqual'</span>, []
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.name ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'id'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.value ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'0'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.type ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'removeAttributeNode'</span>
+</code></pre><h3><a name='should-correctly-describe-removeattributenode-instances'></a>should correctly describe &quot;removeAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-removeattributenode-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-removeattributenode-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, instances constructed as above should have a sensible
 description provided when their <code>toString</code> method is called.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "removeAttributeNode" '</span> +
-       <span class="hljs-string">'instances'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+       <span class="hljs-string">'instances'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             togo = <span class="hljs-built_in">document</span>.createAttribute <span class="hljs-string">'id'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeAttributeNode'</span>, div,
-                togo
-            T.toString()
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toEqual <span class="hljs-string">'Remove id attribute'</span>
-            done()
-</code></pre><h3><a name='should-have-removechild-instances'></a>should have &quot;removeChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-removechild-instances'>see results</a></font> <font size=-1><a href='#should-have-removechild-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeAttributeNode'</span>,
+                div, togo
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.toString() ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'Remove id attribute'</span>
+</code></pre><h3><a name='should-have-removechild-instances'></a>should have &quot;removeChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-removechild-instances'>see results</a></font> <font size=-1><a href='#should-have-removechild-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;removeChild&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
 These will have an integer <code>childIndex</code> member containing the
 index of the child before removal, and a <code>child</code> member containing
 a serialized version of the removed child.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should have "removeChild" instances'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should have "removeChild" instances'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             div.innerHTML = <span class="hljs-string">'first child text node'</span>
             span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             span.innerHTML = <span class="hljs-string">'span contents, just text'</span>
             div.appendChild span
             div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'more text'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeChild'</span>, div, span
-            result = [
-                T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>]
-                T.node
-                T.childIndex
-                T.child
-                T.type
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toEqual []
-            expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-number">1</span>
-            expect( result[<span class="hljs-number">3</span>] ).toEqual
-                <span class="hljs-string">'tagName'</span> : <span class="hljs-string">'SPAN'</span>,
-                <span class="hljs-string">'children'</span> : [ <span class="hljs-string">'span contents, just text'</span> ]
-            expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'removeChild'</span>
-            done()
-</code></pre><h3><a name='should-correctly-describe-removechild-instances'></a>should correctly describe &quot;removeChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-removechild-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-removechild-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeChild'</span>, div,
+                span
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.node ), <span class="hljs-string">'toEqual'</span>, []
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.childIndex ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">1</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.child ), <span class="hljs-string">'toEqual'</span>, {
+            <span class="hljs-string">'tagName'</span> : <span class="hljs-string">'SPAN'</span>
+            <span class="hljs-string">'children'</span> : [ <span class="hljs-string">'span contents, just text'</span> ]
+        }
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.type ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'removeChild'</span>
+</code></pre><h3><a name='should-correctly-describe-removechild-instances'></a>should correctly describe &quot;removeChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-removechild-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-removechild-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, instances constructed as above should have a sensible
 description provided when their <code>toString</code> method is called.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "removeChild" instances'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+    inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             span.innerHTML = <span class="hljs-string">'Hello, &lt;b&gt;friend.&lt;/b&gt;'</span>
             div.appendChild span
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeChild'</span>, div, span
-            T.toString()
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toEqual <span class="hljs-string">'Remove Hello, friend.'</span>
-            done()
-</code></pre><h3><a name='should-have-replacechild-instances'></a>should have &quot;replaceChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-replacechild-instances'>see results</a></font> <font size=-1><a href='#should-have-replacechild-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'removeChild'</span>, div,
+                span
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.toString() ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'Remove Hello, friend.'</span>
+</code></pre><h3><a name='should-have-replacechild-instances'></a>should have &quot;replaceChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-replacechild-instances'>see results</a></font> <font size=-1><a href='#should-have-replacechild-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;replaceChild&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
 These will have an integer <code>childIndex</code> member containing the
 index of the child being replaced, an <code>oldChild</code> member containing
 a serialized version of the replaced child, and a <code>newChild</code>
 member containing a serialization of the replacement child.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should have "replaceChild" instances'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should have "replaceChild" instances'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             div.innerHTML = <span class="hljs-string">'first child text node'</span>
             span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
@@ -292,154 +251,113 @@ member containing a serialization of the replacement child.</p>
             div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'more text'</span>
             repl = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'h1'</span>
             repl.innerHTML = <span class="hljs-string">'Announcement!'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'replaceChild'</span>,
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'replaceChild'</span>,
                 div, repl, span
-            result = [
-                T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>]
-                T.node
-                T.childIndex
-                T.oldChild
-                T.newChild
-                T.type
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toEqual []
-            expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-number">1</span>
-            expect( result[<span class="hljs-number">3</span>] ).toEqual
-                <span class="hljs-string">'tagName'</span> : <span class="hljs-string">'SPAN'</span>,
-                <span class="hljs-string">'children'</span> : [ <span class="hljs-string">'span contents, just text'</span> ]
-            expect( result[<span class="hljs-number">4</span>] ).toEqual
-                <span class="hljs-string">'tagName'</span> : <span class="hljs-string">'H1'</span>,
-                <span class="hljs-string">'children'</span> : [ <span class="hljs-string">'Announcement!'</span> ]
-            expect( result[<span class="hljs-number">5</span>] ).toEqual <span class="hljs-string">'replaceChild'</span>
-            done()
-</code></pre><h3><a name='should-correctly-describe-replacechild-instances'></a>should correctly describe &quot;replaceChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-replacechild-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-replacechild-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.node ), <span class="hljs-string">'toEqual'</span>, []
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.childIndex ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">1</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.oldChild ), <span class="hljs-string">'toEqual'</span>, {
+            <span class="hljs-string">'tagName'</span> : <span class="hljs-string">'SPAN'</span>
+            <span class="hljs-string">'children'</span> : [ <span class="hljs-string">'span contents, just text'</span> ]
+        }
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.newChild ), <span class="hljs-string">'toEqual'</span>, {
+            <span class="hljs-string">'tagName'</span> : <span class="hljs-string">'H1'</span>
+            <span class="hljs-string">'children'</span> : [ <span class="hljs-string">'Announcement!'</span> ]
+        }
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.type ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'replaceChild'</span>
+</code></pre><h3><a name='should-correctly-describe-replacechild-instances'></a>should correctly describe &quot;replaceChild&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-replacechild-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-replacechild-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, instances constructed as above should have a sensible
 description provided when their <code>toString</code> method is called.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "replaceChild" instances'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+    inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             span.innerHTML = <span class="hljs-string">'Hello, &lt;b&gt;friend.&lt;/b&gt;'</span>
             div.appendChild span
             span2 = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             span2.innerHTML = <span class="hljs-string">'&lt;h1&gt;Heading&lt;/h1&gt;'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'replaceChild'</span>, div, span2,
-                span
-            T.toString()
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toEqual \
-                <span class="hljs-string">'Replace Hello, friend. with Heading'</span>
-            done()
-</code></pre><h3><a name='should-have-setattribute-instances'></a>should have &quot;setAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-setattribute-instances'>see results</a></font> <font size=-1><a href='#should-have-setattribute-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'replaceChild'</span>, div,
+                span2, span
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.toString() ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'Replace Hello, friend. with Heading'</span>
+</code></pre><h3><a name='should-have-setattribute-instances'></a>should have &quot;setAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-setattribute-instances'>see results</a></font> <font size=-1><a href='#should-have-setattribute-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;setAttribute&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for the
 class&#39;s constructor</a>.
 These will have a string <code>name</code> member containing the name of the
 attribute being changed, a string <code>oldValue</code> member containing the
 value of the attribute before it was set, and a string <code>newValue</code>
 member containing the value after the attribute is set.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should have "setAttribute" instances'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should have "setAttribute" instances'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'setAttribute'</span>, div, <span class="hljs-string">'id'</span>, <span class="hljs-number">1</span>
-            result = [
-                T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>]
-                T.node
-                T.name
-                T.oldValue
-                T.newValue
-                T.type
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toEqual []
-            expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-string">'id'</span>
-            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'0'</span>
-            expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'1'</span>
-            expect( result[<span class="hljs-number">5</span>] ).toEqual <span class="hljs-string">'setAttribute'</span>
-            done()
-</code></pre><h3><a name='should-correctly-describe-setattribute-instances'></a>should correctly describe &quot;setAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-setattribute-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-setattribute-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'setAttribute'</span>, div,
+                <span class="hljs-string">'id'</span>, <span class="hljs-number">1</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.node ), <span class="hljs-string">'toEqual'</span>, []
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.name ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'id'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.oldValue ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'0'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.newValue ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'1'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.type ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'setAttribute'</span>
+</code></pre><h3><a name='should-correctly-describe-setattribute-instances'></a>should correctly describe &quot;setAttribute&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-setattribute-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-setattribute-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, instances constructed as above should have a sensible
 description provided when their <code>toString</code> method is called.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "setAttribute" instances'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+    inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'setAttribute'</span>, div, <span class="hljs-string">'id'</span>, <span class="hljs-number">17</span>
-            T.toString()
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toEqual <span class="hljs-string">'Change id from 0 to 17'</span>
-            done()
-</code></pre><h3><a name='should-have-setattributenode-instances'></a>should have &quot;setAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-setattributenode-instances'>see results</a></font> <font size=-1><a href='#should-have-setattributenode-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should be able to construct instances of the class with
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'setAttribute'</span>, div,
+                <span class="hljs-string">'id'</span>, <span class="hljs-number">17</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.toString() ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'Change id from 0 to 17'</span>
+</code></pre><h3><a name='should-have-setattributenode-instances'></a>should have &quot;setAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-setattributenode-instances'>see results</a></font> <font size=-1><a href='#should-have-setattributenode-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, we should be able to construct instances of the class with
 the type &quot;setAttributeNode&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for
 the class&#39;s constructor</a>.
 These will have a string <code>name</code> member containing the name of the
 attribute being changed, a string <code>oldValue</code> member containing the
 value of the attribute before it was set, and a string <code>newValue</code>
 member containing the value after the attribute is set.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should have "setAttributeNode" instances'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should have "setAttributeNode" instances'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             attr = <span class="hljs-built_in">document</span>.createAttribute <span class="hljs-string">'id'</span>
             attr.value = <span class="hljs-number">1</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'setAttributeNode'</span>, div, attr
-            result = [
-                T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>]
-                T.node
-                T.name
-                T.oldValue
-                T.newValue
-                T.type
-            ]
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( result[<span class="hljs-number">1</span>] ).toEqual []
-            expect( result[<span class="hljs-number">2</span>] ).toEqual <span class="hljs-string">'id'</span>
-            expect( result[<span class="hljs-number">3</span>] ).toEqual <span class="hljs-string">'0'</span>
-            expect( result[<span class="hljs-number">4</span>] ).toEqual <span class="hljs-string">'1'</span>
-            expect( result[<span class="hljs-number">5</span>] ).toEqual <span class="hljs-string">'setAttributeNode'</span>
-            done()
-</code></pre><h3><a name='should-correctly-describe-setattributenode-instances'></a>should correctly describe &quot;setAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-setattributenode-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-setattributenode-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, instances constructed as above should have a sensible
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'setAttributeNode'</span>,
+                div, attr
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            T.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.node ), <span class="hljs-string">'toEqual'</span>, []
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.name ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'id'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.oldValue ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'0'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.newValue ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'1'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.type ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'setAttributeNode'</span>
+</code></pre><h3><a name='should-correctly-describe-setattributenode-instances'></a>should correctly describe &quot;setAttributeNode&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-setattributenode-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-setattributenode-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, instances constructed as above should have a sensible
 description provided when their <code>toString</code> method is called.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "setAttributeNode" '</span> +
-       <span class="hljs-string">'instances'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
+       <span class="hljs-string">'instances'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             change = <span class="hljs-built_in">document</span>.createAttribute <span class="hljs-string">'id'</span>
             change.value = <span class="hljs-number">17</span>
-            T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'setAttributeNode'</span>, div,
-                change
-            T.toString()
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( result ).toEqual <span class="hljs-string">'Change id from 0 to 17'</span>
-            done()
-</code></pre><h3><a name='should-have-no-other-instances'></a>should have no other instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-no-other-instances'>see results</a></font> <font size=-1><a href='#should-have-no-other-instances'><img src="link.png" class="anchor"></a></font></h3><p>That is, we should get errors if we attempt to construct instances
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'setAttributeNode'</span>,
+                div, change
+        pageExpects (<span class="hljs-function"> -&gt;</span> T.toString() ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'Change id from 0 to 17'</span>
+</code></pre><h3><a name='should-have-no-other-instances'></a>should have no other instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-no-other-instances'>see results</a></font> <font size=-1><a href='#should-have-no-other-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, we should get errors if we attempt to construct instances
 of the class with types other than those tested in the other tests
 in this specification, above.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should have no other instances'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            result = []
-            result.push <span class="hljs-keyword">try</span> <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'foo'</span>, div \
-                        <span class="hljs-keyword">catch</span> e <span class="hljs-keyword">then</span> e.message
-            result.push <span class="hljs-keyword">try</span> <span class="hljs-keyword">new</span> DOMEditAction div, div \
-                        <span class="hljs-keyword">catch</span> e <span class="hljs-keyword">then</span> e.message
-            result.push <span class="hljs-keyword">try</span> <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-number">17</span>, div \
-                        <span class="hljs-keyword">catch</span> e <span class="hljs-keyword">then</span> e.message
-            result.push <span class="hljs-keyword">try</span> <span class="hljs-keyword">new</span> DOMEditAction \
-                        <span class="hljs-string">'appendChildren'</span>, div \
-                        <span class="hljs-keyword">catch</span> e <span class="hljs-keyword">then</span> e.message
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-            expect( <span class="hljs-regexp">/Invalid DOMEditAction type/</span>.test
-                result[<span class="hljs-number">0</span>] ).toBeTruthy()
-            expect( <span class="hljs-regexp">/Invalid DOMEditAction type/</span>.test
-                result[<span class="hljs-number">1</span>] ).toBeTruthy()
-            expect( <span class="hljs-regexp">/Invalid DOMEditAction type/</span>.test
-                result[<span class="hljs-number">2</span>] ).toBeTruthy()
-            expect( <span class="hljs-regexp">/Invalid DOMEditAction type/</span>.test
-                result[<span class="hljs-number">3</span>] ).toBeTruthy()
-            done()
+<pre class="hljs"><code>    it <span class="hljs-string">'should have no other instances'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+        pageExpectsError (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'foo'</span>, div )
+        pageExpectsError (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">new</span> DOMEditAction div, div )
+        pageExpectsError (<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-number">17</span>, div )
+        pageExpectsError (<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'appendChildren'</span>, div )
 </code></pre><p>Eventually it would also be good to test here every other error
 case in the constructor, but I have not yet written such tests.
 I have added them to <a href="plan.md.html">the planning document</a>,
@@ -447,7 +365,7 @@ however, so they are not forgotten.</p>
 
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

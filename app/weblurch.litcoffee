@@ -599,18 +599,17 @@ charge of an ancestor of any given DOM Node.  It returns the
 
         constructor: ( div ) ->
 
-If they did not pass a valid DIV, then store null in the member
-variable reserved for that purpose.  If they passed *something*
-but it wasn't a DIV, then throw an Error.
+If they passed *something* as the `div` parameter, but it wasn't a
+DIV, then throw an Error.
 
-            @element = null
             if div and div?.tagName isnt 'DIV'
                 throw new Error 'DOMEditTracker can only be ' +
                                 'constructed in a DIV node'
 
-Otherwise, store the DIV they passed for later reference.
+Since the div was not an error, store it, or if they omitted it,
+store null.
 
-            @element = div
+            @element = div or null
 
 In either case, initialize the internal undo/redo stack of
 `DOMEditAction` instances to be empty, with a stack pointer of

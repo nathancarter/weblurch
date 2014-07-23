@@ -1,5 +1,7 @@
 <html>
     <head>
+        <link rel="stylesheet"
+              href="../bootstrap/css/bootstrap.min.css"/>
         <link rel="stylesheet" href="./main.css"/>
         <link rel="stylesheet" href="./obsidian.css"/>
         <link rel="shortcut icon" href="favicon.png"/>
@@ -21,68 +23,30 @@
 <li><a href='#should-work-for-appendchild-actions'>should work for &quot;appendChild&quot; actions</a></li><li><a href='#should-work-for-insertbefore-actions'>should work for &quot;insertBefore&quot; actions</a></li><li><a href='#should-work-for-normalize-actions'>should work for &quot;normalize&quot; actions</a></li><li><a href='#should-work-for-removeattribute-actions'>should work for &quot;removeAttribute&quot; actions</a></li><li><a href='#should-work-for-removeattributenode-actions'>should work for &quot;removeAttributeNode&quot; actions</a></li><li><a href='#should-work-for-removechild-actions'>should work for &quot;removeChild&quot; actions</a></li><li><a href='#should-work-for-replacechild-actions'>should work for &quot;replaceChild&quot; actions</a></li><li><a href='#should-work-for-setattribute-actions'>should work for &quot;setAttribute&quot; actions</a></li><li><a href='#should-work-for-setattributenode-actions'>should work for &quot;setAttributeNode&quot; actions</a></li>
         </div>
         <div id="middle">
-            <h1><a name='tests-for-the-undo-redo-features-of-code-domeditaction-code-s'></a>Tests for the undo/redo features of <code>DOMEditAction</code>s &nbsp; <font size=-1><a href='test-results.md.html#tests-for-the-undo-redo-features-of-code-domeditaction-code-s'>see results</a></font> <font size=-1><a href='#tests-for-the-undo-redo-features-of-code-domeditaction-code-s'><img src="link.png" class="anchor"></a></font></h1><p>Pull in the utility functions in
+            <h1><a name='tests-for-the-undo-redo-features-of-code-domeditaction-code-s'></a>Tests for the undo/redo features of <code>DOMEditAction</code>s &nbsp;  <font size=-1><a href='#tests-for-the-undo-redo-features-of-code-domeditaction-code-s'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>Pull in the utility functions in
 <a href="phantom-utils.litcoffee.html">phantom-utils</a> that make it
 easier to write the tests below.  Then follow the same structure
 for setting up tests as documented more thoroughly in
 <a href="basic-spec.litcoffee.html">the basic unit test</a>.</p>
-<pre class="hljs"><code>{ phantomDescribe } = <span class="hljs-built_in">require</span> <span class="hljs-string">'./phantom-utils'</span>
-</code></pre><h2><a name='undo-and-redo'></a>Undo and redo &nbsp; <font size=-1><a href='test-results.md.html#undo-and-redo'>see results</a></font> <font size=-1><a href='#undo-and-redo'><img src="link.png" class="anchor"></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'Undo and redo'</span>, <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
-</code></pre><h3><a name='should-work-for-appendchild-actions'></a>should work for &quot;appendChild&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-appendchild-actions'>see results</a></font> <font size=-1><a href='#should-work-for-appendchild-actions'><img src="link.png" class="anchor"></a></font></h3><p>We will test this by performing an &quot;appendChild&quot; action, then
+<pre class="hljs"><code>{ phantomDescribe, pageDo, pageExpects,
+  pageExpectsError, inPage } = <span class="hljs-built_in">require</span> <span class="hljs-string">'./phantom-utils'</span>
+</code></pre><h2><a name='undo-and-redo'></a>Undo and redo &nbsp; <font size=-1><a href='test-results.md.html#undo-and-redo'>see results</a></font> <font size=-1><a href='#undo-and-redo'><span class="glyphicon glyphicon-link"></span></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'Undo and redo'</span>, <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
+</code></pre><h3><a name='should-work-for-appendchild-actions'></a>should work for &quot;appendChild&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-appendchild-actions'>see results</a></font> <font size=-1><a href='#should-work-for-appendchild-actions'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We will test this by performing an &quot;appendChild&quot; action, then
 asking it to be undone, then asking it to be redone, and inspecting
 the DOM at each step to ensure it&#39;s as expected.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should work for "appendChild" actions'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            tracker = DOMEditTracker.instanceOver div
-            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
-            span.innerHTML = <span class="hljs-string">'&lt;i&gt;stuff,&lt;/i&gt; bro'</span>
-</code></pre><p>The first part of the result will be a baseline against which to
-compare.</p>
-<pre class="hljs"><code>            result = []
-            result.push div.toJSON()
-</code></pre><p>Then we perform the editing action, and record both it and its
-results for testing below.</p>
-<pre class="hljs"><code>            div.appendChild span
-            action = tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
-            result.push action.toJSON()
-            result.push div.toJSON()
-</code></pre><p>Then we perform an undo of that action, and then record the
-results.</p>
-<pre class="hljs"><code>            action.undo()
-            result.push div.toJSON()
-</code></pre><p>Then we perform a redo of that action, and then record the results.
-That&#39;s the final data gathering for this test.</p>
-<pre class="hljs"><code>            action.redo()
-            result.push div.toJSON()
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>Sanity check to be sure the size of the data is correct.</p>
-<pre class="hljs"><code>            expect( result.length ).toEqual <span class="hljs-number">5</span>
-</code></pre><p>Now, is the baseline state of the root div what we expected?
-And is the editing action the append child action we expected?
-And is the result of that edit the DOM state we expected?
-These are checks to be sure the test is doing what we think it is;
-this does not test undo/redo functionality.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual {
+<pre class="hljs"><code>    it <span class="hljs-string">'should work for "appendChild" actions'</span>, inPage<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Because undo and redo march a document through a sequence of states
+(both forwards and backwards) we create that sequence of states
+here, up front, so that we can simply index into it throughout this
+test.  In this case we only have two states, the first before the
+edit, and the second after it.</p>
+<pre class="hljs"><code>        states = [
+            {
                 tagName : <span class="hljs-string">'DIV'</span>
                 attributes : id : <span class="hljs-string">'0'</span>
                 children : [ <span class="hljs-string">'\n        '</span> ]
             }
-            expect( result[<span class="hljs-number">1</span>] ).toEqual {
-                node : [], type : <span class="hljs-string">'appendChild'</span>,
-                toAppend : {
-                    tagName : <span class="hljs-string">'SPAN'</span>
-                    children : [
-                        {
-                            tagName : <span class="hljs-string">'I'</span>
-                            children : [ <span class="hljs-string">'stuff,'</span> ]
-                        }
-                        <span class="hljs-string">' bro'</span>
-                    ]
-                }
-            }
-            expect( result[<span class="hljs-number">2</span>] ).toEqual {
+            {
                 tagName : <span class="hljs-string">'DIV'</span>
                 attributes : id : <span class="hljs-string">'0'</span>
                 children : [
@@ -99,136 +63,125 @@ this does not test undo/redo functionality.</p>
                     }
                 ]
             }
-</code></pre><p>Now we check to be sure that the results of the undo action give
-the original state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>] ).toEqual result[<span class="hljs-number">0</span>]
-</code></pre><p>Now we check to be sure that the results of the redo action give
-the second state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">4</span>] ).toEqual result[<span class="hljs-number">2</span>]
-            done()
-</code></pre><h3><a name='should-work-for-insertbefore-actions'></a>should work for &quot;insertBefore&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-insertbefore-actions'>see results</a></font> <font size=-1><a href='#should-work-for-insertbefore-actions'><img src="link.png" class="anchor"></a></font></h3><p>We will test this by performing an &quot;insertBefore&quot; action, then
-asking it to be undone, then asking it to be redone, and inspecting
-the DOM at each step to ensure it&#39;s as expected.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should work for "insertBefore" actions'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            tracker = DOMEditTracker.instanceOver div
-            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+        ]
+</code></pre><p>Create DOM objects used in this test, and set up a tracker.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
+            <span class="hljs-built_in">window</span>.span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             span.innerHTML = <span class="hljs-string">'&lt;i&gt;stuff,&lt;/i&gt; bro'</span>
-</code></pre><p>The first part of the result will be a baseline against which to
-compare.</p>
-<pre class="hljs"><code>            result = []
-            result.push div.toJSON()
-</code></pre><p>Then we perform the editing action, and record both it and its
-results for testing below.</p>
-<pre class="hljs"><code>            div.insertBefore span, div.childNodes[<span class="hljs-number">0</span>]
-            action = tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
-            result.push action.toJSON()
-            result.push div.toJSON()
-</code></pre><p>Then we perform an undo of that action, and then record the
-results.</p>
-<pre class="hljs"><code>            action.undo()
-            result.push div.toJSON()
-</code></pre><p>Then we perform a redo of that action, and then record the results.
-That&#39;s the final data gathering for this test.</p>
-<pre class="hljs"><code>            action.redo()
-            result.push div.toJSON()
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>Sanity check to be sure the size of the data is correct.</p>
-<pre class="hljs"><code>            expect( result.length ).toEqual <span class="hljs-number">5</span>
-</code></pre><p>Now, is the baseline state of the root div what we expected?
-And is the editing action the append child action we expected?
-And is the result of that edit the DOM state we expected?
-These are checks to be sure the test is doing what we think it is;
-this does not test undo/redo functionality.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual {
-                tagName : <span class="hljs-string">'DIV'</span>
-                attributes : id : <span class="hljs-string">'0'</span>
-                children : [ <span class="hljs-string">'\n        '</span> ]
-            }
-            expect( result[<span class="hljs-number">1</span>] ).toEqual {
-                node : [], type : <span class="hljs-string">'insertBefore'</span>,
-                insertBefore : <span class="hljs-number">0</span>, toInsert : {
-                    tagName : <span class="hljs-string">'SPAN'</span>
-                    children : [
-                        {
-                            tagName : <span class="hljs-string">'I'</span>
-                            children : [ <span class="hljs-string">'stuff,'</span> ]
-                        }
-                        <span class="hljs-string">' bro'</span>
-                    ]
-                }
-            }
-            expect( result[<span class="hljs-number">2</span>] ).toEqual {
-                tagName : <span class="hljs-string">'DIV'</span>
-                attributes : id : <span class="hljs-string">'0'</span>
-                children : [
-                    {
-                        tagName : <span class="hljs-string">'SPAN'</span>
-                        children : [
-                            {
-                                tagName : <span class="hljs-string">'I'</span>
-                                children : [ <span class="hljs-string">'stuff,'</span> ]
-                            }
-                            <span class="hljs-string">' bro'</span>
-                        ]
-                    }
-                    <span class="hljs-string">'\n        '</span>
-                ]
-            }
-</code></pre><p>Now we check to be sure that the results of the undo action give
-the original state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>] ).toEqual result[<span class="hljs-number">0</span>]
-</code></pre><p>Now we check to be sure that the results of the redo action give
-the second state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">4</span>] ).toEqual result[<span class="hljs-number">2</span>]
-            done()
-</code></pre><h3><a name='should-work-for-normalize-actions'></a>should work for &quot;normalize&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-normalize-actions'>see results</a></font> <font size=-1><a href='#should-work-for-normalize-actions'><img src="link.png" class="anchor"></a></font></h3><p>We will test this by performing a &quot;normalize&quot; action, then
-asking it to be undone, then asking it to be redone, and inspecting
-the DOM at each step to ensure it&#39;s as expected.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should work for "normalize" actions'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            tracker = DOMEditTracker.instanceOver div
-            div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'one'</span>
-            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
-            span.innerHTML = <span class="hljs-string">'one and'</span>
-            span.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">' a half'</span>
+</code></pre><p>Verify that the initial state matches what&#39;s stored in the state
+history, above, and is therefore expected.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform the editing action, and validate both it and its results.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
             div.appendChild span
-            div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'two'</span>
-</code></pre><p>The first part of the result will be a baseline against which to
-compare.</p>
-<pre class="hljs"><code>            result = []
-            result.push div.toJSON()
-</code></pre><p>Then we perform the editing action, and record both it and its
-results for testing below.</p>
-<pre class="hljs"><code>            div.normalize()
-            action = tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
-            result.push action.toJSON()
-            result.push div.toJSON()
+            <span class="hljs-built_in">window</span>.action =
+                tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> action.toJSON() ), <span class="hljs-string">'toEqual'</span>, {
+            node : [], type : <span class="hljs-string">'appendChild'</span>,
+            toAppend : {
+                tagName : <span class="hljs-string">'SPAN'</span>
+                children : [
+                    {
+                        tagName : <span class="hljs-string">'I'</span>
+                        children : [ <span class="hljs-string">'stuff,'</span> ]
+                    }
+                    <span class="hljs-string">' bro'</span>
+                ]
+            }
+        }
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
+</code></pre><p>Perform an undo of that action, and verify that the results are
+back to the initial state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.undo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform a redo of that action, and verify that the restuls are
+back to the second state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.redo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
+</code></pre><h3><a name='should-work-for-insertbefore-actions'></a>should work for &quot;insertBefore&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-insertbefore-actions'>see results</a></font> <font size=-1><a href='#should-work-for-insertbefore-actions'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We will test this by performing an &quot;insertBefore&quot; action, then
+asking it to be undone, then asking it to be redone, and inspecting
+the DOM at each step to ensure it&#39;s as expected.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should work for "insertBefore" actions'</span>, inPage<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Because undo and redo march a document through a sequence of states
+(both forwards and backwards) we create that sequence of states
+here, up front, so that we can simply index into it throughout this
+test.  In this case we only have two states, the first before the
+edit, and the second after it.</p>
+<pre class="hljs"><code>        states = [
+            {
+                tagName : <span class="hljs-string">'DIV'</span>
+                attributes : id : <span class="hljs-string">'0'</span>
+                children : [ <span class="hljs-string">'\n        '</span> ]
+            }
+            {
+                tagName : <span class="hljs-string">'DIV'</span>
+                attributes : id : <span class="hljs-string">'0'</span>
+                children : [
+                    {
+                        tagName : <span class="hljs-string">'SPAN'</span>
+                        children : [
+                            {
+                                tagName : <span class="hljs-string">'I'</span>
+                                children : [ <span class="hljs-string">'stuff,'</span> ]
+                            }
+                            <span class="hljs-string">' bro'</span>
+                        ]
+                    }
+                    <span class="hljs-string">'\n        '</span>
+                ]
+            }
+        ]
+</code></pre><p>Create DOM objects used in this test, and set up a tracker.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
+            <span class="hljs-built_in">window</span>.span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span.innerHTML = <span class="hljs-string">'&lt;i&gt;stuff,&lt;/i&gt; bro'</span>
+</code></pre><p>Verify that the initial state matches what&#39;s stored in the state
+history, above, and is therefore expected.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform the editing action, and validate both it and its results.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            div.insertBefore span, div.childNodes[<span class="hljs-number">0</span>]
+            <span class="hljs-built_in">window</span>.action =
+                tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> action.toJSON() ), <span class="hljs-string">'toEqual'</span>, {
+            node : [], type : <span class="hljs-string">'insertBefore'</span>,
+            insertBefore : <span class="hljs-number">0</span>, toInsert : {
+                tagName : <span class="hljs-string">'SPAN'</span>
+                children : [
+                    {
+                        tagName : <span class="hljs-string">'I'</span>
+                        children : [ <span class="hljs-string">'stuff,'</span> ]
+                    }
+                    <span class="hljs-string">' bro'</span>
+                ]
+            }
+        }
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
+</code></pre><p>Perform an undo of that action, and verify that the results are
+back to the initial state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.undo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform a redo of that action, and verify that the restuls are
+back to the second state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.redo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
 </code></pre><p>Then we perform an undo of that action, and then record the
 results.</p>
-<pre class="hljs"><code>            action.undo()
-            result.push div.toJSON()
-</code></pre><p>Then we perform a redo of that action, and then record the results.
-That&#39;s the final data gathering for this test.</p>
-<pre class="hljs"><code>            action.redo()
-            result.push div.toJSON()
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>Sanity check to be sure the size of the data is correct.</p>
-<pre class="hljs"><code>            expect( result.length ).toEqual <span class="hljs-number">5</span>
-</code></pre><p>Now, is the baseline state of the root div what we expected?
-And is the editing action the append child action we expected?
-And is the result of that edit the DOM state we expected?
-These are checks to be sure the test is doing what we think it is;
-this does not test undo/redo functionality.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual {
+<h3><a name='should-work-for-normalize-actions'></a>should work for &quot;normalize&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-normalize-actions'>see results</a></font> <font size=-1><a href='#should-work-for-normalize-actions'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We will test this by performing a &quot;normalize&quot; action, then
+asking it to be undone, then asking it to be redone, and inspecting
+the DOM at each step to ensure it&#39;s as expected.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should work for "normalize" actions'</span>, inPage<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Because undo and redo march a document through a sequence of states
+(both forwards and backwards) we create that sequence of states
+here, up front, so that we can simply index into it throughout this
+test.  In this case we only have two states, the first before the
+edit, and the second after it.</p>
+<pre class="hljs"><code>        states = [
+            {
                 tagName : <span class="hljs-string">'DIV'</span>
                 attributes : id : <span class="hljs-string">'0'</span>
                 children : [
@@ -241,14 +194,7 @@ this does not test undo/redo functionality.</p>
                     <span class="hljs-string">'two'</span>
                 ]
             }
-            expect( result[<span class="hljs-number">1</span>] ).toEqual {
-                node : [], type : <span class="hljs-string">'normalize'</span>,
-                sequences : {
-                    <span class="hljs-string">'[0]'</span> : [ <span class="hljs-string">'\n        '</span>, <span class="hljs-string">'one'</span> ]
-                    <span class="hljs-string">'[1,0]'</span> : [ <span class="hljs-string">'one and'</span>, <span class="hljs-string">' a half'</span> ]
-                }
-            }
-            expect( result[<span class="hljs-number">2</span>] ).toEqual {
+            {
                 tagName : <span class="hljs-string">'DIV'</span>
                 attributes : id : <span class="hljs-string">'0'</span>
                 children : [
@@ -260,166 +206,149 @@ this does not test undo/redo functionality.</p>
                     <span class="hljs-string">'two'</span>
                 ]
             }
-</code></pre><p>Now we check to be sure that the results of the undo action give
-the original state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>] ).toEqual result[<span class="hljs-number">0</span>]
-</code></pre><p>Now we check to be sure that the results of the redo action give
-the second state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">4</span>] ).toEqual result[<span class="hljs-number">2</span>]
-            done()
-</code></pre><h3><a name='should-work-for-removeattribute-actions'></a>should work for &quot;removeAttribute&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-removeattribute-actions'>see results</a></font> <font size=-1><a href='#should-work-for-removeattribute-actions'><img src="link.png" class="anchor"></a></font></h3><p>We will test this by performing a &quot;removeAttribute&quot; action, then
-asking it to be undone, then asking it to be redone, and inspecting
-the DOM at each step to ensure it&#39;s as expected.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should work for "removeAttribute" actions'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            tracker = DOMEditTracker.instanceOver div
-</code></pre><p>The first part of the result will be a baseline against which to
-compare.</p>
-<pre class="hljs"><code>            result = []
-            result.push div.toJSON()
-</code></pre><p>Then we perform the editing action, and record both it and its
-results for testing below.</p>
-<pre class="hljs"><code>            div.removeAttribute <span class="hljs-string">'id'</span>
-            action = tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
-            result.push action.toJSON()
-            result.push div.toJSON()
+        ]
+</code></pre><p>Create DOM objects used in this test, and set up a tracker.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
+            div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'one'</span>
+            <span class="hljs-built_in">window</span>.span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span.innerHTML = <span class="hljs-string">'one and'</span>
+            span.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">' a half'</span>
+            div.appendChild span
+            div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'two'</span>
+</code></pre><p>Verify that the initial state matches what&#39;s stored in the state
+history, above, and is therefore expected.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform the editing action, and validate both it and its results.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            div.normalize()
+            <span class="hljs-built_in">window</span>.action =
+                tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> action.toJSON() ), <span class="hljs-string">'toEqual'</span>, {
+            node : [], type : <span class="hljs-string">'normalize'</span>,
+            sequences : {
+                <span class="hljs-string">'[0]'</span> : [ <span class="hljs-string">'\n        '</span>, <span class="hljs-string">'one'</span> ]
+                <span class="hljs-string">'[1,0]'</span> : [ <span class="hljs-string">'one and'</span>, <span class="hljs-string">' a half'</span> ]
+            }
+        }
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
+</code></pre><p>Perform an undo of that action, and verify that the results are
+back to the initial state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.undo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform a redo of that action, and verify that the restuls are
+back to the second state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.redo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
 </code></pre><p>Then we perform an undo of that action, and then record the
 results.</p>
-<pre class="hljs"><code>            action.undo()
-            result.push div.toJSON()
-</code></pre><p>Then we perform a redo of that action, and then record the results.
-That&#39;s the final data gathering for this test.</p>
-<pre class="hljs"><code>            action.redo()
-            result.push div.toJSON()
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>Sanity check to be sure the size of the data is correct.</p>
-<pre class="hljs"><code>            expect( result.length ).toEqual <span class="hljs-number">5</span>
-</code></pre><p>Now, is the baseline state of the root div what we expected?
-And is the editing action the append child action we expected?
-And is the result of that edit the DOM state we expected?
-These are checks to be sure the test is doing what we think it is;
-this does not test undo/redo functionality.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual {
+<h3><a name='should-work-for-removeattribute-actions'></a>should work for &quot;removeAttribute&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-removeattribute-actions'>see results</a></font> <font size=-1><a href='#should-work-for-removeattribute-actions'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We will test this by performing a &quot;removeAttribute&quot; action, then
+asking it to be undone, then asking it to be redone, and inspecting
+the DOM at each step to ensure it&#39;s as expected.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should work for "removeAttribute" actions'</span>, inPage<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Because undo and redo march a document through a sequence of states
+(both forwards and backwards) we create that sequence of states
+here, up front, so that we can simply index into it throughout this
+test.  In this case we only have two states, the first before the
+edit, and the second after it.</p>
+<pre class="hljs"><code>        states = [
+            {
                 tagName : <span class="hljs-string">'DIV'</span>
                 attributes : id : <span class="hljs-string">'0'</span>
                 children : [ <span class="hljs-string">'\n        '</span> ]
             }
-            expect( result[<span class="hljs-number">1</span>] ).toEqual {
-                node : [], type : <span class="hljs-string">'removeAttribute'</span>,
-                name : <span class="hljs-string">'id'</span>, value : <span class="hljs-string">'0'</span>
-            }
-            expect( result[<span class="hljs-number">2</span>] ).toEqual {
+            {
                 tagName : <span class="hljs-string">'DIV'</span>
                 children : [ <span class="hljs-string">'\n        '</span> ]
             }
-</code></pre><p>Now we check to be sure that the results of the undo action give
-the original state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>] ).toEqual result[<span class="hljs-number">0</span>]
-</code></pre><p>Now we check to be sure that the results of the redo action give
-the second state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">4</span>] ).toEqual result[<span class="hljs-number">2</span>]
-            done()
-</code></pre><h3><a name='should-work-for-removeattributenode-actions'></a>should work for &quot;removeAttributeNode&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-removeattributenode-actions'>see results</a></font> <font size=-1><a href='#should-work-for-removeattributenode-actions'><img src="link.png" class="anchor"></a></font></h3><p>We will test this by performing a &quot;removeAttributeNode&quot; action,
+        ]
+</code></pre><p>Create DOM objects used in this test, and set up a tracker.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
+</code></pre><p>Verify that the initial state matches what&#39;s stored in the state
+history, above, and is therefore expected.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform the editing action, and validate both it and its results.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            div.removeAttribute <span class="hljs-string">'id'</span>
+            <span class="hljs-built_in">window</span>.action =
+                tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> action.toJSON() ), <span class="hljs-string">'toEqual'</span>, {
+            node : [], type : <span class="hljs-string">'removeAttribute'</span>,
+            name : <span class="hljs-string">'id'</span>, value : <span class="hljs-string">'0'</span>
+        }
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
+</code></pre><p>Perform an undo of that action, and verify that the results are
+back to the initial state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.undo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform a redo of that action, and verify that the restuls are
+back to the second state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.redo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
+</code></pre><p>Then we perform an undo of that action, and then record the
+results.</p>
+<h3><a name='should-work-for-removeattributenode-actions'></a>should work for &quot;removeAttributeNode&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-removeattributenode-actions'>see results</a></font> <font size=-1><a href='#should-work-for-removeattributenode-actions'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We will test this by performing a &quot;removeAttributeNode&quot; action,
 then asking it to be undone, then asking it to be redone, and
 inspecting the DOM at each step to ensure it&#39;s as expected.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should work for "removeAttributeNode" actions'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            tracker = DOMEditTracker.instanceOver div
-</code></pre><p>The first part of the result will be a baseline against which to
-compare.</p>
-<pre class="hljs"><code>            result = []
-            result.push div.toJSON()
-</code></pre><p>Then we perform the editing action, and record both it and its
-results for testing below.</p>
-<pre class="hljs"><code>            div.removeAttributeNode div.getAttributeNode <span class="hljs-string">'id'</span>
-            action = tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
-            result.push action.toJSON()
-            result.push div.toJSON()
-</code></pre><p>Then we perform an undo of that action, and then record the
-results.</p>
-<pre class="hljs"><code>            action.undo()
-            result.push div.toJSON()
-</code></pre><p>Then we perform a redo of that action, and then record the results.
-That&#39;s the final data gathering for this test.</p>
-<pre class="hljs"><code>            action.redo()
-            result.push div.toJSON()
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>Sanity check to be sure the size of the data is correct.</p>
-<pre class="hljs"><code>            expect( result.length ).toEqual <span class="hljs-number">5</span>
-</code></pre><p>Now, is the baseline state of the root div what we expected?
-And is the editing action the append child action we expected?
-And is the result of that edit the DOM state we expected?
-These are checks to be sure the test is doing what we think it is;
-this does not test undo/redo functionality.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual {
+    inPage<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Because undo and redo march a document through a sequence of states
+(both forwards and backwards) we create that sequence of states
+here, up front, so that we can simply index into it throughout this
+test.  In this case we only have two states, the first before the
+edit, and the second after it.</p>
+<pre class="hljs"><code>        states = [
+            {
                 tagName : <span class="hljs-string">'DIV'</span>
                 attributes : id : <span class="hljs-string">'0'</span>
                 children : [ <span class="hljs-string">'\n        '</span> ]
             }
-            expect( result[<span class="hljs-number">1</span>] ).toEqual {
-                node : [], type : <span class="hljs-string">'removeAttributeNode'</span>,
-                name : <span class="hljs-string">'id'</span>, value : <span class="hljs-string">'0'</span>
-            }
-            expect( result[<span class="hljs-number">2</span>] ).toEqual {
+            {
                 tagName : <span class="hljs-string">'DIV'</span>
                 children : [ <span class="hljs-string">'\n        '</span> ]
             }
-</code></pre><p>Now we check to be sure that the results of the undo action give
-the original state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>] ).toEqual result[<span class="hljs-number">0</span>]
-</code></pre><p>Now we check to be sure that the results of the redo action give
-the second state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">4</span>] ).toEqual result[<span class="hljs-number">2</span>]
-            done()
-</code></pre><h3><a name='should-work-for-removechild-actions'></a>should work for &quot;removeChild&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-removechild-actions'>see results</a></font> <font size=-1><a href='#should-work-for-removechild-actions'><img src="link.png" class="anchor"></a></font></h3><p>We will test this by performing a &quot;removeChild&quot; action, then asking
+        ]
+</code></pre><p>Create DOM objects used in this test, and set up a tracker.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
+</code></pre><p>Verify that the initial state matches what&#39;s stored in the state
+history, above, and is therefore expected.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform the editing action, and validate both it and its results.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            div.removeAttributeNode div.getAttributeNode <span class="hljs-string">'id'</span>
+            <span class="hljs-built_in">window</span>.action =
+                tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> action.toJSON() ), <span class="hljs-string">'toEqual'</span>, {
+            node : [], type : <span class="hljs-string">'removeAttributeNode'</span>,
+            name : <span class="hljs-string">'id'</span>, value : <span class="hljs-string">'0'</span>
+        }
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
+</code></pre><p>Perform an undo of that action, and verify that the results are
+back to the initial state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.undo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform a redo of that action, and verify that the restuls are
+back to the second state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.redo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
+</code></pre><p>Then we perform an undo of that action, and then record the
+results.</p>
+<h3><a name='should-work-for-removechild-actions'></a>should work for &quot;removeChild&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-removechild-actions'>see results</a></font> <font size=-1><a href='#should-work-for-removechild-actions'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We will test this by performing a &quot;removeChild&quot; action, then asking
 it to be undone, then asking it to be redone, and inspecting the
 DOM at each step to ensure it&#39;s as expected.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should work for "removeChild" actions'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
-            span.innerHTML = <span class="hljs-string">'this is a test'</span>
-            div.appendChild span
-            tracker = DOMEditTracker.instanceOver div
-</code></pre><p>The first part of the result will be a baseline against which to
-compare.</p>
-<pre class="hljs"><code>            result = []
-            result.push div.toJSON()
-</code></pre><p>Then we perform the editing action, and record both it and its
-results for testing below.</p>
-<pre class="hljs"><code>            div.removeChild span
-            action = tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
-            result.push action.toJSON()
-            result.push div.toJSON()
-</code></pre><p>Then we perform an undo of that action, and then record the
-results.</p>
-<pre class="hljs"><code>            action.undo()
-            result.push div.toJSON()
-</code></pre><p>Then we perform a redo of that action, and then record the results.
-That&#39;s the final data gathering for this test.</p>
-<pre class="hljs"><code>            action.redo()
-            result.push div.toJSON()
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>Sanity check to be sure the size of the data is correct.</p>
-<pre class="hljs"><code>            expect( result.length ).toEqual <span class="hljs-number">5</span>
-</code></pre><p>Now, is the baseline state of the root div what we expected?
-And is the editing action the append child action we expected?
-And is the result of that edit the DOM state we expected?
-These are checks to be sure the test is doing what we think it is;
-this does not test undo/redo functionality.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual {
+<pre class="hljs"><code>    it <span class="hljs-string">'should work for "removeChild" actions'</span>, inPage<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Because undo and redo march a document through a sequence of states
+(both forwards and backwards) we create that sequence of states
+here, up front, so that we can simply index into it throughout this
+test.  In this case we only have two states, the first before the
+edit, and the second after it.</p>
+<pre class="hljs"><code>        states = [
+            {
                 tagName : <span class="hljs-string">'DIV'</span>
                 attributes : id : <span class="hljs-string">'0'</span>
                 children : [
@@ -430,67 +359,56 @@ this does not test undo/redo functionality.</p>
                     }
                 ]
             }
-            expect( result[<span class="hljs-number">1</span>] ).toEqual {
-                node : [], type : <span class="hljs-string">'removeChild'</span>,
-                childIndex : <span class="hljs-number">1</span>, child : {
-                    tagName : <span class="hljs-string">'SPAN'</span>
-                    children : [ <span class="hljs-string">'this is a test'</span> ]
-                }
-            }
-            expect( result[<span class="hljs-number">2</span>] ).toEqual {
+            {
                 tagName : <span class="hljs-string">'DIV'</span>
                 attributes : id : <span class="hljs-string">'0'</span>
                 children : [ <span class="hljs-string">'\n        '</span> ]
             }
-</code></pre><p>Now we check to be sure that the results of the undo action give
-the original state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>] ).toEqual result[<span class="hljs-number">0</span>]
-</code></pre><p>Now we check to be sure that the results of the redo action give
-the second state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">4</span>] ).toEqual result[<span class="hljs-number">2</span>]
-            done()
-</code></pre><h3><a name='should-work-for-replacechild-actions'></a>should work for &quot;replaceChild&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-replacechild-actions'>see results</a></font> <font size=-1><a href='#should-work-for-replacechild-actions'><img src="link.png" class="anchor"></a></font></h3><p>We will test this by performing a &quot;replaceChild&quot; action, then
-asking it to be undone, then asking it to be redone, and inspecting
-the DOM at each step to ensure it&#39;s as expected.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should work for "replaceChild" actions'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+        ]
+</code></pre><p>Create DOM objects used in this test, and set up a tracker.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            <span class="hljs-built_in">window</span>.span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
             span.innerHTML = <span class="hljs-string">'this is a test'</span>
             div.appendChild span
-            repl = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'h1'</span>
-            repl.innerHTML = <span class="hljs-string">'a&lt;sup&gt;b&lt;/sup&gt;'</span>
-            tracker = DOMEditTracker.instanceOver div
-</code></pre><p>The first part of the result will be a baseline against which to
-compare.</p>
-<pre class="hljs"><code>            result = []
-            result.push div.toJSON()
-</code></pre><p>Then we perform the editing action, and record both it and its
-results for testing below.</p>
-<pre class="hljs"><code>            div.replaceChild repl, span
-            action = tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
-            result.push action.toJSON()
-            result.push div.toJSON()
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
+</code></pre><p>Verify that the initial state matches what&#39;s stored in the state
+history, above, and is therefore expected.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform the editing action, and validate both it and its results.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            div.removeChild span
+            <span class="hljs-built_in">window</span>.action =
+                tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> action.toJSON() ), <span class="hljs-string">'toEqual'</span>, {
+            node : [], type : <span class="hljs-string">'removeChild'</span>,
+            childIndex : <span class="hljs-number">1</span>, child : {
+                tagName : <span class="hljs-string">'SPAN'</span>
+                children : [ <span class="hljs-string">'this is a test'</span> ]
+            }
+        }
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
+</code></pre><p>Perform an undo of that action, and verify that the results are
+back to the initial state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.undo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform a redo of that action, and verify that the restuls are
+back to the second state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.redo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
 </code></pre><p>Then we perform an undo of that action, and then record the
 results.</p>
-<pre class="hljs"><code>            action.undo()
-            result.push div.toJSON()
-</code></pre><p>Then we perform a redo of that action, and then record the results.
-That&#39;s the final data gathering for this test.</p>
-<pre class="hljs"><code>            action.redo()
-            result.push div.toJSON()
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>Sanity check to be sure the size of the data is correct.</p>
-<pre class="hljs"><code>            expect( result.length ).toEqual <span class="hljs-number">5</span>
-</code></pre><p>Now, is the baseline state of the root div what we expected?
-And is the editing action the append child action we expected?
-And is the result of that edit the DOM state we expected?
-These are checks to be sure the test is doing what we think it is;
-this does not test undo/redo functionality.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual {
+<h3><a name='should-work-for-replacechild-actions'></a>should work for &quot;replaceChild&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-replacechild-actions'>see results</a></font> <font size=-1><a href='#should-work-for-replacechild-actions'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We will test this by performing a &quot;replaceChild&quot; action, then
+asking it to be undone, then asking it to be redone, and inspecting
+the DOM at each step to ensure it&#39;s as expected.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should work for "replaceChild" actions'</span>, inPage<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Because undo and redo march a document through a sequence of states
+(both forwards and backwards) we create that sequence of states
+here, up front, so that we can simply index into it throughout this
+test.  In this case we only have two states, the first before the
+edit, and the second after it.</p>
+<pre class="hljs"><code>        states = [
+            {
                 tagName : <span class="hljs-string">'DIV'</span>
                 attributes : id : <span class="hljs-string">'0'</span>
                 children : [
@@ -501,26 +419,7 @@ this does not test undo/redo functionality.</p>
                     }
                 ]
             }
-            expect( result[<span class="hljs-number">1</span>] ).toEqual {
-                node : []
-                type : <span class="hljs-string">'replaceChild'</span>
-                childIndex : <span class="hljs-number">1</span>
-                oldChild : {
-                    tagName : <span class="hljs-string">'SPAN'</span>
-                    children : [ <span class="hljs-string">'this is a test'</span> ]
-                }
-                newChild : {
-                    tagName : <span class="hljs-string">'H1'</span>
-                    children : [
-                        <span class="hljs-string">'a'</span>
-                        {
-                            tagName : <span class="hljs-string">'SUP'</span>
-                            children : [ <span class="hljs-string">'b'</span> ]
-                        }
-                    ]
-                }
-            }
-            expect( result[<span class="hljs-number">2</span>] ).toEqual {
+            {
                 tagName : <span class="hljs-string">'DIV'</span>
                 attributes : id : <span class="hljs-string">'0'</span>
                 children : [
@@ -537,142 +436,162 @@ this does not test undo/redo functionality.</p>
                     }
                 ]
             }
-</code></pre><p>Now we check to be sure that the results of the undo action give
-the original state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>] ).toEqual result[<span class="hljs-number">0</span>]
-</code></pre><p>Now we check to be sure that the results of the redo action give
-the second state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">4</span>] ).toEqual result[<span class="hljs-number">2</span>]
-            done()
-</code></pre><h3><a name='should-work-for-setattribute-actions'></a>should work for &quot;setAttribute&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-setattribute-actions'>see results</a></font> <font size=-1><a href='#should-work-for-setattribute-actions'><img src="link.png" class="anchor"></a></font></h3><p>We will test this by performing a &quot;setAttribute&quot; action, then
-asking it to be undone, then asking it to be redone, and inspecting
-the DOM at each step to ensure it&#39;s as expected.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should work for "setAttribute" actions'</span>, <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            tracker = DOMEditTracker.instanceOver div
-</code></pre><p>The first part of the result will be a baseline against which to
-compare.</p>
-<pre class="hljs"><code>            result = []
-            result.push div.toJSON()
-</code></pre><p>Then we perform the editing action, and record both it and its
-results for testing below.</p>
-<pre class="hljs"><code>            div.setAttribute <span class="hljs-string">'thing'</span>, <span class="hljs-string">'whatever'</span>
-            action = tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
-            result.push action.toJSON()
-            result.push div.toJSON()
+        ]
+</code></pre><p>Create DOM objects used in this test, and set up a tracker.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            <span class="hljs-built_in">window</span>.span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span.innerHTML = <span class="hljs-string">'this is a test'</span>
+            div.appendChild span
+            <span class="hljs-built_in">window</span>.repl = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'h1'</span>
+            repl.innerHTML = <span class="hljs-string">'a&lt;sup&gt;b&lt;/sup&gt;'</span>
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
+</code></pre><p>Verify that the initial state matches what&#39;s stored in the state
+history, above, and is therefore expected.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform the editing action, and validate both it and its results.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            div.replaceChild repl, span
+            <span class="hljs-built_in">window</span>.action =
+                tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> action.toJSON() ), <span class="hljs-string">'toEqual'</span>, {
+            node : []
+            type : <span class="hljs-string">'replaceChild'</span>
+            childIndex : <span class="hljs-number">1</span>
+            oldChild : {
+                tagName : <span class="hljs-string">'SPAN'</span>
+                children : [ <span class="hljs-string">'this is a test'</span> ]
+            }
+            newChild : {
+                tagName : <span class="hljs-string">'H1'</span>
+                children : [
+                    <span class="hljs-string">'a'</span>
+                    {
+                        tagName : <span class="hljs-string">'SUP'</span>
+                        children : [ <span class="hljs-string">'b'</span> ]
+                    }
+                ]
+            }
+        }
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
+</code></pre><p>Perform an undo of that action, and verify that the results are
+back to the initial state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.undo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform a redo of that action, and verify that the restuls are
+back to the second state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.redo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
 </code></pre><p>Then we perform an undo of that action, and then record the
 results.</p>
-<pre class="hljs"><code>            action.undo()
-            result.push div.toJSON()
-</code></pre><p>Then we perform a redo of that action, and then record the results.
-That&#39;s the final data gathering for this test.</p>
-<pre class="hljs"><code>            action.redo()
-            result.push div.toJSON()
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>Sanity check to be sure the size of the data is correct.</p>
-<pre class="hljs"><code>            expect( result.length ).toEqual <span class="hljs-number">5</span>
-</code></pre><p>Now, is the baseline state of the root div what we expected?
-And is the editing action the append child action we expected?
-And is the result of that edit the DOM state we expected?
-These are checks to be sure the test is doing what we think it is;
-this does not test undo/redo functionality.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual {
+<h3><a name='should-work-for-setattribute-actions'></a>should work for &quot;setAttribute&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-setattribute-actions'>see results</a></font> <font size=-1><a href='#should-work-for-setattribute-actions'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We will test this by performing a &quot;setAttribute&quot; action, then
+asking it to be undone, then asking it to be redone, and inspecting
+the DOM at each step to ensure it&#39;s as expected.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should work for "setAttribute" actions'</span>, inPage<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Because undo and redo march a document through a sequence of states
+(both forwards and backwards) we create that sequence of states
+here, up front, so that we can simply index into it throughout this
+test.  In this case we only have two states, the first before the
+edit, and the second after it.</p>
+<pre class="hljs"><code>        states = [
+            {
                 tagName : <span class="hljs-string">'DIV'</span>
                 attributes : id : <span class="hljs-string">'0'</span>
                 children : [ <span class="hljs-string">'\n        '</span> ]
             }
-            expect( result[<span class="hljs-number">1</span>] ).toEqual {
-                node : []
-                type : <span class="hljs-string">'setAttribute'</span>
-                name : <span class="hljs-string">'thing'</span>
-                newValue : <span class="hljs-string">'whatever'</span>
-                oldValue : <span class="hljs-string">''</span>
-            }
-            expect( result[<span class="hljs-number">2</span>] ).toEqual {
+            {
                 tagName : <span class="hljs-string">'DIV'</span>
                 attributes : { id : <span class="hljs-string">'0'</span>, thing : <span class="hljs-string">'whatever'</span> }
                 children : [ <span class="hljs-string">'\n        '</span> ]
             }
-</code></pre><p>Now we check to be sure that the results of the undo action give
-the original state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>] ).toEqual result[<span class="hljs-number">0</span>]
-</code></pre><p>Now we check to be sure that the results of the redo action give
-the second state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">4</span>] ).toEqual result[<span class="hljs-number">2</span>]
-            done()
-</code></pre><h3><a name='should-work-for-setattributenode-actions'></a>should work for &quot;setAttributeNode&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-setattributenode-actions'>see results</a></font> <font size=-1><a href='#should-work-for-setattributenode-actions'><img src="link.png" class="anchor"></a></font></h3><p>We will test this by performing a &quot;setAttributeNode&quot; action, then
+        ]
+</code></pre><p>Create DOM objects used in this test, and set up a tracker.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
+</code></pre><p>Verify that the initial state matches what&#39;s stored in the state
+history, above, and is therefore expected.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform the editing action, and validate both it and its results.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            div.setAttribute <span class="hljs-string">'thing'</span>, <span class="hljs-string">'whatever'</span>
+            <span class="hljs-built_in">window</span>.action =
+                tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> action.toJSON() ), <span class="hljs-string">'toEqual'</span>, {
+            node : []
+            type : <span class="hljs-string">'setAttribute'</span>
+            name : <span class="hljs-string">'thing'</span>
+            newValue : <span class="hljs-string">'whatever'</span>
+            oldValue : <span class="hljs-string">''</span>
+        }
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
+</code></pre><p>Perform an undo of that action, and verify that the results are
+back to the initial state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.undo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform a redo of that action, and verify that the restuls are
+back to the second state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.redo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
+</code></pre><p>Then we perform an undo of that action, and then record the
+results.</p>
+<h3><a name='should-work-for-setattributenode-actions'></a>should work for &quot;setAttributeNode&quot; actions &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-setattributenode-actions'>see results</a></font> <font size=-1><a href='#should-work-for-setattributenode-actions'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We will test this by performing a &quot;setAttributeNode&quot; action, then
 asking it to be undone, then asking it to be redone, and inspecting
 the DOM at each step to ensure it&#39;s as expected.</p>
-<pre class="hljs"><code>    it <span class="hljs-string">'should work for "setAttributeNode" actions'</span>,
-    <span class="hljs-function"><span class="hljs-params">( done )</span> =&gt;</span>
-        <span class="hljs-property">@page</span>.evaluate<span class="hljs-function"> -&gt;</span>
-            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            tracker = DOMEditTracker.instanceOver div
-</code></pre><p>The first part of the result will be a baseline against which to
-compare.</p>
-<pre class="hljs"><code>            result = []
-            result.push div.toJSON()
-</code></pre><p>Then we perform the editing action, and record both it and its
-results for testing below.</p>
-<pre class="hljs"><code>            attr = <span class="hljs-built_in">document</span>.createAttribute <span class="hljs-string">'thing'</span>
+<pre class="hljs"><code>    it <span class="hljs-string">'should work for "setAttributeNode" actions'</span>, inPage<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Because undo and redo march a document through a sequence of states
+(both forwards and backwards) we create that sequence of states
+here, up front, so that we can simply index into it throughout this
+test.  In this case we only have two states, the first before the
+edit, and the second after it.</p>
+<pre class="hljs"><code>        states = [
+            {
+                tagName : <span class="hljs-string">'DIV'</span>
+                attributes : id : <span class="hljs-string">'0'</span>
+                children : [ <span class="hljs-string">'\n        '</span> ]
+            }
+            {
+                tagName : <span class="hljs-string">'DIV'</span>
+                attributes : { id : <span class="hljs-string">'0'</span>, thing : <span class="hljs-string">'whatever'</span> }
+                children : [ <span class="hljs-string">'\n        '</span> ]
+            }
+        ]
+</code></pre><p>Create DOM objects used in this test, and set up a tracker.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
+</code></pre><p>Verify that the initial state matches what&#39;s stored in the state
+history, above, and is therefore expected.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform the editing action, and validate both it and its results.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            attr = <span class="hljs-built_in">document</span>.createAttribute <span class="hljs-string">'thing'</span>
             attr.value = <span class="hljs-string">'whatever'</span>
             div.setAttributeNode attr
-            action = tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
-            result.push action.toJSON()
-            result.push div.toJSON()
+            <span class="hljs-built_in">window</span>.action =
+                tracker.stack[tracker.stack.length - <span class="hljs-number">1</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> action.toJSON() ), <span class="hljs-string">'toEqual'</span>, {
+            node : []
+            type : <span class="hljs-string">'setAttributeNode'</span>
+            name : <span class="hljs-string">'thing'</span>
+            newValue : <span class="hljs-string">'whatever'</span>
+            oldValue : <span class="hljs-string">''</span>
+        }
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
+</code></pre><p>Perform an undo of that action, and verify that the results are
+back to the initial state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.undo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">0</span>]
+</code></pre><p>Perform a redo of that action, and verify that the restuls are
+back to the second state.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> action.redo()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ), <span class="hljs-string">'toEqual'</span>, states[<span class="hljs-number">1</span>]
 </code></pre><p>Then we perform an undo of that action, and then record the
 results.</p>
-<pre class="hljs"><code>            action.undo()
-            result.push div.toJSON()
-</code></pre><p>Then we perform a redo of that action, and then record the results.
-That&#39;s the final data gathering for this test.</p>
-<pre class="hljs"><code>            action.redo()
-            result.push div.toJSON()
-            result
-        , <span class="hljs-function"><span class="hljs-params">( err, result )</span> -&gt;</span>
-</code></pre><p>Sanity check to be sure the size of the data is correct.</p>
-<pre class="hljs"><code>            expect( result.length ).toEqual <span class="hljs-number">5</span>
-</code></pre><p>Now, is the baseline state of the root div what we expected?
-And is the editing action the append child action we expected?
-And is the result of that edit the DOM state we expected?
-These are checks to be sure the test is doing what we think it is;
-this does not test undo/redo functionality.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">0</span>] ).toEqual {
-                tagName : <span class="hljs-string">'DIV'</span>
-                attributes : id : <span class="hljs-string">'0'</span>
-                children : [ <span class="hljs-string">'\n        '</span> ]
-            }
-            expect( result[<span class="hljs-number">1</span>] ).toEqual {
-                node : []
-                type : <span class="hljs-string">'setAttributeNode'</span>
-                name : <span class="hljs-string">'thing'</span>
-                newValue : <span class="hljs-string">'whatever'</span>
-                oldValue : <span class="hljs-string">''</span>
-            }
-            expect( result[<span class="hljs-number">2</span>] ).toEqual {
-                tagName : <span class="hljs-string">'DIV'</span>
-                attributes : { id : <span class="hljs-string">'0'</span>, thing : <span class="hljs-string">'whatever'</span> }
-                children : [ <span class="hljs-string">'\n        '</span> ]
-            }
-</code></pre><p>Now we check to be sure that the results of the undo action give
-the original state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">3</span>] ).toEqual result[<span class="hljs-number">0</span>]
-</code></pre><p>Now we check to be sure that the results of the redo action give
-the second state of the div back.  We can do this with the
-following shortcut.</p>
-<pre class="hljs"><code>            expect( result[<span class="hljs-number">4</span>] ).toEqual result[<span class="hljs-number">2</span>]
-            done()
-</code></pre>
+
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

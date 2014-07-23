@@ -326,11 +326,10 @@
     };
 
     function DOMEditTracker(div) {
-      this.element = null;
       if (div && (div != null ? div.tagName : void 0) !== 'DIV') {
         throw new Error('DOMEditTracker can only be ' + 'constructed in a DIV node');
       }
-      this.element = div;
+      this.element = div || null;
       this.stack = [];
       this.stackPointer = 0;
       this.stackRecording = true;
