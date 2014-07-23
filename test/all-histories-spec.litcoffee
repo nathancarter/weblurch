@@ -16,6 +16,14 @@ First, we load the necessary tools.
     fs = require 'fs'
     path = require 'path'
 
+We initialize a module-level variable to store all test histories
+in one big data structure.  We populate this as we walk the folder
+hierarchy, below.  We also provide a filename into which this
+structure will be saved, once it's fully populated.
+
+    historyHierarchy = { }
+    historyOutFile = './testapp/all-test-histories.js'
+
 Next, we define a function that will find all `.json` files in a
 given directory hierarchy, and treat each as a test history to be
 run.  It runs such histories in breadth-first-search order.
@@ -36,12 +44,25 @@ or neither (which we ignore).
 
 In order to keep the search breadth-first, we process the files
 in *this* folder first, then recur on any subfolders we found.
+As we process the files, we store them in the global data structure
+if and only if they were an array, which means the test attempted.
 
-        runTestHistory file for file in files
+        for file in files
+            testHistory = runTestHistory file
+            if testHistory instanceof Array
+                historyHierarchy[file] = testHistory
         walk dir for dir in dirs
 
 Now we apply that function to the hierarchy of test histories
 stored in this repository.
 
     walk 'test/histories'
+
+Save the global data structure of all test histories in a file in
+the test app folder.  The output format is JavaScript, initializing
+a global variable to contain the JSON data.
+
+    stringForm = JSON.stringify historyHierarchy
+    fs.writeFileSync historyOutFile,
+        "window.allTestHistories = #{stringForm};"
 

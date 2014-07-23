@@ -17,9 +17,6 @@ than the earlier ones.
 
 ### Better access to automated testing results
 
- * As part of the `cake test` procedure, unite the JSON of all
-   the saved test histories into one big JSON object and create a
-   `.js` file that assigns that object to a global variable.
  * Import that `.js` file into the test app.
  * Create a UI for choosing a test to run from a hierarchical
    list generated from that variable's value.

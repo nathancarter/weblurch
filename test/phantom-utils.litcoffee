@@ -153,7 +153,12 @@ marked as correct (or incorrect) in the JSON data, test to verify
 that the result in the page equals (or does not equal) that
 recorded state.
 
+The return value is the loaded JSON test history, because the
+caller accumulates all such test histories into one big data
+structure, for use in [the test app](../testapp/index.html).
+
     exports.runTestHistory = ( filename ) ->
+        testHistory = null
 
 Start a test for the given filename, whether or not it even exists.
 
@@ -241,6 +246,11 @@ that `@page.evaluate` will run, the test history as a big, JSONable
 object.
 
                 , testHistory
+
+Return the test history, as described in the documentation above
+the function signature, above.
+
+        testHistory
 
 # Convenience function for tests
 
