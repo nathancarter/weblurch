@@ -224,7 +224,7 @@ Create header for this test.  Use the `mapping` computed above to
 create links, if possible.
 
                         name = item.$.name
-                        md += "# #{name} (#{item.$.time} ms)"
+                        md += "## #{name} (#{item.$.time} ms)"
                         if name of mapping
                             escapedName = build.escapeHeading name
                             md += " <font size=-1>" +

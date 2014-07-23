@@ -1,11 +1,81 @@
 <html>
     <head>
+        <link rel='stylesheet'
+              href='../bootstrap/css/bootstrap.min.css'/>
+        <link rel='stylesheet'
+              href='../bootstrap/css/bootstrap-theme.min.css'/>
+        <link rel='stylesheet' href='testapp.css'/>
+        <script src='../bootstrap/js/jquery-2.1.1.min.js'></script>
+        <script src='../bootstrap/js/bootstrap.min.js'></script>
         <script src='../app/weblurch.js'></script>
         <script src='testapp.js'></script>
     </head>
     <body>
-        <h1>For now this page is a stub</h1>
-        <div id='editor'>
+        <div class='container'>
+            <h1>webLurch Test App</h1>
+            <!-- Input box and button for executing JS code -->
+            <div class='row gap-before-3 gap-after-2'>
+                <div class='col-md-9'>
+                    <input type='text' class='form-control'
+                           id='codeInput'
+                           placeholder='enter code to evaluate'/>
+                </div>
+                <div class='col-md-1'>
+                    <button type='button' class='btn btn-default'
+                            id='runButton'>Run</button>
+                </div>
+                <div class='col-md-1'>
+                    <button type='button' class='btn btn-success'
+                            id='yesButton'>Mark right</button>
+                </div>
+                <div class='col-md-1'>
+                    <button type='button' class='btn btn-danger'
+                            id='noButton'>Mark wrong</button>
+                </div>
+            </div>
+            <!-- Bootstrap styles the following list as tabs -->
+            <ul class='nav nav-tabs' role='tablist'>
+                <li class='active'
+                   ><a href='#html' role='tab'
+                    data-toggle='tab'>HTML</a></li>
+                <li><a href='#source' role='tab' id='sourceTab'
+                    data-toggle='tab'>Source</a></li>
+                <li><a href='#history' role='tab' id='historyTab'
+                    data-toggle='tab'>History</a></li>
+            </ul>
+            <!-- Bootstrap shows the following divs when their
+                 corresponding tabs (above) are clicked -->
+            <div class='tab-content'>
+                <div class='tab-pane active panel panel-default'
+                     id='html'>
+                    <div id='editor'></div>
+                </div>
+                <div class='tab-pane' id='source'>
+                </div>
+                <div class='tab-pane' id='history'>
+                    <div class='row gap-before-2'>
+                        <div class='col-md-8'></div>
+                        <div class='col-md-2'>
+                            <div class='input-group'>
+                                <input type='text'
+                                       id='testNameInput'
+                                       class='form-control'
+                                       placeholder='test-history'/>
+                                <span class='input-group-addon'
+                                 >.json</span>
+                            </div>
+                        </div>
+                        <div class='col-md-2'>
+                            <button type='button'
+                                    class='btn btn-default'
+                                    id='downloadButton'
+                             >Download history as JSON</button>
+                        </div>
+                    </div>
+                    <div id='historyBody'>
+                    </div>
+                </div>
+            </div>
         </div>
     </body>
     <script language=javascript>

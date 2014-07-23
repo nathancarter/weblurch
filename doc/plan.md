@@ -15,44 +15,6 @@ than the earlier ones.
 
 ## Test environment
 
-### Test app
-
- * Import into the project a UI toolkit such as
-   [Bootstrap](http://getbootstrap.com).
-   (If you use bootstrap, replace your link png with its link
-   glyphicon.)
- * Import that UI into both the app and test app pages, rewriting
-   them to fit its format if necessary.
- * Split the test app into tabs, one containing a view that shows
-   the document as HTML source.
- * Add to the test app a user interface for making any of the
-   editing API calls on any Node in the `LurchEditor`'s main HTML
-   element (could be just a JS eval of the code in an input box).
- * Update the source view after every API call.
-
-### Easy test generation
-
- * Have test app save the state of the model at the start and
-   after every API call, as well as storing all API calls, thus
-   keeping a full history.  API calls are recorded as the actual
-   code that was evaluated, easy to replay later (and objective).
- * Add buttons to the test app for marking points in the history
-   as correct or incorrect (with optional comments) and store
-   that data in the history as well
- * Create a UI for viewing that history, giving it a name, and
-   downloading it as a JSON file `putTestNameHere.json`.
- * Create a method in [phantom-utils](phantom-utils.litcoffee.html)
-   (possibly rename to `test-utils`?) that can run such a test
-   history inside a jasmine test (i.e., one `describe` with a bunch
-   of `it`s and `expect`s in it.
- * Create a folder in the repository for holding such test JSON
-   files and organize it hierarchically by topic
- * Add to the `cake test` procedure the running of all test
-   histories, verifying each step, and outputting a report,
-   in [Markdown](https://daringfireball.net/projects/markdown/).
- * Categorize the outputs with section headers, etc., imitating
-   the structure of the folder hierarchy.
-
 ### Better access to automated testing results
 
  * As part of the `cake test` procedure, unite the JSON of all
@@ -64,17 +26,10 @@ than the earlier ones.
  * Create functionality that can replay the chosen test one
    step at a time and show the expected vs. the actual, with
    differences highlighted.
-
-### Later, when you put the repository on a server
-
- * Have the server nightly do a git pull of the latest version.
-   Once that's working, have it run a shell script that does the
-   following.
-    * Back up the old HTML version of the test suite output.
-    * Run the test suite.
-    * Email the developers if and only if the new output differs
-      from the old in an important way (i.e., not just timings,
-      but results).
+ * Link to the test app page from the [history spec file](
+   all-histories-spec.litcoffee.html), so that when people follow
+   links from test results to code, and hit that cryptically
+   general page, they have some place to go to see test details.
 
 ## More Word Processing Foundation
 
@@ -86,15 +41,27 @@ than the earlier ones.
    changed.  These events can be listened to by later bubbling and
    validation features.
  * Have the test app update the HTML source view when it hears
-   one of those events, rather than after every API call.
+   one of those events, even if no code was just run from the test
+   app code input.
+ * Create a new type of `DOMEditAction`, a compound one that's just
+   a sequence of non-compound ones.  Create undo, redo, and
+   representation support for it, and let it have a writable name
+   (i.e., string representation).
+ * Give `DOMEditTracker` support for declaring the start and end of
+   a block of edits, and any calls to `nodeEditHappened` in between
+   will just queue up a sequence of edit actions that get bundled
+   into one compound action when the block completes.  The start
+   event should give the block a name.
 
 ### Cursor
 
- * Build the `LurchEditor` API for placing a cursor in the
-   document, or nowhere, depending on whether the document has
+ * Design and build the `LurchEditor` API for placing a cursor in
+   the document, or nowhere, depending on whether the document has
    focus.
  * Add all the functions for dealing with that cursor as if it
-   were a real cursor
+   were a real cursor.  Each of these may make several edits to the
+   document, and so should use the new block-of-edits support
+   mentioned above.
     * insert a cursor before/after a given sub-node of the
       editable DOM element (iff one isn’t already in the element
       somewhere).
@@ -312,12 +279,13 @@ than the earlier ones.
 
 ## For later
 
+### Making unit tests more complete
+
 The following unit tests were skipped earlier in development,
 because they are less important than the ones that were written,
 and yet are included here for the sake of completeness, and so that
 they are not forgotten.  A complete unit testing suite would have
 tests for all of the following cases.
-
  * [The tests for the DOMEditAction constructor](
    domeditaction-spec.litcoffee.html) test every constructor by
    passing it correct parameters.  They do not do any testing to
@@ -326,6 +294,20 @@ tests for all of the following cases.
    action type is valid.  In particular, no testing is done to
    ensure that the node must be valid, nor that for each individual
    action type, the parameters must be given correctly.
+ * All the functionality of the test app.  Currently, it is only
+   tested by the developers' using it, together with some minimal
+   unit tests [in the basic spec file](basic-spec.litcoffee.html).
+
+Someday, when regular, automated testing becomes important, have
+a server do a nightly git pull of the latest version.  Once that's
+working, have it run a shell script that does the following.
+ * Back up the old HTML version of the test suite output.
+ * Run the test suite.
+ * Email the developers if and only if the new output differs from
+   the old in an important way (i.e., not just timings, but
+   results).
+
+### Improving documentation
 
 Documentation in most unit test spec files promises that [the
 basic spec file](basic-spec.litcoffee.html) will provide complete
@@ -334,4 +316,12 @@ it does not.
 
  * Add documentation to that file so that someone who does not know
    how to read a test spec file could learn it from that file.
+
+### Citing sources
+
+The glyph icons that come with Bootstrap were provided free by
+[Glyphicons](http://glyphicons.com/).  Bootstrap requests that if
+you use them, you provide a link back to that site.  When my apps
+are further along in production, such a link should be provided
+somewhere on the site where it makes sense to do so.
 

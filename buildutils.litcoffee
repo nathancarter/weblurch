@@ -200,7 +200,7 @@ stylehseets is already installed in the `doc/` output folder.
 
 The following image is used to indicate an anchor.
 
-    linkpng = '<img src="link.png" class="anchor">'
+    linkcode = '<span class="glyphicon glyphicon-link"></span>'
 
 And now, the conversion function.
 
@@ -231,9 +231,10 @@ links, to be consistent with anchor names generated elsewhere.
                 escapedText = exports.escapeHeading collapsed
 
 If this is a heading in a test suite, create a link to the test
-results.
+results.  The only exception is top-level headings, which do not
+have corresponding entries in the test suite resutls page.
 
-            if /-spec\.litcoffee/.test infile
+            if level > 1 and /-spec\.litcoffee/.test infile
                 results = "<font size=-1><a href='" +
                           "test-results.md.html#" +
                           "#{escapedText}'>see results</a></font>"
@@ -256,7 +257,7 @@ Return the final HTML string for the heading
 
             "<h#{level}><a name='#{escapedText}'></a>#{text} " +
             "&nbsp; #{results} <font size=-1><a href='" +
-            "##{escapedText}'>#{linkpng}</a></font></h#{level}>"
+            "##{escapedText}'>#{linkcode}</a></font></h#{level}>"
 
 Install the renderer just created, as well as highlighting support
 provided by `highlight.js`.
