@@ -17,7 +17,6 @@ than the earlier ones.
 
 ### Better access to automated testing results
 
- * Import that `.js` file into the test app.
  * Create a UI for choosing a test to run from a hierarchical
    list generated from that variable's value.
  * Create functionality that can replay the chosen test one

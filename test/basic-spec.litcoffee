@@ -82,6 +82,7 @@ Later we will also add tests that use `page.get 'content'`,
             pageExpects ( -> Node::address ), 'toBeTruthy'
             pageExpects ( -> LurchEditor ), 'toBeTruthy'
             pageExpects ( -> maindiv ), 'toBeTruthy'
+            pageExpects ( -> allTestHistories ), 'toBeTruthy'
 
 ### should initialize main div to id 0
 
