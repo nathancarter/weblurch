@@ -15,15 +15,6 @@ than the earlier ones.
 
 ## Test environment
 
-### Easy test generation
-
- * Create a folder in the repository for holding such test JSON
-   files and organize it hierarchically by topic
- * Enhance [all-histories-spec.litcoffee](
-   all-histories-spec.litcoffee.html) so that it loops through
-   the JSON files in the hierarchy.  Use section headers that
-   imitate the structure of the folder hierarchy.
-
 ### Better access to automated testing results
 
  * As part of the `cake test` procedure, unite the JSON of all
