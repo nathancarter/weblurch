@@ -23,8 +23,6 @@ than the earlier ones.
    all-histories-spec.litcoffee.html) so that it loops through
    the JSON files in the hierarchy.  Use section headers that
    imitate the structure of the folder hierarchy.
- * Create unit tests for as much of the functionality of this
-   growing test app as is reasonable.
 
 ### Better access to automated testing results
 
@@ -286,12 +284,13 @@ than the earlier ones.
 
 ## For later
 
+### Making unit tests more complete
+
 The following unit tests were skipped earlier in development,
 because they are less important than the ones that were written,
 and yet are included here for the sake of completeness, and so that
 they are not forgotten.  A complete unit testing suite would have
 tests for all of the following cases.
-
  * [The tests for the DOMEditAction constructor](
    domeditaction-spec.litcoffee.html) test every constructor by
    passing it correct parameters.  They do not do any testing to
@@ -300,20 +299,9 @@ tests for all of the following cases.
    action type is valid.  In particular, no testing is done to
    ensure that the node must be valid, nor that for each individual
    action type, the parameters must be given correctly.
-
-Documentation in most unit test spec files promises that [the
-basic spec file](basic-spec.litcoffee.html) will provide complete
-documentation on how to read and understand a test spec file.  But
-it does not.
-
- * Add documentation to that file so that someone who does not know
-   how to read a test spec file could learn it from that file.
-
-The glyph icons that come with Bootstrap were provided free by
-[Glyphicons](http://glyphicons.com/).  Bootstrap requests that if
-you use them, you provide a link back to that site.  When my apps
-are further along in production, such a link should be provided
-somewhere on the site where it makes sense to do so.
+ * All the functionality of the test app.  Currently, it is only
+   tested by the developers' using it, together with some minimal
+   unit tests [in the basic spec file](basic-spec.litcoffee.html).
 
 Someday, when regular, automated testing becomes important, have
 a server do a nightly git pull of the latest version.  Once that's
@@ -323,4 +311,22 @@ working, have it run a shell script that does the following.
  * Email the developers if and only if the new output differs from
    the old in an important way (i.e., not just timings, but
    results).
+
+### Improving documentation
+
+Documentation in most unit test spec files promises that [the
+basic spec file](basic-spec.litcoffee.html) will provide complete
+documentation on how to read and understand a test spec file.  But
+it does not.
+
+ * Add documentation to that file so that someone who does not know
+   how to read a test spec file could learn it from that file.
+
+### Citing sources
+
+The glyph icons that come with Bootstrap were provided free by
+[Glyphicons](http://glyphicons.com/).  Bootstrap requests that if
+you use them, you provide a link back to that site.  When my apps
+are further along in production, such a link should be provided
+somewhere on the site where it makes sense to do so.
 
