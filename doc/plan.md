@@ -13,15 +13,6 @@ being those that should be done next, and the later items those
 that must come after.  Necessarily, the later items are more vague
 than the earlier ones.
 
-## Test environment
-
-### Better access to automated testing results
-
- * Link to the test app page from the [history spec file](
-   all-histories-spec.litcoffee.html), so that when people follow
-   links from test results to code, and hit that cryptically
-   general page, they have some place to go to see test details.
-
 ## More Word Processing Foundation
 
 ### Events

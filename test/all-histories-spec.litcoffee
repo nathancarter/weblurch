@@ -6,9 +6,12 @@ files that contains a sequence of JavaScript commands to execute,
 and waypoints at which to compare the state of the document against
 known-correct (and even known-incorrect) states.
 
-This test suite will eventually traverse a folder hierarchy of many
-such tests, running them all.  For now, it just runs one example
-test history file.
+This test suite traverses a folder hierarchy of many such tests,
+running them all.  *If you've followed a link here hoping to see
+the actual test histories, they are not here, but are stored in
+JSON files in the repository.  The easiest way to browse them is
+through [the test app](../testapp/index.html); click the History
+tab and choose a saved test history from the drop-down list.*
 
 First, we load the necessary tools.
 
