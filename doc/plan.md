@@ -17,10 +17,6 @@ than the earlier ones.
 
 ### Better access to automated testing results
 
- * Improve test app UI
-   * Remove the red and green marking buttons, instead placing a
-     pair of thumb up/down buttons (glyphicon-thumbs-up/down) on
-     *each* state.  Re-clicking the active one toggles it off.
  * Move the name-and-download controls to the left side, and add on
    the right side a drop-down menu for what test history to compare
    to this one.  If none is chosen, show as now.  If one is chosen,

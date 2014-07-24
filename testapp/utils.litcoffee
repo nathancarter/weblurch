@@ -27,8 +27,6 @@ Install event handlers for the buttons.
 
         ( $ runButton ).on 'click', runButtonClicked
         ( $ resetButton ).on 'click', resetButtonClicked
-        ( $ yesButton ).on 'click', yesButtonClicked
-        ( $ noButton ).on 'click', noButtonClicked
         ( $ downloadButton ).on 'click', downloadButtonClicked
         ( $ undoButton ).on 'click', undoButtonClicked
 
@@ -117,12 +115,18 @@ any visible views, clears the code input, and gives it focus.
 The event handlers for the "Mark right" and "Mark wrong" buttons
 edit the last item pushed onto the `testHistory` stack.
 
-    window.yesButtonClicked = ( event ) ->
-        testHistory[testHistory.length - 1].correct = yes
+    window.yesButtonClicked = ( index ) ->
+        if testHistory[index].correct is yes
+            delete testHistory[index].correct
+        else
+            testHistory[index].correct = yes
         updateView()
 
-    window.noButtonClicked = ( event ) ->
-        testHistory[testHistory.length - 1].correct = no
+    window.noButtonClicked = ( index ) ->
+        if testHistory[index].correct is no
+            delete testHistory[index].correct
+        else
+            testHistory[index].correct = no
         updateView()
 
 ### Download button
@@ -269,6 +273,19 @@ the result of executing some JavaScript code.
             representation += """
                 <div class='panel panel-#{type}'>
                   <div class='panel-heading'>
+                    <button type='button'
+                            class='btn btn-xs btn-danger
+                                   pull-right'
+                            onclick='noButtonClicked(#{index});'
+                     ><span class='glyphicon
+                                   glyphicon-thumbs-down'>
+                            </span></button>
+                    <button type='button'
+                            class='btn btn-xs btn-success
+                                   pull-right'
+                            onclick='yesButtonClicked(#{index});'
+                     ><span class='glyphicon glyphicon-thumbs-up'>
+                            </span></button>
                     <h3 class='panel-title'>#{title}</h3>
                   </div>
                   <div class='panel-body'>#{state}</div>
