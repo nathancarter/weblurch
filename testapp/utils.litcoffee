@@ -30,6 +30,7 @@ Install event handlers for the buttons.
         ( $ yesButton ).on 'click', yesButtonClicked
         ( $ noButton ).on 'click', noButtonClicked
         ( $ downloadButton ).on 'click', downloadButtonClicked
+        ( $ undoButton ).on 'click', undoButtonClicked
 
 Make the code input respond to the Enter key by auto-clicking the
 run button.
@@ -163,6 +164,43 @@ whose element is this newly created document.
 Clear out the test history and refresh all views.
 
         initializeHistory()
+        updateView()
+
+### Undo button
+
+This method performs an undo *not* by calling the `undo` method of
+the editor, for two reasons.
+ * The test history may be testing (and thus using) that very undo
+   method, and thus it should not be relied upon in the test app.
+ * Calling that method changes the state of the editor, by
+   manipulating its undo/redo stack.  But the state of that stack
+   must be reverted by this very undo/redo operation.
+
+Thus this method proceeds as follows.
+
+    window.undoButtonClicked = ( event ) ->
+
+First, retain the current test history in a temporary variable for
+use below.
+
+        oldHistory = testHistory
+
+Now reset the entire page to its initial state (which clears out
+the test history, and that's why we saved it, above.)
+
+        resetButtonClicked()
+
+Now replay all the commands in the test history, in order, *except
+for* the final one.  This will put the document *and* the editor in
+the state they were in before that last command took place.  Note
+that the first entry in the test history is not a command, so we
+must skip it.
+
+        for step in oldHistory[1...-1]
+            runCodeInModel step.code
+
+Last, update any views to show that the undo took place.
+
         updateView()
 
 ### Representation of the test history

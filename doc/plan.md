@@ -18,8 +18,6 @@ than the earlier ones.
 ### Better access to automated testing results
 
  * Improve test app UI
-   * Create an undo button that pops the last step off the history
-     and reverts the document to its previous state.
    * Remove the red and green marking buttons, instead placing a
      pair of thumb up/down buttons (glyphicon-thumbs-up/down) on
      *each* state.  Re-clicking the active one toggles it off.
