@@ -17,9 +17,6 @@ than the earlier ones.
 
 ### Better access to automated testing results
 
- * Add Run buttons to each command panel in the loaded history,
-   so that it can be executed immediately in the document (thus
-   updating the active test history).
  * Add a Run All button (up next to the drop-down list?) that runs
    all commands from the loaded history, in succession, one at a
    time, in the current document.  This is useful for re-running

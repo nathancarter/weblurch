@@ -94,7 +94,7 @@ the `LurchEditor`'s element.
                                         .replace( /"/g, '&quot;' )
         sourceView.innerHTML = "<pre>#{code}</pre>"
 
-### Code runner
+### Main code runner
 
 The event handler on the "Run" button that evaluates the code the
 user enters in the code input box.  The following function is the
@@ -122,6 +122,27 @@ any visible views, clears the code input, and gives it focus.
         updateView()
         codeInput.value = ''
         codeInput.focus()
+
+### Code runner for test history
+
+Similar to the previous method, but this event handler is for the
+individual run buttons that appear in code steps in a saved test
+history, if one is displayed.
+
+    window.runSavedStep = ( index ) ->
+
+Guard against having this run at an incorrect time, or with an
+incorrect parameter.
+
+        compare = window.comparisonHistory?.data
+        if compare and index < compare.length
+
+Use the same auxiliary function as
+[the main code runner](#main-code-runner) uses, then update the
+view.
+
+            runCodeInModel compare[index].code
+            updateView()
 
 ### Yes and no buttons
 
@@ -341,6 +362,58 @@ Now, the main event handler.
 
     window.updateHistoryTab = ->
 
+We also need several tiny auxiliary functions that aren't worth
+declaring at the global scope, so I declare them here.  They're
+for creating HTML button code.
+
+A run button for use in saved history commands:
+
+        makeRunButton = ( index ) -> """
+            <button type='button'
+                    class='btn btn-xs btn-default pull-right'
+                    data-toggle='tooltip' title='Run'
+                    onclick='runSavedStep(#{index});'
+             ><span class='glyphicon glyphicon-play'>
+                    </span></button>"""
+
+A pair of thumbs up/down buttons for use in test history states:
+
+        makeThumbButtons = ( index ) -> """
+            <button type='button'
+                    class='btn btn-xs btn-danger pull-right'
+                    data-toggle='tooltip' title='Mark incorrect'
+                    onclick='noButtonClicked(#{index});'
+             ><span class='glyphicon glyphicon-thumbs-down'>
+                    </span></button>
+            <button type='button'
+                    class='btn btn-xs btn-success pull-right'
+                    data-toggle='tooltip' title='Mark correct'
+                    onclick='yesButtonClicked(#{index});'
+             ><span class='glyphicon glyphicon-thumbs-up'>
+                    </span></button>"""
+
+"Same" and "different" indicators for saved history states:
+
+        sameIndicator = '''
+            <div class='pull-right'>SAME
+                <span class='glyphicon glyphicon-ok'></span>
+            </div>'''
+        diffIndicator = '''
+            <div class='pull-right'>DIFFERENT
+                <span class='glyphicon glyphicon-remove'></span>
+            </div>'''
+
+Tool for building rows of two columns:
+
+        makeRowOfTwo = ( left, right ) -> """
+            <div class='row'>
+                <div class='col-md-6'>#{left}</div>
+                <div class='col-md-6'>#{right}</div>
+            </div>"""
+
+And now we truly begin!  Initialize the representation to empty,
+and we'll build it as we loop through the histories.
+
         representation = ''
 
 Find out if we're comparing the current test history to another.
@@ -359,15 +432,11 @@ to this state.
                 if compare
                     if index < compare.length
                         saved = historyCommandRepresentation \
-                            compare[index], index
+                            compare[index], index,
+                            makeRunButton index
                     else
                         saved = ''
-                    current = """
-                        <div class='row'>
-                            <div class='col-md-6'>#{current}</div>
-                            <div class='col-md-6'>#{saved}</div>
-                        </div>
-                        """
+                    current = makeRowOfTwo current, saved
                 representation += current
 
 No matter what state it is, show the state.  We must first
@@ -378,49 +447,23 @@ on its correctness marking.
                 type = 'default'
             else
                 type = if step.correct then 'success' else 'danger'
-            current = historyStateRepresentation step, index, """
-                <button type='button'
-                        class='btn btn-xs btn-danger pull-right'
-                        data-toggle='tooltip'
-                        title='Mark incorrect'
-                        onclick='noButtonClicked(#{index});'
-                 ><span class='glyphicon glyphicon-thumbs-down'>
-                        </span></button>
-                <button type='button'
-                        class='btn btn-xs btn-success pull-right'
-                        data-toggle='tooltip' title='Mark correct'
-                        onclick='yesButtonClicked(#{index});'
-                 ><span class='glyphicon glyphicon-thumbs-up'>
-                        </span></button>
-                """, type
+            current = historyStateRepresentation step, index,
+                makeThumbButtons( index ), type
             if compare
                 if index < compare.length
                     left = JSON.stringify step.state
                     right = JSON.stringify compare[index].state
                     if left is right
-                        details = '''
-                            <div class='pull-right'>SAME
-                                <span class='glyphicon
-                                             glyphicon-ok'>
-                                </span></div>'''
+                        details = sameIndicator
                         type = 'success'
                     else
-                        details = '''
-                            <div class='pull-right'>DIFFERENT
-                                <span class='glyphicon
-                                             glyphicon-remove'>
-                                </span></div>'''
+                        details = diffIndicator
                         type = 'danger'
                     saved = historyStateRepresentation \
                         compare[index], index, details, type
                 else
                     saved = ''
-                current = """
-                    <div class='row'>
-                        <div class='col-md-6'>#{current}</div>
-                        <div class='col-md-6'>#{saved}</div>
-                    </div>
-                    """
+                current = makeRowOfTwo current, saved
             representation += current
 
 If there were more steps remaining in the saved history to which
@@ -429,21 +472,12 @@ we're comparing the current one, show those at the end.
         if compare
             for index in [testHistory.length...compare.length]
                 step = compare[index]
-                code = historyCommandRepresentation step, index
-                details = ''
-                type = 'default'
+                code = historyCommandRepresentation step, index,
+                    makeRunButton index
                 state = historyStateRepresentation \
-                    compare[index], index, details, type
-                representation += """
-                    <div class='row'>
-                        <div class='col-md-6'></div>
-                        <div class='col-md-6'>#{code}</div>
-                    </div>
-                    <div class='row'>
-                        <div class='col-md-6'></div>
-                        <div class='col-md-6'>#{state}</div>
-                    </div>
-                    """
+                    compare[index], index, '', 'default'
+                representation += makeRowOfTwo '', code
+                representation += makeRowOfTwo '', state
 
 Populate the history tab.
 
