@@ -85,21 +85,28 @@ the `LurchEditor`'s element.
 ### Code runner
 
 The event handler on the "Run" button that evaluates the code the
-user enters in the code input box.
+user enters in the code input box.  The following function is the
+auxiliary function it uses to do so.
 
-    window.runButtonClicked = ( event ) ->
-        eval codeInput.value
+    window.runCodeInModel = ( code ) ->
 
-It also appends that action and its result to the test history
-array.
+First, just evaluate the code.
+
+        eval code
+
+This auxiliary function also appends that action and its result to
+the test history array.
 
         testHistory.push {
-            code : codeInput.value
+            code : code
             state : LE.getElement().toJSON()
         }
 
-Update any visible views, clear the code input, and give it focus.
+The event handler just calls the auxiliary function, then updates
+any visible views, clears the code input, and gives it focus.
 
+    window.runButtonClicked = ( event ) ->
+        runCodeInModel codeInput.value
         updateView()
         codeInput.value = ''
         codeInput.focus()
