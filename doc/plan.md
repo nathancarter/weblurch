@@ -13,24 +13,6 @@ being those that should be done next, and the later items those
 that must come after.  Necessarily, the later items are more vague
 than the earlier ones.
 
-## Test environment
-
-### Better access to automated testing results
-
- * As part of the `cake test` procedure, unite the JSON of all
-   the saved test histories into one big JSON object and create a
-   `.js` file that assigns that object to a global variable.
- * Import that `.js` file into the test app.
- * Create a UI for choosing a test to run from a hierarchical
-   list generated from that variable's value.
- * Create functionality that can replay the chosen test one
-   step at a time and show the expected vs. the actual, with
-   differences highlighted.
- * Link to the test app page from the [history spec file](
-   all-histories-spec.litcoffee.html), so that when people follow
-   links from test results to code, and hit that cryptically
-   general page, they have some place to go to see test details.
-
 ## More Word Processing Foundation
 
 ### Events
