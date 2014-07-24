@@ -62,6 +62,12 @@ constructor gives it the next available id.
 
             @assignIds div
 
+Because all of those changes may have been recorded by this object
+(as a `DOMEditTracker`) we now clear its undo/redo stack, so that
+they are not later undoable by a user.
+
+            @clearStack()
+
 ## Functions used by the constructor
 
 Collect a list of all used ids in the given node, removing any
