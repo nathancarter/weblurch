@@ -151,6 +151,7 @@ Throw away the old `LurchEditor` and replace it with a new one,
 whose element is this newly created document.
 
         window.LE = new LurchEditor freshDocument
+        window.maindiv = freshDocument
 
 Clear out the test history and refresh all views.
 
