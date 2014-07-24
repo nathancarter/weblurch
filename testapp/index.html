@@ -65,9 +65,10 @@
                 </div>
                 <div class='tab-pane' id='historyView'>
                     <div class='row gap-before-2'>
-                        <div class='col-md-8'></div>
-                        <div class='col-md-2'>
+                        <div class='col-md-4'>
                             <div class='input-group'>
+                                <span class='input-group-addon'
+                                 >Enter filename:</span>
                                 <input type='text'
                                        id='testNameInput'
                                        class='form-control'
@@ -81,6 +82,12 @@
                                     class='btn btn-default'
                                     id='downloadButton'
                              >Download history as JSON</button>
+                        </div>
+                        <div class='col-md-3'></div>
+                        <div class='col-md-3'>
+                            <select class='form-control'
+                                    id='savedHistoriesList'>
+                            </select>
                         </div>
                     </div>
                     <div id='historyBody'

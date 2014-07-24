@@ -17,12 +17,6 @@ than the earlier ones.
 
 ### Better access to automated testing results
 
- * Move the name-and-download controls to the left side, and add on
-   the right side a drop-down menu for what test history to compare
-   to this one.  If none is chosen, show as now.  If one is chosen,
-   line them up side-by-side.
- * Highlight states in the loaded history that don't match the
-   corresponding points in the active test history.
  * Add Run buttons to each command panel in the loaded history,
    so that it can be executed immediately in the document (thus
    updating the active test history).
