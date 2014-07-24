@@ -21,14 +21,6 @@ code executed to cause changes of state.
 
 Store in global variables the important UI elements on the page.
 
-        '''
-        source history historyBody historyTab
-        codeInput testNameInput
-        runButton yesButton noButton downloadButton
-        mainContainer
-        ''' \
-        .split( ' ' ).map ( id ) ->
-            window[id] = document.getElementById id
         window.maindiv = LE.getElement()
 
 Install event handlers for the buttons.
@@ -57,10 +49,10 @@ and have this update every time the page is resized.
         resizeHistoryHeight()
         ( $ window ).resize resizeHistoryHeight
 
-Run [the routine](#source-synchronizer) that updates the source div
-with the HTML source of the `LurchEditor`'s element.
+Run [the routine](#source-synchronizer) that updates the currently
+active view.
 
-        updateSourceTab()
+        updateView()
 
 Place the user's keyboard focus into the code input box.
 
@@ -73,9 +65,9 @@ Place the user's keyboard focus into the code input box.
 This function dispatches to either the source tab updater or the
 history tab updater, depending on which one is visible, if either.
 
-    window.updateDispatcher = ->
-        if ( $ source ).hasClass 'active' then updateSourceTab()
-        if ( $ history ).hasClass 'active' then updateHistoryTab()
+    window.updateView = ->
+        updateSourceTab() if ( $ sourceView ).hasClass 'active'
+        updateHistoryTab() if ( $ historyView ).hasClass 'active'
 
 ### Source synchronizer
 
@@ -88,7 +80,7 @@ the `LurchEditor`'s element.
                                         .replace( /</g, '&lt;' )
                                         .replace( /'/g, '&apos;' )
                                         .replace( /"/g, '&quot;' )
-        source.innerHTML = "<pre>#{code}</pre>"
+        sourceView.innerHTML = "<pre>#{code}</pre>"
 
 ### Code runner
 
@@ -108,7 +100,7 @@ array.
 
 Update any visible views, clear the code input, and give it focus.
 
-        updateDispatcher()
+        updateView()
         codeInput.value = ''
         codeInput.focus()
 
@@ -119,11 +111,11 @@ edit the last item pushed onto the `testHistory` stack.
 
     window.yesButtonClicked = ( event ) ->
         testHistory[testHistory.length - 1].correct = yes
-        updateDispatcher()
+        updateView()
 
     window.noButtonClicked = ( event ) ->
         testHistory[testHistory.length - 1].correct = no
-        updateDispatcher()
+        updateView()
 
 ### Download button
 
@@ -163,8 +155,7 @@ whose element is this newly created document.
 Clear out the test history and refresh all views.
 
         initializeHistory()
-        updateSourceTab()
-        updateHistoryTab()
+        updateView()
 
 ### Representation of the test history
 
