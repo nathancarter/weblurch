@@ -17,10 +17,6 @@ than the earlier ones.
 
 ### Better access to automated testing results
 
- * Add a Run All button (up next to the drop-down list?) that runs
-   all commands from the loaded history, in succession, one at a
-   time, in the current document.  This is useful for re-running
-   the test from scratch.
  * Link to the test app page from the [history spec file](
    all-histories-spec.litcoffee.html), so that when people follow
    links from test results to code, and hit that cryptically

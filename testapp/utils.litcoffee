@@ -29,6 +29,8 @@ Install event handlers for the buttons.
         ( $ resetButton ).on 'click', resetButtonClicked
         ( $ downloadButton ).on 'click', downloadButtonClicked
         ( $ undoButton ).on 'click', undoButtonClicked
+        ( $ runFullHistoryButton ).on 'click',
+            runFullHistoryButtonClicked
 
 Make the code input respond to the Enter key by auto-clicking the
 run button.
@@ -134,14 +136,32 @@ history, if one is displayed.
 Guard against having this run at an incorrect time, or with an
 incorrect parameter.
 
-        compare = window.comparisonHistory?.data
-        if compare and index < compare.length
+        savedHistory = window.comparisonHistory?.data
+        if savedHistory and index < savedHistory.length
 
 Use the same auxiliary function as
 [the main code runner](#main-code-runner) uses, then update the
 view.
 
-            runCodeInModel compare[index].code
+            runCodeInModel savedHistory[index].code
+            updateView()
+
+### Code runner for full test history
+
+It can be convenient to run the full test history all at once, all
+commands in sequence.  There is a button for doing so, and this is
+its event handler.
+
+It is very similar to
+[the previous handler](#code-runner-for-test-history), except in
+a loop, so I don't feel the need to describe it in detail.  The
+one interesting note is that we don't replay the initial command,
+because it is blank (corresponding to the initial state).
+
+    window.runFullHistoryButtonClicked = ( event ) ->
+        savedHistory = window.comparisonHistory?.data
+        if savedHistory
+            runCodeInModel step.code for step in savedHistory[1..]
             updateView()
 
 ### Yes and no buttons
@@ -469,7 +489,7 @@ on its correctness marking.
 If there were more steps remaining in the saved history to which
 we're comparing the current one, show those at the end.
 
-        if compare
+        if compare and testHistory.length < compare.length
             for index in [testHistory.length...compare.length]
                 step = compare[index]
                 code = historyCommandRepresentation step, index,
