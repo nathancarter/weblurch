@@ -99,6 +99,11 @@ attribute beforehand</li>
 </ul>
 </li>
 <li>Note that <code>element.dataset.foo</code> is not supported.</li>
+<li>There is also a compound action that does not correspond to any
+of the <code>Node</code> member functions listed above, but rather that
+serves to aggregate a sequence of such editing actions into one.
+It stores only the array of atomic edit actions that comprise
+it.</li>
 </ul>
 <p>Now begins the code for the class.</p>
 <pre class="hljs"><code><span class="hljs-built_in">window</span>.DOMEditAction = <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DOMEditAction</span></span>
@@ -125,10 +130,53 @@ be set, the name of the attribute to set, and the value to which
 it should be set</li>
 <li>type &quot;setAttributeNode&quot;, with data the node whose attribute
 should be set and the new attribute node to set on it</li>
+<li>type &quot;compound&quot;, with data the array of atomic actions that
+comprise the compound action; the <code>node</code> member for a compound
+action is the common ancestor of the atomic actions inside it</li>
 </ul>
+<p>We write the signature for the constructor with parameter names
+that expect the construction of an atomic action type, since that
+will be the most common occurrence.  But we handle the special case
+of the compound type immediately.</p>
 <pre class="hljs"><code>    <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">( type, node, data... )</span> -&gt;</span>
-</code></pre><p>The <code>node</code> parameter must actually be a DOM Node, or this
-constructor cannot function.</p>
+</code></pre><p>If this is the compound case, then the user will call <code>new
+DOMEditAction &#39;compound&#39;, arrayOfActions</code> or <code>new DOMEditAction
+&#39;compound&#39;, action1, ..., actionN</code>.  We handle either of those
+cases here, because they do not involve passing a node parameter.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> type <span class="hljs-keyword">is</span> <span class="hljs-string">'compound'</span>
+            <span class="hljs-property">@type</span> = type
+</code></pre><p>First, unite the array case and the many-parameters case into one
+by forming an <code>actionList</code> array.</p>
+<pre class="hljs"><code>            <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> node?
+                <span class="hljs-property">@subactions</span> = []
+            <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> node <span class="hljs-keyword">instanceof</span> Array
+                <span class="hljs-property">@subactions</span> = node
+            <span class="hljs-keyword">else</span>
+                <span class="hljs-property">@subactions</span> = [ node ].concat data
+</code></pre><p>Now verify that its elements are all actions.</p>
+<pre class="hljs"><code>            <span class="hljs-keyword">for</span> action <span class="hljs-keyword">in</span> <span class="hljs-property">@subactions</span>
+                <span class="hljs-keyword">if</span> action <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> DOMEditAction
+                    <span class="hljs-keyword">throw</span> Error <span class="hljs-string">"""Compound action array
+                        containd a non-action: <span class="hljs-subst">#{action}</span>"""</span>
+</code></pre><p>Find the common ancestor for all their addresses.</p>
+<pre class="hljs"><code>            <span class="hljs-keyword">if</span> <span class="hljs-property">@subactions</span>.length <span class="hljs-keyword">is</span> <span class="hljs-number">0</span>
+                <span class="hljs-property">@node</span> = []
+            <span class="hljs-keyword">else</span>
+                <span class="hljs-property">@node</span> = <span class="hljs-property">@subactions</span>[<span class="hljs-number">0</span>].node
+                <span class="hljs-keyword">for</span> action <span class="hljs-keyword">in</span> <span class="hljs-property">@subactions</span>[<span class="hljs-number">1.</span>.]
+                    end = action.length
+                    end = <span class="hljs-property">@node</span>.length <span class="hljs-keyword">if</span> end &gt; <span class="hljs-property">@node</span>.length
+                    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">1.</span>..end]
+                        <span class="hljs-keyword">if</span> <span class="hljs-property">@node</span>[i] <span class="hljs-keyword">isnt</span> action[i]
+                            <span class="hljs-property">@node</span> = <span class="hljs-property">@node</span>[...i]
+                            <span class="hljs-keyword">break</span>
+</code></pre><p>Return this instance, so that the constructor terminates now; this
+is the end of the compound case.</p>
+<pre class="hljs"><code>            <span class="hljs-property">@description</span> = <span class="hljs-string">'Document edit'</span>
+            <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>
+</code></pre><p>Now that the compound case is taken care of, we can return to all
+the other atomic cases, in which the <code>node</code> parameter must actually
+be a DOM Node; otherwise, this constructor cannot function.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">if</span> node <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node
             <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'This is not a node: '</span> + node
 </code></pre><p>The <code>DOMEditTracker</code> instance in which all of this will operate is
@@ -293,7 +341,10 @@ the output are on the following list.</p>
 <li>Remove [name] attribute</li>
 <li>Remove [text removed]</li>
 <li>Replace [text] with [text]</li>
-<li><p>Change [attribute name] from [old value] to [new value]</p>
+<li><p>Change [attribute name] from [old value] to [new value]
+For compound actions, the output will be the vague phrase
+&quot;Document edit&quot; unless it has been changed by calling
+<code>action.description = &#39;Other content here&#39;</code>.</p>
 <pre class="hljs"><code>     <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'appendChild'</span>
          text = Node.fromJSON( <span class="hljs-property">@toAppend</span> ).textContent
          <span class="hljs-keyword">if</span> text.length &gt; max <span class="hljs-keyword">then</span> text = text[..max]+<span class="hljs-string">'...'</span>
@@ -327,6 +378,8 @@ the output are on the following list.</p>
          oldv = <span class="hljs-property">@oldValue</span> <span class="hljs-keyword">or</span> <span class="hljs-string">'empty'</span>
          newv = <span class="hljs-property">@newValue</span> <span class="hljs-keyword">or</span> <span class="hljs-string">'empty'</span>
          <span class="hljs-string">"Change <span class="hljs-subst">#{<span class="hljs-property">@name</span>}</span> from <span class="hljs-subst">#{oldv}</span> to <span class="hljs-subst">#{newv}</span>"</span>
+     <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'compound'</span>
+         <span class="hljs-property">@description</span>
 </code></pre></li>
 </ul>
 <p>An error message is returned as a string if none of the nine valid
@@ -344,7 +397,8 @@ depend upon it to test other functionality.</p>
 <pre class="hljs"><code>    <span class="hljs-attribute">toJSON</span>:<span class="hljs-function"> -&gt;</span> {
         <span class="hljs-property">@type</span>, <span class="hljs-property">@node</span>, <span class="hljs-property">@toAppend</span>, <span class="hljs-property">@toInsert</span>, <span class="hljs-property">@insertBefore</span>,
         <span class="hljs-property">@sequences</span>, <span class="hljs-property">@name</span>, <span class="hljs-property">@value</span>, <span class="hljs-property">@child</span>, <span class="hljs-property">@childIndex</span>,
-        <span class="hljs-property">@oldChild</span>, <span class="hljs-property">@newChild</span>, <span class="hljs-property">@oldValue</span>, <span class="hljs-property">@newValue</span>
+        <span class="hljs-property">@oldChild</span>, <span class="hljs-property">@newChild</span>, <span class="hljs-property">@oldValue</span>, <span class="hljs-property">@newValue</span>,
+        <span class="hljs-property">@description</span>, <span class="hljs-property">@subactions</span>
     }
 </code></pre><h2><a name='undo-redo'></a>Undo/redo &nbsp;  <font size=-1><a href='#undo-redo'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Edit actions, because they are actions, will sit on an undo/redo
 stack, and thus must be able to be applied, either forwards or
@@ -421,6 +475,9 @@ with the specific events generated along the way.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'setAttribute'</span> <span class="hljs-keyword">or</span>
                 <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'setAttributeNode'</span>
             original.setAttribute <span class="hljs-property">@name</span>, <span class="hljs-property">@newValue</span>
+</code></pre><p>If it&#39;s a compound action, just run all the subactions in order.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'compound'</span>
+            action.redo() <span class="hljs-keyword">for</span> action <span class="hljs-keyword">in</span> <span class="hljs-property">@subactions</span>
 </code></pre><p>Next, we consider the backward case.  I provide fewer comments in
 the code below, because it is simply the inverse of the routine
 just built above, which is liberally commented.  Refer to the
@@ -498,6 +555,10 @@ with the specific events generated along the way.</p>
                 original.setAttribute <span class="hljs-property">@name</span>, <span class="hljs-property">@oldValue</span>
             <span class="hljs-keyword">else</span>
                 original.removeAttribute <span class="hljs-property">@name</span>
+</code></pre><p>If it&#39;s a compound action, undo all the subactions, in reverse
+order from how they were originally performed.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'compound'</span>
+            action.undo() <span class="hljs-keyword">for</span> action <span class="hljs-keyword">in</span> <span class="hljs-property">@subactions</span>.reverse()
 </code></pre>
         </div>
         <div id="right">

@@ -28,8 +28,7 @@
 <a href="../testapp/index.html">the test app page</a> has finished loading.</p>
 <pre class="hljs"><code><span class="hljs-built_in">window</span>.<span class="hljs-function"><span class="hljs-title">testAppSetup</span> = -&gt;</span>
 </code></pre><p>Create a <code>LurchEditor</code> instance in the page itself.</p>
-<pre class="hljs"><code>    <span class="hljs-built_in">window</span>.LE =
-        <span class="hljs-keyword">new</span> LurchEditor <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'editor'</span>
+<pre class="hljs"><code>    <span class="hljs-built_in">window</span>.LE = <span class="hljs-keyword">new</span> LurchEditor editor
 </code></pre><p>Create global datum in which we will store the history of all the
 states of the model (i.e., <code>LE</code>&#39;s element), as well as all lines of
 code executed to cause changes of state.</p>

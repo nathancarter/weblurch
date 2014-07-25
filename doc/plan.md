@@ -17,23 +17,18 @@ than the earlier ones.
 
 ### Events
 
- * Make each call to `nodeEditHappened` (as well as each call to
-   undo or redo in a `DOMEditTracker`) fire events about which
-   address(es) in the DOM (below the tracker's main HTML element)
-   changed.  These events can be listened to by later bubbling and
-   validation features.
- * Have the test app update the HTML source view when it hears
-   one of those events, even if no code was just run from the test
-   app code input.
- * Create a new type of `DOMEditAction`, a compound one that's just
-   a sequence of non-compound ones.  Create undo, redo, and
-   representation support for it, and let it have a writable name
-   (i.e., string representation).
- * Give `DOMEditTracker` support for declaring the start and end of
-   a block of edits, and any calls to `nodeEditHappened` in between
+ * Test compound DOMEditAction instances, including:
+   * construction by `new DOMEditAction 'compound', array`
+   * construction by `new DOMEditAction 'compound', actions...`
+   * `toString` member
+   * `redo` member
+   * `undo` member
+ * Give DOMEditTracker support for declaring the start and end of a
+   block of edits, and any calls to `nodeEditHappened` in between
    will just queue up a sequence of edit actions that get bundled
    into one compound action when the block completes.  The start
    event should give the block a name.
+ * Test the DOMEditTracker support for edit blocks.
 
 ### Cursor
 

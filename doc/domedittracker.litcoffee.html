@@ -19,7 +19,7 @@
         <div id="left">
             <p align=center>Page contents</p>
 <p><a href='#dom-edit-tracker-class'>DOM Edit Tracker class</a></p><ul>
-<li><a href='#tracking-instances'>Tracking instances</a></li><li><a href='#constructor'>Constructor</a></li><li><a href='#getters'>Getters</a></li><li><a href='#setters'>Setters</a></li><li><a href='#undo-redo-stack'>Undo/redo stack</a></li>
+<li><a href='#tracking-instances'>Tracking instances</a></li><li><a href='#constructor'>Constructor</a></li><li><a href='#getters'>Getters</a></li><li><a href='#setters'>Setters</a></li><li><a href='#undo-redo-stack'>Undo/redo stack</a></li><li><a href='#listeners'>Listeners</a></li>
         </div>
         <div id="middle">
             <h1><a name='dom-edit-tracker-class'></a>DOM Edit Tracker class &nbsp;  <font size=-1><a href='#dom-edit-tracker-class'><span class="glyphicon glyphicon-link"></span></a></font></h1><pre class="hljs"><code><span class="hljs-built_in">window</span>.DOMEditTracker = <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DOMEditTracker</span></span>
@@ -60,6 +60,10 @@ actions to that stack or not as they occur.  By default it is
 always on, but is disabled briefly when undo/redo actions take
 place.</p>
 <pre class="hljs"><code>        <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">true</span>
+</code></pre><p>Each instance will also have a list of listeners that should be
+notified whenever changes take place in this instance&#39;s element.
+We store those listeners as an array of callbacks, in this member.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@listeners</span> = []
 </code></pre><p>And add this newly created instance to the list of all instances.</p>
 <pre class="hljs"><code>        DOMEditTracker.instances.push <span class="hljs-keyword">this</span>
 </code></pre><h2><a name='getters'></a>Getters &nbsp;  <font size=-1><a href='#getters'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Although in CoffeeScript, no members are truly private, the
@@ -99,15 +103,26 @@ append the latest action to that stack.  After doing so, it updates
 the pointer to equal the stack length, thus preserving the
 invariant that the final action on the stack was the most recently
 completed one.</p>
-<p>The one parameter should be an instance of the <code>DOMEditAction</code>
-class.  If it is not, it is ignored.</p>
 <pre class="hljs"><code>    <span class="hljs-attribute">nodeEditHappened</span>: <span class="hljs-function"><span class="hljs-params">( action )</span> -&gt;</span>
-        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-property">@stackRecording</span> <span class="hljs-keyword">or</span>
-           action <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> DOMEditAction <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span>
-        <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> &lt; <span class="hljs-property">@stack</span>.length
+</code></pre><p>The one parameter should be an instance of the <code>DOMEditAction</code>
+class.  If it is not, it is ignored.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> action <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> DOMEditAction <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span>
+</code></pre><p>Even if we&#39;re not recording the actions on our internal undo/redo
+stack, we must still notify any listeners of any changes that
+happen.</p>
+<pre class="hljs"><code>        listener action <span class="hljs-keyword">for</span> listener <span class="hljs-keyword">in</span> <span class="hljs-property">@listeners</span>
+</code></pre><p>From here on, this routine only records things on the undo/redo
+stack, so now is when we should quit if stack recording is turned
+off.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-property">@stackRecording</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span>
+</code></pre><p>Truncate the stack if necessary, then push the value onto it.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> &lt; <span class="hljs-property">@stack</span>.length
             <span class="hljs-property">@stack</span> = <span class="hljs-property">@stack</span>[...<span class="hljs-property">@stackPointer</span>]
         <span class="hljs-property">@stack</span>.push action
-        <span class="hljs-property">@stackPointer</span> = <span class="hljs-property">@stack</span>.length
+</code></pre><p>The stack pointer must always be after the last-performed action,
+so we must update it here, having just recorded a newly-performed
+action.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@stackPointer</span> = <span class="hljs-property">@stack</span>.length
 </code></pre><p>We add <code>canUndo</code> and <code>canRedo</code> methods to the class that just
 report whether the stack pointer isn&#39;t at the top or bottom of the
 stack.</p>
@@ -137,7 +152,17 @@ the stack.</p>
             <span class="hljs-property">@stack</span>[<span class="hljs-property">@stackPointer</span>].redo()
             <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">true</span>
             <span class="hljs-property">@stackPointer</span>++
-</code></pre>
+</code></pre><h2><a name='listeners'></a>Listeners &nbsp;  <font size=-1><a href='#listeners'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Anyone interested in changes that take place in the document
+monitored by this <code>DOMEditTracker</code> instance can add a callback
+function to the instance&#39;s list, using the following method.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">listen</span>: <span class="hljs-function"><span class="hljs-params">( callback )</span> -&gt;</span> <span class="hljs-property">@listeners</span>.push callback
+</code></pre><p>Those callbacks are called every time a change takes place in the
+DOM tree beneath the element tracked by this instance.  They are
+passed one parameter, the
+<a href="domeditaction.litcoffee.html"><code>DOMEditAction</code></a> instance
+representing the change.  Its <code>.node</code> member will contain the
+address where the change took place.</p>
+
         </div>
         <div id="right">
             <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>

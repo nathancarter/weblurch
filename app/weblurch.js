@@ -8,8 +8,46 @@
 
   window.DOMEditAction = DOMEditAction = (function() {
     function DOMEditAction() {
-      var data, node, process, that, type, _ref;
+      var action, data, end, i, node, process, that, type, _i, _j, _k, _len, _len1, _ref, _ref1, _ref2;
       type = arguments[0], node = arguments[1], data = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
+      if (type === 'compound') {
+        this.type = type;
+        if (node == null) {
+          this.subactions = [];
+        } else if (node instanceof Array) {
+          this.subactions = node;
+        } else {
+          this.subactions = [node].concat(data);
+        }
+        _ref = this.subactions;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          action = _ref[_i];
+          if (!(action instanceof DOMEditAction)) {
+            throw Error("Compound action array\ncontaind a non-action: " + action);
+          }
+        }
+        if (this.subactions.length === 0) {
+          this.node = [];
+        } else {
+          this.node = this.subactions[0].node;
+          _ref1 = this.subactions.slice(1);
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            action = _ref1[_j];
+            end = action.length;
+            if (end > this.node.length) {
+              end = this.node.length;
+            }
+            for (i = _k = 1; 1 <= end ? _k < end : _k > end; i = 1 <= end ? ++_k : --_k) {
+              if (this.node[i] !== action[i]) {
+                this.node = this.node.slice(0, i);
+                break;
+              }
+            }
+          }
+        }
+        this.description = 'Document edit';
+        return this;
+      }
       if (!(node instanceof Node)) {
         throw Error('This is not a node: ' + node);
       }
@@ -91,7 +129,7 @@
         if (!(data[0] instanceof Attr)) {
           throw Error('Invalid attribute node: ' + data[0]);
         }
-        _ref = data[0], this.name = _ref.name, this.value = _ref.value;
+        _ref2 = data[0], this.name = _ref2.name, this.value = _ref2.value;
       } else if (type === 'removeChild') {
         if (data.length !== 1) {
           throw Error('Wrong # of parameters: ' + data);
@@ -196,6 +234,8 @@
         oldv = this.oldValue || 'empty';
         newv = this.newValue || 'empty';
         return "Change " + this.name + " from " + oldv + " to " + newv;
+      } else if (this.type === 'compound') {
+        return this.description;
       } else {
         return "Error, unknown edit action type: " + this.type;
       }
@@ -216,12 +256,14 @@
         oldChild: this.oldChild,
         newChild: this.newChild,
         oldValue: this.oldValue,
-        newValue: this.newValue
+        newValue: this.newValue,
+        description: this.description,
+        subactions: this.subactions
       };
     };
 
     DOMEditAction.prototype.redo = function() {
-      var newnode, original, replacement;
+      var action, newnode, original, replacement, _i, _len, _ref, _results;
       original = this.tracker.getElement().index(this.node);
       if (this.type === 'appendChild') {
         return original.appendChild(Node.fromJSON(this.toAppend));
@@ -243,11 +285,19 @@
         return original.replaceChild(replacement, original.childNodes[this.childIndex]);
       } else if (this.type === 'setAttribute' || this.type === 'setAttributeNode') {
         return original.setAttribute(this.name, this.newValue);
+      } else if (this.type === 'compound') {
+        _ref = this.subactions;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          action = _ref[_i];
+          _results.push(action.redo());
+        }
+        return _results;
       }
     };
 
     DOMEditAction.prototype.undo = function() {
-      var addBack, d, descendants, key, original, replacement, string, _ref, _ref1, _results;
+      var action, addBack, d, descendants, key, original, replacement, string, _i, _len, _ref, _ref1, _ref2, _results, _results1;
       original = this.tracker.getElement().index(this.node);
       if (this.type === 'appendChild') {
         return original.removeChild(original.childNodes[original.childNodes.length - 1]);
@@ -300,6 +350,14 @@
         } else {
           return original.removeAttribute(this.name);
         }
+      } else if (this.type === 'compound') {
+        _ref2 = this.subactions.reverse();
+        _results1 = [];
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          action = _ref2[_i];
+          _results1.push(action.undo());
+        }
+        return _results1;
       }
     };
 
@@ -333,6 +391,7 @@
       this.stack = [];
       this.stackPointer = 0;
       this.stackRecording = true;
+      this.listeners = [];
       DOMEditTracker.instances.push(this);
     }
 
@@ -349,7 +408,16 @@
     };
 
     DOMEditTracker.prototype.nodeEditHappened = function(action) {
-      if (!this.stackRecording || !(action instanceof DOMEditAction)) {
+      var listener, _i, _len, _ref;
+      if (!(action instanceof DOMEditAction)) {
+        return;
+      }
+      _ref = this.listeners;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        listener = _ref[_i];
+        listener(action);
+      }
+      if (!this.stackRecording) {
         return;
       }
       if (this.stackPointer < this.stack.length) {
@@ -399,6 +467,10 @@
         this.stackRecording = true;
         return this.stackPointer++;
       }
+    };
+
+    DOMEditTracker.prototype.listen = function(callback) {
+      return this.listeners.push(callback);
     };
 
     return DOMEditTracker;

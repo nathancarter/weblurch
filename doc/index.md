@@ -92,16 +92,17 @@ repository aims to build, this one will instead be used for
 experimenting with, debugging, and building test data for the real
 app.
 
-This app is *not* a stub, although its usefulness will grow as more
-functionality is implemented.  See
-[the test app page](../testapp/index.html) or
-[the test app help page](test-app-help.html).
+The test app grows in functionality over time, since it tests all
+currently-implemented aspects of the software.  Thus while the main
+app for this project is not yet in existence, the test app is.
+ * [Visit the test app page](../testapp/index.html)
+ * [Read the test app help](test-app-help.md.html)
 
 ## Getting Started
 
-If you want to try out the code online, right now the app is not
-yet built, but foundational tools can be tested by developers
-online using [the test app](../testapp/index.html).
+If you want to try out the software online, the only way to do so
+now is through the developers' test page; see the previous section
+for more information.
 
 If you want to build any of the source code or documentation in
 this repository on your local machine, follow these instructions.

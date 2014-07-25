@@ -58,6 +58,12 @@ place.
 
             @stackRecording = true
 
+Each instance will also have a list of listeners that should be
+notified whenever changes take place in this instance's element.
+We store those listeners as an array of callbacks, in this member.
+
+            @listeners = []
+
 And add this newly created instance to the list of all instances.
 
             DOMEditTracker.instances.push this
@@ -114,15 +120,35 @@ the pointer to equal the stack length, thus preserving the
 invariant that the final action on the stack was the most recently
 completed one.
 
+        nodeEditHappened: ( action ) ->
+
 The one parameter should be an instance of the `DOMEditAction`
 class.  If it is not, it is ignored.
 
-        nodeEditHappened: ( action ) ->
-            if not @stackRecording or
-               action not instanceof DOMEditAction then return
+            if action not instanceof DOMEditAction then return
+
+Even if we're not recording the actions on our internal undo/redo
+stack, we must still notify any listeners of any changes that
+happen.
+
+            listener action for listener in @listeners
+
+From here on, this routine only records things on the undo/redo
+stack, so now is when we should quit if stack recording is turned
+off.
+
+            if not @stackRecording then return
+
+Truncate the stack if necessary, then push the value onto it.
+
             if @stackPointer < @stack.length
                 @stack = @stack[...@stackPointer]
             @stack.push action
+
+The stack pointer must always be after the last-performed action,
+so we must update it here, having just recorded a newly-performed
+action.
+
             @stackPointer = @stack.length
 
 We add `canUndo` and `canRedo` methods to the class that just
@@ -159,4 +185,19 @@ the stack.
                 @stack[@stackPointer].redo()
                 @stackRecording = true
                 @stackPointer++
+
+## Listeners
+
+Anyone interested in changes that take place in the document
+monitored by this `DOMEditTracker` instance can add a callback
+function to the instance's list, using the following method.
+
+        listen: ( callback ) -> @listeners.push callback
+
+Those callbacks are called every time a change takes place in the
+DOM tree beneath the element tracked by this instance.  They are
+passed one parameter, the
+[`DOMEditAction`](domeditaction.litcoffee.html) instance
+representing the change.  Its `.node` member will contain the
+address where the change took place.
 

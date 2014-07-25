@@ -61,6 +61,11 @@ The protocol for what data to store in each case is described here.
      attribute after setting, as well as the original value of the
      attribute beforehand
  * Note that `element.dataset.foo` is not supported.
+ * There is also a compound action that does not correspond to any
+   of the `Node` member functions listed above, but rather that
+   serves to aggregate a sequence of such editing actions into one.
+   It stores only the array of atomic edit actions that comprise
+   it.
 
 Now begins the code for the class.
 
@@ -90,12 +95,65 @@ They are these:
    it should be set
  * type "setAttributeNode", with data the node whose attribute
    should be set and the new attribute node to set on it
+ * type "compound", with data the array of atomic actions that
+   comprise the compound action; the `node` member for a compound
+   action is the common ancestor of the atomic actions inside it
 
+We write the signature for the constructor with parameter names
+that expect the construction of an atomic action type, since that
+will be the most common occurrence.  But we handle the special case
+of the compound type immediately.
 
         constructor: ( type, node, data... ) ->
 
-The `node` parameter must actually be a DOM Node, or this
-constructor cannot function.
+If this is the compound case, then the user will call `new
+DOMEditAction 'compound', arrayOfActions` or `new DOMEditAction
+'compound', action1, ..., actionN`.  We handle either of those
+cases here, because they do not involve passing a node parameter.
+
+            if type is 'compound'
+                @type = type
+
+First, unite the array case and the many-parameters case into one
+by forming an `actionList` array.
+
+                if not node?
+                    @subactions = []
+                else if node instanceof Array
+                    @subactions = node
+                else
+                    @subactions = [ node ].concat data
+
+Now verify that its elements are all actions.
+
+                for action in @subactions
+                    if action not instanceof DOMEditAction
+                        throw Error """Compound action array
+                            containd a non-action: #{action}"""
+
+Find the common ancestor for all their addresses.
+
+                if @subactions.length is 0
+                    @node = []
+                else
+                    @node = @subactions[0].node
+                    for action in @subactions[1..]
+                        end = action.length
+                        end = @node.length if end > @node.length
+                        for i in [1...end]
+                            if @node[i] isnt action[i]
+                                @node = @node[...i]
+                                break
+
+Return this instance, so that the constructor terminates now; this
+is the end of the compound case.
+
+                @description = 'Document edit'
+                return this
+
+Now that the compound case is taken care of, we can return to all
+the other atomic cases, in which the `node` parameter must actually
+be a DOM Node; otherwise, this constructor cannot function.
 
             if node not instanceof Node
                 throw Error 'This is not a node: ' + node
@@ -302,6 +360,9 @@ the output are on the following list.
  * Remove [text removed]
  * Replace [text] with [text]
  * Change [attribute name] from [old value] to [new value]
+For compound actions, the output will be the vague phrase
+"Document edit" unless it has been changed by calling
+`action.description = 'Other content here'`.
 
             if @type is 'appendChild'
                 text = Node.fromJSON( @toAppend ).textContent
@@ -336,6 +397,8 @@ the output are on the following list.
                 oldv = @oldValue or 'empty'
                 newv = @newValue or 'empty'
                 "Change #{@name} from #{oldv} to #{newv}"
+            else if @type is 'compound'
+                @description
 
 An error message is returned as a string if none of the nine valid
 action types is stored in this object (i.e., the object is
@@ -358,7 +421,8 @@ depend upon it to test other functionality.
         toJSON: -> {
             @type, @node, @toAppend, @toInsert, @insertBefore,
             @sequences, @name, @value, @child, @childIndex,
-            @oldChild, @newChild, @oldValue, @newValue
+            @oldChild, @newChild, @oldValue, @newValue,
+            @description, @subactions
         }
 
 ## Undo/redo
@@ -462,6 +526,11 @@ with the specific events generated along the way.
                     @type is 'setAttributeNode'
                 original.setAttribute @name, @newValue
 
+If it's a compound action, just run all the subactions in order.
+
+            else if @type is 'compound'
+                action.redo() for action in @subactions
+
 Next, we consider the backward case.  I provide fewer comments in
 the code below, because it is simply the inverse of the routine
 just built above, which is liberally commented.  Refer to the
@@ -563,4 +632,10 @@ with the specific events generated along the way.
                     original.setAttribute @name, @oldValue
                 else
                     original.removeAttribute @name
+
+If it's a compound action, undo all the subactions, in reverse
+order from how they were originally performed.
+
+            else if @type is 'compound'
+                action.undo() for action in @subactions.reverse()
 

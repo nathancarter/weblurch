@@ -4,7 +4,7 @@
 
   window.testAppSetup = function() {
     var filename, filenames, item, _i, _len;
-    window.LE = new LurchEditor(document.getElementById('editor'));
+    window.LE = new LurchEditor(editor);
     initializeHistory();
     window.maindiv = LE.getElement();
     ($(runButton)).on('click', runButtonClicked);
