@@ -168,7 +168,12 @@ because it is blank (corresponding to the initial state).
     window.runFullHistoryButtonClicked = ( event ) ->
         savedHistory = window.comparisonHistory?.data
         if savedHistory
-            runCodeInModel step.code for step in savedHistory[1..]
+            testHistory[testHistory.length-1].comments =
+                savedHistory[0].comments
+            for step in savedHistory[1..]
+                runCodeInModel step.code
+                testHistory[testHistory.length-1].comments =
+                    step.comments
             updateView()
 
 ### Yes and no buttons
