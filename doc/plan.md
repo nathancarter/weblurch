@@ -17,11 +17,6 @@ than the earlier ones.
 
 ### Events
 
- * Make each call to `nodeEditHappened` (as well as each call to
-   undo or redo in a `DOMEditTracker`) fire events about which
-   address(es) in the DOM (below the tracker's main HTML element)
-   changed.  These events can be listened to by later bubbling and
-   validation features.
  * Have the test app update the HTML source view when it hears
    one of those events, even if no code was just run from the test
    app code input.
