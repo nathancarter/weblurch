@@ -84,4 +84,37 @@ test app not covered in the example above.
      its panel's title bar.
    * To run them all at once, use the Run button next to the
      drop-down menu itself.
+   * Every state in the current test's history can have comments
+     added to it by clicking the pencil icon next to the thumbs-up
+     and thumbs-down icons in its title bar.  It's a great practice
+     to add comments to your tests when creating them, so that
+     later others who read them will know why you designed the test
+     and what it's accomplishing.  To remove a comment, simply edit
+     it and delete all its text before saving.
+
+## Editing saved histories
+
+Use the following workflow to edit a saved history.
+ 1. Load it
+    * Load the test app afresh (or use the Reset button to clear it
+      if you already have it loaded).
+    * In the History tab, choose the test history you wish to edit.
+    * Replay all of its steps by clicking the Run button next to
+      the drop-down from which you selected the test history.
+      Now the test history has been loaded/copied into the test app
+      *as the current history.*
+ 1. Edit it
+    * Use the Undo button to remove steps from the end of the
+      history
+    * Use the Run button to add steps to the end of the history
+    * Use the Edit button on any step to change its comments
+ 1. Save it
+    * Use the naming and downloading controls on the top left of
+      the history tab's view to download the new version of the
+      test history as a JSON file.
+    * Save the file into the repository *over top of the old
+      version* you wish to change.
+    * Commit your changes using git.
+      (Since test histories are stored in the repository,
+      a git commit is a necessary step in this process.)
 

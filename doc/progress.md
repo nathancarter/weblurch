@@ -21,7 +21,7 @@ That building and testing environment does all this:
    (which is currently a stub, but the compilation
    process compiles and minifies all code, with source maps)
  * builds [a test app](../testapp/index.html)
-   for developers (also just a stub for now)
+   for developers (not just a stub; see [below](#test-app))
  * builds all documentation pages
    (see `doc` folder in navigation bar on the right)
  * creates annotated web pages for all source code files
@@ -78,6 +78,26 @@ lurcheditor.litcoffee.html) class already exists.
 So far its only features are that it ensures that each DOM node
 within the DIV over which it has charge gets assigned a unique id,
 for distinguishing them and allowing them to reference one another.
+
+## Test app
+
+All features of the word processing environment that *are* built
+are available in the test app, and can (unsurprisingly) be tested
+there.  Furthermore, the test app remembers the history of
+commands that the user executed, and lets the user do all of the
+following things.
+ * add comments documenting the tests they're performing
+ * mark the results of those commands as correct/incorrect
+   (i.e., find and identify bugs)
+ * save test histories into the repository for use in automated
+   unit testing
+
+For detailed documentation on the test app, visit
+[its help page](test-app-help.md.html) or
+[the test app itself](../testapp/index.html) (which, of course,
+also contains a link to its help page).
+
+## More to come
 
 To see detailed plans for how this project will proceed from its
 current state, see the [Project Plan](plan.md.html).
