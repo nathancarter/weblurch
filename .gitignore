@@ -3,7 +3,8 @@ app/*.js
 app/weblurch.litcoffee
 app/app.litcoffee
 app/*.map
-testapp/*.js
+testapp/testapp.js
+testapp/testapp.min.js
 testapp/testapp.litcoffee
 testapp/*.map
 node_modules/*
