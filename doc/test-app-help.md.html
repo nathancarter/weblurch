@@ -19,7 +19,7 @@
         <div id="left">
             <p align=center>Page contents</p>
 <p><a href='#how-to-use-the-test-app'>How to use the Test App</a></p><ul>
-<li><a href='#purpose-of-the-test-app'>Purpose of the test app</a></li><li><a href='#features-and-limitations'>Features and limitations</a></li><li><a href='#example-use'>Example use</a></li><li><a href='#other-features'>Other features</a></li>
+<li><a href='#purpose-of-the-test-app'>Purpose of the test app</a></li><li><a href='#features-and-limitations'>Features and limitations</a></li><li><a href='#example-use'>Example use</a></li><li><a href='#other-features'>Other features</a></li><li><a href='#editing-saved-histories'>Editing saved histories</a></li>
         </div>
         <div id="middle">
             <h1><a name='how-to-use-the-test-app'></a>How to use the Test App &nbsp;  <font size=-1><a href='#how-to-use-the-test-app'><span class="glyphicon glyphicon-link"></span></a></font></h1><p><a href="../testapp/index.html">The test app can be found at this link.</a></p>
@@ -98,9 +98,47 @@ drop-down list can be executed by clicking the Run button in
 its panel&#39;s title bar.</li>
 <li>To run them all at once, use the Run button next to the
 drop-down menu itself.</li>
+<li>Every state in the current test&#39;s history can have comments
+added to it by clicking the pencil icon next to the thumbs-up
+and thumbs-down icons in its title bar.  It&#39;s a great practice
+to add comments to your tests when creating them, so that
+later others who read them will know why you designed the test
+and what it&#39;s accomplishing.  To remove a comment, simply edit
+it and delete all its text before saving.</li>
 </ul>
 </li>
 </ul>
+<h2><a name='editing-saved-histories'></a>Editing saved histories &nbsp;  <font size=-1><a href='#editing-saved-histories'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Use the following workflow to edit a saved history.</p>
+<ol>
+<li>Load it<ul>
+<li>Load the test app afresh (or use the Reset button to clear it
+if you already have it loaded).</li>
+<li>In the History tab, choose the test history you wish to edit.</li>
+<li>Replay all of its steps by clicking the Run button next to
+the drop-down from which you selected the test history.
+Now the test history has been loaded/copied into the test app
+<em>as the current history.</em></li>
+</ul>
+</li>
+<li>Edit it<ul>
+<li>Use the Undo button to remove steps from the end of the
+history</li>
+<li>Use the Run button to add steps to the end of the history</li>
+<li>Use the Edit button on any step to change its comments</li>
+</ul>
+</li>
+<li>Save it<ul>
+<li>Use the naming and downloading controls on the top left of
+the history tab&#39;s view to download the new version of the
+test history as a JSON file.</li>
+<li>Save the file into the repository <em>over top of the old
+version</em> you wish to change.</li>
+<li>Commit your changes using git.
+(Since test histories are stored in the repository,
+a git commit is a necessary step in this process.)</li>
+</ul>
+</li>
+</ol>
 
         </div>
         <div id="right">

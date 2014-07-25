@@ -19,7 +19,7 @@
         <div id="left">
             <p align=center>Page contents</p>
 <p><a href='#project-progress'>Project Progress</a></p><ul>
-<li><a href='#development-environment'>Development environment</a></li><li><a href='#dom-enhancements'>DOM Enhancements</a></li><li><a href='#word-processing'>Word Processing</a></li>
+<li><a href='#development-environment'>Development environment</a></li><li><a href='#dom-enhancements'>DOM Enhancements</a></li><li><a href='#word-processing'>Word Processing</a></li><li><a href='#test-app'>Test app</a></li><li><a href='#more-to-come'>More to come</a></li>
         </div>
         <div id="middle">
             <h1><a name='project-progress'></a>Project Progress &nbsp;  <font size=-1><a href='#project-progress'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>This document is a complement to the <a href="plan.md.html">Project Plan</a>
@@ -38,7 +38,7 @@ all code in the entire repository is in one language!</p>
 (which is currently a stub, but the compilation
 process compiles and minifies all code, with source maps)</li>
 <li>builds <a href="../testapp/index.html">a test app</a>
-for developers (also just a stub for now)</li>
+for developers (not just a stub; see <a href="#test-app">below</a>)</li>
 <li>builds all documentation pages
 (see <code>doc</code> folder in navigation bar on the right)</li>
 <li>creates annotated web pages for all source code files
@@ -85,7 +85,23 @@ are still several steps away, but the <a href="lurcheditor.litcoffee.html">Lurch
 <p>So far its only features are that it ensures that each DOM node
 within the DIV over which it has charge gets assigned a unique id,
 for distinguishing them and allowing them to reference one another.</p>
-<p>To see detailed plans for how this project will proceed from its
+<h2><a name='test-app'></a>Test app &nbsp;  <font size=-1><a href='#test-app'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>All features of the word processing environment that <em>are</em> built
+are available in the test app, and can (unsurprisingly) be tested
+there.  Furthermore, the test app remembers the history of
+commands that the user executed, and lets the user do all of the
+following things.</p>
+<ul>
+<li>add comments documenting the tests they&#39;re performing</li>
+<li>mark the results of those commands as correct/incorrect
+(i.e., find and identify bugs)</li>
+<li>save test histories into the repository for use in automated
+unit testing</li>
+</ul>
+<p>For detailed documentation on the test app, visit
+<a href="test-app-help.md.html">its help page</a> or
+<a href="../testapp/index.html">the test app itself</a> (which, of course,
+also contains a link to its help page).</p>
+<h2><a name='more-to-come'></a>More to come &nbsp;  <font size=-1><a href='#more-to-come'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>To see detailed plans for how this project will proceed from its
 current state, see the <a href="plan.md.html">Project Plan</a>.</p>
 
         </div>

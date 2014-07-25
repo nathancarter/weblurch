@@ -20,7 +20,7 @@
             <p align=center>Page contents</p>
 <p><a href='#test-app-utilities'>Test app utilities</a></p><ul>
 <li><a href='#setup-routine'>Setup routine</a></li><li><a href='#event-handlers'>Event handlers</a></li><ul>
-<li><a href='#dispatcher'>Dispatcher</a></li><li><a href='#source-synchronizer'>Source synchronizer</a></li><li><a href='#main-code-runner'>Main code runner</a></li><li><a href='#code-runner-for-test-history'>Code runner for test history</a></li><li><a href='#code-runner-for-full-test-history'>Code runner for full test history</a></li><li><a href='#yes-and-no-buttons'>Yes and no buttons</a></li><li><a href='#download-button'>Download button</a></li><li><a href='#reset-button'>Reset button</a></li><li><a href='#undo-button'>Undo button</a></li><li><a href='#handling-a-choice-of-a-saved-history'>Handling a choice of a saved history</a></li><li><a href='#representation-of-the-test-history'>Representation of the test history</a></li><li><a href='#resizing-the-test-history-div'>Resizing the test history div</a></li></ul>
+<li><a href='#dispatcher'>Dispatcher</a></li><li><a href='#source-synchronizer'>Source synchronizer</a></li><li><a href='#main-code-runner'>Main code runner</a></li><li><a href='#code-runner-for-test-history'>Code runner for test history</a></li><li><a href='#code-runner-for-full-test-history'>Code runner for full test history</a></li><li><a href='#yes-and-no-buttons'>Yes and no buttons</a></li><li><a href='#edit-comments-buttons'>Edit comments buttons</a></li><li><a href='#download-button'>Download button</a></li><li><a href='#reset-button'>Reset button</a></li><li><a href='#undo-button'>Undo button</a></li><li><a href='#handling-a-choice-of-a-saved-history'>Handling a choice of a saved history</a></li><li><a href='#representation-of-the-test-history'>Representation of the test history</a></li><li><a href='#resizing-the-test-history-div'>Resizing the test history div</a></li></ul>
 <li><a href='#utility-functions'>Utility functions</a></li>
         </div>
         <div id="middle">
@@ -43,10 +43,17 @@ code executed to cause changes of state.</p>
     ( $ undoButton ).<span class="hljs-literal">on</span> <span class="hljs-string">'click'</span>, undoButtonClicked
     ( $ runFullHistoryButton ).<span class="hljs-literal">on</span> <span class="hljs-string">'click'</span>,
         runFullHistoryButtonClicked
+    ( $ saveStateCommentsButton ).<span class="hljs-literal">on</span> <span class="hljs-string">'click'</span>,
+        saveStateCommentsButtonClicked
 </code></pre><p>Make the code input respond to the Enter key by auto-clicking the
-run button.</p>
-<pre class="hljs"><code>    <span class="hljs-function"><span class="hljs-params">( $ codeInput )</span>.<span class="hljs-title">on</span> '<span class="hljs-title">keyup</span>', <span class="hljs-params">( event )</span> -&gt;</span>
+run button, and the comments input respond to Shift+Enter by
+auto-clicking the Save button.</p>
+<pre class="hljs"><code>    <span class="hljs-function"><span class="hljs-params">( $ codeInput )</span>.<span class="hljs-title">on</span> '<span class="hljs-title">keydown</span>', <span class="hljs-params">( event )</span> -&gt;</span>
         <span class="hljs-keyword">if</span> event.keyCode <span class="hljs-keyword">is</span> <span class="hljs-number">13</span> <span class="hljs-keyword">then</span> runButtonClicked()
+    <span class="hljs-function"><span class="hljs-params">( $ commentEditInput )</span>.<span class="hljs-title">on</span> '<span class="hljs-title">keydown</span>', <span class="hljs-params">( event )</span> -&gt;</span>
+        <span class="hljs-keyword">if</span> event.keyCode <span class="hljs-keyword">is</span> <span class="hljs-number">13</span> <span class="hljs-keyword">and</span> event.shiftKey
+            saveStateCommentsButtonClicked()
+            <span class="hljs-literal">no</span> <span class="hljs-comment"># prevent event propagation</span>
 </code></pre><p>Fill the source and/or history tabs only when they become visible,
 so we&#39;re not always recomputing their contents.</p>
 <pre class="hljs"><code>    ( $ sourceTab ).<span class="hljs-literal">on</span> <span class="hljs-string">'click'</span>, updateSourceTab
@@ -128,7 +135,12 @@ because it is blank (corresponding to the initial state).</p>
 <pre class="hljs"><code><span class="hljs-built_in">window</span>.<span class="hljs-function"><span class="hljs-title">runFullHistoryButtonClicked</span> = <span class="hljs-params">( event )</span> -&gt;</span>
     savedHistory = <span class="hljs-built_in">window</span>.comparisonHistory?.data
     <span class="hljs-keyword">if</span> savedHistory
-        runCodeInModel step.code <span class="hljs-keyword">for</span> step <span class="hljs-keyword">in</span> savedHistory[<span class="hljs-number">1.</span>.]
+        testHistory[testHistory.length-<span class="hljs-number">1</span>].comments =
+            savedHistory[<span class="hljs-number">0</span>].comments
+        <span class="hljs-keyword">for</span> step <span class="hljs-keyword">in</span> savedHistory[<span class="hljs-number">1.</span>.]
+            runCodeInModel step.code
+            testHistory[testHistory.length-<span class="hljs-number">1</span>].comments =
+                step.comments
         updateView()
 </code></pre><h3><a name='yes-and-no-buttons'></a>Yes and no buttons &nbsp;  <font size=-1><a href='#yes-and-no-buttons'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>The event handlers for the &quot;Mark right&quot; and &quot;Mark wrong&quot; buttons
 edit the last item pushed onto the <code>testHistory</code> stack.</p>
@@ -145,15 +157,59 @@ edit the last item pushed onto the <code>testHistory</code> stack.</p>
     <span class="hljs-keyword">else</span>
         testHistory[index].correct = <span class="hljs-literal">no</span>
     updateView()
+</code></pre><h3><a name='edit-comments-buttons'></a>Edit comments buttons &nbsp;  <font size=-1><a href='#edit-comments-buttons'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>The following event handler responds to the user&#39;s clicking the
+edit button in a state in the current history.</p>
+<pre class="hljs"><code><span class="hljs-built_in">window</span>.<span class="hljs-function"><span class="hljs-title">editStateComments</span> = <span class="hljs-params">( index )</span> -&gt;</span>
+</code></pre><p>Fill the hidden modal dialog with the comments to be edited.</p>
+<pre class="hljs"><code>    ( $ commentEditInput ).val testHistory[index].comments
+</code></pre><p>Store the index of the state we&#39;re editing, so we know later where
+to save any edits.</p>
+<pre class="hljs"><code>    commentEditInput.comesFromIndex = index
+</code></pre><p>Show the modal dialog and ensure that focus goes to the right
+control after it appears.</p>
+<pre class="hljs"><code>    ( $ commentEditDialog ).modal {
+        show : <span class="hljs-literal">true</span>
+        backdrop : <span class="hljs-literal">true</span>
+        keyboard : <span class="hljs-literal">true</span>
+    }
+    <span class="hljs-function"><span class="hljs-params">( $ commentEditDialog )</span>.<span class="hljs-title">on</span> '<span class="hljs-title">shown</span>.<span class="hljs-title">bs</span>.<span class="hljs-title">modal</span>', <span class="hljs-params">( event )</span> -&gt;</span>
+        ( $ commentEditInput ).focus()
+</code></pre><p>The following event handler responds to the user&#39;s clicking Save in
+the modal dialog for editing state comments.</p>
+<pre class="hljs"><code><span class="hljs-built_in">window</span>.<span class="hljs-function"><span class="hljs-title">saveStateCommentsButtonClicked</span> = <span class="hljs-params">( event )</span> -&gt;</span>
+</code></pre><p>Fetch the stored index of which state it is whose comments we&#39;re
+editing.</p>
+<pre class="hljs"><code>    index = commentEditInput.comesFromIndex
+</code></pre><p>Save the comments, having trimmed whitespace from start and end.</p>
+<pre class="hljs"><code>    testHistory[index].comments =
+        ( $ commentEditInput ).val().trim()
+</code></pre><p>Hide the modal dialog and update any necessary views.</p>
+<pre class="hljs"><code>    ( $ commentEditDialog ).modal <span class="hljs-string">'hide'</span>
+    updateView()
 </code></pre><h3><a name='download-button'></a>Download button &nbsp;  <font size=-1><a href='#download-button'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code><span class="hljs-built_in">window</span>.<span class="hljs-function"><span class="hljs-title">downloadButtonClicked</span> = <span class="hljs-params">( event )</span> -&gt;</span>
-    data = JSON.stringify testHistory
-    blob = <span class="hljs-keyword">new</span> Blob [ data ], type : <span class="hljs-string">'application/json'</span>
+</code></pre><p>I use pretty printing in the following JSON, because these files
+will be checked into our repository, and developers may end up
+browsing them at some point on disk.  The preferred way to browse
+them is to load them into
+<a href="../testapp/index.html">this very test app</a>, but it doesn&#39;t hurt to
+make reading the source files easier.</p>
+<pre class="hljs"><code>    data = JSON.stringify testHistory, <span class="hljs-literal">null</span>, <span class="hljs-number">2</span>
+</code></pre><p>The following uses the HTML <code>createObjectURL</code> method to store blob
+data in the browser, which provides us a unique URL containing a
+hash that references that blob, for the user to download.</p>
+<pre class="hljs"><code>    blob = <span class="hljs-keyword">new</span> Blob [ data ], type : <span class="hljs-string">'application/json'</span>
     link = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'a'</span>
     link.setAttribute <span class="hljs-string">'href'</span>, URL.createObjectURL blob
     link.setAttribute <span class="hljs-string">'download'</span>,
         <span class="hljs-string">"<span class="hljs-subst">#{testNameInput.value <span class="hljs-keyword">or</span> <span class="hljs-string">'test-history'</span>}</span>.json"</span>
     link.click()
-</code></pre><h3><a name='reset-button'></a>Reset button &nbsp;  <font size=-1><a href='#reset-button'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>This method resets the document (and the editor over it) to their
+</code></pre><p>Technically, once the blob has been used (i.e., the file
+downloaded), we should then delete the URL, to save resources.
+However, the amount of data being stored here is very small, and
+the test app will be used infrequently enough that I&#39;m not
+concerned about that leak right now.  But it could be fixed in the
+future.</p>
+<h3><a name='reset-button'></a>Reset button &nbsp;  <font size=-1><a href='#reset-button'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>This method resets the document (and the editor over it) to their
 initial states, by replacing them with fresh ones.  The process is
 described in the comments interleaved in the code below.</p>
 <pre class="hljs"><code><span class="hljs-built_in">window</span>.<span class="hljs-function"><span class="hljs-title">resetButtonClicked</span> = <span class="hljs-params">( event )</span> -&gt;</span>
@@ -267,10 +323,8 @@ conflicting with the document that&#39;s already in the page.</p>
                   .replace( <span class="hljs-regexp">/'/g</span>, <span class="hljs-string">'&amp;apos;'</span> )
                   .replace( <span class="hljs-regexp">/"/g</span>, <span class="hljs-string">'&amp;quot;'</span> )
     code = code.replace <span class="hljs-regexp">/\s+id=['"][^'"]+['"]/g</span>, <span class="hljs-string">''</span>
-    state = <span class="hljs-string">"""
-        &lt;pre class='gap-below-2'&gt;<span class="hljs-subst">#{escaped}</span>&lt;/pre&gt;
-        <span class="hljs-subst">#{code}</span>
-        """</span>
+    state = <span class="hljs-string">"""&lt;pre class='gap-below-2'&gt;<span class="hljs-subst">#{escaped}</span>&lt;/pre&gt;
+               <span class="hljs-subst">#{code}</span>"""</span>
 </code></pre><p>Label the state as either as the initial state or the result of
 executing some JavaScript code.</p>
 <pre class="hljs"><code>    <span class="hljs-keyword">if</span> index <span class="hljs-keyword">is</span> <span class="hljs-number">0</span>
@@ -278,16 +332,31 @@ executing some JavaScript code.</p>
         type += <span class="hljs-string">' gap-before-2'</span>
     <span class="hljs-keyword">else</span>
         title = <span class="hljs-string">"State after command <span class="hljs-subst">#{index}</span>:"</span>
+</code></pre><p>Wrap the comments in a well if they actually exist, or keep them
+blank if this step does not have any comments.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> step.comments
+        comments = <span class="hljs-string">"""
+            &lt;div class='well well-sm'&gt;
+                &lt;span class='glyphicon glyphicon-info-sign'&gt;
+                &lt;/span&gt;
+                <span class="hljs-subst">#{step.comments}</span>
+            &lt;/div&gt;
+            """</span>
+    <span class="hljs-keyword">else</span>
+        comments = <span class="hljs-string">''</span>
 </code></pre><p>Wrap it in titles and boxes to make it pretty, and insert any
 details the caller provided, such as buttons or markers, in the
 panel title.</p>
 <pre class="hljs"><code>    <span class="hljs-string">"""
     &lt;div class='panel panel-<span class="hljs-subst">#{type}</span>'&gt;
-      &lt;div class='panel-heading'&gt;
-        <span class="hljs-subst">#{details}</span>
-        &lt;h3 class='panel-title'&gt;<span class="hljs-subst">#{title}</span>&lt;/h3&gt;
-      &lt;/div&gt;
-      &lt;div class='panel-body'&gt;<span class="hljs-subst">#{state}</span>&lt;/div&gt;
+        &lt;div class='panel-heading'&gt;
+            <span class="hljs-subst">#{details}</span>
+            &lt;h3 class='panel-title'&gt;<span class="hljs-subst">#{title}</span>&lt;/h3&gt;
+        &lt;/div&gt;
+        &lt;div class='panel-body'&gt;
+            <span class="hljs-subst">#{comments}</span>
+            <span class="hljs-subst">#{state}</span>
+        &lt;/div&gt;
     &lt;/div&gt;
     """</span>
 </code></pre><p>Now, the main event handler.</p>
@@ -302,6 +371,14 @@ for creating HTML button code.</p>
                 data-toggle='tooltip' title='Run'
                 onclick='runSavedStep(<span class="hljs-subst">#{index}</span>);'
          &gt;&lt;span class='glyphicon glyphicon-play'&gt;
+                &lt;/span&gt;&lt;/button&gt;"""</span>
+</code></pre><p>An edit button for use in current history states:</p>
+<pre class="hljs"><code>    <span class="hljs-function"><span class="hljs-title">makeEditButton</span> = <span class="hljs-params">( index )</span> -&gt;</span> <span class="hljs-string">"""
+        &lt;button type='button'
+                class='btn btn-xs btn-default pull-right'
+                data-toggle='tooltip' title='Edit comments'
+                onclick='editStateComments(<span class="hljs-subst">#{index}</span>);'
+         &gt;&lt;span class='glyphicon glyphicon-pencil'&gt;
                 &lt;/span&gt;&lt;/button&gt;"""</span>
 </code></pre><p>A pair of thumbs up/down buttons for use in test history states:</p>
 <pre class="hljs"><code>    <span class="hljs-function"><span class="hljs-title">makeThumbButtons</span> = <span class="hljs-params">( index )</span> -&gt;</span> <span class="hljs-string">"""
@@ -360,7 +437,8 @@ on its correctness marking.</p>
         <span class="hljs-keyword">else</span>
             type = <span class="hljs-keyword">if</span> step.correct <span class="hljs-keyword">then</span> <span class="hljs-string">'success'</span> <span class="hljs-keyword">else</span> <span class="hljs-string">'danger'</span>
         current = historyStateRepresentation step, index,
-            makeThumbButtons( index ), type
+            makeThumbButtons( index ) +
+            makeEditButton( index ), type
         <span class="hljs-keyword">if</span> compare
             <span class="hljs-keyword">if</span> index &lt; compare.length
                 left = JSON.stringify step.state
@@ -398,11 +476,13 @@ updated every time the window resizes.  Hence the following
 function, which I wish I could do in CSS, but I don&#39;t think I can.</p>
 <pre class="hljs"><code><span class="hljs-function"><span class="hljs-title">resizeHistoryHeight</span> = -&gt;</span>
 </code></pre><p>First figure out the total height of all children of the main
-container excluding the tab bodies, which we&#39;re about to resize.</p>
+container, stopping before the tab bodies, which we&#39;re about to
+resize.  (After the tab bodies sit modal dialogs, which we do not
+wish to include in the height computation.)</p>
 <pre class="hljs"><code>    theRest = <span class="hljs-number">75</span> <span class="hljs-comment"># padding</span>
     <span class="hljs-keyword">for</span> child <span class="hljs-keyword">in</span> <span class="hljs-attribute">Array</span>::slice.apply mainContainer.childNodes
-        <span class="hljs-keyword">if</span> child <span class="hljs-keyword">instanceof</span> HTMLElement <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span>
-           ( $ child ).hasClass <span class="hljs-string">'tab-content'</span>
+        <span class="hljs-keyword">if</span> ( $ child ).hasClass <span class="hljs-string">'tab-content'</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">break</span>
+        <span class="hljs-keyword">if</span> child <span class="hljs-keyword">instanceof</span> HTMLElement
             theRest += ( $ child ).outerHeight <span class="hljs-literal">true</span>
 </code></pre><p>Then subtract to determine the appropriate resize height.</p>
 <pre class="hljs"><code>    ( $ historyBody ).height ( $ <span class="hljs-built_in">window</span> ).height() - theRest

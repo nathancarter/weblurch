@@ -12,9 +12,16 @@
     ($(downloadButton)).on('click', downloadButtonClicked);
     ($(undoButton)).on('click', undoButtonClicked);
     ($(runFullHistoryButton)).on('click', runFullHistoryButtonClicked);
-    ($(codeInput)).on('keyup', function(event) {
+    ($(saveStateCommentsButton)).on('click', saveStateCommentsButtonClicked);
+    ($(codeInput)).on('keydown', function(event) {
       if (event.keyCode === 13) {
         return runButtonClicked();
+      }
+    });
+    ($(commentEditInput)).on('keydown', function(event) {
+      if (event.keyCode === 13 && event.shiftKey) {
+        saveStateCommentsButtonClicked();
+        return false;
       }
     });
     ($(sourceTab)).on('click', updateSourceTab);
@@ -78,10 +85,12 @@
     var savedHistory, step, _i, _len, _ref, _ref1;
     savedHistory = (_ref = window.comparisonHistory) != null ? _ref.data : void 0;
     if (savedHistory) {
+      testHistory[testHistory.length - 1].comments = savedHistory[0].comments;
       _ref1 = savedHistory.slice(1);
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         step = _ref1[_i];
         runCodeInModel(step.code);
+        testHistory[testHistory.length - 1].comments = step.comments;
       }
       return updateView();
     }
@@ -105,9 +114,30 @@
     return updateView();
   };
 
+  window.editStateComments = function(index) {
+    ($(commentEditInput)).val(testHistory[index].comments);
+    commentEditInput.comesFromIndex = index;
+    ($(commentEditDialog)).modal({
+      show: true,
+      backdrop: true,
+      keyboard: true
+    });
+    return ($(commentEditDialog)).on('shown.bs.modal', function(event) {
+      return ($(commentEditInput)).focus();
+    });
+  };
+
+  window.saveStateCommentsButtonClicked = function(event) {
+    var index;
+    index = commentEditInput.comesFromIndex;
+    testHistory[index].comments = ($(commentEditInput)).val().trim();
+    ($(commentEditDialog)).modal('hide');
+    return updateView();
+  };
+
   window.downloadButtonClicked = function(event) {
     var blob, data, link;
-    data = JSON.stringify(testHistory);
+    data = JSON.stringify(testHistory, null, 2);
     blob = new Blob([data], {
       type: 'application/json'
     });
@@ -165,7 +195,7 @@
   };
 
   window.historyStateRepresentation = function(step, index, details, type) {
-    var code, escaped, state, title;
+    var code, comments, escaped, state, title;
     if (details == null) {
       details = '';
     }
@@ -182,13 +212,21 @@
     } else {
       title = "State after command " + index + ":";
     }
-    return "<div class='panel panel-" + type + "'>\n  <div class='panel-heading'>\n    " + details + "\n    <h3 class='panel-title'>" + title + "</h3>\n  </div>\n  <div class='panel-body'>" + state + "</div>\n</div>";
+    if (step.comments) {
+      comments = "<div class='well well-sm'>\n    <span class='glyphicon glyphicon-info-sign'>\n    </span>\n    " + step.comments + "\n</div>";
+    } else {
+      comments = '';
+    }
+    return "<div class='panel panel-" + type + "'>\n    <div class='panel-heading'>\n        " + details + "\n        <h3 class='panel-title'>" + title + "</h3>\n    </div>\n    <div class='panel-body'>\n        " + comments + "\n        " + state + "\n    </div>\n</div>";
   };
 
   window.updateHistoryTab = function() {
-    var code, compare, current, details, diffIndicator, index, left, makeRowOfTwo, makeRunButton, makeThumbButtons, representation, right, sameIndicator, saved, state, step, type, _i, _j, _len, _ref, _ref1, _ref2;
+    var code, compare, current, details, diffIndicator, index, left, makeEditButton, makeRowOfTwo, makeRunButton, makeThumbButtons, representation, right, sameIndicator, saved, state, step, type, _i, _j, _len, _ref, _ref1, _ref2;
     makeRunButton = function(index) {
       return "<button type='button'\n        class='btn btn-xs btn-default pull-right'\n        data-toggle='tooltip' title='Run'\n        onclick='runSavedStep(" + index + ");'\n ><span class='glyphicon glyphicon-play'>\n        </span></button>";
+    };
+    makeEditButton = function(index) {
+      return "<button type='button'\n        class='btn btn-xs btn-default pull-right'\n        data-toggle='tooltip' title='Edit comments'\n        onclick='editStateComments(" + index + ");'\n ><span class='glyphicon glyphicon-pencil'>\n        </span></button>";
     };
     makeThumbButtons = function(index) {
       return "<button type='button'\n        class='btn btn-xs btn-danger pull-right'\n        data-toggle='tooltip' title='Mark incorrect'\n        onclick='noButtonClicked(" + index + ");'\n ><span class='glyphicon glyphicon-thumbs-down'>\n        </span></button>\n<button type='button'\n        class='btn btn-xs btn-success pull-right'\n        data-toggle='tooltip' title='Mark correct'\n        onclick='yesButtonClicked(" + index + ");'\n ><span class='glyphicon glyphicon-thumbs-up'>\n        </span></button>";
@@ -219,7 +257,7 @@
       } else {
         type = step.correct ? 'success' : 'danger';
       }
-      current = historyStateRepresentation(step, index, makeThumbButtons(index), type);
+      current = historyStateRepresentation(step, index, makeThumbButtons(index) + makeEditButton(index), type);
       if (compare) {
         if (index < compare.length) {
           left = JSON.stringify(step.state);
@@ -257,7 +295,10 @@
     _ref = Array.prototype.slice.apply(mainContainer.childNodes);
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       child = _ref[_i];
-      if (child instanceof HTMLElement && !($(child)).hasClass('tab-content')) {
+      if (($(child)).hasClass('tab-content')) {
+        break;
+      }
+      if (child instanceof HTMLElement) {
         theRest += ($(child)).outerHeight(true);
       }
     }
