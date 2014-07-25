@@ -10,8 +10,7 @@ The following routine is run after
 
 Create a `LurchEditor` instance in the page itself.
 
-        window.LE =
-            new LurchEditor document.getElementById 'editor'
+        window.LE = new LurchEditor editor
 
 Create global datum in which we will store the history of all the
 states of the model (i.e., `LE`'s element), as well as all lines of
