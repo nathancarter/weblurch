@@ -31,12 +31,19 @@ Install event handlers for the buttons.
         ( $ undoButton ).on 'click', undoButtonClicked
         ( $ runFullHistoryButton ).on 'click',
             runFullHistoryButtonClicked
+        ( $ saveStateCommentsButton ).on 'click',
+            saveStateCommentsButtonClicked
 
 Make the code input respond to the Enter key by auto-clicking the
-run button.
+run button, and the comments input respond to Shift+Enter by
+auto-clicking the Save button.
 
-        ( $ codeInput ).on 'keyup', ( event ) ->
+        ( $ codeInput ).on 'keydown', ( event ) ->
             if event.keyCode is 13 then runButtonClicked()
+        ( $ commentEditInput ).on 'keydown', ( event ) ->
+            if event.keyCode is 13 and event.shiftKey
+                saveStateCommentsButtonClicked()
+                no # prevent event propagation
 
 Fill the source and/or history tabs only when they become visible,
 so we're not always recomputing their contents.
@@ -161,7 +168,12 @@ because it is blank (corresponding to the initial state).
     window.runFullHistoryButtonClicked = ( event ) ->
         savedHistory = window.comparisonHistory?.data
         if savedHistory
-            runCodeInModel step.code for step in savedHistory[1..]
+            testHistory[testHistory.length-1].comments =
+                savedHistory[0].comments
+            for step in savedHistory[1..]
+                runCodeInModel step.code
+                testHistory[testHistory.length-1].comments =
+                    step.comments
             updateView()
 
 ### Yes and no buttons
@@ -183,16 +195,83 @@ edit the last item pushed onto the `testHistory` stack.
             testHistory[index].correct = no
         updateView()
 
+### Edit comments buttons
+
+The following event handler responds to the user's clicking the
+edit button in a state in the current history.
+
+    window.editStateComments = ( index ) ->
+
+Fill the hidden modal dialog with the comments to be edited.
+
+        ( $ commentEditInput ).val testHistory[index].comments
+
+Store the index of the state we're editing, so we know later where
+to save any edits.
+
+        commentEditInput.comesFromIndex = index
+
+Show the modal dialog and ensure that focus goes to the right
+control after it appears.
+
+        ( $ commentEditDialog ).modal {
+            show : true
+            backdrop : true
+            keyboard : true
+        }
+        ( $ commentEditDialog ).on 'shown.bs.modal', ( event ) ->
+            ( $ commentEditInput ).focus()
+
+The following event handler responds to the user's clicking Save in
+the modal dialog for editing state comments.
+
+    window.saveStateCommentsButtonClicked = ( event ) ->
+
+Fetch the stored index of which state it is whose comments we're
+editing.
+
+        index = commentEditInput.comesFromIndex
+
+Save the comments, having trimmed whitespace from start and end.
+
+        testHistory[index].comments =
+            ( $ commentEditInput ).val().trim()
+
+Hide the modal dialog and update any necessary views.
+
+        ( $ commentEditDialog ).modal 'hide'
+        updateView()
+    
 ### Download button
 
     window.downloadButtonClicked = ( event ) ->
-        data = JSON.stringify testHistory
+
+I use pretty printing in the following JSON, because these files
+will be checked into our repository, and developers may end up
+browsing them at some point on disk.  The preferred way to browse
+them is to load them into
+[this very test app](../testapp/index.html), but it doesn't hurt to
+make reading the source files easier.
+
+        data = JSON.stringify testHistory, null, 2
+
+The following uses the HTML `createObjectURL` method to store blob
+data in the browser, which provides us a unique URL containing a
+hash that references that blob, for the user to download.
+
         blob = new Blob [ data ], type : 'application/json'
         link = document.createElement 'a'
         link.setAttribute 'href', URL.createObjectURL blob
         link.setAttribute 'download',
             "#{testNameInput.value or 'test-history'}.json"
         link.click()
+
+Technically, once the blob has been used (i.e., the file
+downloaded), we should then delete the URL, to save resources.
+However, the amount of data being stored here is very small, and
+the test app will be used infrequently enough that I'm not
+concerned about that leak right now.  But it could be fixed in the
+future.
 
 ### Reset button
 
@@ -350,10 +429,8 @@ conflicting with the document that's already in the page.
                       .replace( /'/g, '&apos;' )
                       .replace( /"/g, '&quot;' )
         code = code.replace /\s+id=['"][^'"]+['"]/g, ''
-        state = """
-            <pre class='gap-below-2'>#{escaped}</pre>
-            #{code}
-            """
+        state = """<pre class='gap-below-2'>#{escaped}</pre>
+                   #{code}"""
 
 Label the state as either as the initial state or the result of
 executing some JavaScript code.
@@ -364,17 +441,34 @@ executing some JavaScript code.
         else
             title = "State after command #{index}:"
 
+Wrap the comments in a well if they actually exist, or keep them
+blank if this step does not have any comments.
+
+        if step.comments
+            comments = """
+                <div class='well well-sm'>
+                    <span class='glyphicon glyphicon-info-sign'>
+                    </span>
+                    #{step.comments}
+                </div>
+                """
+        else
+            comments = ''
+
 Wrap it in titles and boxes to make it pretty, and insert any
 details the caller provided, such as buttons or markers, in the
 panel title.
 
         """
         <div class='panel panel-#{type}'>
-          <div class='panel-heading'>
-            #{details}
-            <h3 class='panel-title'>#{title}</h3>
-          </div>
-          <div class='panel-body'>#{state}</div>
+            <div class='panel-heading'>
+                #{details}
+                <h3 class='panel-title'>#{title}</h3>
+            </div>
+            <div class='panel-body'>
+                #{comments}
+                #{state}
+            </div>
         </div>
         """
 
@@ -394,6 +488,16 @@ A run button for use in saved history commands:
                     data-toggle='tooltip' title='Run'
                     onclick='runSavedStep(#{index});'
              ><span class='glyphicon glyphicon-play'>
+                    </span></button>"""
+
+An edit button for use in current history states:
+
+        makeEditButton = ( index ) -> """
+            <button type='button'
+                    class='btn btn-xs btn-default pull-right'
+                    data-toggle='tooltip' title='Edit comments'
+                    onclick='editStateComments(#{index});'
+             ><span class='glyphicon glyphicon-pencil'>
                     </span></button>"""
 
 A pair of thumbs up/down buttons for use in test history states:
@@ -468,7 +572,8 @@ on its correctness marking.
             else
                 type = if step.correct then 'success' else 'danger'
             current = historyStateRepresentation step, index,
-                makeThumbButtons( index ), type
+                makeThumbButtons( index ) +
+                makeEditButton( index ), type
             if compare
                 if index < compare.length
                     left = JSON.stringify step.state
@@ -515,12 +620,14 @@ function, which I wish I could do in CSS, but I don't think I can.
     resizeHistoryHeight = ->
 
 First figure out the total height of all children of the main
-container excluding the tab bodies, which we're about to resize.
+container, stopping before the tab bodies, which we're about to
+resize.  (After the tab bodies sit modal dialogs, which we do not
+wish to include in the height computation.)
 
         theRest = 75 # padding
         for child in Array::slice.apply mainContainer.childNodes
-            if child instanceof HTMLElement and not
-               ( $ child ).hasClass 'tab-content'
+            if ( $ child ).hasClass 'tab-content' then break
+            if child instanceof HTMLElement
                 theRest += ( $ child ).outerHeight true
 
 Then subtract to determine the appropriate resize height.
