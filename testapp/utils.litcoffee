@@ -350,10 +350,8 @@ conflicting with the document that's already in the page.
                       .replace( /'/g, '&apos;' )
                       .replace( /"/g, '&quot;' )
         code = code.replace /\s+id=['"][^'"]+['"]/g, ''
-        state = """
-            <pre class='gap-below-2'>#{escaped}</pre>
-            #{code}
-            """
+        state = """<pre class='gap-below-2'>#{escaped}</pre>
+                   #{code}"""
 
 Label the state as either as the initial state or the result of
 executing some JavaScript code.
@@ -364,17 +362,29 @@ executing some JavaScript code.
         else
             title = "State after command #{index}:"
 
+Wrap the comments in a well if they actually exist, or keep them
+blank if this step does not have any comments.
+
+        if step.comments
+            comments =
+                "<div class='well well-sm'>#{step.comments}</div>"
+        else
+            comments = ''
+
 Wrap it in titles and boxes to make it pretty, and insert any
 details the caller provided, such as buttons or markers, in the
 panel title.
 
         """
         <div class='panel panel-#{type}'>
-          <div class='panel-heading'>
-            #{details}
-            <h3 class='panel-title'>#{title}</h3>
-          </div>
-          <div class='panel-body'>#{state}</div>
+            <div class='panel-heading'>
+                #{details}
+                <h3 class='panel-title'>#{title}</h3>
+            </div>
+            <div class='panel-body'>
+                #{comments}
+                #{state}
+            </div>
         </div>
         """
 
