@@ -245,13 +245,33 @@ Hide the modal dialog and update any necessary views.
 ### Download button
 
     window.downloadButtonClicked = ( event ) ->
-        data = JSON.stringify testHistory
+
+I use pretty printing in the following JSON, because these files
+will be checked into our repository, and developers may end up
+browsing them at some point on disk.  The preferred way to browse
+them is to load them into
+[this very test app](../testapp/index.html), but it doesn't hurt to
+make reading the source files easier.
+
+        data = JSON.stringify testHistory, null, 2
+
+The following uses the HTML `createObjectURL` method to store blob
+data in the browser, which provides us a unique URL containing a
+hash that references that blob, for the user to download.
+
         blob = new Blob [ data ], type : 'application/json'
         link = document.createElement 'a'
         link.setAttribute 'href', URL.createObjectURL blob
         link.setAttribute 'download',
             "#{testNameInput.value or 'test-history'}.json"
         link.click()
+
+Technically, once the blob has been used (i.e., the file
+downloaded), we should then delete the URL, to save resources.
+However, the amount of data being stored here is very small, and
+the test app will be used infrequently enough that I'm not
+concerned about that leak right now.  But it could be fixed in the
+future.
 
 ### Reset button
 
