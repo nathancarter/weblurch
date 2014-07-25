@@ -292,7 +292,20 @@ switching to gh-pages and merging in changes.
 
     build.asyncTask 'pages',
     'Update gh-pages branch before pushing', ( done ) ->
-        console.log 'Switching to gh-pages branch...'
+        console.log '''
+            In case any step of this lengthy process goes wrong, 
+            here are the commands that are about to be run, so
+            that you can complete the process:
+                git checkout gh-pages
+                git merge master
+                cake all
+                git add doc/*.html
+                git commit -a -m 'Updating gh-pages with latest generated docs'
+                git checkout master
+
+            Beginning...
+            Switching to gh-pages branch...
+            '''
         exec 'git checkout gh-pages', ( err, stdout, stderr ) ->
             console.log stdout + stderr if stdout + stderr
             if err then throw err
