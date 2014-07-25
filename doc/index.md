@@ -92,14 +92,19 @@ repository aims to build, this one will instead be used for
 experimenting with, debugging, and building test data for the real
 app.
 
-For right now, it, too, is just a stub/placeholder that will be
-replaced by a more robust application later.
+This app is *not* a stub, although its usefulness will grow as more
+functionality is implemented.  See
+[the test app page](../testapp/index.html) or
+[the test app help page](test-app-help.html).
 
 ## Getting Started
 
-If you want to build any of the source code or documentation in
-this repository, follow these instructions.
+If you want to try out the code online, right now the app is not
+yet built, but foundational tools can be tested by developers
+online using [the test app](../testapp/index.html).
 
+If you want to build any of the source code or documentation in
+this repository on your local machine, follow these instructions.
  * Clone [this repository](
    https://github.com/nathancarter/weblurch).
  * Install [node.js](http://nodejs.org).
