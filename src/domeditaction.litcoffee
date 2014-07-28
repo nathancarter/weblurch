@@ -135,8 +135,10 @@ Find the common ancestor for all their addresses.
 
                 if @subactions.length is 0
                     @node = []
+                    @tracker = null
                 else
                     @node = @subactions[0].node
+                    @tracker = @subactions[0].tracker
                     for action in @subactions[1..]
                         end = action.length
                         end = @node.length if end > @node.length

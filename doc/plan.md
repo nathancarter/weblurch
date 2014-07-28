@@ -17,12 +17,7 @@ than the earlier ones.
 
 ### Events
 
- * Test compound DOMEditAction instances, including:
-   * construction by `new DOMEditAction 'compound', array`
-   * construction by `new DOMEditAction 'compound', actions...`
-   * `toString` member
-   * `redo` member
-   * `undo` member
+ * Test compound DOMEditAction instances' `undo` and `redo` members
  * Give DOMEditTracker support for declaring the start and end of a
    block of edits, and any calls to `nodeEditHappened` in between
    will just queue up a sequence of edit actions that get bundled

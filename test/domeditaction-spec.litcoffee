@@ -409,6 +409,84 @@ description provided when their `toString` method is called.
             pageExpects ( -> T.toString() ),
                 'toEqual', 'Change id from 0 to 17'
 
+### should have "compound" instances
+
+That is, we should be able to construct instances of the class with
+the type "compound", as described [in the documentation for
+the class's constructor](domeditaction.litcoffee.html#constructor).
+These will have a string `description` member containing the name
+of the compound action group, as well as an array of other actions
+stored inside.
+
+        it 'should have "compound" instances', inPage ->
+            pageDo ->
+                div = document.getElementById '0'
+                attr = document.createAttribute 'id'
+                attr.value = 1
+
+First we construct two DOMEditAction instances that will be used
+to form the compound action.
+
+                window.T1 = new DOMEditAction 'setAttributeNode',
+                    div, attr
+                span = document.createElement 'span'
+                span.textContent = 'abcdefg'
+                window.T2 = new DOMEditAction 'appendChild',
+                    div, span
+
+Next we assemble them in two ways, because the constructor for
+compound edit actions can be called in either of the following two
+ways; we must test both.
+
+                window.T3 = new DOMEditAction 'compound',
+                    [ T1, T2 ]
+                window.T4 = new DOMEditAction 'compound', T1, T2
+
+Now we verify the same things for both `T3` and `T4`: that they
+have the correct tracker, node, description, type, and subactions.
+
+            pageExpects ( ->
+                T3.tracker is DOMEditTracker.instances[0] ),
+                'toBeTruthy'
+            pageExpects ( -> T3.node ), 'toEqual', []
+            pageExpects ( -> T3.description ),
+                'toEqual', 'Document edit'
+            pageExpects ( -> T3.type ), 'toEqual', 'compound'
+            pageExpects ( -> T3.subactions[0] is T1 ), 'toBeTruthy'
+            pageExpects ( -> T3.subactions[1] is T2 ), 'toBeTruthy'
+            pageExpects ( ->
+                T4.tracker is DOMEditTracker.instances[0] ),
+                'toBeTruthy'
+            pageExpects ( -> T4.node ), 'toEqual', []
+            pageExpects ( -> T4.description ),
+                'toEqual', 'Document edit'
+            pageExpects ( -> T4.type ), 'toEqual', 'compound'
+            pageExpects ( -> T4.subactions[0] is T1 ), 'toBeTruthy'
+            pageExpects ( -> T4.subactions[1] is T2 ), 'toBeTruthy'
+
+### should correctly describe "compound" instances
+
+That is, instances constructed as above should have a sensible
+description provided when their `toString` method is called.
+
+        it 'should correctly describe "compound" ' +
+           'instances', inPage ->
+            pageDo ->
+                div = document.getElementById '0'
+                attr = document.createAttribute 'id'
+                attr.value = 1
+                window.T1 = new DOMEditAction 'setAttributeNode',
+                    div, attr
+                span = document.createElement 'span'
+                span.textContent = 'abcdefg'
+                window.T2 = new DOMEditAction 'appendChild',
+                    div, span
+                window.T3 = new DOMEditAction 'compound',
+                    [ T1, T2 ]
+                T3.description = 'Burnsnoggle the widgets'
+            pageExpects ( -> T3.toString() ),
+                'toEqual', 'Burnsnoggle the widgets'
+
 ### should have no other instances
 
 That is, we should get errors if we attempt to construct instances
