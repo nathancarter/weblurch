@@ -534,3 +534,166 @@ stack pointer after each redo, to be sure it's being incremented.
                 pageExpects ( -> div.toJSON() ),
                     'toEqual', stateHistory[index]
 
+### supports edit blocks
+
+A sequence of successive edit actions can be treated as a block,
+and thus grouped into a single, compound edit action on the
+undo/redo stack.  Here we test this feature.
+
+        it 'supports edit blocks', inPage ->
+            pageDo ->
+                window.div = document.createElement 'div'
+                document.body.appendChild div
+                window.D = new DOMEditTracker div
+            
+We expect the div to go through the following four states, so we
+create an array of them here.  This will be handy as we repeatedly
+undo/redo various actions, and can just compare the state of the
+div to various values in this array, using each more than once.
+
+            stateHistory = [
+
+The initial state, with the div empty.
+
+                tagName : 'DIV'
+
+The first action we do will be to append a small span.
+
+                {
+                    tagName : 'DIV'
+                    children : [
+                        {
+                            tagName : 'SPAN'
+                            children : [ 'small' ]
+                        }
+                    ]
+                }
+
+Next will be a compound action, walking the div through the
+following three states.  It will do so by appending a second
+child, removing the first child, then changing an attribute.
+
+                {
+                    tagName : 'DIV'
+                    children : [
+                        {
+                            tagName : 'SPAN'
+                            children : [ 'small' ]
+                        }
+                        tagName : 'HR'
+                    ]
+                }
+                {
+                    tagName : 'DIV'
+                    children : [ tagName : 'HR' ]
+                }
+                {
+                    tagName : 'DIV'
+                    children : [
+                        {
+                            tagName : 'HR'
+                            attributes : 'ex' : 'ample'
+                        }
+                    ]
+                }
+
+Finally we will also do another action after the compound action,
+inserting a new first child, thus placing the div in the following
+final state.
+
+                {
+                    tagName : 'DIV'
+                    children : [
+                        {
+                            tagName : 'P'
+                            children : [ 'Lorem ipsum...' ]
+                        }
+                        {
+                            tagName : 'HR'
+                            attributes : 'ex' : 'ample'
+                        }
+                    ]
+                }
+            ]
+
+First, verify that the div begins in the expected initial state,
+and that the undo/redo stack is empty.
+
+            pageExpects ( -> div.toJSON() ),
+                'toEqual', stateHistory[0]
+            pageExpects ( -> D.stack.length ), 'toEqual', 0
+
+Next, perform the first action, which is *not* part of the sequence
+that will be collected into a compound action.  Verify that the
+result is as expected from the state history defined above, and
+that the undo/redo stack has grown to size 1.
+
+            pageDo ->
+                span = document.createElement 'span'
+                span.textContent = 'small'
+                div.appendChild span
+            pageExpects ( -> div.toJSON() ),
+                'toEqual', stateHistory[1]
+            pageExpects ( -> D.stack.length ), 'toEqual', 1
+
+Now begin an edit block in the edit tracker; this is the key aspect
+of the edit tracker on which this test focuses.
+
+            pageDo -> D.startCompoundAction 'My example action'
+
+Now perform each of the three actions that will join to form the
+compound action, verifying that although the state changes as we
+do them, the undo/redo stack does not (yet) grow.
+
+            pageDo -> div.appendChild document.createElement 'hr'
+            pageExpects ( -> div.toJSON() ),
+                'toEqual', stateHistory[2]
+            pageExpects ( -> D.stack.length ), 'toEqual', 1
+            pageDo -> div.removeChild div.childNodes[0]
+            pageExpects ( -> div.toJSON() ),
+                'toEqual', stateHistory[3]
+            pageExpects ( -> D.stack.length ), 'toEqual', 1
+            pageDo -> div.childNodes[0].setAttribute 'ex', 'ample'
+            pageExpects ( -> div.toJSON() ),
+                'toEqual', stateHistory[4]
+            pageExpects ( -> D.stack.length ), 'toEqual', 1
+
+End the edit block in the edit tracker.  Verify that the document
+state does not change, but the undo/redo stack finally grows by 1.
+
+            pageDo -> D.endCompoundAction()
+            pageExpects ( -> div.toJSON() ),
+                'toEqual', stateHistory[4]
+            pageExpects ( -> D.stack.length ), 'toEqual', 2
+
+Finally, perform the final action, also *not* part of the sequence
+just recorded as a compound action.  Verify that the result is as
+expected from the state history defined above, and that the
+undo/redo stack has grown to size 3.
+
+            pageDo ->
+                p = document.createElement 'p'
+                p.textContent = 'Lorem ipsum...'
+                div.insertBefore p, div.childNodes[0]
+            pageExpects ( -> div.toJSON() ),
+                'toEqual', stateHistory[5]
+            pageExpects ( -> D.stack.length ), 'toEqual', 3
+
+Undo all three actions, checking the state of the same div after
+each call to `undo`.  We ask it to call `undo` four times, just to
+be sure that the fourth one has no effect.  
+
+            for index in [4,1,0,0]
+                pageDo -> D.undo()
+                pageExpects ( -> div.toJSON() ),
+                    'toEqual', stateHistory[index]
+
+Redo all three actions, checking the state of the same div after
+each call to `redo`.  We ask it to call `redo` four times, just to
+be sure that the fourth one has no effect.
+
+            for index in [1,4,5,5]
+                pageDo -> D.redo()
+                pageExpects ( -> div.toJSON() ),
+                    'toEqual', stateHistory[index]
+

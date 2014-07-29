@@ -15,21 +15,6 @@ than the earlier ones.
 
 ## More Word Processing Foundation
 
-### Events
-
- * Test compound DOMEditAction instances, including:
-   * construction by `new DOMEditAction 'compound', array`
-   * construction by `new DOMEditAction 'compound', actions...`
-   * `toString` member
-   * `redo` member
-   * `undo` member
- * Give DOMEditTracker support for declaring the start and end of a
-   block of edits, and any calls to `nodeEditHappened` in between
-   will just queue up a sequence of edit actions that get bundled
-   into one compound action when the block completes.  The start
-   event should give the block a name.
- * Test the DOMEditTracker support for edit blocks.
-
 ### Cursor
 
  * Design and build the `LurchEditor` API for placing a cursor in
