@@ -60,6 +60,16 @@ actions to that stack or not as they occur.  By default it is
 always on, but is disabled briefly when undo/redo actions take
 place.</p>
 <pre class="hljs"><code>        <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">true</span>
+</code></pre><p>Sometimes actions recorded on the stack happen in a block, and
+should form a compound action for placement on the stack.  As such
+action sequences are coming in, they are stored in the following
+temporary variable.  When it is null, no compound action is being
+constructed, and the tracker should just push each individual edit
+action onto the stack separately.  The &quot;actions&quot; variable will be
+an array and the &quot;name&quot; variable a string naming it, during
+recording of a compound action.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@compoundActions</span> = <span class="hljs-literal">null</span>
+        <span class="hljs-property">@compoundName</span> = <span class="hljs-literal">null</span>
 </code></pre><p>Each instance will also have a list of listeners that should be
 notified whenever changes take place in this instance&#39;s element.
 We store those listeners as an array of callbacks, in this member.</p>
@@ -111,10 +121,16 @@ class.  If it is not, it is ignored.</p>
 stack, we must still notify any listeners of any changes that
 happen.</p>
 <pre class="hljs"><code>        listener action <span class="hljs-keyword">for</span> listener <span class="hljs-keyword">in</span> <span class="hljs-property">@listeners</span>
-</code></pre><p>From here on, this routine only records things on the undo/redo
-stack, so now is when we should quit if stack recording is turned
-off.</p>
+</code></pre><p>The only further actions this routine takes are recording the
+action on the undo/redo stack, so now is when we should quit if
+stack recording is turned off.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-property">@stackRecording</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span>
+</code></pre><p>If this object is building a compound action, then append the
+current action to that pending compound action, but do nothing
+else.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-property">@compoundActions</span> <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span>
+            <span class="hljs-property">@compoundActions</span>.push action
+            <span class="hljs-keyword">return</span>
 </code></pre><p>Truncate the stack if necessary, then push the value onto it.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> &lt; <span class="hljs-property">@stack</span>.length
             <span class="hljs-property">@stack</span> = <span class="hljs-property">@stack</span>[...<span class="hljs-property">@stackPointer</span>]
@@ -123,6 +139,29 @@ off.</p>
 so we must update it here, having just recorded a newly-performed
 action.</p>
 <pre class="hljs"><code>        <span class="hljs-property">@stackPointer</span> = <span class="hljs-property">@stack</span>.length
+</code></pre><p>When actions are being recorded, the user can stipulate that a
+sequence of successive actions form a logical unit, and thus should
+be recorded as a compound action.  We provide the following two
+methods for indicating the start and end of a compound action.</p>
+<p>The user can flag the beginning of a sequence of actions using the
+following routine.  It does nothing if another sequence is already
+underway.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">startCompoundAction</span>: <span class="hljs-function"><span class="hljs-params">( name )</span> -&gt;</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-property">@compoundActions</span> <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span>
+        <span class="hljs-property">@compoundActions</span> = []
+        <span class="hljs-property">@compoundName</span> = name
+</code></pre><p>The user later flags the end of the sequence of actions using the
+following routine.  It does nothing if no sequence is underway.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">endCompoundAction</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-property">@compoundActions</span> <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span>
+</code></pre><p>Create the new action and clear out the temporary variables.</p>
+<pre class="hljs"><code>        action = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'compound'</span>, <span class="hljs-property">@compoundActions</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-property">@compoundName</span> <span class="hljs-keyword">then</span> action.name = <span class="hljs-property">@compoundName</span>
+        <span class="hljs-property">@compoundActions</span> = <span class="hljs-literal">null</span>
+        <span class="hljs-property">@compoundName</span> = <span class="hljs-literal">null</span>
+</code></pre><p>Inform this object that the comound edit happened, so that it can
+be recorded on the stack.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@nodeEditHappened</span> action
 </code></pre><p>We add <code>canUndo</code> and <code>canRedo</code> methods to the class that just
 report whether the stack pointer isn&#39;t at the top or bottom of the
 stack.</p>
@@ -139,14 +178,21 @@ cannot undo/redo.</p>
             <span class="hljs-string">"Redo <span class="hljs-subst">#{<span class="hljs-property">@stack</span>[<span class="hljs-property">@stackPointer</span>].toString()}</span>"</span>
 </code></pre><p>We add <code>undo</code> and <code>redo</code> methods that move the stack pointer after
 calling the <code>undo</code> and <code>redo</code> methods in the appropriate actions on
-the stack.</p>
+the stack.  Stack recording is disabled while they act, so that
+they do not get doubly recorded.</p>
+<p>Calling <code>undo</code> implicitly terminates any ongoing compound action
+that may be being recorded.  If one <em>was</em> being recorded, then it
+will be <em>that</em> new, compound action that gets undone.</p>
 <pre class="hljs"><code>    <span class="hljs-attribute">undo</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-property">@endCompoundAction</span>()
         <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> &gt; <span class="hljs-number">0</span>
             <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">false</span>
             <span class="hljs-property">@stack</span>[<span class="hljs-property">@stackPointer</span> - <span class="hljs-number">1</span>].undo()
             <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">true</span>
             <span class="hljs-property">@stackPointer</span>--
-    <span class="hljs-attribute">redo</span>:<span class="hljs-function"> -&gt;</span>
+</code></pre><p>If a compound action is being recorded, redo does nothing.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">redo</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@compoundActions</span> <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span>
         <span class="hljs-keyword">if</span> <span class="hljs-property">@stackPointer</span> &lt; <span class="hljs-property">@stack</span>.length
             <span class="hljs-property">@stackRecording</span> = <span class="hljs-literal">false</span>
             <span class="hljs-property">@stack</span>[<span class="hljs-property">@stackPointer</span>].redo()

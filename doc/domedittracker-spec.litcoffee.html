@@ -26,7 +26,7 @@
 <li><a href='#domedittracker-instances-with-divs'>DOMEditTracker instances with DIVs</a></li><ul>
 <li><a href='#should-return-the-correct-div'>should return the correct div</a></li></ul>
 <li><a href='#the-undo-redo-stack'>The undo/redo stack</a></li><ul>
-<li><a href='#should-grow-when-nodeedithappened'>should grow when nodeEditHappened</a></li><li><a href='#should-truncate-if-needed'>should truncate if needed</a></li><li><a href='#handles-canundo-canredo-correctly'>handles canUndo/canRedo correctly</a></li><li><a href='#gives-good-undo-redo-descriptions'>gives good undo/redo descriptions</a></li><li><a href='#performs-undo-redo-in-the-correct-order'>performs undo/redo in the correct order</a></li>
+<li><a href='#should-grow-when-nodeedithappened'>should grow when nodeEditHappened</a></li><li><a href='#should-truncate-if-needed'>should truncate if needed</a></li><li><a href='#handles-canundo-canredo-correctly'>handles canUndo/canRedo correctly</a></li><li><a href='#gives-good-undo-redo-descriptions'>gives good undo/redo descriptions</a></li><li><a href='#performs-undo-redo-in-the-correct-order'>performs undo/redo in the correct order</a></li><li><a href='#supports-edit-blocks'>supports edit blocks</a></li>
         </div>
         <div id="middle">
             <h1><a name='tests-for-the-code-domedittracker-code-class'></a>Tests for the <code>DOMEditTracker</code> class &nbsp;  <font size=-1><a href='#tests-for-the-code-domedittracker-code-class'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>This file contains the specifications for tests of the
@@ -430,6 +430,139 @@ stack pointer after each redo, to be sure it&#39;s being incremented.</p>
                     <span class="hljs-string">'toEqual'</span>, index
             <span class="hljs-keyword">else</span>
                 pageExpects (<span class="hljs-function"> -&gt;</span> D.stackPointer ), <span class="hljs-string">'toBeFalsy'</span>
+            pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ),
+                <span class="hljs-string">'toEqual'</span>, stateHistory[index]
+</code></pre><h3><a name='supports-edit-blocks'></a>supports edit blocks &nbsp; <font size=-1><a href='test-results.md.html#supports-edit-blocks'>see results</a></font> <font size=-1><a href='#supports-edit-blocks'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>A sequence of successive edit actions can be treated as a block,
+and thus grouped into a single, compound edit action on the
+undo/redo stack.  Here we test this feature.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'supports edit blocks'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">document</span>.body.appendChild div
+            <span class="hljs-built_in">window</span>.D = <span class="hljs-keyword">new</span> DOMEditTracker div
+</code></pre><p>We expect the div to go through the following four states, so we
+create an array of them here.  This will be handy as we repeatedly
+undo/redo various actions, and can just compare the state of the
+div to various values in this array, using each more than once.</p>
+<pre class="hljs"><code>        stateHistory = [
+</code></pre><p>The initial state, with the div empty.</p>
+<pre class="hljs"><code>            tagName : <span class="hljs-string">'DIV'</span>
+</code></pre><p>The first action we do will be to append a small span.</p>
+<pre class="hljs"><code>            {
+                tagName : <span class="hljs-string">'DIV'</span>
+                children : [
+                    {
+                        tagName : <span class="hljs-string">'SPAN'</span>
+                        children : [ <span class="hljs-string">'small'</span> ]
+                    }
+                ]
+            }
+</code></pre><p>Next will be a compound action, walking the div through the
+following three states.  It will do so by appending a second
+child, removing the first child, then changing an attribute.</p>
+<pre class="hljs"><code>            {
+                tagName : <span class="hljs-string">'DIV'</span>
+                children : [
+                    {
+                        tagName : <span class="hljs-string">'SPAN'</span>
+                        children : [ <span class="hljs-string">'small'</span> ]
+                    }
+                    tagName : <span class="hljs-string">'HR'</span>
+                ]
+            }
+            {
+                tagName : <span class="hljs-string">'DIV'</span>
+                children : [ tagName : <span class="hljs-string">'HR'</span> ]
+            }
+            {
+                tagName : <span class="hljs-string">'DIV'</span>
+                children : [
+                    {
+                        tagName : <span class="hljs-string">'HR'</span>
+                        attributes : <span class="hljs-string">'ex'</span> : <span class="hljs-string">'ample'</span>
+                    }
+                ]
+            }
+</code></pre><p>Finally we will also do another action after the compound action,
+inserting a new first child, thus placing the div in the following
+final state.</p>
+<pre class="hljs"><code>            {
+                tagName : <span class="hljs-string">'DIV'</span>
+                children : [
+                    {
+                        tagName : <span class="hljs-string">'P'</span>
+                        children : [ <span class="hljs-string">'Lorem ipsum...'</span> ]
+                    }
+                    {
+                        tagName : <span class="hljs-string">'HR'</span>
+                        attributes : <span class="hljs-string">'ex'</span> : <span class="hljs-string">'ample'</span>
+                    }
+                ]
+            }
+        ]
+</code></pre><p>First, verify that the div begins in the expected initial state,
+and that the undo/redo stack is empty.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, stateHistory[<span class="hljs-number">0</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> D.stack.length ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">0</span>
+</code></pre><p>Next, perform the first action, which is <em>not</em> part of the sequence
+that will be collected into a compound action.  Verify that the
+result is as expected from the state history defined above, and
+that the undo/redo stack has grown to size 1.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span.textContent = <span class="hljs-string">'small'</span>
+            div.appendChild span
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, stateHistory[<span class="hljs-number">1</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> D.stack.length ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">1</span>
+</code></pre><p>Now begin an edit block in the edit tracker; this is the key aspect
+of the edit tracker on which this test focuses.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> D.startCompoundAction <span class="hljs-string">'My example action'</span>
+</code></pre><p>Now perform each of the three actions that will join to form the
+compound action, verifying that although the state changes as we
+do them, the undo/redo stack does not (yet) grow.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> div.appendChild <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'hr'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, stateHistory[<span class="hljs-number">2</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> D.stack.length ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">1</span>
+        pageDo<span class="hljs-function"> -&gt;</span> div.removeChild div.childNodes[<span class="hljs-number">0</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, stateHistory[<span class="hljs-number">3</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> D.stack.length ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">1</span>
+        pageDo<span class="hljs-function"> -&gt;</span> div.childNodes[<span class="hljs-number">0</span>].setAttribute <span class="hljs-string">'ex'</span>, <span class="hljs-string">'ample'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, stateHistory[<span class="hljs-number">4</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> D.stack.length ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">1</span>
+</code></pre><p>End the edit block in the edit tracker.  Verify that the document
+state does not change, but the undo/redo stack finally grows by 1.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> D.endCompoundAction()
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, stateHistory[<span class="hljs-number">4</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> D.stack.length ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">2</span>
+</code></pre><p>Finally, perform the final action, also <em>not</em> part of the sequence
+just recorded as a compound action.  Verify that the result is as
+expected from the state history defined above, and that the
+undo/redo stack has grown to size 3.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            p = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'p'</span>
+            p.textContent = <span class="hljs-string">'Lorem ipsum...'</span>
+            div.insertBefore p, div.childNodes[<span class="hljs-number">0</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ),
+            <span class="hljs-string">'toEqual'</span>, stateHistory[<span class="hljs-number">5</span>]
+        pageExpects (<span class="hljs-function"> -&gt;</span> D.stack.length ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">3</span>
+</code></pre><p>Undo all three actions, checking the state of the same div after
+each call to <code>undo</code>.  We ask it to call <code>undo</code> four times, just to
+be sure that the fourth one has no effect.  </p>
+<pre class="hljs"><code>        <span class="hljs-keyword">for</span> index <span class="hljs-keyword">in</span> [<span class="hljs-number">4</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>]
+            pageDo<span class="hljs-function"> -&gt;</span> D.undo()
+            pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ),
+                <span class="hljs-string">'toEqual'</span>, stateHistory[index]
+</code></pre><p>Redo all three actions, checking the state of the same div after
+each call to <code>redo</code>.  We ask it to call <code>redo</code> four times, just to
+be sure that the fourth one has no effect.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">for</span> index <span class="hljs-keyword">in</span> [<span class="hljs-number">1</span>,<span class="hljs-number">4</span>,<span class="hljs-number">5</span>,<span class="hljs-number">5</span>]
+            pageDo<span class="hljs-function"> -&gt;</span> D.redo()
             pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ),
                 <span class="hljs-string">'toEqual'</span>, stateHistory[index]
 </code></pre>

@@ -135,8 +135,10 @@ Find the common ancestor for all their addresses.
 
                 if @subactions.length is 0
                     @node = []
+                    @tracker = null
                 else
                     @node = @subactions[0].node
+                    @tracker = @subactions[0].tracker
                     for action in @subactions[1..]
                         end = action.length
                         end = @node.length if end > @node.length
@@ -634,10 +636,13 @@ with the specific events generated along the way.
                     original.removeAttribute @name
 
 If it's a compound action, undo all the subactions, in reverse
-order from how they were originally performed.
+order from how they were originally performed.  (Note that the code
+below copies the array before reversing it, because the reverse
+happens in-place, impacting the array itself.)
 
             else if @type is 'compound'
-                action.undo() for action in @subactions.reverse()
+                for action in @subactions[..].reverse()
+                    action.undo()
 
 
 
@@ -700,6 +705,18 @@ always on, but is disabled briefly when undo/redo actions take
 place.
 
             @stackRecording = true
+
+Sometimes actions recorded on the stack happen in a block, and
+should form a compound action for placement on the stack.  As such
+action sequences are coming in, they are stored in the following
+temporary variable.  When it is null, no compound action is being
+constructed, and the tracker should just push each individual edit
+action onto the stack separately.  The "actions" variable will be
+an array and the "name" variable a string naming it, during
+recording of a compound action.
+
+            @compoundActions = null
+            @compoundName = null
 
 Each instance will also have a list of listeners that should be
 notified whenever changes take place in this instance's element.
@@ -776,11 +793,19 @@ happen.
 
             listener action for listener in @listeners
 
-From here on, this routine only records things on the undo/redo
-stack, so now is when we should quit if stack recording is turned
-off.
+The only further actions this routine takes are recording the
+action on the undo/redo stack, so now is when we should quit if
+stack recording is turned off.
 
             if not @stackRecording then return
+
+If this object is building a compound action, then append the
+current action to that pending compound action, but do nothing
+else.
+
+            if @compoundActions isnt null
+                @compoundActions.push action
+                return
 
 Truncate the stack if necessary, then push the value onto it.
 
@@ -793,6 +818,38 @@ so we must update it here, having just recorded a newly-performed
 action.
 
             @stackPointer = @stack.length
+
+When actions are being recorded, the user can stipulate that a
+sequence of successive actions form a logical unit, and thus should
+be recorded as a compound action.  We provide the following two
+methods for indicating the start and end of a compound action.
+
+The user can flag the beginning of a sequence of actions using the
+following routine.  It does nothing if another sequence is already
+underway.
+
+        startCompoundAction: ( name ) ->
+            if @compoundActions isnt null then return
+            @compoundActions = []
+            @compoundName = name
+
+The user later flags the end of the sequence of actions using the
+following routine.  It does nothing if no sequence is underway.
+
+        endCompoundAction: ->
+            if @compoundActions is null then return
+
+Create the new action and clear out the temporary variables.
+
+            action = new DOMEditAction 'compound', @compoundActions
+            if @compoundName then action.name = @compoundName
+            @compoundActions = null
+            @compoundName = null
+
+Inform this object that the comound edit happened, so that it can
+be recorded on the stack.
+
+            @nodeEditHappened action
 
 We add `canUndo` and `canRedo` methods to the class that just
 report whether the stack pointer isn't at the top or bottom of the
@@ -814,15 +871,25 @@ cannot undo/redo.
 
 We add `undo` and `redo` methods that move the stack pointer after
 calling the `undo` and `redo` methods in the appropriate actions on
-the stack.
+the stack.  Stack recording is disabled while they act, so that
+they do not get doubly recorded.
+
+Calling `undo` implicitly terminates any ongoing compound action
+that may be being recorded.  If one *was* being recorded, then it
+will be *that* new, compound action that gets undone.
 
         undo: ->
+            @endCompoundAction()
             if @stackPointer > 0
                 @stackRecording = false
                 @stack[@stackPointer - 1].undo()
                 @stackRecording = true
                 @stackPointer--
+
+If a compound action is being recorded, redo does nothing.
+
         redo: ->
+            return if @compoundActions isnt null
             if @stackPointer < @stack.length
                 @stackRecording = false
                 @stack[@stackPointer].redo()

@@ -28,8 +28,10 @@
         }
         if (this.subactions.length === 0) {
           this.node = [];
+          this.tracker = null;
         } else {
           this.node = this.subactions[0].node;
+          this.tracker = this.subactions[0].tracker;
           _ref1 = this.subactions.slice(1);
           for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
             action = _ref1[_j];
@@ -351,7 +353,7 @@
           return original.removeAttribute(this.name);
         }
       } else if (this.type === 'compound') {
-        _ref2 = this.subactions.reverse();
+        _ref2 = this.subactions.slice(0).reverse();
         _results1 = [];
         for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
           action = _ref2[_i];
@@ -391,6 +393,8 @@
       this.stack = [];
       this.stackPointer = 0;
       this.stackRecording = true;
+      this.compoundActions = null;
+      this.compoundName = null;
       this.listeners = [];
       DOMEditTracker.instances.push(this);
     }
@@ -420,11 +424,37 @@
       if (!this.stackRecording) {
         return;
       }
+      if (this.compoundActions !== null) {
+        this.compoundActions.push(action);
+        return;
+      }
       if (this.stackPointer < this.stack.length) {
         this.stack = this.stack.slice(0, this.stackPointer);
       }
       this.stack.push(action);
       return this.stackPointer = this.stack.length;
+    };
+
+    DOMEditTracker.prototype.startCompoundAction = function(name) {
+      if (this.compoundActions !== null) {
+        return;
+      }
+      this.compoundActions = [];
+      return this.compoundName = name;
+    };
+
+    DOMEditTracker.prototype.endCompoundAction = function() {
+      var action;
+      if (this.compoundActions === null) {
+        return;
+      }
+      action = new DOMEditAction('compound', this.compoundActions);
+      if (this.compoundName) {
+        action.name = this.compoundName;
+      }
+      this.compoundActions = null;
+      this.compoundName = null;
+      return this.nodeEditHappened(action);
     };
 
     DOMEditTracker.prototype.canUndo = function() {
@@ -452,6 +482,7 @@
     };
 
     DOMEditTracker.prototype.undo = function() {
+      this.endCompoundAction();
       if (this.stackPointer > 0) {
         this.stackRecording = false;
         this.stack[this.stackPointer - 1].undo();
@@ -461,6 +492,9 @@
     };
 
     DOMEditTracker.prototype.redo = function() {
+      if (this.compoundActions !== null) {
+        return;
+      }
       if (this.stackPointer < this.stack.length) {
         this.stackRecording = false;
         this.stack[this.stackPointer].redo();

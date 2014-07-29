@@ -20,7 +20,7 @@
             <p align=center>Page contents</p>
 <p><a href='#tests-for-the-code-domeditaction-code-class'>Tests for the <code>DOMEditAction</code> class</a></p><ul>
 <li><a href='#domeditaction-class'>DOMEditAction class</a></li><ul>
-<li><a href='#should-exist'>should exist</a></li><li><a href='#should-have-appendchild-instances'>should have &quot;appendChild&quot; instances</a></li><li><a href='#should-correctly-describe-appendchild-instances'>should correctly describe &quot;appendChild&quot; instances</a></li><li><a href='#should-have-insertbefore-instances'>should have &quot;insertBefore&quot; instances</a></li><li><a href='#should-correctly-describe-insertbefore-instances'>should correctly describe &quot;insertBefore&quot; instances</a></li><li><a href='#should-have-normalize-instances'>should have &quot;normalize&quot; instances</a></li><li><a href='#should-correctly-describe-normalize-instances'>should correctly describe &quot;normalize&quot; instances</a></li><li><a href='#should-have-removeattribute-instances'>should have &quot;removeAttribute&quot; instances</a></li><li><a href='#should-correctly-describe-removeattribute-instances'>should correctly describe &quot;removeAttribute&quot; instances</a></li><li><a href='#should-have-removeattributenode-instances'>should have &quot;removeAttributeNode&quot; instances</a></li><li><a href='#should-correctly-describe-removeattributenode-instances'>should correctly describe &quot;removeAttributeNode&quot; instances</a></li><li><a href='#should-have-removechild-instances'>should have &quot;removeChild&quot; instances</a></li><li><a href='#should-correctly-describe-removechild-instances'>should correctly describe &quot;removeChild&quot; instances</a></li><li><a href='#should-have-replacechild-instances'>should have &quot;replaceChild&quot; instances</a></li><li><a href='#should-correctly-describe-replacechild-instances'>should correctly describe &quot;replaceChild&quot; instances</a></li><li><a href='#should-have-setattribute-instances'>should have &quot;setAttribute&quot; instances</a></li><li><a href='#should-correctly-describe-setattribute-instances'>should correctly describe &quot;setAttribute&quot; instances</a></li><li><a href='#should-have-setattributenode-instances'>should have &quot;setAttributeNode&quot; instances</a></li><li><a href='#should-correctly-describe-setattributenode-instances'>should correctly describe &quot;setAttributeNode&quot; instances</a></li><li><a href='#should-have-no-other-instances'>should have no other instances</a></li>
+<li><a href='#should-exist'>should exist</a></li><li><a href='#should-have-appendchild-instances'>should have &quot;appendChild&quot; instances</a></li><li><a href='#should-correctly-describe-appendchild-instances'>should correctly describe &quot;appendChild&quot; instances</a></li><li><a href='#should-have-insertbefore-instances'>should have &quot;insertBefore&quot; instances</a></li><li><a href='#should-correctly-describe-insertbefore-instances'>should correctly describe &quot;insertBefore&quot; instances</a></li><li><a href='#should-have-normalize-instances'>should have &quot;normalize&quot; instances</a></li><li><a href='#should-correctly-describe-normalize-instances'>should correctly describe &quot;normalize&quot; instances</a></li><li><a href='#should-have-removeattribute-instances'>should have &quot;removeAttribute&quot; instances</a></li><li><a href='#should-correctly-describe-removeattribute-instances'>should correctly describe &quot;removeAttribute&quot; instances</a></li><li><a href='#should-have-removeattributenode-instances'>should have &quot;removeAttributeNode&quot; instances</a></li><li><a href='#should-correctly-describe-removeattributenode-instances'>should correctly describe &quot;removeAttributeNode&quot; instances</a></li><li><a href='#should-have-removechild-instances'>should have &quot;removeChild&quot; instances</a></li><li><a href='#should-correctly-describe-removechild-instances'>should correctly describe &quot;removeChild&quot; instances</a></li><li><a href='#should-have-replacechild-instances'>should have &quot;replaceChild&quot; instances</a></li><li><a href='#should-correctly-describe-replacechild-instances'>should correctly describe &quot;replaceChild&quot; instances</a></li><li><a href='#should-have-setattribute-instances'>should have &quot;setAttribute&quot; instances</a></li><li><a href='#should-correctly-describe-setattribute-instances'>should correctly describe &quot;setAttribute&quot; instances</a></li><li><a href='#should-have-setattributenode-instances'>should have &quot;setAttributeNode&quot; instances</a></li><li><a href='#should-correctly-describe-setattributenode-instances'>should correctly describe &quot;setAttributeNode&quot; instances</a></li><li><a href='#should-have-compound-instances'>should have &quot;compound&quot; instances</a></li><li><a href='#should-correctly-describe-compound-instances'>should correctly describe &quot;compound&quot; instances</a></li><li><a href='#should-have-no-other-instances'>should have no other instances</a></li>
         </div>
         <div id="middle">
             <h1><a name='tests-for-the-code-domeditaction-code-class'></a>Tests for the <code>DOMEditAction</code> class &nbsp;  <font size=-1><a href='#tests-for-the-code-domeditaction-code-class'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>Those aspects of the <code>DOMEditAction</code> class that relate to undoing
@@ -347,6 +347,70 @@ description provided when their <code>toString</code> method is called.</p>
                 div, change
         pageExpects (<span class="hljs-function"> -&gt;</span> T.toString() ),
             <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'Change id from 0 to 17'</span>
+</code></pre><h3><a name='should-have-compound-instances'></a>should have &quot;compound&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-compound-instances'>see results</a></font> <font size=-1><a href='#should-have-compound-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, we should be able to construct instances of the class with
+the type &quot;compound&quot;, as described <a href="domeditaction.litcoffee.html#constructor">in the documentation for
+the class&#39;s constructor</a>.
+These will have a string <code>description</code> member containing the name
+of the compound action group, as well as an array of other actions
+stored inside.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should have "compound" instances'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            attr = <span class="hljs-built_in">document</span>.createAttribute <span class="hljs-string">'id'</span>
+            attr.value = <span class="hljs-number">1</span>
+</code></pre><p>First we construct two DOMEditAction instances that will be used
+to form the compound action.</p>
+<pre class="hljs"><code>            <span class="hljs-built_in">window</span>.T1 = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'setAttributeNode'</span>,
+                div, attr
+            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span.textContent = <span class="hljs-string">'abcdefg'</span>
+            <span class="hljs-built_in">window</span>.T2 = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'appendChild'</span>,
+                div, span
+</code></pre><p>Next we assemble them in two ways, because the constructor for
+compound edit actions can be called in either of the following two
+ways; we must test both.</p>
+<pre class="hljs"><code>            <span class="hljs-built_in">window</span>.T3 = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'compound'</span>,
+                [ T1, T2 ]
+            <span class="hljs-built_in">window</span>.T4 = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'compound'</span>, T1, T2
+</code></pre><p>Now we verify the same things for both <code>T3</code> and <code>T4</code>: that they
+have the correct tracker, node, description, type, and subactions.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+            T3.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T3.node ), <span class="hljs-string">'toEqual'</span>, []
+        pageExpects (<span class="hljs-function"> -&gt;</span> T3.description ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'Document edit'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T3.type ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'compound'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T3.subactions[<span class="hljs-number">0</span>] <span class="hljs-keyword">is</span> T1 ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T3.subactions[<span class="hljs-number">1</span>] <span class="hljs-keyword">is</span> T2 ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span>
+            T4.tracker <span class="hljs-keyword">is</span> DOMEditTracker.instances[<span class="hljs-number">0</span>] ),
+            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T4.node ), <span class="hljs-string">'toEqual'</span>, []
+        pageExpects (<span class="hljs-function"> -&gt;</span> T4.description ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'Document edit'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T4.type ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'compound'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T4.subactions[<span class="hljs-number">0</span>] <span class="hljs-keyword">is</span> T1 ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T4.subactions[<span class="hljs-number">1</span>] <span class="hljs-keyword">is</span> T2 ), <span class="hljs-string">'toBeTruthy'</span>
+</code></pre><h3><a name='should-correctly-describe-compound-instances'></a>should correctly describe &quot;compound&quot; instances &nbsp; <font size=-1><a href='test-results.md.html#should-correctly-describe-compound-instances'>see results</a></font> <font size=-1><a href='#should-correctly-describe-compound-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, instances constructed as above should have a sensible
+description provided when their <code>toString</code> method is called.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should correctly describe "compound" '</span> +
+       <span class="hljs-string">'instances'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageDo<span class="hljs-function"> -&gt;</span>
+            div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
+            attr = <span class="hljs-built_in">document</span>.createAttribute <span class="hljs-string">'id'</span>
+            attr.value = <span class="hljs-number">1</span>
+            <span class="hljs-built_in">window</span>.T1 = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'setAttributeNode'</span>,
+                div, attr
+            span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            span.textContent = <span class="hljs-string">'abcdefg'</span>
+            <span class="hljs-built_in">window</span>.T2 = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'appendChild'</span>,
+                div, span
+            <span class="hljs-built_in">window</span>.T3 = <span class="hljs-keyword">new</span> DOMEditAction <span class="hljs-string">'compound'</span>,
+                [ T1, T2 ]
+            T3.description = <span class="hljs-string">'Burnsnoggle the widgets'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> T3.toString() ),
+            <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'Burnsnoggle the widgets'</span>
 </code></pre><h3><a name='should-have-no-other-instances'></a>should have no other instances &nbsp; <font size=-1><a href='test-results.md.html#should-have-no-other-instances'>see results</a></font> <font size=-1><a href='#should-have-no-other-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, we should get errors if we attempt to construct instances
 of the class with types other than those tested in the other tests
 in this specification, above.</p>

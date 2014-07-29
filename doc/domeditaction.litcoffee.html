@@ -161,8 +161,10 @@ by forming an <code>actionList</code> array.</p>
 </code></pre><p>Find the common ancestor for all their addresses.</p>
 <pre class="hljs"><code>            <span class="hljs-keyword">if</span> <span class="hljs-property">@subactions</span>.length <span class="hljs-keyword">is</span> <span class="hljs-number">0</span>
                 <span class="hljs-property">@node</span> = []
+                <span class="hljs-property">@tracker</span> = <span class="hljs-literal">null</span>
             <span class="hljs-keyword">else</span>
                 <span class="hljs-property">@node</span> = <span class="hljs-property">@subactions</span>[<span class="hljs-number">0</span>].node
+                <span class="hljs-property">@tracker</span> = <span class="hljs-property">@subactions</span>[<span class="hljs-number">0</span>].tracker
                 <span class="hljs-keyword">for</span> action <span class="hljs-keyword">in</span> <span class="hljs-property">@subactions</span>[<span class="hljs-number">1.</span>.]
                     end = action.length
                     end = <span class="hljs-property">@node</span>.length <span class="hljs-keyword">if</span> end &gt; <span class="hljs-property">@node</span>.length
@@ -556,9 +558,12 @@ with the specific events generated along the way.</p>
             <span class="hljs-keyword">else</span>
                 original.removeAttribute <span class="hljs-property">@name</span>
 </code></pre><p>If it&#39;s a compound action, undo all the subactions, in reverse
-order from how they were originally performed.</p>
+order from how they were originally performed.  (Note that the code
+below copies the array before reversing it, because the reverse
+happens in-place, impacting the array itself.)</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'compound'</span>
-            action.undo() <span class="hljs-keyword">for</span> action <span class="hljs-keyword">in</span> <span class="hljs-property">@subactions</span>.reverse()
+            <span class="hljs-keyword">for</span> action <span class="hljs-keyword">in</span> <span class="hljs-property">@subactions</span>[..].reverse()
+                action.undo()
 </code></pre>
         </div>
         <div id="right">

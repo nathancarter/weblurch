@@ -20,7 +20,7 @@
             <p align=center>Page contents</p>
 <p><a href='#project-plan'>Project Plan</a></p><ul>
 <li><a href='#more-word-processing-foundation'>More Word Processing Foundation</a></li><ul>
-<li><a href='#events'>Events</a></li><li><a href='#cursor'>Cursor</a></li><li><a href='#keyboard'>Keyboard</a></li><li><a href='#mouse'>Mouse</a></li><li><a href='#load-and-save'>Load and save</a></li></ul>
+<li><a href='#cursor'>Cursor</a></li><li><a href='#keyboard'>Keyboard</a></li><li><a href='#mouse'>Mouse</a></li><li><a href='#load-and-save'>Load and save</a></li></ul>
 <li><a href='#logical-foundation'>Logical Foundation</a></li><ul>
 <li><a href='#dependencies'>Dependencies</a></li><li><a href='#math'>Math</a></li><li><a href='#groupers'>Groupers</a></li><li><a href='#background-processing'>Background processing</a></li><li><a href='#background-computation-of-the-property-graph'>Background computation of the property graph</a></li><li><a href='#background-computation-of-bubble-meanings'>Background computation of bubble meanings</a></li><li><a href='#background-validation-probably-in-stages'>Background validation, probably in stages</a></li></ul>
 <li><a href='#for-later'>For later</a></li><ul>
@@ -36,23 +36,7 @@ viewed as a to-do list in chronological order, the first items
 being those that should be done next, and the later items those
 that must come after.  Necessarily, the later items are more vague
 than the earlier ones.</p>
-<h2><a name='more-word-processing-foundation'></a>More Word Processing Foundation &nbsp;  <font size=-1><a href='#more-word-processing-foundation'><span class="glyphicon glyphicon-link"></span></a></font></h2><h3><a name='events'></a>Events &nbsp;  <font size=-1><a href='#events'><span class="glyphicon glyphicon-link"></span></a></font></h3><ul>
-<li>Test compound DOMEditAction instances, including:<ul>
-<li>construction by <code>new DOMEditAction &#39;compound&#39;, array</code></li>
-<li>construction by <code>new DOMEditAction &#39;compound&#39;, actions...</code></li>
-<li><code>toString</code> member</li>
-<li><code>redo</code> member</li>
-<li><code>undo</code> member</li>
-</ul>
-</li>
-<li>Give DOMEditTracker support for declaring the start and end of a
-block of edits, and any calls to <code>nodeEditHappened</code> in between
-will just queue up a sequence of edit actions that get bundled
-into one compound action when the block completes.  The start
-event should give the block a name.</li>
-<li>Test the DOMEditTracker support for edit blocks.</li>
-</ul>
-<h3><a name='cursor'></a>Cursor &nbsp;  <font size=-1><a href='#cursor'><span class="glyphicon glyphicon-link"></span></a></font></h3><ul>
+<h2><a name='more-word-processing-foundation'></a>More Word Processing Foundation &nbsp;  <font size=-1><a href='#more-word-processing-foundation'><span class="glyphicon glyphicon-link"></span></a></font></h2><h3><a name='cursor'></a>Cursor &nbsp;  <font size=-1><a href='#cursor'><span class="glyphicon glyphicon-link"></span></a></font></h3><ul>
 <li>Design and build the <code>LurchEditor</code> API for placing a cursor in
 the document, or nowhere, depending on whether the document has
 focus.</li>
