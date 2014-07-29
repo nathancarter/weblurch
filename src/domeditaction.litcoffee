@@ -636,8 +636,11 @@ with the specific events generated along the way.
                     original.removeAttribute @name
 
 If it's a compound action, undo all the subactions, in reverse
-order from how they were originally performed.
+order from how they were originally performed.  (Note that the code
+below copies the array before reversing it, because the reverse
+happens in-place, impacting the array itself.)
 
             else if @type is 'compound'
-                action.undo() for action in @subactions.reverse()
+                for action in @subactions[..].reverse()
+                    action.undo()
 

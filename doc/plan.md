@@ -15,10 +15,6 @@ than the earlier ones.
 
 ## More Word Processing Foundation
 
-### Events
-
- * Test the DOMEditTracker support for edit blocks.
-
 ### Cursor
 
  * Design and build the `LurchEditor` API for placing a cursor in
