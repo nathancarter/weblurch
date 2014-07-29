@@ -17,11 +17,6 @@ than the earlier ones.
 
 ### Events
 
- * Give DOMEditTracker support for declaring the start and end of a
-   block of edits, and any calls to `nodeEditHappened` in between
-   will just queue up a sequence of edit actions that get bundled
-   into one compound action when the block completes.  The start
-   event should give the block a name.
  * Test the DOMEditTracker support for edit blocks.
 
 ### Cursor
