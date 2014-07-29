@@ -93,7 +93,7 @@ back to the initial state.
             pageDo -> action.undo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[0]
 
-Perform a redo of that action, and verify that the restuls are
+Perform a redo of that action, and verify that the results are
 back to the second state.
 
             pageDo -> action.redo()
@@ -178,14 +178,11 @@ back to the initial state.
             pageDo -> action.undo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[0]
 
-Perform a redo of that action, and verify that the restuls are
+Perform a redo of that action, and verify that the results are
 back to the second state.
 
             pageDo -> action.redo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[1]
-
-Then we perform an undo of that action, and then record the
-results.
 
 ### should work for "normalize" actions
 
@@ -267,14 +264,11 @@ back to the initial state.
             pageDo -> action.undo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[0]
 
-Perform a redo of that action, and verify that the restuls are
+Perform a redo of that action, and verify that the results are
 back to the second state.
 
             pageDo -> action.redo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[1]
-
-Then we perform an undo of that action, and then record the
-results.
 
 ### should work for "removeAttribute" actions
 
@@ -331,14 +325,11 @@ back to the initial state.
             pageDo -> action.undo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[0]
 
-Perform a redo of that action, and verify that the restuls are
+Perform a redo of that action, and verify that the results are
 back to the second state.
 
             pageDo -> action.redo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[1]
-
-Then we perform an undo of that action, and then record the
-results.
 
 ### should work for "removeAttributeNode" actions
 
@@ -396,14 +387,11 @@ back to the initial state.
             pageDo -> action.undo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[0]
 
-Perform a redo of that action, and verify that the restuls are
+Perform a redo of that action, and verify that the results are
 back to the second state.
 
             pageDo -> action.redo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[1]
-
-Then we perform an undo of that action, and then record the
-results.
 
 ### should work for "removeChild" actions
 
@@ -473,14 +461,11 @@ back to the initial state.
             pageDo -> action.undo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[0]
 
-Perform a redo of that action, and verify that the restuls are
+Perform a redo of that action, and verify that the results are
 back to the second state.
 
             pageDo -> action.redo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[1]
-
-Then we perform an undo of that action, and then record the
-results.
 
 ### should work for "replaceChild" actions
 
@@ -576,14 +561,11 @@ back to the initial state.
             pageDo -> action.undo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[0]
 
-Perform a redo of that action, and verify that the restuls are
+Perform a redo of that action, and verify that the results are
 back to the second state.
 
             pageDo -> action.redo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[1]
-
-Then we perform an undo of that action, and then record the
-results.
 
 ### should work for "setAttribute" actions
 
@@ -644,14 +626,11 @@ back to the initial state.
             pageDo -> action.undo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[0]
 
-Perform a redo of that action, and verify that the restuls are
+Perform a redo of that action, and verify that the results are
 back to the second state.
 
             pageDo -> action.redo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[1]
-
-Then we perform an undo of that action, and then record the
-results.
 
 ### should work for "setAttributeNode" actions
 
@@ -714,12 +693,10 @@ back to the initial state.
             pageDo -> action.undo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[0]
 
-Perform a redo of that action, and verify that the restuls are
+Perform a redo of that action, and verify that the results are
 back to the second state.
 
             pageDo -> action.redo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[1]
 
-Then we perform an undo of that action, and then record the
-results.
 
