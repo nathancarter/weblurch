@@ -699,4 +699,103 @@ back to the second state.
             pageDo -> action.redo()
             pageExpects ( -> div.toJSON() ), 'toEqual', states[1]
 
+### should work for "compound" actions
+
+We will test this by performing a "compound" action, then asking it
+to be undone, then asking it to be redone, and inspecting the DOM
+at each step to ensure it's as expected.
+
+        it 'should work for "compound" actions', inPage ->
+
+Because undo and redo march a document through a sequence of states
+(both forwards and backwards) we create that sequence of states
+here, up front, so that we can simply index into it throughout this
+test.  In this case we only have three states, the first before the
+first edit, the second before the second edit, and the third after
+both edits.
+
+            states = [
+                {
+                    tagName : 'DIV'
+                    attributes : id : '0'
+                    children : [ '\n        ' ]
+                }
+                {
+                    tagName : 'DIV'
+                    attributes : { id : '0', thing : 'whatever' }
+                    children : [ '\n        ' ]
+                }
+                {
+                    tagName : 'DIV'
+                    attributes : { id : '0', thing : 'whatever' }
+                    children : [
+                        '\n        '
+                        {
+                            tagName : 'SPAN'
+                            children : [ 'contents of span' ]
+                        }
+                    ]
+                }
+            ]
+
+Create DOM objects used in this test, and set up a tracker.
+
+            pageDo ->
+                window.div = document.getElementById '0'
+                window.tracker = DOMEditTracker.instanceOver div
+
+Verify that the initial state matches what's stored in the state
+history, above, and is therefore expected.
+
+            pageExpects ( -> div.toJSON() ), 'toEqual', states[0]
+
+Perform the first action, and validate both it and its results.
+
+            pageDo ->
+                attr = document.createAttribute 'thing'
+                attr.value = 'whatever'
+                div.setAttributeNode attr
+                window.action1 =
+                    tracker.stack[tracker.stack.length - 1]
+            pageExpects ( -> action1.toJSON() ), 'toEqual', {
+                node : []
+                type : 'setAttributeNode'
+                name : 'thing'
+                newValue : 'whatever'
+                oldValue : ''
+            }
+            pageExpects ( -> div.toJSON() ), 'toEqual', states[1]
+
+Perform the second action, and validate both it and its results.
+
+            pageDo ->
+                span = document.createElement 'span'
+                span.textContent = 'contents of span'
+                div.appendChild span
+                window.action2 =
+                    tracker.stack[tracker.stack.length - 1]
+            pageExpects ( -> action2.toJSON() ), 'toEqual', {
+                node : [], type : 'appendChild',
+                toAppend : {
+                    tagName : 'SPAN'
+                    children : [ 'content of span' ]
+                }
+            }
+            pageExpects ( -> div.toJSON() ), 'toEqual', states[2]
+
+Construct a compound action from the two just performed.  Then
+perform an undo of that action, and verify that the results are
+back to the initial state.
+
+            pageDo ->
+                window.actionC = new DOMEditAction 'compound',
+                    action1, action2
+                actionC.undo()
+            pageExpects ( -> div.toJSON() ), 'toEqual', states[0]
+
+Perform a redo of that action, and verify that the results are
+back to the third state.
+
+            pageDo -> actionC.redo()
+            pageExpects ( -> div.toJSON() ), 'toEqual', states[2]
 
