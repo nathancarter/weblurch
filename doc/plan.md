@@ -21,11 +21,11 @@ For every item in this section, as it is accomplished, we should
 also (of course) create unit tests verifying that it was completed
 correctly.
 
- * Design and build the `LurchEditor` API for placing a cursor in
-   the document, or nowhere, depending on whether the document has
-   focus.
-    * Create LurchEditor method for finding the one span in the
-      document with the LECursor class.
+ * Implement the following cursor features in `LurchEditor`.
+    * Create member variables in the `LurchEditor` class for
+      storing the cursor position and anchor elements.
+    * Create `LurchEditor` method for refreshing those member
+      variables by seeking out the relevant elements.
     * Create method in Node prototype for computing the number of
       text characters in the node.  (For elements with no children,
       this is 1.  For elements with children, it is the sum of the
@@ -35,20 +35,29 @@ correctly.
       before and after the split.  (Or it can return `[A,null]` if
       the position equals the text length, and `[null,B]` if the
       position equals zero.)
-    * Create a LurchEditor method for placing a cursor at a given
-      position inside a given node (which defaults to the main
-      div of the editor).
-    * Create a LurchEditor method for removing the cursor from the
-      document (i.e., defocusing) and normalizing as needed.
+    * Create a `LurchEditor` method for placing a cursor position
+      at a given position inside a given node (which defaults to
+      the main div of the editor).
+    * Create a `LurchEditor` method for removing the cursor from
+      the document (i.e., defocusing) and normalizing as needed.
       Ensure that this is automatically called if the
       insert-a-cursor method is called when a cursor is already
       there.
-    * Add to LurchEditor instances a timer that flashes the cursor
-      just as MathQuill does.
-    * Add methods for moving the cursor by a given delta.
- * Design extensions to that API (and the corresponding
-   representations) that provide for a cursor position and anchor,
-   so that selections are possible.
+    * Add to `LurchEditor` instances a timer that flashes the
+      cursor just as MathQuill does.
+    * Add to the Node prototype a method for finding the previous
+      leaf node in the tree, even if that's a "cousin" node.  Do
+      the ame for "next" nodes.
+    * Add a CSS class that gives a blue background, for use on the
+      cursor selection.
+    * Add to the cursor placement routine a parameter for whether
+      or not to move the anchor as well, defaulting to yes.  If the
+      anchor does not move, ensure that all elements between the
+      old and new cursor positions get the requisite class for
+      showing the blue background.  If the anchor does move, ensure
+      that all elements that had that class lose it.
+    * Add methods for moving the cursor by a given delta, with or
+      without moving the anchor (defaults to moving it).
  * Add all the functions for dealing with that cursor as if it
    were a real cursor.  Each of these may make several edits to the
    document, and so should use the new block-of-edits support
