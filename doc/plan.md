@@ -22,10 +22,6 @@ also (of course) create unit tests verifying that it was completed
 correctly.
 
  * Implement the following cursor features in `LurchEditor`.
-    * Create method in Node prototype for computing the number of
-      text characters in the node.  (For elements with no children,
-      this is 1.  For elements with children, it is the sum of the
-      values for the children.)
     * Create a Node prototype method for splitting the node after
       the character with a given index, and returning the two nodes
       before and after the split.  (Or it can return `[A,null]` if

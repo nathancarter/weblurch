@@ -264,3 +264,34 @@ original method.
 
             result
 
+## Character counts
+
+The following simple sum-of-an-array function is handy below.
+
+    window.sum = ( array ) ->
+        total = 0 ; total += a for a in array ; total
+
+For identifying cursor positions within a node, we need to be able
+to compute how many characters there are within that node.  The
+following routine does so, recursively.
+
+    Node::characterCount = ->
+
+Text nodes have character counts equal to the length of the text
+they contain.
+
+        if this instanceof Text
+            @length
+
+All other nodes with no children are considered single characters
+(e.g., a horizontal rule, an image, etc.).
+
+        else if @childNodes.length is 0
+            1
+
+Things with children have a character count equal to the total of
+their children's character counts.
+
+        else
+            sum( c.characterCount() for c in @childNodes )
+

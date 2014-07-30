@@ -1559,3 +1559,66 @@ Validate the recorded edit actions.
                     oldValue : 'yes', newValue : 'no'
                 }
 
+## characterCount member of Node class
+
+The tests in this section test the `characterCount` member
+function in the `Node` prototype.
+[See its definition here.](
+domutils.litcoffee.html#character-counts).
+
+    phantomDescribe 'characterCount member of Node class',
+    './app/index.html', ->
+
+### should be defined
+
+First, just verify that it's present.
+
+        it 'should be defined', inPage ->
+            pageExpects ( -> Node::characterCount ), 'toBeTruthy'
+
+### should yield correct numbers
+
+        it 'should yield correct numbers', inPage ->
+
+The title for this test is vague, but the reason is so that we
+may pack several tests into one `it` call.  (There is no need to
+reload the page after each of these.)
+
+First, the character count of a text node should be the number of
+characters in it.  Zero for an empty text node, and more for those
+with content.
+
+            pageDo -> window.T = document.createTextNode ''
+            pageExpects ( -> T.characterCount() ), 'toEqual', 0
+            pageDo -> T.textContent = 'A'
+            pageExpects ( -> T.characterCount() ), 'toEqual', 1
+            pageDo -> T.textContent = 'hi'
+            pageExpects ( -> T.characterCount() ), 'toEqual', 2
+            pageDo -> T.textContent = 'hello, friends'
+            pageExpects ( -> T.characterCount() ), 'toEqual', 14
+
+Second, a non-text node with no children should count as a single
+character.  Here I test images, horizontal rules, line breaks, and
+empty spans.
+
+            pageDo -> window.S = document.createElement 'img'
+            pageExpects ( -> S.characterCount() ), 'toEqual', 1
+            pageDo -> S = document.createElement 'hr'
+            pageExpects ( -> S.characterCount() ), 'toEqual', 1
+            pageDo -> S = document.createElement 'br'
+            pageExpects ( -> S.characterCount() ), 'toEqual', 1
+            pageDo -> S = document.createElement 'span'
+            pageExpects ( -> S.characterCount() ), 'toEqual', 1
+
+Finally, elements with children should return the total count of
+all characters in all children.
+
+            pageDo ->
+                window.D = document.createElement 'div'
+                D.innerHTML = '''some text <span
+                    >more text</span><br><span
+                    >nest<i>ed</i></span>'''
+            pageExpects ( -> D.characterCount() ), 'toEqual', 26
+            pageDo -> D.innerHTML = '<b><i><u>1</u></i></b>'
+            pageExpects ( -> D.characterCount() ), 'toEqual', 1
+
