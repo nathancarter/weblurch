@@ -22,10 +22,6 @@ also (of course) create unit tests verifying that it was completed
 correctly.
 
  * Implement the following cursor features in `LurchEditor`.
-    * Create member variables in the `LurchEditor` class for
-      storing the cursor position and anchor elements.
-    * Create `LurchEditor` method for refreshing those member
-      variables by seeking out the relevant elements.
     * Create method in Node prototype for computing the number of
       text characters in the node.  (For elements with no children,
       this is 1.  For elements with children, it is the sum of the

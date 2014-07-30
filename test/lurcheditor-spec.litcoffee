@@ -369,3 +369,75 @@ of the instance is empty.
             pageExpects ( -> LE.address div ), 'toBeNull'
             pageExpects ( -> LE.index div ), 'toBeNull'
 
+## LurchEditor cursor support
+
+We now test the routines that support placement and movement of
+cursor position and anchor elements in the document.
+
+    phantomDescribe 'LurchEditor cursor support',
+    './app/index.html', ->
+
+### should locate position and anchor elements
+
+        it 'should locate position and anchor elements', inPage ->
+
+In this test we construct a `LurchEditor` over a div that's got
+some elements inside that can function like cursor position and
+anchor markers.  We assign those elements the appropriate ids to
+indicate that they are cursor position and anchor markers, and
+verify that the editor can identify them as such.
+
+            pageDo ->
+
+Create a div and put inside five spans, only two of which are
+marked as cursor position and anchor elements.
+
+                window.div = document.createElement 'div'
+                document.body.appendChild div
+                window.LE = new LurchEditor div
+                temp = document.createElement 'span'
+                temp.textContent = 'not important'
+                div.appendChild temp
+                window.P = document.createElement 'span'
+                P.id = LurchEditor::positionId
+                P.textContent = 'foo'
+                div.appendChild P
+                temp = document.createElement 'span'
+                temp.textContent = 'also not important'
+                div.appendChild temp
+                window.A = document.createElement 'span'
+                A.id = LurchEditor::anchorId
+                A.textContent = 'bar'
+                div.appendChild A
+                temp = document.createElement 'span'
+                temp.textContent = 'yes, still not important'
+                div.appendChild temp
+
+Verify that, at first, the `LurchEditor` instance has no known
+cursor position or anchor elements.
+
+            pageExpects ( -> LE.cursor.position ), 'toBeNull'
+            pageExpects ( -> LE.cursor.anchor ), 'toBeNull'
+
+Now have the editor find its cursor position and anchor elements.
+
+            pageDo -> LE.updateCursor()
+
+Verify that it found the correct items.
+
+            pageExpects ( -> LE.cursor.position is P ),
+                'toBeTruthy'
+            pageExpects ( -> LE.cursor.anchor is A ),
+                'toBeTruthy'
+
+Next, remove those elements from the document.  We will then
+recompute the cursor position and anchor, and verify that they
+have become null once again.
+
+            pageDo ->
+                div.removeChild P
+                div.removeChild A
+                LE.updateCursor()
+            pageExpects ( -> LE.cursor.position ), 'toBeNull'
+            pageExpects ( -> LE.cursor.anchor ), 'toBeNull'
+

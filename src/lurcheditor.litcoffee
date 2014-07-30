@@ -68,6 +68,13 @@ they are not later undoable by a user.
 
             @clearStack()
 
+The editor keeps references to cursor position and anchor elements
+in a member variable, for easy access.  These begin as null,
+meaning that there is no cursor initially; the document doesn't
+have focus.
+
+            @cursor = position : null, anchor : null
+
 ## Functions used by the constructor
 
 Collect a list of all used ids in the given node, removing any
@@ -125,4 +132,32 @@ But if we have no main HTML element, return null.
 We therefore have the guarantee `N == LE.index LE.address N`
 inherited from the address and index functions defined in the Node
 prototype.
+
+## Cursor support
+
+The following two element ids will be used for the elements that
+represent the cursor position and anchor in the document.
+
+        positionId: 'lurch-cursor-position'
+        anchorId: 'lurch-cursor-anchor'
+
+To update the member variables that point to the cursor and/or its
+anchor, we have the following routine.  Although in many cases it's
+possible to simply keep those member variables up-to-date, we have
+this routine in case a document is restored from a serialized state
+with a cursor at a specific position, so that the member variables
+can get caught up to the document state.
+
+        updateCursor: ->
+            @cursor = position : null, anchor : null
+            walk = start = document.getElementById \
+                LurchEditor::positionId
+            while walk and not @cursor.position
+                if walk is @element then @cursor.position = start
+                walk = walk.parentNode
+            walk = start = document.getElementById \
+                LurchEditor::anchorId
+            while walk and not @cursor.anchor
+                if walk is @element then @cursor.anchor = start
+                walk = walk.parentNode
 
