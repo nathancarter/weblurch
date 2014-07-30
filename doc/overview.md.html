@@ -1,0 +1,77 @@
+<html>
+    <head>
+        <link rel="stylesheet"
+              href="../bootstrap/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="./main.css"/>
+        <link rel="stylesheet" href="./obsidian.css"/>
+        <link rel="shortcut icon" href="favicon.png"/>
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config( {
+              tex2jax: { inlineMath: [ [ '$', '$' ], [ '\\(', '\\)' ] ] }
+            } );
+        </script>
+        <script type="text/javascript"
+                src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+        <title>webLurch docs: overview</title>
+    </head>
+    <body>
+        <div id="left">
+            <p align=center>Page contents</p>
+<p><a href='#project-overview'>Project Overview</a></p><ul>
+<li><a href='#what-is-lurch-now-'>What is Lurch now?</a></li><li><a href='#what-39-s-the-plan-'>What&#39;s the plan?</a></li><li><a href='#what-39-s-built-so-far-'>What&#39;s built so far?</a></li>
+        </div>
+        <div id="middle">
+            <h1><a name='project-overview'></a>Project Overview &nbsp;  <font size=-1><a href='#project-overview'><span class="glyphicon glyphicon-link"></span></a></font></h1><h2><a name='what-is-lurch-now-'></a>What is Lurch now? &nbsp;  <font size=-1><a href='#what-is-lurch-now-'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Lurch is a math-enabled word processor that can check the reasoning
+in a user&#39;s document, including mathematical proofs.  The current
+version is <a href="http://lurchmath.org">a desktop app</a>.  The purpose of
+this project is to move it to the web.</p>
+<h2><a name='what-39-s-the-plan-'></a>What&#39;s the plan? &nbsp;  <font size=-1><a href='#what-39-s-the-plan-'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Doing so requires implementing a meaning-enabled word processor in
+the browser.  For a variety of reasons I won&#39;t go into here, just
+setting a div as content-editable causes great problems.  Therefore
+it is necessary to implement the word processor from the ground up,
+writing our own display, editing events, keyboard and mouse
+handling, and so on.  This is slow, but gives great power and
+control in the long run.</p>
+<p>Thus the project comes in roughly the following <em>four phases,</em>
+although you can read much more details about these on the
+<a href="progress.md.html">Progress Page</a> (what has been done so far) and
+the <a href="plan.md.html">Plan Page</a> (what still must be done).</p>
+<ol>
+<li>Basement - Build ways to monitor and respond to edits in the
+DOM, undo/redo them, combine them, etc.
+<em>This has been built and unit tested.</em></li>
+<li>Lobby - Build keyboard and mouse handlers that perform DOM
+edits, including cursor movements, selection, typing,
+formatting, copy, paste, etc.
+<em>This is not yet built, but when it is, there will be a
+full word processor in the browser.  It will not be
+Lurch-specific, in that it could easily be re-used for another
+project.</em></li>
+<li>Guest rooms - Add &quot;smart characters&quot; to the word processor,
+that is, custom objects that sit in a paragraph like a single
+(perhaps very large) character, but have a different purpose
+(e.g., images, equations, invisible groupers).  Add background
+processing threads that can deal with the semantics of these
+custom objects.
+<em>This is not yet built, but when it is, the Lurch word
+processor will become powerful enough to handle a wide variety
+of non-Lurch tasks, including many kinds of meaningful
+documents, like various computational tools.</em></li>
+<li>Penthouse suite - Apply the previous layer to the specific
+needs of Lurch, building validation, rules, properties, etc.
+<em>This is not yet built, but when it is, Lurch will have
+migrated from the desktop to the web.</em></li>
+</ol>
+<h2><a name='what-39-s-built-so-far-'></a>What&#39;s built so far? &nbsp;  <font size=-1><a href='#what-39-s-built-so-far-'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Always check with the <a href="progress.md.html">Progress Page</a> to see the
+answer to this question.</p>
+<p>Also, <a href="../testapp/index.html">the test app</a> is the most advanced
+product in this repository at the moment, and the help link on its
+page can tell you how to use it, if you&#39;re a developer or tester.</p>
+
+        </div>
+        <div id="right">
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+        </div>
+    </body>
+</html>
