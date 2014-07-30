@@ -5,16 +5,15 @@
 
 This project is an attempt to rewrite [Lurch](http://lurchmath.org)
 in a web browser, together with many major design improvements at
-the same time.  So far the main development on *Lurch* is still in
-the desktop app, at the website just linked to.  If this project
-becomes more promising later, then more development efforts will
-be focused here.
- * To know what parts have already been built, see
-   [the Project Progress page](progress.md.html).
- * To know what parts remain to be done, see
-   [the Project Plan](plan.md.html).
- * To try any of this code out, see
-   [Getting Started](#getting-started), below.
+the same time.  But this project is only just beginning; the main
+Lurch product is still the desktop app, which still works very well
+(within limits).
+
+For more information on *this* project:
+ * [Overview](overview.md.html) - start here
+ * [Project Progress page](progress.md.html) - what's been built
+ * [The Project Plan](plan.md.html) - what's left to build
+ * [Getting Started](#getting-started) - to try it out
 
 ## Structure of this repository
 
