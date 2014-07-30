@@ -17,21 +17,43 @@ than the earlier ones.
 
 ### Cursor
 
+For every item in this section, as it is accomplished, we should
+also (of course) create unit tests verifying that it was completed
+correctly.
+
  * Design and build the `LurchEditor` API for placing a cursor in
    the document, or nowhere, depending on whether the document has
    focus.
+    * Create LurchEditor method for finding the one span in the
+      document with the LECursor class.
+    * Create method in Node prototype for computing the number of
+      text characters in the node.  (For elements with no children,
+      this is 1.  For elements with children, it is the sum of the
+      values for the children.)
+    * Create a Node prototype method for splitting the node after
+      the character with a given index, and returning the two nodes
+      before and after the split.  (Or it can return `[A,null]` if
+      the position equals the text length, and `[null,B]` if the
+      position equals zero.)
+    * Create a LurchEditor method for placing a cursor at a given
+      position inside a given node (which defaults to the main
+      div of the editor).
+    * Create a LurchEditor method for removing the cursor from the
+      document (i.e., defocusing) and normalizing as needed.
+      Ensure that this is automatically called if the
+      insert-a-cursor method is called when a cursor is already
+      there.
+    * Add to LurchEditor instances a timer that flashes the cursor
+      just as MathQuill does.
+    * Add methods for moving the cursor by a given delta.
+ * Design extensions to that API (and the corresponding
+   representations) that provide for a cursor position and anchor,
+   so that selections are possible.
  * Add all the functions for dealing with that cursor as if it
    were a real cursor.  Each of these may make several edits to the
    document, and so should use the new block-of-edits support
    mentioned above.
-    * insert a cursor before/after a given sub-node of the
-      editable DOM element (iff one isn’t already in the element
-      somewhere).
-    * get the existing cursor object.
-    * jump to abs pos, with or without moving the anchor
-    * move by rel amt, with or without moving the anchor
     * insert text, HTML, or entire object before cursor
-    * split content at cursor
     * replace selection with text, HTML, or entire object
     * change properties of selection (e.g., font, color)
     * delete character before/after cursor
@@ -46,8 +68,6 @@ than the earlier ones.
       * implement copy, and then cut is copy-then-delete
       * implement paste when there is no selection, and then paste
         when there is a selection is just delete-then-paste
- * As you create each, create tests for it as well, and save
-   them in the repository
 
 ### Keyboard
 
