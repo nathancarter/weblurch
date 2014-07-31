@@ -74,6 +74,7 @@ correctly.
 
  * Layer on top of the cursor functions a set of keyboard event
    handlers, which call the cursor functions under the hood.
+   [This Stack Overflow question and answer may be useful.](http://stackoverflow.com/questions/497094/how-do-i-find-out-which-dom-element-has-the-focus)
     * text character = insert text before cursor or replace
       selection with text
     * left/right arrow = move by rel amt +/-1
