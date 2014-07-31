@@ -21,33 +21,45 @@ For every item in this section, as it is accomplished, we should
 also (of course) create unit tests verifying that it was completed
 correctly.
 
+ * Prepare for cursor features by adding these methods to the Node
+   prototype.
+    * A method for finding the next leaf node after a given leaf
+      node.
+    * A method for finding the previous leaf node before a given
+      leaf node.
  * Implement the following cursor features in `LurchEditor`.
-    * Create a Node prototype method for splitting the node after
-      the character with a given index, and returning the two nodes
-      before and after the split.  (Or it can return `[A,null]` if
-      the position equals the text length, and `[null,B]` if the
-      position equals zero.)
-    * Create a `LurchEditor` method for placing a cursor position
-      at a given position inside a given node (which defaults to
-      the main div of the editor).
-    * Create a `LurchEditor` method for removing the cursor from
-      the document (i.e., defocusing) and normalizing as needed.
-      Ensure that this is automatically called if the
-      insert-a-cursor method is called when a cursor is already
-      there.
+    * Add documentation stating that the cursor position and
+      anchor spans are allowed to be the exact same element, and
+      in fact we *want* that to be the case iff there is no
+      selection, which is iff there is no visual difference between
+      the position and anchor spots.
+    * Create a `LurchEditor` method for counting the number of
+      cursor positions in any given node.  The default value of the
+      parameter will be the editor's root element.  This includes
+      counting twice positions that will be visually identical,
+      but semantically different.  It does *not* include counting
+      any positions in any invisible elements.
+    * Create a `LurchEditor` method for lifting the cursor out of
+      the document, if one exists.  (If one does not exist, it
+      should call `updateCursor` to be sure of that, first.)
+      Normalize the parent after removing it.
+    * Create a `LurchEditor` method for placing the cursor position
+      at a given cursor position inside a given node (which
+      defaults to the zeroth position of the root element of the
+      editor).  Be sure to remove the cursor before placing it.
     * Add to `LurchEditor` instances a timer that flashes the
       cursor just as MathQuill does.
-    * Add to the Node prototype a method for finding the previous
-      leaf node in the tree, even if that's a "cousin" node.  Do
-      the ame for "next" nodes.
     * Add a CSS class that gives a blue background, for use on the
       cursor selection.
     * Add to the cursor placement routine a parameter for whether
       or not to move the anchor as well, defaulting to yes.  If the
-      anchor does not move, ensure that all elements between the
+      anchor does not move, ensure that all leaf nodes between the
       old and new cursor positions get the requisite class for
       showing the blue background.  If the anchor does move, ensure
-      that all elements that had that class lose it.
+      that all elements that had that class lose it.  Note that you
+      can tweak the old version of the routine by not *deleting*
+      the old cursor position, but replacing it with a temporary
+      marker, doing the highlighting, then removing the marker.
     * Add methods for moving the cursor by a given delta, with or
       without moving the anchor (defaults to moving it).
  * Add all the functions for dealing with that cursor as if it
