@@ -38,8 +38,8 @@ easier to write the tests below.
 ### should have global variables defined
 
         it 'should have global variables defined', inPage ->
-            pageExpects ( -> Node::address ), 'toBeTruthy'
-            pageExpects ( -> LurchEditor ), 'toBeTruthy'
+            pageExpects -> Node::address
+            pageExpects -> LurchEditor
 
 ### should initialize main div to id 0
 
@@ -79,10 +79,10 @@ Later we will also add tests that use `page.get 'content'`,
 ### should have global variables defined
 
         it 'should have global variables defined', inPage ->
-            pageExpects ( -> Node::address ), 'toBeTruthy'
-            pageExpects ( -> LurchEditor ), 'toBeTruthy'
-            pageExpects ( -> maindiv ), 'toBeTruthy'
-            pageExpects ( -> allTestHistories ), 'toBeTruthy'
+            pageExpects -> Node::address
+            pageExpects -> LurchEditor
+            pageExpects -> maindiv
+            pageExpects -> allTestHistories
 
 ### should initialize main div to id 0
 

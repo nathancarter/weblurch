@@ -20,7 +20,7 @@ That is, the class should be defined in the global namespace of
 the browser after loading the main app page.
 
         it 'should exist', inPage ->
-            pageExpects ( -> LurchEditor ), 'toBeTruthy'
+            pageExpects -> LurchEditor
 
 ## LurchEditor instances without DIVs
 
@@ -147,24 +147,18 @@ in the HTML code given above), verify that it is actually present
 in the document by looking up the id and verifying that the result
 is not null.
 
-            pageExpects ( ->
-                document.getElementById( 'yo' ) isnt null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( 'inner' ) isnt null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( '-1' ) isnt null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( '-0' ) isnt null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( '1.0' ) isnt null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( 'hank' ) isnt null ),
-                'toBeTruthy'
+            pageExpects ->
+                document.getElementById( 'yo' ) isnt null
+            pageExpects ->
+                document.getElementById( 'inner' ) isnt null
+            pageExpects ->
+                document.getElementById( '-1' ) isnt null
+            pageExpects ->
+                document.getElementById( '-0' ) isnt null
+            pageExpects ->
+                document.getElementById( '1.0' ) isnt null
+            pageExpects ->
+                document.getElementById( 'hank' ) isnt null
 
 Install the Lurch Editor in the DIV in question.
 
@@ -173,24 +167,14 @@ Install the Lurch Editor in the DIV in question.
 For each id that used to be in the document, verify that it is no
 longer present in the document.
 
-            pageExpects ( ->
-                document.getElementById( 'yo' ) is null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( 'inner' ) is null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( '-1' ) is null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( '-0' ) is null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( '1.0' ) is null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( 'hank' ) is null ),
-                'toBeTruthy'
+            pageExpects -> document.getElementById( 'yo' ) is null
+            pageExpects ->
+                document.getElementById( 'inner' ) is null
+            pageExpects -> document.getElementById( '-1' ) is null
+            pageExpects -> document.getElementById( '-0' ) is null
+            pageExpects -> document.getElementById( '1.0' ) is null
+            pageExpects ->
+                document.getElementById( 'hank' ) is null
 
 ### should assign unique integer ids
 
@@ -343,8 +327,7 @@ Four address queries.
             pageExpects ( -> LE.address div ), 'toEqual', []
             pageExpects ( -> LE.address span1 ), 'toEqual', [ 0 ]
             pageExpects ( -> LE.address span2 ), 'toEqual', [ 1 ]
-            pageExpects ( -> null is LE.address document ),
-                'toBeTruthy'
+            pageExpects -> null is LE.address document
 
 Four index queries, the last of which we expect to be undefined.
 
@@ -425,10 +408,8 @@ Now have the editor find its cursor position and anchor elements.
 
 Verify that it found the correct items.
 
-            pageExpects ( -> LE.cursor.position is P ),
-                'toBeTruthy'
-            pageExpects ( -> LE.cursor.anchor is A ),
-                'toBeTruthy'
+            pageExpects -> LE.cursor.position is P
+            pageExpects -> LE.cursor.anchor is A
 
 Next, remove those elements from the document.  We will then
 recompute the cursor position and anchor, and verify that they

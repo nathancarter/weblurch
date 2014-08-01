@@ -25,7 +25,7 @@ That is, the class should be defined in the global namespace of
 the browser after loading the main app page.
 
         it 'should exist', inPage ->
-            pageExpects ( -> DOMEditAction ), 'toBeTruthy'
+            pageExpects -> DOMEditAction
 
 ### should have "appendChild" instances
 
@@ -40,9 +40,7 @@ appended.
                 div = document.getElementById '0'
                 window.T = new DOMEditAction 'appendChild', div,
                     document.createElement 'span'
-            pageExpects ( ->
-                T.tracker is DOMEditTracker.instances[0] ),
-                'toBeTruthy'
+            pageExpects -> T.tracker is DOMEditTracker.instances[0]
             pageExpects ( -> T.node ), 'toEqual', []
             pageExpects ( -> T.toAppend ),
                 'toEqual', tagName : 'SPAN'
@@ -78,9 +76,7 @@ index that the newly inserted child will have after insertion.
                 div = document.getElementById '0'
                 window.T = new DOMEditAction 'insertBefore', div,
                     document.createElement 'span'
-            pageExpects ( ->
-                T.tracker is DOMEditTracker.instances[0] ),
-                'toBeTruthy'
+            pageExpects -> T.tracker is DOMEditTracker.instances[0]
             pageExpects ( -> T.node ), 'toEqual', []
             pageExpects ( -> T.toInsert ),
                 'toEqual', tagName : 'SPAN'
@@ -123,9 +119,7 @@ content at that time.
                 div.appendChild span
                 div.appendChild document.createTextNode 'five'
                 window.T = new DOMEditAction 'normalize', div
-            pageExpects ( ->
-                T.tracker is DOMEditTracker.instances[0] ),
-                'toBeTruthy'
+            pageExpects -> T.tracker is DOMEditTracker.instances[0]
             pageExpects ( -> T.toJSON() ), 'toEqual', {
                 node : [], type : 'normalize',
                 sequences : {
@@ -163,9 +157,7 @@ value that the attribute had before removal.
                 div = document.getElementById '0'
                 window.T = new DOMEditAction 'removeAttribute',
                     div, 'id'
-            pageExpects ( ->
-                T.tracker is DOMEditTracker.instances[0] ),
-                'toBeTruthy'
+            pageExpects -> T.tracker is DOMEditTracker.instances[0]
             pageExpects ( -> T.node ), 'toEqual', []
             pageExpects ( -> T.name ), 'toEqual', 'id'
             pageExpects ( -> T.value ), 'toEqual', '0'
@@ -201,9 +193,7 @@ value that the attribute had before removal.
                 div = document.getElementById '0'
                 window.T = new DOMEditAction 'removeAttributeNode',
                     div, div.getAttributeNode 'id'
-            pageExpects ( ->
-                T.tracker is DOMEditTracker.instances[0] ),
-                'toBeTruthy'
+            pageExpects -> T.tracker is DOMEditTracker.instances[0]
             pageExpects ( -> T.node ), 'toEqual', []
             pageExpects ( -> T.name ), 'toEqual', 'id'
             pageExpects ( -> T.value ), 'toEqual', '0'
@@ -244,9 +234,7 @@ a serialized version of the removed child.
                 div.appendChild document.createTextNode 'more text'
                 window.T = new DOMEditAction 'removeChild', div,
                     span
-            pageExpects ( ->
-                T.tracker is DOMEditTracker.instances[0] ),
-                'toBeTruthy'
+            pageExpects -> T.tracker is DOMEditTracker.instances[0]
             pageExpects ( -> T.node ), 'toEqual', []
             pageExpects ( -> T.childIndex ), 'toEqual', 1
             pageExpects ( -> T.child ), 'toEqual', {
@@ -294,9 +282,7 @@ member containing a serialization of the replacement child.
                 repl.innerHTML = 'Announcement!'
                 window.T = new DOMEditAction 'replaceChild',
                     div, repl, span
-            pageExpects ( ->
-                T.tracker is DOMEditTracker.instances[0] ),
-                'toBeTruthy'
+            pageExpects -> T.tracker is DOMEditTracker.instances[0]
             pageExpects ( -> T.node ), 'toEqual', []
             pageExpects ( -> T.childIndex ), 'toEqual', 1
             pageExpects ( -> T.oldChild ), 'toEqual', {
@@ -343,9 +329,7 @@ member containing the value after the attribute is set.
                 div = document.getElementById '0'
                 window.T = new DOMEditAction 'setAttribute', div,
                     'id', 1
-            pageExpects ( ->
-                T.tracker is DOMEditTracker.instances[0] ),
-                'toBeTruthy'
+            pageExpects -> T.tracker is DOMEditTracker.instances[0]
             pageExpects ( -> T.node ), 'toEqual', []
             pageExpects ( -> T.name ), 'toEqual', 'id'
             pageExpects ( -> T.oldValue ), 'toEqual', '0'
@@ -383,9 +367,7 @@ member containing the value after the attribute is set.
                 attr.value = 1
                 window.T = new DOMEditAction 'setAttributeNode',
                     div, attr
-            pageExpects ( ->
-                T.tracker is DOMEditTracker.instances[0] ),
-                'toBeTruthy'
+            pageExpects -> T.tracker is DOMEditTracker.instances[0]
             pageExpects ( -> T.node ), 'toEqual', []
             pageExpects ( -> T.name ), 'toEqual', 'id'
             pageExpects ( -> T.oldValue ), 'toEqual', '0'
@@ -445,24 +427,22 @@ ways; we must test both.
 Now we verify the same things for both `T3` and `T4`: that they
 have the correct tracker, node, description, type, and subactions.
 
-            pageExpects ( ->
-                T3.tracker is DOMEditTracker.instances[0] ),
-                'toBeTruthy'
+            pageExpects ->
+                T3.tracker is DOMEditTracker.instances[0]
             pageExpects ( -> T3.node ), 'toEqual', []
             pageExpects ( -> T3.description ),
                 'toEqual', 'Document edit'
             pageExpects ( -> T3.type ), 'toEqual', 'compound'
-            pageExpects ( -> T3.subactions[0] is T1 ), 'toBeTruthy'
-            pageExpects ( -> T3.subactions[1] is T2 ), 'toBeTruthy'
-            pageExpects ( ->
-                T4.tracker is DOMEditTracker.instances[0] ),
-                'toBeTruthy'
+            pageExpects -> T3.subactions[0] is T1
+            pageExpects -> T3.subactions[1] is T2
+            pageExpects ->
+                T4.tracker is DOMEditTracker.instances[0]
             pageExpects ( -> T4.node ), 'toEqual', []
             pageExpects ( -> T4.description ),
                 'toEqual', 'Document edit'
             pageExpects ( -> T4.type ), 'toEqual', 'compound'
-            pageExpects ( -> T4.subactions[0] is T1 ), 'toBeTruthy'
-            pageExpects ( -> T4.subactions[1] is T2 ), 'toBeTruthy'
+            pageExpects -> T4.subactions[0] is T1
+            pageExpects -> T4.subactions[1] is T2
 
 ### should correctly describe "compound" instances
 
@@ -494,8 +474,7 @@ of the class with types other than those tested in the other tests
 in this specification, above.
 
         it 'should have no other instances', inPage ->
-            pageDo ->
-                window.div = document.getElementById '0'
+            pageDo -> window.div = document.getElementById '0'
             pageExpectsError ( -> new DOMEditAction 'foo', div )
             pageExpectsError ( -> new DOMEditAction div, div )
             pageExpectsError ( -> new DOMEditAction 17, div )
