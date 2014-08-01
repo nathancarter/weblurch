@@ -15,6 +15,18 @@ than the earlier ones.
 
 ## More Word Processing Foundation
 
+### Editing actions
+
+ * Update the idea of an editing action to be able to, after it's
+   constructed, report whether it is an actual change or not.
+   E.g., if `normalize` is called when there are no adjacent text
+   noes, or if `setAttribute` is called with parameters that re-set
+   an attribute to its current value, and so on, then those editing
+   actions should report themselves as null actions.
+ * Whenever a null action is reported to the edit tracker, do not
+   push it on the stack, and do not notify listeners of a change
+   in the document.
+
 ### Cursor
 
 For every item in this section, as it is accomplished, we should
