@@ -21,12 +21,6 @@ For every item in this section, as it is accomplished, we should
 also (of course) create unit tests verifying that it was completed
 correctly.
 
- * Prepare for cursor features by adding these methods to the Node
-   prototype.
-    * A method for finding the next leaf node after a given leaf
-      node.
-    * A method for finding the previous leaf node before a given
-      leaf node.
  * Implement the following cursor features in `LurchEditor`.
     * Add documentation stating that the cursor position and
       anchor spans are allowed to be the exact same element, and

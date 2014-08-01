@@ -1539,6 +1539,44 @@ Validate the recorded edit actions.
                     oldValue : 'yes', newValue : 'no'
                 }
 
+## leaf navigation in Node class
+
+The tests in this section test the `nextLeaf` and `previousLeaf`
+member functions in the `Node` prototype.
+[See their definition here.](
+domutils.litcoffee.html#next-and-previous-leaves).
+
+    phantomDescribe 'leaf navigation in Node class',
+    './app/index.html', ->
+
+### should be defined
+
+First, just verify that both functions are present.
+
+        it 'should be defined', inPage ->
+            pageExpects -> Node::nextLeaf
+            pageExpects -> Node::previousLeaf
+
+### should work among sibling leaves
+
+        it 'should work among sibling leaves', inPage ->
+
+We test the simplest case, when we call the functions on leaf
+nodes who have immediate sibling nodes that are also leaves, and
+thus which should be returned by the functions.  We work within
+the following environment.
+
+            pageDo ->
+                window.div = document.createElement 'div'
+                div.innerHTML = '''A section of text.
+                                   <br><hr>Yet more text.'''
+
+Within the div we find just four leaf nodes.  Let's ensure that
+the functions work correctly among those four.
+
+            pageExpects ->
+                div.childNodes[0].nextLeaf() is div.childNodes[1]
+
 ## characterCount member of Node class
 
 The tests in this section test the `characterCount` member

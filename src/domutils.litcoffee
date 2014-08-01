@@ -264,6 +264,56 @@ original method.
 
             result
 
+## Next and previous leaves
+
+Although the DOM provides properties for the next and previous
+siblings of any node, it does not provide a method for finding the
+next or previous *leaf* nodes.  The following additions to the Node
+prototype do just that.
+
+One can call `N.nextLeaf()` to get the next leaf node in the
+document strictly after `N` (regardless of whether `N` itself is a
+leaf), or `N.nextLeaf M` to restrict the search to within the
+ancestor node `M`.  `M` defaults to the entire document.  `M` must
+be an ancestor of `N`, or this default is used.
+
+    Node::nextLeaf = ( container = null ) ->
+
+Walk up the DOM tree until we can find a previous sibling.  Do not
+step outside the bounds of the document or `container`.
+
+        walk = this
+        while walk and walk isnt container and not walk.nextSibling
+            walk = walk.parentNode
+
+If no next sibling could be found, quit now, returning null.
+
+        walk = walk?.nextSibling
+        if not walk then return null
+
+We have a next sibling, so return its first leaf node.
+
+        while walk.childNodes.length > 0
+            walk = walk.childNodes[0]
+        walk
+
+The following routine is analogous to the previous one, but in the
+opposite direction (finding the previous leaf node, within the
+given `container`, if such a leaf node exists).  Its code is not
+documented because it is so similar to the previous routine, which
+is documented.
+
+    Node::previousLeaf = ( container = null ) ->
+        walk = this
+        while walk and walk isnt container and
+          not walk.previousSibling
+            walk = walk.parentNode
+        walk = walk?.previousSibling
+        if not walk then return null
+        while walk.childNodes.length > 0
+            walk = walk.childNodes[walk.childNodes.length - 1]
+        walk
+
 ## Character counts
 
 The following simple sum-of-an-array function is handy below.
