@@ -71,7 +71,8 @@ they are not later undoable by a user.
 The editor keeps references to cursor position and anchor elements
 in a member variable, for easy access.  These begin as null,
 meaning that there is no cursor initially; the document doesn't
-have focus.
+have focus.  For more information on these variables, see the
+[section below on the cursor](#cursor-support).
 
             @cursor = position : null, anchor : null
 
@@ -141,12 +142,23 @@ represent the cursor position and anchor in the document.
         positionId: 'lurch-cursor-position'
         anchorId: 'lurch-cursor-anchor'
 
-To update the member variables that point to the cursor and/or its
-anchor, we have the following routine.  Although in many cases it's
-possible to simply keep those member variables up-to-date, we have
-this routine in case a document is restored from a serialized state
-with a cursor at a specific position, so that the member variables
-can get caught up to the document state.
+The `cursor` member of this class contains two fields, `position`
+and `anchor`.
+ * These may both be null, meaning that there is no cursor in the
+   document.
+ * These may both be the same element, meaning that there is no
+   selection; the cursor position and anchor are the same.
+ * These may be different elements, meaning that there is a
+   selection; it includes all leaves between the position and
+   anchor.
+
+Because it is possible for the document state to become out-of-sync
+with these variables, we provide the following routine to update
+them.  Although in many cases it's possible to simply keep those
+member variables up-to-date, we have this routine in case a
+document is restored from a serialized state with a cursor at a
+specific position, so that the member variables can get caught up
+to the document state.
 
         updateCursor: ->
             @cursor = position : null, anchor : null

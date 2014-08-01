@@ -34,11 +34,6 @@ also (of course) create unit tests verifying that it was completed
 correctly.
 
  * Implement the following cursor features in `LurchEditor`.
-    * Add documentation stating that the cursor position and
-      anchor spans are allowed to be the exact same element, and
-      in fact we *want* that to be the case iff there is no
-      selection, which is iff there is no visual difference between
-      the position and anchor spots.
     * Create a `LurchEditor` method for counting the number of
       cursor positions in any given node.  The default value of the
       parameter will be the editor's root element.  This includes
