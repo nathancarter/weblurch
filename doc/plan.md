@@ -34,12 +34,6 @@ also (of course) create unit tests verifying that it was completed
 correctly.
 
  * Implement the following cursor features in `LurchEditor`.
-    * Create a `LurchEditor` method for counting the number of
-      cursor positions in any given node.  The default value of the
-      parameter will be the editor's root element.  This includes
-      counting twice positions that will be visually identical,
-      but semantically different.  It does *not* include counting
-      any positions in any invisible elements.
     * Create a `LurchEditor` method for lifting the cursor out of
       the document, if one exists.  (If one does not exist, it
       should call `updateCursor` to be sure of that, first.)

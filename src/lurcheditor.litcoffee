@@ -173,3 +173,77 @@ to the document state.
                 if walk is @element then @cursor.anchor = start
                 walk = walk.parentNode
 
+This class supports placing the cursor inside some HTML elements,
+but not others.  For isntance, you can place your cursor inside a
+SPAN, but not inside an HR.  The following variable local to this
+module stores the list of variables in which we can place the
+cursor.  (These were selected from [the full list on the w3schools
+website](http://www.w3schools.com/tags/).)
+
+        elementsSupportingCursor: t.toUpperCase() for t in '''
+            a abbr acronym address article aside b bdi bdo big
+            blockquote caption center cite code dd details dfn div
+            dl dt em fieldset figcaption figure footer form header
+            h1 h2 h3 h4 h5 h6 i kbd label legend li mark nav ol p
+            pre q s samp section small span strong sub summary sup
+            td th time u ul var'''.trim().split /\s+/
+
+For placing the cursor within a node, we need to be able to compute
+how many cursor positions are available within that node.  The
+following routine does so, recursively.
+
+Note that it computes only the number of cursor positions *inside*
+the node, so a node such as &lt;span&gt;hi&lt;/span&gt; would have
+three locations (before the h, after the h, and after the i).  The
+two locations outside the node (before and after it) are *not*
+counted by this routine; they will be counted if this were called
+on the span's parent node.
+
+This is even true for text nodes!  For example, the text node child
+inside the span in the previous paragraph has one inner location,
+because the positions before the h and after the i do not count as
+"inside."
+
+        cursorPositionsIn: ( node ) ->
+
+Text nodes can have the cursor before any character but the first,
+because, as described above, we are counting only the cursor
+positions *inside* the node.  For text nodes with no content, this
+has the funny consequence of giving -1 cursor positions, but that
+is acceptable.
+
+            if node instanceof Text
+                node.length - 1
+
+Next we handle the two subcases of nodes without children.
+
+Some nodes with no children are only temporarily childless; e.g.,
+an empty span can contain the cursor and permit typing within it.
+For such nodes, we say there is one cursor location, which is
+immediately inside the node.
+
+Other nodes with no children are not permitted to contain the
+cursor (e.g., a horizontal rule, an image, etc.).  Such nodes have
+no cursor positions inside them.
+
+            else if node.childNodes.length is 0
+                if node.tagName in \
+                LurchEditor::elementsSupportingCursor then 1 \
+                else 0
+
+Nodes with children have a character count that depends on the
+character counts of the children.  We sum the character counts of
+the children, which accounts for all cursor positions strictly
+inside the children, but then we need to add the cursor positions
+immediately inside the parent node, but between children, or before
+or after all children.  There are $n+1$ of them, if $n$ is the
+number of children, because every child has a valid position before
+it, and the last child also has one additional valid position after
+it.
+
+            else
+                result = node.childNodes.length + 1
+                for child, index in node.childNodes
+                    result += @cursorPositionsIn child
+                result
+

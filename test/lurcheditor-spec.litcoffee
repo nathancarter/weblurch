@@ -422,3 +422,68 @@ have become null once again.
             pageExpects ( -> LE.cursor.position ), 'toBeNull'
             pageExpects ( -> LE.cursor.anchor ), 'toBeNull'
 
+### should provide the cursorPositionsIn member
+
+First, just verify that it's present.
+
+        it 'should provide the cursorPositionsIn member', inPage ->
+            pageExpects -> LurchEditor::cursorPositionsIn
+
+### should compute correct cursor position counts
+
+        it 'should compute correct cursor position counts',
+        inPage ->
+
+The title for this test is vague, but the reason is so that we
+may pack several tests into one `it` call.  (There is no need to
+reload the page after each of these.)
+
+First, the character count of a text node should be the number of
+characters in it minus one.
+
+            pageDo ->
+                window.L = new LurchEditor()
+                window.T = document.createTextNode ''
+            pageExpects ( -> L.cursorPositionsIn T ), 'toEqual', -1
+            pageDo -> T.textContent = 'A'
+            pageExpects ( -> L.cursorPositionsIn T ), 'toEqual', 0
+            pageDo -> T.textContent = 'hi'
+            pageExpects ( -> L.cursorPositionsIn T ), 'toEqual', 1
+            pageDo -> T.textContent = 'hello, friends'
+            pageExpects ( -> L.cursorPositionsIn T ), 'toEqual', 13
+
+Second, a non-text node with no children and no permission to
+contain the cursor should have no cursor positions.  Here I test
+just a few example such elements.
+
+            pageDo -> window.S = document.createElement 'img'
+            pageExpects ( -> L.cursorPositionsIn S ), 'toEqual', 0
+            pageDo -> window.S = document.createElement 'hr'
+            pageExpects ( -> L.cursorPositionsIn S ), 'toEqual', 0
+            pageDo -> window.S = document.createElement 'br'
+            pageExpects ( -> L.cursorPositionsIn S ), 'toEqual', 0
+
+Third, a non-text node with no children but with position to
+contain the cursor should have one cursor position.  Here I test
+just a few example such elements.
+
+            pageDo -> window.S = document.createElement 'a'
+            pageExpects ( -> L.cursorPositionsIn S ), 'toEqual', 1
+            pageDo -> window.S = document.createElement 'td'
+            pageExpects ( -> L.cursorPositionsIn S ), 'toEqual', 1
+            pageDo -> window.S = document.createElement 'span'
+            pageExpects ( -> L.cursorPositionsIn S ), 'toEqual', 1
+
+Finally, elements with children should return the total count of
+all characters in all children, plus the number of children,
+plus 1.
+
+            pageDo ->
+                window.D = document.createElement 'div'
+                D.innerHTML = '''some text <span
+                    >more text</span><br><span
+                    >nest<i>ed</i></span>'''
+            pageExpects ( -> L.cursorPositionsIn D ), 'toEqual', 33
+            pageDo -> D.innerHTML = '<b><i><u>1</u></i></b>'
+            pageExpects ( -> L.cursorPositionsIn D ), 'toEqual', 8
+
