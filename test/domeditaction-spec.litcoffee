@@ -389,6 +389,25 @@ description provided when their `toString` method is called.
             pageExpects ( -> T.toString() ),
                 'toEqual', 'Remove Hello, friend.'
 
+### should detect null "removeChild" instances
+
+That is, instances constructed as above should be able to correctly
+report whether or not they are null.  They are never null, because
+removing a child always changes the DOM.
+
+        it 'should detect null "removeChild" instances', inPage ->
+            pageDo ->
+                div = document.getElementById '0'
+                span = document.createElement 'span'
+                span.innerHTML = 'Hello, <b>friend.</b>'
+                div.appendChild span
+                window.T1 = new DOMEditAction 'removeChild', div,
+                    span
+                window.T2 = new DOMEditAction 'removeChild', span,
+                    span.childNodes[1]
+            pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
+            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
+
 ### should have "replaceChild" instances
 
 That is, we should be able to construct instances of the class with
@@ -443,6 +462,49 @@ description provided when their `toString` method is called.
             pageExpects ( -> T.toString() ),
                 'toEqual', 'Replace Hello, friend. with Heading'
 
+### should detect null "replaceChild" instances
+
+That is, instances constructed as above should be able to correctly
+report whether or not they are null.  They are null iff the new
+child has the same exact structure as the one it's replacing.
+
+        it 'should detect null "replaceChild" instances', inPage ->
+            pageDo ->
+                window.div = document.getElementById '0'
+                window.span = document.createElement 'span'
+                span.innerHTML = 'Hello, <b>friend.</b>'
+                span.setAttribute 'example', 'some value'
+                div.appendChild span
+
+Replacing it witha a completely different child must be a non-null
+action.
+
+                span2 = document.createElement 'span'
+                span2.innerHTML = '<h1>Heading</h1>'
+                window.T1 = new DOMEditAction 'replaceChild', div,
+                    span2, span
+            pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
+
+Replacing it with a very similar (but still slightly different)
+child must be a non-null action.
+
+            pageDo ->
+                span3 = document.createElement 'span'
+                span3.innerHTML = 'Hello, <b>friend.</b>'
+                window.T2 = new DOMEditAction 'replaceChild', div,
+                    span3, span
+            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
+
+Replacing it with an exact copy must be a null action.
+
+            pageDo ->
+                span4 = document.createElement 'span'
+                span4.innerHTML = 'Hello, <b>friend.</b>'
+                span4.setAttribute 'example', 'some value'
+                window.T3 = new DOMEditAction 'replaceChild', div,
+                    span4, span
+            pageExpects ( -> T3.isNullAction() ), 'toBeTruthy'
+
 ### should have "setAttribute" instances
 
 That is, we should be able to construct instances of the class with
@@ -478,6 +540,44 @@ description provided when their `toString` method is called.
                     'id', 17
             pageExpects ( -> T.toString() ),
                 'toEqual', 'Change id from 0 to 17'
+
+### should detect null "setAttribute" instances
+
+That is, instances constructed as above should be able to correctly
+report whether or not they are null.  They are null iff the new
+attribute value is the same as the old one.
+
+        it 'should detect null "setAttribute" instances',
+        inPage ->
+            pageDo ->
+                window.div = document.getElementById '0'
+
+If we set an existing attribute to its current value, that's a null
+action; setting it to a new value is a non-null action.
+
+                window.T1 = new DOMEditAction 'setAttribute', div,
+                    'id', 0
+                window.T2 = new DOMEditAction 'setAttribute', div,
+                    'id', 17
+            pageExpects ( -> T1.isNullAction() ), 'toBeTruthy'
+            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
+
+If we set a non-existant attribute to the empty string is a null
+action; setting it to any other value is a non-null action.
+
+            pageDo ->
+                window.T1 = new DOMEditAction 'setAttribute', div,
+                    'other-thing', ''
+                window.T2 = new DOMEditAction 'setAttribute', div,
+                    'other-thing', null
+                window.T3 = new DOMEditAction 'setAttribute', div,
+                    'other-thing', undefined
+                window.T4 = new DOMEditAction 'setAttribute', div,
+                    'other-thing', 'not empty'
+            pageExpects ( -> T1.isNullAction() ), 'toBeTruthy'
+            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
+            pageExpects ( -> T3.isNullAction() ), 'toBeFalsy'
+            pageExpects ( -> T4.isNullAction() ), 'toBeFalsy'
 
 ### should have "setAttributeNode" instances
 
@@ -519,6 +619,56 @@ description provided when their `toString` method is called.
                     div, change
             pageExpects ( -> T.toString() ),
                 'toEqual', 'Change id from 0 to 17'
+
+### should detect null "setAttributeNode" instances
+
+That is, instances constructed as above should be able to correctly
+report whether or not they are null.  They are null iff the new
+attribute value is the same as the old one.
+
+        it 'should detect null "setAttributeNode" instances',
+        inPage ->
+            pageDo ->
+                window.div = document.getElementById '0'
+
+If we set an existing attribute to its current value, that's a null
+action; setting it to a new value is a non-null action.
+
+                tmp = document.createAttribute 'id'
+                tmp.value = 0
+                window.T1 = new DOMEditAction 'setAttributeNode',
+                    div, tmp
+                tmp = document.createAttribute 'id'
+                tmp.value = 17
+                window.T2 = new DOMEditAction 'setAttributeNode',
+                    div, tmp
+            pageExpects ( -> T1.isNullAction() ), 'toBeTruthy'
+            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
+
+If we set a non-existant attribute to the empty string is a null
+action; setting it to any other value is a non-null action.
+
+            pageDo ->
+                tmp = document.createAttribute 'other-thing'
+                tmp.value = ''
+                window.T1 = new DOMEditAction 'setAttributeNode',
+                    div, tmp
+                tmp = document.createAttribute 'other-thing'
+                tmp.value = null
+                window.T2 = new DOMEditAction 'setAttributeNode',
+                    div, tmp
+                tmp = document.createAttribute 'other-thing'
+                tmp.value = undefined
+                window.T3 = new DOMEditAction 'setAttributeNode',
+                    div, tmp
+                tmp = document.createAttribute 'other-thing'
+                tmp.value = 'not empty'
+                window.T4 = new DOMEditAction 'setAttributeNode',
+                    div, tmp
+            pageExpects ( -> T1.isNullAction() ), 'toBeTruthy'
+            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
+            pageExpects ( -> T3.isNullAction() ), 'toBeFalsy'
+            pageExpects ( -> T4.isNullAction() ), 'toBeFalsy'
 
 ### should have "compound" instances
 
@@ -595,6 +745,50 @@ description provided when their `toString` method is called.
                 T3.description = 'Burnsnoggle the widgets'
             pageExpects ( -> T3.toString() ),
                 'toEqual', 'Burnsnoggle the widgets'
+
+### should detect null "compound" instances
+
+That is, instances constructed as above should be able to correctly
+report whether or not they are null.  They are null iff all of the
+subactions are null.
+
+        it 'should detect null "compound" instances', inPage ->
+            pageDo ->
+                window.div = document.getElementById '0'
+
+Let's create some non-null atomic actions.
+
+                attr = document.createAttribute 'id'
+                attr.value = 1
+                T1 = new DOMEditAction 'setAttributeNode', div,
+                    attr
+                span = document.createElement 'span'
+                span.textContent = 'abcdefg'
+                T2 = new DOMEditAction 'appendChild', div, span
+
+Let's create some null atomic actions.
+
+                T3 = new DOMEditAction 'normalize', div
+                T4 = new DOMEditAction 'setAttribute', div, 'id',
+                    '0'
+
+Let's form five compound actions, two null and three non-null.
+
+                window.C1 = new DOMEditAction 'compound',
+                    [ T3, T4 ]
+                window.C2 = new DOMEditAction 'compound',
+                    [ T4, T3 ]
+                window.C3 = new DOMEditAction 'compound',
+                    [ T1, T3 ]
+                window.C4 = new DOMEditAction 'compound',
+                    [ T2, T3 ]
+                window.C5 = new DOMEditAction 'compound',
+                    [ T1, T4 ]
+            pageExpects ( -> C1.isNullAction() ), 'toBeTruthy'
+            pageExpects ( -> C2.isNullAction() ), 'toBeTruthy'
+            pageExpects ( -> C3.isNullAction() ), 'toBeFalsy'
+            pageExpects ( -> C4.isNullAction() ), 'toBeFalsy'
+            pageExpects ( -> C5.isNullAction() ), 'toBeFalsy'
 
 ### should have no other instances
 

@@ -17,7 +17,6 @@ than the earlier ones.
 
 ### Editing actions
 
- * Complete the testing of `DOMEditAction.isNullAction()`.
  * Whenever a null action is reported to the edit tracker, do not
    push it on the stack, and do not notify listeners of a change
    in the document.

@@ -400,11 +400,14 @@ is a different string than the old value.
                 return @oldValue is @newValue
 
 A compound action is a null action iff all its elements are.
+Although we could make it null iff the combined sequence of actions
+is guaranteed to yield the same document as before, but that is
+both less useful and harder to compute.
 
             else if @type is 'compound'
                 for subaction in @subactions
-                    if subaction.isNull() then return yes
-                return no
+                    if not subaction.isNullAction() then return no
+                return yes
 
 And those are all the types we know.
 
