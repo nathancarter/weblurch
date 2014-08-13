@@ -123,6 +123,30 @@ description provided when their `toString` method is called.
             pageExpects ( -> T.toString() ),
                 'toEqual', 'Insert Hello, friend.'
 
+### should detect null "insertBefore" instances
+
+That is, instances constructed as above should be able to correctly
+report whether or not they are null.  In every single case, they
+should report non-null, since inserting a child is always an action
+that impacts the DOM, and thus is not a null action.
+
+        it 'should detect null "insertBefore" instances', inPage ->
+            pageDo ->
+                div = document.getElementById '0'
+                span1 = document.createElement 'span'
+                span1.innerHTML = 'Hello, <b>friend.</b>'
+                span2 = document.createElement 'span'
+                span2.innerHTML = 'Hello, <b>frenemy.</b>'
+                window.T1 = new DOMEditAction 'insertBefore', div,
+                    span1
+                window.T2 = new DOMEditAction 'insertBefore', div,
+                    span2
+                window.T3 = new DOMEditAction 'insertBefore',
+                    span1, span2, span1.childNodes[1]
+            pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
+            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
+            pageExpects ( -> T3.isNullAction() ), 'toBeFalsy'
+
 ### should have "normalize" instances
 
 That is, we should be able to construct instances of the class with
@@ -167,6 +191,47 @@ description provided when their `toString` method is called.
             pageExpects ( -> T.toString() ),
                 'toEqual', 'Normalize text'
 
+### should detect null "normalize" instances
+
+That is, instances constructed as above should be able to correctly
+report whether or not they are null.  Such instances should be null
+actions iff there were no adjacent text nodes under the node on
+which the action was constructed.
+
+        it 'should detect null "normalize" instances', inPage ->
+            pageDo ->
+                div = document.getElementById '0'
+
+Create a span in which normalize does nothing.
+
+                span1 = document.createElement 'span'
+                span1.innerHTML = 'Hello, <b>friend.</b>'
+
+Create a span in which normalize does something.
+
+                span2 = document.createElement 'span'
+                span2.textContent = 'Hello...'
+                span2.appendChild document.createTextNode 'frenemy'
+
+Create a div containing both spans, so that we can check more than
+one level deep.  I don't use the existing div, because later tests
+assume that I haven't modified it.
+
+                div2 = document.createElement 'div'
+                div2.appendChild span1
+                div2.appendChild span2
+
+Then we investigate whether normalize is null on each of those two
+spans, as well as the whole div.  It should be null only on the
+first span, and non-null everywhere else.
+
+                window.T1 = new DOMEditAction 'normalize', div2
+                window.T2 = new DOMEditAction 'normalize', span1
+                window.T3 = new DOMEditAction 'normalize', span2
+            pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
+            pageExpects ( -> T2.isNullAction() ), 'toBeTruthy'
+            pageExpects ( -> T3.isNullAction() ), 'toBeFalsy'
+
 ### should have "removeAttribute" instances
 
 That is, we should be able to construct instances of the class with
@@ -200,6 +265,27 @@ description provided when their `toString` method is called.
                     div, 'id'
             pageExpects ( -> T.toString() ),
                 'toEqual', 'Remove id attribute'
+
+### should detect null "removeAttribute" instances
+
+That is, instances constructed as above should be able to correctly
+report whether or not they are null.  They are null iff the
+attribute to be removed didn't exist in the first place.
+
+        it 'should detect null "removeAttribute" instances',
+        inPage ->
+            pageDo ->
+                div = document.getElementById '0'
+
+We try it on an attribute that exists, and then one that doesn't,
+requiring "null" and "not null" as the answers, in that order.
+
+                window.T1 = new DOMEditAction 'removeAttribute',
+                    div, 'id'
+                window.T2 = new DOMEditAction 'removeAttribute',
+                    div, 'attribute-not-there'
+            pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
+            pageExpects ( -> T2.isNullAction() ), 'toBeTruthy'
 
 ### should have "removeAttributeNode" instances
 
@@ -238,6 +324,27 @@ description provided when their `toString` method is called.
                     div, togo
             pageExpects ( -> T.toString() ),
                 'toEqual', 'Remove id attribute'
+
+### should detect null "removeAttributeNode" instances
+
+That is, instances constructed as above should be able to correctly
+report whether or not they are null.  They are null iff the
+attribute to be removed didn't exist in the first place.
+We proceed the same as in the "removeAttribute" case, above.
+
+        it 'should detect null "removeAttributeNode" instances',
+        inPage ->
+            pageDo ->
+                div = document.getElementById '0'
+                togo = document.createAttribute 'id'
+                window.T1 = new DOMEditAction \
+                    'removeAttributeNode', div, togo
+                togo = document.createAttribute \
+                    'attribute-not-there'
+                window.T2 = new DOMEditAction \
+                    'removeAttributeNode', div, togo
+            pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
+            pageExpects ( -> T2.isNullAction() ), 'toBeTruthy'
 
 ### should have "removeChild" instances
 

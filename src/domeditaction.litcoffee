@@ -273,7 +273,8 @@ previous type, under the same names.
                 if data[0] not instanceof Attr
                     throw Error 'Invalid attribute node: ' +
                                 data[0]
-                { @name, @value } = data[0]
+                { @name } = data[0]
+                @value = node.getAttribute @name
 
 For type "removeChild", we store the child's original index within
 `@node` as `@childIndex`, and a serialization of the child, as
@@ -375,6 +376,7 @@ the attribute, in which case `@value` will be null.
 
             if @type is 'removeAttribute' or
                @type is 'removeAttributeNode'
+                console.log 'old attribute is', @name, @value
                 return @value is null
 
 Normalize is a null action iff the constructor did not find any
@@ -382,7 +384,7 @@ sequences of adjacent text nodes anywhere in the node to be
 normalized.
 
             else if @type is 'normalize'
-                return @sequences.length is 0
+                return JSON.equals @sequences, {}
 
 Replacing a child with another is an actual modification iff the
 "before" child is distinguishable from the "after" child.
