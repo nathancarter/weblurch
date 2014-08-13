@@ -20,7 +20,7 @@ That is, the class should be defined in the global namespace of
 the browser after loading the main app page.
 
         it 'should exist', inPage ->
-            pageExpects ( -> LurchEditor ), 'toBeTruthy'
+            pageExpects -> LurchEditor
 
 ## LurchEditor instances without DIVs
 
@@ -147,24 +147,18 @@ in the HTML code given above), verify that it is actually present
 in the document by looking up the id and verifying that the result
 is not null.
 
-            pageExpects ( ->
-                document.getElementById( 'yo' ) isnt null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( 'inner' ) isnt null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( '-1' ) isnt null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( '-0' ) isnt null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( '1.0' ) isnt null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( 'hank' ) isnt null ),
-                'toBeTruthy'
+            pageExpects ->
+                document.getElementById( 'yo' ) isnt null
+            pageExpects ->
+                document.getElementById( 'inner' ) isnt null
+            pageExpects ->
+                document.getElementById( '-1' ) isnt null
+            pageExpects ->
+                document.getElementById( '-0' ) isnt null
+            pageExpects ->
+                document.getElementById( '1.0' ) isnt null
+            pageExpects ->
+                document.getElementById( 'hank' ) isnt null
 
 Install the Lurch Editor in the DIV in question.
 
@@ -173,24 +167,14 @@ Install the Lurch Editor in the DIV in question.
 For each id that used to be in the document, verify that it is no
 longer present in the document.
 
-            pageExpects ( ->
-                document.getElementById( 'yo' ) is null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( 'inner' ) is null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( '-1' ) is null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( '-0' ) is null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( '1.0' ) is null ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.getElementById( 'hank' ) is null ),
-                'toBeTruthy'
+            pageExpects -> document.getElementById( 'yo' ) is null
+            pageExpects ->
+                document.getElementById( 'inner' ) is null
+            pageExpects -> document.getElementById( '-1' ) is null
+            pageExpects -> document.getElementById( '-0' ) is null
+            pageExpects -> document.getElementById( '1.0' ) is null
+            pageExpects ->
+                document.getElementById( 'hank' ) is null
 
 ### should assign unique integer ids
 
@@ -343,8 +327,7 @@ Four address queries.
             pageExpects ( -> LE.address div ), 'toEqual', []
             pageExpects ( -> LE.address span1 ), 'toEqual', [ 0 ]
             pageExpects ( -> LE.address span2 ), 'toEqual', [ 1 ]
-            pageExpects ( -> null is LE.address document ),
-                'toBeTruthy'
+            pageExpects -> null is LE.address document
 
 Four index queries, the last of which we expect to be undefined.
 
@@ -368,4 +351,139 @@ of the instance is empty.
                 window.LE = new LurchEditor()
             pageExpects ( -> LE.address div ), 'toBeNull'
             pageExpects ( -> LE.index div ), 'toBeNull'
+
+## LurchEditor cursor support
+
+We now test the routines that support placement and movement of
+cursor position and anchor elements in the document.
+
+    phantomDescribe 'LurchEditor cursor support',
+    './app/index.html', ->
+
+### should locate position and anchor elements
+
+        it 'should locate position and anchor elements', inPage ->
+
+In this test we construct a `LurchEditor` over a div that's got
+some elements inside that can function like cursor position and
+anchor markers.  We assign those elements the appropriate ids to
+indicate that they are cursor position and anchor markers, and
+verify that the editor can identify them as such.
+
+            pageDo ->
+
+Create a div and put inside five spans, only two of which are
+marked as cursor position and anchor elements.
+
+                window.div = document.createElement 'div'
+                document.body.appendChild div
+                window.LE = new LurchEditor div
+                temp = document.createElement 'span'
+                temp.textContent = 'not important'
+                div.appendChild temp
+                window.P = document.createElement 'span'
+                P.id = LurchEditor::positionId
+                P.textContent = 'foo'
+                div.appendChild P
+                temp = document.createElement 'span'
+                temp.textContent = 'also not important'
+                div.appendChild temp
+                window.A = document.createElement 'span'
+                A.id = LurchEditor::anchorId
+                A.textContent = 'bar'
+                div.appendChild A
+                temp = document.createElement 'span'
+                temp.textContent = 'yes, still not important'
+                div.appendChild temp
+
+Verify that, at first, the `LurchEditor` instance has no known
+cursor position or anchor elements.
+
+            pageExpects ( -> LE.cursor.position ), 'toBeNull'
+            pageExpects ( -> LE.cursor.anchor ), 'toBeNull'
+
+Now have the editor find its cursor position and anchor elements.
+
+            pageDo -> LE.updateCursor()
+
+Verify that it found the correct items.
+
+            pageExpects -> LE.cursor.position is P
+            pageExpects -> LE.cursor.anchor is A
+
+Next, remove those elements from the document.  We will then
+recompute the cursor position and anchor, and verify that they
+have become null once again.
+
+            pageDo ->
+                div.removeChild P
+                div.removeChild A
+                LE.updateCursor()
+            pageExpects ( -> LE.cursor.position ), 'toBeNull'
+            pageExpects ( -> LE.cursor.anchor ), 'toBeNull'
+
+### should provide the cursorPositionsIn member
+
+First, just verify that it's present.
+
+        it 'should provide the cursorPositionsIn member', inPage ->
+            pageExpects -> LurchEditor::cursorPositionsIn
+
+### should compute correct cursor position counts
+
+        it 'should compute correct cursor position counts',
+        inPage ->
+
+The title for this test is vague, but the reason is so that we
+may pack several tests into one `it` call.  (There is no need to
+reload the page after each of these.)
+
+First, the character count of a text node should be the number of
+characters in it minus one.
+
+            pageDo ->
+                window.L = new LurchEditor()
+                window.T = document.createTextNode ''
+            pageExpects ( -> L.cursorPositionsIn T ), 'toEqual', -1
+            pageDo -> T.textContent = 'A'
+            pageExpects ( -> L.cursorPositionsIn T ), 'toEqual', 0
+            pageDo -> T.textContent = 'hi'
+            pageExpects ( -> L.cursorPositionsIn T ), 'toEqual', 1
+            pageDo -> T.textContent = 'hello, friends'
+            pageExpects ( -> L.cursorPositionsIn T ), 'toEqual', 13
+
+Second, a non-text node with no children and no permission to
+contain the cursor should have no cursor positions.  Here I test
+just a few example such elements.
+
+            pageDo -> window.S = document.createElement 'img'
+            pageExpects ( -> L.cursorPositionsIn S ), 'toEqual', 0
+            pageDo -> window.S = document.createElement 'hr'
+            pageExpects ( -> L.cursorPositionsIn S ), 'toEqual', 0
+            pageDo -> window.S = document.createElement 'br'
+            pageExpects ( -> L.cursorPositionsIn S ), 'toEqual', 0
+
+Third, a non-text node with no children but with position to
+contain the cursor should have one cursor position.  Here I test
+just a few example such elements.
+
+            pageDo -> window.S = document.createElement 'a'
+            pageExpects ( -> L.cursorPositionsIn S ), 'toEqual', 1
+            pageDo -> window.S = document.createElement 'td'
+            pageExpects ( -> L.cursorPositionsIn S ), 'toEqual', 1
+            pageDo -> window.S = document.createElement 'span'
+            pageExpects ( -> L.cursorPositionsIn S ), 'toEqual', 1
+
+Finally, elements with children should return the total count of
+all characters in all children, plus the number of children,
+plus 1.
+
+            pageDo ->
+                window.D = document.createElement 'div'
+                D.innerHTML = '''some text <span
+                    >more text</span><br><span
+                    >nest<i>ed</i></span>'''
+            pageExpects ( -> L.cursorPositionsIn D ), 'toEqual', 33
+            pageDo -> D.innerHTML = '<b><i><u>1</u></i></b>'
+            pageExpects ( -> L.cursorPositionsIn D ), 'toEqual', 8
 

@@ -176,7 +176,7 @@ tracker.  (But this class is not very useful if there is no edit
 tracker; we avoid throwing an error mainly for the convenience of
 the caller.)
 
-            @node = node.address @tracker.getElement()
+            @node = node.address @tracker?.getElement()
 
 For type "appendChild", the node to append is stored serialized,
 in `@toAppend`.
@@ -273,7 +273,8 @@ previous type, under the same names.
                 if data[0] not instanceof Attr
                     throw Error 'Invalid attribute node: ' +
                                 data[0]
-                { @name, @value } = data[0]
+                { @name } = data[0]
+                @value = node.getAttribute @name
 
 For type "removeChild", we store the child's original index within
 `@node` as `@childIndex`, and a serialization of the child, as
@@ -337,6 +338,80 @@ construct, throw an error, because they're the only types
 supported.
 
             else throw Error 'Invalid DOMEditAction type: ' + type
+
+## Non-actions
+
+It is possible to create edit actions that do not actually change
+the document in any way.  For instance, a normalize action might
+be called when there are not any adjacent text nodes, so it does
+nothing.  Or a replaceChild action might be performed, replacing
+an existing child with one that is indistinguishable from it.
+
+We wish to be able to detect when an edit action is really a
+non-action, for a few reasons.
+ * Let's not push onto the undo/redo stack actions that will do
+   nothing if the user undoes/redoes them.  This would be confusing
+   to the user.
+ * Let's not notify listeners of null changes, because whatever
+   processing the listeners would do upon changes would then be
+   wasted effort, since the document has not really changed.
+
+Thus the following member function of the `DOMEditAction` class
+returns whether or not the action is null.
+
+        isNullAction: ->
+
+Appending, inserting, or remvoing a child always changes the
+document.  (If the attempt had been to append or insert something
+invalid, or remove something invalid, this object would not have
+completed its constructor.  The fact that it did means that the
+addition or removal is a valid action.)
+
+            if @type is 'appendChild' or @type is 'insertBefore' or
+               @type is 'removeChild'
+                return no
+
+Removing an attribute is null if and only if the node did not have
+the attribute, in which case `@value` will be null.
+
+            if @type is 'removeAttribute' or
+               @type is 'removeAttributeNode'
+                console.log 'old attribute is', @name, @value
+                return @value is null
+
+Normalize is a null action iff the constructor did not find any
+sequences of adjacent text nodes anywhere in the node to be
+normalized.
+
+            else if @type is 'normalize'
+                return JSON.equals @sequences, {}
+
+Replacing a child with another is an actual modification iff the
+"before" child is distinguishable from the "after" child.
+
+            else if @type is 'replaceChild'
+                return JSON.equals @oldChild, @newChild
+
+Setting an attribute is an actual modification iff the new value
+is a different string than the old value.
+
+            else if @type is 'setAttribute' or
+                    @type is 'setAttributeNode'
+                return @oldValue is @newValue
+
+A compound action is a null action iff all its elements are.
+Although we could make it null iff the combined sequence of actions
+is guaranteed to yield the same document as before, but that is
+both less useful and harder to compute.
+
+            else if @type is 'compound'
+                for subaction in @subactions
+                    if not subaction.isNullAction() then return no
+                return yes
+
+And those are all the types we know.
+
+            else throw Error 'Invalid DOMEditAction type: ' + @type
 
 ## Description
 
@@ -460,8 +535,11 @@ that purpose.  Also, it gives a nice symmetry with `undo`.
 In every case, we need to know what object was "`this`" when the
 event was created.  Its address within the containing
 `DOMEditTracker` is stored in our `node` field, so we find it that
-way.
+way.  If there is no tracker, this will fail.
 
+            if not @tracker
+                throw Error \
+                    'Cannot redo action with no DOMEditTracker'
             original = @tracker.getElement().index @node
 
 Now we consider each possible action type separately, in a big
@@ -540,8 +618,12 @@ routine above for more detailed explanations of each part below.
 
         undo: ->
 
-As above, compute the original "`this`" node.
+As above, compute the original "`this`" node.  If there is no
+tracker, this will fail.
 
+            if not @tracker
+                throw Error \
+                    'Cannot undo action with no DOMEditTracker'
             original = @tracker.getElement().index @node
 
 The inverse of "appendChild" is to remove the last child.

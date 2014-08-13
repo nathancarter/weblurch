@@ -26,7 +26,7 @@ That is, the class should be defined in the global namespace of
 the browser after loading the main app page.
 
         it 'should exist', inPage ->
-            pageExpects ( -> DOMEditTracker ), 'toBeTruthy'
+            pageExpects -> DOMEditTracker
 
 ### should track instances
 
@@ -42,10 +42,9 @@ desired id.
 
             pageExpects ( ->
                 DOMEditTracker.instances.length ), 'toEqual', 1
-            pageExpects ( ->
+            pageExpects ->
                 DOMEditTracker.instances[0] \
-                    .getElement().parentNode is document.body ),
-                'toBeTruthy'
+                    .getElement().parentNode is document.body
 
 Create an edit tracker and check to be sure the instances array
 has length 2 and contains the new instance.
@@ -53,8 +52,7 @@ has length 2 and contains the new instance.
             pageDo -> window.T1 = new DOMEditTracker
             pageExpects ( -> DOMEditTracker.instances.length ),
                 'toEqual', 2
-            pageExpects ( -> DOMEditTracker.instances[1] is T1 ),
-                'toBeTruthy'
+            pageExpects -> DOMEditTracker.instances[1] is T1
 
 Create another, this one around an element outside the document,
 and check to be sure the instances array has length 3 and contains
@@ -65,8 +63,7 @@ the two new instances in the appropriate order.
                 window.T2 = new DOMEditTracker div
             pageExpects ( -> DOMEditTracker.instances.length ),
                 'toEqual', 3
-            pageExpects ( -> DOMEditTracker.instances[2] is T2 ),
-                'toBeTruthy'
+            pageExpects -> DOMEditTracker.instances[2] is T2
 
 ### should find the correct containers
 
@@ -101,24 +98,22 @@ elements and a `DOMEditTracker` instance around it.
 First, is the original `DOMEditTracker` instance in charge of the
 first div in the document?
 
-            pageExpects ( ->
+            pageExpects ->
                 firstDiv = document.body
                     .getElementsByTagName( 'div' )[0]
                 DOMEditTracker.instances[0] is
-                    DOMEditTracker.instanceOver firstDiv ),
-                'toBeTruthy'
+                    DOMEditTracker.instanceOver firstDiv
 
 Second, is the new `DOMEditTracker` instance in charge of the div
 created above?  And of one of its child nodes?  And one of its
 grandchild nodes?
 
-            pageExpects ( -> another is
-                DOMEditTracker.instanceOver div ), 'toBeTruthy'
-            pageExpects ( -> another is
-                DOMEditTracker.instanceOver ielt ), 'toBeTruthy'
-            pageExpects ( -> another is
-                DOMEditTracker.instanceOver ielt.childNodes[0] ),
-                'toBeTruthy'
+            pageExpects -> another is
+                DOMEditTracker.instanceOver div
+            pageExpects -> another is
+                DOMEditTracker.instanceOver ielt
+            pageExpects -> another is
+                DOMEditTracker.instanceOver ielt.childNodes[0]
 
 Now create an instance around a div outside the document, and do
 similar tests on it.
@@ -131,15 +126,14 @@ similar tests on it.
                 grandchild.textContent = 'waah'
                 child.appendChild grandchild
                 window.final = new DOMEditTracker outside
-            pageExpects ( -> final is
-                DOMEditTracker.instanceOver outside ), 'toBeTruthy'
-            pageExpects ( -> final is
-                DOMEditTracker.instanceOver child ), 'toBeTruthy'
-            pageExpects ( -> final is
-                DOMEditTracker.instanceOver grandchild ),
-                'toBeTruthy'
-            pageExpects ( -> final is DOMEditTracker.instanceOver \
-                grandchild.childNodes[0] ), 'toBeTruthy'
+            pageExpects ->
+                final is DOMEditTracker.instanceOver outside
+            pageExpects ->
+                final is DOMEditTracker.instanceOver child
+            pageExpects ->
+                final is DOMEditTracker.instanceOver grandchild
+            pageExpects -> final is DOMEditTracker.instanceOver \
+                grandchild.childNodes[0]
 
 ## DOMEditTracker instances without DIVs
 
@@ -181,7 +175,7 @@ return null from its `getElement` method.  Here we construct the
                 window.div = document.createElement 'div'
                 document.body.appendChild div
                 window.D = new DOMEditTracker div
-            pageExpects ( -> div is D.getElement() ), 'toBeTruthy'
+            pageExpects -> div is D.getElement()
 
 ## The undo/redo stack
 
@@ -506,16 +500,11 @@ Undo all three actions, checking the state of the same div after
 each call to `undo`.  We ask it to call `undo` four times, just to
 be sure that the fourth one has no effect.  We also check the
 stack pointer after each undo, to be sure it's being decremented.
-Note that when the index is zero, we must test to see if it is
-false, since the test framework replaces zero and false with null.
 
             for index in [2,1,0,0]
                 pageDo -> D.undo()
-                if index > 0
-                    pageExpects ( -> D.stackPointer ),
-                        'toEqual', index
-                else
-                    pageExpects ( -> D.stackPointer ), 'toBeFalsy'
+                pageExpects ( -> D.stackPointer ),
+                    'toEqual', index
                 pageExpects ( -> div.toJSON() ),
                     'toEqual', stateHistory[index]
 
@@ -526,11 +515,8 @@ stack pointer after each redo, to be sure it's being incremented.
 
             for index in [1,2,3,3]
                 pageDo -> D.redo()
-                if index > 0
-                    pageExpects ( -> D.stackPointer ),
-                        'toEqual', index
-                else
-                    pageExpects ( -> D.stackPointer ), 'toBeFalsy'
+                pageExpects ( -> D.stackPointer ),
+                    'toEqual', index
                 pageExpects ( -> div.toJSON() ),
                     'toEqual', stateHistory[index]
 

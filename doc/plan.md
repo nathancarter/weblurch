@@ -15,40 +15,45 @@ than the earlier ones.
 
 ## More Word Processing Foundation
 
+### Editing actions
+
+ * The creation of the null action testing routine necessitated
+   the creation of a JSON object comparison utility.  Write unit
+   tests for that routine.
+ * Whenever a null action is reported to the edit tracker, do not
+   push it on the stack, and do not notify listeners of a change
+   in the document.
+
 ### Cursor
 
 For every item in this section, as it is accomplished, we should
 also (of course) create unit tests verifying that it was completed
 correctly.
 
- * Design and build the `LurchEditor` API for placing a cursor in
-   the document, or nowhere, depending on whether the document has
-   focus.
-    * Create LurchEditor method for finding the one span in the
-      document with the LECursor class.
-    * Create method in Node prototype for computing the number of
-      text characters in the node.  (For elements with no children,
-      this is 1.  For elements with children, it is the sum of the
-      values for the children.)
-    * Create a Node prototype method for splitting the node after
-      the character with a given index, and returning the two nodes
-      before and after the split.  (Or it can return `[A,null]` if
-      the position equals the text length, and `[null,B]` if the
-      position equals zero.)
-    * Create a LurchEditor method for placing a cursor at a given
-      position inside a given node (which defaults to the main
-      div of the editor).
-    * Create a LurchEditor method for removing the cursor from the
-      document (i.e., defocusing) and normalizing as needed.
-      Ensure that this is automatically called if the
-      insert-a-cursor method is called when a cursor is already
-      there.
-    * Add to LurchEditor instances a timer that flashes the cursor
-      just as MathQuill does.
-    * Add methods for moving the cursor by a given delta.
- * Design extensions to that API (and the corresponding
-   representations) that provide for a cursor position and anchor,
-   so that selections are possible.
+ * Implement the following cursor features in `LurchEditor`.
+    * Create a `LurchEditor` method for lifting the cursor out of
+      the document, if one exists.  (If one does not exist, it
+      should call `updateCursor` to be sure of that, first.)
+      Normalize the parent after removing it.
+    * Create a `LurchEditor` method for placing the cursor position
+      at a given cursor position inside a given node (which
+      defaults to the zeroth position of the root element of the
+      editor).  Be sure to remove the cursor before placing it.
+    * Add to `LurchEditor` instances a timer that flashes the
+      cursor just as MathQuill does.
+    * Add a CSS class that gives a blue background, for use on the
+      cursor selection.
+    * Add to the cursor placement routine a parameter for whether
+      or not to move the anchor as well, defaulting to yes.  If the
+      anchor does not move, ensure that all leaf nodes between the
+      old and new cursor positions get the requisite class for
+      showing the blue background.  If the anchor does move, ensure
+      that all elements that had that class lose it.  Note that you
+      can tweak the old version of the routine by not *deleting*
+      the old cursor position, but replacing it with a temporary
+      marker, doing the highlighting, then removing the marker.
+    * Add methods for moving the cursor by a given delta, with or
+      without moving the anchor (defaults to moving it).
  * Add all the functions for dealing with that cursor as if it
    were a real cursor.  Each of these may make several edits to the
    document, and so should use the new block-of-edits support
@@ -73,6 +78,7 @@ correctly.
 
  * Layer on top of the cursor functions a set of keyboard event
    handlers, which call the cursor functions under the hood.
+   [This Stack Overflow question and answer may be useful.](http://stackoverflow.com/questions/497094/how-do-i-find-out-which-dom-element-has-the-focus)
     * text character = insert text before cursor or replace
       selection with text
     * left/right arrow = move by rel amt +/-1

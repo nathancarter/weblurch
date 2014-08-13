@@ -21,7 +21,7 @@ the `Node` prototype.
 First, just verify that it's present.
 
         it 'should be defined', inPage ->
-            pageExpects ( -> Node::address ), 'toBeTruthy'
+            pageExpects -> Node::address
 
 ### should give null on corner cases
 
@@ -237,7 +237,7 @@ The tests in this section test the `index` member function in the
 ### should be defined
 
         it 'should be defined', inPage ->
-            pageExpects ( -> Node::index ), 'toBeTruthy'
+            pageExpects -> Node::index
 
 ### should give errors for non-arrays
 
@@ -274,20 +274,12 @@ that are not part of the document.
                 document.body.appendChild spanInPage
                 window.divOutside = document.createElement 'div'
                 window.spanOutside = document.createElement 'span'
-            pageExpects ( -> divInPage is divInPage.index [] ),
-                'toBeTruthy'
-            pageExpects ( -> spanInPage is spanInPage.index [] ),
-                'toBeTruthy'
-            pageExpects ( -> divOutside is divOutside.index [] ),
-                'toBeTruthy'
-            pageExpects ( ->
-                spanOutside is spanOutside.index [] ),
-                'toBeTruthy'
-            pageExpects ( -> document is document.index [] ),
-                'toBeTruthy'
-            pageExpects ( ->
-                document.body is document.body.index [] ),
-                'toBeTruthy'
+            pageExpects -> divInPage is divInPage.index []
+            pageExpects -> spanInPage is spanInPage.index []
+            pageExpects -> divOutside is divOutside.index []
+            pageExpects -> spanOutside is spanOutside.index []
+            pageExpects -> document is document.index []
+            pageExpects -> document.body is document.body.index []
 
 ### should work for descendant indices
 
@@ -458,7 +450,7 @@ The tests in this section test the `toJSON` member function in the
 
 First, just verify that the function itself is present.
 
-            pageExpects ( -> Node::toJSON ), 'toBeTruthy'
+            pageExpects -> Node::toJSON
 
 ### should convert text nodes to strings
 
@@ -790,7 +782,7 @@ domutils.litcoffee.html#from-objects-to-dom-nodes)
 
 First, just verify that the function itself is present.
 
-            pageExpects ( -> Node.fromJSON ), 'toBeTruthy'
+            pageExpects -> Node.fromJSON
 
 ### should convert strings to text nodes
 
@@ -804,20 +796,16 @@ content.
             pageDo ->
                 window.node1 = Node.fromJSON 'just a string'
                 window.node2 = Node.fromJSON ''
-            pageExpects ( -> node1 instanceof Node ), 'toBeTruthy'
-            pageExpects ( -> node1 instanceof Text ), 'toBeTruthy'
-            pageExpects ( -> node1 instanceof Comment ),
-                'toBeFalsy'
-            pageExpects ( -> node1 instanceof Element ),
-                'toBeFalsy'
+            pageExpects -> node1 instanceof Node
+            pageExpects -> node1 instanceof Text
+            pageExpects -> node1 not instanceof Comment
+            pageExpects -> node1 not instanceof Element
             pageExpects ( -> node1.textContent ),
                 'toEqual', 'just a string'
-            pageExpects ( -> node2 instanceof Node ), 'toBeTruthy'
-            pageExpects ( -> node2 instanceof Text ), 'toBeTruthy'
-            pageExpects ( -> node2 instanceof Comment ),
-                'toBeFalsy'
-            pageExpects ( -> node2 instanceof Element ),
-                'toBeFalsy'
+            pageExpects -> node2 instanceof Node
+            pageExpects -> node2 instanceof Text
+            pageExpects -> node2 not instanceof Comment
+            pageExpects -> node2 not instanceof Element
             pageExpects ( -> node2.textContent ), 'toEqual', ''
 
 ### should handle comment objects
@@ -835,20 +823,16 @@ content.
                     m : yes, n : 'some comment'
                 window.node2 = Node.fromJSON \
                     comment : yes, content : ''
-            pageExpects ( -> node1 instanceof Node ), 'toBeTruthy'
-            pageExpects ( -> node1 instanceof Text ), 'toBeFalsy'
-            pageExpects ( -> node1 instanceof Comment ),
-                'toBeTruthy'
-            pageExpects ( -> node1 instanceof Element ),
-                'toBeFalsy'
+            pageExpects -> node1 instanceof Node
+            pageExpects -> node1 not instanceof Text
+            pageExpects -> node1 instanceof Comment
+            pageExpects -> node1 not instanceof Element
             pageExpects ( -> node1.textContent ),
                 'toEqual', 'some comment'
-            pageExpects ( -> node2 instanceof Node ), 'toBeTruthy'
-            pageExpects ( -> node2 instanceof Text ), 'toBeFalsy'
-            pageExpects ( -> node2 instanceof Comment ),
-                'toBeTruthy'
-            pageExpects ( -> node2 instanceof Element ),
-                'toBeFalsy'
+            pageExpects -> node2 instanceof Node
+            pageExpects -> node2 not instanceof Text
+            pageExpects -> node2 instanceof Comment
+            pageExpects -> node2 not instanceof Element
             pageExpects ( -> node2.textContent ), 'toEqual', ''
 
 ### should be able to create empty elements
@@ -867,12 +851,10 @@ attributes.
                     attributes : class : 'y', whatever : 'dude'
                 window.node2 = Node.fromJSON \
                     t : 'br', a : id : '24601'
-            pageExpects ( -> node1 instanceof Node ), 'toBeTruthy'
-            pageExpects ( -> node1 instanceof Text ), 'toBeFalsy'
-            pageExpects ( -> node1 instanceof Comment ),
-                'toBeFalsy'
-            pageExpects ( -> node1 instanceof Element ),
-                'toBeTruthy'
+            pageExpects -> node1 instanceof Node
+            pageExpects -> node1 not instanceof Text
+            pageExpects -> node1 not instanceof Comment
+            pageExpects -> node1 instanceof Element
             pageExpects ( -> node1.tagName ), 'toEqual', 'HR'
             pageExpects ( -> node1.childNodes.length ),
                 'toEqual', 0
@@ -886,12 +868,10 @@ attributes.
                 'toEqual', 'whatever'
             pageExpects ( -> node1.attributes[1].value ),
                 'toEqual', 'dude'
-            pageExpects ( -> node2 instanceof Node ), 'toBeTruthy'
-            pageExpects ( -> node2 instanceof Text ), 'toBeFalsy'
-            pageExpects ( -> node2 instanceof Comment ),
-                'toBeFalsy'
-            pageExpects ( -> node2 instanceof Element ),
-                'toBeTruthy'
+            pageExpects -> node2 instanceof Node
+            pageExpects -> node2 not instanceof Text
+            pageExpects -> node2 not instanceof Comment
+            pageExpects -> node2 instanceof Element
             pageExpects ( -> node2.tagName ), 'toEqual', 'BR'
             pageExpects ( -> node2.childNodes.length ),
                 'toEqual', 0
@@ -1258,16 +1238,16 @@ Validate the recorded edit actions.
                 'toEqual', 2
             pageExpects ( ->
                 tracker.getEditActions()[0].toJSON() ),
-                    'toEqual', {
-                        type : 'removeAttribute', node : [ 0 ],
-                        name : 'align', value : 'center'
-                    }
+                'toEqual', {
+                    type : 'removeAttribute', node : [ 0 ],
+                    name : 'align', value : 'center'
+                }
             pageExpects ( ->
                 tracker.getEditActions()[1].toJSON() ),
-                    'toEqual', {
-                        type : 'removeAttribute', node : [ 2 ],
-                        name : 'style', value : 'color:blue;'
-                    }
+                'toEqual', {
+                    type : 'removeAttribute', node : [ 2 ],
+                    name : 'style', value : 'color:blue;'
+                }
 
 ### should send alerts on `removeAttributeNode` calls
 
@@ -1558,4 +1538,42 @@ Validate the recorded edit actions.
                     node : [ 0 ], name : 'example',
                     oldValue : 'yes', newValue : 'no'
                 }
+
+## leaf navigation in Node class
+
+The tests in this section test the `nextLeaf` and `previousLeaf`
+member functions in the `Node` prototype.
+[See their definition here.](
+domutils.litcoffee.html#next-and-previous-leaves).
+
+    phantomDescribe 'leaf navigation in Node class',
+    './app/index.html', ->
+
+### should be defined
+
+First, just verify that both functions are present.
+
+        it 'should be defined', inPage ->
+            pageExpects -> Node::nextLeaf
+            pageExpects -> Node::previousLeaf
+
+### should work among sibling leaves
+
+        it 'should work among sibling leaves', inPage ->
+
+We test the simplest case, when we call the functions on leaf
+nodes who have immediate sibling nodes that are also leaves, and
+thus which should be returned by the functions.  We work within
+the following environment.
+
+            pageDo ->
+                window.div = document.createElement 'div'
+                div.innerHTML = '''A section of text.
+                                   <br><hr>Yet more text.'''
+
+Within the div we find just four leaf nodes.  Let's ensure that
+the functions work correctly among those four.
+
+            pageExpects ->
+                div.childNodes[0].nextLeaf() is div.childNodes[1]
 

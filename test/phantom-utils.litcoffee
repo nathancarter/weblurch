@@ -282,9 +282,13 @@ in the global object `P` for later use.
             func()
 
 This one can be used in place of `expect` to provide the extra
-checks we desire, and cause `done` to be called for us.
+checks we desire, and cause `done` to be called for us.  Note that
+the default value for `check` enables the idiom
+`pageExpects -> expression` as a shortcut for
+`pageExpects ( -> expression ), 'toBeTruthy'`.
 
-    exports.pageExpects = ( func, check, args... ) ->
+    exports.pageExpects =
+    ( func, check = 'toBeTruthy', args... ) ->
         P.page.evaluate ( evaluateThis ) ->
             result = try eval evaluateThis catch e then e
             if typeof result is 'undefined'
