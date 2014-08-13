@@ -19,7 +19,7 @@
         <div id="left">
             <p align=center>Page contents</p>
 <p><a href='#dom-edit-action'>DOM Edit Action</a></p><ul>
-<li><a href='#constructor'>Constructor</a></li><li><a href='#description'>Description</a></li><li><a href='#serialization'>Serialization</a></li><li><a href='#undo-redo'>Undo/redo</a></li>
+<li><a href='#constructor'>Constructor</a></li><li><a href='#non-actions'>Non-actions</a></li><li><a href='#description'>Description</a></li><li><a href='#serialization'>Serialization</a></li><li><a href='#undo-redo'>Undo/redo</a></li>
         </div>
         <div id="middle">
             <h1><a name='dom-edit-action'></a>DOM Edit Action &nbsp;  <font size=-1><a href='#dom-edit-action'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>This class will embody a single, atomic edit to a DOM tree.  This
@@ -192,7 +192,7 @@ given edit tracker, or within its topmost ancestor if there is no
 tracker.  (But this class is not very useful if there is no edit
 tracker; we avoid throwing an error mainly for the convenience of
 the caller.)</p>
-<pre class="hljs"><code>        <span class="hljs-property">@node</span> = node.address <span class="hljs-property">@tracker</span>.getElement()
+<pre class="hljs"><code>        <span class="hljs-property">@node</span> = node.address <span class="hljs-property">@tracker</span>?.getElement()
 </code></pre><p>For type &quot;appendChild&quot;, the node to append is stored serialized,
 in <code>@toAppend</code>.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">if</span> type <span class="hljs-keyword">is</span> <span class="hljs-string">'appendChild'</span>
@@ -271,7 +271,8 @@ previous type, under the same names.</p>
             <span class="hljs-keyword">if</span> data[<span class="hljs-number">0</span>] <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Attr
                 <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid attribute node: '</span> +
                             data[<span class="hljs-number">0</span>]
-            { <span class="hljs-property">@name</span>, <span class="hljs-property">@value</span> } = data[<span class="hljs-number">0</span>]
+            { <span class="hljs-property">@name</span> } = data[<span class="hljs-number">0</span>]
+            <span class="hljs-property">@value</span> = node.getAttribute <span class="hljs-property">@name</span>
 </code></pre><p>For type &quot;removeChild&quot;, we store the child&#39;s original index within
 <code>@node</code> as <code>@childIndex</code>, and a serialization of the child, as
 <code>@child</code>.</p>
@@ -325,6 +326,62 @@ previous case, and under the same names.</p>
 construct, throw an error, because they&#39;re the only types
 supported.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid DOMEditAction type: '</span> + type
+</code></pre><h2><a name='non-actions'></a>Non-actions &nbsp;  <font size=-1><a href='#non-actions'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>It is possible to create edit actions that do not actually change
+the document in any way.  For instance, a normalize action might
+be called when there are not any adjacent text nodes, so it does
+nothing.  Or a replaceChild action might be performed, replacing
+an existing child with one that is indistinguishable from it.</p>
+<p>We wish to be able to detect when an edit action is really a
+non-action, for a few reasons.</p>
+<ul>
+<li>Let&#39;s not push onto the undo/redo stack actions that will do
+nothing if the user undoes/redoes them.  This would be confusing
+to the user.</li>
+<li>Let&#39;s not notify listeners of null changes, because whatever
+processing the listeners would do upon changes would then be
+wasted effort, since the document has not really changed.</li>
+</ul>
+<p>Thus the following member function of the <code>DOMEditAction</code> class
+returns whether or not the action is null.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">isNullAction</span>:<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Appending, inserting, or remvoing a child always changes the
+document.  (If the attempt had been to append or insert something
+invalid, or remove something invalid, this object would not have
+completed its constructor.  The fact that it did means that the
+addition or removal is a valid action.)</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'appendChild'</span> <span class="hljs-keyword">or</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'insertBefore'</span> <span class="hljs-keyword">or</span>
+           <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'removeChild'</span>
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">no</span>
+</code></pre><p>Removing an attribute is null if and only if the node did not have
+the attribute, in which case <code>@value</code> will be null.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'removeAttribute'</span> <span class="hljs-keyword">or</span>
+           <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'removeAttributeNode'</span>
+            <span class="hljs-built_in">console</span>.log <span class="hljs-string">'old attribute is'</span>, <span class="hljs-property">@name</span>, <span class="hljs-property">@value</span>
+            <span class="hljs-keyword">return</span> <span class="hljs-property">@value</span> <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
+</code></pre><p>Normalize is a null action iff the constructor did not find any
+sequences of adjacent text nodes anywhere in the node to be
+normalized.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'normalize'</span>
+            <span class="hljs-keyword">return</span> JSON.equals <span class="hljs-property">@sequences</span>, {}
+</code></pre><p>Replacing a child with another is an actual modification iff the
+&quot;before&quot; child is distinguishable from the &quot;after&quot; child.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'replaceChild'</span>
+            <span class="hljs-keyword">return</span> JSON.equals <span class="hljs-property">@oldChild</span>, <span class="hljs-property">@newChild</span>
+</code></pre><p>Setting an attribute is an actual modification iff the new value
+is a different string than the old value.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'setAttribute'</span> <span class="hljs-keyword">or</span>
+                <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'setAttributeNode'</span>
+            <span class="hljs-keyword">return</span> <span class="hljs-property">@oldValue</span> <span class="hljs-keyword">is</span> <span class="hljs-property">@newValue</span>
+</code></pre><p>A compound action is a null action iff all its elements are.
+Although we could make it null iff the combined sequence of actions
+is guaranteed to yield the same document as before, but that is
+both less useful and harder to compute.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'compound'</span>
+            <span class="hljs-keyword">for</span> subaction <span class="hljs-keyword">in</span> <span class="hljs-property">@subactions</span>
+                <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> subaction.isNullAction() <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-literal">no</span>
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">yes</span>
+</code></pre><p>And those are all the types we know.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">throw</span> Error <span class="hljs-string">'Invalid DOMEditAction type: '</span> + <span class="hljs-property">@type</span>
 </code></pre><h2><a name='description'></a>Description &nbsp;  <font size=-1><a href='#description'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Instance of the class need to be able to provide descriptions of
 themselves, for use on undo/redo stacks.  We provide this
 functionality with a <code>toString</code> method.</p>
@@ -428,8 +485,11 @@ that purpose.  Also, it gives a nice symmetry with <code>undo</code>.</p>
 </code></pre><p>In every case, we need to know what object was &quot;<code>this</code>&quot; when the
 event was created.  Its address within the containing
 <code>DOMEditTracker</code> is stored in our <code>node</code> field, so we find it that
-way.</p>
-<pre class="hljs"><code>        original = <span class="hljs-property">@tracker</span>.getElement().index <span class="hljs-property">@node</span>
+way.  If there is no tracker, this will fail.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-property">@tracker</span>
+            <span class="hljs-keyword">throw</span> Error \
+                <span class="hljs-string">'Cannot redo action with no DOMEditTracker'</span>
+        original = <span class="hljs-property">@tracker</span>.getElement().index <span class="hljs-property">@node</span>
 </code></pre><p>Now we consider each possible action type separately, in a big
 <code>if</code>-<code>else</code> clause, as in the <code>toString</code> method, above.</p>
 <p>In the case of &quot;appendChild&quot;, we simply unserialize the stored
@@ -485,8 +545,12 @@ the code below, because it is simply the inverse of the routine
 just built above, which is liberally commented.  Refer to the
 routine above for more detailed explanations of each part below.</p>
 <pre class="hljs"><code>    <span class="hljs-attribute">undo</span>:<span class="hljs-function"> -&gt;</span>
-</code></pre><p>As above, compute the original &quot;<code>this</code>&quot; node.</p>
-<pre class="hljs"><code>        original = <span class="hljs-property">@tracker</span>.getElement().index <span class="hljs-property">@node</span>
+</code></pre><p>As above, compute the original &quot;<code>this</code>&quot; node.  If there is no
+tracker, this will fail.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-property">@tracker</span>
+            <span class="hljs-keyword">throw</span> Error \
+                <span class="hljs-string">'Cannot undo action with no DOMEditTracker'</span>
+        original = <span class="hljs-property">@tracker</span>.getElement().index <span class="hljs-property">@node</span>
 </code></pre><p>The inverse of &quot;appendChild&quot; is to remove the last child.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-property">@type</span> <span class="hljs-keyword">is</span> <span class="hljs-string">'appendChild'</span>
             original.removeChild original.childNodes[ \
@@ -567,7 +631,7 @@ happens in-place, impacting the array itself.)</p>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

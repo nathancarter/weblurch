@@ -24,7 +24,9 @@
 <li><a href='#lurcheditor-instances-without-divs'>LurchEditor instances without DIVs</a></li><ul>
 <li><a href='#should-initialize-freeids'>should initialize freeIds</a></li><li><a href='#nextfreeid-should-count-0-1-2-'>nextFreeId() should count 0,1,2,...</a></li><li><a href='#addfreeid-re-inserts-in-order'>addFreeId() re-inserts in order</a></li></ul>
 <li><a href='#lurcheditor-instances-with-divs'>LurchEditor instances with DIVs</a></li><ul>
-<li><a href='#should-give-an-empty-div-id-0'>should give an empty DIV id 0</a></li><li><a href='#should-remove-all-invalid-ids'>should remove all invalid ids</a></li><li><a href='#should-assign-unique-integer-ids'>should assign unique integer ids</a></li><li><a href='#should-work-with-existing-integer-ids'>should work with existing integer ids</a></li><li><a href='#should-have-working-address-and-index'>should have working address and index</a></li><li><a href='#should-give-no-address-and-index-if-empty'>should give no address and index if empty</a></li>
+<li><a href='#should-give-an-empty-div-id-0'>should give an empty DIV id 0</a></li><li><a href='#should-remove-all-invalid-ids'>should remove all invalid ids</a></li><li><a href='#should-assign-unique-integer-ids'>should assign unique integer ids</a></li><li><a href='#should-work-with-existing-integer-ids'>should work with existing integer ids</a></li><li><a href='#should-have-working-address-and-index'>should have working address and index</a></li><li><a href='#should-give-no-address-and-index-if-empty'>should give no address and index if empty</a></li></ul>
+<li><a href='#lurcheditor-cursor-support'>LurchEditor cursor support</a></li><ul>
+<li><a href='#should-locate-position-and-anchor-elements'>should locate position and anchor elements</a></li><li><a href='#should-provide-the-cursorpositionsin-member'>should provide the cursorPositionsIn member</a></li><li><a href='#should-compute-correct-cursor-position-counts'>should compute correct cursor position counts</a></li>
         </div>
         <div id="middle">
             <h1><a name='tests-for-the-code-lurcheditor-code-class'></a>Tests for the <code>LurchEditor</code> class &nbsp;  <font size=-1><a href='#tests-for-the-code-lurcheditor-code-class'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>Pull in the utility functions in
@@ -38,7 +40,7 @@ for setting up tests as documented more thoroughly in
 </code></pre><h3><a name='should-exist'></a>should exist &nbsp; <font size=-1><a href='test-results.md.html#should-exist'>see results</a></font> <font size=-1><a href='#should-exist'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, the class should be defined in the global namespace of
 the browser after loading the main app page.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should exist'</span>, inPage<span class="hljs-function"> -&gt;</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> LurchEditor ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> LurchEditor
 </code></pre><h2><a name='lurcheditor-instances-without-divs'></a>LurchEditor instances without DIVs &nbsp; <font size=-1><a href='test-results.md.html#lurcheditor-instances-without-divs'>see results</a></font> <font size=-1><a href='#lurcheditor-instances-without-divs'><span class="glyphicon glyphicon-link"></span></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'LurchEditor instances without DIVs'</span>,
 <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
 </code></pre><h3><a name='should-initialize-freeids'></a>should initialize freeIds &nbsp; <font size=-1><a href='test-results.md.html#should-initialize-freeids'>see results</a></font> <font size=-1><a href='#should-initialize-freeids'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>A newly created <code>LurchEditor</code> instance should have a <code>freeIds</code>
@@ -127,46 +129,30 @@ removed all of their old ids.</p>
 in the HTML code given above), verify that it is actually present
 in the document by looking up the id and verifying that the result
 is not null.</p>
-<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
-            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'yo'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span> ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span>
-            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'inner'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span> ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span>
-            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'-1'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span> ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span>
-            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'-0'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span> ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span>
-            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'1.0'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span> ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span>
-            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'hank'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span> ),
-            <span class="hljs-string">'toBeTruthy'</span>
+<pre class="hljs"><code>        pageExpects<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'yo'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span>
+        pageExpects<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'inner'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span>
+        pageExpects<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'-1'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span>
+        pageExpects<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'-0'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span>
+        pageExpects<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'1.0'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span>
+        pageExpects<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'hank'</span> ) <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span>
 </code></pre><p>Install the Lurch Editor in the DIV in question.</p>
 <pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> <span class="hljs-keyword">new</span> LurchEditor div
 </code></pre><p>For each id that used to be in the document, verify that it is no
 longer present in the document.</p>
-<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
-            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'yo'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span>
-            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'inner'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span>
-            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'-1'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span>
-            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'-0'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span>
-            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'1.0'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span>
-            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'hank'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> ),
-            <span class="hljs-string">'toBeTruthy'</span>
+<pre class="hljs"><code>        pageExpects<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'yo'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
+        pageExpects<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'inner'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'-1'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'-0'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'1.0'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
+        pageExpects<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">document</span>.getElementById( <span class="hljs-string">'hank'</span> ) <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
 </code></pre><h3><a name='should-assign-unique-integer-ids'></a>should assign unique integer ids &nbsp; <font size=-1><a href='test-results.md.html#should-assign-unique-integer-ids'>see results</a></font> <font size=-1><a href='#should-assign-unique-integer-ids'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should assign unique integer ids'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>If we re-run the same test as the previous (creating a
 <code>LurchEditor</code> class around the same DIV) we should find that it
@@ -285,8 +271,7 @@ do not test them extensively, since that is already done in
 <pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> LE.address div ), <span class="hljs-string">'toEqual'</span>, []
         pageExpects (<span class="hljs-function"> -&gt;</span> LE.address span1 ), <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">0</span> ]
         pageExpects (<span class="hljs-function"> -&gt;</span> LE.address span2 ), <span class="hljs-string">'toEqual'</span>, [ <span class="hljs-number">1</span> ]
-        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-literal">null</span> <span class="hljs-keyword">is</span> LE.address <span class="hljs-built_in">document</span> ),
-            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> <span class="hljs-literal">null</span> <span class="hljs-keyword">is</span> LE.address <span class="hljs-built_in">document</span>
 </code></pre><p>Four index queries, the last of which we expect to be undefined.</p>
 <pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> LE.index( [] ).id ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'0'</span>
         pageExpects (<span class="hljs-function"> -&gt;</span> LE.index( [ <span class="hljs-number">0</span> ] ).id ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'1'</span>
@@ -303,10 +288,110 @@ of the instance is empty.</p>
             <span class="hljs-built_in">window</span>.LE = <span class="hljs-keyword">new</span> LurchEditor()
         pageExpects (<span class="hljs-function"> -&gt;</span> LE.address div ), <span class="hljs-string">'toBeNull'</span>
         pageExpects (<span class="hljs-function"> -&gt;</span> LE.index div ), <span class="hljs-string">'toBeNull'</span>
+</code></pre><h2><a name='lurcheditor-cursor-support'></a>LurchEditor cursor support &nbsp; <font size=-1><a href='test-results.md.html#lurcheditor-cursor-support'>see results</a></font> <font size=-1><a href='#lurcheditor-cursor-support'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>We now test the routines that support placement and movement of
+cursor position and anchor elements in the document.</p>
+<pre class="hljs"><code>phantomDescribe <span class="hljs-string">'LurchEditor cursor support'</span>,
+<span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
+</code></pre><h3><a name='should-locate-position-and-anchor-elements'></a>should locate position and anchor elements &nbsp; <font size=-1><a href='test-results.md.html#should-locate-position-and-anchor-elements'>see results</a></font> <font size=-1><a href='#should-locate-position-and-anchor-elements'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should locate position and anchor elements'</span>, inPage<span class="hljs-function"> -&gt;</span>
+</code></pre><p>In this test we construct a <code>LurchEditor</code> over a div that&#39;s got
+some elements inside that can function like cursor position and
+anchor markers.  We assign those elements the appropriate ids to
+indicate that they are cursor position and anchor markers, and
+verify that the editor can identify them as such.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Create a div and put inside five spans, only two of which are
+marked as cursor position and anchor elements.</p>
+<pre class="hljs"><code>            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            <span class="hljs-built_in">document</span>.body.appendChild div
+            <span class="hljs-built_in">window</span>.LE = <span class="hljs-keyword">new</span> LurchEditor div
+            temp = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            temp.textContent = <span class="hljs-string">'not important'</span>
+            div.appendChild temp
+            <span class="hljs-built_in">window</span>.P = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            P.id = <span class="hljs-attribute">LurchEditor</span>::positionId
+            P.textContent = <span class="hljs-string">'foo'</span>
+            div.appendChild P
+            temp = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            temp.textContent = <span class="hljs-string">'also not important'</span>
+            div.appendChild temp
+            <span class="hljs-built_in">window</span>.A = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            A.id = <span class="hljs-attribute">LurchEditor</span>::anchorId
+            A.textContent = <span class="hljs-string">'bar'</span>
+            div.appendChild A
+            temp = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+            temp.textContent = <span class="hljs-string">'yes, still not important'</span>
+            div.appendChild temp
+</code></pre><p>Verify that, at first, the <code>LurchEditor</code> instance has no known
+cursor position or anchor elements.</p>
+<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> LE.cursor.position ), <span class="hljs-string">'toBeNull'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> LE.cursor.anchor ), <span class="hljs-string">'toBeNull'</span>
+</code></pre><p>Now have the editor find its cursor position and anchor elements.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> LE.updateCursor()
+</code></pre><p>Verify that it found the correct items.</p>
+<pre class="hljs"><code>        pageExpects<span class="hljs-function"> -&gt;</span> LE.cursor.position <span class="hljs-keyword">is</span> P
+        pageExpects<span class="hljs-function"> -&gt;</span> LE.cursor.anchor <span class="hljs-keyword">is</span> A
+</code></pre><p>Next, remove those elements from the document.  We will then
+recompute the cursor position and anchor, and verify that they
+have become null once again.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            div.removeChild P
+            div.removeChild A
+            LE.updateCursor()
+        pageExpects (<span class="hljs-function"> -&gt;</span> LE.cursor.position ), <span class="hljs-string">'toBeNull'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> LE.cursor.anchor ), <span class="hljs-string">'toBeNull'</span>
+</code></pre><h3><a name='should-provide-the-cursorpositionsin-member'></a>should provide the cursorPositionsIn member &nbsp; <font size=-1><a href='test-results.md.html#should-provide-the-cursorpositionsin-member'>see results</a></font> <font size=-1><a href='#should-provide-the-cursorpositionsin-member'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>First, just verify that it&#39;s present.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should provide the cursorPositionsIn member'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">LurchEditor</span>::cursorPositionsIn
+</code></pre><h3><a name='should-compute-correct-cursor-position-counts'></a>should compute correct cursor position counts &nbsp; <font size=-1><a href='test-results.md.html#should-compute-correct-cursor-position-counts'>see results</a></font> <font size=-1><a href='#should-compute-correct-cursor-position-counts'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should compute correct cursor position counts'</span>,
+    inPage<span class="hljs-function"> -&gt;</span>
+</code></pre><p>The title for this test is vague, but the reason is so that we
+may pack several tests into one <code>it</code> call.  (There is no need to
+reload the page after each of these.)</p>
+<p>First, the character count of a text node should be the number of
+characters in it minus one.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.L = <span class="hljs-keyword">new</span> LurchEditor()
+            <span class="hljs-built_in">window</span>.T = <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">''</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.cursorPositionsIn T ), <span class="hljs-string">'toEqual'</span>, -<span class="hljs-number">1</span>
+        pageDo<span class="hljs-function"> -&gt;</span> T.textContent = <span class="hljs-string">'A'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.cursorPositionsIn T ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">0</span>
+        pageDo<span class="hljs-function"> -&gt;</span> T.textContent = <span class="hljs-string">'hi'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.cursorPositionsIn T ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">1</span>
+        pageDo<span class="hljs-function"> -&gt;</span> T.textContent = <span class="hljs-string">'hello, friends'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.cursorPositionsIn T ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">13</span>
+</code></pre><p>Second, a non-text node with no children and no permission to
+contain the cursor should have no cursor positions.  Here I test
+just a few example such elements.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">window</span>.S = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'img'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.cursorPositionsIn S ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">0</span>
+        pageDo<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">window</span>.S = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'hr'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.cursorPositionsIn S ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">0</span>
+        pageDo<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">window</span>.S = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'br'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.cursorPositionsIn S ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">0</span>
+</code></pre><p>Third, a non-text node with no children but with position to
+contain the cursor should have one cursor position.  Here I test
+just a few example such elements.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">window</span>.S = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'a'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.cursorPositionsIn S ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">1</span>
+        pageDo<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">window</span>.S = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'td'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.cursorPositionsIn S ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">1</span>
+        pageDo<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">window</span>.S = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.cursorPositionsIn S ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">1</span>
+</code></pre><p>Finally, elements with children should return the total count of
+all characters in all children, plus the number of children,
+plus 1.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.D = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            D.innerHTML = <span class="hljs-string">'''some text &lt;span
+                &gt;more text&lt;/span&gt;&lt;br&gt;&lt;span
+                &gt;nest&lt;i&gt;ed&lt;/i&gt;&lt;/span&gt;'''</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.cursorPositionsIn D ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">33</span>
+        pageDo<span class="hljs-function"> -&gt;</span> D.innerHTML = <span class="hljs-string">'&lt;b&gt;&lt;i&gt;&lt;u&gt;1&lt;/u&gt;&lt;/i&gt;&lt;/b&gt;'</span>
+        pageExpects (<span class="hljs-function"> -&gt;</span> L.cursorPositionsIn D ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">8</span>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

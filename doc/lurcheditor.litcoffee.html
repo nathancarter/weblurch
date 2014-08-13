@@ -19,7 +19,7 @@
         <div id="left">
             <p align=center>Page contents</p>
 <p><a href='#-code-lurcheditor-code-class'><code>LurchEditor</code> class</a></p><ul>
-<li><a href='#functions-related-to-ids'>Functions related to ids</a></li><li><a href='#-code-lurcheditor-code-constructor'><code>LurchEditor</code> constructor</a></li><li><a href='#functions-used-by-the-constructor'>Functions used by the constructor</a></li><li><a href='#convenience-methods'>Convenience methods</a></li>
+<li><a href='#functions-related-to-ids'>Functions related to ids</a></li><li><a href='#-code-lurcheditor-code-constructor'><code>LurchEditor</code> constructor</a></li><li><a href='#functions-used-by-the-constructor'>Functions used by the constructor</a></li><li><a href='#convenience-methods'>Convenience methods</a></li><li><a href='#cursor-support'>Cursor support</a></li>
         </div>
         <div id="middle">
             <h1><a name='-code-lurcheditor-code-class'></a><code>LurchEditor</code> class &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-class'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>A Lurch Editor is an HTML DIV (that has <em>not</em> been marked as
@@ -69,6 +69,12 @@ change events that the superclass records.  We do not wish to have
 those changes recorded here, because we do not wish to allow the
 user to undo them.  Thus at this point, we clear the changes stack.</p>
 <pre class="hljs"><code>        <span class="hljs-property">@clearStack</span>()
+</code></pre><p>The editor keeps references to cursor position and anchor elements
+in a member variable, for easy access.  These begin as null,
+meaning that there is no cursor initially; the document doesn&#39;t
+have focus.  For more information on these variables, see the
+<a href="#cursor-support">section below on the cursor</a>.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@cursor</span> = position : <span class="hljs-literal">null</span>, anchor : <span class="hljs-literal">null</span>
 </code></pre><h2><a name='functions-used-by-the-constructor'></a>Functions used by the constructor &nbsp;  <font size=-1><a href='#functions-used-by-the-constructor'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Collect a list of all used ids in the given node, removing any
 ids that aren&#39;t just nonnegative integers.  This routine is used
 by the class&#39;s constructor as part of the procedure for
@@ -111,10 +117,104 @@ But if we have no main HTML element, return null.</p>
 </code></pre><p>We therefore have the guarantee <code>N == LE.index LE.address N</code>
 inherited from the address and index functions defined in the Node
 prototype.</p>
-
+<h2><a name='cursor-support'></a>Cursor support &nbsp;  <font size=-1><a href='#cursor-support'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The following two element ids will be used for the elements that
+represent the cursor position and anchor in the document.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">positionId</span>: <span class="hljs-string">'lurch-cursor-position'</span>
+    <span class="hljs-attribute">anchorId</span>: <span class="hljs-string">'lurch-cursor-anchor'</span>
+</code></pre><p>The <code>cursor</code> member of this class contains two fields, <code>position</code>
+and <code>anchor</code>.</p>
+<ul>
+<li>These may both be null, meaning that there is no cursor in the
+document.</li>
+<li>These may both be the same element, meaning that there is no
+selection; the cursor position and anchor are the same.</li>
+<li>These may be different elements, meaning that there is a
+selection; it includes all leaves between the position and
+anchor.</li>
+</ul>
+<p>Because it is possible for the document state to become out-of-sync
+with these variables, we provide the following routine to update
+them.  Although in many cases it&#39;s possible to simply keep those
+member variables up-to-date, we have this routine in case a
+document is restored from a serialized state with a cursor at a
+specific position, so that the member variables can get caught up
+to the document state.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">updateCursor</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-property">@cursor</span> = position : <span class="hljs-literal">null</span>, anchor : <span class="hljs-literal">null</span>
+        walk = start = <span class="hljs-built_in">document</span>.getElementById \
+            <span class="hljs-attribute">LurchEditor</span>::positionId
+        <span class="hljs-keyword">while</span> walk <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span> <span class="hljs-property">@cursor</span>.position
+            <span class="hljs-keyword">if</span> walk <span class="hljs-keyword">is</span> <span class="hljs-property">@element</span> <span class="hljs-keyword">then</span> <span class="hljs-property">@cursor</span>.position = start
+            walk = walk.parentNode
+        walk = start = <span class="hljs-built_in">document</span>.getElementById \
+            <span class="hljs-attribute">LurchEditor</span>::anchorId
+        <span class="hljs-keyword">while</span> walk <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span> <span class="hljs-property">@cursor</span>.anchor
+            <span class="hljs-keyword">if</span> walk <span class="hljs-keyword">is</span> <span class="hljs-property">@element</span> <span class="hljs-keyword">then</span> <span class="hljs-property">@cursor</span>.anchor = start
+            walk = walk.parentNode
+</code></pre><p>This class supports placing the cursor inside some HTML elements,
+but not others.  For isntance, you can place your cursor inside a
+SPAN, but not inside an HR.  The following variable local to this
+module stores the list of variables in which we can place the
+cursor.  (These were selected from <a href="http://www.w3schools.com/tags/">the full list on the w3schools
+website</a>.)</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">elementsSupportingCursor</span>: t.toUpperCase() <span class="hljs-keyword">for</span> t <span class="hljs-keyword">in</span> <span class="hljs-string">'''
+        a abbr acronym address article aside b bdi bdo big
+        blockquote caption center cite code dd details dfn div
+        dl dt em fieldset figcaption figure footer form header
+        h1 h2 h3 h4 h5 h6 i kbd label legend li mark nav ol p
+        pre q s samp section small span strong sub summary sup
+        td th time u ul var'''</span>.trim().split <span class="hljs-regexp">/\s+/</span>
+</code></pre><p>For placing the cursor within a node, we need to be able to compute
+how many cursor positions are available within that node.  The
+following routine does so, recursively.</p>
+<p>Note that it computes only the number of cursor positions <em>inside</em>
+the node, so a node such as &lt;span&gt;hi&lt;/span&gt; would have
+three locations (before the h, after the h, and after the i).  The
+two locations outside the node (before and after it) are <em>not</em>
+counted by this routine; they will be counted if this were called
+on the span&#39;s parent node.</p>
+<p>This is even true for text nodes!  For example, the text node child
+inside the span in the previous paragraph has one inner location,
+because the positions before the h and after the i do not count as
+&quot;inside.&quot;</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">cursorPositionsIn</span>: <span class="hljs-function"><span class="hljs-params">( node )</span> -&gt;</span>
+</code></pre><p>Text nodes can have the cursor before any character but the first,
+because, as described above, we are counting only the cursor
+positions <em>inside</em> the node.  For text nodes with no content, this
+has the funny consequence of giving -1 cursor positions, but that
+is acceptable.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> node <span class="hljs-keyword">instanceof</span> Text
+            node.length - <span class="hljs-number">1</span>
+</code></pre><p>Next we handle the two subcases of nodes without children.</p>
+<p>Some nodes with no children are only temporarily childless; e.g.,
+an empty span can contain the cursor and permit typing within it.
+For such nodes, we say there is one cursor location, which is
+immediately inside the node.</p>
+<p>Other nodes with no children are not permitted to contain the
+cursor (e.g., a horizontal rule, an image, etc.).  Such nodes have
+no cursor positions inside them.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> node.childNodes.length <span class="hljs-keyword">is</span> <span class="hljs-number">0</span>
+            <span class="hljs-keyword">if</span> node.tagName <span class="hljs-keyword">in</span> \
+            <span class="hljs-attribute">LurchEditor</span>::elementsSupportingCursor <span class="hljs-keyword">then</span> <span class="hljs-number">1</span> \
+            <span class="hljs-keyword">else</span> <span class="hljs-number">0</span>
+</code></pre><p>Nodes with children have a character count that depends on the
+character counts of the children.  We sum the character counts of
+the children, which accounts for all cursor positions strictly
+inside the children, but then we need to add the cursor positions
+immediately inside the parent node, but between children, or before
+or after all children.  There are $n+1$ of them, if $n$ is the
+number of children, because every child has a valid position before
+it, and the last child also has one additional valid position after
+it.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span>
+            result = node.childNodes.length + <span class="hljs-number">1</span>
+            <span class="hljs-keyword">for</span> child, index <span class="hljs-keyword">in</span> node.childNodes
+                result += <span class="hljs-property">@cursorPositionsIn</span> child
+            result
+</code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

@@ -28,7 +28,9 @@
 <li><a href='#node-fromjson-conversion'>Node fromJSON conversion</a></li><ul>
 <li><a href='#should-be-defined'>should be defined</a></li><li><a href='#should-convert-strings-to-text-nodes'>should convert strings to text nodes</a></li><li><a href='#should-handle-comment-objects'>should handle comment objects</a></li><li><a href='#should-be-able-to-create-empty-elements'>should be able to create empty elements</a></li><li><a href='#should-build-depth-one-dom-trees'>should build depth-one DOM trees</a></li><li><a href='#should-build-deep-dom-trees'>should build deep DOM trees</a></li></ul>
 <li><a href='#using-node-prototype-methods'>Using Node prototype methods</a></li><ul>
-<li><a href='#should-send-alerts-on-code-appendchild-code-calls'>should send alerts on <code>appendChild</code> calls</a></li><li><a href='#should-send-alerts-on-code-insertbefore-code-calls'>should send alerts on <code>insertBefore</code> calls</a></li><li><a href='#should-send-alerts-on-code-normalize-code-calls'>should send alerts on <code>normalize</code> calls</a></li><li><a href='#should-send-alerts-on-code-removeattribute-code-calls'>should send alerts on <code>removeAttribute</code> calls</a></li><li><a href='#should-send-alerts-on-code-removeattributenode-code-calls'>should send alerts on <code>removeAttributeNode</code> calls</a></li><li><a href='#should-send-alerts-on-code-removechild-code-calls'>should send alerts on <code>removeChild</code> calls</a></li><li><a href='#should-send-alerts-on-code-replacechild-code-calls'>should send alerts on <code>replaceChild</code> calls</a></li><li><a href='#should-send-alerts-on-code-setattribute-code-calls'>should send alerts on <code>setAttribute</code> calls</a></li><li><a href='#should-send-alerts-on-code-setattributenode-code-calls'>should send alerts on <code>setAttributeNode</code> calls</a></li>
+<li><a href='#should-send-alerts-on-code-appendchild-code-calls'>should send alerts on <code>appendChild</code> calls</a></li><li><a href='#should-send-alerts-on-code-insertbefore-code-calls'>should send alerts on <code>insertBefore</code> calls</a></li><li><a href='#should-send-alerts-on-code-normalize-code-calls'>should send alerts on <code>normalize</code> calls</a></li><li><a href='#should-send-alerts-on-code-removeattribute-code-calls'>should send alerts on <code>removeAttribute</code> calls</a></li><li><a href='#should-send-alerts-on-code-removeattributenode-code-calls'>should send alerts on <code>removeAttributeNode</code> calls</a></li><li><a href='#should-send-alerts-on-code-removechild-code-calls'>should send alerts on <code>removeChild</code> calls</a></li><li><a href='#should-send-alerts-on-code-replacechild-code-calls'>should send alerts on <code>replaceChild</code> calls</a></li><li><a href='#should-send-alerts-on-code-setattribute-code-calls'>should send alerts on <code>setAttribute</code> calls</a></li><li><a href='#should-send-alerts-on-code-setattributenode-code-calls'>should send alerts on <code>setAttributeNode</code> calls</a></li></ul>
+<li><a href='#leaf-navigation-in-node-class'>leaf navigation in Node class</a></li><ul>
+<li><a href='#should-be-defined'>should be defined</a></li><li><a href='#should-work-among-sibling-leaves'>should work among sibling leaves</a></li>
         </div>
         <div id="middle">
             <h1><a name='tests-of-dom-utilities-module'></a>Tests of DOM utilities module &nbsp;  <font size=-1><a href='#tests-of-dom-utilities-module'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>Pull in the utility functions in <code>phantom-utils</code> that make it
@@ -42,7 +44,7 @@ the <code>Node</code> prototype.
 <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
 </code></pre><h3><a name='should-be-defined'></a>should be defined &nbsp; <font size=-1><a href='test-results.md.html#should-be-defined'>see results</a></font> <font size=-1><a href='#should-be-defined'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>First, just verify that it&#39;s present.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should be defined'</span>, inPage<span class="hljs-function"> -&gt;</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">Node</span>::address ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">Node</span>::address
 </code></pre><h3><a name='should-give-null-on-corner-cases'></a>should give null on corner cases &nbsp; <font size=-1><a href='test-results.md.html#should-give-null-on-corner-cases'>see results</a></font> <font size=-1><a href='#should-give-null-on-corner-cases'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should give null on corner cases'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>The corner cases to be tested here are these:</p>
 <ul>
@@ -214,7 +216,7 @@ their addresses relative to that element.</p>
 <pre class="hljs"><code>phantomDescribe <span class="hljs-string">'index member function of Node class'</span>,
 <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
 </code></pre><h3><a name='should-be-defined'></a>should be defined &nbsp; <font size=-1><a href='test-results.md.html#should-be-defined'>see results</a></font> <font size=-1><a href='#should-be-defined'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be defined'</span>, inPage<span class="hljs-function"> -&gt;</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">Node</span>::index ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">Node</span>::index
 </code></pre><h3><a name='should-give-errors-for-non-arrays'></a>should give errors for non-arrays &nbsp; <font size=-1><a href='test-results.md.html#should-give-errors-for-non-arrays'>see results</a></font> <font size=-1><a href='#should-give-errors-for-non-arrays'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should give errors for non-arrays'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>Verify that calls to the function throw errors if anything but an
 array is passed as the argument, and that the error messages
@@ -241,20 +243,12 @@ that are not part of the document.</p>
             <span class="hljs-built_in">document</span>.body.appendChild spanInPage
             <span class="hljs-built_in">window</span>.divOutside = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">window</span>.spanOutside = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> divInPage <span class="hljs-keyword">is</span> divInPage.index [] ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> spanInPage <span class="hljs-keyword">is</span> spanInPage.index [] ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> divOutside <span class="hljs-keyword">is</span> divOutside.index [] ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span>
-            spanOutside <span class="hljs-keyword">is</span> spanOutside.index [] ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span> <span class="hljs-keyword">is</span> <span class="hljs-built_in">document</span>.index [] ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span>
-            <span class="hljs-built_in">document</span>.body <span class="hljs-keyword">is</span> <span class="hljs-built_in">document</span>.body.index [] ),
-            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> divInPage <span class="hljs-keyword">is</span> divInPage.index []
+        pageExpects<span class="hljs-function"> -&gt;</span> spanInPage <span class="hljs-keyword">is</span> spanInPage.index []
+        pageExpects<span class="hljs-function"> -&gt;</span> divOutside <span class="hljs-keyword">is</span> divOutside.index []
+        pageExpects<span class="hljs-function"> -&gt;</span> spanOutside <span class="hljs-keyword">is</span> spanOutside.index []
+        pageExpects<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span> <span class="hljs-keyword">is</span> <span class="hljs-built_in">document</span>.index []
+        pageExpects<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">document</span>.body <span class="hljs-keyword">is</span> <span class="hljs-built_in">document</span>.body.index []
 </code></pre><h3><a name='should-work-for-descendant-indices'></a>should work for descendant indices &nbsp; <font size=-1><a href='test-results.md.html#should-work-for-descendant-indices'>see results</a></font> <font size=-1><a href='#should-work-for-descendant-indices'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should work for descendant indices'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>Here we re-use the same hierarchy from
 <a href="#should-work-for-grandchildren-etc-">a test above</a>,
@@ -393,7 +387,7 @@ the page as valid JSON.</p>
 <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
 </code></pre><h3><a name='should-be-defined'></a>should be defined &nbsp; <font size=-1><a href='test-results.md.html#should-be-defined'>see results</a></font> <font size=-1><a href='#should-be-defined'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be defined'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>First, just verify that the function itself is present.</p>
-<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">Node</span>::toJSON ), <span class="hljs-string">'toBeTruthy'</span>
+<pre class="hljs"><code>        pageExpects<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">Node</span>::toJSON
 </code></pre><h3><a name='should-convert-text-nodes-to-strings'></a>should convert text nodes to strings &nbsp; <font size=-1><a href='test-results.md.html#should-convert-text-nodes-to-strings'>see results</a></font> <font size=-1><a href='#should-convert-text-nodes-to-strings'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should convert text nodes to strings'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>HTML text nodes should serialize as ordinary strings.
 We test a variety of ways they might occur.</p>
@@ -676,7 +670,7 @@ the <code>Node</code> object.
 <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
 </code></pre><h3><a name='should-be-defined'></a>should be defined &nbsp; <font size=-1><a href='test-results.md.html#should-be-defined'>see results</a></font> <font size=-1><a href='#should-be-defined'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be defined'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>First, just verify that the function itself is present.</p>
-<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> Node.fromJSON ), <span class="hljs-string">'toBeTruthy'</span>
+<pre class="hljs"><code>        pageExpects<span class="hljs-function"> -&gt;</span> Node.fromJSON
 </code></pre><h3><a name='should-convert-strings-to-text-nodes'></a>should convert strings to text nodes &nbsp; <font size=-1><a href='test-results.md.html#should-convert-strings-to-text-nodes'>see results</a></font> <font size=-1><a href='#should-convert-strings-to-text-nodes'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should convert strings to text nodes'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>This test is simply the inverse of the analogous test earlier.
 It verifies that two strings, one empty and one nonempty, both get
@@ -685,20 +679,16 @@ content.</p>
 <pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
             <span class="hljs-built_in">window</span>.node1 = Node.fromJSON <span class="hljs-string">'just a string'</span>
             <span class="hljs-built_in">window</span>.node2 = Node.fromJSON <span class="hljs-string">''</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Node ), <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Text ), <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Comment ),
-            <span class="hljs-string">'toBeFalsy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Element ),
-            <span class="hljs-string">'toBeFalsy'</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Node
+        pageExpects<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Text
+        pageExpects<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Comment
+        pageExpects<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Element
         pageExpects (<span class="hljs-function"> -&gt;</span> node1.textContent ),
             <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'just a string'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Node ), <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Text ), <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Comment ),
-            <span class="hljs-string">'toBeFalsy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Element ),
-            <span class="hljs-string">'toBeFalsy'</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Node
+        pageExpects<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Text
+        pageExpects<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Comment
+        pageExpects<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Element
         pageExpects (<span class="hljs-function"> -&gt;</span> node2.textContent ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">''</span>
 </code></pre><h3><a name='should-handle-comment-objects'></a>should handle comment objects &nbsp; <font size=-1><a href='test-results.md.html#should-handle-comment-objects'>see results</a></font> <font size=-1><a href='#should-handle-comment-objects'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should handle comment objects'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>This test is simply the inverse of the analogous test earlier.
@@ -711,20 +701,16 @@ content.</p>
                 m : <span class="hljs-literal">yes</span>, n : <span class="hljs-string">'some comment'</span>
             <span class="hljs-built_in">window</span>.node2 = Node.fromJSON \
                 comment : <span class="hljs-literal">yes</span>, content : <span class="hljs-string">''</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Node ), <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Text ), <span class="hljs-string">'toBeFalsy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Comment ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Element ),
-            <span class="hljs-string">'toBeFalsy'</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Node
+        pageExpects<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Text
+        pageExpects<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">instanceof</span> Comment
+        pageExpects<span class="hljs-function"> -&gt;</span> node1 <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Element
         pageExpects (<span class="hljs-function"> -&gt;</span> node1.textContent ),
             <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">'some comment'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Node ), <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Text ), <span class="hljs-string">'toBeFalsy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Comment ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Element ),
-            <span class="hljs-string">'toBeFalsy'</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Node
+        pageExpects<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Text
+        pageExpects<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">instanceof</span> Comment
+        pageExpects<span class="hljs-function"> -&gt;</span> node2 <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Element
         pageExpects (<span class="hljs-function"> -&gt;</span> node2.textContent ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-string">''</span>
 </code></pre><h3><a name='should-be-able-to-create-empty-elements'></a>should be able to create empty elements &nbsp; <font size=-1><a href='test-results.md.html#should-be-able-to-create-empty-elements'>see results</a></font> <font size=-1><a href='#should-be-able-to-create-empty-elements'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should be able to create empty elements'</span>, inPage<span class="hljs-function"> -&gt;</span>
 </code></pre><p>This test is simply the inverse of the analogous test earlier.
@@ -738,12 +724,10 @@ attributes.</p>
                 attributes : class : 'y', whatever : 'dude'
             window.node2 = Node.fromJSON \
                 t : 'br', a : id : '24601'
-        pageExpects ( -&gt; node1 instanceof Node ), 'toBeTruthy'
-        pageExpects ( -&gt; node1 instanceof Text ), 'toBeFalsy'
-        pageExpects ( -&gt; node1 instanceof Comment ),
-            'toBeFalsy'
-        pageExpects ( -&gt; node1 instanceof Element ),
-            'toBeTruthy'
+        pageExpects -&gt; node1 instanceof Node
+        pageExpects -&gt; node1 not instanceof Text
+        pageExpects -&gt; node1 not instanceof Comment
+        pageExpects -&gt; node1 instanceof Element
         pageExpects ( -&gt; node1.tagName ), 'toEqual', 'HR'
         pageExpects ( -&gt; node1.childNodes.length ),
             'toEqual', 0
@@ -757,12 +741,10 @@ attributes.</p>
             'toEqual', 'whatever'
         pageExpects ( -&gt; node1.attributes[1].value ),
             'toEqual', 'dude'
-        pageExpects ( -&gt; node2 instanceof Node ), 'toBeTruthy'
-        pageExpects ( -&gt; node2 instanceof Text ), 'toBeFalsy'
-        pageExpects ( -&gt; node2 instanceof Comment ),
-            'toBeFalsy'
-        pageExpects ( -&gt; node2 instanceof Element ),
-            'toBeTruthy'
+        pageExpects -&gt; node2 instanceof Node
+        pageExpects -&gt; node2 not instanceof Text
+        pageExpects -&gt; node2 not instanceof Comment
+        pageExpects -&gt; node2 instanceof Element
         pageExpects ( -&gt; node2.tagName ), 'toEqual', 'BR'
         pageExpects ( -&gt; node2.childNodes.length ),
             'toEqual', 0
@@ -1069,16 +1051,16 @@ return value of <code>removeAttribute</code> in each case is undefined.</p>
             <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">2</span>
         pageExpects (<span class="hljs-function"> -&gt;</span>
             tracker.getEditActions()[<span class="hljs-number">0</span>].toJSON() ),
-                <span class="hljs-string">'toEqual'</span>, {
-                    type : <span class="hljs-string">'removeAttribute'</span>, node : [ <span class="hljs-number">0</span> ],
-                    name : <span class="hljs-string">'align'</span>, value : <span class="hljs-string">'center'</span>
-                }
+            <span class="hljs-string">'toEqual'</span>, {
+                type : <span class="hljs-string">'removeAttribute'</span>, node : [ <span class="hljs-number">0</span> ],
+                name : <span class="hljs-string">'align'</span>, value : <span class="hljs-string">'center'</span>
+            }
         pageExpects (<span class="hljs-function"> -&gt;</span>
             tracker.getEditActions()[<span class="hljs-number">1</span>].toJSON() ),
-                <span class="hljs-string">'toEqual'</span>, {
-                    type : <span class="hljs-string">'removeAttribute'</span>, node : [ <span class="hljs-number">2</span> ],
-                    name : <span class="hljs-string">'style'</span>, value : <span class="hljs-string">'color:blue;'</span>
-                }
+            <span class="hljs-string">'toEqual'</span>, {
+                type : <span class="hljs-string">'removeAttribute'</span>, node : [ <span class="hljs-number">2</span> ],
+                name : <span class="hljs-string">'style'</span>, value : <span class="hljs-string">'color:blue;'</span>
+            }
 </code></pre><h3><a name='should-send-alerts-on-code-removeattributenode-code-calls'></a>should send alerts on <code>removeAttributeNode</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-removeattributenode-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-removeattributenode-code-calls'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>This test imitates the previous one, but uses
 <code>removeAttributeNode</code> rather than <code>removeAttribute</code>.  This adds
 just one new step, of fetching the attribute node to be removed.</p>
@@ -1329,10 +1311,32 @@ being replaced, or null if there was none.</p>
                 node : [ <span class="hljs-number">0</span> ], name : <span class="hljs-string">'example'</span>,
                 oldValue : <span class="hljs-string">'yes'</span>, newValue : <span class="hljs-string">'no'</span>
             }
+</code></pre><h2><a name='leaf-navigation-in-node-class'></a>leaf navigation in Node class &nbsp; <font size=-1><a href='test-results.md.html#leaf-navigation-in-node-class'>see results</a></font> <font size=-1><a href='#leaf-navigation-in-node-class'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The tests in this section test the <code>nextLeaf</code> and <code>previousLeaf</code>
+member functions in the <code>Node</code> prototype.
+<a href="domutils.litcoffee.html#next-and-previous-leaves">See their definition here.</a>.</p>
+<pre class="hljs"><code>phantomDescribe <span class="hljs-string">'leaf navigation in Node class'</span>,
+<span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
+</code></pre><h3><a name='should-be-defined'></a>should be defined &nbsp; <font size=-1><a href='test-results.md.html#should-be-defined'>see results</a></font> <font size=-1><a href='#should-be-defined'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>First, just verify that both functions are present.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should be defined'</span>, inPage<span class="hljs-function"> -&gt;</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">Node</span>::nextLeaf
+        pageExpects<span class="hljs-function"> -&gt;</span> <span class="hljs-attribute">Node</span>::previousLeaf
+</code></pre><h3><a name='should-work-among-sibling-leaves'></a>should work among sibling leaves &nbsp; <font size=-1><a href='test-results.md.html#should-work-among-sibling-leaves'>see results</a></font> <font size=-1><a href='#should-work-among-sibling-leaves'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should work among sibling leaves'</span>, inPage<span class="hljs-function"> -&gt;</span>
+</code></pre><p>We test the simplest case, when we call the functions on leaf
+nodes who have immediate sibling nodes that are also leaves, and
+thus which should be returned by the functions.  We work within
+the following environment.</p>
+<pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
+            <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
+            div.innerHTML = <span class="hljs-string">'''A section of text.
+                               &lt;br&gt;&lt;hr&gt;Yet more text.'''</span>
+</code></pre><p>Within the div we find just four leaf nodes.  Let&#39;s ensure that
+the functions work correctly among those four.</p>
+<pre class="hljs"><code>        pageExpects<span class="hljs-function"> -&gt;</span>
+            div.childNodes[<span class="hljs-number">0</span>].nextLeaf() <span class="hljs-keyword">is</span> div.childNodes[<span class="hljs-number">1</span>]
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

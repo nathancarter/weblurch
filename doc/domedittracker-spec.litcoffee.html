@@ -45,7 +45,7 @@ for setting up tests as documented more thoroughly in
 </code></pre><h3><a name='should-exist'></a>should exist &nbsp; <font size=-1><a href='test-results.md.html#should-exist'>see results</a></font> <font size=-1><a href='#should-exist'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>That is, the class should be defined in the global namespace of
 the browser after loading the main app page.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should exist'</span>, inPage<span class="hljs-function"> -&gt;</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> DOMEditTracker ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> DOMEditTracker
 </code></pre><h3><a name='should-track-instances'></a>should track instances &nbsp; <font size=-1><a href='test-results.md.html#should-track-instances'>see results</a></font> <font size=-1><a href='#should-track-instances'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>Each instance of the class created should be placed in an array
 stored in the class variable <code>@instances</code>.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should track instances'</span>, inPage<span class="hljs-function"> -&gt;</span>
@@ -55,17 +55,15 @@ check that there is an instance already, and its element has the
 desired id.</p>
 <pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
             DOMEditTracker.instances.length ), <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">1</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span>
+        pageExpects<span class="hljs-function"> -&gt;</span>
             DOMEditTracker.instances[<span class="hljs-number">0</span>] \
-                .getElement().parentNode <span class="hljs-keyword">is</span> <span class="hljs-built_in">document</span>.body ),
-            <span class="hljs-string">'toBeTruthy'</span>
+                .getElement().parentNode <span class="hljs-keyword">is</span> <span class="hljs-built_in">document</span>.body
 </code></pre><p>Create an edit tracker and check to be sure the instances array
 has length 2 and contains the new instance.</p>
 <pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span> <span class="hljs-built_in">window</span>.T1 = <span class="hljs-keyword">new</span> DOMEditTracker
         pageExpects (<span class="hljs-function"> -&gt;</span> DOMEditTracker.instances.length ),
             <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">2</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> DOMEditTracker.instances[<span class="hljs-number">1</span>] <span class="hljs-keyword">is</span> T1 ),
-            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> DOMEditTracker.instances[<span class="hljs-number">1</span>] <span class="hljs-keyword">is</span> T1
 </code></pre><p>Create another, this one around an element outside the document,
 and check to be sure the instances array has length 3 and contains
 the two new instances in the appropriate order.</p>
@@ -74,8 +72,7 @@ the two new instances in the appropriate order.</p>
             <span class="hljs-built_in">window</span>.T2 = <span class="hljs-keyword">new</span> DOMEditTracker div
         pageExpects (<span class="hljs-function"> -&gt;</span> DOMEditTracker.instances.length ),
             <span class="hljs-string">'toEqual'</span>, <span class="hljs-number">3</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> DOMEditTracker.instances[<span class="hljs-number">2</span>] <span class="hljs-keyword">is</span> T2 ),
-            <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> DOMEditTracker.instances[<span class="hljs-number">2</span>] <span class="hljs-keyword">is</span> T2
 </code></pre><h3><a name='should-find-the-correct-containers'></a>should find the correct containers &nbsp; <font size=-1><a href='test-results.md.html#should-find-the-correct-containers'>see results</a></font> <font size=-1><a href='#should-find-the-correct-containers'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>There will already be one <code>DOMEditTracker</code> instance in place,
 instantiated by the index page itself.  It is over the first div in
 the document.</p>
@@ -101,22 +98,20 @@ elements and a <code>DOMEditTracker</code> instance around it.</p>
             <span class="hljs-built_in">window</span>.another = <span class="hljs-keyword">new</span> DOMEditTracker div
 </code></pre><p>First, is the original <code>DOMEditTracker</code> instance in charge of the
 first div in the document?</p>
-<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
+<pre class="hljs"><code>        pageExpects<span class="hljs-function"> -&gt;</span>
             firstDiv = <span class="hljs-built_in">document</span>.body
                 .getElementsByTagName( <span class="hljs-string">'div'</span> )[<span class="hljs-number">0</span>]
             DOMEditTracker.instances[<span class="hljs-number">0</span>] <span class="hljs-keyword">is</span>
-                DOMEditTracker.instanceOver firstDiv ),
-            <span class="hljs-string">'toBeTruthy'</span>
+                DOMEditTracker.instanceOver firstDiv
 </code></pre><p>Second, is the new <code>DOMEditTracker</code> instance in charge of the div
 created above?  And of one of its child nodes?  And one of its
 grandchild nodes?</p>
-<pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span> another <span class="hljs-keyword">is</span>
-            DOMEditTracker.instanceOver div ), <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> another <span class="hljs-keyword">is</span>
-            DOMEditTracker.instanceOver ielt ), <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> another <span class="hljs-keyword">is</span>
-            DOMEditTracker.instanceOver ielt.childNodes[<span class="hljs-number">0</span>] ),
-            <span class="hljs-string">'toBeTruthy'</span>
+<pre class="hljs"><code>        pageExpects<span class="hljs-function"> -&gt;</span> another <span class="hljs-keyword">is</span>
+            DOMEditTracker.instanceOver div
+        pageExpects<span class="hljs-function"> -&gt;</span> another <span class="hljs-keyword">is</span>
+            DOMEditTracker.instanceOver ielt
+        pageExpects<span class="hljs-function"> -&gt;</span> another <span class="hljs-keyword">is</span>
+            DOMEditTracker.instanceOver ielt.childNodes[<span class="hljs-number">0</span>]
 </code></pre><p>Now create an instance around a div outside the document, and do
 similar tests on it.</p>
 <pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
@@ -127,15 +122,14 @@ similar tests on it.</p>
             grandchild.textContent = <span class="hljs-string">'waah'</span>
             child.appendChild grandchild
             <span class="hljs-built_in">window</span>.final = <span class="hljs-keyword">new</span> DOMEditTracker outside
-        pageExpects (<span class="hljs-function"> -&gt;</span> final <span class="hljs-keyword">is</span>
-            DOMEditTracker.instanceOver outside ), <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> final <span class="hljs-keyword">is</span>
-            DOMEditTracker.instanceOver child ), <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> final <span class="hljs-keyword">is</span>
-            DOMEditTracker.instanceOver grandchild ),
-            <span class="hljs-string">'toBeTruthy'</span>
-        pageExpects (<span class="hljs-function"> -&gt;</span> final <span class="hljs-keyword">is</span> DOMEditTracker.instanceOver \
-            grandchild.childNodes[<span class="hljs-number">0</span>] ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects<span class="hljs-function"> -&gt;</span>
+            final <span class="hljs-keyword">is</span> DOMEditTracker.instanceOver outside
+        pageExpects<span class="hljs-function"> -&gt;</span>
+            final <span class="hljs-keyword">is</span> DOMEditTracker.instanceOver child
+        pageExpects<span class="hljs-function"> -&gt;</span>
+            final <span class="hljs-keyword">is</span> DOMEditTracker.instanceOver grandchild
+        pageExpects<span class="hljs-function"> -&gt;</span> final <span class="hljs-keyword">is</span> DOMEditTracker.instanceOver \
+            grandchild.childNodes[<span class="hljs-number">0</span>]
 </code></pre><h2><a name='domedittracker-instances-without-divs'></a>DOMEditTracker instances without DIVs &nbsp; <font size=-1><a href='test-results.md.html#domedittracker-instances-without-divs'>see results</a></font> <font size=-1><a href='#domedittracker-instances-without-divs'><span class="glyphicon glyphicon-link"></span></a></font></h2><pre class="hljs"><code>phantomDescribe <span class="hljs-string">'DOMEditTracker instances without DIVs'</span>,
 <span class="hljs-string">'./app/index.html'</span>,<span class="hljs-function"> -&gt;</span>
 </code></pre><h3><a name='should-return-a-null-element'></a>should return a null element &nbsp; <font size=-1><a href='test-results.md.html#should-return-a-null-element'>see results</a></font> <font size=-1><a href='#should-return-a-null-element'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>An instance of the <code>DOMEditTracker</code> class created without a div
@@ -161,7 +155,7 @@ return null from its <code>getElement</code> method.  Here we construct the
             <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
             <span class="hljs-built_in">document</span>.body.appendChild div
             <span class="hljs-built_in">window</span>.D = <span class="hljs-keyword">new</span> DOMEditTracker div
-        pageExpects (<span class="hljs-function"> -&gt;</span> div <span class="hljs-keyword">is</span> D.getElement() ), <span class="hljs-string">'toBeTruthy'</span>
+        pageExpects<span class="hljs-function"> -&gt;</span> div <span class="hljs-keyword">is</span> D.getElement()
 </code></pre><h2><a name='the-undo-redo-stack'></a>The undo/redo stack &nbsp; <font size=-1><a href='test-results.md.html#the-undo-redo-stack'>see results</a></font> <font size=-1><a href='#the-undo-redo-stack'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The tests in this section concern all functions related to the
 undo/redo stack maintained by a <code>DOMEditTracker</code> instance.
 See the documentation in <a href="domedittracker.litcoffee.html#undo-redo-stack">the DOMEditTracker source code</a> for information
@@ -407,16 +401,11 @@ text in it, adding more text, and normalizing to unite the texts.</p>
 </code></pre><p>Undo all three actions, checking the state of the same div after
 each call to <code>undo</code>.  We ask it to call <code>undo</code> four times, just to
 be sure that the fourth one has no effect.  We also check the
-stack pointer after each undo, to be sure it&#39;s being decremented.
-Note that when the index is zero, we must test to see if it is
-false, since the test framework replaces zero and false with null.</p>
+stack pointer after each undo, to be sure it&#39;s being decremented.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">for</span> index <span class="hljs-keyword">in</span> [<span class="hljs-number">2</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>]
             pageDo<span class="hljs-function"> -&gt;</span> D.undo()
-            <span class="hljs-keyword">if</span> index &gt; <span class="hljs-number">0</span>
-                pageExpects (<span class="hljs-function"> -&gt;</span> D.stackPointer ),
-                    <span class="hljs-string">'toEqual'</span>, index
-            <span class="hljs-keyword">else</span>
-                pageExpects (<span class="hljs-function"> -&gt;</span> D.stackPointer ), <span class="hljs-string">'toBeFalsy'</span>
+            pageExpects (<span class="hljs-function"> -&gt;</span> D.stackPointer ),
+                <span class="hljs-string">'toEqual'</span>, index
             pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ),
                 <span class="hljs-string">'toEqual'</span>, stateHistory[index]
 </code></pre><p>Redo all three actions, checking the state of the same div after
@@ -425,11 +414,8 @@ be sure that the fourth one has no effect.  We also check the
 stack pointer after each redo, to be sure it&#39;s being incremented.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">for</span> index <span class="hljs-keyword">in</span> [<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">3</span>]
             pageDo<span class="hljs-function"> -&gt;</span> D.redo()
-            <span class="hljs-keyword">if</span> index &gt; <span class="hljs-number">0</span>
-                pageExpects (<span class="hljs-function"> -&gt;</span> D.stackPointer ),
-                    <span class="hljs-string">'toEqual'</span>, index
-            <span class="hljs-keyword">else</span>
-                pageExpects (<span class="hljs-function"> -&gt;</span> D.stackPointer ), <span class="hljs-string">'toBeFalsy'</span>
+            pageExpects (<span class="hljs-function"> -&gt;</span> D.stackPointer ),
+                <span class="hljs-string">'toEqual'</span>, index
             pageExpects (<span class="hljs-function"> -&gt;</span> div.toJSON() ),
                 <span class="hljs-string">'toEqual'</span>, stateHistory[index]
 </code></pre><h3><a name='supports-edit-blocks'></a>supports edit blocks &nbsp; <font size=-1><a href='test-results.md.html#supports-edit-blocks'>see results</a></font> <font size=-1><a href='#supports-edit-blocks'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>A sequence of successive edit actions can be treated as a block,
@@ -568,7 +554,7 @@ be sure that the fourth one has no effect.</p>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

@@ -176,7 +176,7 @@ tracker.  (But this class is not very useful if there is no edit
 tracker; we avoid throwing an error mainly for the convenience of
 the caller.)
 
-            @node = node.address @tracker.getElement()
+            @node = node.address @tracker?.getElement()
 
 For type "appendChild", the node to append is stored serialized,
 in `@toAppend`.
@@ -273,7 +273,8 @@ previous type, under the same names.
                 if data[0] not instanceof Attr
                     throw Error 'Invalid attribute node: ' +
                                 data[0]
-                { @name, @value } = data[0]
+                { @name } = data[0]
+                @value = node.getAttribute @name
 
 For type "removeChild", we store the child's original index within
 `@node` as `@childIndex`, and a serialization of the child, as
@@ -337,6 +338,80 @@ construct, throw an error, because they're the only types
 supported.
 
             else throw Error 'Invalid DOMEditAction type: ' + type
+
+## Non-actions
+
+It is possible to create edit actions that do not actually change
+the document in any way.  For instance, a normalize action might
+be called when there are not any adjacent text nodes, so it does
+nothing.  Or a replaceChild action might be performed, replacing
+an existing child with one that is indistinguishable from it.
+
+We wish to be able to detect when an edit action is really a
+non-action, for a few reasons.
+ * Let's not push onto the undo/redo stack actions that will do
+   nothing if the user undoes/redoes them.  This would be confusing
+   to the user.
+ * Let's not notify listeners of null changes, because whatever
+   processing the listeners would do upon changes would then be
+   wasted effort, since the document has not really changed.
+
+Thus the following member function of the `DOMEditAction` class
+returns whether or not the action is null.
+
+        isNullAction: ->
+
+Appending, inserting, or remvoing a child always changes the
+document.  (If the attempt had been to append or insert something
+invalid, or remove something invalid, this object would not have
+completed its constructor.  The fact that it did means that the
+addition or removal is a valid action.)
+
+            if @type is 'appendChild' or @type is 'insertBefore' or
+               @type is 'removeChild'
+                return no
+
+Removing an attribute is null if and only if the node did not have
+the attribute, in which case `@value` will be null.
+
+            if @type is 'removeAttribute' or
+               @type is 'removeAttributeNode'
+                console.log 'old attribute is', @name, @value
+                return @value is null
+
+Normalize is a null action iff the constructor did not find any
+sequences of adjacent text nodes anywhere in the node to be
+normalized.
+
+            else if @type is 'normalize'
+                return JSON.equals @sequences, {}
+
+Replacing a child with another is an actual modification iff the
+"before" child is distinguishable from the "after" child.
+
+            else if @type is 'replaceChild'
+                return JSON.equals @oldChild, @newChild
+
+Setting an attribute is an actual modification iff the new value
+is a different string than the old value.
+
+            else if @type is 'setAttribute' or
+                    @type is 'setAttributeNode'
+                return @oldValue is @newValue
+
+A compound action is a null action iff all its elements are.
+Although we could make it null iff the combined sequence of actions
+is guaranteed to yield the same document as before, but that is
+both less useful and harder to compute.
+
+            else if @type is 'compound'
+                for subaction in @subactions
+                    if not subaction.isNullAction() then return no
+                return yes
+
+And those are all the types we know.
+
+            else throw Error 'Invalid DOMEditAction type: ' + @type
 
 ## Description
 
@@ -460,8 +535,11 @@ that purpose.  Also, it gives a nice symmetry with `undo`.
 In every case, we need to know what object was "`this`" when the
 event was created.  Its address within the containing
 `DOMEditTracker` is stored in our `node` field, so we find it that
-way.
+way.  If there is no tracker, this will fail.
 
+            if not @tracker
+                throw Error \
+                    'Cannot redo action with no DOMEditTracker'
             original = @tracker.getElement().index @node
 
 Now we consider each possible action type separately, in a big
@@ -540,8 +618,12 @@ routine above for more detailed explanations of each part below.
 
         undo: ->
 
-As above, compute the original "`this`" node.
+As above, compute the original "`this`" node.  If there is no
+tracker, this will fail.
 
+            if not @tracker
+                throw Error \
+                    'Cannot undo action with no DOMEditTracker'
             original = @tracker.getElement().index @node
 
 The inverse of "appendChild" is to remove the last child.
@@ -1179,6 +1261,56 @@ original method.
 
             result
 
+## Next and previous leaves
+
+Although the DOM provides properties for the next and previous
+siblings of any node, it does not provide a method for finding the
+next or previous *leaf* nodes.  The following additions to the Node
+prototype do just that.
+
+One can call `N.nextLeaf()` to get the next leaf node in the
+document strictly after `N` (regardless of whether `N` itself is a
+leaf), or `N.nextLeaf M` to restrict the search to within the
+ancestor node `M`.  `M` defaults to the entire document.  `M` must
+be an ancestor of `N`, or this default is used.
+
+    Node::nextLeaf = ( container = null ) ->
+
+Walk up the DOM tree until we can find a previous sibling.  Do not
+step outside the bounds of the document or `container`.
+
+        walk = this
+        while walk and walk isnt container and not walk.nextSibling
+            walk = walk.parentNode
+
+If no next sibling could be found, quit now, returning null.
+
+        walk = walk?.nextSibling
+        if not walk then return null
+
+We have a next sibling, so return its first leaf node.
+
+        while walk.childNodes.length > 0
+            walk = walk.childNodes[0]
+        walk
+
+The following routine is analogous to the previous one, but in the
+opposite direction (finding the previous leaf node, within the
+given `container`, if such a leaf node exists).  Its code is not
+documented because it is so similar to the previous routine, which
+is documented.
+
+    Node::previousLeaf = ( container = null ) ->
+        walk = this
+        while walk and walk isnt container and
+          not walk.previousSibling
+            walk = walk.parentNode
+        walk = walk?.previousSibling
+        if not walk then return null
+        while walk.childNodes.length > 0
+            walk = walk.childNodes[walk.childNodes.length - 1]
+        walk
+
 
 
 
@@ -1253,6 +1385,14 @@ user to undo them.  Thus at this point, we clear the changes stack.
 
             @clearStack()
 
+The editor keeps references to cursor position and anchor elements
+in a member variable, for easy access.  These begin as null,
+meaning that there is no cursor initially; the document doesn't
+have focus.  For more information on these variables, see the
+[section below on the cursor](#cursor-support).
+
+            @cursor = position : null, anchor : null
+
 ## Functions used by the constructor
 
 Collect a list of all used ids in the given node, removing any
@@ -1310,4 +1450,177 @@ But if we have no main HTML element, return null.
 We therefore have the guarantee `N == LE.index LE.address N`
 inherited from the address and index functions defined in the Node
 prototype.
+
+## Cursor support
+
+The following two element ids will be used for the elements that
+represent the cursor position and anchor in the document.
+
+        positionId: 'lurch-cursor-position'
+        anchorId: 'lurch-cursor-anchor'
+
+The `cursor` member of this class contains two fields, `position`
+and `anchor`.
+ * These may both be null, meaning that there is no cursor in the
+   document.
+ * These may both be the same element, meaning that there is no
+   selection; the cursor position and anchor are the same.
+ * These may be different elements, meaning that there is a
+   selection; it includes all leaves between the position and
+   anchor.
+
+Because it is possible for the document state to become out-of-sync
+with these variables, we provide the following routine to update
+them.  Although in many cases it's possible to simply keep those
+member variables up-to-date, we have this routine in case a
+document is restored from a serialized state with a cursor at a
+specific position, so that the member variables can get caught up
+to the document state.
+
+        updateCursor: ->
+            @cursor = position : null, anchor : null
+            walk = start = document.getElementById \
+                LurchEditor::positionId
+            while walk and not @cursor.position
+                if walk is @element then @cursor.position = start
+                walk = walk.parentNode
+            walk = start = document.getElementById \
+                LurchEditor::anchorId
+            while walk and not @cursor.anchor
+                if walk is @element then @cursor.anchor = start
+                walk = walk.parentNode
+
+This class supports placing the cursor inside some HTML elements,
+but not others.  For isntance, you can place your cursor inside a
+SPAN, but not inside an HR.  The following variable local to this
+module stores the list of variables in which we can place the
+cursor.  (These were selected from [the full list on the w3schools
+website](http://www.w3schools.com/tags/).)
+
+        elementsSupportingCursor: t.toUpperCase() for t in '''
+            a abbr acronym address article aside b bdi bdo big
+            blockquote caption center cite code dd details dfn div
+            dl dt em fieldset figcaption figure footer form header
+            h1 h2 h3 h4 h5 h6 i kbd label legend li mark nav ol p
+            pre q s samp section small span strong sub summary sup
+            td th time u ul var'''.trim().split /\s+/
+
+For placing the cursor within a node, we need to be able to compute
+how many cursor positions are available within that node.  The
+following routine does so, recursively.
+
+Note that it computes only the number of cursor positions *inside*
+the node, so a node such as &lt;span&gt;hi&lt;/span&gt; would have
+three locations (before the h, after the h, and after the i).  The
+two locations outside the node (before and after it) are *not*
+counted by this routine; they will be counted if this were called
+on the span's parent node.
+
+This is even true for text nodes!  For example, the text node child
+inside the span in the previous paragraph has one inner location,
+because the positions before the h and after the i do not count as
+"inside."
+
+        cursorPositionsIn: ( node ) ->
+
+Text nodes can have the cursor before any character but the first,
+because, as described above, we are counting only the cursor
+positions *inside* the node.  For text nodes with no content, this
+has the funny consequence of giving -1 cursor positions, but that
+is acceptable.
+
+            if node instanceof Text
+                node.length - 1
+
+Next we handle the two subcases of nodes without children.
+
+Some nodes with no children are only temporarily childless; e.g.,
+an empty span can contain the cursor and permit typing within it.
+For such nodes, we say there is one cursor location, which is
+immediately inside the node.
+
+Other nodes with no children are not permitted to contain the
+cursor (e.g., a horizontal rule, an image, etc.).  Such nodes have
+no cursor positions inside them.
+
+            else if node.childNodes.length is 0
+                if node.tagName in \
+                LurchEditor::elementsSupportingCursor then 1 \
+                else 0
+
+Nodes with children have a character count that depends on the
+character counts of the children.  We sum the character counts of
+the children, which accounts for all cursor positions strictly
+inside the children, but then we need to add the cursor positions
+immediately inside the parent node, but between children, or before
+or after all children.  There are $n+1$ of them, if $n$ is the
+number of children, because every child has a valid position before
+it, and the last child also has one additional valid position after
+it.
+
+            else
+                result = node.childNodes.length + 1
+                for child, index in node.childNodes
+                    result += @cursorPositionsIn child
+                result
+
+
+
+
+# Generic Utilities
+
+This file provides functions useful across a wide variety of
+situations.  Utilities specific to the DOM appear in
+[the DOM utilities package](domutilities.litcoffee.html).  More
+generic ones appear here.
+
+## Equal JSON objects
+
+By a "JSON object" I mean an object where the only information we
+care about is that which would be preserved by `JSON.stringify`
+(i.e., an object that can be serialized and deserialized with
+JSON's `stringify` and `parse` without bringing any harm to our
+data).
+
+We wish to be able to compare such objects for semantic equality
+(not actual equality of objects in memory, as `==` would do).  We
+cannot simply do this by comparing the `JSON.stringify` of each,
+because [documentation on JSON.stringify](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify)
+says that we cannot rely on a consistent ordering of the object
+keys.  Thus we implement the following comparison routine.
+
+Note that this only works for objects that fit the requirements
+above; if equality (in your situation) is affected by the prototype
+chain, or if your object contains functions, or any other similar
+difficulty, then this routine is not guaranteed to work for you.
+
+It yields the same result as 
+`JSON.stringify(x) is JSON.stringify(y)` would if `stringify`
+always gave the same ordering of object keys.
+
+    JSON.equals = ( x, y ) ->
+
+If only one is an object, they're not equal.
+If neither is an object, you can use plain simple `is` to compare.
+
+        if ( x instanceof Object ) isnt ( y instanceof Object )
+            return no
+        if x not instanceof Object then return x is y
+
+So now we know that both inputs are objects.
+
+Get their keys in a consistent order.  If they aren't the same for
+both objects, then the objects aren't equal.
+
+        xkeys = ( Object.keys x ).sort()
+        ykeys = ( Object.keys y ).sort()
+        if ( JSON.stringify xkeys ) isnt ( JSON.stringify ykeys )
+            return no
+
+If there's any key on which the objects don't match, then they
+aren't equal.  Otherwise, they are.
+
+        for key in xkeys
+            if not JSON.equals x[key], y[key] then return no
+        yes
 

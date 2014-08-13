@@ -55,7 +55,7 @@
       }
       this.tracker = DOMEditTracker.instanceOver(node);
       this.type = type;
-      this.node = node.address(this.tracker.getElement());
+      this.node = node.address((_ref2 = this.tracker) != null ? _ref2.getElement() : void 0);
       if (type === 'appendChild') {
         if (data.length !== 1) {
           throw Error('Wrong # of parameters: ' + data);
@@ -131,7 +131,8 @@
         if (!(data[0] instanceof Attr)) {
           throw Error('Invalid attribute node: ' + data[0]);
         }
-        _ref2 = data[0], this.name = _ref2.name, this.value = _ref2.value;
+        this.name = data[0].name;
+        this.value = node.getAttribute(this.name);
       } else if (type === 'removeChild') {
         if (data.length !== 1) {
           throw Error('Wrong # of parameters: ' + data);
@@ -181,6 +182,34 @@
         throw Error('Invalid DOMEditAction type: ' + type);
       }
     }
+
+    DOMEditAction.prototype.isNullAction = function() {
+      var subaction, _i, _len, _ref;
+      if (this.type === 'appendChild' || this.type === 'insertBefore' || this.type === 'removeChild') {
+        return false;
+      }
+      if (this.type === 'removeAttribute' || this.type === 'removeAttributeNode') {
+        console.log('old attribute is', this.name, this.value);
+        return this.value === null;
+      } else if (this.type === 'normalize') {
+        return JSON.equals(this.sequences, {});
+      } else if (this.type === 'replaceChild') {
+        return JSON.equals(this.oldChild, this.newChild);
+      } else if (this.type === 'setAttribute' || this.type === 'setAttributeNode') {
+        return this.oldValue === this.newValue;
+      } else if (this.type === 'compound') {
+        _ref = this.subactions;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          subaction = _ref[_i];
+          if (!subaction.isNullAction()) {
+            return false;
+          }
+        }
+        return true;
+      } else {
+        throw Error('Invalid DOMEditAction type: ' + this.type);
+      }
+    };
 
     DOMEditAction.prototype.toString = function() {
       var max, newv, oldv, orig, repl, text;
@@ -266,6 +295,9 @@
 
     DOMEditAction.prototype.redo = function() {
       var action, newnode, original, replacement, _i, _len, _ref, _results;
+      if (!this.tracker) {
+        throw Error('Cannot redo action with no DOMEditTracker');
+      }
       original = this.tracker.getElement().index(this.node);
       if (this.type === 'appendChild') {
         return original.appendChild(Node.fromJSON(this.toAppend));
@@ -300,6 +332,9 @@
 
     DOMEditAction.prototype.undo = function() {
       var action, addBack, d, descendants, key, original, replacement, string, _i, _len, _ref, _ref1, _ref2, _results, _results1;
+      if (!this.tracker) {
+        throw Error('Cannot undo action with no DOMEditTracker');
+      }
       original = this.tracker.getElement().index(this.node);
       if (this.type === 'appendChild') {
         return original.removeChild(original.childNodes[original.childNodes.length - 1]);
@@ -667,7 +702,47 @@
     };
   });
 
+  Node.prototype.nextLeaf = function(container) {
+    var walk;
+    if (container == null) {
+      container = null;
+    }
+    walk = this;
+    while (walk && walk !== container && !walk.nextSibling) {
+      walk = walk.parentNode;
+    }
+    walk = walk != null ? walk.nextSibling : void 0;
+    if (!walk) {
+      return null;
+    }
+    while (walk.childNodes.length > 0) {
+      walk = walk.childNodes[0];
+    }
+    return walk;
+  };
+
+  Node.prototype.previousLeaf = function(container) {
+    var walk;
+    if (container == null) {
+      container = null;
+    }
+    walk = this;
+    while (walk && walk !== container && !walk.previousSibling) {
+      walk = walk.parentNode;
+    }
+    walk = walk != null ? walk.previousSibling : void 0;
+    if (!walk) {
+      return null;
+    }
+    while (walk.childNodes.length > 0) {
+      walk = walk.childNodes[walk.childNodes.length - 1];
+    }
+    return walk;
+  };
+
   window.LurchEditor = LurchEditor = (function(_super) {
+    var t;
+
     __extends(LurchEditor, _super);
 
     LurchEditor.prototype.nextFreeId = function() {
@@ -703,6 +778,10 @@
       })();
       this.assignIds(div);
       this.clearStack();
+      this.cursor = {
+        position: null,
+        anchor: null
+      };
     }
 
     LurchEditor.prototype.cleanIds = function(node) {
@@ -770,9 +849,91 @@
       }
     };
 
+    LurchEditor.prototype.positionId = 'lurch-cursor-position';
+
+    LurchEditor.prototype.anchorId = 'lurch-cursor-anchor';
+
+    LurchEditor.prototype.updateCursor = function() {
+      var start, walk, _results;
+      this.cursor = {
+        position: null,
+        anchor: null
+      };
+      walk = start = document.getElementById(LurchEditor.prototype.positionId);
+      while (walk && !this.cursor.position) {
+        if (walk === this.element) {
+          this.cursor.position = start;
+        }
+        walk = walk.parentNode;
+      }
+      walk = start = document.getElementById(LurchEditor.prototype.anchorId);
+      _results = [];
+      while (walk && !this.cursor.anchor) {
+        if (walk === this.element) {
+          this.cursor.anchor = start;
+        }
+        _results.push(walk = walk.parentNode);
+      }
+      return _results;
+    };
+
+    LurchEditor.prototype.elementsSupportingCursor = (function() {
+      var _i, _len, _ref, _results;
+      _ref = 'a abbr acronym address article aside b bdi bdo big\nblockquote caption center cite code dd details dfn div\ndl dt em fieldset figcaption figure footer form header\nh1 h2 h3 h4 h5 h6 i kbd label legend li mark nav ol p\npre q s samp section small span strong sub summary sup\ntd th time u ul var'.trim().split(/\s+/);
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        t = _ref[_i];
+        _results.push(t.toUpperCase());
+      }
+      return _results;
+    })();
+
+    LurchEditor.prototype.cursorPositionsIn = function(node) {
+      var child, index, result, _i, _len, _ref, _ref1;
+      if (node instanceof Text) {
+        return node.length - 1;
+      } else if (node.childNodes.length === 0) {
+        if (_ref = node.tagName, __indexOf.call(LurchEditor.prototype.elementsSupportingCursor, _ref) >= 0) {
+          return 1;
+        } else {
+          return 0;
+        }
+      } else {
+        result = node.childNodes.length + 1;
+        _ref1 = node.childNodes;
+        for (index = _i = 0, _len = _ref1.length; _i < _len; index = ++_i) {
+          child = _ref1[index];
+          result += this.cursorPositionsIn(child);
+        }
+        return result;
+      }
+    };
+
     return LurchEditor;
 
   })(DOMEditTracker);
+
+  JSON.equals = function(x, y) {
+    var key, xkeys, ykeys, _i, _len;
+    if ((x instanceof Object) !== (y instanceof Object)) {
+      return false;
+    }
+    if (!(x instanceof Object)) {
+      return x === y;
+    }
+    xkeys = (Object.keys(x)).sort();
+    ykeys = (Object.keys(y)).sort();
+    if ((JSON.stringify(xkeys)) !== (JSON.stringify(ykeys))) {
+      return false;
+    }
+    for (_i = 0, _len = xkeys.length; _i < _len; _i++) {
+      key = xkeys[_i];
+      if (!JSON.equals(x[key], y[key])) {
+        return false;
+      }
+    }
+    return true;
+  };
 
 }).call(this);
 
