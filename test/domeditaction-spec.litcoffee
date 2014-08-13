@@ -62,6 +62,30 @@ description provided when their `toString` method is called.
             pageExpects ( -> T.toString() ),
                 'toEqual', 'Add Hello, friend.'
 
+### should detect null "appendChild" instances
+
+That is, instances constructed as above should be able to correctly
+report whether or not they are null.  In every single case, they
+should report non-null, since appending a child is always an action
+that impacts the DOM, and thus is not a null action.
+
+        it 'should detect null "appendChild" instances', inPage ->
+            pageDo ->
+                div = document.getElementById '0'
+                span1 = document.createElement 'span'
+                span1.innerHTML = 'Hello, <b>friend.</b>'
+                span2 = document.createElement 'span'
+                span2.innerHTML = 'Hello, <b>frenemy.</b>'
+                window.T1 = new DOMEditAction 'appendChild', div,
+                    span1
+                window.T2 = new DOMEditAction 'appendChild', div,
+                    span2
+                window.T3 = new DOMEditAction 'appendChild', span1,
+                    span2
+            pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
+            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
+            pageExpects ( -> T3.isNullAction() ), 'toBeFalsy'
+
 ### should have "insertBefore" instances
 
 That is, we should be able to construct instances of the class with
