@@ -213,19 +213,17 @@ Create a span in which normalize does something.
                 span2.textContent = 'Hello...'
                 span2.appendChild document.createTextNode 'frenemy'
 
-Create a div containing both spans, so that we can check more than
-one level deep.  I don't use the existing div, because later tests
-assume that I haven't modified it.
+Place both spans in the div, so that we can check more than one
+level deep.
 
-                div2 = document.createElement 'div'
-                div2.appendChild span1
-                div2.appendChild span2
+                div.appendChild span1
+                div.appendChild span2
 
 Then we investigate whether normalize is null on each of those two
 spans, as well as the whole div.  It should be null only on the
 first span, and non-null everywhere else.
 
-                window.T1 = new DOMEditAction 'normalize', div2
+                window.T1 = new DOMEditAction 'normalize', div
                 window.T2 = new DOMEditAction 'normalize', span1
                 window.T3 = new DOMEditAction 'normalize', span2
             pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
