@@ -197,6 +197,10 @@ correctly.
    in the document.
  * Make ordinary keyboard motions of the cursor able to enter
    and exit MathQuill instances.
+ * Make keyboard and mouse actions that create/extend a selection
+   (e.g., shift-arrows, shift-click, click-and-drag) unable to
+   select only a portion of a MathQuill object, but instead select
+   all or none of it.
  * Consider whether you can render the MathQuill using
    [MathJax](http://www.mathjax.org/) when the cursor exits,
    to get prettier results.
