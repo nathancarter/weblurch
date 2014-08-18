@@ -13,16 +13,6 @@ being those that should be done next, and the later items those
 that must come after.  Necessarily, the later items are more vague
 than the earlier ones.
 
-## Miscellaneous code improvement
-
- * Search for all instances of triple-quoted strings (either with
-   single or double quotes) and see if they should actually be
-   single-quoted, multi-line strings.  I had been operating under
-   the mistaken impression that multi-line strings required the
-   triple quotes, but that is incorrect; most often, I want multi-
-   line strings that do not insert newlines.  The correct tool for
-   that is multi-line, single-quote strings.  Change as needed.
-
 ## More Word Processing Foundation
 
 ### Editing actions

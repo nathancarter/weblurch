@@ -222,11 +222,10 @@ before, but with the changes explained below.  The following code
 just performs the modification to each of the methods listed in
 the following string.
 
-    '''
-    appendChild insertBefore normalize removeAttribute
+    'appendChild insertBefore normalize removeAttribute
     removeAttributeNode removeChild replaceChild
     setAttribute setAttributeNode
-    '''.split( /\s+/ ).map ( methodName ) ->
+    '.split( /\s+/ ).map ( methodName ) ->
 
 Compute whether the modificatio needs to take place in the Node
 prototype or the Element prototype, and then store the original

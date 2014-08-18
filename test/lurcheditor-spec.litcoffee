@@ -480,9 +480,8 @@ plus 1.
 
             pageDo ->
                 window.D = document.createElement 'div'
-                D.innerHTML = '''some text <span
-                    >more text</span><br><span
-                    >nest<i>ed</i></span>'''
+                D.innerHTML = 'some text <span>more text</span><br
+                    ><span>nest<i>ed</i></span>'
             pageExpects ( -> L.cursorPositionsIn D ), 'toEqual', 33
             pageDo -> D.innerHTML = '<b><i><u>1</u></i></b>'
             pageExpects ( -> L.cursorPositionsIn D ), 'toEqual', 8

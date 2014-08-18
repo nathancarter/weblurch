@@ -1215,10 +1215,9 @@ correct events are propagated for each.
         inPage ->
             pageDo ->
                 div = document.getElementById '0'
-                div.innerHTML = '''
+                div.innerHTML = '
                 <span align="center" class="thing">hi</span>
-                <span style="color:blue;">blue</span>
-                '''
+                <span style="color:blue;">blue</span>'
                 window.span1 = div.childNodes[0]
                 window.span2 = div.childNodes[2]
                 window.tracker = DOMEditTracker.instanceOver div
@@ -1259,10 +1258,9 @@ just one new step, of fetching the attribute node to be removed.
         inPage ->
             pageDo ->
                 div = document.getElementById '0'
-                div.innerHTML = '''
+                div.innerHTML = '
                 <span align="center" class="thing">hi</span>
-                <span style="color:blue;">blue</span>
-                '''
+                <span style="color:blue;">blue</span>'
                 window.span1 = div.childNodes[0]
                 window.span2 = div.childNodes[2]
                 window.tracker = DOMEditTracker.instanceOver div
@@ -1310,10 +1308,9 @@ time.
         it 'should send alerts on removeChild calls', inPage ->
             pageDo ->
                 window.div = document.getElementById '0'
-                div.innerHTML = '''
+                div.innerHTML = '
                 <span><span>INNER SPAN!</span>hi</span>
-                <span>there</span>
-                '''
+                <span>there</span>'
                 window.span1 = div.childNodes[0]
                 window.span2 = div.childNodes[2]
                 window.spanI = span1.childNodes[0]
@@ -1374,10 +1371,9 @@ that are measurably different, for the purposes of testing.
         it 'should send alerts on replaceChild calls', inPage ->
             pageDo ->
                 window.div = document.getElementById '0'
-                div.innerHTML = '''
+                div.innerHTML = '
                 <span><span>INNER SPAN!</span>hi</span>
-                <span>there</span>
-                '''
+                <span>there</span>'
                 window.span1 = div.childNodes[0]
                 window.span2 = div.childNodes[2]
                 window.spanI = span1.childNodes[0]
@@ -1450,9 +1446,8 @@ new attribute, and in the other case, replacing an existing one.
         it 'should send alerts on setAttribute calls', inPage ->
             pageDo ->
                 window.div = document.getElementById '0'
-                div.innerHTML = '''
-                <span example="yes">content</span>
-                '''
+                div.innerHTML = '
+                    <span example="yes">content</span>'
                 window.span = div.childNodes[0]
                 window.tracker = DOMEditTracker.instanceOver div
                 tracker.clearStack()
@@ -1496,9 +1491,8 @@ new attribute, and in the other case, replacing an existing one.
         inPage ->
             pageDo ->
                 window.div = document.getElementById '0'
-                window.div.innerHTML = '''
-                <span example="yes">content</span>
-                '''
+                window.div.innerHTML = '
+                    <span example="yes">content</span>'
                 window.span = div.childNodes[0]
                 window.tracker = DOMEditTracker.instanceOver div
                 tracker.clearStack()
@@ -1568,8 +1562,8 @@ the following environment.
 
             pageDo ->
                 window.div = document.createElement 'div'
-                div.innerHTML = '''A section of text.
-                                   <br><hr>Yet more text.'''
+                div.innerHTML = 'A section of text.
+                                 <br><hr>Yet more text.'
 
 Within the div we find just four leaf nodes.  Let's ensure that
 the functions work correctly among those four.

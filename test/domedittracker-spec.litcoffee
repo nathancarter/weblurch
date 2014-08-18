@@ -86,10 +86,9 @@ elements and a `DOMEditTracker` instance around it.
             pageDo ->
                 window.div = document.createElement 'div'
                 document.body.appendChild div
-                div.innerHTML = '''
+                div.innerHTML = '
                     <div>just some tags in a hierarchy
-                    <span>for testing purposes</span></div>
-                    '''
+                    <span>for testing purposes</span></div>'
                 window.ielt = document.createElement 'i'
                 ielt.textContent = 'dummy'
                 div.appendChild ielt

@@ -128,8 +128,8 @@ Now verify that its elements are all actions.
 
                 for action in @subactions
                     if action not instanceof DOMEditAction
-                        throw Error """Compound action array
-                            containd a non-action: #{action}"""
+                        throw Error "Compound action array
+                            contained a non-action: #{action}"
 
 Find the common ancestor for all their addresses.
 

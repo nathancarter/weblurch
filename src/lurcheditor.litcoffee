@@ -180,13 +180,13 @@ module stores the list of variables in which we can place the
 cursor.  (These were selected from [the full list on the w3schools
 website](http://www.w3schools.com/tags/).)
 
-        elementsSupportingCursor: t.toUpperCase() for t in '''
+        elementsSupportingCursor: t.toUpperCase() for t in '
             a abbr acronym address article aside b bdi bdo big
             blockquote caption center cite code dd details dfn div
             dl dt em fieldset figcaption figure footer form header
             h1 h2 h3 h4 h5 h6 i kbd label legend li mark nav ol p
             pre q s samp section small span strong sub summary sup
-            td th time u ul var'''.trim().split /\s+/
+            td th time u ul var'.trim().split /\s+/
 
 For placing the cursor within a node, we need to be able to compute
 how many cursor positions are available within that node.  The
