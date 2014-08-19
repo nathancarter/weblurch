@@ -376,7 +376,6 @@ the attribute, in which case `@value` will be null.
 
             if @type is 'removeAttribute' or
                @type is 'removeAttributeNode'
-                console.log 'old attribute is', @name, @value
                 return @value is null
 
 Normalize is a null action iff the constructor did not find any
