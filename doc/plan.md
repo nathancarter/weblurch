@@ -15,12 +15,6 @@ than the earlier ones.
 
 ## More Word Processing Foundation
 
-### Editing actions
-
- * Whenever a null action is reported to the edit tracker, do not
-   push it on the stack, and do not notify listeners of a change
-   in the document.
-
 ### Cursor
 
 For every item in this section, as it is accomplished, we should

@@ -1145,7 +1145,8 @@ that node and repeat the test.
                 window.div = document.getElementById '0'
                 div.appendChild document.createTextNode 'example'
                 window.span = document.createElement 'span'
-                span.innerHTML = 'foo<span></span>bar'
+                span.innerHTML = 'foo'
+                span.appendChild document.createTextNode 'bar'
                 window.tracker = DOMEditTracker.instanceOver div
                 tracker.clearStack()
 
@@ -1189,20 +1190,19 @@ included for completeness.
                         tagName : 'SPAN'
                         children : [
                             'foo'
-                            { tagName : 'SPAN' }
                             'bar'
                         ]
                     }
                 }
 
 Finally, the second normalize event, called on the span inside the
-div, with two text node children, not adjacent.
+div, with two adjacent text node children.
 
             pageExpects ( ->
                 tracker.getEditActions()[2].toJSON() ),
                 'toEqual', {
                     type : 'normalize', node : [ 1 ],
-                    sequences : { }
+                    sequences : { '[0]' : [ 'foo', 'bar' ] }
                 }
 
 ### should send alerts on `removeAttribute` calls

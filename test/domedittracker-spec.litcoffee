@@ -280,16 +280,18 @@ the stack before recording the new action.
 
             pageDo ->
                 D.stackPointer--
-                D.nodeEditHappened new DOMEditAction 'normalize',
-                    div
+                D.nodeEditHappened new DOMEditAction \
+                    'setAttribute', div, 'example', 'example'
 
 Verify that the stack has not grown, but that the new most recent
-action is of the new type.
+action is the one most recently added.
 
             pageExpects ( -> D.stack.length ), 'toEqual', 3
             pageExpects ( -> D.stackPointer ), 'toEqual', 3
             pageExpects ( -> D.stack[D.stack.length - 1].type ),
-                'toEqual', 'normalize'
+                'toEqual', 'setAttribute'
+            pageExpects ( -> D.stack[D.stack.length - 1].name ),
+                'toEqual', 'example'
 
 ### handles canUndo/canRedo correctly
 
@@ -362,6 +364,8 @@ Create the objects needed to run the test.
             pageDo ->
                 div = document.createElement 'div'
                 document.body.appendChild div
+                div.appendChild document.createTextNode 'one'
+                div.appendChild document.createTextNode 'two'
                 window.D = new DOMEditTracker div
                 span = document.createElement 'span'
 
