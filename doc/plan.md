@@ -22,8 +22,6 @@ also (of course) create unit tests verifying that it was completed
 correctly.
 
  * Implement the following cursor features in `LurchEditor`.
-    * Add to `LurchEditor` instances a timer that flashes the
-      cursor just as MathQuill does.
     * Have the LurchEditor ignore all edit actions that pertain
       only to the interior of the cursor.  This way it can flash
       indefinitely without any listeners being notified, nor the

@@ -328,17 +328,26 @@ verbose and opaque) call `N.parentNode.removeChild N`.
 It is handy to have methods that add and remove CSS classes on
 HTML element instances.
 
-First, for adding a class to an element:
+First, for checking if one is there:
+
+    Element::hasClass = ( name ) ->
+        classes = ( @getAttribute 'class' )?.split /\s+/
+        classes and name in classes
+
+Next, for adding a class to an element:
 
     Element::addClass = ( name ) ->
-        classes = ( @getAttribute 'class' ).split /\s+/
-        if name not in classes then classes.push name
+        classes = ( @getAttribute 'class' )?.split /\s+/
+        if classes
+            if name not in classes then classes.push name
+        else
+            classes = [ name ]
         @setAttribute 'class', classes.join ' '
 
-Then, for removing one:
+Last, for removing one:
 
     Element::removeClass = ( name ) ->
-        classes = ( @getAttribute 'class' ).split /\s+/
+        classes = ( @getAttribute 'class' )?.split /\s+/
         classes = ( c for c in classes when c isnt name )
         @setAttribute 'class', classes.join ' '
 

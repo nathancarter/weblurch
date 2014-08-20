@@ -42,6 +42,15 @@ See the constructor of [the ancestor `DOMEditTracker` class](
 domedittracker.litcoffee.html) for more information on the call to
 `super`.
 
+The constructor also starts a timer that's used to flash the cursor
+in the document, when the cursor is visible.  Only one timer is
+created, which governs all instances of this class, so we use the
+following class variable to store the timer id.
+
+        cursorTimerId: null
+
+Now, the constructor itself.
+
         constructor: ( div ) ->
             super div
 
@@ -75,6 +84,12 @@ have focus.  For more information on these variables, see the
 [section below on the cursor](#cursor-support).
 
             @cursor = position : null, anchor : null
+
+Start the timer for blinking the cursor.
+
+            if LurchEditor::cursorTimerId is null
+                LurchEditor::cursorTimerId = setInterval \
+                    LurchEditor::blinkCursors, 500
 
 ## Functions used by the constructor
 
@@ -384,4 +399,36 @@ Now call that auxiliary routine on the root div.
 
             recur @element, position
             @cursor.position = @cursor.anchor = newCursor
+
+### Blinking the cursor
+
+The following callback is a "class method," because it is a timer's
+callback, and therefore won't have a `this` object defined.  We
+therefore apply it to every existing `LurchEditor` instance.  We
+find a list of them by utilizing the fact that the parent class,
+`DOMEditTracker`, keeps a list of all its instances, which we can
+filter to just those that are also `LurchEditor`s.
+
+The following CSS class will be used for the element that
+represents the cursor position in the document.
+
+        cursorVisible: 'lurch-cursor-visible'
+
+This routine adds/removes a CSS class that makes the cursor
+visible, and it does so in all of the child nodes of the root div
+for each `LurchEditor` instance.  Because this happens regularly,
+as set up by a repeating timer in the constructor, all cursors end
+up flashing, as desired, so long as the CSS class given above
+appears in the page stylesheet with an appropriate definition.
+
+        blinkCursors: ->
+            cssClass = LurchEditor::cursorVisible
+            for LE in DOMEditTracker.instances
+                if LE instanceof LurchEditor
+                    LE.updateCursor()
+                    continue unless LE.cursor.position
+                    if LE.cursor.position.hasClass cssClass
+                        LE.cursor.position.removeClass cssClass
+                    else
+                        LE.cursor.position.addClass cssClass
 

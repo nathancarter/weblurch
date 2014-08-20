@@ -1,0 +1,9 @@
+
+#lurch-cursor-position {
+    border-left: solid 1px white;
+}
+
+.lurch-cursor-visible {
+    border-right: solid 1px black;
+}
+
