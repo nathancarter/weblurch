@@ -318,7 +318,6 @@ Now we need to recur, so we create an inner, auxiliary routine for
 recurring from the root div of the editor on downward.
 
             recur = ( node, pos ) =>
-                console.log 'recur', node.outerHTML, pos
 
 As we start to recur down the DOM hierarchy, we first consider HTML
 elements that can have children.  For such nodes, We look at their
@@ -333,7 +332,6 @@ cursor position.
                 LurchEditor::elementsSupportingCursor
                     count = 0
                     for child in Array::slice.apply node.childNodes
-                        console.log 'count',count
 
 Is it the interstice before the current child?
 
