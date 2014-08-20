@@ -22,10 +22,6 @@ also (of course) create unit tests verifying that it was completed
 correctly.
 
  * Implement the following cursor features in `LurchEditor`.
-    * Have the LurchEditor ignore all edit actions that pertain
-      only to the interior of the cursor.  This way it can flash
-      indefinitely without any listeners being notified, nor the
-      undo/redo stack growing.
     * Add a CSS class that gives a blue background, for use on the
       cursor selection.
     * Add to the cursor placement routine a parameter for whether

@@ -427,6 +427,16 @@ appears in the page stylesheet with an appropriate definition.
                 if LE instanceof LurchEditor
                     LE.updateCursor()
                     continue unless LE.cursor.position
+
+Now that we're about to blink the cursor, we first ensure that the
+change we make will not be recorded on the undo/redo stack.
+
+                    oldValue = LE.stackRecording
+                    LE.stackRecording = no
+
+Now we can go ahead and change the cursor visibility, then restore
+the `@stackRecording` member's old value.
+
                     if onOff is 'toggle'
                         onOff = not LE.cursor.position.hasClass \
                             cssClass
@@ -434,4 +444,5 @@ appears in the page stylesheet with an appropriate definition.
                         LE.cursor.position.addClass cssClass
                     else
                         LE.cursor.position.removeClass cssClass
+                    LE.stackRecording = oldValue
 
