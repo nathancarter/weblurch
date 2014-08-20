@@ -313,3 +313,32 @@ is documented.
             walk = walk.childNodes[walk.childNodes.length - 1]
         walk
 
+## More convenient `remove` method
+
+Some browsers provide the `remove` method in the `Node` prototype,
+but some do not.  To make things standard, I create the following
+member in the `Node` prototype.  It guarantees that for any node
+`N`, the call `N.remove()` has the same effect as the (more
+verbose and opaque) call `N.parentNode.removeChild N`.
+
+    Node::remove = -> @parentNode.removeChild this
+
+## Adding classes to and removing classes from elements
+
+It is handy to have methods that add and remove CSS classes on
+HTML element instances.
+
+First, for adding a class to an element:
+
+    Element::addClass = ( name ) ->
+        classes = ( @getAttribute 'class' ).split /\s+/
+        if name not in classes then classes.push name
+        @setAttribute 'class', classes.join ' '
+
+Then, for removing one:
+
+    Element::removeClass = ( name ) ->
+        classes = ( @getAttribute 'class' ).split /\s+/
+        classes = ( c for c in classes when c isnt name )
+        @setAttribute 'class', classes.join ' '
+

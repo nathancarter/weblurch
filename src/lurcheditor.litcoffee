@@ -142,6 +142,11 @@ represent the cursor position and anchor in the document.
         positionId: 'lurch-cursor-position'
         anchorId: 'lurch-cursor-anchor'
 
+The following class will be used for the elements that sit within
+the selection, i.e., those between the cursor position and anchor.
+
+        selectionClass: 'lurch-cursor-selection'
+
 The `cursor` member of this class contains two fields, `position`
 and `anchor`.
  * These may both be null, meaning that there is no cursor in the
@@ -151,6 +156,8 @@ and `anchor`.
  * These may be different elements, meaning that there is a
    selection; it includes all leaves between the position and
    anchor.
+
+### Keeping member variables up to date with DOM
 
 Because it is possible for the document state to become out-of-sync
 with these variables, we provide the following routine to update
@@ -173,6 +180,8 @@ to the document state.
                 if walk is @element then @cursor.anchor = start
                 walk = walk.parentNode
 
+### Which HTML element types can contain the cursor?
+
 This class supports placing the cursor inside some HTML elements,
 but not others.  For isntance, you can place your cursor inside a
 SPAN, but not inside an HR.  The following variable local to this
@@ -187,6 +196,8 @@ website](http://www.w3schools.com/tags/).)
             h1 h2 h3 h4 h5 h6 i kbd label legend li mark nav ol p
             pre q s samp section small span strong sub summary sup
             td th time u ul var'.trim().split /\s+/
+
+### Number of cursor positions within a given node
 
 For placing the cursor within a node, we need to be able to compute
 how many cursor positions are available within that node.  The
@@ -246,4 +257,133 @@ it.
                 for child, index in node.childNodes
                     result += @cursorPositionsIn child
                 result
+
+### Removing the cursor from the document
+
+There are times when the cursor (and its anchor, and any selection)
+needs to be removed from the document.  For example, one such time
+is when the document loses focus.  This function accomplishes that.
+
+        removeCursor: ->
+
+First, let's be sure our member variables about the cursor are
+up-to-date.
+
+            @updateCursor()
+            
+Remove the cursor and its anchor from the document, setting the
+variables that track them to null.
+
+            @cursor.position?.remove()
+            @cursor.anchor?.remove()
+            @cursor.position = @cursor.anchor = null
+
+Now remove the selection class from anything that had it.
+
+            selection = Array::slice.apply \
+                @element.getElementsByClassName \
+                LurchEditor::selectionClass
+            for element in selection
+                selection.removeClass? LurchEditor::selectionClass
+
+Because this may have placed two text nodes next to one another,
+normalize to unit them.
+
+            @element.normalize()
+
+### Inserting the cursor into the document
+
+If we are to insert a cursor into the document, we need a way to
+create a new cursor element.  It will simply be a span with the
+id declared [earlier](#cursor-support).
+
+        makeNewCursor = ->
+            result = document.createElement 'span'
+            result.setAttribute 'id', LurchEditor::positionId
+            result
+
+To insert the cursor into the document, we first remove it from
+wherever it currently is, if anywhere, then we insert it at the
+given cursor position.  If no cursor position is given, we default
+to using the very beginning of the document.
+
+        placeCursor: ( position = 0 ) ->
+
+Remove the old cursor, if any, and create a new one.
+
+            @removeCursor()
+            newCursor = makeNewCursor()
+
+Now we need to recur, so we create an inner, auxiliary routine for
+recurring from the root div of the editor on downward.
+
+            recur = ( node, pos ) =>
+                console.log 'recur', node.outerHTML, pos
+
+As we start to recur down the DOM hierarchy, we first consider HTML
+elements that can have children.  For such nodes, We look at their
+children.
+
+The interstices between them fall at various indices.  If any such
+index matches `pos`, then we insert the new cursor at that
+interstice.  If not, then we recur on the child which contains the
+cursor position.
+
+                if node.tagName in \
+                LurchEditor::elementsSupportingCursor
+                    count = 0
+                    for child in Array::slice.apply node.childNodes
+                        console.log 'count',count
+
+Is it the interstice before the current child?
+
+                        if count is pos
+                            node.insertBefore newCursor, child
+                            return
+
+No, so add 1 to count, to record that interstice.  Then see if the
+child itself contains the cursor.  If so, recur on the child.
+
+                        count++
+                        size = @cursorPositionsIn child
+                        if pos < count + size
+                            recur child, pos - count
+                            return
+                        count += size
+
+If none of that succeeded, place the cursor at the end of the list
+of children.  This assumes that the routine was not called with too
+large a cursor position; if it was, this caps it at the maximum.
+
+This includes the case where the element has no children, and *any*
+position was given, valid or otherwise.
+
+                    node.appendChild newCursor
+
+The only kind of node we support that has cursor positions in it
+but that cannot contain child nodes is a Text node.  For it, we
+split the text node if necessary.
+
+Recall that position 0 inside a text node is actually after the
+first character, because that is the first position *inside*.  Even
+so, we include boundary cases just to be safe.
+
+                else if node instanceof Text
+                    if pos + 1 <= 0
+                        node.parentNode.insertBefore newCursor,
+                            node
+                    else if pos + 1 >= node.textContent.length
+                        node.parentNode.appendChild newCursor
+                    else
+                        split = node.splitText pos + 1
+                        node.parentNode.insertBefore newCursor,
+                            split
+
+If we attempted to insert the cursor inside a non-text node that
+cannot support children, the routine does nothing.
+
+Now call that auxiliary routine on the root div.
+
+            recur @element, position
+            @cursor.position = @cursor.anchor = newCursor
 

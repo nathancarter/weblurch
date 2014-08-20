@@ -22,14 +22,6 @@ also (of course) create unit tests verifying that it was completed
 correctly.
 
  * Implement the following cursor features in `LurchEditor`.
-    * Create a `LurchEditor` method for lifting the cursor out of
-      the document, if one exists.  (If one does not exist, it
-      should call `updateCursor` to be sure of that, first.)
-      Normalize the parent after removing it.
-    * Create a `LurchEditor` method for placing the cursor position
-      at a given cursor position inside a given node (which
-      defaults to the zeroth position of the root element of the
-      editor).  Be sure to remove the cursor before placing it.
     * Add to `LurchEditor` instances a timer that flashes the
       cursor just as MathQuill does.
     * Add a CSS class that gives a blue background, for use on the

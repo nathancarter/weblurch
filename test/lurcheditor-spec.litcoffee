@@ -424,6 +424,9 @@ have become null once again.
 
 ### should provide the cursorPositionsIn member
 
+This section and the next test the routine defined [here](
+lurcheditor.litcoffee#number-of-cursor-positions-with-a-given-node).
+
 First, just verify that it's present.
 
         it 'should provide the cursorPositionsIn member', inPage ->
@@ -485,4 +488,222 @@ plus 1.
             pageExpects ( -> L.cursorPositionsIn D ), 'toEqual', 33
             pageDo -> D.innerHTML = '<b><i><u>1</u></i></b>'
             pageExpects ( -> L.cursorPositionsIn D ), 'toEqual', 8
+
+### should provide the placeCursor member
+
+This section and the next test the routine defined [here](
+lurcheditor.litcoffee#inserting-the-cursor-into-the-document).
+Note that testing `placeCursor` implicitly tests `removeCursor`
+because `removeCursor` is called at the beginning of every run of
+`placeCursor`, and if it didn't work, then there would be two
+cursors in the document thereafter, and the `placeCursor` tests
+would therefore fail.
+
+First, just verify that it's present.
+
+        it 'should provide the placeCursor member', inPage ->
+            pageExpects -> LurchEditor::placeCursor
+
+### should place the cursor correctly
+
+        it 'should place the cursor correctly', inPage ->
+
+Initialize the contents of the main div to have some text, some
+no-children nodes, and some nested items.
+
+            pageDo ->
+                window.div = LE.getElement()
+                div.innerHTML = 'text<br><span><i>more</i></span>'
+
+Verify that the desired structure was produced.
+
+            initialConfiguration = {
+                tagName : 'DIV'
+                attributes : { id : '0' }
+                children : [
+                    'text'
+                    tagName : 'BR'
+                    {
+                        tagName : 'SPAN'
+                        children : [
+                            {
+                                tagName : 'I'
+                                children : [ 'more' ]
+                            }
+                        ]
+                    }
+                ]
+            }
+            pageExpects ( -> div.toJSON() ), 'toEqual',
+                initialConfiguration
+
+Place the cursor at the beginning of the document.
+
+            pageDo -> LE.placeCursor()
+
+Verify that it got there.
+
+            cursor = {
+                tagName : 'SPAN'
+                attributes : { id : 'lurch-cursor-position' }
+            }
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children.unshift cursor
+            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+
+Place the cursor way past the end of the document, which will be
+treated as placing it at the end of the document.
+
+            pageDo -> LE.placeCursor 1000
+
+Verify that it got there.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children.push cursor
+            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+
+Place the cursor between the first two nodes (text and BR).
+
+            pageDo -> LE.placeCursor 4
+
+Verify that it got there.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children = [
+                copy.children[0]
+                cursor
+                copy.children[1]
+                copy.children[2]
+            ]
+            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+
+Place the cursor between the second and third nodes (BR and span).
+
+            pageDo -> LE.placeCursor 5
+
+Verify that it got there.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children = [
+                copy.children[0]
+                copy.children[1]
+                cursor
+                copy.children[2]
+            ]
+            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+
+Place the cursor inside the initial text node, and ensure it
+splits.
+
+            pageDo -> LE.placeCursor 2
+
+Verify that it got there.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children = [
+                'te'
+                cursor
+                'xt'
+                copy.children[1]
+                copy.children[2]
+            ]
+            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+
+Place the cursor inside the final span, but not yet inside its
+inner italic element.
+
+            pageDo -> LE.placeCursor 6
+
+Verify that it got there.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[2].children = [
+                cursor
+                copy.children[2].children[0]
+            ]
+            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+
+Place the cursor one step further, not only inside the final span,
+but also inside its inner italic element, just before the text
+inside that italic element.
+
+            pageDo -> LE.placeCursor 7
+
+Verify that it got there.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[2].children[0].children = [
+                cursor
+                'more'
+            ]
+            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+
+Place the cursor one step further, thus splitting the text "more"
+into two pieces.
+
+            pageDo -> LE.placeCursor 8
+
+Verify that it got there.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[2].children[0].children = [
+                'm'
+                cursor
+                'ore'
+            ]
+            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+
+Place the cursor two steps further, thus splitting the text "more"
+at a different location.
+
+            pageDo -> LE.placeCursor 10
+
+Verify that it got there.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[2].children[0].children = [
+                'mor'
+                cursor
+                'e'
+            ]
+            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+
+Place the cursor one step further, after the text "more" but still
+inside the italic element.
+
+            pageDo -> LE.placeCursor 11
+
+Verify that it got there.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[2].children[0].children = [
+                'more'
+                cursor
+            ]
+            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+
+Place the cursor one step further, after the italic element but
+still inside the span.
+
+            pageDo -> LE.placeCursor 12
+
+Verify that it got there.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[2].children = [
+                copy.children[2].children[0]
+                cursor
+            ]
+            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+
+Place the cursor one step further, and verify that that is the end
+of the document.
+
+            pageDo -> LE.placeCursor 13
+
+Verify that it got there.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children.push cursor
+            pageExpects ( -> div.toJSON() ), 'toEqual', copy
 

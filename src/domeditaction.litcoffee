@@ -201,9 +201,9 @@ omitted, in `@insertBefore`.
                 @toInsert = data[0].toJSON()
                 if data.length is 2
                     if data[1] not instanceof Node
-                        throw Error 'Invalid parameter: ' + data[0]
+                        throw Error 'Invalid parameter: ' + data[1]
                     if data[1].parentNode isnt node
-                        throw Error 'Invalid child: ' + data[0]
+                        throw Error 'Invalid child: ' + data[1]
                     @insertBefore = data[1].indexInParent()
                 else
                     @insertBefore = node.childNodes.length
