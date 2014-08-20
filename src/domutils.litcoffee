@@ -337,17 +337,17 @@ First, for checking if one is there:
 Next, for adding a class to an element:
 
     Element::addClass = ( name ) ->
-        classes = ( @getAttribute 'class' )?.split /\s+/
-        if classes
-            if name not in classes then classes.push name
-        else
-            classes = [ name ]
+        classes = ( ( @getAttribute 'class' )?.split /\s+/ ) or []
+        if name not in classes then classes.push name
         @setAttribute 'class', classes.join ' '
 
 Last, for removing one:
 
     Element::removeClass = ( name ) ->
-        classes = ( @getAttribute 'class' )?.split /\s+/
+        classes = ( ( @getAttribute 'class' )?.split /\s+/ ) or []
         classes = ( c for c in classes when c isnt name )
-        @setAttribute 'class', classes.join ' '
+        if classes.length > 0
+            @setAttribute 'class', classes.join ' '
+        else
+            @removeAttribute 'class'
 

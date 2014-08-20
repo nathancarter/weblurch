@@ -537,9 +537,14 @@ Verify that the desired structure was produced.
             pageExpects ( -> div.toJSON() ), 'toEqual',
                 initialConfiguration
 
-Place the cursor at the beginning of the document.
+Place the cursor at the beginning of the document.  Then remove any
+indication of whether the cursor is blinking on or off, and clone
+that state of the document for later comparison.
 
-            pageDo -> LE.placeCursor()
+            pageDo ->
+                LE.placeCursor()
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
 
 Verify that it got there.
 
@@ -549,22 +554,32 @@ Verify that it got there.
             }
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children.unshift cursor
-            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
 Place the cursor way past the end of the document, which will be
 treated as placing it at the end of the document.
+Again, we make a clone to remove the possibility of cursor
+blinking.
 
-            pageDo -> LE.placeCursor 1000
+            pageDo ->
+                LE.placeCursor 1000
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
 
 Verify that it got there.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children.push cursor
-            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
 Place the cursor between the first two nodes (text and BR).
+Again, we make a clone to remove the possibility of cursor
+blinking.
 
-            pageDo -> LE.placeCursor 4
+            pageDo ->
+                LE.placeCursor 4
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
 
 Verify that it got there.
 
@@ -575,11 +590,16 @@ Verify that it got there.
                 copy.children[1]
                 copy.children[2]
             ]
-            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
 Place the cursor between the second and third nodes (BR and span).
+Again, we make a clone to remove the possibility of cursor
+blinking.
 
-            pageDo -> LE.placeCursor 5
+            pageDo ->
+                LE.placeCursor 5
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
 
 Verify that it got there.
 
@@ -590,12 +610,17 @@ Verify that it got there.
                 cursor
                 copy.children[2]
             ]
-            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
 Place the cursor inside the initial text node, and ensure it
 splits.
+Again, we make a clone to remove the possibility of cursor
+blinking.
 
-            pageDo -> LE.placeCursor 2
+            pageDo ->
+                LE.placeCursor 2
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
 
 Verify that it got there.
 
@@ -607,12 +632,17 @@ Verify that it got there.
                 copy.children[1]
                 copy.children[2]
             ]
-            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
 Place the cursor inside the final span, but not yet inside its
 inner italic element.
+Again, we make a clone to remove the possibility of cursor
+blinking.
 
-            pageDo -> LE.placeCursor 6
+            pageDo ->
+                LE.placeCursor 6
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
 
 Verify that it got there.
 
@@ -621,13 +651,18 @@ Verify that it got there.
                 cursor
                 copy.children[2].children[0]
             ]
-            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
 Place the cursor one step further, not only inside the final span,
 but also inside its inner italic element, just before the text
 inside that italic element.
+Again, we make a clone to remove the possibility of cursor
+blinking.
 
-            pageDo -> LE.placeCursor 7
+            pageDo ->
+                LE.placeCursor 7
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
 
 Verify that it got there.
 
@@ -636,12 +671,17 @@ Verify that it got there.
                 cursor
                 'more'
             ]
-            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
 Place the cursor one step further, thus splitting the text "more"
 into two pieces.
+Again, we make a clone to remove the possibility of cursor
+blinking.
 
-            pageDo -> LE.placeCursor 8
+            pageDo ->
+                LE.placeCursor 8
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
 
 Verify that it got there.
 
@@ -651,12 +691,17 @@ Verify that it got there.
                 cursor
                 'ore'
             ]
-            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
 Place the cursor two steps further, thus splitting the text "more"
 at a different location.
+Again, we make a clone to remove the possibility of cursor
+blinking.
 
-            pageDo -> LE.placeCursor 10
+            pageDo ->
+                LE.placeCursor 10
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
 
 Verify that it got there.
 
@@ -666,12 +711,17 @@ Verify that it got there.
                 cursor
                 'e'
             ]
-            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
 Place the cursor one step further, after the text "more" but still
 inside the italic element.
+Again, we make a clone to remove the possibility of cursor
+blinking.
 
-            pageDo -> LE.placeCursor 11
+            pageDo ->
+                LE.placeCursor 11
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
 
 Verify that it got there.
 
@@ -680,12 +730,17 @@ Verify that it got there.
                 'more'
                 cursor
             ]
-            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
 Place the cursor one step further, after the italic element but
 still inside the span.
+Again, we make a clone to remove the possibility of cursor
+blinking.
 
-            pageDo -> LE.placeCursor 12
+            pageDo ->
+                LE.placeCursor 12
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
 
 Verify that it got there.
 
@@ -694,16 +749,21 @@ Verify that it got there.
                 copy.children[2].children[0]
                 cursor
             ]
-            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
 Place the cursor one step further, and verify that that is the end
 of the document.
+Again, we make a clone to remove the possibility of cursor
+blinking.
 
-            pageDo -> LE.placeCursor 13
+            pageDo ->
+                LE.placeCursor 13
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
 
 Verify that it got there.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children.push cursor
-            pageExpects ( -> div.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 

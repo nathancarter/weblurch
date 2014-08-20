@@ -421,14 +421,17 @@ as set up by a repeating timer in the constructor, all cursors end
 up flashing, as desired, so long as the CSS class given above
 appears in the page stylesheet with an appropriate definition.
 
-        blinkCursors: ->
+        blinkCursors: ( onOff = 'toggle' ) ->
             cssClass = LurchEditor::cursorVisible
             for LE in DOMEditTracker.instances
                 if LE instanceof LurchEditor
                     LE.updateCursor()
                     continue unless LE.cursor.position
-                    if LE.cursor.position.hasClass cssClass
-                        LE.cursor.position.removeClass cssClass
-                    else
+                    if onOff is 'toggle'
+                        onOff = not LE.cursor.position.hasClass \
+                            cssClass
+                    if onOff
                         LE.cursor.position.addClass cssClass
+                    else
+                        LE.cursor.position.removeClass cssClass
 
