@@ -24,6 +24,10 @@ correctly.
  * Implement the following cursor features in `LurchEditor`.
     * Add to `LurchEditor` instances a timer that flashes the
       cursor just as MathQuill does.
+    * Have the LurchEditor ignore all edit actions that pertain
+      only to the interior of the cursor.  This way it can flash
+      indefinitely without any listeners being notified, nor the
+      undo/redo stack growing.
     * Add a CSS class that gives a blue background, for use on the
       cursor selection.
     * Add to the cursor placement routine a parameter for whether
@@ -37,6 +41,9 @@ correctly.
       marker, doing the highlighting, then removing the marker.
     * Add methods for moving the cursor by a given delta, with or
       without moving the anchor (defaults to moving it).
+    * Add a method for querying the cursor position or anchor as an
+      integer within the root div, an integer that could be passed
+      to the `placeCursor` routine of the `LurchEditor`.
  * Add all the functions for dealing with that cursor as if it
    were a real cursor.  Each of these may make several edits to the
    document, and so should use the new block-of-edits support
