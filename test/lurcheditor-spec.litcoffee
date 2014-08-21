@@ -513,7 +513,8 @@ no-children nodes, and some nested items.
 
             pageDo ->
                 window.div = LE.getElement()
-                div.innerHTML = 'text<br><span><i>more</i></span>'
+                div.innerHTML =
+                    'text<br><span><i>more</i></span><b></b>'
 
 Verify that the desired structure was produced.
 
@@ -532,6 +533,7 @@ Verify that the desired structure was produced.
                             }
                         ]
                     }
+                    tagName : 'B'
                 ]
             }
             pageExpects ( -> div.toJSON() ), 'toEqual',
@@ -589,6 +591,7 @@ Verify that it got there.
                 cursor
                 copy.children[1]
                 copy.children[2]
+                copy.children[3]
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
@@ -609,6 +612,7 @@ Verify that it got there.
                 copy.children[1]
                 cursor
                 copy.children[2]
+                copy.children[3]
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
@@ -631,6 +635,7 @@ Verify that it got there.
                 'xt'
                 copy.children[1]
                 copy.children[2]
+                copy.children[3]
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
@@ -751,13 +756,51 @@ Verify that it got there.
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
 
-Place the cursor one step further, and verify that that is the end
-of the document.
+Place the cursor one step further, and verify that that is right
+before the empty bold element.
 Again, we make a clone to remove the possibility of cursor
 blinking.
 
             pageDo ->
                 LE.placeCursor 13
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children = [
+                copy.children[0]
+                copy.children[1]
+                copy.children[2]
+                cursor
+                copy.children[3]
+            ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+
+Place the cursor one step further, and verify that that is inside
+the empty bold element.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 14
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[3].children = [ cursor ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+
+Place the cursor one step further, and verify that that is at the
+end of the document.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 15
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
