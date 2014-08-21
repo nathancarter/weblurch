@@ -506,6 +506,14 @@ First, just verify that it's present.
 
 ### should place the cursor correctly
 
+In this routine, not only do we test the `placeCursor` routine,
+verifying that it puts the cursor where we expect, but we also
+verify that, after the cursor has been placed, it reports its
+position correctly.  That is, if we put the cursor at position $k$,
+then after verifying that it appeared where we expect, we also
+query its position (using `cursorPositionOf`) and ensure that it is
+$k$.
+
         it 'should place the cursor correctly', inPage ->
 
 Initialize the contents of the main div to have some text, some
@@ -548,7 +556,7 @@ that state of the document for later comparison.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there.
+Verify that it got there, and is at position 0.
 
             cursor = {
                 tagName : 'SPAN'
@@ -557,6 +565,7 @@ Verify that it got there.
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children.unshift cursor
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 0
 
 Place the cursor way past the end of the document, which will be
 treated as placing it at the end of the document.
@@ -568,11 +577,13 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there.
+Verify that it got there, and is at position 15, which is the last
+one in the document.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children.push cursor
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 15
 
 Place the cursor between the first two nodes (text and BR).
 Again, we make a clone to remove the possibility of cursor
@@ -583,7 +594,7 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there.
+Verify that it got there, and is at position 4.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children = [
@@ -594,6 +605,7 @@ Verify that it got there.
                 copy.children[3]
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 4
 
 Place the cursor between the second and third nodes (BR and span).
 Again, we make a clone to remove the possibility of cursor
@@ -604,7 +616,7 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there.
+Verify that it got there, and is at position 5.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children = [
@@ -615,6 +627,7 @@ Verify that it got there.
                 copy.children[3]
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 5
 
 Place the cursor inside the initial text node, and ensure it
 splits.
@@ -626,7 +639,7 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there.
+Verify that it got there, and is at position 2.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children = [
@@ -638,6 +651,7 @@ Verify that it got there.
                 copy.children[3]
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 2
 
 Place the cursor inside the final span, but not yet inside its
 inner italic element.
@@ -649,7 +663,7 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there.
+Verify that it got there, and is at position 6.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children[2].children = [
@@ -657,6 +671,7 @@ Verify that it got there.
                 copy.children[2].children[0]
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 6
 
 Place the cursor one step further, not only inside the final span,
 but also inside its inner italic element, just before the text
@@ -669,7 +684,7 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there.
+Verify that it got there, and is at position 7.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children[2].children[0].children = [
@@ -677,6 +692,7 @@ Verify that it got there.
                 'more'
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 7
 
 Place the cursor one step further, thus splitting the text "more"
 into two pieces.
@@ -688,7 +704,7 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there.
+Verify that it got there, and is at position 8.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children[2].children[0].children = [
@@ -697,6 +713,7 @@ Verify that it got there.
                 'ore'
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 8
 
 Place the cursor two steps further, thus splitting the text "more"
 at a different location.
@@ -708,7 +725,7 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there.
+Verify that it got there, and is at position 10.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children[2].children[0].children = [
@@ -717,6 +734,7 @@ Verify that it got there.
                 'e'
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 10
 
 Place the cursor one step further, after the text "more" but still
 inside the italic element.
@@ -728,7 +746,7 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there.
+Verify that it got there, and is at position 11.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children[2].children[0].children = [
@@ -736,6 +754,7 @@ Verify that it got there.
                 cursor
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 11
 
 Place the cursor one step further, after the italic element but
 still inside the span.
@@ -747,7 +766,7 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there.
+Verify that it got there, and is at position 12.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children[2].children = [
@@ -755,6 +774,7 @@ Verify that it got there.
                 cursor
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 12
 
 Place the cursor one step further, and verify that that is right
 before the empty bold element.
@@ -766,7 +786,7 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there.
+Verify that it got there, and is at position 13.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children = [
@@ -777,6 +797,7 @@ Verify that it got there.
                 copy.children[3]
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 13
 
 Place the cursor one step further, and verify that that is inside
 the empty bold element.
@@ -788,11 +809,12 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there.
+Verify that it got there, and is at position 14.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children[3].children = [ cursor ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 14
 
 Place the cursor one step further, and verify that that is at the
 end of the document.
@@ -804,9 +826,10 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there.
+Verify that it got there, and is at position 15.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children.push cursor
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 15
 

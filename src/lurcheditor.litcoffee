@@ -273,6 +273,69 @@ it.
                     result += @cursorPositionsIn child
                 result
 
+### Detecting a node's cursor position
+
+We will primarily use the routines in this section for placing and
+removing the cursor itself, as a node in the document.  But these
+can be thought of independently of that application, and are thus
+expressed independently here.
+
+Node A has a cursor position in an ancestor node B if we think of
+A as taking up no space in the DOM, but as being one of the
+interstices between other DOM nodes.  Because the routine defined
+above, `cursorPositionsIn`, counts the interstices between both
+nodes and characters, we can then ask at which of those interstices
+does the imagined-empty version of A sit?  That answer is its
+cursor position, and this notion makes sense when we imagine A to
+actually be a cursor, which takes up no space in the document, and
+always sits at one of these intersticial locations.
+
+The following routine tells us the cursor position of the given
+node within any given ancestor.  The ancestor defaults to this
+editor's root div if not otherwise specified.
+
+        cursorPositionOf: ( node, ancestor = @getElement() ) ->
+
+First we need to know the cursor position of the node within its
+own parent node.  We need a parent to accomplish this.
+
+            if not node.parentNode then return 0
+
+To find that position, we add up the size of every earlier sibling,
+plus one for the interstice before each sibling
+
+            positionInParent = 0
+            sibling = node.parentNode.childNodes[0]
+            while sibling isnt node
+                positionInParent += 1 + @cursorPositionsIn sibling
+                sibling = sibling.nextSibling
+
+If our parent is the ancestor in question, we're done.
+
+            if node.parentNode is ancestor
+                return positionInParent
+
+Otherwise, recur up to the parent.  We also add 1 here because of
+the intersticial point before the parent node, which will not be
+counted as part of the parent's earlier siblings sizes, in the
+recursion.
+
+            return positionInParent + 1 +
+                @cursorPositionOf node.parentNode, ancestor
+
+The following convenience methods simply calls the previous one on
+the cursor or anchor, respectively.  If there is no cursor or
+anchor, these return -1.
+
+        cursorPosition: ->
+            @updateCursor()
+            return -1 unless @cursor.position
+            @cursorPositionOf @cursor.position
+        anchorPosition: ->
+            @updateCursor()
+            return -1 unless @cursor.anchor
+            @cursorPositionOf @cursor.anchor
+
 ### Removing the cursor from the document
 
 There are times when the cursor (and its anchor, and any selection)
