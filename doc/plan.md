@@ -22,17 +22,8 @@ also (of course) create unit tests verifying that it was completed
 correctly.
 
  * Implement the following cursor features in `LurchEditor`.
-    * Add to the cursor placement routine a parameter for whether
-      or not to move the anchor as well, defaulting to yes.
-       * Before recurring:
-          * Remove all selection classes
-          * Record the former anchor and cursor spots as their
-            parent nodes and indices within them, then remove both.
-       * After recurring:
-          * If the anchor didn't move with the cursor, insert it
-            if and only if it would NOT be the cursor's sibling.
-          * If both anchor and cursor exist, give the selection
-            class to everything between them.
+    * Test the parameter for whether or not to move the anchor
+      with the cursor.
     * Add methods for moving the cursor by a given delta, with or
       without moving the anchor (defaults to moving it).
     * Add a method for querying the cursor position or anchor as an

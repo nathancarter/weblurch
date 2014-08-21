@@ -425,7 +425,11 @@ There are times when the cursor (and its anchor, and any selection)
 needs to be removed from the document.  For example, one such time
 is when the document loses focus.  This function accomplishes that.
 
-        removeCursor: ->
+The optional parameter indicates whether the routine should then
+normalize the document, because the cursor may have been splitting
+two text nodes, and so its absence permits them to unite.
+
+        removeCursor: ( andThenNormalize = yes ) ->
 
 First, let's be sure our member variables about the cursor are
 up-to-date.
@@ -447,22 +451,29 @@ Now remove the selection class from anything that had it.
             for element in selection
                 selection.removeClass? LurchEditor::selectionClass
 
-Because this may have placed two text nodes next to one another,
-normalize to unit them.
+Respect the `andThenNormalize` parameter.
 
-            @element.normalize()
+            if andThenNormalize then @getElement()?.normalize()
 
 ### Inserting the cursor into the document
 
-To insert the cursor into the document, we first remove it from
-wherever it currently is, if anywhere, then we insert it at the
-given cursor position.  If no cursor position is given, we default
-to using the very beginning of the document.
+To insert the cursor into the document, we first remove it, its
+anchor, and any existing selection, then re-insert those objects
+in the new positions if needed.
 
-        placeCursor: ( position = 0 ) ->
+If no cursor position is given, we default to using the very
+beginning of the document.  If no value is given for whether or not
+to also move the anchor, we assume that we should move it also.
 
-Remove the old cursor, if any.
+        placeCursor: ( position = 0, moveAnchor = yes ) ->
 
+Record the positions of the existing cursor and anchor, then remove
+both.  This also removes any existing selection.
+
+            cursorParent = @cursor.position?.parentNode
+            cursorIndex = @cursor.position?.indexInParent()
+            anchorParent = @cursor.anchor?.parentNode
+            anchorIndex = @cursor.anchor?.indexInParent()
             @removeCursor()
 
 The cursor is simply a span with the id declared
@@ -477,7 +488,38 @@ which we also store in the member variables for both cursor and
 anchor.
 
             @insertNodeAt cursor, position
-            @cursor.position = @cursor.anchor = cursor
+            @cursor.position = cursor
+
+Now we need to decide whether the anchor should be the same as the
+cursor.  There are three cases in which this should be so.
+ 1. when the user explicitly said so, with `moveAnchor`
+ 1. when there was no recorded anchor position beforehand,
+    so there is no sense in which we could put the anchor back
+ 1. when the recorded location of the anchor is immediately
+    adjacent to the cursor, so they should unite
+In any of these cases, we just set the anchor equal to the cursor
+and stop.
+
+            if moveAnchor or
+            not anchorParent or
+            anchorParent?.childNodes[anchorIndex] is cursor or
+            anchorParent?.childNodes[anchorIndex-1] is cursor
+                @cursor.anchor = @cursor.position
+                return
+
+Otherwise, we create a separate anchor object and place it where it
+was before the cursor was moved.  
+
+            anchor = document.createElement 'span'
+            anchor.setAttribute 'id', LurchEditor::anchorId
+            if anchorIndex < anchorParent.childNodes.length
+                anchorParent.insertBefore anchor,
+                    anchorParent.childNodes[anchorIndex]
+            else
+                anchorParent.appendChild anchor
+
+*We must also select everything between the anchor and cursor here,
+but the code for that is not yet implemented.*
 
 ### Blinking the cursor
 
