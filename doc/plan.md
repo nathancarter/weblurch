@@ -23,14 +23,16 @@ correctly.
 
  * Implement the following cursor features in `LurchEditor`.
     * Add to the cursor placement routine a parameter for whether
-      or not to move the anchor as well, defaulting to yes.  If the
-      anchor does not move, ensure that all leaf nodes between the
-      old and new cursor positions get the requisite class for
-      showing the blue background.  If the anchor does move, ensure
-      that all elements that had that class lose it.  Note that you
-      can tweak the old version of the routine by not *deleting*
-      the old cursor position, but replacing it with a temporary
-      marker, doing the highlighting, then removing the marker.
+      or not to move the anchor as well, defaulting to yes.
+       * Before recurring:
+          * Remove all selection classes
+          * Record the former anchor and cursor spots as their
+            parent nodes and indices within them, then remove both.
+       * After recurring:
+          * If the anchor didn't move with the cursor, insert it
+            if and only if it would NOT be the cursor's sibling.
+          * If both anchor and cursor exist, give the selection
+            class to everything between them.
     * Add methods for moving the cursor by a given delta, with or
       without moving the anchor (defaults to moving it).
     * Add a method for querying the cursor position or anchor as an
