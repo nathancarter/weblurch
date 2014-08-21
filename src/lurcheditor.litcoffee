@@ -336,6 +336,89 @@ anchor, these return -1.
             return -1 unless @cursor.anchor
             @cursorPositionOf @cursor.anchor
 
+### Inserting a node at a given position
+
+As in the previous section, this will most often be useful when
+moving the cursor; we will be able to insert it anywhere in the
+document that we want to.  But it is phrased here in general terms,
+inserting any given node at any given cursor position.
+
+Because the routines defined above assign integer indices (cursor
+positions) to the interstices between DOM elements, and characters
+in text nodes, we can use those indices to tell the following
+routine where to insert new nodes.
+
+The `toInsert` parameter is the node to insert.  The `position`
+parameter must be an integer, the cursor position at which to
+insert; it defaults to zero, meaning insert at the very beginning.
+The `inNode` parameter is the context in which the position should
+be interpreted.  This defaults to the root element for this editor.
+
+        insertNodeAt: ( toInsert, position = 0,
+                        inNode = @getElement() ) ->
+
+As we start to recur down the DOM hierarchy, we first consider HTML
+elements that can have children.  For such nodes, we look at their
+children.
+
+The interstices between them fall at various indices.  If any such
+index matches the given `postion`, then we insert the new cursor at
+that interstice.  If not, then we recur on the child which contains
+the `position`.
+
+            if inNode.tagName in \
+            LurchEditor::elementsSupportingCursor
+                count = 0
+                for child in Array::slice.apply inNode.childNodes
+
+Is it the interstice before the current child?
+
+                    if count is position
+                        inNode.insertBefore toInsert, child
+                        return
+
+No, so add 1 to count, to record that interstice.  Then see if the
+child itself contains the cursor.  If so, recur on the child.
+
+                    count++
+                    size = @cursorPositionsIn child
+                    if position < count + size
+                        @insertNodeAt toInsert, position - count,
+                            child
+                        return
+                    count += size
+
+If none of that succeeded, place the cursor at the end of the list
+of children.  This assumes that the routine was not called with too
+large a cursor position; if it was, this caps it at the maximum.
+
+This includes the case where the element has no children, and *any*
+position was given, valid or otherwise.
+
+                inNode.appendChild toInsert
+
+The only kind of node we support that has cursor positions in it
+but that cannot contain child nodes is a Text node.  For it, we
+split the text node if necessary.
+
+Recall that position 0 inside a text node is actually after the
+first character, because that is the first position *inside*.  Even
+so, we include boundary cases just to be safe.
+
+            else if inNode instanceof Text
+                if position + 1 <= 0
+                    inNode.parentNode.insertBefore toInsert,
+                        inNode
+                else if position + 1 >= inNode.textContent.length
+                    inNode.parentNode.appendChild toInsert
+                else
+                    split = inNode.splitText position + 1
+                    inNode.parentNode.insertBefore toInsert,
+                        split
+
+If we attempted to insert the cursor inside a non-text node that
+cannot support children, the routine does nothing.
+
 ### Removing the cursor from the document
 
 There are times when the cursor (and its anchor, and any selection)
@@ -371,15 +454,6 @@ normalize to unit them.
 
 ### Inserting the cursor into the document
 
-If we are to insert a cursor into the document, we need a way to
-create a new cursor element.  It will simply be a span with the
-id declared [earlier](#cursor-support).
-
-        makeNewCursor = ->
-            result = document.createElement 'span'
-            result.setAttribute 'id', LurchEditor::positionId
-            result
-
 To insert the cursor into the document, we first remove it from
 wherever it currently is, if anywhere, then we insert it at the
 given cursor position.  If no cursor position is given, we default
@@ -387,81 +461,23 @@ to using the very beginning of the document.
 
         placeCursor: ( position = 0 ) ->
 
-Remove the old cursor, if any, and create a new one.
+Remove the old cursor, if any.
 
             @removeCursor()
-            newCursor = makeNewCursor()
 
-Now we need to recur, so we create an inner, auxiliary routine for
-recurring from the root div of the editor on downward.
+The cursor is simply a span with the id declared
+[earlier](#cursor-support).
 
-            recur = ( node, pos ) =>
+            cursor = document.createElement 'span'
+            cursor.setAttribute 'id', LurchEditor::positionId
 
-As we start to recur down the DOM hierarchy, we first consider HTML
-elements that can have children.  For such nodes, We look at their
-children.
+Now call the routine defined earlier for inserting arbitrary nodes
+at a given cursor position, passing it a newly-created cursor,
+which we also store in the member variables for both cursor and
+anchor.
 
-The interstices between them fall at various indices.  If any such
-index matches `pos`, then we insert the new cursor at that
-interstice.  If not, then we recur on the child which contains the
-cursor position.
-
-                if node.tagName in \
-                LurchEditor::elementsSupportingCursor
-                    count = 0
-                    for child in Array::slice.apply node.childNodes
-
-Is it the interstice before the current child?
-
-                        if count is pos
-                            node.insertBefore newCursor, child
-                            return
-
-No, so add 1 to count, to record that interstice.  Then see if the
-child itself contains the cursor.  If so, recur on the child.
-
-                        count++
-                        size = @cursorPositionsIn child
-                        if pos < count + size
-                            recur child, pos - count
-                            return
-                        count += size
-
-If none of that succeeded, place the cursor at the end of the list
-of children.  This assumes that the routine was not called with too
-large a cursor position; if it was, this caps it at the maximum.
-
-This includes the case where the element has no children, and *any*
-position was given, valid or otherwise.
-
-                    node.appendChild newCursor
-
-The only kind of node we support that has cursor positions in it
-but that cannot contain child nodes is a Text node.  For it, we
-split the text node if necessary.
-
-Recall that position 0 inside a text node is actually after the
-first character, because that is the first position *inside*.  Even
-so, we include boundary cases just to be safe.
-
-                else if node instanceof Text
-                    if pos + 1 <= 0
-                        node.parentNode.insertBefore newCursor,
-                            node
-                    else if pos + 1 >= node.textContent.length
-                        node.parentNode.appendChild newCursor
-                    else
-                        split = node.splitText pos + 1
-                        node.parentNode.insertBefore newCursor,
-                            split
-
-If we attempted to insert the cursor inside a non-text node that
-cannot support children, the routine does nothing.
-
-Now call that auxiliary routine on the root div.
-
-            recur @element, position
-            @cursor.position = @cursor.anchor = newCursor
+            @insertNodeAt cursor, position
+            @cursor.position = @cursor.anchor = cursor
 
 ### Blinking the cursor
 
