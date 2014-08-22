@@ -21,12 +21,6 @@ For every item in this section, as it is accomplished, we should
 also (of course) create unit tests verifying that it was completed
 correctly.
 
- * Implement the following cursor features in `LurchEditor`.
-    * Add methods for moving the cursor by a given delta, with or
-      without moving the anchor (defaults to moving it).
-    * Add a method for querying the cursor position or anchor as an
-      integer within the root div, an integer that could be passed
-      to the `placeCursor` routine of the `LurchEditor`.
  * Add all the functions for dealing with that cursor as if it
    were a real cursor.  Each of these may make several edits to the
    document, and so should use the new block-of-edits support

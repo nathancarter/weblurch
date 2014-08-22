@@ -567,8 +567,7 @@ to also move the anchor, we assume that we should move it also.
 Record the positions of the existing anchor, then remove both the
 cursor and the anchor.  This also removes any existing selection.
 
-            @updateCursor()
-            anchorIndex = @anchorPosition()
+            anchorIndex = @anchorPosition() # calls updateCursor
             @removeCursor()
 
 The cursor is simply a span with the id declared
@@ -673,6 +672,20 @@ one if its parent is not already selected.
                 if not textNode.parentNode?.hasClass \
                 LurchEditor::selectionClass
                     @wrapForSelection textNode
+
+We then create the following convenience methods for moving the
+cursor around.  They simply add the given delta to the cursor
+position, with or without moving the anchor, as indicated by the
+second parameter.
+
+        moveCursor: ( delta = 0, moveAnchor = yes ) ->
+            console.log 'moveCursor', @cursorPosition()
+            if ( current = @cursorPosition() ) is -1 then return
+            console.log 'current', current
+            if ( newpos = current + delta ) < 0 then newpos = 0
+            console.log 'newpos', newpos
+            @placeCursor newpos, moveAnchor
+            console.log 'done'
 
 ### Blinking the cursor
 
