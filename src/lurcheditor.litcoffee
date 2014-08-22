@@ -461,14 +461,16 @@ variables that track them to null.
             @cursor.anchor?.remove()
             @cursor.position = @cursor.anchor = null
 
-Now remove the selection class from anything that had it, and then
-normalize.
+Remove the selection class from anything that had it.
 
             selection = Array::slice.apply \
                 @element.getElementsByClassName \
                 LurchEditor::selectionClass
             for element in selection
-                selection.removeClass? LurchEditor::selectionClass
+                element.removeClass LurchEditor::selectionClass
+
+Normalize the whole document.
+
             @getElement()?.normalize()
 
 ### Inserting the cursor into the document
