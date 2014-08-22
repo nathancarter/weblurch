@@ -23,7 +23,24 @@ correctly.
 
  * Implement the following cursor features in `LurchEditor`.
     * Address the design flaw mentioned at the end of
-      [this test spec file](lurcheditor-spec.litcoffee.html).
+      [this test spec file](lurcheditor-spec.litcoffee.html) as
+      follows.
+       * Create tools for
+          * wrapping text nodes in selection spans,
+          * unwrapping selection spans from around text nodes, and
+          * detecting when a node is a selection span.
+       * Modify `cursorPositionsIn` to ignore selection spans, in
+         the sense that it doesn't see their boundaries, but only
+         their interior.
+       * Modify `cursorPositionOf` to ignore selection spans, in
+         the same sense as `cursorPositionsIn`.
+       * Modify `insertNodeAt` to ignore selection spans, in the
+         same sense as `cursorPositionsIn`.
+       * Modify `removeCursor` so that when it removes the
+         selection, it also unwraps all selection spans.
+       * Modify `placeCursor` so that it accumulates a list of all
+         text nodes that it would have liked to highlight, and then
+         at the end, it wraps them all in selection spans.
     * Add methods for moving the cursor by a given delta, with or
       without moving the anchor (defaults to moving it).
     * Add a method for querying the cursor position or anchor as an
