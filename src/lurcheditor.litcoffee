@@ -519,7 +519,10 @@ Remove the selection class from anything that had it.
                 @element.getElementsByClassName \
                 LurchEditor::selectionClass
             for element in selection
-                element.removeClass LurchEditor::selectionClass
+                if @isWrappedForSelection element
+                    @unwrapFromSelection element
+                else
+                    element.removeClass LurchEditor::selectionClass
 
 Normalize the whole document.
 
