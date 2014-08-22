@@ -477,9 +477,8 @@ just a few example such elements.
             pageDo -> window.S = document.createElement 'span'
             pageExpects ( -> L.cursorPositionsIn S ), 'toEqual', 1
 
-Finally, elements with children should return the total count of
-all characters in all children, plus the number of children,
-plus 1.
+Elements with children should return the total count of all
+characters in all children, plus the number of children, plus 1.
 
             pageDo ->
                 window.D = document.createElement 'div'
@@ -488,6 +487,17 @@ plus 1.
             pageExpects ( -> L.cursorPositionsIn D ), 'toEqual', 33
             pageDo -> D.innerHTML = '<b><i><u>1</u></i></b>'
             pageExpects ( -> L.cursorPositionsIn D ), 'toEqual', 8
+
+Now test the difficult situation of tables, which are complex
+structures.
+
+            pageDo ->
+                window.TBL = document.createElement 'div'
+                TBL.innerHTML = 'before <table><tr><th>one</th>
+                    <th>two</th></tr><tr><td>three</td>
+                    <td>four</td></tr></table> after'
+            pageExpects ( -> L.cursorPositionsIn TBL ),
+                'toEqual', 34
 
 ### should provide the placeCursor member
 
@@ -1079,4 +1089,252 @@ is at position 6, and so no elements are selected.
             ]
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
             pageExpects ( -> LE.cursorPosition() ), 'toEqual', 6
+
+### should handle tables
+
+Because HTML tables are complex structures, one of the trickier
+tests of the cursor routines is whether it can work well with
+tables.  This routine puts a simple table into the document and
+tries to move the cursor and anchor among its cells and the
+adjacent elements.
+
+        it 'should handle tables', inPage ->
+
+Initialize the contents of the main div, now with a table and some
+other things nearby.
+
+            pageDo ->
+                window.div = LE.getElement()
+                div.innerHTML =
+                    'plain text before the table' +
+                    '<table><tr><th>Column 1</td>' +
+                    '<th>Column 2</td></tr>' +
+                    '<tr><td>blah</td><td>blah</td></tr>' +
+                    '</table><div><b>Content</b> after</div>'
+
+Verify that the desired structure was produced.
+
+            initialConfiguration = {
+                tagName : 'DIV'
+                attributes : { id : '0' }
+                children : [
+                    'plain text before the table'
+                    {
+                        tagName : 'TABLE'
+                        children : [
+                            {
+                                tagName : 'TBODY'
+                                children : [
+                                    {
+                                        tagName : 'TR'
+                                        children : [
+                                            {
+                                                tagName : 'TH'
+                                                children : [
+                                                    'Column 1'
+                                                ]
+                                            }
+                                            {
+                                                tagName : 'TH'
+                                                children : [
+                                                    'Column 2'
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                    {
+                                        tagName : 'TR'
+                                        children : [
+                                            {
+                                                tagName : 'TD'
+                                                children : [
+                                                    'blah'
+                                                ]
+                                            }
+                                            {
+                                                tagName : 'TD'
+                                                children : [
+                                                    'blah'
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                    {
+                        tagName : 'DIV'
+                        children : [
+                            {
+                                tagName : 'B'
+                                children : [ 'Content' ]
+                            }
+                            ' after'
+                        ]
+                    }
+                ]
+            }
+            pageExpects ( -> div.toJSON() ), 'toEqual',
+                initialConfiguration
+
+Place the cursor at the beginning of the document.  Then remove
+any indication of whether the cursor is blinking on or off, and
+clone that state of the document for later comparison.
+
+            pageDo ->
+                LE.placeCursor()
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 0.
+
+            cursor = {
+                tagName : 'SPAN'
+                attributes : { id : 'lurch-cursor-position' }
+            }
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children.unshift cursor
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 0
+            pageExpects ( -> LE.anchorPosition() ), 'toEqual', 0
+
+Place the cursor way past the end of the document, which will be
+treated as placing it at the end of the document.  Move the anchor
+with it.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 1000
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 73, which is the last
+one in the document.  The anchor must remain at position zero, and
+all elements between the two must have the selection class.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children.push cursor
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 73
+            pageExpects ( -> LE.anchorPosition() ), 'toEqual', 73
+
+Place the cursor just inside the first table cell.  This is an
+important point to test, because several seemingly-valid cursor
+positions (i.e., immediately inside the TABLE, TBODY, and TR
+elements) must be skipped in favor of the TD element.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 28
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 28.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[1].children[0].children[0] \
+                .children[0].children.unshift cursor
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 28
+            pageExpects ( -> LE.anchorPosition() ), 'toEqual', 28
+
+Now try to highlight a selection from there into half-way through
+the first cell in the second row.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 48, no
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 28.
+
+            anchor = {
+                tagName : 'SPAN'
+                attributes : { id : 'lurch-cursor-anchor' }
+            }
+            selected = class : 'lurch-cursor-selection'
+            wrapped = class : 'lurch-selection-wrap
+                lurch-cursor-selection'
+            copy = {
+                tagName : 'DIV'
+                attributes : { id : '0' }
+                children : [
+                    'plain text before the table'
+                    {
+                        tagName : 'TABLE'
+                        children : [
+                            {
+                                tagName : 'TBODY'
+                                children : [
+                                    {
+                                        tagName : 'TR'
+                                        children : [
+                                            {
+                                                tagName : 'TH'
+                                                children : [
+                                                    anchor
+                                                    {
+                                                        tagName : 'SPAN'
+                                                        attributes : wrapped
+                                                        children : [ 'Column 1' ]
+                                                    }
+                                                ]
+                                            }
+                                            {
+                                                tagName : 'TH'
+                                                attributes : \
+                                                    selected
+                                                children : [
+                                                    'Column 2'
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                    {
+                                        tagName : 'TR'
+                                        children : [
+                                            {
+                                                tagName : 'TD'
+                                                children : [
+                                                    {
+                                                        tagName : 'SPAN'
+                                                        attributes : wrapped
+                                                        children : [ 'bl' ]
+                                                    }
+                                                    cursor
+                                                    'ah'
+                                                ]
+                                            }
+                                            {
+                                                tagName : 'TD'
+                                                children : [
+                                                    'blah'
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                    {
+                        tagName : 'DIV'
+                        children : [
+                            {
+                                tagName : 'B'
+                                children : [ 'Content' ]
+                            }
+                            ' after'
+                        ]
+                    }
+                ]
+            }
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 48
+            pageExpects ( -> LE.anchorPosition() ), 'toEqual', 28
 

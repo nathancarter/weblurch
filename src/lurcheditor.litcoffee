@@ -213,6 +213,21 @@ website](http://www.w3schools.com/tags/).)
             pre q s samp section small span strong sub summary sup
             td th time u ul var'.trim().split /\s+/
 
+It is then very often that we want to translate a tag name that is
+on this list to a 1, and one that is not on this list to a 0.  The
+reason for this is because we are doing a lot of counting, below,
+of cursor positions, and elements that can contain the cursor get
+intersticial locations between their children counted as valid
+positions, and those that cannot contain the cursor don't.  So the
+following routine is handy to have.  It accepts either tag names
+or nodes, which it then converts into tag names.
+
+        shouldBeCounted: ( tagName ) ->
+            if tagName instanceof Node
+                tagName = tagName.tagName
+            if tagName in LurchEditor::elementsSupportingCursor \
+                then 1 else 0
+
 ### Selecting text nodes
 
 The easiest way to visually indicate the cursor selection in the
@@ -266,6 +281,12 @@ because the positions before the h and after the i do not count as
 
         cursorPositionsIn: ( node ) ->
 
+Confusing errors may arise if we do not verify this first:
+
+            if node not instanceof Node
+                throw Error "cursorPositionsIn requires a Node as
+                    the parameter, but got this: #{node}"
+
 Text nodes can have the cursor before any character but the first,
 because, as described above, we are counting only the cursor
 positions *inside* the node.  For text nodes with no content, this
@@ -295,9 +316,7 @@ cursor (e.g., a horizontal rule, an image, etc.).  Such nodes have
 no cursor positions inside them.
 
             else if node.childNodes.length is 0
-                if node.tagName in \
-                LurchEditor::elementsSupportingCursor then 1 \
-                else 0
+                @shouldBeCounted node
 
 Nodes with children have a character count that depends on the
 character counts of the children.  We sum the character counts of
@@ -314,12 +333,15 @@ the anchor, because they are not to be treated as "part of the
 document" in this sense.
 
             else
-                result = 1
-                for child, index in node.childNodes
+                interstice = @shouldBeCounted node
+                result = interstice
+                for child, index in Array::slice.apply \
+                node.childNodes
                     id = child.getAttribute? 'id'
                     if id isnt LurchEditor::positionId and
                        id isnt LurchEditor::anchorId
-                        result += 1 + @cursorPositionsIn child
+                        result += interstice +
+                            @cursorPositionsIn child
                 result
 
 ### Detecting a node's cursor position
@@ -355,12 +377,13 @@ plus one for the interstice before each sibling
 
             positionInParent = 0
             sibling = node.parentNode.childNodes[0]
+            interstice = @shouldBeCounted node.parentNode
             while sibling isnt node
                 id = sibling.getAttribute? 'id'
                 if id isnt LurchEditor::positionId and
                    id isnt LurchEditor::anchorId
                     positionInParent +=
-                        1 + @cursorPositionsIn sibling
+                        interstice + @cursorPositionsIn sibling
                 sibling = sibling.nextSibling
 
 If our parent is the ancestor in question, we're done.
@@ -368,12 +391,13 @@ If our parent is the ancestor in question, we're done.
             if node.parentNode is ancestor
                 return positionInParent
 
-Otherwise, recur up to the parent.  We also add 1 here because of
+Otherwise, recur up to the parent.  We may add 1 here because of
 the intersticial point before the parent node, which will not be
 counted as part of the parent's earlier siblings sizes, in the
 recursion.
 
-            return positionInParent + 1 +
+            return positionInParent +
+                ( @shouldBeCounted node.parentNode.parentNode ) +
                 @cursorPositionOf node.parentNode, ancestor
 
 The following convenience methods simply calls the previous one on
@@ -421,61 +445,15 @@ supposed to be invisible.
                 return @insertNodeAt toInsert, position,
                     inNode.childNodes[0]
 
-As we start to recur down the DOM hierarchy, we first consider HTML
-elements that can have children.  For such nodes, we look at their
-children.
-
-The interstices between them fall at various indices.  If any such
-index matches the given `postion`, then we insert the new cursor at
-that interstice.  If not, then we recur on the child which contains
-the `position`.
-
-            if inNode.tagName in \
-            LurchEditor::elementsSupportingCursor
-                count = 0
-                for child in Array::slice.apply inNode.childNodes
-
-Is it the interstice before the current child?
-
-                    if count is position
-                        inNode.insertBefore toInsert, child
-                        return
-
-If this child is the cursor or anchor, skip over it.
-
-                    id = child.getAttribute? 'id'
-                    if id is LurchEditor::positionId or
-                       id is LurchEditor::anchorId then continue
-
-No, so add 1 to count, to record that interstice.  Then see if the
-child itself contains the cursor.  If so, recur on the child.
-
-                    count++
-                    size = @cursorPositionsIn child
-                    if position < count + size
-                        @insertNodeAt toInsert, position - count,
-                            child
-                        return
-                    count += size
-
-If none of that succeeded, place the cursor at the end of the list
-of children.  This assumes that the routine was not called with too
-large a cursor position; if it was, this caps it at the maximum.
-
-This includes the case where the element has no children, and *any*
-position was given, valid or otherwise.
-
-                inNode.appendChild toInsert
-
 The only kind of node we support that has cursor positions in it
 but that cannot contain child nodes is a Text node.  For it, we
-split the text node if necessary.
+split the text node if necessary.  This is the base case.
 
 Recall that position 0 inside a text node is actually after the
 first character, because that is the first position *inside*.  Even
 so, we include boundary cases just to be safe.
 
-            else if inNode instanceof Text
+            if inNode instanceof Text
                 if position + 1 <= 0
                     inNode.parentNode.insertBefore toInsert,
                         inNode
@@ -485,9 +463,55 @@ so, we include boundary cases just to be safe.
                     split = inNode.splitText position + 1
                     inNode.parentNode.insertBefore toInsert,
                         split
+                return
 
-If we attempted to insert the cursor inside a non-text node that
-cannot support children, the routine does nothing.
+For the recursive case, we consider HTML elements that can have
+children, and we look at their children.
+
+            interstice = @shouldBeCounted inNode
+            count = 0
+            for child in Array::slice.apply inNode.childNodes
+
+The interstices between them fall at various indices.  If any such
+index matches the given `position`, then we insert the new cursor
+at that interstice.  If not, then we recur on the child which
+contains the `position`.  For nodes that cannot contain the cursor
+(which means `interstice` will be 0) we skip this step, because we
+cannot insert the cursor here.
+
+Is the interstice before the current child the one where we're
+supposed to insert the thing?  And are we permitted to do so?
+
+                if interstice > 0 and count is position
+                    inNode.insertBefore toInsert, child
+                    return
+
+If this child is the cursor or anchor, skip over it.
+
+                id = child.getAttribute? 'id'
+                if id is LurchEditor::positionId or
+                   id is LurchEditor::anchorId then continue
+
+No, so add 1 to count if needed, to record that interstice.  Then
+see if the child itself contains the cursor.  If so, recur on the
+child.
+
+                count += interstice
+                size = @cursorPositionsIn child
+                if position < count + size
+                    @insertNodeAt toInsert, position - count, child
+                    return
+                count += size
+
+If none of that succeeded, and yet the current node is permitted to
+contain the cursor, then place the object at the end of the list
+of children.  This assumes that the routine was not called with too
+large a cursor position; if it was, this caps it at the maximum.
+
+This includes the case where the element has no children, and *any*
+position was given, valid or otherwise.
+
+            if interstice > 0 then inNode.appendChild toInsert
 
 ### Removing the cursor from the document
 
