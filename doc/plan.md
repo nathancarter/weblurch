@@ -15,6 +15,15 @@ than the earlier ones.
 
 ## More Word Processing Foundation
 
+### Test app improvements
+
+ * Create a button that copies the entire sequence of test history
+   commands to the clipboard, as an array of strings in JSON
+   format.
+ * Create a button that executes a sequence of test history
+   commands that are stored in the clipboard as an array of strings
+   in JSON format.
+
 ### Cursor
 
 For every item in this section, as it is accomplished, we should
