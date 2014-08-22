@@ -321,7 +321,7 @@ member in the `Node` prototype.  It guarantees that for any node
 `N`, the call `N.remove()` has the same effect as the (more
 verbose and opaque) call `N.parentNode.removeChild N`.
 
-    Node::remove = -> @parentNode.removeChild this
+    Node::remove = -> @parentNode?.removeChild this
 
 ## Adding classes to and removing classes from elements
 
