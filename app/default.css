@@ -2,11 +2,15 @@
 #lurch-cursor-position {
     border-left: solid 1px white;
     margin-left: -1px;
+    display: inline-block;
+    height: 1em;
 }
 
 .lurch-cursor-visible {
     border-right: solid 1px black;
     margin-right: -1px;
+    display: inline-block;
+    height: 1em;
 }
 
 .lurch-cursor-selection {
