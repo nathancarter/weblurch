@@ -209,7 +209,44 @@ flagging test passes/failures with the appropriate CSS classes.
 
                  '''
             pass = '<span class="test-pass">Pass</span>'
+            re = /^([0-9]+): Expected (.*) to equal (.*)\.$/
             fail = ( x ) ->
+
+The following if/try block is a simple attempt at formatting object
+code nicer.  It will not work in all situations, but it is nice for
+those situations in which it does work.  The difficult-to-read
+output that comes to the console will appear much more nicely in
+the web output, and the developer can look there to help compare
+the unmatched objects.
+
+                if m = re.exec x
+                    try
+                        obj1 = JSON.parse m[2] \
+                            .replace( /'/g, '"' ) \
+                            .replace( /([{,])\s*(\w+)\s*:/g,
+                                '$1 "$2" :' )
+                        obj2 = JSON.parse m[3] \
+                            .replace( /'/g, '"' ) \
+                            .replace( /([{,])\s*(\w+)\s*:/g,
+                                '$1 "$2" :' )
+                        x = "#{m[1]}: Expected these to be equal:
+                            <br>
+                            <table width=100% cellspacing=0
+                                   cellpadding=0>
+                            <tr><td>
+                            Actual:
+                            \n
+                            \n```
+                            \n#{JSON.stringify obj1, null, 2}
+                            \n```
+                            \n
+                            \n</td><td>
+                            Expected:
+                            \n
+                            \n```
+                            \n#{JSON.stringify obj2, null, 2}
+                            \n```
+                            \n</td></tr></table>"
                 "<span class='test-fail'>Failure #{x}</span>"
 
 Read those XML files and produce [Markdown](markdown) output,
