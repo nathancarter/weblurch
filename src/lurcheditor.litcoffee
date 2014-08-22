@@ -268,10 +268,17 @@ number of children, because every child has a valid position before
 it, and the last child also has one additional valid position after
 it.
 
+Note that as we loop through children, we ignore the cursor and
+the anchor, because they are not to be treated as "part of the
+document" in this sense.
+
             else
-                result = node.childNodes.length + 1
+                result = 1
                 for child, index in node.childNodes
-                    result += @cursorPositionsIn child
+                    id = child.getAttribute? 'id'
+                    if id isnt LurchEditor::positionId and
+                       id isnt LurchEditor::anchorId
+                        result += 1 + @cursorPositionsIn child
                 result
 
 ### Detecting a node's cursor position
@@ -308,7 +315,11 @@ plus one for the interstice before each sibling
             positionInParent = 0
             sibling = node.parentNode.childNodes[0]
             while sibling isnt node
-                positionInParent += 1 + @cursorPositionsIn sibling
+                id = sibling.getAttribute? 'id'
+                if id isnt LurchEditor::positionId and
+                   id isnt LurchEditor::anchorId
+                    positionInParent +=
+                        1 + @cursorPositionsIn sibling
                 sibling = sibling.nextSibling
 
 If our parent is the ancestor in question, we're done.
@@ -378,6 +389,12 @@ Is it the interstice before the current child?
                         inNode.insertBefore toInsert, child
                         return
 
+If this child is the cursor or anchor, skip over it.
+
+                    id = child.getAttribute? 'id'
+                    if id is LurchEditor::positionId or
+                       id is LurchEditor::anchorId then continue
+
 No, so add 1 to count, to record that interstice.  Then see if the
 child itself contains the cursor.  If so, recur on the child.
 
@@ -426,11 +443,11 @@ There are times when the cursor (and its anchor, and any selection)
 needs to be removed from the document.  For example, one such time
 is when the document loses focus.  This function accomplishes that.
 
-The optional parameter indicates whether the routine should then
-normalize the document, because the cursor may have been splitting
-two text nodes, and so its absence permits them to unite.
+When this routine finishes, it normalizes the document, because the
+cursor may have been splitting two text nodes, and so its absence
+permits them to unite.
 
-        removeCursor: ( andThenNormalize = yes ) ->
+        removeCursor: ->
 
 First, let's be sure our member variables about the cursor are
 up-to-date.
@@ -444,17 +461,15 @@ variables that track them to null.
             @cursor.anchor?.remove()
             @cursor.position = @cursor.anchor = null
 
-Now remove the selection class from anything that had it.
+Now remove the selection class from anything that had it, and then
+normalize.
 
             selection = Array::slice.apply \
                 @element.getElementsByClassName \
                 LurchEditor::selectionClass
             for element in selection
                 selection.removeClass? LurchEditor::selectionClass
-
-Respect the `andThenNormalize` parameter.
-
-            if andThenNormalize then @getElement()?.normalize()
+            @getElement()?.normalize()
 
 ### Inserting the cursor into the document
 
@@ -468,13 +483,12 @@ to also move the anchor, we assume that we should move it also.
 
         placeCursor: ( position = 0, moveAnchor = yes ) ->
 
-Record the positions of the existing cursor and anchor, then remove
-both.  This also removes any existing selection.
+Record the positions of the existing anchor, then remove both the
+cursor and the anchor.  This also removes any existing selection.
 
-            cursorParent = @cursor.position?.parentNode
-            cursorIndex = @cursor.position?.indexInParent()
-            anchorParent = @cursor.anchor?.parentNode
-            anchorIndex = @cursor.anchor?.indexInParent()
+            @updateCursor()
+            anchorIndex = if @cursor.anchor then \
+                @cursorPositionOf @cursor.anchor else -1
             @removeCursor()
 
 The cursor is simply a span with the id declared
@@ -492,32 +506,36 @@ anchor.
             @cursor.position = cursor
 
 Now we need to decide whether the anchor should be the same as the
-cursor.  There are three cases in which this should be so.
+cursor.  There are two cases in which this should be so.
  1. when the user explicitly said so, with `moveAnchor`
  1. when there was no recorded anchor position beforehand,
     so there is no sense in which we could put the anchor back
- 1. when the recorded location of the anchor is immediately
-    adjacent to the cursor, so they should unite
-In any of these cases, we just set the anchor equal to the cursor
-and stop.
+In eitehr of these cases, we just set the anchor equal to the
+cursor, normalize, and stop.
 
-            if moveAnchor or
-            not anchorParent or
-            anchorParent?.childNodes[anchorIndex] is cursor or
-            anchorParent?.childNodes[anchorIndex-1] is cursor
+            if moveAnchor or anchorIndex is -1
                 @cursor.anchor = @cursor.position
+                @getElement()?.normalize()
                 return
 
 Otherwise, we create a separate anchor object and place it where it
-was before the cursor was moved.  
+was before the cursor was moved.
 
             anchor = document.createElement 'span'
             anchor.setAttribute 'id', LurchEditor::anchorId
-            if anchorIndex < anchorParent.childNodes.length
-                anchorParent.insertBefore anchor,
-                    anchorParent.childNodes[anchorIndex]
-            else
-                anchorParent.appendChild anchor
+            @insertNodeAt anchor, anchorIndex
+            @cursor.anchor = anchor
+
+If that happens to be immediately next to the cursor, then we
+remove the anchor, and set it equal to the cursor.
+            if anchor.previousSibling is cursor or
+               anchor.nextSibling is cursor
+                anchor.remove()
+                @cursor.anchor = @cursor.position
+
+Finally, normalize.
+
+            @getElement()?.normalize()
 
 *We must also select everything between the anchor and cursor here,
 but the code for that is not yet implemented.*

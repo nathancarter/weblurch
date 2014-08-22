@@ -22,8 +22,9 @@ also (of course) create unit tests verifying that it was completed
 correctly.
 
  * Implement the following cursor features in `LurchEditor`.
-    * Test the parameter for whether or not to move the anchor
-      with the cursor.
+    * Add to the cursor motion routine the feature to highlight
+      everything between the cursor and the anchor as the
+      selection.  Then test that, too.
     * Add methods for moving the cursor by a given delta, with or
       without moving the anchor (defaults to moving it).
     * Add a method for querying the cursor position or anchor as an
