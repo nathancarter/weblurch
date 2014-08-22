@@ -82,9 +82,9 @@ that impacts the DOM, and thus is not a null action.
                     span2
                 window.T3 = new DOMEditAction 'appendChild', span1,
                     span2
-            pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
-            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
-            pageExpects ( -> T3.isNullAction() ), 'toBeFalsy'
+            pageExpects -> not T1.isNullAction()
+            pageExpects -> not T2.isNullAction()
+            pageExpects -> not T3.isNullAction()
 
 ### should have "insertBefore" instances
 
@@ -143,9 +143,9 @@ that impacts the DOM, and thus is not a null action.
                     span2
                 window.T3 = new DOMEditAction 'insertBefore',
                     span1, span2, span1.childNodes[1]
-            pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
-            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
-            pageExpects ( -> T3.isNullAction() ), 'toBeFalsy'
+            pageExpects -> not T1.isNullAction()
+            pageExpects -> not T2.isNullAction()
+            pageExpects -> not T3.isNullAction()
 
 ### should have "normalize" instances
 
@@ -226,9 +226,9 @@ first span, and non-null everywhere else.
                 window.T1 = new DOMEditAction 'normalize', div
                 window.T2 = new DOMEditAction 'normalize', span1
                 window.T3 = new DOMEditAction 'normalize', span2
-            pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
-            pageExpects ( -> T2.isNullAction() ), 'toBeTruthy'
-            pageExpects ( -> T3.isNullAction() ), 'toBeFalsy'
+            pageExpects -> not T1.isNullAction()
+            pageExpects -> T2.isNullAction()
+            pageExpects -> not T3.isNullAction()
 
 ### should have "removeAttribute" instances
 
@@ -282,8 +282,8 @@ requiring "null" and "not null" as the answers, in that order.
                     div, 'id'
                 window.T2 = new DOMEditAction 'removeAttribute',
                     div, 'attribute-not-there'
-            pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
-            pageExpects ( -> T2.isNullAction() ), 'toBeTruthy'
+            pageExpects -> not T1.isNullAction()
+            pageExpects -> T2.isNullAction()
 
 ### should have "removeAttributeNode" instances
 
@@ -341,8 +341,8 @@ We proceed the same as in the "removeAttribute" case, above.
                     'attribute-not-there'
                 window.T2 = new DOMEditAction \
                     'removeAttributeNode', div, togo
-            pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
-            pageExpects ( -> T2.isNullAction() ), 'toBeTruthy'
+            pageExpects -> not T1.isNullAction()
+            pageExpects -> T2.isNullAction()
 
 ### should have "removeChild" instances
 
@@ -405,8 +405,8 @@ removing a child always changes the DOM.
                     span
                 window.T2 = new DOMEditAction 'removeChild', span,
                     span.childNodes[1]
-            pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
-            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
+            pageExpects -> not T1.isNullAction()
+            pageExpects -> not T2.isNullAction()
 
 ### should have "replaceChild" instances
 
@@ -483,7 +483,7 @@ action.
                 span2.innerHTML = '<h1>Heading</h1>'
                 window.T1 = new DOMEditAction 'replaceChild', div,
                     span2, span
-            pageExpects ( -> T1.isNullAction() ), 'toBeFalsy'
+            pageExpects -> not T1.isNullAction()
 
 Replacing it with a very similar (but still slightly different)
 child must be a non-null action.
@@ -493,7 +493,7 @@ child must be a non-null action.
                 span3.innerHTML = 'Hello, <b>friend.</b>'
                 window.T2 = new DOMEditAction 'replaceChild', div,
                     span3, span
-            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
+            pageExpects -> not T2.isNullAction()
 
 Replacing it with an exact copy must be a null action.
 
@@ -503,7 +503,7 @@ Replacing it with an exact copy must be a null action.
                 span4.setAttribute 'example', 'some value'
                 window.T3 = new DOMEditAction 'replaceChild', div,
                     span4, span
-            pageExpects ( -> T3.isNullAction() ), 'toBeTruthy'
+            pageExpects -> T3.isNullAction()
 
 ### should have "setAttribute" instances
 
@@ -559,8 +559,8 @@ action; setting it to a new value is a non-null action.
                     'id', 0
                 window.T2 = new DOMEditAction 'setAttribute', div,
                     'id', 17
-            pageExpects ( -> T1.isNullAction() ), 'toBeTruthy'
-            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
+            pageExpects -> T1.isNullAction()
+            pageExpects -> not T2.isNullAction()
 
 If we set a non-existant attribute to the empty string is a null
 action; setting it to any other value is a non-null action.
@@ -574,10 +574,10 @@ action; setting it to any other value is a non-null action.
                     'other-thing', undefined
                 window.T4 = new DOMEditAction 'setAttribute', div,
                     'other-thing', 'not empty'
-            pageExpects ( -> T1.isNullAction() ), 'toBeTruthy'
-            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
-            pageExpects ( -> T3.isNullAction() ), 'toBeFalsy'
-            pageExpects ( -> T4.isNullAction() ), 'toBeFalsy'
+            pageExpects -> T1.isNullAction()
+            pageExpects -> not T2.isNullAction()
+            pageExpects -> not T3.isNullAction()
+            pageExpects -> not T4.isNullAction()
 
 ### should have "setAttributeNode" instances
 
@@ -642,8 +642,8 @@ action; setting it to a new value is a non-null action.
                 tmp.value = 17
                 window.T2 = new DOMEditAction 'setAttributeNode',
                     div, tmp
-            pageExpects ( -> T1.isNullAction() ), 'toBeTruthy'
-            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
+            pageExpects -> T1.isNullAction()
+            pageExpects -> not T2.isNullAction()
 
 If we set a non-existant attribute to the empty string is a null
 action; setting it to any other value is a non-null action.
@@ -665,10 +665,10 @@ action; setting it to any other value is a non-null action.
                 tmp.value = 'not empty'
                 window.T4 = new DOMEditAction 'setAttributeNode',
                     div, tmp
-            pageExpects ( -> T1.isNullAction() ), 'toBeTruthy'
-            pageExpects ( -> T2.isNullAction() ), 'toBeFalsy'
-            pageExpects ( -> T3.isNullAction() ), 'toBeFalsy'
-            pageExpects ( -> T4.isNullAction() ), 'toBeFalsy'
+            pageExpects -> T1.isNullAction()
+            pageExpects -> not T2.isNullAction()
+            pageExpects -> not T3.isNullAction()
+            pageExpects -> not T4.isNullAction()
 
 ### should have "compound" instances
 
@@ -784,11 +784,11 @@ Let's form five compound actions, two null and three non-null.
                     [ T2, T3 ]
                 window.C5 = new DOMEditAction 'compound',
                     [ T1, T4 ]
-            pageExpects ( -> C1.isNullAction() ), 'toBeTruthy'
-            pageExpects ( -> C2.isNullAction() ), 'toBeTruthy'
-            pageExpects ( -> C3.isNullAction() ), 'toBeFalsy'
-            pageExpects ( -> C4.isNullAction() ), 'toBeFalsy'
-            pageExpects ( -> C5.isNullAction() ), 'toBeFalsy'
+            pageExpects -> C1.isNullAction()
+            pageExpects -> C2.isNullAction()
+            pageExpects -> not C3.isNullAction()
+            pageExpects -> not C4.isNullAction()
+            pageExpects -> not C5.isNullAction()
 
 ### should have no other instances
 

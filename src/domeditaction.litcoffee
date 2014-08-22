@@ -128,8 +128,8 @@ Now verify that its elements are all actions.
 
                 for action in @subactions
                     if action not instanceof DOMEditAction
-                        throw Error """Compound action array
-                            containd a non-action: #{action}"""
+                        throw Error "Compound action array
+                            contained a non-action: #{action}"
 
 Find the common ancestor for all their addresses.
 
@@ -201,9 +201,9 @@ omitted, in `@insertBefore`.
                 @toInsert = data[0].toJSON()
                 if data.length is 2
                     if data[1] not instanceof Node
-                        throw Error 'Invalid parameter: ' + data[0]
+                        throw Error 'Invalid parameter: ' + data[1]
                     if data[1].parentNode isnt node
-                        throw Error 'Invalid child: ' + data[0]
+                        throw Error 'Invalid child: ' + data[1]
                     @insertBefore = data[1].indexInParent()
                 else
                     @insertBefore = node.childNodes.length
@@ -376,7 +376,6 @@ the attribute, in which case `@value` will be null.
 
             if @type is 'removeAttribute' or
                @type is 'removeAttributeNode'
-                console.log 'old attribute is', @name, @value
                 return @value is null
 
 Normalize is a null action iff the constructor did not find any

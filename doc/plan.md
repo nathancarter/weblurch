@@ -15,45 +15,12 @@ than the earlier ones.
 
 ## More Word Processing Foundation
 
-### Editing actions
-
- * The creation of the null action testing routine necessitated
-   the creation of a JSON object comparison utility.  Write unit
-   tests for that routine.
- * Whenever a null action is reported to the edit tracker, do not
-   push it on the stack, and do not notify listeners of a change
-   in the document.
-
 ### Cursor
 
 For every item in this section, as it is accomplished, we should
 also (of course) create unit tests verifying that it was completed
 correctly.
 
- * Implement the following cursor features in `LurchEditor`.
-    * Create a `LurchEditor` method for lifting the cursor out of
-      the document, if one exists.  (If one does not exist, it
-      should call `updateCursor` to be sure of that, first.)
-      Normalize the parent after removing it.
-    * Create a `LurchEditor` method for placing the cursor position
-      at a given cursor position inside a given node (which
-      defaults to the zeroth position of the root element of the
-      editor).  Be sure to remove the cursor before placing it.
-    * Add to `LurchEditor` instances a timer that flashes the
-      cursor just as MathQuill does.
-    * Add a CSS class that gives a blue background, for use on the
-      cursor selection.
-    * Add to the cursor placement routine a parameter for whether
-      or not to move the anchor as well, defaulting to yes.  If the
-      anchor does not move, ensure that all leaf nodes between the
-      old and new cursor positions get the requisite class for
-      showing the blue background.  If the anchor does move, ensure
-      that all elements that had that class lose it.  Note that you
-      can tweak the old version of the routine by not *deleting*
-      the old cursor position, but replacing it with a temporary
-      marker, doing the highlighting, then removing the marker.
-    * Add methods for moving the cursor by a given delta, with or
-      without moving the anchor (defaults to moving it).
  * Add all the functions for dealing with that cursor as if it
    were a real cursor.  Each of these may make several edits to the
    document, and so should use the new block-of-edits support
@@ -187,6 +154,10 @@ correctly.
    in the document.
  * Make ordinary keyboard motions of the cursor able to enter
    and exit MathQuill instances.
+ * Make keyboard and mouse actions that create/extend a selection
+   (e.g., shift-arrows, shift-click, click-and-drag) unable to
+   select only a portion of a MathQuill object, but instead select
+   all or none of it.
  * Consider whether you can render the MathQuill using
    [MathJax](http://www.mathjax.org/) when the cursor exits,
    to get prettier results.

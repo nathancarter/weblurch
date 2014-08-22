@@ -139,6 +139,12 @@ class.  If it is not, it is ignored.
 
             if action not instanceof DOMEditAction then return
 
+If this action is a null action, then ignore it.  Listeners and the
+undo/redo stack only want to track actual changes, but null actions
+represent no change.
+
+            if action.isNullAction() then return
+
 Even if we're not recording the actions on our internal undo/redo
 stack, we must still notify any listeners of any changes that
 happen.

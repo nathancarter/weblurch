@@ -424,6 +424,9 @@ have become null once again.
 
 ### should provide the cursorPositionsIn member
 
+This section and the next test the routine defined [here](
+lurcheditor.litcoffee#number-of-cursor-positions-with-a-given-node).
+
 First, just verify that it's present.
 
         it 'should provide the cursorPositionsIn member', inPage ->
@@ -474,16 +477,864 @@ just a few example such elements.
             pageDo -> window.S = document.createElement 'span'
             pageExpects ( -> L.cursorPositionsIn S ), 'toEqual', 1
 
-Finally, elements with children should return the total count of
-all characters in all children, plus the number of children,
-plus 1.
+Elements with children should return the total count of all
+characters in all children, plus the number of children, plus 1.
 
             pageDo ->
                 window.D = document.createElement 'div'
-                D.innerHTML = '''some text <span
-                    >more text</span><br><span
-                    >nest<i>ed</i></span>'''
+                D.innerHTML = 'some text <span>more text</span><br
+                    ><span>nest<i>ed</i></span>'
             pageExpects ( -> L.cursorPositionsIn D ), 'toEqual', 33
             pageDo -> D.innerHTML = '<b><i><u>1</u></i></b>'
             pageExpects ( -> L.cursorPositionsIn D ), 'toEqual', 8
+
+Now test the difficult situation of tables, which are complex
+structures.
+
+            pageDo ->
+                window.TBL = document.createElement 'div'
+                TBL.innerHTML = 'before <table><tr><th>one</th>
+                    <th>two</th></tr><tr><td>three</td>
+                    <td>four</td></tr></table> after'
+            pageExpects ( -> L.cursorPositionsIn TBL ),
+                'toEqual', 34
+
+### should provide the placeCursor member
+
+This section and the next test the routine defined [here](
+lurcheditor.litcoffee#inserting-the-cursor-into-the-document).
+Note that testing `placeCursor` implicitly tests `removeCursor`
+because `removeCursor` is called at the beginning of every run of
+`placeCursor`, and if it didn't work, then there would be two
+cursors in the document thereafter, and the `placeCursor` tests
+would therefore fail.
+
+First, just verify that it's present.
+
+        it 'should provide the placeCursor member', inPage ->
+            pageExpects -> LurchEditor::placeCursor
+
+### should place the cursor correctly
+
+In this routine, not only do we test the `placeCursor` routine,
+verifying that it puts the cursor where we expect, but we also
+verify that, after the cursor has been placed, it reports its
+position correctly.  That is, if we put the cursor at position $k$,
+then after verifying that it appeared where we expect, we also
+query its position (using `cursorPositionOf`) and ensure that it is
+$k$.
+
+        it 'should place the cursor correctly', inPage ->
+
+Initialize the contents of the main div to have some text, some
+no-children nodes, and some nested items.
+
+            pageDo ->
+                window.div = LE.getElement()
+                div.innerHTML =
+                    'text<br><span><i>more</i></span><b></b>'
+
+Verify that the desired structure was produced.
+
+            initialConfiguration = {
+                tagName : 'DIV'
+                attributes : { id : '0' }
+                children : [
+                    'text'
+                    tagName : 'BR'
+                    {
+                        tagName : 'SPAN'
+                        children : [
+                            {
+                                tagName : 'I'
+                                children : [ 'more' ]
+                            }
+                        ]
+                    }
+                    tagName : 'B'
+                ]
+            }
+            pageExpects ( -> div.toJSON() ), 'toEqual',
+                initialConfiguration
+
+Place the cursor at the beginning of the document.  Then remove any
+indication of whether the cursor is blinking on or off, and clone
+that state of the document for later comparison.
+
+            pageDo ->
+                LE.placeCursor()
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 0.
+
+            cursor = {
+                tagName : 'SPAN'
+                attributes : { id : 'lurch-cursor-position' }
+            }
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children.unshift cursor
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 0
+
+Place the cursor way past the end of the document, which will be
+treated as placing it at the end of the document.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 1000
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 15, which is the last
+one in the document.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children.push cursor
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 15
+
+Place the cursor between the first two nodes (text and BR).
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 4
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 4.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children = [
+                copy.children[0]
+                cursor
+                copy.children[1]
+                copy.children[2]
+                copy.children[3]
+            ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 4
+
+Place the cursor between the second and third nodes (BR and span).
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 5
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 5.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children = [
+                copy.children[0]
+                copy.children[1]
+                cursor
+                copy.children[2]
+                copy.children[3]
+            ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 5
+
+Place the cursor inside the initial text node, and ensure it
+splits.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 2
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 2.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children = [
+                'te'
+                cursor
+                'xt'
+                copy.children[1]
+                copy.children[2]
+                copy.children[3]
+            ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 2
+
+Place the cursor inside the final span, but not yet inside its
+inner italic element.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 6
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 6.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[2].children = [
+                cursor
+                copy.children[2].children[0]
+            ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 6
+
+Place the cursor one step further, not only inside the final span,
+but also inside its inner italic element, just before the text
+inside that italic element.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 7
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 7.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[2].children[0].children = [
+                cursor
+                'more'
+            ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 7
+
+Place the cursor one step further, thus splitting the text "more"
+into two pieces.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 8
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 8.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[2].children[0].children = [
+                'm'
+                cursor
+                'ore'
+            ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 8
+
+Place the cursor two steps further, thus splitting the text "more"
+at a different location.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 10
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 10.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[2].children[0].children = [
+                'mor'
+                cursor
+                'e'
+            ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 10
+
+Place the cursor one step further, after the text "more" but still
+inside the italic element.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 11
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 11.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[2].children[0].children = [
+                'more'
+                cursor
+            ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 11
+
+Place the cursor one step further, after the italic element but
+still inside the span.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 12
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 12.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[2].children = [
+                copy.children[2].children[0]
+                cursor
+            ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 12
+
+Place the cursor one step further, and verify that that is right
+before the empty bold element.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 13
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 13.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children = [
+                copy.children[0]
+                copy.children[1]
+                copy.children[2]
+                cursor
+                copy.children[3]
+            ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 13
+
+Place the cursor one step further, and verify that that is inside
+the empty bold element.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 14
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 14.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[3].children = [ cursor ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 14
+
+Place the cursor one step further, and verify that that is at the
+end of the document.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 15
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 15.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children.push cursor
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 15
+
+### should preserve the anchor correctly
+
+The `placeCursor` routine takes an optional parameter that can
+make the cursor's anchor stay still while the cursor moves.
+We thus take variations on the previous section's tests, now
+keeping the anchor still, and verifying that the results remain
+correct.
+
+        it 'should preserve the anchor correctly', inPage ->
+
+Initialize the contents of the main div as in the previous test.
+
+            pageDo ->
+                window.div = LE.getElement()
+                div.innerHTML =
+                    'text<br><span><i>more</i></span><b></b>'
+
+Verify that the desired structure was produced.
+
+            initialConfiguration = {
+                tagName : 'DIV'
+                attributes : { id : '0' }
+                children : [
+                    'text'
+                    tagName : 'BR'
+                    {
+                        tagName : 'SPAN'
+                        children : [
+                            {
+                                tagName : 'I'
+                                children : [ 'more' ]
+                            }
+                        ]
+                    }
+                    tagName : 'B'
+                ]
+            }
+            pageExpects ( -> div.toJSON() ), 'toEqual',
+                initialConfiguration
+
+Place the cursor at the beginning of the document.  Then remove
+any indication of whether the cursor is blinking on or off, and
+clone that state of the document for later comparison.
+
+            pageDo ->
+                LE.placeCursor()
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 0.
+
+            cursor = {
+                tagName : 'SPAN'
+                attributes : { id : 'lurch-cursor-position' }
+            }
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children.unshift cursor
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 0
+            pageExpects ( -> LE.anchorPosition() ), 'toEqual', 0
+
+Place the cursor way past the end of the document, which will be
+treated as placing it at the end of the document.  Do not let
+the anchor move.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            anchor = {
+                tagName : 'SPAN'
+                attributes : { id : 'lurch-cursor-anchor' }
+            }
+            pageDo ->
+                LE.placeCursor 1000, no
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 15, which is the last
+one in the document.  The anchor must remain at position zero, and
+all elements between the two must have the selection class.
+
+            selected = class : 'lurch-cursor-selection'
+            wrapped = class : 'lurch-selection-wrap
+                lurch-cursor-selection'
+            copy = {
+                tagName : 'DIV'
+                attributes : { id : '0' }
+                children : [
+                    anchor
+                    {
+                        tagName : 'SPAN'
+                        attributes : wrapped
+                        children : [ 'text' ]
+                    }
+                    {
+                        tagName : 'BR'
+                        attributes : selected
+                    }
+                    {
+                        tagName : 'SPAN'
+                        attributes : selected
+                        children : [
+                            {
+                                tagName : 'I'
+                                attributes : selected
+                                children : [ 'more' ]
+                            }
+                        ]
+                    }
+                    {
+                        tagName : 'B'
+                        attributes : selected
+                    }
+                    cursor
+                ]
+            }
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 15
+            pageExpects ( -> LE.anchorPosition() ), 'toEqual', 0
+
+Place the cursor between the first two nodes (text and BR).
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 4
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 4.  The anchor, too,
+has position 4, and no elements are selected.
+
+            copy = {
+                tagName : 'DIV'
+                attributes : { id : '0' }
+                children : [
+                    'text'
+                    cursor
+                    tagName : 'BR'
+                    {
+                        tagName : 'SPAN'
+                        children : [
+                            {
+                                tagName : 'I'
+                                children : [ 'more' ]
+                            }
+                        ]
+                    }
+                    tagName : 'B'
+                ]
+            }
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 4
+            pageExpects ( -> LE.anchorPosition() ), 'toEqual', 4
+
+Place the cursor between the second and third nodes (BR and span).
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 5, no
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 5.  The anchor still
+has position 4 and the one element between them is selected.
+
+            copy = {
+                tagName : 'DIV'
+                attributes : { id : '0' }
+                children : [
+                    'text'
+                    anchor
+                    {
+                        tagName : 'BR'
+                        attributes : selected
+                    }
+                    cursor
+                    {
+                        tagName : 'SPAN'
+                        children : [
+                            {
+                                tagName : 'I'
+                                children : [ 'more' ]
+                            }
+                        ]
+                    }
+                    tagName : 'B'
+                ]
+            }
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 5
+            pageExpects ( -> LE.anchorPosition() ), 'toEqual', 4
+
+Place the cursor inside the initial text node, and ensure it
+splits.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 2, no
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 2.  The anchor
+remains at position 4, and the text between them has been wrapped
+in a span that lets it have the CSS style for the cursor
+selection.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children = [
+                'te'
+                cursor
+                {
+                    tagName : 'SPAN'
+                    attributes : wrapped
+                    children : [ 'xt' ]
+                }
+                anchor
+                copy.children[1]
+                copy.children[2]
+                copy.children[3]
+            ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 2
+            pageExpects ( -> LE.anchorPosition() ), 'toEqual', 4
+
+Place the cursor inside the final span, but not yet inside its
+inner italic element.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 6
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 6.  The anchor, too,
+is at position 6, and so no elements are selected.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[2].children = [
+                cursor
+                copy.children[2].children[0]
+            ]
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 6
+
+### should handle tables
+
+Because HTML tables are complex structures, one of the trickier
+tests of the cursor routines is whether it can work well with
+tables.  This routine puts a simple table into the document and
+tries to move the cursor and anchor among its cells and the
+adjacent elements.
+
+        it 'should handle tables', inPage ->
+
+Initialize the contents of the main div, now with a table and some
+other things nearby.
+
+            pageDo ->
+                window.div = LE.getElement()
+                div.innerHTML =
+                    'plain text before the table' +
+                    '<table><tr><th>Column 1</td>' +
+                    '<th>Column 2</td></tr>' +
+                    '<tr><td>blah</td><td>blah</td></tr>' +
+                    '</table><div><b>Content</b> after</div>'
+
+Verify that the desired structure was produced.
+
+            initialConfiguration = {
+                tagName : 'DIV'
+                attributes : { id : '0' }
+                children : [
+                    'plain text before the table'
+                    {
+                        tagName : 'TABLE'
+                        children : [
+                            {
+                                tagName : 'TBODY'
+                                children : [
+                                    {
+                                        tagName : 'TR'
+                                        children : [
+                                            {
+                                                tagName : 'TH'
+                                                children : [
+                                                    'Column 1'
+                                                ]
+                                            }
+                                            {
+                                                tagName : 'TH'
+                                                children : [
+                                                    'Column 2'
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                    {
+                                        tagName : 'TR'
+                                        children : [
+                                            {
+                                                tagName : 'TD'
+                                                children : [
+                                                    'blah'
+                                                ]
+                                            }
+                                            {
+                                                tagName : 'TD'
+                                                children : [
+                                                    'blah'
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                    {
+                        tagName : 'DIV'
+                        children : [
+                            {
+                                tagName : 'B'
+                                children : [ 'Content' ]
+                            }
+                            ' after'
+                        ]
+                    }
+                ]
+            }
+            pageExpects ( -> div.toJSON() ), 'toEqual',
+                initialConfiguration
+
+Place the cursor at the beginning of the document.  Then remove
+any indication of whether the cursor is blinking on or off, and
+clone that state of the document for later comparison.
+
+            pageDo ->
+                LE.placeCursor()
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 0.
+
+            cursor = {
+                tagName : 'SPAN'
+                attributes : { id : 'lurch-cursor-position' }
+            }
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children.unshift cursor
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 0
+            pageExpects ( -> LE.anchorPosition() ), 'toEqual', 0
+
+Place the cursor way past the end of the document, which will be
+treated as placing it at the end of the document.  Move the anchor
+with it.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 1000
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 73, which is the last
+one in the document.  The anchor must remain at position zero, and
+all elements between the two must have the selection class.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children.push cursor
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 73
+            pageExpects ( -> LE.anchorPosition() ), 'toEqual', 73
+
+Place the cursor just inside the first table cell.  This is an
+important point to test, because several seemingly-valid cursor
+positions (i.e., immediately inside the TABLE, TBODY, and TR
+elements) must be skipped in favor of the TD element.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 28
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 28.
+
+            copy = JSON.parse JSON.stringify initialConfiguration
+            copy.children[1].children[0].children[0] \
+                .children[0].children.unshift cursor
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 28
+            pageExpects ( -> LE.anchorPosition() ), 'toEqual', 28
+
+Now try to highlight a selection from there into half-way through
+the first cell in the second row.
+Again, we make a clone to remove the possibility of cursor
+blinking.
+
+            pageDo ->
+                LE.placeCursor 48, no
+                LurchEditor::blinkCursors off
+                window.LEcopy = LE.getElement().cloneNode true
+
+Verify that it got there, and is at position 28.
+
+            anchor = {
+                tagName : 'SPAN'
+                attributes : { id : 'lurch-cursor-anchor' }
+            }
+            selected = class : 'lurch-cursor-selection'
+            wrapped = class : 'lurch-selection-wrap
+                lurch-cursor-selection'
+            copy = {
+                tagName : 'DIV'
+                attributes : { id : '0' }
+                children : [
+                    'plain text before the table'
+                    {
+                        tagName : 'TABLE'
+                        children : [
+                            {
+                                tagName : 'TBODY'
+                                children : [
+                                    {
+                                        tagName : 'TR'
+                                        children : [
+                                            {
+                                                tagName : 'TH'
+                                                children : [
+                                                    anchor
+                                                    {
+                                                        tagName : 'SPAN'
+                                                        attributes : wrapped
+                                                        children : [ 'Column 1' ]
+                                                    }
+                                                ]
+                                            }
+                                            {
+                                                tagName : 'TH'
+                                                attributes : \
+                                                    selected
+                                                children : [
+                                                    'Column 2'
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                    {
+                                        tagName : 'TR'
+                                        children : [
+                                            {
+                                                tagName : 'TD'
+                                                children : [
+                                                    {
+                                                        tagName : 'SPAN'
+                                                        attributes : wrapped
+                                                        children : [ 'bl' ]
+                                                    }
+                                                    cursor
+                                                    'ah'
+                                                ]
+                                            }
+                                            {
+                                                tagName : 'TD'
+                                                children : [
+                                                    'blah'
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                    {
+                        tagName : 'DIV'
+                        children : [
+                            {
+                                tagName : 'B'
+                                children : [ 'Content' ]
+                            }
+                            ' after'
+                        ]
+                    }
+                ]
+            }
+            pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
+            pageExpects ( -> LE.cursorPosition() ), 'toEqual', 48
+            pageExpects ( -> LE.anchorPosition() ), 'toEqual', 28
 

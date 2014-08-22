@@ -5,6 +5,7 @@
     <link rel='stylesheet'
           href='../bootstrap/css/bootstrap-theme.min.css'/>
     <link rel='stylesheet' href='testapp.css'/>
+    <link rel='stylesheet' href='../app/default.css'/>
     <script src='../bootstrap/js/jquery-2.1.1.min.js'></script>
     <script src='../bootstrap/js/bootstrap.min.js'></script>
     <script src='../app/weblurch.js'></script>
@@ -72,13 +73,17 @@
                 <span class='input-group-addon'>.json</span>
               </div>
             </div>
-            <div class='col-md-2'>
+            <div class='col-md-3'>
               <button type='button' class='btn btn-default'
                       id='downloadButton'>
-                Download history as JSON
+                <span class='glyphicon glyphicon-download'></span>
               </button>
+              <button type='button' class='btn btn-default'
+                      id='copyButton'>Copy</button>
+              <button type='button' class='btn btn-default'
+                      id='pasteButton'>Paste</button>
             </div>
-            <div class='col-md-2'></div>
+            <div class='col-md-1'></div>
             <div class='col-md-3'>
               <select class='form-control' id='savedHistoriesList'>
               </select>

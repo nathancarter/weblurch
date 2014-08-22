@@ -32,10 +32,13 @@ always gave the same ordering of object keys.
 
     JSON.equals = ( x, y ) ->
 
-If only one is an object, they're not equal.
+If only one is an object, or only one is an array,
+then they're not equal.
 If neither is an object, you can use plain simple `is` to compare.
 
         if ( x instanceof Object ) isnt ( y instanceof Object )
+            return no
+        if ( x instanceof Array ) isnt ( y instanceof Array )
             return no
         if x not instanceof Object then return x is y
 
