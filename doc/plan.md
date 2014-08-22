@@ -21,6 +21,7 @@ For every item in this section, as it is accomplished, we should
 also (of course) create unit tests verifying that it was completed
 correctly.
 
+ * Bug to fix:  Cursor cannot be placed inside tables.
  * Implement the following cursor features in `LurchEditor`.
     * Add methods for moving the cursor by a given delta, with or
       without moving the anchor (defaults to moving it).
