@@ -194,6 +194,7 @@ to the document state.
             while walk and not @cursor.anchor
                 if walk is @element then @cursor.anchor = start
                 walk = walk.parentNode
+            @cursor.anchor = @cursor.anchor or @cursor.position
 
 ### Which HTML element types can contain the cursor?
 
