@@ -27,6 +27,8 @@ Install event handlers for the buttons.
         ( $ runButton ).on 'click', runButtonClicked
         ( $ resetButton ).on 'click', resetButtonClicked
         ( $ downloadButton ).on 'click', downloadButtonClicked
+        ( $ copyButton ).on 'click', copyButtonClicked
+        ( $ pasteButton ).on 'click', pasteButtonClicked
         ( $ undoButton ).on 'click', undoButtonClicked
         ( $ runFullHistoryButton ).on 'click',
             runFullHistoryButtonClicked
@@ -271,6 +273,31 @@ However, the amount of data being stored here is very small, and
 the test app will be used infrequently enough that I'm not
 concerned about that leak right now.  But it could be fixed in the
 future.
+
+### Copy and paste buttons
+
+The copy button just throws up a prompt that lets the user use
+Ctrl+C to copy the contents of the window.  This is less than
+perfectly convenient, but there are security reasons why copying
+to the clipboard in JavaScript is tricky.
+
+    window.copyButtonClicked = ( event ) ->
+        window.prompt 'Press Ctrl+C, then Enter',
+            JSON.stringify ( step.code for step in testHistory \
+                when step.code isnt '' )
+
+The paste button does the same thing, requiring the user to
+manually paste the clipboard contents into a prompt box.  Again,
+this is due to JavaScript security constraints.
+
+    window.pasteButtonClicked = ( event ) ->
+        got = window.prompt 'Press Ctrl+V, then Enter', ''
+        try
+            for command in JSON.parse got
+                runCodeInModel command
+            updateView()
+        catch
+            alert 'That was not a valid command history.'
 
 ### Reset button
 
