@@ -243,7 +243,7 @@ follows.
         unwrapFromSelection: ( wrapSpan ) ->
             textNode = wrapSpan.childNodes[0]
             wrapSpan.parentNode.replaceChild textNode, wrapSpan
-        isSelectionWrap: ( node ) ->
+        isWrappedForSelection: ( node ) ->
             node.hasClass? LurchEditor::selectionWrapClass
 
 ### Number of cursor positions within a given node
@@ -274,6 +274,14 @@ is acceptable.
 
             if node instanceof Text
                 node.length - 1
+
+Another special case is that of text nodes that have been wrapped
+for selection, [as described above](#selecting-text-nodes).  In
+that case, we simply ignore the outer shell, treating the node as
+if it were the one text node inside it.
+
+            else if @isWrappedForSelection node
+                @cursorPositionsIn node.childNodes[0]
 
 Next we handle the two subcases of nodes without children.
 
@@ -338,7 +346,7 @@ editor's root div if not otherwise specified.
         cursorPositionOf: ( node, ancestor = @getElement() ) ->
 
 First we need to know the cursor position of the node within its
-own parent node.  We need a parent to accomplish this.
+own parent node.  Thus without a parent node, we cannot proceed.
 
             if not node.parentNode then return 0
 
