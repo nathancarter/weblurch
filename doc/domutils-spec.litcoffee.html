@@ -976,7 +976,8 @@ that node and repeat the test.</p>
             <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
             div.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'example'</span>
             <span class="hljs-built_in">window</span>.span = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
-            span.innerHTML = <span class="hljs-string">'foo&lt;span&gt;&lt;/span&gt;bar'</span>
+            span.innerHTML = <span class="hljs-string">'foo'</span>
+            span.appendChild <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">'bar'</span>
             <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
             tracker.clearStack()
 </code></pre><p>Normalize the div, append the span, and normalize the span.  As
@@ -1012,18 +1013,17 @@ included for completeness.</p>
                     tagName : <span class="hljs-string">'SPAN'</span>
                     children : [
                         <span class="hljs-string">'foo'</span>
-                        { tagName : <span class="hljs-string">'SPAN'</span> }
                         <span class="hljs-string">'bar'</span>
                     ]
                 }
             }
 </code></pre><p>Finally, the second normalize event, called on the span inside the
-div, with two text node children, not adjacent.</p>
+div, with two adjacent text node children.</p>
 <pre class="hljs"><code>        pageExpects (<span class="hljs-function"> -&gt;</span>
             tracker.getEditActions()[<span class="hljs-number">2</span>].toJSON() ),
             <span class="hljs-string">'toEqual'</span>, {
                 type : <span class="hljs-string">'normalize'</span>, node : [ <span class="hljs-number">1</span> ],
-                sequences : { }
+                sequences : { <span class="hljs-string">'[0]'</span> : [ <span class="hljs-string">'foo'</span>, <span class="hljs-string">'bar'</span> ] }
             }
 </code></pre><h3><a name='should-send-alerts-on-code-removeattribute-code-calls'></a>should send alerts on <code>removeAttribute</code> calls &nbsp; <font size=-1><a href='test-results.md.html#should-send-alerts-on-code-removeattribute-code-calls'>see results</a></font> <font size=-1><a href='#should-send-alerts-on-code-removeattribute-code-calls'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We place two spans inside the root div, with attributes on each.
 We then remove some of those attributes and ensure that the
@@ -1032,10 +1032,9 @@ correct events are propagated for each.</p>
     inPage<span class="hljs-function"> -&gt;</span>
         pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            div.innerHTML = <span class="hljs-string">'''
+            div.innerHTML = <span class="hljs-string">'
             &lt;span align="center" class="thing"&gt;hi&lt;/span&gt;
-            &lt;span style="color:blue;"&gt;blue&lt;/span&gt;
-            '''</span>
+            &lt;span style="color:blue;"&gt;blue&lt;/span&gt;'</span>
             <span class="hljs-built_in">window</span>.span1 = div.childNodes[<span class="hljs-number">0</span>]
             <span class="hljs-built_in">window</span>.span2 = div.childNodes[<span class="hljs-number">2</span>]
             <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
@@ -1068,10 +1067,9 @@ just one new step, of fetching the attribute node to be removed.</p>
     inPage<span class="hljs-function"> -&gt;</span>
         pageDo<span class="hljs-function"> -&gt;</span>
             div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            div.innerHTML = <span class="hljs-string">'''
+            div.innerHTML = <span class="hljs-string">'
             &lt;span align="center" class="thing"&gt;hi&lt;/span&gt;
-            &lt;span style="color:blue;"&gt;blue&lt;/span&gt;
-            '''</span>
+            &lt;span style="color:blue;"&gt;blue&lt;/span&gt;'</span>
             <span class="hljs-built_in">window</span>.span1 = div.childNodes[<span class="hljs-number">0</span>]
             <span class="hljs-built_in">window</span>.span2 = div.childNodes[<span class="hljs-number">2</span>]
             <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
@@ -1111,10 +1109,9 @@ time.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on removeChild calls'</span>, inPage<span class="hljs-function"> -&gt;</span>
         pageDo<span class="hljs-function"> -&gt;</span>
             <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            div.innerHTML = <span class="hljs-string">'''
+            div.innerHTML = <span class="hljs-string">'
             &lt;span&gt;&lt;span&gt;INNER SPAN!&lt;/span&gt;hi&lt;/span&gt;
-            &lt;span&gt;there&lt;/span&gt;
-            '''</span>
+            &lt;span&gt;there&lt;/span&gt;'</span>
             <span class="hljs-built_in">window</span>.span1 = div.childNodes[<span class="hljs-number">0</span>]
             <span class="hljs-built_in">window</span>.span2 = div.childNodes[<span class="hljs-number">2</span>]
             <span class="hljs-built_in">window</span>.spanI = span1.childNodes[<span class="hljs-number">0</span>]
@@ -1167,10 +1164,9 @@ that are measurably different, for the purposes of testing.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on replaceChild calls'</span>, inPage<span class="hljs-function"> -&gt;</span>
         pageDo<span class="hljs-function"> -&gt;</span>
             <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            div.innerHTML = <span class="hljs-string">'''
+            div.innerHTML = <span class="hljs-string">'
             &lt;span&gt;&lt;span&gt;INNER SPAN!&lt;/span&gt;hi&lt;/span&gt;
-            &lt;span&gt;there&lt;/span&gt;
-            '''</span>
+            &lt;span&gt;there&lt;/span&gt;'</span>
             <span class="hljs-built_in">window</span>.span1 = div.childNodes[<span class="hljs-number">0</span>]
             <span class="hljs-built_in">window</span>.span2 = div.childNodes[<span class="hljs-number">2</span>]
             <span class="hljs-built_in">window</span>.spanI = span1.childNodes[<span class="hljs-number">0</span>]
@@ -1235,9 +1231,8 @@ new attribute, and in the other case, replacing an existing one.</p>
 <pre class="hljs"><code>    it <span class="hljs-string">'should send alerts on setAttribute calls'</span>, inPage<span class="hljs-function"> -&gt;</span>
         pageDo<span class="hljs-function"> -&gt;</span>
             <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            div.innerHTML = <span class="hljs-string">'''
-            &lt;span example="yes"&gt;content&lt;/span&gt;
-            '''</span>
+            div.innerHTML = <span class="hljs-string">'
+                &lt;span example="yes"&gt;content&lt;/span&gt;'</span>
             <span class="hljs-built_in">window</span>.span = div.childNodes[<span class="hljs-number">0</span>]
             <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
             tracker.clearStack()
@@ -1273,9 +1268,8 @@ new attribute, and in the other case, replacing an existing one.</p>
     inPage<span class="hljs-function"> -&gt;</span>
         pageDo<span class="hljs-function"> -&gt;</span>
             <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.getElementById <span class="hljs-string">'0'</span>
-            <span class="hljs-built_in">window</span>.div.innerHTML = <span class="hljs-string">'''
-            &lt;span example="yes"&gt;content&lt;/span&gt;
-            '''</span>
+            <span class="hljs-built_in">window</span>.div.innerHTML = <span class="hljs-string">'
+                &lt;span example="yes"&gt;content&lt;/span&gt;'</span>
             <span class="hljs-built_in">window</span>.span = div.childNodes[<span class="hljs-number">0</span>]
             <span class="hljs-built_in">window</span>.tracker = DOMEditTracker.instanceOver div
             tracker.clearStack()
@@ -1327,8 +1321,8 @@ thus which should be returned by the functions.  We work within
 the following environment.</p>
 <pre class="hljs"><code>        pageDo<span class="hljs-function"> -&gt;</span>
             <span class="hljs-built_in">window</span>.div = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'div'</span>
-            div.innerHTML = <span class="hljs-string">'''A section of text.
-                               &lt;br&gt;&lt;hr&gt;Yet more text.'''</span>
+            div.innerHTML = <span class="hljs-string">'A section of text.
+                             &lt;br&gt;&lt;hr&gt;Yet more text.'</span>
 </code></pre><p>Within the div we find just four leaf nodes.  Let&#39;s ensure that
 the functions work correctly among those four.</p>
 <pre class="hljs"><code>        pageExpects<span class="hljs-function"> -&gt;</span>
@@ -1336,7 +1330,7 @@ the functions work correctly among those four.</p>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li><li><a href='utils-spec.litcoffee.html'>utils-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

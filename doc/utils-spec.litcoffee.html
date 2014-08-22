@@ -1,0 +1,183 @@
+<html>
+    <head>
+        <link rel="stylesheet"
+              href="../bootstrap/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="./main.css"/>
+        <link rel="stylesheet" href="./obsidian.css"/>
+        <link rel="shortcut icon" href="favicon.png"/>
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config( {
+              tex2jax: { inlineMath: [ [ '$', '$' ], [ '\\(', '\\)' ] ] }
+            } );
+        </script>
+        <script type="text/javascript"
+                src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+        </script>
+        <title>webLurch docs: utils-spec</title>
+    </head>
+    <body>
+        <div id="left">
+            <p align=center>Page contents</p>
+<p><a href='#tests-of-the-utils-module'>Tests of the utils module</a></p><ul>
+<li><a href='#json-equals'>JSON.equals</a></li><ul>
+<li><a href='#should-call-equal-atomic-values-equal'>should call equal atomic values equal</a></li><li><a href='#should-call-unequal-atomic-values-unequal'>should call unequal atomic values unequal</a></li><li><a href='#should-distinguish-atomics-from-non-atomics'>should distinguish atomics from non-atomics</a></li><li><a href='#should-call-equal-structure-objects-equal'>should call equal-structure objects equal</a></li><li><a href='#should-call-unequal-structure-objects-unequal'>should call unequal-structure objects unequal</a></li>
+        </div>
+        <div id="middle">
+            <h1><a name='tests-of-the-utils-module'></a>Tests of the utils module &nbsp;  <font size=-1><a href='#tests-of-the-utils-module'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>See the documentation in the
+<a href="basic-spec.litcoffee">basic test spec</a> for information on how
+test specifications are structured.</p>
+<pre class="hljs"><code><span class="hljs-built_in">require</span> <span class="hljs-string">'../src/utils'</span>
+</code></pre><h2><a name='json-equals'></a>JSON.equals &nbsp; <font size=-1><a href='test-results.md.html#json-equals'>see results</a></font> <font size=-1><a href='#json-equals'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>This section tests the equality function for JSON objects, called
+<code>JSON.equals</code>.</p>
+<pre class="hljs"><code>describe <span class="hljs-string">'JSON.equals'</span>,<span class="hljs-function"> -&gt;</span>
+</code></pre><h3><a name='should-call-equal-atomic-values-equal'></a>should call equal atomic values equal &nbsp; <font size=-1><a href='test-results.md.html#should-call-equal-atomic-values-equal'>see results</a></font> <font size=-1><a href='#should-call-equal-atomic-values-equal'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should call equal atomic values equal'</span>,<span class="hljs-function"> -&gt;</span>
+        expect( JSON.equals <span class="hljs-number">3</span>, <span class="hljs-number">3</span> ).toBeTruthy()
+        expect( JSON.equals <span class="hljs-string">'3'</span>, <span class="hljs-string">'3'</span> ).toBeTruthy()
+        expect( JSON.equals <span class="hljs-string">'three'</span>, <span class="hljs-string">'three'</span> ).toBeTruthy()
+        expect( JSON.equals <span class="hljs-literal">null</span>, <span class="hljs-literal">null</span> ).toBeTruthy()
+        expect( JSON.equals <span class="hljs-literal">undefined</span>, <span class="hljs-literal">undefined</span> ).toBeTruthy()
+</code></pre><h3><a name='should-call-unequal-atomic-values-unequal'></a>should call unequal atomic values unequal &nbsp; <font size=-1><a href='test-results.md.html#should-call-unequal-atomic-values-unequal'>see results</a></font> <font size=-1><a href='#should-call-unequal-atomic-values-unequal'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should call unequal atomic values unequal'</span>,<span class="hljs-function"> -&gt;</span>
+        expect( JSON.equals <span class="hljs-number">3</span>, <span class="hljs-number">4</span> ).toBeFalsy()
+        expect( JSON.equals <span class="hljs-string">'3'</span>, <span class="hljs-string">'03'</span> ).toBeFalsy()
+        expect( JSON.equals <span class="hljs-string">'three'</span>, <span class="hljs-string">'tree'</span> ).toBeFalsy()
+        expect( JSON.equals <span class="hljs-literal">null</span>, <span class="hljs-literal">undefined</span> ).toBeFalsy()
+        expect( JSON.equals <span class="hljs-literal">undefined</span>, <span class="hljs-number">0</span> ).toBeFalsy()
+        expect( JSON.equals <span class="hljs-literal">null</span>, <span class="hljs-number">0</span> ).toBeFalsy()
+</code></pre><h3><a name='should-distinguish-atomics-from-non-atomics'></a>should distinguish atomics from non-atomics &nbsp; <font size=-1><a href='test-results.md.html#should-distinguish-atomics-from-non-atomics'>see results</a></font> <font size=-1><a href='#should-distinguish-atomics-from-non-atomics'><span class="glyphicon glyphicon-link"></span></a></font></h3><pre class="hljs"><code>    it <span class="hljs-string">'should distinguish atomics from non-atomics'</span>,<span class="hljs-function"> -&gt;</span>
+        expect( JSON.equals <span class="hljs-number">3</span>, {} ).toBeFalsy()
+        expect( JSON.equals <span class="hljs-string">'3'</span>, {} ).toBeFalsy()
+        expect( JSON.equals <span class="hljs-string">'three'</span>, JSON ).toBeFalsy()
+        expect( JSON.equals <span class="hljs-literal">null</span>, (<span class="hljs-function">-&gt;</span>) ).toBeFalsy()
+        expect( JSON.equals <span class="hljs-literal">undefined</span>, {<span class="hljs-attribute">a</span>:<span class="hljs-number">3</span>} ).toBeFalsy()
+</code></pre><h3><a name='should-call-equal-structure-objects-equal'></a>should call equal-structure objects equal &nbsp; <font size=-1><a href='test-results.md.html#should-call-equal-structure-objects-equal'>see results</a></font> <font size=-1><a href='#should-call-equal-structure-objects-equal'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>This includes not only objects but also arrays, and nestings of
+the two, where key order is irrelevant.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should call equal-structure objects equal'</span>,<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Objects with depth 1:</p>
+<pre class="hljs"><code>        expect( JSON.equals {
+            thing : <span class="hljs-string">'foo'</span>
+            other : <span class="hljs-number">169</span>
+        }, {
+            other : <span class="hljs-number">169</span>
+            thing : <span class="hljs-string">'foo'</span>
+        } ).toBeTruthy()
+</code></pre><p>Arrays with depth 1:</p>
+<pre class="hljs"><code>        expect( JSON.equals [ <span class="hljs-number">7</span>, <span class="hljs-string">'eight'</span>, <span class="hljs-number">9999</span> ],
+            [ <span class="hljs-number">7</span>, <span class="hljs-string">'eight'</span>, <span class="hljs-number">9999</span> ] ).toBeTruthy()
+</code></pre><p>Mixed objects and arrays, with depth greater than 1:</p>
+<pre class="hljs"><code>        expect( JSON.equals {
+            thing : [ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span> ]
+            other : { foo : [] }
+            list : [
+                { }
+                { }
+                { henry : <span class="hljs-string">'huggins'</span>, beverly : <span class="hljs-string">'cleary'</span> }
+                <span class="hljs-number">50</span>
+            ]
+        }, {
+            list : [
+                { }
+                { }
+                { beverly : <span class="hljs-string">'cleary'</span>, henry : <span class="hljs-string">'huggins'</span> }
+                <span class="hljs-number">50</span>
+            ]
+            thing : [ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span> ]
+            other : { foo : [] }
+        } ).toBeTruthy()
+        expect( JSON.equals [ { }, JSON, { <span class="hljs-attribute">a</span>:<span class="hljs-number">1</span>, <span class="hljs-attribute">b</span>:<span class="hljs-number">2</span>, <span class="hljs-attribute">c</span>:<span class="hljs-number">3</span> } ],
+            [ { }, JSON, { <span class="hljs-attribute">b</span>:<span class="hljs-number">2</span>, <span class="hljs-attribute">a</span>:<span class="hljs-number">1</span>, <span class="hljs-attribute">c</span>:<span class="hljs-number">3</span> } ] ).toBeTruthy()
+</code></pre><h3><a name='should-call-unequal-structure-objects-unequal'></a>should call unequal-structure objects unequal &nbsp; <font size=-1><a href='test-results.md.html#should-call-unequal-structure-objects-unequal'>see results</a></font> <font size=-1><a href='#should-call-unequal-structure-objects-unequal'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>This includes not only objects but also arrays, and nestings of
+the two, where key order is irrelevant.  So in these tests, I will
+keep key order the same, and yet the objects should still differ.</p>
+<pre class="hljs"><code>    it <span class="hljs-string">'should call unequal-structure objects unequal'</span>,<span class="hljs-function"> -&gt;</span>
+</code></pre><p>Objects with depth 1:</p>
+<pre class="hljs"><code>        expect( JSON.equals {
+            thing : <span class="hljs-string">'foo'</span>
+            other : <span class="hljs-number">169</span>
+        }, {
+            thing : <span class="hljs-string">'foo'</span>
+            other : <span class="hljs-number">168</span>
+        } ).toBeFalsy()
+        expect( JSON.equals {
+            thing : <span class="hljs-string">'foo'</span>
+            other : <span class="hljs-number">169</span>
+        }, {
+            thing : <span class="hljs-string">'foo'</span>
+        } ).toBeFalsy()
+        expect( JSON.equals {
+            thing : <span class="hljs-string">'foo'</span>
+        }, {
+            other : <span class="hljs-number">169</span>
+            thing : <span class="hljs-string">'foo'</span>
+        } ).toBeFalsy()
+</code></pre><p>Arrays with depth 1:</p>
+<pre class="hljs"><code>        expect( JSON.equals [ <span class="hljs-number">7</span>, <span class="hljs-number">8</span>, <span class="hljs-number">9999</span> ],
+            [ <span class="hljs-number">7</span>, <span class="hljs-string">'eight'</span>, <span class="hljs-number">9999</span> ] ).toBeFalsy()
+        expect( JSON.equals [ <span class="hljs-number">7</span>, <span class="hljs-number">8</span>, <span class="hljs-number">9999</span> ], [ <span class="hljs-number">7</span>, <span class="hljs-number">9999</span>, <span class="hljs-number">8</span> ] \
+            ).toBeFalsy()
+</code></pre><p>Mixed objects and arrays, with depth greater than 1:</p>
+<pre class="hljs"><code>        expect( JSON.equals {
+            thing : [ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span> ]
+            other : { foo : [] }
+            list : [
+                { }
+                { }
+                { henry : <span class="hljs-string">'huggins'</span>, beverly : <span class="hljs-string">'cleary'</span> }
+                <span class="hljs-number">50</span>
+            ]
+        }, {
+            thing : [ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span> ]
+            other : { foo : [] }
+            list : [
+                { }
+                { }
+                { beverly : <span class="hljs-string">'cleary'</span>, henry : <span class="hljs-string">'huggins'</span> }
+                <span class="hljs-number">50</span>
+            ]
+        } ).toBeFalsy()
+        expect( JSON.equals {
+            thing : [ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span> ]
+            other : { foo : [] }
+            list : [
+                { }
+                [ ]
+                { henry : <span class="hljs-string">'huggins'</span>, beverly : <span class="hljs-string">'cleary'</span> }
+                <span class="hljs-number">50</span>
+            ]
+        }, {
+            thing : [ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span> ]
+            other : { foo : [] }
+            list : [
+                { }
+                { }
+                { henry : <span class="hljs-string">'huggins'</span>, beverly : <span class="hljs-string">'cleary'</span> }
+                <span class="hljs-number">50</span>
+            ]
+        } ).toBeFalsy()
+        expect( JSON.equals {
+            thing : [ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span> ]
+            other : { foo : [] }
+            list : [
+                { }
+                { }
+                { henry : <span class="hljs-string">'huggins'</span>, beverly : <span class="hljs-string">'cleary'</span> }
+                <span class="hljs-number">50</span>
+            ]
+        }, {
+            list : [
+                { }
+                { }
+                { henry : <span class="hljs-string">'huggins'</span>, beverly : <span class="hljs-string">'cleary'</span> }
+                <span class="hljs-number">50</span>
+            ]
+            thing : [ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span> ]
+        } ).toBeFalsy()
+        expect( JSON.equals [ { }, JSON, { <span class="hljs-attribute">a</span>:<span class="hljs-number">1</span>, <span class="hljs-attribute">b</span>:<span class="hljs-number">2</span>, <span class="hljs-attribute">c</span>:<span class="hljs-number">3</span> } ],
+            [ { }, JSON, { <span class="hljs-attribute">a</span>:<span class="hljs-number">1</span>, <span class="hljs-attribute">b</span>:<span class="hljs-number">2</span>, <span class="hljs-attribute">c</span>:<span class="hljs-number">3</span>, JSON } ]
+            ).toBeFalsy()
+</code></pre>
+        </div>
+        <div id="right">
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li><li><a href='utils-spec.litcoffee.html'>utils-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+        </div>
+    </body>
+</html>

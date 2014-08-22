@@ -20,7 +20,7 @@
             <p align=center>Page contents</p>
 <p><a href='#test-app-utilities'>Test app utilities</a></p><ul>
 <li><a href='#setup-routine'>Setup routine</a></li><li><a href='#event-handlers'>Event handlers</a></li><ul>
-<li><a href='#dispatcher'>Dispatcher</a></li><li><a href='#source-synchronizer'>Source synchronizer</a></li><li><a href='#main-code-runner'>Main code runner</a></li><li><a href='#code-runner-for-test-history'>Code runner for test history</a></li><li><a href='#code-runner-for-full-test-history'>Code runner for full test history</a></li><li><a href='#yes-and-no-buttons'>Yes and no buttons</a></li><li><a href='#edit-comments-buttons'>Edit comments buttons</a></li><li><a href='#download-button'>Download button</a></li><li><a href='#reset-button'>Reset button</a></li><li><a href='#undo-button'>Undo button</a></li><li><a href='#handling-a-choice-of-a-saved-history'>Handling a choice of a saved history</a></li><li><a href='#representation-of-the-test-history'>Representation of the test history</a></li><li><a href='#resizing-the-test-history-div'>Resizing the test history div</a></li></ul>
+<li><a href='#dispatcher'>Dispatcher</a></li><li><a href='#source-synchronizer'>Source synchronizer</a></li><li><a href='#main-code-runner'>Main code runner</a></li><li><a href='#code-runner-for-test-history'>Code runner for test history</a></li><li><a href='#code-runner-for-full-test-history'>Code runner for full test history</a></li><li><a href='#yes-and-no-buttons'>Yes and no buttons</a></li><li><a href='#edit-comments-buttons'>Edit comments buttons</a></li><li><a href='#download-button'>Download button</a></li><li><a href='#copy-and-paste-buttons'>Copy and paste buttons</a></li><li><a href='#reset-button'>Reset button</a></li><li><a href='#undo-button'>Undo button</a></li><li><a href='#handling-a-choice-of-a-saved-history'>Handling a choice of a saved history</a></li><li><a href='#representation-of-the-test-history'>Representation of the test history</a></li><li><a href='#resizing-the-test-history-div'>Resizing the test history div</a></li></ul>
 <li><a href='#utility-functions'>Utility functions</a></li>
         </div>
         <div id="middle">
@@ -39,6 +39,8 @@ code executed to cause changes of state.</p>
 <pre class="hljs"><code>    ( $ runButton ).<span class="hljs-literal">on</span> <span class="hljs-string">'click'</span>, runButtonClicked
     ( $ resetButton ).<span class="hljs-literal">on</span> <span class="hljs-string">'click'</span>, resetButtonClicked
     ( $ downloadButton ).<span class="hljs-literal">on</span> <span class="hljs-string">'click'</span>, downloadButtonClicked
+    ( $ copyButton ).<span class="hljs-literal">on</span> <span class="hljs-string">'click'</span>, copyButtonClicked
+    ( $ pasteButton ).<span class="hljs-literal">on</span> <span class="hljs-string">'click'</span>, pasteButtonClicked
     ( $ undoButton ).<span class="hljs-literal">on</span> <span class="hljs-string">'click'</span>, undoButtonClicked
     ( $ runFullHistoryButton ).<span class="hljs-literal">on</span> <span class="hljs-string">'click'</span>,
         runFullHistoryButtonClicked
@@ -208,7 +210,26 @@ However, the amount of data being stored here is very small, and
 the test app will be used infrequently enough that I&#39;m not
 concerned about that leak right now.  But it could be fixed in the
 future.</p>
-<h3><a name='reset-button'></a>Reset button &nbsp;  <font size=-1><a href='#reset-button'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>This method resets the document (and the editor over it) to their
+<h3><a name='copy-and-paste-buttons'></a>Copy and paste buttons &nbsp;  <font size=-1><a href='#copy-and-paste-buttons'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>The copy button just throws up a prompt that lets the user use
+Ctrl+C to copy the contents of the window.  This is less than
+perfectly convenient, but there are security reasons why copying
+to the clipboard in JavaScript is tricky.</p>
+<pre class="hljs"><code><span class="hljs-built_in">window</span>.<span class="hljs-function"><span class="hljs-title">copyButtonClicked</span> = <span class="hljs-params">( event )</span> -&gt;</span>
+    <span class="hljs-built_in">window</span>.prompt <span class="hljs-string">'Press Ctrl+C, then Enter'</span>,
+        JSON.stringify ( step.code <span class="hljs-keyword">for</span> step <span class="hljs-keyword">in</span> testHistory \
+            <span class="hljs-keyword">when</span> step.code <span class="hljs-keyword">isnt</span> <span class="hljs-string">''</span> )
+</code></pre><p>The paste button does the same thing, requiring the user to
+manually paste the clipboard contents into a prompt box.  Again,
+this is due to JavaScript security constraints.</p>
+<pre class="hljs"><code><span class="hljs-built_in">window</span>.<span class="hljs-function"><span class="hljs-title">pasteButtonClicked</span> = <span class="hljs-params">( event )</span> -&gt;</span>
+    got = <span class="hljs-built_in">window</span>.prompt <span class="hljs-string">'Press Ctrl+V, then Enter'</span>, <span class="hljs-string">''</span>
+    <span class="hljs-keyword">try</span>
+        <span class="hljs-keyword">for</span> command <span class="hljs-keyword">in</span> JSON.parse got
+            runCodeInModel command
+        updateView()
+    <span class="hljs-keyword">catch</span>
+        alert <span class="hljs-string">'That was not a valid command history.'</span>
+</code></pre><h3><a name='reset-button'></a>Reset button &nbsp;  <font size=-1><a href='#reset-button'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>This method resets the document (and the editor over it) to their
 initial states, by replacing them with fresh ones.  The process is
 described in the comments interleaved in the code below.</p>
 <pre class="hljs"><code><span class="hljs-built_in">window</span>.<span class="hljs-function"><span class="hljs-title">resetButtonClicked</span> = <span class="hljs-params">( event )</span> -&gt;</span>
@@ -500,7 +521,7 @@ because at the outset, no such history has been chosen.</p>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li><li><a href='utils-spec.litcoffee.html'>utils-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

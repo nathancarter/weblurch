@@ -3,8 +3,8 @@
   var DOMEditAction, DOMEditTracker, LurchEditor,
     __slice = [].slice,
     __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   window.DOMEditAction = DOMEditAction = (function() {
     function DOMEditAction() {
@@ -23,7 +23,7 @@
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           action = _ref[_i];
           if (!(action instanceof DOMEditAction)) {
-            throw Error("Compound action array\ncontaind a non-action: " + action);
+            throw Error("Compound action array contained a non-action: " + action);
           }
         }
         if (this.subactions.length === 0) {
@@ -74,10 +74,10 @@
         this.toInsert = data[0].toJSON();
         if (data.length === 2) {
           if (!(data[1] instanceof Node)) {
-            throw Error('Invalid parameter: ' + data[0]);
+            throw Error('Invalid parameter: ' + data[1]);
           }
           if (data[1].parentNode !== node) {
-            throw Error('Invalid child: ' + data[0]);
+            throw Error('Invalid child: ' + data[1]);
           }
           this.insertBefore = data[1].indexInParent();
         } else {
@@ -189,7 +189,6 @@
         return false;
       }
       if (this.type === 'removeAttribute' || this.type === 'removeAttributeNode') {
-        console.log('old attribute is', this.name, this.value);
         return this.value === null;
       } else if (this.type === 'normalize') {
         return JSON.equals(this.sequences, {});
@@ -451,6 +450,9 @@
       if (!(action instanceof DOMEditAction)) {
         return;
       }
+      if (action.isNullAction()) {
+        return;
+      }
       _ref = this.listeners;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         listener = _ref[_i];
@@ -679,7 +681,7 @@
     return result;
   };
 
-  'appendChild insertBefore normalize removeAttribute\nremoveAttributeNode removeChild replaceChild\nsetAttribute setAttributeNode'.split(/\s+/).map(function(methodName) {
+  'appendChild insertBefore normalize removeAttribute removeAttributeNode removeChild replaceChild setAttribute setAttributeNode'.split(/\s+/).map(function(methodName) {
     var original, which;
     which = Node.prototype[methodName] ? Node : Element;
     original = which.prototype[methodName];
@@ -740,6 +742,47 @@
     return walk;
   };
 
+  Node.prototype.remove = function() {
+    var _ref;
+    return (_ref = this.parentNode) != null ? _ref.removeChild(this) : void 0;
+  };
+
+  Element.prototype.hasClass = function(name) {
+    var classes, _ref;
+    classes = (_ref = this.getAttribute('class')) != null ? _ref.split(/\s+/) : void 0;
+    return classes && __indexOf.call(classes, name) >= 0;
+  };
+
+  Element.prototype.addClass = function(name) {
+    var classes, _ref;
+    classes = ((_ref = this.getAttribute('class')) != null ? _ref.split(/\s+/) : void 0) || [];
+    if (__indexOf.call(classes, name) < 0) {
+      classes.push(name);
+    }
+    return this.setAttribute('class', classes.join(' '));
+  };
+
+  Element.prototype.removeClass = function(name) {
+    var c, classes, _ref;
+    classes = ((_ref = this.getAttribute('class')) != null ? _ref.split(/\s+/) : void 0) || [];
+    classes = (function() {
+      var _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = classes.length; _i < _len; _i++) {
+        c = classes[_i];
+        if (c !== name) {
+          _results.push(c);
+        }
+      }
+      return _results;
+    })();
+    if (classes.length > 0) {
+      return this.setAttribute('class', classes.join(' '));
+    } else {
+      return this.removeAttribute('class');
+    }
+  };
+
   window.LurchEditor = LurchEditor = (function(_super) {
     var t;
 
@@ -762,6 +805,8 @@
       }
     };
 
+    LurchEditor.prototype.cursorTimerId = null;
+
     function LurchEditor(div) {
       var i, usedIds;
       LurchEditor.__super__.constructor.call(this, div);
@@ -782,6 +827,9 @@
         position: null,
         anchor: null
       };
+      if (LurchEditor.prototype.cursorTimerId === null) {
+        LurchEditor.prototype.cursorTimerId = setInterval(LurchEditor.prototype.blinkCursors, 500);
+      }
     }
 
     LurchEditor.prototype.cleanIds = function(node) {
@@ -853,8 +901,10 @@
 
     LurchEditor.prototype.anchorId = 'lurch-cursor-anchor';
 
+    LurchEditor.prototype.selectionClass = 'lurch-cursor-selection';
+
     LurchEditor.prototype.updateCursor = function() {
-      var start, walk, _results;
+      var start, walk;
       this.cursor = {
         position: null,
         anchor: null
@@ -867,19 +917,18 @@
         walk = walk.parentNode;
       }
       walk = start = document.getElementById(LurchEditor.prototype.anchorId);
-      _results = [];
       while (walk && !this.cursor.anchor) {
         if (walk === this.element) {
           this.cursor.anchor = start;
         }
-        _results.push(walk = walk.parentNode);
+        walk = walk.parentNode;
       }
-      return _results;
+      return this.cursor.anchor = this.cursor.anchor || this.cursor.position;
     };
 
     LurchEditor.prototype.elementsSupportingCursor = (function() {
       var _i, _len, _ref, _results;
-      _ref = 'a abbr acronym address article aside b bdi bdo big\nblockquote caption center cite code dd details dfn div\ndl dt em fieldset figcaption figure footer form header\nh1 h2 h3 h4 h5 h6 i kbd label legend li mark nav ol p\npre q s samp section small span strong sub summary sup\ntd th time u ul var'.trim().split(/\s+/);
+      _ref = 'a abbr acronym address article aside b bdi bdo big blockquote caption center cite code dd details dfn div dl dt em fieldset figcaption figure footer form header h1 h2 h3 h4 h5 h6 i kbd label legend li mark nav ol p pre q s samp section small span strong sub summary sup td th time u ul var'.trim().split(/\s+/);
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         t = _ref[_i];
@@ -888,25 +937,306 @@
       return _results;
     })();
 
+    LurchEditor.prototype.shouldBeCounted = function(tagName) {
+      if (tagName instanceof Node) {
+        tagName = tagName.tagName;
+      }
+      if (__indexOf.call(LurchEditor.prototype.elementsSupportingCursor, tagName) >= 0) {
+        return 1;
+      } else {
+        return 0;
+      }
+    };
+
+    LurchEditor.prototype.selectionWrapClass = 'lurch-selection-wrap';
+
+    LurchEditor.prototype.wrapForSelection = function(textNode) {
+      var wrap, _ref;
+      wrap = document.createElement('span');
+      wrap.addClass(LurchEditor.prototype.selectionWrapClass);
+      wrap.addClass(LurchEditor.prototype.selectionClass);
+      if ((_ref = textNode.parentNode) != null) {
+        _ref.replaceChild(wrap, textNode);
+      }
+      return wrap.appendChild(textNode);
+    };
+
+    LurchEditor.prototype.unwrapFromSelection = function(wrapSpan) {
+      var textNode;
+      textNode = wrapSpan.childNodes[0];
+      return wrapSpan.parentNode.replaceChild(textNode, wrapSpan);
+    };
+
+    LurchEditor.prototype.isWrappedForSelection = function(node) {
+      return typeof node.hasClass === "function" ? node.hasClass(LurchEditor.prototype.selectionWrapClass) : void 0;
+    };
+
     LurchEditor.prototype.cursorPositionsIn = function(node) {
-      var child, index, result, _i, _len, _ref, _ref1;
+      var child, id, index, interstice, result, _i, _len, _ref;
+      if (!(node instanceof Node)) {
+        throw Error("cursorPositionsIn requires a Node as the parameter, but got this: " + node);
+      }
       if (node instanceof Text) {
         return node.length - 1;
+      } else if (this.isWrappedForSelection(node)) {
+        return this.cursorPositionsIn(node.childNodes[0]);
       } else if (node.childNodes.length === 0) {
-        if (_ref = node.tagName, __indexOf.call(LurchEditor.prototype.elementsSupportingCursor, _ref) >= 0) {
-          return 1;
-        } else {
-          return 0;
-        }
+        return this.shouldBeCounted(node);
       } else {
-        result = node.childNodes.length + 1;
-        _ref1 = node.childNodes;
-        for (index = _i = 0, _len = _ref1.length; _i < _len; index = ++_i) {
-          child = _ref1[index];
-          result += this.cursorPositionsIn(child);
+        interstice = this.shouldBeCounted(node);
+        result = interstice;
+        _ref = Array.prototype.slice.apply(node.childNodes);
+        for (index = _i = 0, _len = _ref.length; _i < _len; index = ++_i) {
+          child = _ref[index];
+          id = typeof child.getAttribute === "function" ? child.getAttribute('id') : void 0;
+          if (id !== LurchEditor.prototype.positionId && id !== LurchEditor.prototype.anchorId) {
+            result += interstice + this.cursorPositionsIn(child);
+          }
         }
         return result;
       }
+    };
+
+    LurchEditor.prototype.cursorPositionOf = function(node, ancestor) {
+      var id, interstice, positionInParent, sibling;
+      if (ancestor == null) {
+        ancestor = this.getElement();
+      }
+      if (!node.parentNode) {
+        return 0;
+      }
+      positionInParent = 0;
+      sibling = node.parentNode.childNodes[0];
+      interstice = this.shouldBeCounted(node.parentNode);
+      while (sibling !== node) {
+        id = typeof sibling.getAttribute === "function" ? sibling.getAttribute('id') : void 0;
+        if (id !== LurchEditor.prototype.positionId && id !== LurchEditor.prototype.anchorId) {
+          positionInParent += interstice + this.cursorPositionsIn(sibling);
+        }
+        sibling = sibling.nextSibling;
+      }
+      if (node.parentNode === ancestor) {
+        return positionInParent;
+      }
+      return positionInParent + (this.shouldBeCounted(node.parentNode.parentNode)) + this.cursorPositionOf(node.parentNode, ancestor);
+    };
+
+    LurchEditor.prototype.cursorPosition = function() {
+      this.updateCursor();
+      if (!this.cursor.position) {
+        return -1;
+      }
+      return this.cursorPositionOf(this.cursor.position);
+    };
+
+    LurchEditor.prototype.anchorPosition = function() {
+      this.updateCursor();
+      if (!this.cursor.anchor) {
+        return -1;
+      }
+      return this.cursorPositionOf(this.cursor.anchor);
+    };
+
+    LurchEditor.prototype.insertNodeAt = function(toInsert, position, inNode) {
+      var child, count, id, interstice, size, split, _i, _len, _ref;
+      if (position == null) {
+        position = 0;
+      }
+      if (inNode == null) {
+        inNode = this.getElement();
+      }
+      if (this.isWrappedForSelection(inNode)) {
+        return this.insertNodeAt(toInsert, position, inNode.childNodes[0]);
+      }
+      if (inNode instanceof Text) {
+        if (position + 1 <= 0) {
+          inNode.parentNode.insertBefore(toInsert, inNode);
+        } else if (position + 1 >= inNode.textContent.length) {
+          inNode.parentNode.appendChild(toInsert);
+        } else {
+          split = inNode.splitText(position + 1);
+          inNode.parentNode.insertBefore(toInsert, split);
+        }
+        return;
+      }
+      interstice = this.shouldBeCounted(inNode);
+      count = 0;
+      _ref = Array.prototype.slice.apply(inNode.childNodes);
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        child = _ref[_i];
+        if (interstice > 0 && count === position) {
+          inNode.insertBefore(toInsert, child);
+          return;
+        }
+        id = typeof child.getAttribute === "function" ? child.getAttribute('id') : void 0;
+        if (id === LurchEditor.prototype.positionId || id === LurchEditor.prototype.anchorId) {
+          continue;
+        }
+        count += interstice;
+        size = this.cursorPositionsIn(child);
+        if (position < count + size) {
+          this.insertNodeAt(toInsert, position - count, child);
+          return;
+        }
+        count += size;
+      }
+      if (interstice > 0) {
+        return inNode.appendChild(toInsert);
+      }
+    };
+
+    LurchEditor.prototype.removeCursor = function() {
+      var element, selection, _i, _len, _ref, _ref1, _ref2;
+      this.updateCursor();
+      if ((_ref = this.cursor.position) != null) {
+        _ref.remove();
+      }
+      if ((_ref1 = this.cursor.anchor) != null) {
+        _ref1.remove();
+      }
+      this.cursor.position = this.cursor.anchor = null;
+      selection = Array.prototype.slice.apply(this.element.getElementsByClassName(LurchEditor.prototype.selectionClass));
+      for (_i = 0, _len = selection.length; _i < _len; _i++) {
+        element = selection[_i];
+        if (this.isWrappedForSelection(element)) {
+          this.unwrapFromSelection(element);
+        } else {
+          element.removeClass(LurchEditor.prototype.selectionClass);
+        }
+      }
+      return (_ref2 = this.getElement()) != null ? _ref2.normalize() : void 0;
+    };
+
+    LurchEditor.prototype.placeCursor = function(position, moveAnchor) {
+      var anchor, anchorIndex, cursor, marker1, marker2, selectUpTo, stepRight, textNode, textNodesToSelect, walk, _i, _len, _ref, _ref1, _results;
+      if (position == null) {
+        position = 0;
+      }
+      if (moveAnchor == null) {
+        moveAnchor = true;
+      }
+      anchorIndex = this.anchorPosition();
+      this.removeCursor();
+      cursor = document.createElement('span');
+      cursor.setAttribute('id', LurchEditor.prototype.positionId);
+      this.insertNodeAt(cursor, position);
+      this.cursor.position = cursor;
+      if (moveAnchor || anchorIndex === -1) {
+        this.cursor.anchor = this.cursor.position;
+        return;
+      }
+      anchor = document.createElement('span');
+      anchor.setAttribute('id', LurchEditor.prototype.anchorId);
+      this.insertNodeAt(anchor, anchorIndex);
+      this.cursor.anchor = anchor;
+      if (anchor.previousSibling === cursor || anchor.nextSibling === cursor) {
+        anchor.remove();
+        this.cursor.anchor = this.cursor.position;
+        return;
+      }
+      _ref = position < anchorIndex ? [cursor, anchor] : [anchor, cursor], marker1 = _ref[0], marker2 = _ref[1];
+      stepRight = (function(_this) {
+        return function(fromHere) {
+          if (fromHere === null || fromHere === _this.getElement()) {
+            return null;
+          }
+          return fromHere.nextSibling || stepRight(fromHere.parentNode);
+        };
+      })(this);
+      textNodesToSelect = [];
+      selectUpTo = function(inThis, stopHere) {
+        var child, _i, _len, _ref1;
+        if (inThis === stopHere) {
+          return true;
+        }
+        if (!(inThis instanceof Element)) {
+          if (inThis instanceof Text) {
+            textNodesToSelect.push(inThis);
+          }
+          return false;
+        }
+        _ref1 = Array.prototype.slice.apply(inThis.childNodes);
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          child = _ref1[_i];
+          if (selectUpTo(child, stopHere)) {
+            return true;
+          }
+        }
+        inThis.addClass(LurchEditor.prototype.selectionClass);
+        return false;
+      };
+      walk = marker1;
+      while (walk = stepRight(walk)) {
+        if (selectUpTo(walk, marker2)) {
+          break;
+        }
+      }
+      _results = [];
+      for (_i = 0, _len = textNodesToSelect.length; _i < _len; _i++) {
+        textNode = textNodesToSelect[_i];
+        if (!((_ref1 = textNode.parentNode) != null ? _ref1.hasClass(LurchEditor.prototype.selectionClass) : void 0)) {
+          _results.push(this.wrapForSelection(textNode));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    };
+
+    LurchEditor.prototype.moveCursor = function(delta, moveAnchor) {
+      var current, newpos;
+      if (delta == null) {
+        delta = 0;
+      }
+      if (moveAnchor == null) {
+        moveAnchor = true;
+      }
+      console.log('moveCursor', this.cursorPosition());
+      if ((current = this.cursorPosition()) === -1) {
+        return;
+      }
+      console.log('current', current);
+      if ((newpos = current + delta) < 0) {
+        newpos = 0;
+      }
+      console.log('newpos', newpos);
+      this.placeCursor(newpos, moveAnchor);
+      return console.log('done');
+    };
+
+    LurchEditor.prototype.cursorVisible = 'lurch-cursor-visible';
+
+    LurchEditor.prototype.blinkCursors = function(onOff) {
+      var LE, cssClass, oldValue, _i, _len, _ref, _results;
+      if (onOff == null) {
+        onOff = 'toggle';
+      }
+      cssClass = LurchEditor.prototype.cursorVisible;
+      _ref = DOMEditTracker.instances;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        LE = _ref[_i];
+        if (LE instanceof LurchEditor) {
+          LE.updateCursor();
+          if (!LE.cursor.position) {
+            continue;
+          }
+          oldValue = LE.stackRecording;
+          LE.stackRecording = false;
+          if (onOff === 'toggle') {
+            onOff = !LE.cursor.position.hasClass(cssClass);
+          }
+          if (onOff) {
+            LE.cursor.position.addClass(cssClass);
+          } else {
+            LE.cursor.position.removeClass(cssClass);
+          }
+          _results.push(LE.stackRecording = oldValue);
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
     };
 
     return LurchEditor;
@@ -916,6 +1246,9 @@
   JSON.equals = function(x, y) {
     var key, xkeys, ykeys, _i, _len;
     if ((x instanceof Object) !== (y instanceof Object)) {
+      return false;
+    }
+    if ((x instanceof Array) !== (y instanceof Array)) {
       return false;
     }
     if (!(x instanceof Object)) {

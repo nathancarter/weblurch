@@ -19,7 +19,8 @@
         <div id="left">
             <p align=center>Page contents</p>
 <p><a href='#-code-lurcheditor-code-class'><code>LurchEditor</code> class</a></p><ul>
-<li><a href='#functions-related-to-ids'>Functions related to ids</a></li><li><a href='#-code-lurcheditor-code-constructor'><code>LurchEditor</code> constructor</a></li><li><a href='#functions-used-by-the-constructor'>Functions used by the constructor</a></li><li><a href='#convenience-methods'>Convenience methods</a></li><li><a href='#cursor-support'>Cursor support</a></li>
+<li><a href='#functions-related-to-ids'>Functions related to ids</a></li><li><a href='#-code-lurcheditor-code-constructor'><code>LurchEditor</code> constructor</a></li><li><a href='#functions-used-by-the-constructor'>Functions used by the constructor</a></li><li><a href='#convenience-methods'>Convenience methods</a></li><li><a href='#cursor-support'>Cursor support</a></li><ul>
+<li><a href='#keeping-member-variables-up-to-date-with-dom'>Keeping member variables up to date with DOM</a></li><li><a href='#which-html-element-types-can-contain-the-cursor-'>Which HTML element types can contain the cursor?</a></li><li><a href='#selecting-text-nodes'>Selecting text nodes</a></li><li><a href='#number-of-cursor-positions-within-a-given-node'>Number of cursor positions within a given node</a></li><li><a href='#detecting-a-node-39-s-cursor-position'>Detecting a node&#39;s cursor position</a></li><li><a href='#inserting-a-node-at-a-given-position'>Inserting a node at a given position</a></li><li><a href='#removing-the-cursor-from-the-document'>Removing the cursor from the document</a></li><li><a href='#inserting-the-cursor-into-the-document'>Inserting the cursor into the document</a></li><li><a href='#blinking-the-cursor'>Blinking the cursor</a></li>
         </div>
         <div id="middle">
             <h1><a name='-code-lurcheditor-code-class'></a><code>LurchEditor</code> class &nbsp;  <font size=-1><a href='#-code-lurcheditor-code-class'><span class="glyphicon glyphicon-link"></span></a></font></h1><p>A Lurch Editor is an HTML DIV (that has <em>not</em> been marked as
@@ -50,6 +51,12 @@ by numerical order, not dictionary (string) order.</p>
 argument if the instance is not to be made visible in a webpage.
 See the constructor of <a href="domedittracker.litcoffee.html">the ancestor <code>DOMEditTracker</code> class</a> for more information on the call to
 <code>super</code>.</p>
+<p>The constructor also starts a timer that&#39;s used to flash the cursor
+in the document, when the cursor is visible.  Only one timer is
+created, which governs all instances of this class, so we use the
+following class variable to store the timer id.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">cursorTimerId</span>: <span class="hljs-literal">null</span>
+</code></pre><p>Now, the constructor itself.</p>
 <pre class="hljs"><code>    <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">( div )</span> -&gt;</span>
         <span class="hljs-keyword">super</span> div
 </code></pre><p>It calls <code>cleanIds</code> on that DIV to remove from it any ids that
@@ -75,6 +82,10 @@ meaning that there is no cursor initially; the document doesn&#39;t
 have focus.  For more information on these variables, see the
 <a href="#cursor-support">section below on the cursor</a>.</p>
 <pre class="hljs"><code>        <span class="hljs-property">@cursor</span> = position : <span class="hljs-literal">null</span>, anchor : <span class="hljs-literal">null</span>
+</code></pre><p>Start the timer for blinking the cursor.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-attribute">LurchEditor</span>::cursorTimerId <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span>
+            <span class="hljs-attribute">LurchEditor</span>::cursorTimerId = setInterval \
+                <span class="hljs-attribute">LurchEditor</span>::blinkCursors, <span class="hljs-number">500</span>
 </code></pre><h2><a name='functions-used-by-the-constructor'></a>Functions used by the constructor &nbsp;  <font size=-1><a href='#functions-used-by-the-constructor'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Collect a list of all used ids in the given node, removing any
 ids that aren&#39;t just nonnegative integers.  This routine is used
 by the class&#39;s constructor as part of the procedure for
@@ -121,6 +132,9 @@ prototype.</p>
 represent the cursor position and anchor in the document.</p>
 <pre class="hljs"><code>    <span class="hljs-attribute">positionId</span>: <span class="hljs-string">'lurch-cursor-position'</span>
     <span class="hljs-attribute">anchorId</span>: <span class="hljs-string">'lurch-cursor-anchor'</span>
+</code></pre><p>The following class will be used for the elements that sit within
+the selection, i.e., those between the cursor position and anchor.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">selectionClass</span>: <span class="hljs-string">'lurch-cursor-selection'</span>
 </code></pre><p>The <code>cursor</code> member of this class contains two fields, <code>position</code>
 and <code>anchor</code>.</p>
 <ul>
@@ -132,7 +146,7 @@ selection; the cursor position and anchor are the same.</li>
 selection; it includes all leaves between the position and
 anchor.</li>
 </ul>
-<p>Because it is possible for the document state to become out-of-sync
+<h3><a name='keeping-member-variables-up-to-date-with-dom'></a>Keeping member variables up to date with DOM &nbsp;  <font size=-1><a href='#keeping-member-variables-up-to-date-with-dom'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>Because it is possible for the document state to become out-of-sync
 with these variables, we provide the following routine to update
 them.  Although in many cases it&#39;s possible to simply keep those
 member variables up-to-date, we have this routine in case a
@@ -151,20 +165,60 @@ to the document state.</p>
         <span class="hljs-keyword">while</span> walk <span class="hljs-keyword">and</span> <span class="hljs-keyword">not</span> <span class="hljs-property">@cursor</span>.anchor
             <span class="hljs-keyword">if</span> walk <span class="hljs-keyword">is</span> <span class="hljs-property">@element</span> <span class="hljs-keyword">then</span> <span class="hljs-property">@cursor</span>.anchor = start
             walk = walk.parentNode
-</code></pre><p>This class supports placing the cursor inside some HTML elements,
+        <span class="hljs-property">@cursor</span>.anchor = <span class="hljs-property">@cursor</span>.anchor <span class="hljs-keyword">or</span> <span class="hljs-property">@cursor</span>.position
+</code></pre><h3><a name='which-html-element-types-can-contain-the-cursor-'></a>Which HTML element types can contain the cursor? &nbsp;  <font size=-1><a href='#which-html-element-types-can-contain-the-cursor-'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>This class supports placing the cursor inside some HTML elements,
 but not others.  For isntance, you can place your cursor inside a
 SPAN, but not inside an HR.  The following variable local to this
 module stores the list of variables in which we can place the
 cursor.  (These were selected from <a href="http://www.w3schools.com/tags/">the full list on the w3schools
 website</a>.)</p>
-<pre class="hljs"><code>    <span class="hljs-attribute">elementsSupportingCursor</span>: t.toUpperCase() <span class="hljs-keyword">for</span> t <span class="hljs-keyword">in</span> <span class="hljs-string">'''
+<pre class="hljs"><code>    <span class="hljs-attribute">elementsSupportingCursor</span>: t.toUpperCase() <span class="hljs-keyword">for</span> t <span class="hljs-keyword">in</span> <span class="hljs-string">'
         a abbr acronym address article aside b bdi bdo big
         blockquote caption center cite code dd details dfn div
         dl dt em fieldset figcaption figure footer form header
         h1 h2 h3 h4 h5 h6 i kbd label legend li mark nav ol p
         pre q s samp section small span strong sub summary sup
-        td th time u ul var'''</span>.trim().split <span class="hljs-regexp">/\s+/</span>
-</code></pre><p>For placing the cursor within a node, we need to be able to compute
+        td th time u ul var'</span>.trim().split <span class="hljs-regexp">/\s+/</span>
+</code></pre><p>It is then very often that we want to translate a tag name that is
+on this list to a 1, and one that is not on this list to a 0.  The
+reason for this is because we are doing a lot of counting, below,
+of cursor positions, and elements that can contain the cursor get
+intersticial locations between their children counted as valid
+positions, and those that cannot contain the cursor don&#39;t.  So the
+following routine is handy to have.  It accepts either tag names
+or nodes, which it then converts into tag names.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">shouldBeCounted</span>: <span class="hljs-function"><span class="hljs-params">( tagName )</span> -&gt;</span>
+        <span class="hljs-keyword">if</span> tagName <span class="hljs-keyword">instanceof</span> Node
+            tagName = tagName.tagName
+        <span class="hljs-keyword">if</span> tagName <span class="hljs-keyword">in</span> <span class="hljs-attribute">LurchEditor</span>::elementsSupportingCursor \
+            <span class="hljs-keyword">then</span> <span class="hljs-number">1</span> <span class="hljs-keyword">else</span> <span class="hljs-number">0</span>
+</code></pre><h3><a name='selecting-text-nodes'></a>Selecting text nodes &nbsp;  <font size=-1><a href='#selecting-text-nodes'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>The easiest way to visually indicate the cursor selection in the
+document is by setting the background color of the items selected.
+The problem with this is that some items to be selected may be
+text nodes, which are not of the <code>HTMLElement</code> class, and thus
+cannot have style attributes, such as the background color.</p>
+<p>Thus it is sometimes useful to wrap text nodes in spans only for
+the purposes of highlighting them as part of the cursor selection.
+Such spans should be ignored when counting cursor positions and/or
+placing the cursor, in that they should not contribute any new
+positions, since they&#39;re not really part of the document, only its
+visual presentation.  We identify such nodes with this CSS class.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">selectionWrapClass</span>: <span class="hljs-string">'lurch-selection-wrap'</span>
+</code></pre><p>And we create three routines for creating, destroying, and
+detecting these temporary spans that wrap selected text nodes, as
+follows.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">wrapForSelection</span>: <span class="hljs-function"><span class="hljs-params">( textNode )</span> -&gt;</span>
+        wrap = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+        wrap.addClass <span class="hljs-attribute">LurchEditor</span>::selectionWrapClass
+        wrap.addClass <span class="hljs-attribute">LurchEditor</span>::selectionClass
+        textNode.parentNode?.replaceChild wrap, textNode
+        wrap.appendChild textNode
+    <span class="hljs-attribute">unwrapFromSelection</span>: <span class="hljs-function"><span class="hljs-params">( wrapSpan )</span> -&gt;</span>
+        textNode = wrapSpan.childNodes[<span class="hljs-number">0</span>]
+        wrapSpan.parentNode.replaceChild textNode, wrapSpan
+    <span class="hljs-attribute">isWrappedForSelection</span>: <span class="hljs-function"><span class="hljs-params">( node )</span> -&gt;</span>
+        node.hasClass? <span class="hljs-attribute">LurchEditor</span>::selectionWrapClass
+</code></pre><h3><a name='number-of-cursor-positions-within-a-given-node'></a>Number of cursor positions within a given node &nbsp;  <font size=-1><a href='#number-of-cursor-positions-within-a-given-node'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>For placing the cursor within a node, we need to be able to compute
 how many cursor positions are available within that node.  The
 following routine does so, recursively.</p>
 <p>Note that it computes only the number of cursor positions <em>inside</em>
@@ -178,6 +232,10 @@ inside the span in the previous paragraph has one inner location,
 because the positions before the h and after the i do not count as
 &quot;inside.&quot;</p>
 <pre class="hljs"><code>    <span class="hljs-attribute">cursorPositionsIn</span>: <span class="hljs-function"><span class="hljs-params">( node )</span> -&gt;</span>
+</code></pre><p>Confusing errors may arise if we do not verify this first:</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> node <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Node
+            <span class="hljs-keyword">throw</span> Error <span class="hljs-string">"cursorPositionsIn requires a Node as
+                the parameter, but got this: <span class="hljs-subst">#{node}</span>"</span>
 </code></pre><p>Text nodes can have the cursor before any character but the first,
 because, as described above, we are counting only the cursor
 positions <em>inside</em> the node.  For text nodes with no content, this
@@ -185,6 +243,12 @@ has the funny consequence of giving -1 cursor positions, but that
 is acceptable.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">if</span> node <span class="hljs-keyword">instanceof</span> Text
             node.length - <span class="hljs-number">1</span>
+</code></pre><p>Another special case is that of text nodes that have been wrapped
+for selection, <a href="#selecting-text-nodes">as described above</a>.  In
+that case, we simply ignore the outer shell, treating the node as
+if it were the one text node inside it.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@isWrappedForSelection</span> node
+            <span class="hljs-property">@cursorPositionsIn</span> node.childNodes[<span class="hljs-number">0</span>]
 </code></pre><p>Next we handle the two subcases of nodes without children.</p>
 <p>Some nodes with no children are only temporarily childless; e.g.,
 an empty span can contain the cursor and permit typing within it.
@@ -194,9 +258,7 @@ immediately inside the node.</p>
 cursor (e.g., a horizontal rule, an image, etc.).  Such nodes have
 no cursor positions inside them.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> node.childNodes.length <span class="hljs-keyword">is</span> <span class="hljs-number">0</span>
-            <span class="hljs-keyword">if</span> node.tagName <span class="hljs-keyword">in</span> \
-            <span class="hljs-attribute">LurchEditor</span>::elementsSupportingCursor <span class="hljs-keyword">then</span> <span class="hljs-number">1</span> \
-            <span class="hljs-keyword">else</span> <span class="hljs-number">0</span>
+            <span class="hljs-property">@shouldBeCounted</span> node
 </code></pre><p>Nodes with children have a character count that depends on the
 character counts of the children.  We sum the character counts of
 the children, which accounts for all cursor positions strictly
@@ -206,15 +268,323 @@ or after all children.  There are $n+1$ of them, if $n$ is the
 number of children, because every child has a valid position before
 it, and the last child also has one additional valid position after
 it.</p>
+<p>Note that as we loop through children, we ignore the cursor and
+the anchor, because they are not to be treated as &quot;part of the
+document&quot; in this sense.</p>
 <pre class="hljs"><code>        <span class="hljs-keyword">else</span>
-            result = node.childNodes.length + <span class="hljs-number">1</span>
-            <span class="hljs-keyword">for</span> child, index <span class="hljs-keyword">in</span> node.childNodes
-                result += <span class="hljs-property">@cursorPositionsIn</span> child
+            interstice = <span class="hljs-property">@shouldBeCounted</span> node
+            result = interstice
+            <span class="hljs-keyword">for</span> child, index <span class="hljs-keyword">in</span> <span class="hljs-attribute">Array</span>::slice.apply \
+            node.childNodes
+                id = child.getAttribute? <span class="hljs-string">'id'</span>
+                <span class="hljs-keyword">if</span> id <span class="hljs-keyword">isnt</span> <span class="hljs-attribute">LurchEditor</span>::positionId <span class="hljs-keyword">and</span>
+                   id <span class="hljs-keyword">isnt</span> <span class="hljs-attribute">LurchEditor</span>::anchorId
+                    result += interstice +
+                        <span class="hljs-property">@cursorPositionsIn</span> child
             result
+</code></pre><h3><a name='detecting-a-node-39-s-cursor-position'></a>Detecting a node&#39;s cursor position &nbsp;  <font size=-1><a href='#detecting-a-node-39-s-cursor-position'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>We will primarily use the routines in this section for placing and
+removing the cursor itself, as a node in the document.  But these
+can be thought of independently of that application, and are thus
+expressed independently here.</p>
+<p>Node A has a cursor position in an ancestor node B if we think of
+A as taking up no space in the DOM, but as being one of the
+interstices between other DOM nodes.  Because the routine defined
+above, <code>cursorPositionsIn</code>, counts the interstices between both
+nodes and characters, we can then ask at which of those interstices
+does the imagined-empty version of A sit?  That answer is its
+cursor position, and this notion makes sense when we imagine A to
+actually be a cursor, which takes up no space in the document, and
+always sits at one of these intersticial locations.</p>
+<p>The following routine tells us the cursor position of the given
+node within any given ancestor.  The ancestor defaults to this
+editor&#39;s root div if not otherwise specified.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">cursorPositionOf</span>: <span class="hljs-function"><span class="hljs-params">( node, ancestor = <span class="hljs-property">@getElement</span>() )</span> -&gt;</span>
+</code></pre><p>First we need to know the cursor position of the node within its
+own parent node.  Thus without a parent node, we cannot proceed.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> node.parentNode <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>
+</code></pre><p>To find that position, we add up the size of every earlier sibling,
+plus one for the interstice before each sibling</p>
+<pre class="hljs"><code>        positionInParent = <span class="hljs-number">0</span>
+        sibling = node.parentNode.childNodes[<span class="hljs-number">0</span>]
+        interstice = <span class="hljs-property">@shouldBeCounted</span> node.parentNode
+        <span class="hljs-keyword">while</span> sibling <span class="hljs-keyword">isnt</span> node
+            id = sibling.getAttribute? <span class="hljs-string">'id'</span>
+            <span class="hljs-keyword">if</span> id <span class="hljs-keyword">isnt</span> <span class="hljs-attribute">LurchEditor</span>::positionId <span class="hljs-keyword">and</span>
+               id <span class="hljs-keyword">isnt</span> <span class="hljs-attribute">LurchEditor</span>::anchorId
+                positionInParent +=
+                    interstice + <span class="hljs-property">@cursorPositionsIn</span> sibling
+            sibling = sibling.nextSibling
+</code></pre><p>If our parent is the ancestor in question, we&#39;re done.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> node.parentNode <span class="hljs-keyword">is</span> ancestor
+            <span class="hljs-keyword">return</span> positionInParent
+</code></pre><p>Otherwise, recur up to the parent.  We may add 1 here because of
+the intersticial point before the parent node, which will not be
+counted as part of the parent&#39;s earlier siblings sizes, in the
+recursion.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">return</span> positionInParent +
+            ( <span class="hljs-property">@shouldBeCounted</span> node.parentNode.parentNode ) +
+            <span class="hljs-property">@cursorPositionOf</span> node.parentNode, ancestor
+</code></pre><p>The following convenience methods simply calls the previous one on
+the cursor or anchor, respectively.  If there is no cursor or
+anchor, these return -1.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">cursorPosition</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-property">@updateCursor</span>()
+        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span> <span class="hljs-keyword">unless</span> <span class="hljs-property">@cursor</span>.position
+        <span class="hljs-property">@cursorPositionOf</span> <span class="hljs-property">@cursor</span>.position
+    <span class="hljs-attribute">anchorPosition</span>:<span class="hljs-function"> -&gt;</span>
+        <span class="hljs-property">@updateCursor</span>()
+        <span class="hljs-keyword">return</span> -<span class="hljs-number">1</span> <span class="hljs-keyword">unless</span> <span class="hljs-property">@cursor</span>.anchor
+        <span class="hljs-property">@cursorPositionOf</span> <span class="hljs-property">@cursor</span>.anchor
+</code></pre><h3><a name='inserting-a-node-at-a-given-position'></a>Inserting a node at a given position &nbsp;  <font size=-1><a href='#inserting-a-node-at-a-given-position'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>As in the previous section, this will most often be useful when
+moving the cursor; we will be able to insert it anywhere in the
+document that we want to.  But it is phrased here in general terms,
+inserting any given node at any given cursor position.</p>
+<p>Because the routines defined above assign integer indices (cursor
+positions) to the interstices between DOM elements, and characters
+in text nodes, we can use those indices to tell the following
+routine where to insert new nodes.</p>
+<p>The <code>toInsert</code> parameter is the node to insert.  The <code>position</code>
+parameter must be an integer, the cursor position at which to
+insert; it defaults to zero, meaning insert at the very beginning.
+The <code>inNode</code> parameter is the context in which the position should
+be interpreted.  This defaults to the root element for this editor.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">insertNodeAt</span>: ( toInsert, position = <span class="hljs-number">0</span>,
+                    inNode = <span class="hljs-property">@getElement</span><span class="hljs-function"><span class="hljs-params">()</span> ) -&gt;</span>
+</code></pre><p>Before beginning the main work of this routine, we handle the
+special case of text nodes wrapped for selection,
+<a href="#selecting-text-nodes">as described above</a>.  If this routine has
+been called on such a node, we simply skip the wrapper entirely and
+immediately push the recursion inside, because the wrapper is
+supposed to be invisible.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> <span class="hljs-property">@isWrappedForSelection</span> inNode
+            <span class="hljs-keyword">return</span> <span class="hljs-property">@insertNodeAt</span> toInsert, position,
+                inNode.childNodes[<span class="hljs-number">0</span>]
+</code></pre><p>The only kind of node we support that has cursor positions in it
+but that cannot contain child nodes is a Text node.  For it, we
+split the text node if necessary.  This is the base case.</p>
+<p>Recall that position 0 inside a text node is actually after the
+first character, because that is the first position <em>inside</em>.  Even
+so, we include boundary cases just to be safe.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> inNode <span class="hljs-keyword">instanceof</span> Text
+            <span class="hljs-keyword">if</span> position + <span class="hljs-number">1</span> &lt;= <span class="hljs-number">0</span>
+                inNode.parentNode.insertBefore toInsert,
+                    inNode
+            <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> position + <span class="hljs-number">1</span> &gt;= inNode.textContent.length
+                inNode.parentNode.appendChild toInsert
+            <span class="hljs-keyword">else</span>
+                split = inNode.splitText position + <span class="hljs-number">1</span>
+                inNode.parentNode.insertBefore toInsert,
+                    split
+            <span class="hljs-keyword">return</span>
+</code></pre><p>For the recursive case, we consider HTML elements that can have
+children, and we look at their children.</p>
+<pre class="hljs"><code>        interstice = <span class="hljs-property">@shouldBeCounted</span> inNode
+        count = <span class="hljs-number">0</span>
+        <span class="hljs-keyword">for</span> child <span class="hljs-keyword">in</span> <span class="hljs-attribute">Array</span>::slice.apply inNode.childNodes
+</code></pre><p>The interstices between them fall at various indices.  If any such
+index matches the given <code>position</code>, then we insert the new cursor
+at that interstice.  If not, then we recur on the child which
+contains the <code>position</code>.  For nodes that cannot contain the cursor
+(which means <code>interstice</code> will be 0) we skip this step, because we
+cannot insert the cursor here.</p>
+<p>Is the interstice before the current child the one where we&#39;re
+supposed to insert the thing?  And are we permitted to do so?</p>
+<pre class="hljs"><code>            <span class="hljs-keyword">if</span> interstice &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">and</span> count <span class="hljs-keyword">is</span> position
+                inNode.insertBefore toInsert, child
+                <span class="hljs-keyword">return</span>
+</code></pre><p>If this child is the cursor or anchor, skip over it.</p>
+<pre class="hljs"><code>            id = child.getAttribute? <span class="hljs-string">'id'</span>
+            <span class="hljs-keyword">if</span> id <span class="hljs-keyword">is</span> <span class="hljs-attribute">LurchEditor</span>::positionId <span class="hljs-keyword">or</span>
+               id <span class="hljs-keyword">is</span> <span class="hljs-attribute">LurchEditor</span>::anchorId <span class="hljs-keyword">then</span> <span class="hljs-keyword">continue</span>
+</code></pre><p>No, so add 1 to count if needed, to record that interstice.  Then
+see if the child itself contains the cursor.  If so, recur on the
+child.</p>
+<pre class="hljs"><code>            count += interstice
+            size = <span class="hljs-property">@cursorPositionsIn</span> child
+            <span class="hljs-keyword">if</span> position &lt; count + size
+                <span class="hljs-property">@insertNodeAt</span> toInsert, position - count, child
+                <span class="hljs-keyword">return</span>
+            count += size
+</code></pre><p>If none of that succeeded, and yet the current node is permitted to
+contain the cursor, then place the object at the end of the list
+of children.  This assumes that the routine was not called with too
+large a cursor position; if it was, this caps it at the maximum.</p>
+<p>This includes the case where the element has no children, and <em>any</em>
+position was given, valid or otherwise.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> interstice &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">then</span> inNode.appendChild toInsert
+</code></pre><h3><a name='removing-the-cursor-from-the-document'></a>Removing the cursor from the document &nbsp;  <font size=-1><a href='#removing-the-cursor-from-the-document'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>There are times when the cursor (and its anchor, and any selection)
+needs to be removed from the document.  For example, one such time
+is when the document loses focus.  This function accomplishes that.</p>
+<p>When this routine finishes, it normalizes the document, because the
+cursor may have been splitting two text nodes, and so its absence
+permits them to unite.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">removeCursor</span>:<span class="hljs-function"> -&gt;</span>
+</code></pre><p>First, let&#39;s be sure our member variables about the cursor are
+up-to-date.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@updateCursor</span>()
+</code></pre><p>Remove the cursor and its anchor from the document, setting the
+variables that track them to null.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@cursor</span>.position?.remove()
+        <span class="hljs-property">@cursor</span>.anchor?.remove()
+        <span class="hljs-property">@cursor</span>.position = <span class="hljs-property">@cursor</span>.anchor = <span class="hljs-literal">null</span>
+</code></pre><p>Remove the selection class from anything that had it.</p>
+<pre class="hljs"><code>        selection = <span class="hljs-attribute">Array</span>::slice.apply \
+            <span class="hljs-property">@element</span>.getElementsByClassName \
+            <span class="hljs-attribute">LurchEditor</span>::selectionClass
+        <span class="hljs-keyword">for</span> element <span class="hljs-keyword">in</span> selection
+            <span class="hljs-keyword">if</span> <span class="hljs-property">@isWrappedForSelection</span> element
+                <span class="hljs-property">@unwrapFromSelection</span> element
+            <span class="hljs-keyword">else</span>
+                element.removeClass <span class="hljs-attribute">LurchEditor</span>::selectionClass
+</code></pre><p>Normalize the whole document.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@getElement</span>()?.normalize()
+</code></pre><h3><a name='inserting-the-cursor-into-the-document'></a>Inserting the cursor into the document &nbsp;  <font size=-1><a href='#inserting-the-cursor-into-the-document'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>To insert the cursor into the document, we first remove it, its
+anchor, and any existing selection, then re-insert those objects
+in the new positions if needed.</p>
+<p>If no cursor position is given, we default to using the very
+beginning of the document.  If no value is given for whether or not
+to also move the anchor, we assume that we should move it also.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">placeCursor</span>: <span class="hljs-function"><span class="hljs-params">( position = <span class="hljs-number">0</span>, moveAnchor = <span class="hljs-literal">yes</span> )</span> -&gt;</span>
+</code></pre><p>Record the positions of the existing anchor, then remove both the
+cursor and the anchor.  This also removes any existing selection.</p>
+<pre class="hljs"><code>        anchorIndex = <span class="hljs-property">@anchorPosition</span>() <span class="hljs-comment"># calls updateCursor</span>
+        <span class="hljs-property">@removeCursor</span>()
+</code></pre><p>The cursor is simply a span with the id declared
+<a href="#cursor-support">earlier</a>.</p>
+<pre class="hljs"><code>        cursor = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+        cursor.setAttribute <span class="hljs-string">'id'</span>, <span class="hljs-attribute">LurchEditor</span>::positionId
+</code></pre><p>Now call the routine defined earlier for inserting arbitrary nodes
+at a given cursor position, passing it a newly-created cursor,
+which we also store in the member variables for both cursor and
+anchor.</p>
+<pre class="hljs"><code>        <span class="hljs-property">@insertNodeAt</span> cursor, position
+        <span class="hljs-property">@cursor</span>.position = cursor
+</code></pre><p>Now we need to decide whether the anchor should be the same as the
+cursor.  There are two cases in which this should be so.</p>
+<ol>
+<li>when the user explicitly said so, with <code>moveAnchor</code></li>
+<li><p>when there was no recorded anchor position beforehand,
+so there is no sense in which we could put the anchor back
+In eitehr of these cases, we just set the anchor equal to the
+cursor, and stop.</p>
+<pre class="hljs"><code>    <span class="hljs-keyword">if</span> moveAnchor <span class="hljs-keyword">or</span> anchorIndex <span class="hljs-keyword">is</span> -<span class="hljs-number">1</span>
+        <span class="hljs-property">@cursor</span>.anchor = <span class="hljs-property">@cursor</span>.position
+        <span class="hljs-keyword">return</span>
+</code></pre></li>
+</ol>
+<p>Otherwise, we create a separate anchor object and place it where it
+was before the cursor was moved.</p>
+<pre class="hljs"><code>        anchor = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'span'</span>
+        anchor.setAttribute <span class="hljs-string">'id'</span>, <span class="hljs-attribute">LurchEditor</span>::anchorId
+        <span class="hljs-property">@insertNodeAt</span> anchor, anchorIndex
+        <span class="hljs-property">@cursor</span>.anchor = anchor
+</code></pre><p>If that happens to be immediately next to the cursor, then we
+remove the anchor, and set it equal to the cursor, and we can stop
+there.  (Further work in this routine is on the cursor selection,
+but there is none when the cursor equals the anchor.)</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">if</span> anchor.previousSibling <span class="hljs-keyword">is</span> cursor <span class="hljs-keyword">or</span>
+           anchor.nextSibling <span class="hljs-keyword">is</span> cursor
+            anchor.remove()
+            <span class="hljs-property">@cursor</span>.anchor = <span class="hljs-property">@cursor</span>.position
+            <span class="hljs-keyword">return</span>
+</code></pre><p>Now we must highlight the selection.  Determine which comes sooner,
+the cursor or its anchor.</p>
+<pre class="hljs"><code>        [ marker1, marker2 ] = <span class="hljs-keyword">if</span> position &lt; anchorIndex <span class="hljs-keyword">then</span> \
+            [ cursor, anchor ] <span class="hljs-keyword">else</span> [ anchor, cursor ]
+</code></pre><p>We wish to walk from <code>marker1</code> to <code>marker2</code>, highlighting all the
+elements in between.  This takes a few auxiliary routines.  First,
+one for moving one node to the right in the DOM tree, without ever
+going past the boundary of the document.</p>
+<pre class="hljs"><code>        <span class="hljs-function"><span class="hljs-title">stepRight</span> = <span class="hljs-params">( fromHere )</span> =&gt;</span>
+            <span class="hljs-keyword">if</span> fromHere <span class="hljs-keyword">is</span> <span class="hljs-literal">null</span> <span class="hljs-keyword">or</span> fromHere <span class="hljs-keyword">is</span> <span class="hljs-property">@getElement</span>()
+                <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>
+            <span class="hljs-keyword">return</span> fromHere.nextSibling <span class="hljs-keyword">or</span>
+                   stepRight fromHere.parentNode
+</code></pre><p>Next we need an auxiliary routine that adds the selection class to
+every element within the given node, up to but not including the
+given stopping point.  It returns whether it found the stopping
+point <code>stopHere</code> within the given node <code>inThis</code>, as a boolean.</p>
+<p>It also accrues a list of all text nodes that it was unable to
+highlight (because they cannot have a CSS selection class applied
+to them, not being <code>HTMLElement</code>s).  This way, at the end, all such
+text nodes can be wrapped in selection spans,
+<a href="#selecting-text-nodes">as described above</a>.</p>
+<pre class="hljs"><code>        textNodesToSelect = []
+        <span class="hljs-function"><span class="hljs-title">selectUpTo</span> = <span class="hljs-params">( inThis, stopHere )</span> -&gt;</span>
+            <span class="hljs-keyword">if</span> inThis <span class="hljs-keyword">is</span> stopHere <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> <span class="hljs-literal">yes</span>
+            <span class="hljs-keyword">if</span> inThis <span class="hljs-keyword">not</span> <span class="hljs-keyword">instanceof</span> Element
+                <span class="hljs-keyword">if</span> inThis <span class="hljs-keyword">instanceof</span> Text
+                    textNodesToSelect.push inThis
+                <span class="hljs-keyword">return</span> <span class="hljs-literal">no</span>
+            <span class="hljs-keyword">for</span> child <span class="hljs-keyword">in</span> <span class="hljs-attribute">Array</span>::slice.apply inThis.childNodes
+                <span class="hljs-keyword">if</span> selectUpTo child, stopHere
+                    <span class="hljs-keyword">return</span> <span class="hljs-literal">yes</span>
+            inThis.addClass <span class="hljs-attribute">LurchEditor</span>::selectionClass
+            <span class="hljs-literal">no</span>
+</code></pre><p>Now we apply those two routines to walk from <code>marker1</code> to <code>marker2</code>
+and highlighte everything in between as the selection.</p>
+<pre class="hljs"><code>        walk = marker1
+        <span class="hljs-keyword">while</span> walk = stepRight walk
+            <span class="hljs-keyword">if</span> selectUpTo walk, marker2 <span class="hljs-keyword">then</span> <span class="hljs-keyword">break</span>
+</code></pre><p>Now all text nodes that need to be selected have been recorded in
+the <code>textNodesToSelect</code> array, so we wrap each one in a selection
+span, <a href="#selecting-text-nodes">as described above</a>.  We only wrap
+one if its parent is not already selected.</p>
+<pre class="hljs"><code>        <span class="hljs-keyword">for</span> textNode <span class="hljs-keyword">in</span> textNodesToSelect
+            <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> textNode.parentNode?.hasClass \
+            <span class="hljs-attribute">LurchEditor</span>::selectionClass
+                <span class="hljs-property">@wrapForSelection</span> textNode
+</code></pre><p>We then create the following convenience methods for moving the
+cursor around.  They simply add the given delta to the cursor
+position, with or without moving the anchor, as indicated by the
+second parameter.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">moveCursor</span>: <span class="hljs-function"><span class="hljs-params">( delta = <span class="hljs-number">0</span>, moveAnchor = <span class="hljs-literal">yes</span> )</span> -&gt;</span>
+        <span class="hljs-built_in">console</span>.log <span class="hljs-string">'moveCursor'</span>, <span class="hljs-property">@cursorPosition</span>()
+        <span class="hljs-keyword">if</span> ( current = <span class="hljs-property">@cursorPosition</span>() ) <span class="hljs-keyword">is</span> -<span class="hljs-number">1</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span>
+        <span class="hljs-built_in">console</span>.log <span class="hljs-string">'current'</span>, current
+        <span class="hljs-keyword">if</span> ( newpos = current + delta ) &lt; <span class="hljs-number">0</span> <span class="hljs-keyword">then</span> newpos = <span class="hljs-number">0</span>
+        <span class="hljs-built_in">console</span>.log <span class="hljs-string">'newpos'</span>, newpos
+        <span class="hljs-property">@placeCursor</span> newpos, moveAnchor
+        <span class="hljs-built_in">console</span>.log <span class="hljs-string">'done'</span>
+</code></pre><h3><a name='blinking-the-cursor'></a>Blinking the cursor &nbsp;  <font size=-1><a href='#blinking-the-cursor'><span class="glyphicon glyphicon-link"></span></a></font></h3><p>The following callback is a &quot;class method,&quot; because it is a timer&#39;s
+callback, and therefore won&#39;t have a <code>this</code> object defined.  We
+therefore apply it to every existing <code>LurchEditor</code> instance.  We
+find a list of them by utilizing the fact that the parent class,
+<code>DOMEditTracker</code>, keeps a list of all its instances, which we can
+filter to just those that are also <code>LurchEditor</code>s.</p>
+<p>The following CSS class will be used for the element that
+represents the cursor position in the document.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">cursorVisible</span>: <span class="hljs-string">'lurch-cursor-visible'</span>
+</code></pre><p>This routine adds/removes a CSS class that makes the cursor
+visible, and it does so in all of the child nodes of the root div
+for each <code>LurchEditor</code> instance.  Because this happens regularly,
+as set up by a repeating timer in the constructor, all cursors end
+up flashing, as desired, so long as the CSS class given above
+appears in the page stylesheet with an appropriate definition.</p>
+<pre class="hljs"><code>    <span class="hljs-attribute">blinkCursors</span>: <span class="hljs-function"><span class="hljs-params">( onOff = <span class="hljs-string">'toggle'</span> )</span> -&gt;</span>
+        cssClass = <span class="hljs-attribute">LurchEditor</span>::cursorVisible
+        <span class="hljs-keyword">for</span> LE <span class="hljs-keyword">in</span> DOMEditTracker.instances
+            <span class="hljs-keyword">if</span> LE <span class="hljs-keyword">instanceof</span> LurchEditor
+                LE.updateCursor()
+                <span class="hljs-keyword">continue</span> <span class="hljs-keyword">unless</span> LE.cursor.position
+</code></pre><p>Now that we&#39;re about to blink the cursor, we first ensure that the
+change we make will not be recorded on the undo/redo stack.</p>
+<pre class="hljs"><code>                oldValue = LE.stackRecording
+                LE.stackRecording = <span class="hljs-literal">no</span>
+</code></pre><p>Now we can go ahead and change the cursor visibility, then restore
+the <code>@stackRecording</code> member&#39;s old value.</p>
+<pre class="hljs"><code>                <span class="hljs-keyword">if</span> onOff <span class="hljs-keyword">is</span> <span class="hljs-string">'toggle'</span>
+                    onOff = <span class="hljs-keyword">not</span> LE.cursor.position.hasClass \
+                        cssClass
+                <span class="hljs-keyword">if</span> onOff
+                    LE.cursor.position.addClass cssClass
+                <span class="hljs-keyword">else</span>
+                    LE.cursor.position.removeClass cssClass
+                LE.stackRecording = oldValue
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li><li><a href='utils-spec.litcoffee.html'>utils-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>

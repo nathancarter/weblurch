@@ -10,6 +10,8 @@
     ($(runButton)).on('click', runButtonClicked);
     ($(resetButton)).on('click', resetButtonClicked);
     ($(downloadButton)).on('click', downloadButtonClicked);
+    ($(copyButton)).on('click', copyButtonClicked);
+    ($(pasteButton)).on('click', pasteButtonClicked);
     ($(undoButton)).on('click', undoButtonClicked);
     ($(runFullHistoryButton)).on('click', runFullHistoryButtonClicked);
     ($(saveStateCommentsButton)).on('click', saveStateCommentsButtonClicked);
@@ -145,6 +147,36 @@
     link.setAttribute('href', URL.createObjectURL(blob));
     link.setAttribute('download', "" + (testNameInput.value || 'test-history') + ".json");
     return link.click();
+  };
+
+  window.copyButtonClicked = function(event) {
+    var step;
+    return window.prompt('Press Ctrl+C, then Enter', JSON.stringify((function() {
+      var _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = testHistory.length; _i < _len; _i++) {
+        step = testHistory[_i];
+        if (step.code !== '') {
+          _results.push(step.code);
+        }
+      }
+      return _results;
+    })()));
+  };
+
+  window.pasteButtonClicked = function(event) {
+    var command, got, _i, _len, _ref;
+    got = window.prompt('Press Ctrl+V, then Enter', '');
+    try {
+      _ref = JSON.parse(got);
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        command = _ref[_i];
+        runCodeInModel(command);
+      }
+      return updateView();
+    } catch (_error) {
+      return alert('That was not a valid command history.');
+    }
   };
 
   window.resetButtonClicked = function(event) {

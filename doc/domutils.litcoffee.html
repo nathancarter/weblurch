@@ -21,7 +21,7 @@
 <p><a href='#utility-functions-for-working-with-the-dom'>Utility functions for working with the DOM</a></p><ul>
 <li><a href='#address'>Address</a></li><li><a href='#index'>Index</a></li><li><a href='#serialization'>Serialization</a></li><ul>
 <li><a href='#from-dom-nodes-to-objects'>From DOM Nodes to objects</a></li><li><a href='#from-objects-to-dom-nodes'>From objects to DOM Nodes</a></li></ul>
-<li><a href='#change-events'>Change events</a></li><li><a href='#next-and-previous-leaves'>Next and previous leaves</a></li>
+<li><a href='#change-events'>Change events</a></li><li><a href='#next-and-previous-leaves'>Next and previous leaves</a></li><li><a href='#more-convenient-code-remove-code-method'>More convenient <code>remove</code> method</a></li><li><a href='#adding-classes-to-and-removing-classes-from-elements'>Adding classes to and removing classes from elements</a></li>
         </div>
         <div id="middle">
             <h1><a name='utility-functions-for-working-with-the-dom'></a>Utility functions for working with the DOM &nbsp;  <font size=-1><a href='#utility-functions-for-working-with-the-dom'><span class="glyphicon glyphicon-link"></span></a></font></h1><h2><a name='address'></a>Address &nbsp;  <font size=-1><a href='#address'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>The address of a node <code>N</code> in an ancestor node <code>M</code> is an array <code>a</code>
@@ -189,11 +189,10 @@ prototype, so changes happen in both, actually.)</p>
 before, but with the changes explained below.  The following code
 just performs the modification to each of the methods listed in
 the following string.</p>
-<pre class="hljs"><code><span class="hljs-string">'''
-appendChild insertBefore normalize removeAttribute
+<pre class="hljs"><code><span class="hljs-string">'appendChild insertBefore normalize removeAttribute
 removeAttributeNode removeChild replaceChild
 setAttribute setAttributeNode
-'''</span>.split<span class="hljs-function"><span class="hljs-params">( <span class="hljs-regexp">/\s+/</span> )</span>.<span class="hljs-title">map</span> <span class="hljs-params">( methodName )</span> -&gt;</span>
+'</span>.split<span class="hljs-function"><span class="hljs-params">( <span class="hljs-regexp">/\s+/</span> )</span>.<span class="hljs-title">map</span> <span class="hljs-params">( methodName )</span> -&gt;</span>
 </code></pre><p>Compute whether the modificatio needs to take place in the Node
 prototype or the Element prototype, and then store the original
 value of the method for use from within our modified one.</p>
@@ -255,10 +254,35 @@ is documented.</p>
     <span class="hljs-keyword">while</span> walk.childNodes.length &gt; <span class="hljs-number">0</span>
         walk = walk.childNodes[walk.childNodes.length - <span class="hljs-number">1</span>]
     walk
+</code></pre><h2><a name='more-convenient-code-remove-code-method'></a>More convenient <code>remove</code> method &nbsp;  <font size=-1><a href='#more-convenient-code-remove-code-method'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>Some browsers provide the <code>remove</code> method in the <code>Node</code> prototype,
+but some do not.  To make things standard, I create the following
+member in the <code>Node</code> prototype.  It guarantees that for any node
+<code>N</code>, the call <code>N.remove()</code> has the same effect as the (more
+verbose and opaque) call <code>N.parentNode.removeChild N</code>.</p>
+<pre class="hljs"><code><span class="hljs-attribute">Node</span>::<span class="hljs-function"><span class="hljs-title">remove</span> = -&gt;</span> <span class="hljs-property">@parentNode</span>?.removeChild <span class="hljs-keyword">this</span>
+</code></pre><h2><a name='adding-classes-to-and-removing-classes-from-elements'></a>Adding classes to and removing classes from elements &nbsp;  <font size=-1><a href='#adding-classes-to-and-removing-classes-from-elements'><span class="glyphicon glyphicon-link"></span></a></font></h2><p>It is handy to have methods that add and remove CSS classes on
+HTML element instances.</p>
+<p>First, for checking if one is there:</p>
+<pre class="hljs"><code><span class="hljs-attribute">Element</span>::<span class="hljs-function"><span class="hljs-title">hasClass</span> = <span class="hljs-params">( name )</span> -&gt;</span>
+    classes = ( <span class="hljs-property">@getAttribute</span> <span class="hljs-string">'class'</span> )?.split <span class="hljs-regexp">/\s+/</span>
+    classes <span class="hljs-keyword">and</span> name <span class="hljs-keyword">in</span> classes
+</code></pre><p>Next, for adding a class to an element:</p>
+<pre class="hljs"><code><span class="hljs-attribute">Element</span>::<span class="hljs-function"><span class="hljs-title">addClass</span> = <span class="hljs-params">( name )</span> -&gt;</span>
+    classes = ( ( <span class="hljs-property">@getAttribute</span> <span class="hljs-string">'class'</span> )?.split <span class="hljs-regexp">/\s+/</span> ) <span class="hljs-keyword">or</span> []
+    <span class="hljs-keyword">if</span> name <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> classes <span class="hljs-keyword">then</span> classes.push name
+    <span class="hljs-property">@setAttribute</span> <span class="hljs-string">'class'</span>, classes.join <span class="hljs-string">' '</span>
+</code></pre><p>Last, for removing one:</p>
+<pre class="hljs"><code><span class="hljs-attribute">Element</span>::<span class="hljs-function"><span class="hljs-title">removeClass</span> = <span class="hljs-params">( name )</span> -&gt;</span>
+    classes = ( ( <span class="hljs-property">@getAttribute</span> <span class="hljs-string">'class'</span> )?.split <span class="hljs-regexp">/\s+/</span> ) <span class="hljs-keyword">or</span> []
+    classes = ( c <span class="hljs-keyword">for</span> c <span class="hljs-keyword">in</span> classes <span class="hljs-keyword">when</span> c <span class="hljs-keyword">isnt</span> name )
+    <span class="hljs-keyword">if</span> classes.length &gt; <span class="hljs-number">0</span>
+        <span class="hljs-property">@setAttribute</span> <span class="hljs-string">'class'</span>, classes.join <span class="hljs-string">' '</span>
+    <span class="hljs-keyword">else</span>
+        <span class="hljs-property">@removeAttribute</span> <span class="hljs-string">'class'</span>
 </code></pre>
         </div>
         <div id="right">
-            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
+            <h3 align=center>Navigation</h3><br><h3><a href='index.md.html'>webLurch home</a></h3><p>.</p><ul><li><a href='buildutils.litcoffee.html'>buildutils.litcoffee</a></li><li><a href='cake.litcoffee.html'>cake.litcoffee</a></li></ul><p>./app</p><ul><li><a href='../app/index.html'>index.html</a></li></ul><p>./doc</p><ul><li><a href='overview.md.html'>overview.md</a></li><li><a href='plan.md.html'>plan.md</a></li><li><a href='progress.md.html'>progress.md</a></li><li><a href='test-app-help.md.html'>test-app-help.md</a></li><li><a href='test-results.md.html'>test-results.md</a></li></ul><p>./src</p><ul><li><a href='domeditaction.litcoffee.html'>domeditaction.litcoffee</a></li><li><a href='domedittracker.litcoffee.html'>domedittracker.litcoffee</a></li><li><a href='domutils.litcoffee.html'>domutils.litcoffee</a></li><li><a href='lurcheditor.litcoffee.html'>lurcheditor.litcoffee</a></li><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li></ul><p>./test</p><ul><li><a href='all-histories-spec.litcoffee.html'>all-histories-spec.litcoffee</a></li><li><a href='basic-spec.litcoffee.html'>basic-spec.litcoffee</a></li><li><a href='domeditaction-spec.litcoffee.html'>domeditaction-spec.litcoffee</a></li><li><a href='domedittracker-spec.litcoffee.html'>domedittracker-spec.litcoffee</a></li><li><a href='domutils-spec.litcoffee.html'>domutils-spec.litcoffee</a></li><li><a href='lurcheditor-spec.litcoffee.html'>lurcheditor-spec.litcoffee</a></li><li><a href='phantom-utils.litcoffee.html'>phantom-utils.litcoffee</a></li><li><a href='undoredo-spec.litcoffee.html'>undoredo-spec.litcoffee</a></li><li><a href='utils-spec.litcoffee.html'>utils-spec.litcoffee</a></li></ul><p>./testapp</p><ul><li><a href='utils.litcoffee.html'>utils.litcoffee</a></li><li><a href='../testapp/index.html'>index.html</a></li></ul>
         </div>
     </body>
 </html>
