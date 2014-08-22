@@ -213,6 +213,39 @@ website](http://www.w3schools.com/tags/).)
             pre q s samp section small span strong sub summary sup
             td th time u ul var'.trim().split /\s+/
 
+### Selecting text nodes
+
+The easiest way to visually indicate the cursor selection in the
+document is by setting the background color of the items selected.
+The problem with this is that some items to be selected may be
+text nodes, which are not of the `HTMLElement` class, and thus
+cannot have style attributes, such as the background color.
+
+Thus it is sometimes useful to wrap text nodes in spans only for
+the purposes of highlighting them as part of the cursor selection.
+Such spans should be ignored when counting cursor positions and/or
+placing the cursor, in that they should not contribute any new
+positions, since they're not really part of the document, only its
+visual presentation.  We identify such nodes with this CSS class.
+
+        selectionWrapClass: 'lurch-selection-wrap'
+
+And we create three routines for creating, destroying, and
+detecting these temporary spans that wrap selected text nodes, as
+follows.
+
+        wrapForSelection: ( textNode ) ->
+            wrap = document.createElement 'span'
+            wrap.addClass LurchEditor::selectionWrapClass
+            wrap.addClass LurchEditor::selectionClass
+            textNode.parentNode?.replaceChild wrap, textNode
+            wrap.appendChild textNode
+        unwrapFromSelection: ( wrapSpan ) ->
+            textNode = wrapSpan.childNodes[0]
+            wrapSpan.parentNode.replaceChild textNode, wrapSpan
+        isSelectionWrap: ( node ) ->
+            node.hasClass? LurchEditor::selectionWrapClass
+
 ### Number of cursor positions within a given node
 
 For placing the cursor within a node, we need to be able to compute
@@ -489,8 +522,7 @@ Record the positions of the existing anchor, then remove both the
 cursor and the anchor.  This also removes any existing selection.
 
             @updateCursor()
-            anchorIndex = if @cursor.anchor then \
-                @cursorPositionOf @cursor.anchor else -1
+            anchorIndex = @anchorPosition()
             @removeCursor()
 
 The cursor is simply a span with the id declared

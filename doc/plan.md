@@ -25,10 +25,6 @@ correctly.
     * Address the design flaw mentioned at the end of
       [this test spec file](lurcheditor-spec.litcoffee.html) as
       follows.
-       * Create tools for
-          * wrapping text nodes in selection spans,
-          * unwrapping selection spans from around text nodes, and
-          * detecting when a node is a selection span.
        * Modify `cursorPositionsIn` to ignore selection spans, in
          the sense that it doesn't see their boundaries, but only
          their interior.
