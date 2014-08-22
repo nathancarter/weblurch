@@ -25,8 +25,6 @@ correctly.
     * Address the design flaw mentioned at the end of
       [this test spec file](lurcheditor-spec.litcoffee.html) as
       follows.
-       * Modify `insertNodeAt` to ignore selection spans, in the
-         same sense as `cursorPositionsIn`.
        * Modify `removeCursor` so that when it removes the
          selection, it also unwraps all selection spans.
        * Modify `placeCursor` so that it accumulates a list of all

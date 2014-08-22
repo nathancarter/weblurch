@@ -410,6 +410,17 @@ be interpreted.  This defaults to the root element for this editor.
         insertNodeAt: ( toInsert, position = 0,
                         inNode = @getElement() ) ->
 
+Before beginning the main work of this routine, we handle the
+special case of text nodes wrapped for selection,
+[as described above](#selecting-text-nodes).  If this routine has
+been called on such a node, we simply skip the wrapper entirely and
+immediately push the recursion inside, because the wrapper is
+supposed to be invisible.
+
+            if @isWrappedForSelection inNode
+                return @insertNodeAt toInsert, position,
+                    inNode.childNodes[0]
+
 As we start to recur down the DOM hierarchy, we first consider HTML
 elements that can have children.  For such nodes, we look at their
 children.
