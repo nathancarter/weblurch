@@ -914,12 +914,18 @@ one in the document.  The anchor must remain at position zero, and
 all elements between the two must have the selection class.
 
             selected = class : 'lurch-cursor-selection'
+            wrapped = class : 'lurch-selection-wrap
+                lurch-cursor-selection'
             copy = {
                 tagName : 'DIV'
                 attributes : { id : '0' }
                 children : [
                     anchor
-                    'text'
+                    {
+                        tagName : 'SPAN'
+                        attributes : wrapped
+                        children : [ 'text' ]
+                    }
                     {
                         tagName : 'BR'
                         attributes : selected
@@ -1031,17 +1037,19 @@ blinking.
                 window.LEcopy = LE.getElement().cloneNode true
 
 Verify that it got there, and is at position 2.  The anchor
-remains at position 4, and *unfortunately, because there are no
-elements between them, the text will not appear selected.  This
-reveals a design flaw because plain text cannot be selected
-unless it sits within an element.  This will need to be
-rethought.*
+remains at position 4, and the text between them has been wrapped
+in a span that lets it have the CSS style for the cursor
+selection.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children = [
                 'te'
                 cursor
-                'xt'
+                {
+                    tagName : 'SPAN'
+                    attributes : wrapped
+                    children : [ 'xt' ]
+                }
                 anchor
                 copy.children[1]
                 copy.children[2]

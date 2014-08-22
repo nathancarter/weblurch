@@ -614,9 +614,19 @@ every element within the given node, up to but not including the
 given stopping point.  It returns whether it found the stopping
 point `stopHere` within the given node `inThis`, as a boolean.
 
+It also accrues a list of all text nodes that it was unable to
+highlight (because they cannot have a CSS selection class applied
+to them, not being `HTMLElement`s).  This way, at the end, all such
+text nodes can be wrapped in selection spans,
+[as described above](#selecting-text-nodes).
+
+            textNodesToSelect = []
             selectUpTo = ( inThis, stopHere ) ->
                 if inThis is stopHere then return yes
-                if inThis not instanceof Element then return no
+                if inThis not instanceof Element
+                    if inThis instanceof Text
+                        textNodesToSelect.push inThis
+                    return no
                 for child in Array::slice.apply inThis.childNodes
                     if selectUpTo child, stopHere
                         return yes
@@ -629,6 +639,16 @@ and highlighte everything in between as the selection.
             walk = marker1
             while walk = stepRight walk
                 if selectUpTo walk, marker2 then break
+
+Now all text nodes that need to be selected have been recorded in
+the `textNodesToSelect` array, so we wrap each one in a selection
+span, [as described above](#selecting-text-nodes).  We only wrap
+one if its parent is not already selected.
+
+            for textNode in textNodesToSelect
+                if not textNode.parentNode?.hasClass \
+                LurchEditor::selectionClass
+                    @wrapForSelection textNode
 
 ### Blinking the cursor
 

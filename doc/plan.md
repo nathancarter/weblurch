@@ -22,12 +22,6 @@ also (of course) create unit tests verifying that it was completed
 correctly.
 
  * Implement the following cursor features in `LurchEditor`.
-    * Address the design flaw mentioned at the end of
-      [this test spec file](lurcheditor-spec.litcoffee.html) as
-      follows.
-       * Modify `placeCursor` so that it accumulates a list of all
-         text nodes that it would have liked to highlight, and then
-         at the end, it wraps them all in selection spans.
     * Add methods for moving the cursor by a given delta, with or
       without moving the anchor (defaults to moving it).
     * Add a method for querying the cursor position or anchor as an
