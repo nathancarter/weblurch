@@ -910,11 +910,38 @@ blinking.
                 window.LEcopy = LE.getElement().cloneNode true
 
 Verify that it got there, and is at position 15, which is the last
-one in the document.
+one in the document.  The anchor must remain at position zero, and
+all elements between the two must have the selection class.
 
-            copy = JSON.parse JSON.stringify initialConfiguration
-            copy.children.unshift anchor
-            copy.children.push cursor
+            selected = class : 'lurch-cursor-selection'
+            copy = {
+                tagName : 'DIV'
+                attributes : { id : '0' }
+                children : [
+                    anchor
+                    'text'
+                    {
+                        tagName : 'BR'
+                        attributes : selected
+                    }
+                    {
+                        tagName : 'SPAN'
+                        attributes : selected
+                        children : [
+                            {
+                                tagName : 'I'
+                                attributes : selected
+                                children : [ 'more' ]
+                            }
+                        ]
+                    }
+                    {
+                        tagName : 'B'
+                        attributes : selected
+                    }
+                    cursor
+                ]
+            }
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
             pageExpects ( -> LE.cursorPosition() ), 'toEqual', 15
             pageExpects ( -> LE.anchorPosition() ), 'toEqual', 0
@@ -928,16 +955,28 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there, and is at position 4.
+Verify that it got there, and is at position 4.  The anchor, too,
+has position 4, and no elements are selected.
 
-            copy = JSON.parse JSON.stringify initialConfiguration
-            copy.children = [
-                copy.children[0]
-                cursor
-                copy.children[1]
-                copy.children[2]
-                copy.children[3]
-            ]
+            copy = {
+                tagName : 'DIV'
+                attributes : { id : '0' }
+                children : [
+                    'text'
+                    cursor
+                    tagName : 'BR'
+                    {
+                        tagName : 'SPAN'
+                        children : [
+                            {
+                                tagName : 'I'
+                                children : [ 'more' ]
+                            }
+                        ]
+                    }
+                    tagName : 'B'
+                ]
+            }
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
             pageExpects ( -> LE.cursorPosition() ), 'toEqual', 4
             pageExpects ( -> LE.anchorPosition() ), 'toEqual', 4
@@ -951,17 +990,32 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there, and is at position 5.
+Verify that it got there, and is at position 5.  The anchor still
+has position 4 and the one element between them is selected.
 
-            copy = JSON.parse JSON.stringify initialConfiguration
-            copy.children = [
-                copy.children[0]
-                anchor
-                copy.children[1]
-                cursor
-                copy.children[2]
-                copy.children[3]
-            ]
+            copy = {
+                tagName : 'DIV'
+                attributes : { id : '0' }
+                children : [
+                    'text'
+                    anchor
+                    {
+                        tagName : 'BR'
+                        attributes : selected
+                    }
+                    cursor
+                    {
+                        tagName : 'SPAN'
+                        children : [
+                            {
+                                tagName : 'I'
+                                children : [ 'more' ]
+                            }
+                        ]
+                    }
+                    tagName : 'B'
+                ]
+            }
             pageExpects ( -> LEcopy.toJSON() ), 'toEqual', copy
             pageExpects ( -> LE.cursorPosition() ), 'toEqual', 5
             pageExpects ( -> LE.anchorPosition() ), 'toEqual', 4
@@ -976,7 +1030,12 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there, and is at position 2.
+Verify that it got there, and is at position 2.  The anchor
+remains at position 4, and *unfortunately, because there are no
+elements between them, the text will not appear selected.  This
+reveals a design flaw because plain text cannot be selected
+unless it sits within an element.  This will need to be
+rethought.*
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children = [
@@ -1002,7 +1061,8 @@ blinking.
                 LurchEditor::blinkCursors off
                 window.LEcopy = LE.getElement().cloneNode true
 
-Verify that it got there, and is at position 6.
+Verify that it got there, and is at position 6.  The anchor, too,
+is at position 6, and so no elements are selected.
 
             copy = JSON.parse JSON.stringify initialConfiguration
             copy.children[2].children = [

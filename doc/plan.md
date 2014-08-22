@@ -22,9 +22,8 @@ also (of course) create unit tests verifying that it was completed
 correctly.
 
  * Implement the following cursor features in `LurchEditor`.
-    * Add to the cursor motion routine the feature to highlight
-      everything between the cursor and the anchor as the
-      selection.  Then test that, too.
+    * Address the design flaw mentioned at the end of
+      [this test spec file](lurcheditor-spec.litcoffee.html).
     * Add methods for moving the cursor by a given delta, with or
       without moving the anchor (defaults to moving it).
     * Add a method for querying the cursor position or anchor as an

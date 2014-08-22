@@ -513,11 +513,10 @@ cursor.  There are two cases in which this should be so.
  1. when there was no recorded anchor position beforehand,
     so there is no sense in which we could put the anchor back
 In eitehr of these cases, we just set the anchor equal to the
-cursor, normalize, and stop.
+cursor, and stop.
 
             if moveAnchor or anchorIndex is -1
                 @cursor.anchor = @cursor.position
-                @getElement()?.normalize()
                 return
 
 Otherwise, we create a separate anchor object and place it where it
@@ -529,18 +528,53 @@ was before the cursor was moved.
             @cursor.anchor = anchor
 
 If that happens to be immediately next to the cursor, then we
-remove the anchor, and set it equal to the cursor.
+remove the anchor, and set it equal to the cursor, and we can stop
+there.  (Further work in this routine is on the cursor selection,
+but there is none when the cursor equals the anchor.)
+
             if anchor.previousSibling is cursor or
                anchor.nextSibling is cursor
                 anchor.remove()
                 @cursor.anchor = @cursor.position
+                return
 
-Finally, normalize.
+Now we must highlight the selection.  Determine which comes sooner,
+the cursor or its anchor.
 
-            @getElement()?.normalize()
+            [ marker1, marker2 ] = if position < anchorIndex then \
+                [ cursor, anchor ] else [ anchor, cursor ]
 
-*We must also select everything between the anchor and cursor here,
-but the code for that is not yet implemented.*
+We wish to walk from `marker1` to `marker2`, highlighting all the
+elements in between.  This takes a few auxiliary routines.  First,
+one for moving one node to the right in the DOM tree, without ever
+going past the boundary of the document.
+
+            stepRight = ( fromHere ) =>
+                if fromHere is null or fromHere is @getElement()
+                    return null
+                return fromHere.nextSibling or
+                       stepRight fromHere.parentNode
+
+Next we need an auxiliary routine that adds the selection class to
+every element within the given node, up to but not including the
+given stopping point.  It returns whether it found the stopping
+point `stopHere` within the given node `inThis`, as a boolean.
+
+            selectUpTo = ( inThis, stopHere ) ->
+                if inThis is stopHere then return yes
+                if inThis not instanceof Element then return no
+                for child in Array::slice.apply inThis.childNodes
+                    if selectUpTo child, stopHere
+                        return yes
+                inThis.addClass LurchEditor::selectionClass
+                no
+
+Now we apply those two routines to walk from `marker1` to `marker2`
+and highlighte everything in between as the selection.
+
+            walk = marker1
+            while walk = stepRight walk
+                if selectUpTo walk, marker2 then break
 
 ### Blinking the cursor
 
