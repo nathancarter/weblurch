@@ -71,6 +71,10 @@ and have this update every time the page is resized.
         resizeHistoryHeight()
         ( $ window ).resize resizeHistoryHeight
 
+Set up the common commands panel.
+
+        setupCommonCommands()
+
 Run [the routine](#source-synchronizer) that updates the currently
 active view.
 
@@ -678,4 +682,78 @@ Clear the history to which the user wishes to compare that one,
 because at the outset, no such history has been chosen.
 
         window.comparisonHistory = null
+
+    window.setupCommonCommands = ->
+        glyphIcon = ( name ) ->
+            "<span class='glyphicon glyphicon-#{name}'></span>"
+        commonCommands = [
+            [
+                glyphIcon 'align-justify'
+                'Set the document to a few paragraphs of text'
+                'maindiv.innerHTML = "<p>Lorem ipsum dolor sit
+                    amet, consectetur adipiscing elit,
+                    sed do eiusmod tempor incididunt ut
+                    labore et dolore magna aliqua.</p>
+                    <p>Ut enim ad minim veniam,
+                    quis nostrud exercitation ullamco laboris
+                    nisi ut aliquip ex ea commodo consequat.</p>"'
+            ]
+            [
+                glyphIcon 'plus'
+                'Add one paragraph to the end of the document'
+                'maindiv.innerHTML += "<p>Appended paragraph</p>"'
+            ]
+            [
+                glyphIcon 'trash'
+                'Remove all content from the document'
+                'maindiv.innerHTML = ""'
+            ]
+            [
+                glyphIcon 'backward'
+                'Places the cursor at the beginning'
+                'LE.placeCursor(0)'
+            ]
+            [
+                glyphIcon 'forward'
+                'Places the cursor at the end'
+                'LE.placeCursor(LE.cursorPositionsIn(LE.getElement()))'
+            ]
+            [
+                glyphIcon 'arrow-left'
+                'Move the cursor to the left'
+                'LE.moveCursor(-1)'
+            ]
+            [
+                glyphIcon 'arrow-right'
+                'Move the cursor to the right'
+                'LE.moveCursor(1)'
+            ]
+            [
+                glyphIcon 'chevron-left'
+                'Shift+move the cursor to the left'
+                'LE.moveCursor(-1,false)'
+            ]
+            [
+                glyphIcon 'chevron-right'
+                'Shift+move the cursor to the right'
+                'LE.moveCursor(1,false)'
+            ]
+            [
+                glyphIcon 'resize-horizontal'
+                'Select all'
+                'LE.placeCursor(0); LE.placeCursor(LE.cursorPositionsIn(LE.getElement()),false);'
+            ]
+        ]
+        for triple in commonCommands
+            [ title, desc, code ] = triple
+            button = document.createElement 'button'
+            button.innerHTML = title
+            button.setAttribute 'type', 'button'
+            button.setAttribute 'class', 'btn btn-default'
+            button.setAttribute 'title', "#{desc}\n#{code}"
+            window.commonCommands.appendChild button
+            do ( code ) ->
+                ( $ button ).click ( event ) -> runCodeInModel code
+            window.commonCommands.appendChild \
+                document.createTextNode ' '
 
