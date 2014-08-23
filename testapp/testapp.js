@@ -356,7 +356,8 @@
     commonCommands = [[glyphIcon('align-justify'), 'Set the document to a few paragraphs of text', 'maindiv.innerHTML = "<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p> <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>"'], [glyphIcon('plus'), 'Add one paragraph to the end of the document', 'maindiv.innerHTML += "<p>Appended paragraph</p>"'], [glyphIcon('trash'), 'Remove all content from the document', 'maindiv.innerHTML = ""'], [glyphIcon('backward'), 'Places the cursor at the beginning', 'LE.placeCursor(0)'], [glyphIcon('forward'), 'Places the cursor at the end', 'LE.placeCursor(LE.cursorPositionsIn(LE.getElement()))'], [glyphIcon('arrow-left'), 'Move the cursor to the left', 'LE.moveCursor(-1)'], [glyphIcon('arrow-right'), 'Move the cursor to the right', 'LE.moveCursor(1)'], [glyphIcon('chevron-left'), 'Shift+move the cursor to the left', 'LE.moveCursor(-1,false)'], [glyphIcon('chevron-right'), 'Shift+move the cursor to the right', 'LE.moveCursor(1,false)'], [glyphIcon('resize-horizontal'), 'Select all', 'LE.placeCursor(0); LE.placeCursor(LE.cursorPositionsIn(LE.getElement()),false);']];
     _fn = function(code) {
       return ($(button)).click(function(event) {
-        return runCodeInModel(code);
+        runCodeInModel(code);
+        return updateView();
       });
     };
     _results = [];

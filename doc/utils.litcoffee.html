@@ -591,7 +591,9 @@ because at the outset, no such history has been chosen.</p>
         button.setAttribute <span class="hljs-string">'title'</span>, <span class="hljs-string">"<span class="hljs-subst">#{desc}</span>\n<span class="hljs-subst">#{code}</span>"</span>
         <span class="hljs-built_in">window</span>.commonCommands.appendChild button
         <span class="hljs-keyword">do</span> <span class="hljs-function"><span class="hljs-params">( code )</span> -&gt;</span>
-            <span class="hljs-function"><span class="hljs-params">( $ button )</span>.<span class="hljs-title">click</span> <span class="hljs-params">( event )</span> -&gt;</span> runCodeInModel code
+            <span class="hljs-function"><span class="hljs-params">( $ button )</span>.<span class="hljs-title">click</span> <span class="hljs-params">( event )</span> -&gt;</span>
+                runCodeInModel code
+                updateView()
         <span class="hljs-built_in">window</span>.commonCommands.appendChild \
             <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">' '</span>
 </code></pre>

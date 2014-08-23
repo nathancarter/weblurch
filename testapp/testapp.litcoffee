@@ -753,7 +753,9 @@ because at the outset, no such history has been chosen.
             button.setAttribute 'title', "#{desc}\n#{code}"
             window.commonCommands.appendChild button
             do ( code ) ->
-                ( $ button ).click ( event ) -> runCodeInModel code
+                ( $ button ).click ( event ) ->
+                    runCodeInModel code
+                    updateView()
             window.commonCommands.appendChild \
                 document.createTextNode ' '
 
