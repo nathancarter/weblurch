@@ -25,11 +25,14 @@ correctly.
    were a real cursor.  Each of these may make several edits to the
    document, and so should use the new block-of-edits support
    mentioned above.
-    * insert text, HTML, or entire object before cursor
-    * replace selection with text, HTML, or entire object
-    * change properties of selection (e.g., font, color)
-    * delete character before/after cursor
+    * insert text before cursor
+    * replace selection with text
+    * delete character before cursor
+    * delete character after cursor
     * delete selection
+    * insert HTML before cursor
+    * replace selection with HTML
+    * change properties of selection (e.g., font, color)
     * change properties of paragraph around cursor
       (e.g., justification, indentation)
     * cut, copy, and paste
@@ -37,9 +40,11 @@ correctly.
       http://stackoverflow.com/a/11347714/670492) for a possibly
       helpful way to put complex content on the clipboard from
       JavaScript.)
-      * implement copy, and then cut is copy-then-delete
-      * implement paste when there is no selection, and then paste
-        when there is a selection is just delete-then-paste
+      * implement copy
+      * implement cut as copy-then-delete
+      * implement paste when there is no selection
+      * implement paste when there is a selection as
+        delete-then-paste
 
 ### Keyboard
 
