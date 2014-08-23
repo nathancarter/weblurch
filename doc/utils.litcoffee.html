@@ -74,6 +74,8 @@ that drop-down list.</p>
 and have this update every time the page is resized.</p>
 <pre class="hljs"><code>    resizeHistoryHeight()
     ( $ <span class="hljs-built_in">window</span> ).resize resizeHistoryHeight
+</code></pre><p>Set up the common commands panel.</p>
+<pre class="hljs"><code>    setupCommonCommands()
 </code></pre><p>Run <a href="#source-synchronizer">the routine</a> that updates the currently
 active view.</p>
 <pre class="hljs"><code>    updateView()
@@ -518,6 +520,80 @@ document state.</p>
 </code></pre><p>Clear the history to which the user wishes to compare that one,
 because at the outset, no such history has been chosen.</p>
 <pre class="hljs"><code>    <span class="hljs-built_in">window</span>.comparisonHistory = <span class="hljs-literal">null</span>
+
+<span class="hljs-built_in">window</span>.<span class="hljs-function"><span class="hljs-title">setupCommonCommands</span> = -&gt;</span>
+    <span class="hljs-function"><span class="hljs-title">glyphIcon</span> = <span class="hljs-params">( name )</span> -&gt;</span>
+        <span class="hljs-string">"&lt;span class='glyphicon glyphicon-<span class="hljs-subst">#{name}</span>'&gt;&lt;/span&gt;"</span>
+    commonCommands = [
+        [
+            glyphIcon <span class="hljs-string">'align-justify'</span>
+            <span class="hljs-string">'Set the document to a few paragraphs of text'</span>
+            <span class="hljs-string">'maindiv.innerHTML = "&lt;p&gt;Lorem ipsum dolor sit
+                amet, consectetur adipiscing elit,
+                sed do eiusmod tempor incididunt ut
+                labore et dolore magna aliqua.&lt;/p&gt;
+                &lt;p&gt;Ut enim ad minim veniam,
+                quis nostrud exercitation ullamco laboris
+                nisi ut aliquip ex ea commodo consequat.&lt;/p&gt;"'</span>
+        ]
+        [
+            glyphIcon <span class="hljs-string">'plus'</span>
+            <span class="hljs-string">'Add one paragraph to the end of the document'</span>
+            <span class="hljs-string">'maindiv.innerHTML += "&lt;p&gt;Appended paragraph&lt;/p&gt;"'</span>
+        ]
+        [
+            glyphIcon <span class="hljs-string">'trash'</span>
+            <span class="hljs-string">'Remove all content from the document'</span>
+            <span class="hljs-string">'maindiv.innerHTML = ""'</span>
+        ]
+        [
+            glyphIcon <span class="hljs-string">'backward'</span>
+            <span class="hljs-string">'Places the cursor at the beginning'</span>
+            <span class="hljs-string">'LE.placeCursor(0)'</span>
+        ]
+        [
+            glyphIcon <span class="hljs-string">'forward'</span>
+            <span class="hljs-string">'Places the cursor at the end'</span>
+            <span class="hljs-string">'LE.placeCursor(LE.cursorPositionsIn(LE.getElement()))'</span>
+        ]
+        [
+            glyphIcon <span class="hljs-string">'arrow-left'</span>
+            <span class="hljs-string">'Move the cursor to the left'</span>
+            <span class="hljs-string">'LE.moveCursor(-1)'</span>
+        ]
+        [
+            glyphIcon <span class="hljs-string">'arrow-right'</span>
+            <span class="hljs-string">'Move the cursor to the right'</span>
+            <span class="hljs-string">'LE.moveCursor(1)'</span>
+        ]
+        [
+            glyphIcon <span class="hljs-string">'chevron-left'</span>
+            <span class="hljs-string">'Shift+move the cursor to the left'</span>
+            <span class="hljs-string">'LE.moveCursor(-1,false)'</span>
+        ]
+        [
+            glyphIcon <span class="hljs-string">'chevron-right'</span>
+            <span class="hljs-string">'Shift+move the cursor to the right'</span>
+            <span class="hljs-string">'LE.moveCursor(1,false)'</span>
+        ]
+        [
+            glyphIcon <span class="hljs-string">'resize-horizontal'</span>
+            <span class="hljs-string">'Select all'</span>
+            <span class="hljs-string">'LE.placeCursor(0); LE.placeCursor(LE.cursorPositionsIn(LE.getElement()),false);'</span>
+        ]
+    ]
+    <span class="hljs-keyword">for</span> triple <span class="hljs-keyword">in</span> commonCommands
+        [ title, desc, code ] = triple
+        button = <span class="hljs-built_in">document</span>.createElement <span class="hljs-string">'button'</span>
+        button.innerHTML = title
+        button.setAttribute <span class="hljs-string">'type'</span>, <span class="hljs-string">'button'</span>
+        button.setAttribute <span class="hljs-string">'class'</span>, <span class="hljs-string">'btn btn-default'</span>
+        button.setAttribute <span class="hljs-string">'title'</span>, <span class="hljs-string">"<span class="hljs-subst">#{desc}</span>\n<span class="hljs-subst">#{code}</span>"</span>
+        <span class="hljs-built_in">window</span>.commonCommands.appendChild button
+        <span class="hljs-keyword">do</span> <span class="hljs-function"><span class="hljs-params">( code )</span> -&gt;</span>
+            <span class="hljs-function"><span class="hljs-params">( $ button )</span>.<span class="hljs-title">click</span> <span class="hljs-params">( event )</span> -&gt;</span> runCodeInModel code
+        <span class="hljs-built_in">window</span>.commonCommands.appendChild \
+            <span class="hljs-built_in">document</span>.createTextNode <span class="hljs-string">' '</span>
 </code></pre>
         </div>
         <div id="right">

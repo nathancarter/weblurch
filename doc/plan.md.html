@@ -44,20 +44,25 @@ correctly.</p>
 were a real cursor.  Each of these may make several edits to the
 document, and so should use the new block-of-edits support
 mentioned above.<ul>
-<li>insert text, HTML, or entire object before cursor</li>
-<li>replace selection with text, HTML, or entire object</li>
-<li>change properties of selection (e.g., font, color)</li>
-<li>delete character before/after cursor</li>
+<li>insert text before cursor</li>
+<li>replace selection with text</li>
+<li>delete character before cursor</li>
+<li>delete character after cursor</li>
 <li>delete selection</li>
+<li>insert HTML before cursor</li>
+<li>replace selection with HTML</li>
+<li>change properties of selection (e.g., font, color)</li>
 <li>change properties of paragraph around cursor
 (e.g., justification, indentation)</li>
 <li>cut, copy, and paste
 (See <a href="http://stackoverflow.com/a/11347714/670492">this StackOverflow answer</a> for a possibly
 helpful way to put complex content on the clipboard from
 JavaScript.)<ul>
-<li>implement copy, and then cut is copy-then-delete</li>
-<li>implement paste when there is no selection, and then paste
-when there is a selection is just delete-then-paste</li>
+<li>implement copy</li>
+<li>implement cut as copy-then-delete</li>
+<li>implement paste when there is no selection</li>
+<li>implement paste when there is a selection as
+delete-then-paste</li>
 </ul>
 </li>
 </ul>
