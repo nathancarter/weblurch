@@ -16,9 +16,9 @@
    version="1.1"
    inkscape:version="0.48.5 r10040"
    sodipodi:docname="testapp-icon.svg"
-   inkscape:export-filename="/Users/nathan/Development/weblurch/app/app-icon-152x162.png"
-   inkscape:export-xdpi="26.719999"
-   inkscape:export-ydpi="26.719999">
+   inkscape:export-filename="/Users/nathan/Development/weblurch/testapp/testapp-icon-76x76.png"
+   inkscape:export-xdpi="13.36"
+   inkscape:export-ydpi="13.36">
   <defs
      id="defs4">
     <linearGradient
@@ -210,7 +210,7 @@
      inkscape:cx="293.59611"
      inkscape:cy="249.42336"
      inkscape:document-units="px"
-     inkscape:current-layer="layer2"
+     inkscape:current-layer="layer4"
      showgrid="false"
      inkscape:window-width="2560"
      inkscape:window-height="1392"
@@ -256,13 +256,14 @@
      style="display:inline"
      transform="translate(0,106.59375)">
     <rect
-       style="fill:#e3dfdf;fill-opacity:1;stroke:#aa7a79;stroke-width:14.38899994;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       style="fill:#e3dfdf;fill-opacity:1;stroke:#aa7a79;stroke-width:19.0867939;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        id="rect4051"
-       width="497.61057"
-       height="277.48923"
-       x="7.1947079"
-       y="10.723587"
-       ry="36.910297" />
+       width="492.91275"
+       height="492.91321"
+       x="9.5436049"
+       y="-96.049355"
+       ry="65.564972"
+       rx="65.339317" />
   </g>
   <g
      inkscape:groupmode="layer"
