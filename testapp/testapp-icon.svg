@@ -231,7 +231,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -262,8 +262,8 @@
        height="492.91321"
        x="9.5436049"
        y="-96.049355"
-       ry="65.564972"
-       rx="65.339317" />
+       ry="103.0099"
+       rx="107.63007" />
   </g>
   <g
      inkscape:groupmode="layer"
