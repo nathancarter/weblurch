@@ -289,6 +289,7 @@ the default value for `check` enables the idiom
 
     exports.pageExpects =
     ( func, check = 'toBeTruthy', args... ) ->
+        setErrorPoint()
         P.page.evaluate ( evaluateThis ) ->
             result = try eval evaluateThis catch e then e
             if typeof result is 'undefined'
@@ -328,6 +329,7 @@ If you expect an error, you can do so with this routine.  The
 error object (if one exists) if and only if they're provided.
 
     exports.pageExpectsError = ( func, check, args... ) ->
+        setErrorPoint()
         P.page.evaluate ( evaluateThis ) ->
             try eval evaluateThis ; null catch e then e
         , ( err, result ) ->
@@ -361,4 +363,47 @@ One can then do the following.
     #         variables, be sure to use window.varName...
     #     pageExpects ( -> back to more tests here ),
     #         'toBeTruthyOrWhatever'
+
+# Jasmine modifications
+
+The `pageExpects` and `pageExpectsError` functions, above, make
+asynchronous calls to `page.evaluate` and then perform `expect`
+calls in the callback.  The problem with this is that if any of
+the tests in the `expect` calls fails, the traceback used to report
+the error location will have the wrong call stack.  It will be the
+call stack for the callback, which will usually come from a
+`node.js` timer function, rather than the caller of the
+`pageExpects` function, for instance.  This makes it very hard to
+track down the errors, and is thus undesirable.
+
+To fix this problem, we make some modifications to the Jasmine API,
+so that we can set the stack trace before the asynchronous code
+begins, and that stack trace will be used in later error reports.
+
+First, we provide a function that can be used to set the stack
+trace.
+
+    setErrorPoint = ->
+        spec = jasmine?.getEnv().currentSpec
+        if not spec
+            throw Error 'No current spec in which to
+                set error point'
+
+When we create a new stack trace, we remove from it the mention of
+this function (`setErrorPoint`) and the one that called it (which
+will be `pageExpects`, above).
+
+        stack = ( new Error() ).stack.split '\n'
+        stack = [ stack[0] ].concat stack[3..]
+        spec.overrideStack_ = stack.join '\n'
+
+Second, we wrap the `addMatcherResult` function in `jasmine.Spec`
+with a "before" clause that looks up the data stored above and
+uses it, if it's present, to overwrite any existing error stack.
+
+    oldFn = jasmine.Spec.prototype.addMatcherResult
+    jasmine.Spec.prototype.addMatcherResult = ( result ) ->
+        if @overrideStack_ and result.passed_ is no
+            result.trace.stack = @overrideStack_
+        oldFn.apply this, [ result ]
 
