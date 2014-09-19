@@ -264,8 +264,12 @@ provided by `highlight.js`.
 
         marked.setOptions
             highlight: ( code ) ->
-                require( 'highlight.js' )
-                    .highlight( 'coffeescript', code ).value
+                hljs = require( 'highlight.js' )
+                lang = 'coffeescript'
+                if /^\s*#\s*(html|HTML)\s*\n/.test code
+                    lang = 'html'
+                    code = code.split( '\n' )[1..].join( '\n' )
+                hljs.highlight( lang, code ).value
             renderer: renderer
 
 The return value is an object, containing both the HTML for the
