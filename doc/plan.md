@@ -15,9 +15,6 @@ later items are more vague than the earlier ones.
 
 ### Cleanup
 
- * Make significant revisions to anything remaining in `doc/`, now based on
-   the fact that github renders `.md` and `.litcoffee` files perfectly, so
-   that you no longer need to bother with a doc-build step.
  * Clear out just about everything in the gh-pages branch, except a redirect
    to the app itself, which is just a stub.
  * Move the `reports/` folder into `test/reports/`, so that no one sees it,
