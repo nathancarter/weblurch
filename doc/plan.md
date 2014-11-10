@@ -17,7 +17,6 @@ than the earlier ones.
 
 ### Cleanup
 
- * See what tests now fail and clean them up.
  * Make significant revisions to anything remaining in `doc/`, now based on
    the fact that github renders `.md` and `.litcoffee` files perfectly, so
    that you no longer need to bother with a doc-build step.
