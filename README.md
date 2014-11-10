@@ -28,7 +28,7 @@ this repository on your local machine, follow these instructions.
    the build process.  Start with `cake all`.
  * Browse this repository for more information.  The source code is
    literate, so there's lots of documentation embedded in it, by nature.
-   
+
 ## Repository contents
 
 All source code in this repository is written in [literate
@@ -43,7 +43,7 @@ In the root folder of this repository you will find only a very few files.
    dependencies for this project.  (This project does not run under `node`;
    it runs in a browser, but the build system runs under `node`.)
  * `cake.litcoffee` - definition of the build process.  To run the build
-   process, see [Getting Started](#getting-started), below.
+   process, see [Getting Started](#getting-started), above.
  * `Cakefile` - technically, this is the file that `cake` reads, but in
    order to keep all files in the repository in the same language, this file
    is just a one-liner that redirects all processing to `cake.litcoffee`.
@@ -74,7 +74,7 @@ information.
 ### `node_modules` folder
 
 This folder appears when you configure a local copy of this repository.  See
-[Getting Started](#getting-started), below.  It is where `node` installs all
+[Getting Started](#getting-started), above.  It is where `node` installs all
 necessary dependencies, locally.
 
 ### `reports` folder
@@ -82,4 +82,5 @@ necessary dependencies, locally.
 This folder is not in the repository, but will appear in a local copy if you
 run the unit tests.  It's a temporary storage location for reports on the
 results of the last run of unit tests, used by the build system when
-generating [the HTML version of those same reports](test/test-results.md).
+generating [the Markdown version of those same
+reports](test/test-results.md).

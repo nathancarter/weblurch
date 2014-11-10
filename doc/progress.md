@@ -14,7 +14,7 @@ This project has a handy building and testing environment written in [the
 same language as the project itself](http://coffeescript.org/#literate).
 
 It does this:
- * builds [the app itself](app/index.html)
+ * builds [the app itself](../app/)
    (which is currently a stub, but the compilation process compiles and
    minifies all code, with source maps)
  * runs all unit tests and formats their results for reading online (see
@@ -23,10 +23,10 @@ It does this:
 ## DOM Enhancements
 
 So far the following has been accomplished on this front:
- * [Addressing](domutils.litcoffee#address) and [indexing](
-   domutils.litcoffee#index) functions have been added to DOM Nodes.
+ * [Addressing](../src/domutils.litcoffee#address) and [indexing](
+   ../src/domutils.litcoffee#index) functions have been added to DOM Nodes.
  * DOM nodes can also be [serialized](
-   domutils.litcoffee#serialization) (and unserialized) for storage
+   ../src/domutils.litcoffee#serialization) (and unserialized) for storage
 
 ## More to come
 

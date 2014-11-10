@@ -22,7 +22,9 @@ later items are more vague than the earlier ones.
    to the app itself, which is just a stub.
  * Move the `reports/` folder into `test/reports/`, so that no one sees it,
    and you can remove mention of it from the README.
- * Get a Travis-CI build going.
+ * Get a Travis-CI build going.  Once that works, ``install CoffeeScript''
+   should be able to be removed from the Getting Started info.  Change it to
+   an `npm build` or something.
 
 ### New tools
 
@@ -236,6 +238,12 @@ BackgroundFunction class.
    such data even be stored?  Design discussion to have...
 
 ### Math
+
+Before proceeding with this section, do review what's already been done in
+this space, including
+[this](https://github.com/foraker/tinymce_equation_editor) and
+[this](https://github.com/efloti/plugin-mathjax-pour-tinymce).  There are
+similar projects for CKEditor as well.
 
  * Create a button or keystroke that allows you to insert a
    [MathQuill](http://mathquill.com/) instance in your document, and stores
