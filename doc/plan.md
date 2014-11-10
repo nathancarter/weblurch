@@ -17,20 +17,12 @@ than the earlier ones.
 
 ### Cleanup
 
- * In the master branch, clear out all the following stuff.
-   * everything in `src/` except `utils` and `domutils`
-   * everything in `test/` except `utils-spec` and `domutils-spec`,
-     including the `histories` subfolder
-   * `app/app.litcoffee` and possibly `app/appsetup.litcoffee`,
-     but first figure out which of them, if either, is built by the
-     build process
-   * `testapp` folder, plus any reference to it in the build
-     proces
-   * `doc/wp-spec.md` and `doc/test-app-help.md`
-   * `bootstrap` folder
- * Make significant revisions to anything remaining in `doc/`.
  * See what tests now fail and clean them up.
- * Regenerate gh-pages.
+ * Make significant revisions to anything remaining in `doc/`, now based on
+   the fact that github renders `.md` and `.litcoffee` files perfectly, so
+   that you no longer need to bother with a doc-build step.
+ * Clear out just about everything in the gh-pages branch, except a redirect
+   to the app itself, which is just a stub.
 
 ### New tools
 
@@ -41,6 +33,7 @@ than the earlier ones.
 
 ## Load and save
 
+Big-picture plan:
  * Before executing any of the tasks in this section, first look
    ahead to the [Dependencies](#dependencies) section, below.  It
    has requirements that will require you to be careful *here*
@@ -83,6 +76,10 @@ than the earlier ones.
    project web space) core dependencies that anyone can use, and
    the integrity of a course (or the whole Lurch project!) is not
    dependent on the state of any individual's Dropbox folder.
+
+But the way I expect to proceed immediately is by implementing
+[jsfs](http://github.com/nathancarter/jsfs) first, and then using
+that as a mock filesystem that's always present.
 
 ## Extending the Editor
 
@@ -235,15 +232,6 @@ means of the BackgroundFunction class.
      same background function and argument list is already running,
      terminate it and delete it.
 
-## Design discussions to have
-
-Imagine the whole Lurch experience being online, in the sense
-that our website could house a wiki-like thing of Lurch
-documents.  You want to share a document with your students?
-just get an instructor account, save the document from your
-weblurch to the wiki, then give the students the URL to use as a
-dependency.  True cloud lurch sharing.
-
 ## Logical Foundation
 
 ### Dependencies
@@ -306,8 +294,8 @@ working, have it run a shell script that does the following.
 
 Suggestion from Dana Ernst: Perhaps this is not necessary or
 feasible, but if you go with a web app, could you make it easy
-for teachers to “plug into” the common LMS’s (e.g. Blackboard,
-Canvas, etc.)?  I’m envisioning students being able to submit
+for teachers to "plug into" the common LMS's (e.g. Blackboard,
+Canvas, etc.)?  I'm envisioning students being able to submit
 assignments with ease to an LMS and then teachers can grade and
 enter grades easily without have to go back and forth between web
 pages.  
@@ -321,6 +309,13 @@ two and then they are off and running on their own.  It might be
 advantageous to allow multiple users to edit the same Lurch
 document.  No idea if this is feasible or not, nor if it is even
 an idea worth pursuing.
+
+Imagine the whole Lurch experience being online, in the sense
+that our website could house a wiki-like thing of Lurch
+documents.  You want to share a document with your students?
+just get an instructor account, save the document from your
+weblurch to the wiki, then give the students the URL to use as a
+dependency.  True cloud lurch sharing.
 
 A web Lurch is trivially also a desktop Lurch, as follows.  You
 can, of course, write a stupid shell app that’s just a single web
@@ -337,7 +332,14 @@ opening files, etc., etc.  And those things are so modular that a
 different person can be in charge of the app on different
 platforms, even!  E.g., someone does the iOS app, someone does
 the Android app, and someone does the
-cross-platform-Qt-based-desktop app.
+cross-platform-Qt-based-desktop app.  Also, there are toolkits
+that do this for you.  Here are some links.
+ * [Node-WebKit](https://github.com/rogerwang/node-webkit)
+ * [PHP Desktop](https://code.google.com/p/phpdesktop/)
+ * [Webapp XUL Wrapper](https://github.com/neam/webapp-xul-wrapper)
+ * [Atom Shell](https://github.com/atom/atom-shell/) which seems
+   to be like Node-WebKit, except it's Node-Chromium
+ * See more information in [this blog post](http://blog.neamlabs.com/post/36584972328/2012-11-26-web-app-cross-platform-desktop-distribution).
 
 ### Improving documentation
 
@@ -356,4 +358,3 @@ The glyph icons that come with Bootstrap were provided free by
 you use them, you provide a link back to that site.  When my apps
 are further along in production, such a link should be provided
 somewhere on the site where it makes sense to do so.
-

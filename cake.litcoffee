@@ -18,8 +18,8 @@ now load.
 If you want to build and test evertything, just run `cake all`.
 It simply invokes all the other tasks, defined below.
 
-    build.task 'all', 'Build app, testapp, docs, and run tests', ->
-        build.enqueue 'app', 'testapp', 'test', 'doc'
+    build.task 'all', 'Build app and run tests', ->
+        build.enqueue 'app', 'test'
 
 ## Requirements
 
@@ -39,12 +39,8 @@ These constants define how the functions below perform.
     title = 'webLurch'
     srcdir = './src/'
     appdir = './app/'
-    tappdir = './testapp/'
     srcout = 'weblurch.litcoffee'
     appout = 'app.litcoffee'
-    tappout = 'testapp.litcoffee'
-    docdir = './doc/'
-    doctmp = 'template.html'
     testdir = './test/'
     repdir = './reports/'
     mapfile = './reports/unit-test-names.json'
@@ -80,91 +76,6 @@ This compiles, minifies, and generates source maps.
 
         build.compile appdir+srcout, ->
         build.compile appdir+appout, done
-
-## The `testapp` build process
-
-This build process is nearly identical to that of `app`.
-
-    build.asyncTask 'testapp', 'Build the testapp', ( done ) ->
-
-Before building, ensure that the output folder exists.
-
-        fs.mkdirSync tappdir unless fs.existsSync tappdir
-
-Next concatenate all `.litcoffee` source files from the test app
-directory into one.
-
-        all = ( fs.readFileSync name for name in \
-            build.dir tappdir, /\.litcoffee$/ \
-            when name.indexOf( tappout ) is -1 )
-        fs.writeFileSync tappdir+tappout, all.join( '\n\n' ),
-            'utf8'
-
-Run the compile process defined in
-[the build utilities module](buildutils.litcoffee.html).
-This compiles, minifies, and generates source maps.
-
-        build.compile tappdir+tappout, done
-
-## The `doc` build process
-
-    build.task 'doc', 'Build the documentation', ->
-
-Fetch all files in the source directory, plus this file,
-plus any `.md` files in the `doc/` dir that need converting,
-and the template HTML output file from the `doc/` directory.
-
-        all = ( f for f in build.dir( '.', /\.litcoffee$/,
-                                      srcdir, /\.litcoffee$/,
-                                      testdir, /\.litcoffee$/,
-                                      docdir, /\.md$/,
-                                      tappdir, /\.litcoffee$/ ) \
-            when f.indexOf( tappout ) is -1 )
-        html = fs.readFileSync docdir + doctmp, 'utf8'
-
-Build a file navigation list from those files' names.
-
-        nav = {}
-        navtxt = '<h3 align=center>Navigation</h3><br>'
-        for file in all
-            end = ( path = file.split '/' ).pop()
-            if end is mainpg
-                navtxt += "<h3><a href='#{mainpg}.html'>" +
-                          "#{title} home</a></h3>"
-            else
-                ( nav[path.join '/'] ?= [] ).push {
-                    file : end, text : end }
-        ( nav[appdir[...-1]] ?= [] ).push {
-            file : ".#{appdir}index", text : 'index.html' }
-        ( nav[tappdir[...-1]] ?= [] ).push {
-            file : ".#{tappdir}index", text : 'index.html' }
-        for path in ( Object.keys nav ).sort()
-            navtxt += "<p>#{path || './'}</p><ul>"
-            for e in nav[path]
-                navtxt += "<li><a href='#{e.file}.html'>" +
-                          "#{e.text}</a></li>"
-            navtxt += '</ul>'
-
-Read each source file and place its marked-down version into the
-HTML template, saving it into the docs directory.  The marking-down
-process also generates a table of contents (TOC) for the page,
-which we put in the left frame.
-
-        for file in all
-            end = file.split( '/' ).pop()
-            beginning = end.split( '.' ).shift()
-            console.log "\tCreating #{end}.html..."
-            rendered = build.md2html file
-            toc = """<p align=center>Page contents</p>
-                     #{rendered.toc}"""
-            myhtml = html.replace( 'LEFT', toc )
-                         .replace( 'RIGHT', navtxt )
-                         .replace( 'MIDDLE', rendered.html )
-                         .replace( /<pre><code>/g,
-                                   '<pre class="hljs"><code>' )
-                         .replace( 'TITLE',
-                                   "#{title} docs: #{beginning}" )
-            fs.writeFileSync "#{docdir+end}.html", myhtml, 'utf8'
 
 ## The `test` build process
 
@@ -257,33 +168,13 @@ all together into a single output file.
                 ( err, result ) ->
                     for item in result.testsuites.testsuite
 
-Create header for this test.  Use the `mapping` computed above to
-create links, if possible.
+Create header for this test and a subheader for each case within it.
 
                         name = item.$.name
-                        md += "## #{name} (#{item.$.time} ms)"
-                        if name of mapping
-                            escapedName = build.escapeHeading name
-                            md += " <font size=-1>" +
-                                  "<a href='#{mapping[name]}" +
-                                  ".html##{escapedName}'>" +
-                                  "see source</a></font>"
-                        md += '\n\n'
-
-Create subheader for each case in the test.  Again, use the
-`mapping` computed above to create links, if possible.
-
+                        md += "## #{name} (#{item.$.time} ms)\n\n"
                         for c in item.testcase
                             cn = c.$.name
-                            md += "### #{cn} (#{c.$.time} ms)"
-                            if item.$.name of mapping
-                                esc = build.escapeHeading c.$.name
-                                md += " <font size=-1>" +
-                                      "<a href='" +
-                                      "#{mapping[item.$.name]}." +
-                                      "html##{esc}'>see source" +
-                                      "</a></font>"
-                            md += '\n\n'
+                            md += "### #{cn} (#{c.$.time} ms)\n\n"
 
 Create list item for each failure, or one single item reporting
 a pass if there were no failures.
@@ -305,7 +196,7 @@ Create a footer for this test, summarizing its time and totals.
 That output file goes in the `doc/` folder for later processing
 by the doc task, defined above.
 
-            fs.writeFileSync "#{docdir}/test-results.md",
+            fs.writeFileSync "#{testdir}/test-results.md",
                 md, 'utf8'
             done()
 
@@ -330,7 +221,7 @@ switching to gh-pages and merging in changes.
     build.asyncTask 'pages',
     'Update gh-pages branch before pushing', ( done ) ->
         console.log '''
-            In case any step of this lengthy process goes wrong, 
+            In case any step of this lengthy process goes wrong,
             here are the commands that are about to be run, so
             that you can complete the process:
                 git checkout gh-pages
@@ -358,7 +249,7 @@ build process will call once it's run all the other build tasks in
 the queue.
 
                 console.log 'Building all in gh-pages...'
-                build.enqueue 'app', 'testapp', 'test', 'doc', ->
+                build.enqueue 'app', 'test', 'doc', ->
 
 This function commits the changes done by the other steps in the
 build process, then switches back to the master branch and reports
@@ -394,4 +285,3 @@ things, so that the build system will then start processing what
 we put on the queue.
 
                 done()
-

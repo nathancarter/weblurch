@@ -1,9 +1,7 @@
 
 # Tests of the utils module
 
-See the documentation in the
-[basic test spec](basic-spec.litcoffee) for information on how
-test specifications are structured.
+Test specifications still need to be documented.
 
     require '../src/utils'
 
@@ -186,4 +184,3 @@ Mixed objects and arrays, with depth greater than 1:
             expect( JSON.equals [ { }, JSON, { a:1, b:2, c:3 } ],
                 [ { }, JSON, { a:1, b:2, c:3, JSON } ]
                 ).toBeFalsy()
-
