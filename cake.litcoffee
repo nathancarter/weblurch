@@ -226,9 +226,8 @@ switching to gh-pages and merging in changes.
             that you can complete the process:
                 git checkout gh-pages
                 git merge master
-                cake all
-                git add doc/*.html
-                git commit -a -m 'Updating gh-pages with latest generated docs'
+                cake app
+                git commit -a -m 'Updating gh-pages with latest app build'
                 git checkout master
 
             Beginning...
@@ -248,37 +247,32 @@ this branch.  The final thing we enqueue is a function that the
 build process will call once it's run all the other build tasks in
 the queue.
 
-                console.log 'Building all in gh-pages...'
-                build.enqueue 'app', 'test', 'doc', ->
+                console.log 'Building app in gh-pages...'
+                build.enqueue 'app', ->
 
 This function commits the changes done by the other steps in the
 build process, then switches back to the master branch and reports
 completion to the user.
 
-                    exec 'git add doc/*.html',
+                    exec "git commit -a -m 'Updating gh-" +
+                         "pages with latest generated docs'",
                     ( err, stdout, stderr ) ->
                         if stdout + stderr
                             console.log stdout + stderr
                         if err then throw err
-                        exec "git commit -a -m 'Updating gh-" +
-                             "pages with latest generated docs'",
+                        console.log 'Going back to master...'
+                        exec 'git checkout master',
                         ( err, stdout, stderr ) ->
                             if stdout + stderr
                                 console.log stdout + stderr
                             if err then throw err
-                            console.log 'Going back to master...'
-                            exec 'git checkout master',
-                            ( err, stdout, stderr ) ->
-                                if stdout + stderr
-                                    console.log stdout + stderr
-                                if err then throw err
-                                console.log '''
-                                Done.
+                            console.log '''
+                            Done.
 
-                                If you're happy with the results \
-                                of this process, just type \
-                                "git push" to publish them.
-                                '''
+                            If you're happy with the results of \
+                            this process, just type "git push" \
+                            to publish them.
+                            '''
 
 We report that we're done with this task once we enqueue all those
 things, so that the build system will then start processing what
