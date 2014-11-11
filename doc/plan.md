@@ -15,10 +15,6 @@ later items are more vague than the earlier ones.
 
 ### Cleanup
 
- * Use colors in the cake build processes to make console output more
-   visually clear.  (See how you do this in `jsfs`.)
- * Factor the nested `exec` calls into a single recursive routine, also as
-   you did in `jsfs`.
  * Move the `reports/` folder into `test/reports/`, so that no one sees it,
    and you can remove mention of it from the README.
  * Get a Travis-CI build going.  Once that works, ``install CoffeeScript''
