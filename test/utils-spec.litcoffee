@@ -42,8 +42,8 @@ This section tests the equality function for JSON objects, called
 
 ### should call equal-structure objects equal
 
-This includes not only objects but also arrays, and nestings of
-the two, where key order is irrelevant.
+This includes not only objects but also arrays, and nestings of the two,
+where key order is irrelevant.
 
         it 'should call equal-structure objects equal', ->
 
@@ -88,9 +88,9 @@ Mixed objects and arrays, with depth greater than 1:
 
 ### should call unequal-structure objects unequal
 
-This includes not only objects but also arrays, and nestings of
-the two, where key order is irrelevant.  So in these tests, I will
-keep key order the same, and yet the objects should still differ.
+This includes not only objects but also arrays, and nestings of the two,
+where key order is irrelevant.  So in these tests, I will keep key order the
+same, and yet the objects should still differ.
 
         it 'should call unequal-structure objects unequal', ->
 
