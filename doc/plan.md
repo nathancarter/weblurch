@@ -15,8 +15,6 @@ later items are more vague than the earlier ones.
 
 ### Cleanup
 
- * Move the `reports/` folder into `test/reports/`, so that no one sees it,
-   and you can remove mention of it from the README.
  * Get a Travis-CI build going.  Once that works, ``install CoffeeScript''
    should be able to be removed from the Getting Started info.  Change it to
    an `npm build` or something.

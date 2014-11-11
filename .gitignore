@@ -3,13 +3,9 @@ app/*.js
 app/weblurch.litcoffee
 app/app.litcoffee
 app/*.map
-testapp/testapp.js
-testapp/testapp.min.js
-testapp/testapp.litcoffee
-testapp/*.map
 node_modules/*
 doc/*.litcoffee.html
 doc/*.md.html
 doc/test-results.md
-reports/*
+test/reports/*
 nps-jn-test

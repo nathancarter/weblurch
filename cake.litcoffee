@@ -32,15 +32,14 @@ modules we'll need later (which were installed by npm install).
 
 These constants define how the functions below perform.
 
+    p = require 'path'
     title = 'webLurch'
     srcdir = './src/'
     appdir = './app/'
     srcout = 'weblurch.litcoffee'
     appout = 'app.litcoffee'
     testdir = './test/'
-    repdir = './reports/'
-    mapfile = './reports/unit-test-names.json'
-    mainpg = 'index.md'
+    repdir = './test/reports/'
 
 ## The `app` build process
 
@@ -87,20 +86,11 @@ output folder forever.
 Run [jasmine](http://jasmine.github.io/) on all files in the `test/` folder,
 and produce output in `junitreport` format (a bunch of XML files).
 
-        exec "node node_modules/jasmine-node/lib/jasmine-node/" +
-             "cli.js --junitreport --verbose --coffee " +
-             "--forceexit #{testdir}",
+        exec "node node_modules/jasmine-node/lib/jasmine-node/cli.js
+              --junitreport --output #{repdir} --verbose --coffee
+              --forceexit #{testdir}",
         ( err, stdout, stderr ) ->
             console.log stdout + stderr if stdout + stderr
-
-Now that the tests have been run, see if they created a file mapping the
-unit test names to the files in which they are defined. If so, we will use
-it below to create links from test results to test definition files.
-
-            try
-                mapping = JSON.parse fs.readFileSync mapfile
-            catch error
-                mapping = null
 
 Create the header for the test output page and two functions for flagging
 test passes/failures with the appropriate CSS classes.
@@ -179,11 +169,11 @@ there were no failures.
 
 Create a footer for this test, summarizing its time and totals.
 
-                        md += "Above tests run at " +
-                              "#{item.$.timestamp}.  " +
-                              "Tests: #{item.$.tests} - " +
-                              "Errors: #{item.$.errors} - " +
-                              "Failures: #{item.$.failures}\n\n"
+                        md += "Above tests run at
+                               #{item.$.timestamp}.
+                               Tests: #{item.$.tests} -
+                               Errors: #{item.$.errors} -
+                               Failures: #{item.$.failures}\n\n"
 
 That output file goes in the `doc/` folder for later processing by the doc
 task, defined above.

@@ -76,11 +76,3 @@ information.
 This folder appears when you configure a local copy of this repository.  See
 [Getting Started](#getting-started), above.  It is where `node` installs all
 necessary dependencies, locally.
-
-### `reports` folder
-
-This folder is not in the repository, but will appear in a local copy if you
-run the unit tests.  It's a temporary storage location for reports on the
-results of the last run of unit tests, used by the build system when
-generating [the Markdown version of those same
-reports](test/test-results.md).

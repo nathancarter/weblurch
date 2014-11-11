@@ -59,7 +59,7 @@ and sets it to true if the opening complets without error.
             if err then console.log err ; throw err
             P.page.loaded = yes
             callback()
-            
+
 This function initializes the global variable `P`, loads the given
 URL into the page stored in that global variable, and then calls a
 callback function.  If `P` was already initialized, then this just
@@ -91,11 +91,6 @@ And now we define the one function this module exports, which will
 initialize the members of `P` if and when needed.
 
     exports.phantomDescribe = ( text, url, tests ) ->
-
-First, we record which unit test called this function.  See the
-documentation for `logUnitTestName` below for additional details.
-
-        logUnitTestName text
         describe text, ->
 
 Before each test, load the given page into the headless browser and
@@ -118,31 +113,6 @@ Example use (note the very important `=>` for preserving `this`):
     #     it 'must load', ( done ) =>
     #         expect( @page.loaded ).toBeTruthy()
     #         done()
-
-# Logging unit test names and filenames
-
-We want to keep track of the mapping from unit test names to
-filenames in which they were defined, so that documentation
-generation can create links from test results to files that
-define those tests.  This function uses the stack trace to find
-which unit test file (of the form `\*-spec.litcoffee`) made a
-call to `phantomDescribe`, and logs that data in a JSON file in
-the test reports directory.
-
-    savefile = './reports/unit-test-names.json'
-    logUnitTestName = ( name ) ->
-        fs = require 'fs'
-        try
-            mapping = JSON.parse fs.readFileSync savefile
-        catch error
-            mapping = { }
-        for frame in st.get()
-            fn = frame.getFileName()
-            if /-spec\.litcoffee/.test fn
-                mapping[name] = ( fn.split '/' ).pop()
-                fs.writeFileSync savefile,
-                                 JSON.stringify mapping, null, 2
-                break
 
 # Running test app histories
 
@@ -406,4 +376,3 @@ uses it, if it's present, to overwrite any existing error stack.
         if @overrideStack_ and result.passed_ is no
             result.trace.stack = @overrideStack_
         oldFn.apply this, [ result ]
-
