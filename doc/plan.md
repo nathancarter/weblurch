@@ -13,15 +13,6 @@ later items are more vague than the earlier ones.
 
 ## Reworking this whole repository
 
-### Cleanup
-
- * Get a Travis-CI build going.  Once that works, ``install CoffeeScript''
-   should be able to be removed from the Getting Started info (because `npm
-   test` will build the app and run the tests, and uses the local `cake` and
-   `coffee` commands).
-
-### New tools
-
  * Import jQuery and TinyMCE into the respository.
  * Include jQuery and TinyMCE scripts into the main app.
  * Create a setup function in the main app that installs TinyMCE and makes
