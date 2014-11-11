@@ -180,6 +180,12 @@ task, defined above.
 
             fs.writeFileSync "#{testdir}/test-results.md",
                 md, 'utf8'
+
+If a test failed, stop here and return the failure exit code, so that this
+script will indicate to the shell that the tests did not all pass.
+Otherwise, move on to the next task (or a peaceful exit) with `done()`.
+
+            if err then process.exit err.code
             done()
 
 ## The `pages` build process
