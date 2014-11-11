@@ -9,3 +9,4 @@ doc/*.md.html
 doc/test-results.md
 test/reports/*
 nps-jn-test
+.atom-build.json
