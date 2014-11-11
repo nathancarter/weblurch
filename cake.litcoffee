@@ -254,6 +254,10 @@ This function commits the changes done by the other steps in the
 build process, then switches back to the master branch and reports
 completion to the user.
 
+                    console.log 'Committing changes...'
+                    console.log '(This may fail if there were no
+                        changes to the app itself.  If so, just
+                        "git checkout master" and push.)'
                     exec "git commit -a -m 'Updating gh-" +
                          "pages with latest generated docs'",
                     ( err, stdout, stderr ) ->
