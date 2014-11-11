@@ -10,7 +10,6 @@
     "jasmine-node": "1.13.1",
     "node-phantom-simple": "1.0.16",
     "xml2js": "0.4.1",
-    "stack-trace": "0.0.8",
     "colors" : "1.0.3"
   }
 }
