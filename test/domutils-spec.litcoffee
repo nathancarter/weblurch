@@ -96,7 +96,7 @@ node, and we expect that its address will also be the empty array.
 Run a baseline test to be sure we know the size of the document now.
 
             pageExpects ( -> document.body.childNodes.length ),
-                'toEqual', 3
+                'toEqual', 5
 
 First, add some structure to the document.
 We will need to run tests on a variety of parent-child pairs of
@@ -135,9 +135,9 @@ are equal.
             pageExpects ( -> chidiv2.address pardiv ),
                 'toEqual', [ 1 ]
             pageExpects ( -> document.body.childNodes.length ),
-                'toEqual', 4
+                'toEqual', 6
             pageExpects ( -> pardiv.address document.body ),
-                'toEqual', [ 3 ]
+                'toEqual', [ 5 ]
             pageExpects ( -> inner.address outer ),
                 'toEqual', [ 0 ]
 
