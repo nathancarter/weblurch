@@ -16,8 +16,9 @@ later items are more vague than the earlier ones.
 ### Cleanup
 
  * Get a Travis-CI build going.  Once that works, ``install CoffeeScript''
-   should be able to be removed from the Getting Started info.  Change it to
-   an `npm build` or something.
+   should be able to be removed from the Getting Started info (because `npm
+   test` will build the app and run the tests, and uses the local `cake` and
+   `coffee` commands).
 
 ### New tools
 
