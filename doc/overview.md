@@ -1,58 +1,57 @@
 
 # Project Overview
 
-## What is Lurch now?
+## Current state of *Lurch*
 
-Lurch is a math-enabled word processor that can check the reasoning
-in a user's document, including mathematical proofs.  The current
-version is [a desktop app](http://lurchmath.org).  The purpose of
-this project is to move it to the web.
+Lurch is a math-enabled word processor that can check the reasoning in a
+user's document, including mathematical proofs.  The current version is [a
+desktop app](http://lurchmath.org).  The purpose of this project is to move
+it to the web.
 
-## What's the plan?
+## Future plans
 
-Doing so requires implementing a meaning-enabled word processor in
-the browser.  For a variety of reasons I won't go into here, just
-setting a div as content-editable causes great problems.  Therefore
-it is necessary to implement the word processor from the ground up,
-writing our own display, editing events, keyboard and mouse
-handling, and so on.  This is slow, but gives great power and
-control in the long run.
+Moving to the web requires implementing a meaning-enabled word processor in
+the browser.  This will be done by choosing a well-established foundation
+(probably [TinyMCE](http://www.tinymce.com/), or possibly [CKEditor](
+http://ckeditor.com/)) and building meaningful mathematical content on top
+of it.  This is very similar to how the desktop version of *Lurch* took a
+word-processor widget from [the Qt Project](http://qt-project.org/) and
+added a layer of meaning on top.
 
-Thus the project comes in roughly the following *four phases,*
-although you can read much more details about these on the
-[Progress Page](progress.md.html) (what has been done so far) and
-the [Plan Page](plan.md.html) (what still must be done).
- 1. Basement - Build ways to monitor and respond to edits in the
-    DOM, undo/redo them, combine them, etc.
-    *This has been built and unit tested.*
- 1. Lobby - Build keyboard and mouse handlers that perform DOM
-    edits, including cursor movements, selection, typing,
-    formatting, copy, paste, etc.
-    *This is not yet built, but when it is, there will be a
-    full word processor in the browser.  It will not be
-    Lurch-specific, in that it could easily be re-used for another
-    project.*
- 1. Guest rooms - Add "smart characters" to the word processor,
-    that is, custom objects that sit in a paragraph like a single
-    (perhaps very large) character, but have a different purpose
-    (e.g., images, equations, invisible groupers).  Add background
-    processing threads that can deal with the semantics of these
-    custom objects.
-    *This is not yet built, but when it is, the Lurch word
-    processor will become powerful enough to handle a wide variety
-    of non-Lurch tasks, including many kinds of meaningful
-    documents, like various computational tools.*
- 1. Penthouse suite - Apply the previous layer to the specific
-    needs of Lurch, building validation, rules, properties, etc.
-    *This is not yet built, but when it is, Lurch will have
-    migrated from the desktop to the web.*
+The project comes in roughly the following *five phases,* although you can
+read much more details about these on the [Progress Page](progress.md) (what
+has been done so far) and the [Plan Page](plan.md) (what still must be
+done).
+ 1. Foundation - Add to a TinyMCE or CKEditor interface the ability to load
+    and save files to the browser's local storage.  *This is in process.
+    Note that when it is complete, it can be used in many projects, not just
+    Lurch.*
+ 1. Basement - Add a layer of meaning on top of the plain editor.  In the
+    desktop version of the software, this shows up as "bubbles," a UI
+    familiar to anyone who has used Word's Equation Editor
+    or [LyX](http://wiki.lyx.org/) or [the current version of *Lurch*](http://lurchmath.org/wordpress-temp/wp-content/uploads/2012/03/mathfest-2013-gcps.pdf).
+    *This has not yet begun. Note that when it is complete, it can be used
+    in many projects, not just Lurch.*
+ 1. Lobby - Add tools for mathematical typesetting.  These might be done
+    with [MathQuill](http://mathquill.com/) or
+    [MathJax](http://www.mathjax.org/), [as in the desktop
+    version](https://www.youtube.com/watch?v=xvVz0xdqi-8).
+    *This is not yet built, but others [have](
+    https://github.com/foraker/tinymce_equation_editor) [built](
+    http://ckeditor.com/addon/mathjax) [similar](
+    https://github.com/rikuhaa/mathedit) [plugins](
+    https://github.com/efloti/plugin-mathjax-pour-tinymce) already.
+    This item could be done at this point, or earlier or later; it is
+    somewhat orthogonal to the rest.*
+ 1. Guest rooms - Add a facility for easy background processing of document
+    content.  This allows developers to extend the version with useless
+    bubbles to a version in which the bubbles can be used for any of a wide
+    variety of results.  *This is designed but not yet begun.*
+ 1. Penthouse suite - Apply the previous layer to the specific needs of
+    *Lurch*, adding dependencies, meaning, rules, etc.
+    *This is not yet fully designed, but when it has been both designed and
+    built, Lurch will have migrated from the desktop to the web.*
 
 ## What's built so far?
 
-Always check with the [Progress Page](progress.md.html) to see the
-answer to this question.
-
-Also, [the test app](../testapp/index.html) is the most advanced
-product in this repository at the moment, and the help link on its
-page can tell you how to use it, if you're a developer or tester.
-
+See the [Progress Page](progress.md) for the answer to this question.
