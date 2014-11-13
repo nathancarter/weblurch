@@ -28,6 +28,12 @@ So far the following has been accomplished on this front:
  * DOM nodes can also be [serialized](
    ../src/domutils.litcoffee#serialization) (and unserialized) for storage
 
+## External work
+
+I have implemented [jsfs](http://github.com/nathancarter/jsfs), a tool for
+storing files in the browser's LocalStorage as if it were a filesystem.
+This will be useful to import into Lurch.
+
 ## More to come
 
 To see detailed plans for how this project will proceed from its
