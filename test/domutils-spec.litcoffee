@@ -92,10 +92,13 @@ address will also be the empty array.
 
         it 'should be length-1 for a child', inPage ->
 
-Run a baseline test to be sure we know the size of the document now.
+Run a baseline test to be sure we know the size of the document now.  It
+should have three children, the empty text in the document body by default,
+the editor added there by a script after the page loads, and the div used as
+a toolbar by that editor.
 
             pageExpects ( -> document.body.childNodes.length ),
-                'toEqual', 5
+                'toEqual', 3
 
 First, add some structure to the document. We will need to run tests on a
 variety of parent-child pairs of nodes, so we need to create such pairs as
@@ -131,9 +134,9 @@ of those ways to verify that they are equal.
             pageExpects ( -> chidiv2.address pardiv ),
                 'toEqual', [ 1 ]
             pageExpects ( -> document.body.childNodes.length ),
-                'toEqual', 6
+                'toEqual', 4
             pageExpects ( -> pardiv.address document.body ),
-                'toEqual', [ 5 ]
+                'toEqual', [ 3 ]
             pageExpects ( -> inner.address outer ),
                 'toEqual', [ 0 ]
 

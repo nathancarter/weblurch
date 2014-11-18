@@ -13,8 +13,6 @@ later items are more vague than the earlier ones.
 
 ## A simple editor
 
- * Create a setup function in the main app that installs TinyMCE and makes
-   it full-screen, with appropriate buttons and plugins.
  * Add [jsfs](http://github.com/nathancarter/jsfs) support to that editor,
    so that it can load and save files to LocalStorage.
 
