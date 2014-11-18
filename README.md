@@ -1,6 +1,8 @@
 
 # webLurch
 
+![Build status](https://travis-ci.org/nathancarter/weblurch.svg?branch=master)
+
 This project is an attempt to rewrite [Lurch](http://lurchmath.org) in a web
 browser, together with many major design improvements at the same time.  But
 this project is only just beginning; the main Lurch product is still the
@@ -19,15 +21,25 @@ Or just start here:
 You cannot yet try the software out online, but that opportunity will come
 soon.
 
-If you want to build any of the source code or documentation in
-this repository on your local machine, follow these instructions.
- * Clone [this repository](https://github.com/nathancarter/weblurch).
- * Install [node.js](http://nodejs.org).
- * Install [CoffeeScript](http://coffeescript.org).
- * Run `cake` in the root folder of the repository to see the options for
-   the build process.  Start with `cake all`.
- * Browse this repository for more information.  The source code is
-   literate, so there's lots of documentation embedded in it, by nature.
+If you want to build any of the source code in this repository on your local
+machine, be sure that you have [node.js](http://nodejs.org) installed, and
+then execute the commands below. (The software does not run under `node`,
+but the build process does.)
+```
+$ git clone https://github.com/nathancarter/weblurch
+$ cd weblurch
+$ npm install        # installs required packages in ./node_modules
+$ npm test           # builds app and runs unit test suite
+```
+To build the app without running the tests, run `./node_modules/.bin/cake`.
+Since that's inconvenient, you can install
+[CoffeeScript](http://www.coffeescript.org) globally as follows, and `cake`
+will then be in your path.
+```
+$ npm install -g coffee-script
+```
+Browse this repository for more information.  The source code is
+literate, so there's lots of documentation embedded in it, by nature.
 
 ## Repository contents
 
@@ -76,11 +88,3 @@ information.
 This folder appears when you configure a local copy of this repository.  See
 [Getting Started](#getting-started), above.  It is where `node` installs all
 necessary dependencies, locally.
-
-### `reports` folder
-
-This folder is not in the repository, but will appear in a local copy if you
-run the unit tests.  It's a temporary storage location for reports on the
-results of the last run of unit tests, used by the build system when
-generating [the Markdown version of those same
-reports](test/test-results.md).

@@ -1,17 +1,16 @@
 
 # Tests of DOM utilities module
 
-Pull in the utility functions in `phantom-utils` that make it
-easier to write the tests below.
+Pull in the utility functions in `phantom-utils` that make it easier to
+write the tests below.
 
     { phantomDescribe, pageDo, pageExpects, inPage,
       pageExpectsError } = require './phantom-utils'
 
 ## address member function of Node class
 
-The tests in this section test the `address` member function in
-the `Node` prototype.
-[See its definition here.](domutils.litcoffee.html#address).
+The tests in this section test the `address` member function in the `Node`
+prototype. [See its definition here.](domutils.litcoffee.html#address).
 
     phantomDescribe 'address member function of Node class',
     './app/index.html', ->
@@ -53,8 +52,8 @@ Although there are others we could test, these are enough for now.
 
         it 'should be empty when argument is this', inPage ->
 
-We will test a few cases where the argument is the node it's being
-called on, for various nodes.
+We will test a few cases where the argument is the node it's being called
+on, for various nodes.
 
             pageDo ->
                 window.pardiv = document.createElement 'div'
@@ -79,10 +78,10 @@ called on, for various nodes.
 
         it 'should be empty for top-level,null', inPage ->
 
-The simplest way to test this is to compute the address of the
-document, and expect it to be the empty array.  But we also make
-the document create an empty div and not put it inside any other
-node, and we expect that its address will also be the empty array.
+The simplest way to test this is to compute the address of the document, and
+expect it to be the empty array.  But we also make the document create an
+empty div and not put it inside any other node, and we expect that its
+address will also be the empty array.
 
             pageExpects ( -> document.address() ), 'toEqual', [ ]
             pageExpects ( ->
@@ -93,15 +92,17 @@ node, and we expect that its address will also be the empty array.
 
         it 'should be length-1 for a child', inPage ->
 
-Run a baseline test to be sure we know the size of the document now.
+Run a baseline test to be sure we know the size of the document now.  It
+should have three children, the empty text in the document body by default,
+the editor added there by a script after the page loads, and the div used as
+a toolbar by that editor.
 
             pageExpects ( -> document.body.childNodes.length ),
                 'toEqual', 3
 
-First, add some structure to the document.
-We will need to run tests on a variety of parent-child pairs of
-nodes, so we need to create such pairs as structures in the
-document first.
+First, add some structure to the document. We will need to run tests on a
+variety of parent-child pairs of nodes, so we need to create such pairs as
+structures in the document first.
 
             pageDo ->
                 window.pardiv = document.createElement 'div'
@@ -111,19 +112,17 @@ document first.
                 window.chidiv2 = document.createElement 'div'
                 pardiv.appendChild chidiv2
 
-Next, create some structure *outside* the document.
-We want to verify that our routines work outside the page's
-document as well.
+Next, create some structure *outside* the document. We want to verify that
+our routines work outside the page's document as well.
 
                 window.outer = document.createElement 'div'
                 window.inner = document.createElement 'span'
                 outer.appendChild inner
 
-We call the `address` function in several different ways, but each
-time we call it on an immediate child of the argument (or an
-immediate child of the document, with no argument).  Sometimes we
-compute the same result in both of those ways to verify that they
-are equal.
+We call the `address` function in several different ways, but each time we
+call it on an immediate child of the argument (or an immediate child of the
+document, with no argument).  Sometimes we compute the same result in both
+of those ways to verify that they are equal.
 
             pageExpects ( ->
                 document.childNodes[0].address document ),
@@ -145,10 +144,10 @@ are equal.
 
         it 'should work for grandchildren, etc.', inPage ->
 
-First, we construct a hierarchy with several levels so that we can
-ask questions across those various levels.  This also ensures that
-we know exactly what the child indices are, because we designed
-the hierarchy in the first place.
+First, we construct a hierarchy with several levels so that we can ask
+questions across those various levels.  This also ensures that we know
+exactly what the child indices are, because we designed the hierarchy in the
+first place.
 
             pageDo ->
                 hierarchy = '''
@@ -171,10 +170,9 @@ the hierarchy in the first place.
                     </div>
                     '''
 
-In order to ensure that we do not insert any text nodes that would
-change the expected indices of the elements in the HTML code
-above, we remove whitespace between tags before creating a DOM
-structure from that code.
+In order to ensure that we do not insert any text nodes that would change
+the expected indices of the elements in the HTML code above, we remove
+whitespace between tags before creating a DOM structure from that code.
 
                 hierarchy = hierarchy.replace( /^\s*|\s*$/g, '' )
                                      .replace( />\s*</g, '><' )
@@ -187,9 +185,8 @@ Now create that hierarchy inside our page, for testing.
                 window.elts = ( document.getElementById \
                     "test-#{i}" for i in [0..8] )
 
-We check the address of each test element inside the div we just
-created, as well as its address relative to the div with id
-`test-2`.
+We check the address of each test element inside the div we just created, as
+well as its address relative to the div with id `test-2`.
 
 First, check all descendants of the main div.
 
@@ -212,8 +209,8 @@ First, check all descendants of the main div.
             pageExpects ( -> elts[8].address div ),
                 'toEqual', [ 2, 1, 1 ]
 
-Next, check the descendants of the element with id `test-2` for
-their addresses relative to that element.
+Next, check the descendants of the element with id `test-2` for their
+addresses relative to that element.
 
             pageExpects ( -> elts[2].address elts[2] ),
                 'toEqual', [ ]
@@ -232,9 +229,9 @@ their addresses relative to that element.
 
 ## index member function of Node class
 
-The tests in this section test the `index` member function in the
-`Node` prototype.  This function is like the inverse of `address`.
-[See its definition here.](domutils.litcoffee.html#index).
+The tests in this section test the `index` member function in the `Node`
+prototype.  This function is like the inverse of `address`. [See its
+definition here.](domutils.litcoffee.html#index).
 
     phantomDescribe 'index member function of Node class',
     './app/index.html', ->
@@ -248,9 +245,9 @@ The tests in this section test the `index` member function in the
 
         it 'should give errors for non-arrays', inPage ->
 
-Verify that calls to the function throw errors if anything but an
-array is passed as the argument, and that the error messages
-contain the relevant portion of the expected error message.
+Verify that calls to the function throw errors if anything but an array is
+passed as the argument, and that the error messages contain the relevant
+portion of the expected error message.
 
             pageExpectsError ( -> document.index 0 ),
                 'toMatch', /requires an array/
@@ -267,10 +264,9 @@ contain the relevant portion of the expected error message.
 
         it 'should yield itself for []', inPage ->
 
-Verify that `N.index []` yields `N`, for any node `N`.
-We test a variety of type of nodes, including the document, the
-body, some DIVs and SPANs inside, as well as some DIVs and SPANs
-that are not part of the document.
+Verify that `N.index []` yields `N`, for any node `N`. We test a variety of
+type of nodes, including the document, the body, some DIVs and SPANs inside,
+as well as some DIVs and SPANs that are not part of the document.
 
             pageDo ->
                 window.divInPage = document.createElement 'div'
@@ -290,9 +286,8 @@ that are not part of the document.
 
         it 'should work for descendant indices', inPage ->
 
-Here we re-use the same hierarchy from
-[a test above](#should-work-for-grandchildren-etc-),
-for the same reasons.
+Here we re-use the same hierarchy from [a test
+above](#should-work-for-grandchildren-etc-), for the same reasons.
 
             pageDo ->
                 hierarchy = '''
@@ -315,8 +310,8 @@ for the same reasons.
                     </div>
                     '''
 
-For the same reasons as above, we remove whitespace between tags
-before creating a DOM structure from that code.
+For the same reasons as above, we remove whitespace between tags before
+creating a DOM structure from that code.
 
                 hierarchy = hierarchy.replace( /^\s*|\s*$/g, '' )
                                      .replace( />\s*</g, '><' )
@@ -327,8 +322,8 @@ Now create that hierarchy inside our page, for testing.
                 document.body.appendChild div
                 div.innerHTML = hierarchy
 
-Look up a lot of addresses, and verify their ids (if they are
-elements with ids) or their text content (if they are text nodes).
+Look up a lot of addresses, and verify their ids (if they are elements with
+ids) or their text content (if they are text nodes).
 
             pageExpects ( -> div.index( [ 0 ] ).id ),
                 'toEqual', 'test-0'
@@ -363,15 +358,14 @@ elements with ids) or their text content (if they are text nodes).
 
         it 'should give undefined for bad indices', inPage ->
 
-Verify that calls to the function return undefined if any step in
-the address array is invalid.  There are many ways for this to
-happen (entry less than zero, entry larger than number of children
-at that level, entry not an integer, entry not a number at all).
-We test each of these cases below.
+Verify that calls to the function return undefined if any step in the
+address array is invalid.  There are many ways for this to happen (entry
+less than zero, entry larger than number of children at that level, entry
+not an integer, entry not a number at all). We test each of these cases
+below.
 
-First we re-create the same hierarchy from
-[a test above](#should-work-for-grandchildren-etc-),
-for the same reasons.
+First we re-create the same hierarchy from [a test
+above](#should-work-for-grandchildren-etc-), for the same reasons.
 
             pageDo ->
                 hierarchy = '''
@@ -394,8 +388,8 @@ for the same reasons.
                     </div>
                     '''
 
-For the same reasons as above, we remove whitespace between tags
-before creating a DOM structure from that code.
+For the same reasons as above, we remove whitespace between tags before
+creating a DOM structure from that code.
 
                 hierarchy = hierarchy.replace( /^\s*|\s*$/g, '' )
                                      .replace( />\s*</g, '><' )
@@ -406,12 +400,11 @@ Now create that hierarchy inside our page, for testing.
                 document.body.appendChild div
                 div.innerHTML = hierarchy
 
-Now call `div.index` with addresses that contain each of the
-erroneous steps mentioned above.  Here we call `typeof` on each
-of the return values, because we expect that they will be
-undefined in each case, and we wish to populate our array with
-that information in string form, so that it can be returned from
-the page as valid JSON.
+Now call `div.index` with addresses that contain each of the erroneous steps
+mentioned above.  Here we call `typeof` on each of the return values,
+because we expect that they will be undefined in each case, and we wish to
+populate our array with that information in string form, so that it can be
+returned from the page as valid JSON.
 
             pageExpects ( -> typeof div.index [ -1 ] ),
                 'toEqual', 'undefined'
@@ -442,9 +435,8 @@ the page as valid JSON.
 
 ## Node toJSON conversion
 
-The tests in this section test the `toJSON` member function in the
-`Node` prototype.
-[See its definition here.](domutils.litcoffee.html#serialization)
+The tests in this section test the `toJSON` member function in the `Node`
+prototype. [See its definition here.](domutils.litcoffee.html#serialization)
 
     phantomDescribe 'Node toJSON conversion',
     './app/index.html', ->
@@ -461,8 +453,8 @@ First, just verify that the function itself is present.
 
         it 'should convert text nodes to strings', inPage ->
 
-HTML text nodes should serialize as ordinary strings.
-We test a variety of ways they might occur.
+HTML text nodes should serialize as ordinary strings. We test a variety of
+ways they might occur.
 
             pageDo ->
                 window.textNode = document.createTextNode 'foo'
@@ -479,8 +471,8 @@ We test a variety of ways they might occur.
 
         it 'should convert comment nodes to objects', inPage ->
 
-HTML comment nodes should serialize as objects with the comment
-flag and the comment's text content as well.
+HTML comment nodes should serialize as objects with the comment flag and the
+comment's text content as well.
 
             pageExpects ( ->
                 comment = document.createComment 'comment content'
@@ -495,9 +487,9 @@ flag and the comment's text content as well.
 
         it 'should handle other no-children elements', inPage ->
 
-Other no-children elements include images, horizontal rules, and
-line breaks.  We verify that in each case the object is encoded
-with the correct tag name and attributes, but no children.
+Other no-children elements include images, horizontal rules, and line
+breaks.  We verify that in each case the object is encoded with the correct
+tag name and attributes, but no children.
 
             pageDo ->
                 window.div = document.createElement 'div'
@@ -521,11 +513,10 @@ with the correct tag name and attributes, but no children.
         it 'should handle spans correctly', inPage ->
 
 Must correctly convert things of the form `<span>text</span>` or
-`<i>text</i>` or any other simple, non-nested tag.  Three simple
-tests are done, plus one with two different attributes.
+`<i>text</i>` or any other simple, non-nested tag.  Three simple tests are
+done, plus one with two different attributes.
 
-First, a span created by appendign a text node child to a new
-span element.
+First, a span created by appending a text node child to a new span element.
 
             pageExpects ( ->
                 span1 = document.createElement 'span'
@@ -535,8 +526,8 @@ span element.
                     children : [ 'hello' ]
                 }
 
-Next, a span created by assigning to the innerHTML property of a
-new span element.
+Next, a span created by assigning to the innerHTML property of a new span
+element.
 
             pageExpects ( ->
                 span2 = document.createElement 'span'
@@ -546,8 +537,8 @@ new span element.
                     children : [ 'world' ]
                 }
 
-Next, an italic element lifted out of a div, where it was created
-using the innerHTML property of the div.
+Next, an italic element lifted out of a div, where it was created using the
+innerHTML property of the div.
 
             pageExpects ( ->
                 div1 = document.createElement 'div'
@@ -557,8 +548,7 @@ using the innerHTML property of the div.
                     children : [ 'The Great Gatsby' ]
                 }
 
-Same as the previous, but this time with some attributes on the
-element.
+Same as the previous, but this time with some attributes on the element.
 
             pageExpects ( ->
                 div2 = document.createElement 'div'
@@ -573,10 +563,10 @@ element.
 
         it 'should handle hierarchies correctly', inPage ->
 
-The above tests cover simple situations, either DOM trees of
-height 1 or 2.  Now we consider situations in which there are
-many levels to the Node tree.  I choose three examples, and mix in
-a diversity of depths, attributes, tag names, comments, etc.
+The above tests cover simple situations, either DOM trees of height 1 or 2.
+Now we consider situations in which there are many levels to the Node tree.
+I choose three examples, and mix in a diversity of depths, attributes, tag
+names, comments, etc.
 
             pageDo ->
                 window.div1 = document.createElement 'div'
@@ -718,13 +708,11 @@ a diversity of depths, attributes, tag names, comments, etc.
 
         it 'should respect verbosity setting', inPage ->
 
-The verbosity setting of the serializer defaults to true, and
-gives results like those shown in the tests above, whose object
-keys are human-readable.  If verbosity is disabled, as in the
-tests below, then each key is shrunk to a unique one-letter
-abbreviation, as documented
-[in the module where the serialization is implemented](
-domutils.litcoffee.html#serialization).
+The verbosity setting of the serializer defaults to true, and gives results
+like those shown in the tests above, whose object keys are human-readable.
+If verbosity is disabled, as in the tests below, then each key is shrunk to
+a unique one-letter abbreviation, as documented [in the module where the
+serialization is implemented]( domutils.litcoffee.html#serialization).
 
 Here we do only one, brief test of each of the types tested above.
 
@@ -773,9 +761,8 @@ Here we do only one, brief test of each of the types tested above.
 
 ## Node fromJSON conversion
 
-The tests in this section test the `fromJSON` member function in
-the `Node` object.
-[See its definition here.](
+The tests in this section test the `fromJSON` member function in the `Node`
+object. [See its definition here.](
 domutils.litcoffee.html#from-objects-to-dom-nodes)
 
     phantomDescribe 'Node fromJSON conversion',
@@ -793,10 +780,9 @@ First, just verify that the function itself is present.
 
         it 'should convert strings to text nodes', inPage ->
 
-This test is simply the inverse of the analogous test earlier.
-It verifies that two strings, one empty and one nonempty, both get
-converted correctly into `Text` instances with the appropriate
-content.
+This test is simply the inverse of the analogous test earlier. It verifies
+that two strings, one empty and one nonempty, both get converted correctly
+into `Text` instances with the appropriate content.
 
             pageDo ->
                 window.node1 = Node.fromJSON 'just a string'
@@ -817,11 +803,10 @@ content.
 
         it 'should handle comment objects', inPage ->
 
-This test is simply the inverse of the analogous test earlier.
-It verifies that two objects, one in verbose and one in
-non-verbose notation, one empty and one nonempty, both get
-converted correctly into `Comment` instances with the appropriate
-content.
+This test is simply the inverse of the analogous test earlier. It verifies
+that two objects, one in verbose and one in non-verbose notation, one empty
+and one nonempty, both get converted correctly into `Comment` instances with
+the appropriate content.
 
             pageDo ->
                 window.node1 = Node.fromJSON \
@@ -844,11 +829,10 @@ content.
 
         it 'should be able to create empty elements', inPage ->
 
-This test is simply the inverse of the analogous test earlier.
-It verifies that two objects, one in verbose and one in
-non-verbose notation, both get converted correctly into `Element`
-instances with no children but the appropriate tags and
-attributes.
+This test is simply the inverse of the analogous test earlier. It verifies
+that two objects, one in verbose and one in non-verbose notation, both get
+converted correctly into `Element` instances with no children but the
+appropriate tags and attributes.
 
             pageDo ->
                 window.node1 = Node.fromJSON \
@@ -891,11 +875,11 @@ attributes.
 
         it 'should build depth-one DOM trees', inPage ->
 
-This test is simply the inverse of the analogous test earlier.
-Depth-one trees are those that are objects with a children array,
-no child of which has any children itself.  We test with one that
-uses verbose notation and one using non-verbose.  In each case,
-some of the parts have attributes and some don't.
+This test is simply the inverse of the analogous test earlier. Depth-one
+trees are those that are objects with a children array, no child of which
+has any children itself.  We test with one that uses verbose notation and
+one using non-verbose.  In each case, some of the parts have attributes and
+some don't.
 
             pageExpects ( ->
                 node = Node.fromJSON {
@@ -941,11 +925,10 @@ some of the parts have attributes and some don't.
 
         it 'should build depth-one DOM trees', inPage ->
 
-This test is simply the inverse of the analogous test earlier.
-The routines for building DOM trees from JSON objects should be
-able to create many-level, nested structures.  Here I mix
-verbose and non-verbose notation in one, large test, to be sure
-that this works.
+This test is simply the inverse of the analogous test earlier. The routines
+for building DOM trees from JSON objects should be able to create
+many-level, nested structures.  Here I mix verbose and non-verbose notation
+in one, large test, to be sure that this works.
 
             pageExpects ( ->
                 node = Node.fromJSON {
@@ -1003,9 +986,8 @@ that this works.
 
 ## leaf navigation in Node class
 
-The tests in this section test the `nextLeaf` and `previousLeaf`
-member functions in the `Node` prototype.
-[See their definition here.](
+The tests in this section test the `nextLeaf` and `previousLeaf` member
+functions in the `Node` prototype. [See their definition here.](
 domutils.litcoffee.html#next-and-previous-leaves).
 
     phantomDescribe 'leaf navigation in Node class',
@@ -1023,18 +1005,17 @@ First, just verify that both functions are present.
 
         it 'should work among sibling leaves', inPage ->
 
-We test the simplest case, when we call the functions on leaf
-nodes who have immediate sibling nodes that are also leaves, and
-thus which should be returned by the functions.  We work within
-the following environment.
+We test the simplest case, when we call the functions on leaf nodes who have
+immediate sibling nodes that are also leaves, and thus which should be
+returned by the functions.  We work within the following environment.
 
             pageDo ->
                 window.div = document.createElement 'div'
                 div.innerHTML = 'A section of text.
                                  <br><hr>Yet more text.'
 
-Within the div we find just four leaf nodes.  Let's ensure that
-the functions work correctly among those four.
+Within the div we find just four leaf nodes.  Let's ensure that the
+functions work correctly among those four.
 
             pageExpects ->
                 div.childNodes[0].nextLeaf() is div.childNodes[1]

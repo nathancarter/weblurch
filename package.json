@@ -5,11 +5,18 @@
   "author": "Nathan Carter <ncarter@bentley.edu> (http://web.bentley.edu/empl/c/ncarter)",
   "license": "LGPLv3",
   "dependencies": {
-    "coffee-script" : "1.7.1",
-    "uglify-js" : "2.4.12",
+    "coffee-script": "1.8.0",
+    "uglify-js" : "2.4.15",
     "jasmine-node": "1.13.1",
     "node-phantom-simple": "1.0.16",
     "xml2js": "0.4.1",
-    "stack-trace": "0.0.8"
+    "colors": "1.0.3"
+  },
+  "scripts": {
+    "test": "./node_modules/.bin/cake all"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nathancarter/weblurch.git"
   }
 }

@@ -11,72 +11,10 @@ in chronological order, the first items being those that should be done
 next, and the later items those that must come after.  Necessarily, the
 later items are more vague than the earlier ones.
 
-## Reworking this whole repository
+## A simple editor
 
-### Cleanup
-
- * Clear out just about everything in the gh-pages branch, except a redirect
-   to the app itself, which is just a stub.
- * Move the `reports/` folder into `test/reports/`, so that no one sees it,
-   and you can remove mention of it from the README.
- * Get a Travis-CI build going.  Once that works, ``install CoffeeScript''
-   should be able to be removed from the Getting Started info.  Change it to
-   an `npm build` or something.
-
-### New tools
-
- * Import jQuery and TinyMCE into the respository.
- * Include jQuery and TinyMCE scripts into the main app.
- * Create a setup function in the main app that installs TinyMCE and makes
-   it full-screen, with appropriate buttons and plugins.
-
-## Load and save
-
-Big-picture plan:
- * Before executing any of the tasks in this section, first look ahead to
-   the [Dependencies](#dependencies) section, below.  It has requirements
-   that will require you to be careful *here* about your design decisions.
-   Ensure that a sensible design for loading, saving, sharing, and
-   dependency loading is in place before proceeding to implement any of the
-   load/save features in this section.
- * Research the notion of using Dropbox as a data storage location; it may
-   impact how you proceed with the other tasks in this section, below.  Here
-   are some details:
-   * [You can use ready-made open and save dialogs.](
-     https://www.dropbox.com/developers/dropins)
-     This may be the best for us, since it's minimally invasive and may
-     handle what we need.  Not sure how it would work with (a) the settings
-     file or (b) dependencies.
-   * [You can store tables that are a JSON-SQL hybrid.](
-     https://www.dropbox.com/developers/datastore)
-     This is quite general, but also comes with increased complexity over
-     the previous option.  It is not, however, really that complex.
-   * A bonus on top of the previous bullet point is that
-     [recent, bleeding-edge changes in the API](
-     https://www.dropbox.com/developers/blog/99/using-the-new-local-datastores-feature)
-     make it possible to use one codebase for both local storage and Dropbox
-     storage, a very attractive option.
- * Implement the following needs.
-   * The main app must be able to load and save documents at least
-     locally (e.g.,
-     [Web Storage](http://www.w3schools.com/html/html5_webstorage.asp))
-     but preferably everywhere (e.g., Dropbox, as described above)
-   * If Dropbox is not used, and thus the user's files are not present on
-     their own local machine, provide a way for the user to load/save files
-     into/out of web storage?
- * Add the ability to share documents with the world, using something like
-   [Firebase](https://www.firebase.com/), or making Dropbox files shared, if
-   the API supports that.
- * Make there be a way to share files as webpages as well, read-only pages
-   that contain full meaning information.  This way instructors can post on
-   their websites (or Lurch can post on its project web space) core
-   dependencies that anyone can use, and the integrity of a course (or the
-   whole Lurch project!) is not dependent on the state of any individual's
-   Dropbox folder.
-
-But the way I expect to proceed immediately is by implementing
-[jsfs](http://github.com/nathancarter/jsfs) first, and then using that as a
-mock filesystem that's always present.
+ * Add [jsfs](http://github.com/nathancarter/jsfs) support to that editor,
+   so that it can load and save files to LocalStorage.
 
 ## Extending the Editor
 
@@ -220,12 +158,16 @@ BackgroundFunction class.
 
 ### Dependencies
 
+This section connects tightly with the one after it, "Extending load and
+save."  Be sure to read both together.
+
  * Create a way to give a document a title, author, language, and version,
    like we did before.  But perhaps we can drop language?  Version?
- * Create a way to find a document in the user's web storage or anywhere
-   online (Firebase, web, Dropbox public folder, etc.) based on its URN.
- * Cache such files in local/Dropbox storage, so that Lurch is usable
-   offline.
+ * Reference dependencies by URLs; these can be file:/// URLs, which is a
+   reference to LocalStorage, or http:// URLs, which is a reference to
+   `lurchmath.org`.
+ * Cache the meaning computed from such files in local/Dropbox storage, so
+   that Lurch is usable offline.
  * This will impact the events of what needs to happen when files are
    closed/opened, and what needs to be recomputed, based on whether or not
    the dependencies changed.  Perhaps do what
@@ -233,6 +175,41 @@ BackgroundFunction class.
    and use a combination of timestamps and MD5 hashes to tell whether you
    need to bother recomputing the data from a dependency.  But where should
    such data even be stored?  Design discussion to have...
+
+## Extending load and save
+
+We may later want to add more load-and-save features, such as Dropbox
+integration.  See the following web links for details on how such extensions
+could be implemented.
+
+   * [You can use ready-made open and save dialogs.](
+     https://www.dropbox.com/developers/dropins)
+     This is minimally invasive, but does not allow you to upload files from
+     the browser's LocalStorage (at the time of this writing).  Rather, it
+     only permits uploading files from the user's hard drive.
+   * [You can store tables that are a JSON-SQL hybrid.](
+     https://www.dropbox.com/developers/datastore)
+     This is quite general, but also comes with increased complexity over
+     the previous option.  It is not, however, really that complex.
+   * A bonus on top of the previous bullet point is that
+     [recent, bleeding-edge changes in the API](
+     https://www.dropbox.com/developers/blog/99/using-the-new-local-datastores-feature)
+     make it possible to use one codebase for both local storage and Dropbox
+     storage, a very attractive option.
+   * If Dropbox is not used, and thus the user's files are not present on
+     their own local machine, provide a way for the user to load/save files
+     into/out of web storage?
+   * Add the ability to share documents with the world.  Options:
+     * Use something like [Firebase](https://www.firebase.com/)
+     * If using Dropbox, make files shared, if the API supports that
+     * Create a wiki on `lurchmath.org` into which entire Lurch HTML files
+       can be pasted as new pages, but only editable by the original author.
+       This way instructors can post on that wiki core dependencies that
+       anyone can use, and the integrity of a course (or the whole Lurch
+       project!) is not dependent on the state of any individual's Dropbox
+       folder.  (Note that external websites are not an option, since
+       `XMLHttpRequest` restricts cross-domain access, unless you run a
+       proxy on `lurchmath.org`.)
 
 ### Math
 
