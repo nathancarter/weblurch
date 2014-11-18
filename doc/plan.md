@@ -13,8 +13,6 @@ later items are more vague than the earlier ones.
 
 ## A simple editor
 
- * Import jQuery and TinyMCE into the respository.
- * Include jQuery and TinyMCE scripts into the main app.
  * Create a setup function in the main app that installs TinyMCE and makes
    it full-screen, with appropriate buttons and plugins.
  * Add [jsfs](http://github.com/nathancarter/jsfs) support to that editor,
