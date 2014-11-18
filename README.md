@@ -18,8 +18,10 @@ Or just start here:
 
 ## Getting Started
 
-You cannot yet try the software out online, but that opportunity will come
-soon.
+Although you can [try the current version out
+online](http://nathancarter.github.io/weblurch/app/index.html), right now
+it's just a [TinyMCE](http://www.tinymce.com) instance with nothing else
+added.  The math-specific features are still to come.
 
 If you want to build any of the source code in this repository on your local
 machine, be sure that you have [node.js](http://nodejs.org) installed, and
