@@ -217,7 +217,7 @@ to gh-pages and merging in changes.
                 git commit -a -m 'Updating gh-pages with latest app build'
                 git checkout master
             '''.yellow
-        runShellCommands [
+        build.runShellCommands [
             {
                 description : 'Switching to gh-pages branch...'.green
                 command : 'git checkout gh-pages'
@@ -229,7 +229,7 @@ to gh-pages and merging in changes.
         ], ->
             console.log 'Building app in gh-pages...'.green
             build.enqueue 'app', ->
-                runShellCommands [
+                build.runShellCommands [
                     {
                         description : 'Committing changes... (which may fail
                             if there were no changes to tha app itself; in
