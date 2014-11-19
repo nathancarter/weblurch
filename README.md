@@ -1,7 +1,7 @@
 
 # webLurch
 
-![Build status](https://travis-ci.org/nathancarter/weblurch.svg?branch=master)
+[![Build status](https://travis-ci.org/nathancarter/weblurch.svg?branch=master)](https://travis-ci.org/nathancarter/weblurch)
 
 This project is an attempt to rewrite [Lurch](http://lurchmath.org) in a web
 browser, together with many major design improvements at the same time.  But
