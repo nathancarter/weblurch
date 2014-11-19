@@ -13,14 +13,8 @@ later items are more vague than the earlier ones.
 
 ## Load and save
 
-### Preparation
-
- * Create a `loadsaveplugin.litcoffee` file in which we will write a TinyMCE
-   plugin for jsfs integration.  In that file, write the skeleton of a
-   plugin, a near-empty `tinymce.PluginManager.add` call.
- * Load the plugin from `setup.litcoffee`.
-
-The rest of the steps below are all work in the `loadsaveplugin`.
+The steps below are all work in [the Load/Save
+Plugin](../app/loadsaveplugin.litcoffee).
 
  * Create a `LoadSave` class whose instances will live as members in
    TinyMCE editor instances, and control their load and save functionality.

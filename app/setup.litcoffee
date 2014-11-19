@@ -24,7 +24,7 @@ buttons, and context menu items as given below.
             statusbar : no
             plugins : 'advlist table charmap colorpicker contextmenu image
                 link importcss paste print save searchreplace spellchecker
-                textcolor fullscreen'
+                textcolor fullscreen -loadsave'
             toolbar : [
                 'newfile openfile savefile managefiles | print
                     | undo redo | cut copy paste
