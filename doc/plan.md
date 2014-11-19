@@ -16,8 +16,6 @@ later items are more vague than the earlier ones.
 The steps below are all work in [the Load/Save
 Plugin](../app/loadsaveplugin.litcoffee).
 
- * Add to both setters code that updates the page's title to reflect the
-   name of the file being edited, and a \* for when it's dirty or not.
  * Create a `clear` subroutine that does the following.
    * Call `editor.setContent ''`.
    * Set the dirty flag to false.

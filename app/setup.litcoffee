@@ -1,6 +1,11 @@
 
 # Add an editor to the app
 
+First, specify that the app's name is "Lurch," so that will be used when
+creating the title for this page (e.g., to show up in the tab in Chrome).
+
+    setAppName 'Lurch'
+
 This file initializes a [TinyMCE](http://www.tinymce.com/) editor inside the
 [main app page](index.html).  It is designed to be used inside that page,
 where [jQuery](http://jquery.com/) has already been loaded, thus defining
