@@ -30,9 +30,10 @@ but the build process does.)
 ```
 $ git clone https://github.com/nathancarter/weblurch
 $ cd weblurch
-$ git submodule init # downloads all files in all git submodules
-$ npm install        # installs required packages in ./node_modules
-$ npm test           # builds app and runs unit test suite
+$ git submodule init   # prepares git submodule folders
+$ git submodule update # downloads all files in all git submodules
+$ npm install          # installs required packages in ./node_modules
+$ npm test             # builds app and runs unit test suite
 ```
 To build the app without running the tests, run `./node_modules/.bin/cake`.
 Since that's inconvenient, you can install
