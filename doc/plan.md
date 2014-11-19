@@ -16,13 +16,6 @@ later items are more vague than the earlier ones.
 The steps below are all work in [the Load/Save
 Plugin](../app/loadsaveplugin.litcoffee).
 
- * Create a `LoadSave` class whose instances will live as members in
-   TinyMCE editor instances, and control their load and save functionality.
- * On editor initialization, if there is not already a `LoadSave` member of
-   the editor object, create one, an empty object.
- * Add a member to that class for whether the document is dirty, together
-   with a setter.  Initialize it to false.
- * Add a member to that class for the filename, together with a setter.
  * Add to both setters code that updates the page's title to reflect the
    name of the file being edited, and a \* for when it's dirty or not.
  * Create a `clear` subroutine that does the following.
