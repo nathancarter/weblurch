@@ -30,6 +30,7 @@ but the build process does.)
 ```
 $ git clone https://github.com/nathancarter/weblurch
 $ cd weblurch
+$ git submodule init # downloads all files in all git submodules
 $ npm install        # installs required packages in ./node_modules
 $ npm test           # builds app and runs unit test suite
 ```

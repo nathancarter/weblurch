@@ -13,8 +13,8 @@ later items are more vague than the earlier ones.
 
 ## A simple editor
 
- * Add [jsfs](http://github.com/nathancarter/jsfs) support to that editor,
-   so that it can load and save files to LocalStorage.
+ * Use [jsfs](http://github.com/nathancarter/jsfs) so that the editor can
+   load and save files to LocalStorage.
 
 ## Extending the Editor
 
