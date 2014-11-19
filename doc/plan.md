@@ -16,12 +16,6 @@ later items are more vague than the earlier ones.
 The steps below are all work in [the Load/Save
 Plugin](../app/loadsaveplugin.litcoffee).
 
- * Create a `clear` subroutine that does the following.
-   * Call `editor.setContent ''`.
-   * Set the dirty flag to false.
- * Call `clear` after the editor is initialized.
- * Add a change handler that marks the document dirty.
-
 ### New
 
  * Add a `tryToClear` member to the `LoadSave` class.  It does this:
