@@ -11,10 +11,75 @@ in chronological order, the first items being those that should be done
 next, and the later items those that must come after.  Necessarily, the
 later items are more vague than the earlier ones.
 
-## A simple editor
+## Load and save
 
- * Use [jsfs](http://github.com/nathancarter/jsfs) so that the editor can
-   load and save files to LocalStorage.
+### Preparation
+
+ * Create a `loadsaveplugin.litcoffee` file in which we will write a TinyMCE
+   plugin for jsfs integration.  In that file, write the skeleton of a
+   plugin, a near-empty `tinymce.PluginManager.add` call.
+ * Load the plugin from `setup.litcoffee`.
+
+The rest of the steps below are all work in the `loadsaveplugin`.
+
+ * Create a `LoadSave` class whose instances will live as members in
+   TinyMCE editor instances, and control their load and save functionality.
+ * On editor initialization, if there is not already a `LoadSave` member of
+   the editor object, create one, an empty object.
+ * Add a member to that class for whether the document is dirty, together
+   with a setter.  Initialize it to false.
+ * Add a member to that class for the filename, together with a setter.
+ * Add to both setters code that updates the page's title to reflect the
+   name of the file being edited, and a \* for when it's dirty or not.
+ * Create a `clear` subroutine that does the following.
+   * Call `editor.setContent ''`.
+   * Set the dirty flag to false.
+ * Call `clear` after the editor is initialized.
+ * Add a change handler that marks the document dirty.
+
+### New
+
+ * Add a `tryToClear` member to the `LoadSave` class.  It does this:
+   * If the document is dirty, prompt the user for whether they wish to
+     save, discard, or cancel.  It then does one of these things:
+     * Save does nothing for now, but we'll implement it below.  So for now
+       it just pops an alert saying that it can't save yet.
+     * Discard calls `clear`.
+     * Cancel does nothing.
+ * Add a File > New menu item and toolbar button that just call the
+   `tryToClear` member of the `LoadSave` class.
+
+### Save
+
+ * Add a `tryToSave` function to the `LoadSave` class that calls a
+   callback when complete, passing a filename for where to save, or null to
+   mean the dialog was cancelled.  It uses the save dialog in the `jsfs`
+   submodule.
+ * In `tryToClear`, replace the alert box with a call to `tryToSave`,
+   passing `clear` as the callback for if the save was successful.
+ * Add a File > Save menu item and toolbar button that just call the
+   `tryToSave` member of the `LoadSave` class.
+
+### Load
+
+ * Add an `tryToOpen` function to the `LoadSave` class that calls a callback
+   when complete, passing a filename indicating what to open, or null to
+   mean the dialog was cancelled.  It uses the open dialog in the `jsfs`
+   submodule.
+ * Add a `handleOpen` member to the `LoadSave` class.  It does this:
+   * If the document is dirty, prompt the user for whether they wish to
+     save, discard, or cancel.  It then does one of these things:
+     * Save does nothing for now, but we'll implement it below.  So for now
+       it just pops an alert saying that it can't save yet.
+     * Discard calls `tryToOpen`.
+     * Cancel does nothing.
+ * Add a File > Open menu item and toolbar button that just call the
+   `handleOpen` member of the `LoadSave` class.
+
+### Files
+
+ * Add a File > Manage files... menu item that just uses the manage files
+   dialog provided in the `jsfs` submodule.
 
 ## Extending the Editor
 
