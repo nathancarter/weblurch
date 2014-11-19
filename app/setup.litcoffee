@@ -40,6 +40,42 @@ buttons, and context menu items as given below.
                     | link unlink | charmap image
                     | spellchecker searchreplace'
             ]
+            menu : {
+                file : {
+                    title : 'File'
+                    items : 'newfile | print'
+                }
+                edit : {
+                    title : 'Edit'
+                    items : 'undo redo
+                           | cut copy paste pastetext
+                           | selectall'
+                }
+                insert : {
+                    title : 'Insert'
+                    items : 'link media
+                           | template hr'
+                }
+                view : {
+                    title : 'View'
+                    items : 'visualaid'
+                }
+                format : {
+                    title : 'Format'
+                    items : 'bold italic underline
+                             strikethrough superscript subscript
+                           | formats | removeformat'
+                }
+                table : {
+                    title : 'Table'
+                    items : 'inserttable tableprops deletetable
+                           | cell row column'
+                }
+                tools : {
+                    title : 'Tools'
+                    items : 'spellchecker code'
+                }
+            }
             contextmenu : 'link image inserttable
                 | cell row column deletetable'
 

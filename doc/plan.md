@@ -16,18 +16,6 @@ later items are more vague than the earlier ones.
 The steps below are all work in [the Load/Save
 Plugin](../app/loadsaveplugin.litcoffee).
 
-### New
-
- * Add a `tryToClear` member to the `LoadSave` class.  It does this:
-   * If the document is dirty, prompt the user for whether they wish to
-     save, discard, or cancel.  It then does one of these things:
-     * Save does nothing for now, but we'll implement it below.  So for now
-       it just pops an alert saying that it can't save yet.
-     * Discard calls `clear`.
-     * Cancel does nothing.
- * Add a File > New menu item and toolbar button that just call the
-   `tryToClear` member of the `LoadSave` class.
-
 ### Save
 
  * Add a `tryToSave` function to the `LoadSave` class that calls a

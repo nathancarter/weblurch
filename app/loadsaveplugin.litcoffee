@@ -48,6 +48,22 @@ this object, which therefore adds the \* marker to the page title.
 
             @editor.on 'change', ( event ) => @setDocumentDirty yes
 
+Now install into the editor controls that run methods in this object.
+
+            @editor.addButton 'newfile', {
+                text : 'New'
+                icon : 'newdocument'
+                shortcut : 'ctrl+N'
+                onclick : => @tryToClear()
+            }
+            @editor.addMenuItem 'newfile', {
+                text : 'New'
+                icon : 'newdocument'
+                context : 'file'
+                shortcut : 'ctrl+N'
+                onclick : => @tryToClear()
+            }
+
 Lastly, keep track of this instance in the class member for that purpose.
 
             LoadSave::instances.push this
@@ -79,10 +95,43 @@ in code.
 
 To clear the contents of the document, use this method in its `LoadSave`
 member.  It handles notifying this instance that the document is then clean.
+It does *not* check to see if the document needs to be saved first; it just
+outright clears the editor.
 
         clear: ->
             @editor.setContent ''
             @setDocumentDirty no
+
+Unlike the previous, this function *does* first check to see if the contents
+of the editor need to be saved.  If they do, and they aren't saved (or if
+the user cancels), then the clear is aborted.  Otherwise, clear is run.
+
+        tryToClear: ->
+            if not @documentDirty
+                @clear()
+                @editor.focus()
+                return
+            @editor.windowManager.open {
+                title : 'Save first?'
+                buttons : [
+                    {
+                        text : 'Save'
+                        onclick : =>
+                            alert 'Not yet implemented'
+                            @editor.windowManager.close()
+                    }
+                    {
+                        text : 'Discard'
+                        onclick : =>
+                            @clear()
+                            @editor.windowManager.close()
+                    }
+                    {
+                        text : 'Cancel'
+                        onclick : => @editor.windowManager.close()
+                    }
+                ]
+            }
 
 # Plugin setup, etc.
 
