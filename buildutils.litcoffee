@@ -196,11 +196,9 @@ Run the `coffee` compiler on the file, also creating a source map. This
 generates both `.js` and `.js.map` files.
 
         exports.runShellCommands [
-            {
-                description : "\tCompiling #{srcfile}..."
-                command : "#{coffee} --map --compile #{file}"
-                cwd : path
-            }
+            description : "\tCompiling #{srcfile}..."
+            command : "#{coffee} --map --compile #{file}"
+            cwd : path
 
 Run [uglifyjs](http://github.com/mishoo/UglifyJS) to minify the results,
 taking source maps into account.  Call the callback when done, or throw an
@@ -209,11 +207,10 @@ error if there was one.
 (The `uglify` output is not printed unless there was an error, because
 `uglify` dumps a bit of spam I'm suppressing.)
 
-            {
-                description : "\tMinifying #{base}.js..."
-                command : "#{uglify} -c -m -v false
-                           --in-source-map #{base}.js.map -o #{base}.min.js
-                           --source-map #{base}.min.js.map"
-                cwd : path
-            }
+        ,
+            description : "\tMinifying #{base}.js..."
+            command : "#{uglify} -c -m -v false
+                       --in-source-map #{base}.js.map -o #{base}.min.js
+                       --source-map #{base}.min.js.map"
+            cwd : path
         ], callback

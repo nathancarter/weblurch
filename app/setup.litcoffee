@@ -23,7 +23,7 @@ Create a `<textarea>` to be used as the editor.
 Install a TinyMCE instance in that text area, with specific plugins, toolbar
 buttons, and context menu items as given below.
 
-        tinymce.init {
+        tinymce.init
             selector : '#editor'
             auto_focus : 'editor'
             statusbar : no
@@ -90,4 +90,3 @@ Increase the default font size and maximize the editor to fill the page.
                 editor.on 'init', ->
                     editor.getBody().style.fontSize = '16px'
                     setTimeout ( -> editor.execCommand 'mceFullScreen' ), 0
-        }

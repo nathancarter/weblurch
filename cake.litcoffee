@@ -218,30 +218,23 @@ to gh-pages and merging in changes.
                 git checkout master
             '''.yellow
         build.runShellCommands [
-            {
-                description : 'Switching to gh-pages branch...'.green
-                command : 'git checkout gh-pages'
-            }
-            {
-                description : 'Merging in changes...'.green
-                command : 'git merge master'
-            }
+            description : 'Switching to gh-pages branch...'.green
+            command : 'git checkout gh-pages'
+        ,
+            description : 'Merging in changes...'.green
+            command : 'git merge master'
         ], ->
             console.log 'Building app in gh-pages...'.green
             build.enqueue 'app', ->
                 build.runShellCommands [
-                    {
-                        description : 'Committing changes... (which may fail
-                            if there were no changes to tha app itself; in
-                            that case, just git checkout master and push.)'
-                            .green
-                        command : "git commit -a -m 'Updating gh-pages with
-                            latest generated docs'"
-                    }
-                    {
-                        description : 'Going back to master...'.green
-                        command : 'git checkout master'
-                    }
+                    description : 'Committing changes... (which may fail if
+                        there were no changes to tha app itself; in that
+                        case, just git checkout master and push.)'.green
+                ,
+                    command : "git commit -a -m 'Updating gh-pages with
+                        latest generated docs'"
+                    description : 'Going back to master...'.green
+                    command : 'git checkout master'
                 ], ->
                     console.log 'Done.'.green
                     console.log '''

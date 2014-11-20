@@ -50,19 +50,17 @@ this object, which therefore adds the \* marker to the page title.
 
 Now install into the editor controls that run methods in this object.
 
-            @editor.addButton 'newfile', {
+            @editor.addButton 'newfile',
                 text : 'New'
                 icon : 'newdocument'
                 shortcut : 'ctrl+N'
                 onclick : => @tryToClear()
-            }
-            @editor.addMenuItem 'newfile', {
+            @editor.addMenuItem 'newfile',
                 text : 'New'
                 icon : 'newdocument'
                 context : 'file'
                 shortcut : 'ctrl+N'
                 onclick : => @tryToClear()
-            }
 
 Lastly, keep track of this instance in the class member for that purpose.
 
@@ -114,22 +112,18 @@ the user cancels), then the clear is aborted.  Otherwise, clear is run.
             @editor.windowManager.open {
                 title : 'Save first?'
                 buttons : [
-                    {
-                        text : 'Save'
-                        onclick : =>
-                            alert 'Not yet implemented'
-                            @editor.windowManager.close()
-                    }
-                    {
-                        text : 'Discard'
-                        onclick : =>
-                            @clear()
-                            @editor.windowManager.close()
-                    }
-                    {
-                        text : 'Cancel'
-                        onclick : => @editor.windowManager.close()
-                    }
+                    text : 'Save'
+                    onclick : =>
+                        alert 'Not yet implemented'
+                        @editor.windowManager.close()
+                ,
+                    text : 'Discard'
+                    onclick : =>
+                        @clear()
+                        @editor.windowManager.close()
+                ,
+                    text : 'Cancel'
+                    onclick : => @editor.windowManager.close()
                 ]
             }
 
