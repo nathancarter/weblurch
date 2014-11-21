@@ -18,12 +18,6 @@ Plugin](../app/loadsaveplugin.litcoffee).
 
 ### Save
 
- * Add a `tryToSave` function to the `LoadSave` class that calls a
-   callback when complete, passing a filename for where to save, or null to
-   mean the dialog was cancelled.  It uses the save dialog in the `jsfs`
-   submodule.
- * In `tryToClear`, replace the alert box with a call to `tryToSave`,
-   passing `clear` as the callback for if the save was successful.
  * Add a File > Save menu item and toolbar button that just call the
    `tryToSave` member of the `LoadSave` class.
 
