@@ -18,8 +18,25 @@ Plugin](../app/loadsaveplugin.litcoffee).
 
 ### Save
 
- * Add a File > Save menu item and toolbar button that just call the
-   `tryToSave` member of the `LoadSave` class.
+ * In `jsfs`, move the code in `demo/filedialog.html` out into
+   `demo/filedialog.litcoffee`.
+ * Bring the new version of `jsfs` in as a submodule to `weblurch`.
+ * Update the `weblurch` build process to also run the `cake.litcoffee` in
+   the `jsfs` subproject.
+ * Copy `weblurch/jsfs/demo/filedialog.html` into `weblurch/app`.
+ * Update it to reference the `filedialog.min.js` in `weblurch/jsfs/demo`.
+ * Create a new `tinymcedialog.solo.litcoffee` file that includes this code,
+   explained:
+```coffeescript
+    args = top.tinymce.activeEditor.windowManager.getParams()
+    if args.fsName then setFileSystemName args.fsName
+    if args.mode then setTimeout ( -> setFileBrowserMode args.mode ), 0
+```
+ * Update the build process so that `app/*.solo.litcoffee` is built as its
+   own file, not incorporated into the mammoth `app.litcoffee`.  Document
+   this in the appropriate `README.md` files, and in
+   `tinymcedialog.solo.litcoffee` itself.
+ * Verify that the save dialog now works.
 
 ### Load
 
