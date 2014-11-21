@@ -169,7 +169,8 @@ is no filename, then a save dialog is shown.
 
             if filename isnt null
                 @filename = filename
-                return callback @save()
+                result = @save() # save happens even if no callback
+                callback? result
 
 There is not a readily available filename, so we must pop up a "Save as"
 dialog.  First we create a routine for updating the dialog we're about to
@@ -180,7 +181,7 @@ selected.
                 dialog = document.getElementsByClassName( 'mce-window' )[0]
                 for button in dialog.getElementsByTagName 'button'
                     if button.textContent is 'Save'
-                        if name
+                        if filename
                             button.removeAttribute 'disabled'
                             button.parentNode.style.backgroundImage = null
                             button.parentNode.style.backgroundColor = null
@@ -204,12 +205,13 @@ refresh the dialog in this case.
             filepath = null
             @changedFolderHandler = ( newfolder ) -> filepath = newfolder
 
-Now we are sufficiently ready to pop up the dialog.  We use the one from the
-demo in the `jsfs` submodule, which is currently sufficient for our needs.
+Now we are sufficiently ready to pop up the dialog.  We use one made from
+[filedialog.html](filedialog.html), which was copied from [the jsfs
+submodule](../jsfs/demo) and modified to suit the needs of this application.
 
             @editor.windowManager.open {
                 title : 'Save file...'
-                url : '../jsfs/demo/filedialog.html'
+                url : 'filedialog.html'
                 width : 600
                 height : 400
                 buttons : [
@@ -217,12 +219,19 @@ demo in the `jsfs` submodule, which is currently sufficient for our needs.
                     subtype : 'primary'
                     onclick : =>
                         [ @filename, @filepath ] = [ filename, filepath ]
-                        callback @save()
+                        @editor.windowManager.close()
+                        result = @save() # save happens even if no callback
+                        callback? result
                 ,
                     text : 'Cancel'
-                    onclick : -> callback no
+                    onclick : =>
+                        @editor.windowManager.close()
+                        callback? no
                 ]
-            }, { }
+            }, {
+                fsName : @fileSystem
+                mode : 'save file'
+            }
 
 # Global stuff
 
@@ -241,10 +250,10 @@ instances of the `LoadSave` class for whichever one wants to handle that
 message.  Whichever one has a handler ready, we call that handler.
 
     window.onmessage = ( event ) ->
-        handlerName = "#{event[0]}Handler"
+        handlerName = "#{event.data[0]}Handler"
         for instance in LoadSave::instances
             if instance.hasOwnProperty handlerName
-                return instance.handlerName event.data.slice 1
+                return instance[handlerName].apply null, event.data[1..]
 
 ## Global functions
 
