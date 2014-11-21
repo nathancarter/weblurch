@@ -16,7 +16,7 @@ If you want to build and test evertything, just run `cake all`. It simply
 invokes all the other tasks, defined below.
 
     build.task 'all', 'Build app and run tests', ->
-        build.enqueue 'app', 'test'
+        build.enqueue 'app', 'submodules', 'test'
 
 ## Requirements
 
@@ -40,6 +40,9 @@ These constants define how the functions below perform.
     appout = 'app.litcoffee'
     testdir = './test/'
     repdir = './test/reports/'
+    submodules = {
+        jsfs : 'npm install && ./node_modules/.bin/cake all'
+    }
 
 ## The `app` build process
 
@@ -70,6 +73,21 @@ source maps.
 
         build.compile appdir+srcout, ->
         build.compile appdir+appout, done
+
+## The `submodules` build process
+
+Although there is currently only one submodule, this task is ready in the
+event that there will be more later.  It enters each of their subfolders and
+runs any necessary build process on those submodules.  For instance, the
+`jsfs` submodule requires compiling and minifying CoffeeScript code just
+like this project does, because they are structured the same way.
+
+    build.asyncTask 'submodules', 'Build any git submodule projects',
+    ( done ) ->
+        commands = for own submodule, command of submodules
+            description : "Running #{submodule} build process...".green
+            command : "cd #{submodule} && #{command} && cd .."
+        build.runShellCommands commands, done
 
 ## The `test` build process
 

@@ -18,8 +18,6 @@ Plugin](../app/loadsaveplugin.litcoffee).
 
 ### Save
 
- * Update the `weblurch` build process to also run the `cake.litcoffee` in
-   the `jsfs` subproject.
  * Copy `weblurch/jsfs/demo/filedialog.html` into `weblurch/app`.
  * Update it to reference the `filedialog.min.js` in `weblurch/jsfs/demo`.
  * Create a new `tinymcedialog.solo.litcoffee` file that includes this code,
