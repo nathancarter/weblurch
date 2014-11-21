@@ -42,7 +42,6 @@ changed with the setters defined in the following section.
             @setAppName LoadSave::appName
             @setFileSystem @appName
             @setFilepath FileSystem::pathSeparator # root
-            @setFilename null
             setTimeout ( => @clear() ), 0
 
 Whenever the contents of the document changes, we mark the document dirty in
@@ -104,11 +103,14 @@ in code.
 To clear the contents of the document, use this method in its `LoadSave`
 member.  It handles notifying this instance that the document is then clean.
 It does *not* check to see if the document needs to be saved first; it just
-outright clears the editor.
+outright clears the editor.  It also clears the filename, so that if you
+create a new document and then save, it does not save over your last
+document.
 
         clear: ->
             @editor.setContent ''
             @setDocumentDirty no
+            @setFilename null
 
 Unlike the previous, this function *does* first check to see if the contents
 of the editor need to be saved.  If they do, and they aren't saved (or if
@@ -142,13 +144,15 @@ the user cancels), then the clear is aborted.  Otherwise, clear is run.
 To save the current document under the filename in the `@filename` member,
 call the following function.  It returns a boolean indicating success or
 failure.  If there is no filename in the `@filename` member, failure is
-returned and no action taken.
+returned and no action taken.  If the save succeeds, mark the document
+clean.
 
         save: ->
             if @filename is null then return
             tmp = new FileSystem @fileSystem
             tmp.cd @filepath
-            tmp.write @filename, @editor.getContent()
+            if tmp.write @filename, @editor.getContent(), yes # compressed
+                @setDocumentDirty no
 
 This function tries to save the current document.  When the save has been
 completed or canceled, the callback will be called, with one of the
@@ -168,9 +172,9 @@ If there is a filename for the current document already in this object's
 is no filename, then a save dialog is shown.
 
             if filename isnt null
-                @filename = filename
+                @setFilename filename
                 result = @save() # save happens even if no callback
-                callback? result
+                return callback? result
 
 There is not a readily available filename, so we must pop up a "Save as"
 dialog.  First we create a routine for updating the dialog we're about to
@@ -218,7 +222,8 @@ submodule](../jsfs/demo) and modified to suit the needs of this application.
                     text : 'Save'
                     subtype : 'primary'
                     onclick : =>
-                        [ @filename, @filepath ] = [ filename, filepath ]
+                        @setFilepath filepath
+                        @setFilename filename
                         @editor.windowManager.close()
                         result = @save() # save happens even if no callback
                         callback? result

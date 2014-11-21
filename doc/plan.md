@@ -16,13 +16,9 @@ later items are more vague than the earlier ones.
 The steps below are all work in [the Load/Save
 Plugin](../app/loadsaveplugin.litcoffee).
 
-### Save
-
- * Verify that the save dialog now works.
-
 ### Load
 
- * Add an `tryToOpen` function to the `LoadSave` class that calls a callback
+ * Add a `tryToOpen` function to the `LoadSave` class that calls a callback
    when complete, passing a filename indicating what to open, or null to
    mean the dialog was cancelled.  It uses the open dialog in the `jsfs`
    submodule.
