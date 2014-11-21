@@ -56,23 +56,39 @@ Next concatenate all `.litcoffee` source files into one.
 
         all = ( fs.readFileSync name for name in \
             build.dir srcdir, /\.litcoffee$/ )
-        fs.writeFileSync appdir+srcout, all.join( '\n\n' ), 'utf8'
+        fs.writeFileSync appdir + srcout, all.join( '\n\n' ), 'utf8'
 
 Also compile any files specific to the main app (as opposed to the test
-app), which will sit in the app folder rather than the source folder.
+app), which will sit in the app folder rather than the source folder.  The
+only exception to this rule is if any of them end in `.solo.litcoffee`, then
+they're requesting that they be compiled individually.  So we filter those
+out.
 
         all = ( fs.readFileSync name for name in \
             build.dir( appdir, /\.litcoffee$/ ) \
             when name.indexOf( srcout ) is -1 and
-                 name.indexOf( appout ) is -1 )
-        fs.writeFileSync appdir+appout, all.join( '\n\n' ), 'utf8'
+                 name.indexOf( appout ) is -1 and
+                 name[-15..] isnt '.solo.litcoffee' )
+        fs.writeFileSync appdir + appout, all.join( '\n\n' ), 'utf8'
 
 Run the compile process defined in [the build utilities
-module](buildutils.litcoffee.html). This compiles, minifies, and generates
-source maps.
+module](buildutils.litcoffee.html).  This compiles, minifies, and generates
+source maps.  We run it in sequence on the source files, the app-specific
+files, and the "solo" files in the app folder.
 
-        build.compile appdir+srcout, ->
-        build.compile appdir+appout, done
+First, here is a little function that recursively runs the build process on
+all `.solo.litcoffee` files in the app folder.
+
+        solofiles = build.dir appdir, /\.solo.litcoffee$/
+        buildNext = ->
+            if solofiles.length is 0 then return done()
+            build.compile solofiles.shift(), buildNext
+
+We put that function as the last step in the compilation sequence, by using
+it as the last callback, below.
+
+        build.compile appdir + srcout, ->
+        build.compile appdir + appout, buildNext
 
 ## The `submodules` build process
 
