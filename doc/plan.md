@@ -18,9 +18,6 @@ Plugin](../app/loadsaveplugin.litcoffee).
 
 ### Save
 
- * In `jsfs`, move the code in `demo/filedialog.html` out into
-   `demo/filedialog.litcoffee`.
- * Bring the new version of `jsfs` in as a submodule to `weblurch`.
  * Update the `weblurch` build process to also run the `cake.litcoffee` in
    the `jsfs` subproject.
  * Copy `weblurch/jsfs/demo/filedialog.html` into `weblurch/app`.
