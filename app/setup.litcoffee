@@ -43,7 +43,7 @@ buttons, and context menu items as given below.
             menu : {
                 file : {
                     title : 'File'
-                    items : 'newfile savefile saveas | print'
+                    items : 'newfile openfile | savefile saveas | print'
                 }
                 edit : {
                     title : 'Edit'

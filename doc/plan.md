@@ -18,10 +18,6 @@ Plugin](../app/loadsaveplugin.litcoffee).
 
 ### Load
 
- * Add a `tryToOpen` function to the `LoadSave` class that calls a callback
-   when complete, passing a filename indicating what to open, or null to
-   mean the dialog was cancelled.  It uses the open dialog in the `jsfs`
-   submodule.
  * Add a `handleOpen` member to the `LoadSave` class.  It does this:
    * If the document is dirty, prompt the user for whether they wish to
      save, discard, or cancel.  It then does one of these things:
@@ -29,8 +25,7 @@ Plugin](../app/loadsaveplugin.litcoffee).
        it just pops an alert saying that it can't save yet.
      * Discard calls `tryToOpen`.
      * Cancel does nothing.
- * Add a File > Open menu item and toolbar button that just call the
-   `handleOpen` member of the `LoadSave` class.
+ * Replace the current handler for the Open action with `handleOpen`.
 
 ### Files
 

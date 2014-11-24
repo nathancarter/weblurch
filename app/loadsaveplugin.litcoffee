@@ -259,6 +259,90 @@ submodule](../jsfs/demo) and modified to suit the needs of this application.
                 mode : 'save file'
             }
 
+## Loading documents
+
+The following function loads into the editor the contents of the file.  It
+must be a file containing a string of HTML, because that content will be
+directly used as the content of the editor.  The current path and filename
+of this plugin are set to be the parameters passed here.
+
+        load: ( filepath, filename ) ->
+            if filename is null then return
+            if filepath is null then filepath = '.'
+            tmp = new FileSystem @fileSystem
+            tmp.cd filepath
+            @editor.setContent tmp.read filename
+            @setFilepath filepath
+            @setFilename filename
+            @setDocumentDirty no
+
+The following function pops up a dialog to the user, allowing them to choose
+a filename to open.  If they choose a file, it (with the current directory)
+is passed to the given callback function.  If they do not choose a file, but
+cancel the dialog instead, then null is passed to that callback to indicate
+the cancellation. It makes the most sense to leave the callback function the
+default, `@load`.
+
+        tryToOpen: ( callback = ( p, f ) => @load p, f ) ->
+
+First we create a routine for updating the dialog we're about to show with
+an enabled/disabled Save button, based on whether there is a file selected.
+
+            refreshDialog = ->
+                dialog = document.getElementsByClassName( 'mce-window' )[0]
+                for button in dialog.getElementsByTagName 'button'
+                    if button.textContent is 'Open'
+                        if filename
+                            button.removeAttribute 'disabled'
+                            button.parentNode.style.backgroundImage = null
+                            button.parentNode.style.backgroundColor = null
+                        else
+                            button.setAttribute 'disabled', yes
+                            button.parentNode.style.backgroundImage = 'none'
+                            button.parentNode.style.backgroundColor = '#ccc'
+                        break
+
+Now we install a handler for when a file is selected, save that filename for
+possible later use, and refresh the dialog.
+
+            filename = null
+            @selectedFileHandler = ( newname ) ->
+                filename = newname
+                refreshDialog()
+
+Do the same thing for when the folder changes, but there's no need to
+refresh the dialog in this case.
+
+            filepath = null
+            @changedFolderHandler = ( newfolder ) -> filepath = newfolder
+
+Now we are sufficiently ready to pop up the dialog.  We use one made from
+[filedialog.html](filedialog.html), which was copied from [the jsfs
+submodule](../jsfs/demo) and modified to suit the needs of this application.
+
+            @editor.windowManager.open {
+                title : 'Open file...'
+                url : 'filedialog.html'
+                width : 600
+                height : 400
+                buttons : [
+                    text : 'Open'
+                    subtype : 'primary'
+                    onclick : =>
+                        @editor.windowManager.close()
+                        callback? filepath, filename
+                ,
+                    text : 'Cancel'
+                    onclick : =>
+                        @editor.windowManager.close()
+                        callback? null, null
+                ]
+            }, {
+                fsName : @fileSystem
+                mode : 'open file'
+            }
+            refreshDialog()
+
 # Global stuff
 
 ## Installing the plugin
