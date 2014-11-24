@@ -86,7 +86,7 @@ upon receipt.)
                 icon : 'browse'
                 context : 'file'
                 shortcut : 'ctrl+O'
-                onclick : => @tryToOpen()
+                onclick : => @handleOpen()
 
 Lastly, keep track of this instance in the class member for that purpose.
 
@@ -342,6 +342,38 @@ submodule](../jsfs/demo) and modified to suit the needs of this application.
                 mode : 'open file'
             }
             refreshDialog()
+
+The following handler for the "open" controls checks with the user to see if
+they wish to save their current document first, if and only if that document
+is dirty.  The user may save, or cancel, or discard the document.
+
+        handleOpen: ->
+
+First, if the document does not need to be saved, just do a regular "open."
+
+            if not @documentDirty then return @tryToOpen()
+
+Now, we know that the document needs to be saved.  So prompt the user with a
+dialog box asking what they wish to do.
+
+            @editor.windowManager.open {
+                title : 'Save first?'
+                buttons : [
+                    text : 'Save'
+                    onclick : =>
+                        @editor.windowManager.close()
+                        @tryToSave ( success ) =>
+                            if success then @tryToOpen()
+                ,
+                    text : 'Discard'
+                    onclick : =>
+                        @editor.windowManager.close()
+                        @tryToOpen()
+                ,
+                    text : 'Cancel'
+                    onclick : => @editor.windowManager.close()
+                ]
+            }
 
 # Global stuff
 

@@ -16,17 +16,6 @@ later items are more vague than the earlier ones.
 The steps below are all work in [the Load/Save
 Plugin](../app/loadsaveplugin.litcoffee).
 
-### Load
-
- * Add a `handleOpen` member to the `LoadSave` class.  It does this:
-   * If the document is dirty, prompt the user for whether they wish to
-     save, discard, or cancel.  It then does one of these things:
-     * Save does nothing for now, but we'll implement it below.  So for now
-       it just pops an alert saying that it can't save yet.
-     * Discard calls `tryToOpen`.
-     * Cancel does nothing.
- * Replace the current handler for the Open action with `handleOpen`.
-
 ### Files
 
  * Add a File > Manage files... menu item that just uses the manage files
@@ -47,6 +36,12 @@ Make it so that loading and saving can support more than just HTML
    loaded into the editor.  Then, the object itself, without its `document`
    member, will be passed to `loadMetaData`, which functions as a handler,
    if it is non-null.
+
+### Bugs
+
+Not all edits cause the document to be marked dirty.  Perhaps the TinyMCE
+events are not firing when I expect, or perhaps I am not handling them
+correctly.
 
 ## Extending the Editor
 
