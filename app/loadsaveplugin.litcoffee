@@ -49,10 +49,18 @@ this object, which therefore adds the \* marker to the page title.
 
             @editor.on 'change', ( event ) => @setDocumentDirty yes
 
-Now install into the editor controls that run methods in this object.
+Now install into the editor controls that run methods in this object.  The
+`control` method does something seemingly inefficient to duplicate the input
+data object to pass to `addButton`, but this turns out to be necessary, or
+the menu items look like buttons.  (I believe TinyMCE manipulates the object
+upon receipt.)
 
             control = ( name, data ) =>
-                @editor.addButton name, data
+                @editor.addButton name,
+                    text : data.text
+                    icon : data.icon
+                    shortcut : data.shortcut
+                    onclick : data.onclick
                 @editor.addMenuItem name, data
             control 'newfile',
                 text : 'New'
@@ -66,6 +74,11 @@ Now install into the editor controls that run methods in this object.
                 context : 'file'
                 shortcut : 'ctrl+S'
                 onclick : => @tryToSave()
+            @editor.addMenuItem 'saveas',
+                text : 'Save as...'
+                context : 'file'
+                shortcut : 'ctrl+shift+S'
+                onclick : => @tryToSave null, ''
 
 Lastly, keep track of this instance in the class member for that purpose.
 
@@ -171,7 +184,7 @@ If there is a filename for the current document already in this object's
 `@filename` member, then a save is done directly to that filename.  If there
 is no filename, then a save dialog is shown.
 
-            if filename isnt null
+            if filename
                 @setFilename filename
                 result = @save() # save happens even if no callback
                 return callback? result
