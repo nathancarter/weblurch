@@ -1,5 +1,7 @@
 *.swp
-app/*.js
+app/weblurch*.js
+app/tinymcedialog*.js
+app/app*.js
 app/weblurch.litcoffee
 app/app.litcoffee
 app/*.solo.*.map
