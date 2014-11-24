@@ -2,7 +2,7 @@
 app/*.js
 app/weblurch.litcoffee
 app/app.litcoffee
-app/*.map
+app/*.solo.*.map
 node_modules/*
 doc/test-results.md
 test/reports/*
