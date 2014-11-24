@@ -56,11 +56,13 @@ the menu items look like buttons.  (I believe TinyMCE manipulates the object
 upon receipt.)
 
             control = ( name, data ) =>
-                @editor.addButton name,
-                    text : data.text
+                buttonData =
                     icon : data.icon
                     shortcut : data.shortcut
                     onclick : data.onclick
+                key = if data.icon then 'icon' else 'text'
+                buttonData[key] = data[key]
+                @editor.addButton name, buttonData
                 @editor.addMenuItem name, data
             control 'newfile',
                 text : 'New'
@@ -79,6 +81,12 @@ upon receipt.)
                 context : 'file'
                 shortcut : 'ctrl+shift+S'
                 onclick : => @tryToSave null, ''
+            control 'openfile',
+                text : 'Open...'
+                icon : 'browse'
+                context : 'file'
+                shortcut : 'ctrl+O'
+                onclick : => @tryToOpen()
 
 Lastly, keep track of this instance in the class member for that purpose.
 
