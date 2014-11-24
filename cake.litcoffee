@@ -85,10 +85,17 @@ all `.solo.litcoffee` files in the app folder.
             build.compile solofiles.shift(), buildNext
 
 We put that function as the last step in the compilation sequence, by using
-it as the last callback, below.
+it as the last callback, below.  (Note that, although they are not indented,
+each new command below is nested one level deeper in callback functions,
+because of the `->` symbols at the end of each line.)
 
         build.compile appdir + srcout, ->
-        build.compile appdir + appout, buildNext
+        build.compile appdir + appout, ->
+        build.runShellCommands [
+            description : 'Copying lz-string into app folder...'
+            command : 'cp node_modules/lz-string/libs/lz-string-1.3.3.js
+                app/'
+        ], buildNext
 
 ## The `submodules` build process
 
