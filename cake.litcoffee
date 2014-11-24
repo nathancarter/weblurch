@@ -16,7 +16,7 @@ If you want to build and test evertything, just run `cake all`. It simply
 invokes all the other tasks, defined below.
 
     build.task 'all', 'Build app and run tests', ->
-        build.enqueue 'app', 'test'
+        build.enqueue 'app', 'submodules', 'test'
 
 ## Requirements
 
@@ -40,6 +40,9 @@ These constants define how the functions below perform.
     appout = 'app.litcoffee'
     testdir = './test/'
     repdir = './test/reports/'
+    submodules = {
+        jsfs : 'npm install && ./node_modules/.bin/cake all'
+    }
 
 ## The `app` build process
 
@@ -53,23 +56,61 @@ Next concatenate all `.litcoffee` source files into one.
 
         all = ( fs.readFileSync name for name in \
             build.dir srcdir, /\.litcoffee$/ )
-        fs.writeFileSync appdir+srcout, all.join( '\n\n' ), 'utf8'
+        fs.writeFileSync appdir + srcout, all.join( '\n\n' ), 'utf8'
 
 Also compile any files specific to the main app (as opposed to the test
-app), which will sit in the app folder rather than the source folder.
+app), which will sit in the app folder rather than the source folder.  The
+only exception to this rule is if any of them end in `.solo.litcoffee`, then
+they're requesting that they be compiled individually.  So we filter those
+out.
 
         all = ( fs.readFileSync name for name in \
             build.dir( appdir, /\.litcoffee$/ ) \
             when name.indexOf( srcout ) is -1 and
-                 name.indexOf( appout ) is -1 )
-        fs.writeFileSync appdir+appout, all.join( '\n\n' ), 'utf8'
+                 name.indexOf( appout ) is -1 and
+                 name[-15..] isnt '.solo.litcoffee' )
+        fs.writeFileSync appdir + appout, all.join( '\n\n' ), 'utf8'
 
 Run the compile process defined in [the build utilities
-module](buildutils.litcoffee.html). This compiles, minifies, and generates
-source maps.
+module](buildutils.litcoffee.html).  This compiles, minifies, and generates
+source maps.  We run it in sequence on the source files, the app-specific
+files, and the "solo" files in the app folder.
 
-        build.compile appdir+srcout, ->
-        build.compile appdir+appout, done
+First, here is a little function that recursively runs the build process on
+all `.solo.litcoffee` files in the app folder.
+
+        solofiles = build.dir appdir, /\.solo.litcoffee$/
+        buildNext = ->
+            if solofiles.length is 0 then return done()
+            build.compile solofiles.shift(), buildNext
+
+We put that function as the last step in the compilation sequence, by using
+it as the last callback, below.  (Note that, although they are not indented,
+each new command below is nested one level deeper in callback functions,
+because of the `->` symbols at the end of each line.)
+
+        build.compile appdir + srcout, ->
+        build.compile appdir + appout, ->
+        build.runShellCommands [
+            description : 'Copying lz-string into app folder...'
+            command : 'cp node_modules/lz-string/libs/lz-string-1.3.3.js
+                app/'
+        ], buildNext
+
+## The `submodules` build process
+
+Although there is currently only one submodule, this task is ready in the
+event that there will be more later.  It enters each of their subfolders and
+runs any necessary build process on those submodules.  For instance, the
+`jsfs` submodule requires compiling and minifying CoffeeScript code just
+like this project does, because they are structured the same way.
+
+    build.asyncTask 'submodules', 'Build any git submodule projects',
+    ( done ) ->
+        commands = for own submodule, command of submodules
+            description : "Running #{submodule} build process...".green
+            command : "cd #{submodule} && #{command} && cd .."
+        build.runShellCommands commands, done
 
 ## The `test` build process
 
@@ -218,30 +259,23 @@ to gh-pages and merging in changes.
                 git checkout master
             '''.yellow
         build.runShellCommands [
-            {
-                description : 'Switching to gh-pages branch...'.green
-                command : 'git checkout gh-pages'
-            }
-            {
-                description : 'Merging in changes...'.green
-                command : 'git merge master'
-            }
+            description : 'Switching to gh-pages branch...'.green
+            command : 'git checkout gh-pages'
+        ,
+            description : 'Merging in changes...'.green
+            command : 'git merge master'
         ], ->
             console.log 'Building app in gh-pages...'.green
             build.enqueue 'app', ->
                 build.runShellCommands [
-                    {
-                        description : 'Committing changes... (which may fail
-                            if there were no changes to tha app itself; in
-                            that case, just git checkout master and push.)'
-                            .green
-                        command : "git commit -a -m 'Updating gh-pages with
-                            latest generated docs'"
-                    }
-                    {
-                        description : 'Going back to master...'.green
-                        command : 'git checkout master'
-                    }
+                    description : 'Committing changes... (which may fail if
+                        there were no changes to tha app itself; in that
+                        case, just git checkout master and push.)'.green
+                ,
+                    command : "git commit -a -m 'Updating gh-pages with
+                        latest generated docs'"
+                    description : 'Going back to master...'.green
+                    command : 'git checkout master'
                 ], ->
                     console.log 'Done.'.green
                     console.log '''

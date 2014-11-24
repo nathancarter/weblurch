@@ -1,7 +1,7 @@
 
 # webLurch
 
-![Build status](https://travis-ci.org/nathancarter/weblurch.svg?branch=master)
+[![Build status](https://travis-ci.org/nathancarter/weblurch.svg?branch=master)](https://travis-ci.org/nathancarter/weblurch)
 
 This project is an attempt to rewrite [Lurch](http://lurchmath.org) in a web
 browser, together with many major design improvements at the same time.  But
@@ -18,8 +18,10 @@ Or just start here:
 
 ## Getting Started
 
-You cannot yet try the software out online, but that opportunity will come
-soon.
+Although you can [try the current version out
+online](http://nathancarter.github.io/weblurch/app/index.html), right now
+it's just a [TinyMCE](http://www.tinymce.com) instance with nothing else
+added.  The math-specific features are still to come.
 
 If you want to build any of the source code in this repository on your local
 machine, be sure that you have [node.js](http://nodejs.org) installed, and
@@ -28,8 +30,10 @@ but the build process does.)
 ```
 $ git clone https://github.com/nathancarter/weblurch
 $ cd weblurch
-$ npm install        # installs required packages in ./node_modules
-$ npm test           # builds app and runs unit test suite
+$ git submodule init   # prepares git submodule folders
+$ git submodule update # downloads all files in all git submodules
+$ npm install          # installs required packages in ./node_modules
+$ npm test             # builds app and runs unit test suite
 ```
 To build the app without running the tests, run `./node_modules/.bin/cake`.
 Since that's inconvenient, you can install

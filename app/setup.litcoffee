@@ -1,6 +1,11 @@
 
 # Add an editor to the app
 
+First, specify that the app's name is "Lurch," so that will be used when
+creating the title for this page (e.g., to show up in the tab in Chrome).
+
+    setAppName 'Lurch'
+
 This file initializes a [TinyMCE](http://www.tinymce.com/) editor inside the
 [main app page](index.html).  It is designed to be used inside that page,
 where [jQuery](http://jquery.com/) has already been loaded, thus defining
@@ -18,13 +23,13 @@ Create a `<textarea>` to be used as the editor.
 Install a TinyMCE instance in that text area, with specific plugins, toolbar
 buttons, and context menu items as given below.
 
-        tinymce.init {
+        tinymce.init
             selector : '#editor'
             auto_focus : 'editor'
             statusbar : no
             plugins : 'advlist table charmap colorpicker contextmenu image
                 link importcss paste print save searchreplace spellchecker
-                textcolor fullscreen'
+                textcolor fullscreen -loadsave'
             toolbar : [
                 'newfile openfile savefile managefiles | print
                     | undo redo | cut copy paste
@@ -35,6 +40,42 @@ buttons, and context menu items as given below.
                     | link unlink | charmap image
                     | spellchecker searchreplace'
             ]
+            menu : {
+                file : {
+                    title : 'File'
+                    items : 'newfile openfile | savefile saveas | print'
+                }
+                edit : {
+                    title : 'Edit'
+                    items : 'undo redo
+                           | cut copy paste pastetext
+                           | selectall'
+                }
+                insert : {
+                    title : 'Insert'
+                    items : 'link media
+                           | template hr'
+                }
+                view : {
+                    title : 'View'
+                    items : 'visualaid'
+                }
+                format : {
+                    title : 'Format'
+                    items : 'bold italic underline
+                             strikethrough superscript subscript
+                           | formats | removeformat'
+                }
+                table : {
+                    title : 'Table'
+                    items : 'inserttable tableprops deletetable
+                           | cell row column'
+                }
+                tools : {
+                    title : 'Tools'
+                    items : 'spellchecker code'
+                }
+            }
             contextmenu : 'link image inserttable
                 | cell row column deletetable'
 
@@ -49,4 +90,3 @@ Increase the default font size and maximize the editor to fill the page.
                 editor.on 'init', ->
                     editor.getBody().style.fontSize = '16px'
                     setTimeout ( -> editor.execCommand 'mceFullScreen' ), 0
-        }

@@ -49,13 +49,13 @@ where key order is irrelevant.
 
 Objects with depth 1:
 
-            expect( JSON.equals {
+            expect JSON.equals
                 thing : 'foo'
                 other : 169
-            }, {
+            ,
                 other : 169
                 thing : 'foo'
-            } ).toBeTruthy()
+            .toBeTruthy()
 
 Arrays with depth 1:
 
@@ -64,7 +64,7 @@ Arrays with depth 1:
 
 Mixed objects and arrays, with depth greater than 1:
 
-            expect( JSON.equals {
+            expect JSON.equals
                 thing : [ 1, 2, 3 ]
                 other : { foo : [] }
                 list : [
@@ -73,7 +73,7 @@ Mixed objects and arrays, with depth greater than 1:
                     { henry : 'huggins', beverly : 'cleary' }
                     50
                 ]
-            }, {
+            ,
                 list : [
                     { }
                     { }
@@ -82,7 +82,7 @@ Mixed objects and arrays, with depth greater than 1:
                 ]
                 thing : [ 1, 2, 3 ]
                 other : { foo : [] }
-            } ).toBeTruthy()
+            .toBeTruthy()
             expect( JSON.equals [ { }, JSON, { a:1, b:2, c:3 } ],
                 [ { }, JSON, { b:2, a:1, c:3 } ] ).toBeTruthy()
 
@@ -96,25 +96,25 @@ same, and yet the objects should still differ.
 
 Objects with depth 1:
 
-            expect( JSON.equals {
+            expect JSON.equals
                 thing : 'foo'
                 other : 169
-            }, {
+            ,
                 thing : 'foo'
                 other : 168
-            } ).toBeFalsy()
-            expect( JSON.equals {
+            .toBeFalsy()
+            expect JSON.equals
                 thing : 'foo'
                 other : 169
-            }, {
+            ,
                 thing : 'foo'
-            } ).toBeFalsy()
-            expect( JSON.equals {
+            .toBeFalsy()
+            expect JSON.equals
                 thing : 'foo'
-            }, {
+            ,
                 other : 169
                 thing : 'foo'
-            } ).toBeFalsy()
+            .toBeFalsy()
 
 Arrays with depth 1:
 
@@ -125,7 +125,7 @@ Arrays with depth 1:
 
 Mixed objects and arrays, with depth greater than 1:
 
-            expect( JSON.equals {
+            expect JSON.equals
                 thing : [ 1, 2, 3 ]
                 other : { foo : [] }
                 list : [
@@ -134,7 +134,7 @@ Mixed objects and arrays, with depth greater than 1:
                     { henry : 'huggins', beverly : 'cleary' }
                     50
                 ]
-            }, {
+            ,
                 thing : [ 1, 2, 3, 4 ]
                 other : { foo : [] }
                 list : [
@@ -143,8 +143,8 @@ Mixed objects and arrays, with depth greater than 1:
                     { beverly : 'cleary', henry : 'huggins' }
                     50
                 ]
-            } ).toBeFalsy()
-            expect( JSON.equals {
+            .toBeFalsy()
+            expect JSON.equals
                 thing : [ 1, 2, 3 ]
                 other : { foo : [] }
                 list : [
@@ -153,7 +153,7 @@ Mixed objects and arrays, with depth greater than 1:
                     { henry : 'huggins', beverly : 'cleary' }
                     50
                 ]
-            }, {
+            ,
                 thing : [ 1, 2, 3 ]
                 other : { foo : [] }
                 list : [
@@ -162,8 +162,8 @@ Mixed objects and arrays, with depth greater than 1:
                     { henry : 'huggins', beverly : 'cleary' }
                     50
                 ]
-            } ).toBeFalsy()
-            expect( JSON.equals {
+            .toBeFalsy()
+            expect JSON.equals
                 thing : [ 1, 2, 3 ]
                 other : { foo : [] }
                 list : [
@@ -172,7 +172,7 @@ Mixed objects and arrays, with depth greater than 1:
                     { henry : 'huggins', beverly : 'cleary' }
                     50
                 ]
-            }, {
+            ,
                 list : [
                     { }
                     { }
@@ -180,7 +180,7 @@ Mixed objects and arrays, with depth greater than 1:
                     50
                 ]
                 thing : [ 1, 2, 3 ]
-            } ).toBeFalsy()
+            .toBeFalsy()
             expect( JSON.equals [ { }, JSON, { a:1, b:2, c:3 } ],
                 [ { }, JSON, { a:1, b:2, c:3, JSON } ]
                 ).toBeFalsy()
