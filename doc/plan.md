@@ -37,6 +37,22 @@ Plugin](../app/loadsaveplugin.litcoffee).
  * Add a File > Manage files... menu item that just uses the manage files
    dialog provided in the `jsfs` submodule.
 
+### Extensions
+
+Make it so that loading and saving can support more than just HTML
+ * Create `saveMetaData` and `loadMetaData` members of the LoadSave plugin,
+   that you can set freely from the outside.  Each defaults to null.
+ * Before saving, if `saveMetaData` is non-null, it is called, and it must
+   return an object representing any metadata about the document that the
+   application wishes to save.  (If it is not an object, it will be
+   ignored.)  Its `document` member will be set to the HTML contents of the
+   editor, and that object saved rather than the plain HTML string alone.
+ * After loading, if the object loaded is not a string, then its `document`
+   member will be lifted out, and its value used as the HTML content to be
+   loaded into the editor.  Then, the object itself, without its `document`
+   member, will be passed to `loadMetaData`, which functions as a handler,
+   if it is non-null.
+
 ## Extending the Editor
 
 ### Overlay plugin
