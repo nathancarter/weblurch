@@ -23,6 +23,8 @@ Plugin](../app/loadsaveplugin.litcoffee).
    correctly.
  * Using the keyboard shortcut for Save throws up a dialog with error
    messages about invalid content.
+ * Pressing Enter or Esc when focus is in the filename text box of the Save
+   dialog does not trigger the Save or Cancel actions (respectively).
 
 ## Extending the Editor
 
