@@ -106,3 +106,9 @@ Increase the default font size and maximize the editor to fill the page.
                 editor.on 'init', ->
                     editor.getBody().style.fontSize = '16px'
                     setTimeout ( -> editor.execCommand 'mceFullScreen' ), 0
+
+Workaround for [this bug](http://www.tinymce.com/develop/bugtracker_view.php?id=3162):
+
+                    editor.getBody().addEventListener 'focus', ->
+                        if editor.windowManager.getWindows().length isnt 0
+                            editor.windowManager.close()

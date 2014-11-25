@@ -23,11 +23,11 @@ Plugin](../app/loadsaveplugin.litcoffee).
    correctly.  (No easily known way to reproduce this, yet.)
  * Using the keyboard shortcut for Save throws up a dialog with error
    messages about invalid content.  (To reproduce: Open app, press Cmd+S.)
+ * Using the keyboard shortcut for New or Open on Mac triggers the Chrome
+   behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
+   menu.
  * Pressing Enter or Esc when focus is in the filename text box of the Save
    dialog does not trigger the Save or Cancel actions (respectively).
- * It is possible, using the tab key, to put the focus in the editor when a
-   dialog (that should be modal) is visible.  (To reproduce: Open app,
-   click Save button, press tab, start typing.)
 
 ### Missing functionality
 
