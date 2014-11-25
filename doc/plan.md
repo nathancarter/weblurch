@@ -20,11 +20,19 @@ Plugin](../app/loadsaveplugin.litcoffee).
 
  * Not all edits cause the document to be marked dirty.  Perhaps the TinyMCE
    events are not firing when I expect, or perhaps I am not handling them
-   correctly.
+   correctly.  (No easily known way to reproduce this, yet.)
  * Using the keyboard shortcut for Save throws up a dialog with error
-   messages about invalid content.
+   messages about invalid content.  (To reproduce: Open app, press Cmd+S.)
  * Pressing Enter or Esc when focus is in the filename text box of the Save
    dialog does not trigger the Save or Cancel actions (respectively).
+ * It is possible, using the tab key, to put the focus in the editor when a
+   dialog (that should be modal) is visible.  (To reproduce: Open app,
+   click Save button, press tab, start typing.)
+
+### Missing functionality
+
+ * Attempting to save over an existing file does not prompt to ask if you
+   are sure you want to replace it.  Add this check.
 
 ## Extending the Editor
 
