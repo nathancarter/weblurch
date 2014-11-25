@@ -3,6 +3,7 @@ app/*.js
 app/weblurch.litcoffee
 app/app.litcoffee
 app/*.map
+app/filedialog.litcoffee
 node_modules/*
 doc/*.litcoffee.html
 doc/*.md.html
