@@ -16,10 +16,13 @@ later items are more vague than the earlier ones.
 The steps below are all work in [the Load/Save
 Plugin](../app/loadsaveplugin.litcoffee).
 
-### Files
+### Bugs
 
- * Add a File > Manage files... menu item that just uses the manage files
-   dialog provided in the `jsfs` submodule.
+ * Not all edits cause the document to be marked dirty.  Perhaps the TinyMCE
+   events are not firing when I expect, or perhaps I am not handling them
+   correctly.
+ * Using the keyboard shortcut for Save throws up a dialog with error
+   messages about invalid content.
 
 ### Extensions
 
@@ -36,12 +39,6 @@ Make it so that loading and saving can support more than just HTML
    loaded into the editor.  Then, the object itself, without its `document`
    member, will be passed to `loadMetaData`, which functions as a handler,
    if it is non-null.
-
-### Bugs
-
-Not all edits cause the document to be marked dirty.  Perhaps the TinyMCE
-events are not firing when I expect, or perhaps I am not handling them
-correctly.
 
 ## Extending the Editor
 

@@ -95,6 +95,15 @@
           };
         })(this)
       });
+      this.editor.addMenuItem('managefiles', {
+        text: 'Manage files...',
+        context: 'file',
+        onclick: (function(_this) {
+          return function() {
+            return _this.manageFiles();
+          };
+        })(this)
+      });
       LoadSave.prototype.instances.push(this);
     }
 
@@ -410,6 +419,44 @@
       });
     };
 
+    LoadSave.prototype.manageFiles = function() {
+      return this.editor.windowManager.open({
+        title: 'Manage files',
+        url: 'filedialog.html',
+        width: 700,
+        height: 500,
+        buttons: [
+          {
+            text: 'New folder',
+            onclick: (function(_this) {
+              return function() {
+                var frame, frames, _i, _len;
+                frames = document.getElementsByTagName('iframe');
+                console.log(frames);
+                for (_i = 0, _len = frames.length; _i < _len; _i++) {
+                  frame = frames[_i];
+                  console.log(frame.getAttribute('src'));
+                  if ('filedialog.html' === frame.getAttribute('src')) {
+                    return frame.contentWindow.postMessage(['buttonClicked', 'New folder'], '*');
+                  }
+                }
+              };
+            })(this)
+          }, {
+            text: 'Done',
+            onclick: (function(_this) {
+              return function() {
+                return _this.editor.windowManager.close();
+              };
+            })(this)
+          }
+        ]
+      }, {
+        fsName: this.fileSystem,
+        mode: 'manage files'
+      });
+    };
+
     return LoadSave;
 
   })();
@@ -453,7 +500,7 @@
       menu: {
         file: {
           title: 'File',
-          items: 'newfile openfile | savefile saveas | print'
+          items: 'newfile openfile | savefile saveas | managefiles | print'
         },
         edit: {
           title: 'Edit',

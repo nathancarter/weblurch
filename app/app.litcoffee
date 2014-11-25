@@ -87,6 +87,10 @@ upon receipt.)
                 context : 'file'
                 shortcut : 'ctrl+O'
                 onclick : => @handleOpen()
+            @editor.addMenuItem 'managefiles',
+                text : 'Manage files...'
+                context : 'file'
+                onclick : => @manageFiles()
 
 Lastly, keep track of this instance in the class member for that purpose.
 
@@ -375,6 +379,39 @@ dialog box asking what they wish to do.
                 ]
             }
 
+## Managing files
+
+The final menu item is one that shows a dialog for managing files in the
+filesystem.  On desktop apps, no such feature is necessary, because every
+operating system comes with a file manager of its own.  In this web app,
+where we have a virtual filesystem, we must provide a file manager to access
+it and move, rename, and delete files, create folders, etc.
+
+        manageFiles: ->
+            @editor.windowManager.open {
+                title : 'Manage files'
+                url : 'filedialog.html'
+                width : 700
+                height : 500
+                buttons : [
+                    text : 'New folder'
+                    onclick : =>
+                        frames = document.getElementsByTagName 'iframe'
+                        console.log frames
+                        for frame in frames
+                            console.log frame.getAttribute 'src'
+                            if 'filedialog.html' is frame.getAttribute 'src'
+                                return frame.contentWindow.postMessage \
+                                    [ 'buttonClicked', 'New folder' ], '*'
+                ,
+                    text : 'Done'
+                    onclick : => @editor.windowManager.close()
+                ]
+            }, {
+                fsName : @fileSystem
+                mode : 'manage files'
+            }
+
 # Global stuff
 
 ## Installing the plugin
@@ -449,7 +486,8 @@ buttons, and context menu items as given below.
             menu : {
                 file : {
                     title : 'File'
-                    items : 'newfile openfile | savefile saveas | print'
+                    items : 'newfile openfile | savefile saveas
+                           | managefiles | print'
                 }
                 edit : {
                     title : 'Edit'
