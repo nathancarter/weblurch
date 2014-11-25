@@ -399,9 +399,7 @@ it and move, rename, and delete files, create folders, etc.
                     text : 'New folder'
                     onclick : =>
                         frames = document.getElementsByTagName 'iframe'
-                        console.log frames
                         for frame in frames
-                            console.log frame.getAttribute 'src'
                             if 'filedialog/filedialog.html' is
                               frame.getAttribute 'src'
                                 return frame.contentWindow.postMessage \
