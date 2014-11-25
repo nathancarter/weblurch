@@ -492,8 +492,10 @@
     return tinymce.init({
       selector: '#editor',
       auto_focus: 'editor',
+      browser_spellcheck: true,
+      gecko_spellcheck: true,
       statusbar: false,
-      plugins: 'advlist table charmap colorpicker contextmenu image link importcss paste print save searchreplace spellchecker textcolor fullscreen -loadsave',
+      plugins: 'advlist table charmap colorpicker contextmenu image link importcss paste print save searchreplace textcolor fullscreen -loadsave',
       toolbar: ['newfile openfile savefile managefiles | print | undo redo | cut copy paste | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent blockquote | table', 'fontselect styleselect | bold italic underline textcolor subscript superscript removeformat | link unlink | charmap image | spellchecker searchreplace'],
       menu: {
         file: {
@@ -519,10 +521,6 @@
         table: {
           title: 'Table',
           items: 'inserttable tableprops deletetable | cell row column'
-        },
-        tools: {
-          title: 'Tools',
-          items: 'spellchecker code'
         }
       },
       contextmenu: 'link image inserttable | cell row column deletetable',

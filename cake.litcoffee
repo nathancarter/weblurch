@@ -257,8 +257,8 @@ to gh-pages and merging in changes.
             here are the commands that are about to be run, so
             that you can complete the process:
                 git checkout gh-pages
-                git merge master
-                cake app
+                git merge master --no-commit
+                cake app submodules
                 git commit -a -m 'Updating gh-pages with latest app build'
                 git checkout master
             '''.yellow
@@ -267,7 +267,7 @@ to gh-pages and merging in changes.
             command : 'git checkout gh-pages'
         ,
             description : 'Merging in changes...'.green
-            command : 'git merge master'
+            command : 'git merge master --no-commit'
         ], ->
             console.log 'Building app and submodules in gh-pages...'.green
             build.enqueue 'app', 'submodules', ->

@@ -470,10 +470,23 @@ buttons, and context menu items as given below.
         tinymce.init
             selector : '#editor'
             auto_focus : 'editor'
+
+These enable the use of the browser's built-in spell-checking facilities, so
+that no server-side callback needs to be done for spellchecking.
+
+            browser_spellcheck : yes
+            gecko_spellcheck : yes
             statusbar : no
+
+Not all of the following plugins are working yet, but most are.  A plugin
+that begins with a hyphen is a local plugin written as part of this project.
+
             plugins : 'advlist table charmap colorpicker contextmenu image
-                link importcss paste print save searchreplace spellchecker
-                textcolor fullscreen -loadsave'
+                link importcss paste print save searchreplace textcolor
+                fullscreen -loadsave'
+
+We then install two toolbars, with separators indicated by pipes (`|`).
+
             toolbar : [
                 'newfile openfile savefile managefiles | print
                     | undo redo | cut copy paste
@@ -484,6 +497,9 @@ buttons, and context menu items as given below.
                     | link unlink | charmap image
                     | spellchecker searchreplace'
             ]
+
+We then customize the menus' contents as follows.
+
             menu : {
                 file : {
                     title : 'File'
@@ -516,11 +532,10 @@ buttons, and context menu items as given below.
                     items : 'inserttable tableprops deletetable
                            | cell row column'
                 }
-                tools : {
-                    title : 'Tools'
-                    items : 'spellchecker code'
-                }
             }
+
+And, finally, we customize the context menu.
+
             contextmenu : 'link image inserttable
                 | cell row column deletetable'
 
