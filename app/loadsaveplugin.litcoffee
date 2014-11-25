@@ -44,6 +44,21 @@ changed with the setters defined in the following section.
             @setFilepath FileSystem::pathSeparator # root
             setTimeout ( => @clear() ), 0
 
+The following handlers exist for wrapping metadata around a document before
+saving, or unwrapping after loading.  They default to null, but can be
+overridden by a client by direct assignment of functions to these members.
+
+The `saveMetaData` function should take no inputs, and yield as output a
+single object encoding all the metadata as key-value pairs in the object.
+It will be saved together with the document content.
+
+The `loadMetaData` function should take as input one argument, an object
+that was previously created by the a call to `saveMetaData`, and repopulate
+the UI and memory with the relevant portions of that document metadata.  It
+is called immediately after a document is loaded.
+
+            @saveMetaData = @loadMetaData = null
+
 Whenever the contents of the document changes, we mark the document dirty in
 this object, which therefore adds the \* marker to the page title.
 
@@ -176,7 +191,8 @@ clean.
             if @filename is null then return
             tmp = new FileSystem @fileSystem
             tmp.cd @filepath
-            if tmp.write @filename, @editor.getContent(), yes # compressed
+            objectToSave = [ @editor.getContent(), @saveMetaData?() ]
+            if tmp.write @filename, objectToSave, yes # use compression
                 @setDocumentDirty no
 
 This function tries to save the current document.  When the save has been
@@ -276,10 +292,12 @@ of this plugin are set to be the parameters passed here.
             if filepath is null then filepath = '.'
             tmp = new FileSystem @fileSystem
             tmp.cd filepath
-            @editor.setContent tmp.read filename
+            [ content, metadata ] = tmp.read filename
+            @editor.setContent content
             @setFilepath filepath
             @setFilename filename
             @setDocumentDirty no
+            if metadata then @loadMetaData? metadata
 
 The following function pops up a dialog to the user, allowing them to choose
 a filename to open.  If they choose a file, it (with the current directory)

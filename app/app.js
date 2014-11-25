@@ -33,6 +33,7 @@
           return _this.clear();
         };
       })(this)), 0);
+      this.saveMetaData = this.loadMetaData = null;
       this.editor.on('change', (function(_this) {
         return function(event) {
           return _this.setDocumentDirty(true);
@@ -202,13 +203,14 @@
     };
 
     LoadSave.prototype.save = function() {
-      var tmp;
+      var objectToSave, tmp;
       if (this.filename === null) {
         return;
       }
       tmp = new FileSystem(this.fileSystem);
       tmp.cd(this.filepath);
-      if (tmp.write(this.filename, this.editor.getContent(), true)) {
+      objectToSave = [this.editor.getContent(), typeof this.saveMetaData === "function" ? this.saveMetaData() : void 0];
+      if (tmp.write(this.filename, objectToSave, true)) {
         return this.setDocumentDirty(false);
       }
     };
@@ -291,7 +293,7 @@
     };
 
     LoadSave.prototype.load = function(filepath, filename) {
-      var tmp;
+      var content, metadata, tmp, _ref;
       if (filename === null) {
         return;
       }
@@ -300,10 +302,14 @@
       }
       tmp = new FileSystem(this.fileSystem);
       tmp.cd(filepath);
-      this.editor.setContent(tmp.read(filename));
+      _ref = tmp.read(filename), content = _ref[0], metadata = _ref[1];
+      this.editor.setContent(content);
       this.setFilepath(filepath);
       this.setFilename(filename);
-      return this.setDocumentDirty(false);
+      this.setDocumentDirty(false);
+      if (metadata) {
+        return typeof this.loadMetaData === "function" ? this.loadMetaData(metadata) : void 0;
+      }
     };
 
     LoadSave.prototype.tryToOpen = function(callback) {
@@ -527,9 +533,14 @@
       setup: function(editor) {
         return editor.on('init', function() {
           editor.getBody().style.fontSize = '16px';
-          return setTimeout((function() {
+          setTimeout((function() {
             return editor.execCommand('mceFullScreen');
           }), 0);
+          return editor.getBody().addEventListener('focus', function() {
+            if (editor.windowManager.getWindows().length !== 0) {
+              return editor.windowManager.close();
+            }
+          });
         });
       }
     });
