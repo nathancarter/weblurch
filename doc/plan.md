@@ -45,7 +45,8 @@ Make it so that loading and saving can support more than just HTML
 ### Overlay plugin
 
  * Create an overlay plugin for TinyMCE that installs (and can later fetch)
-   the overlay canvas.  Use it in the main app.
+   the overlay canvas.
+ * Use it in the main app.
 
 ### Groups plugin
 
@@ -183,22 +184,29 @@ BackgroundFunction class.
 ### Dependencies
 
 This section connects tightly with the one after it, "Extending load and
-save."  Be sure to read both together.
+save."  Be sure to read both together.  Also, this will need to be extended
+later when enhancing Lurch to be usable offline (see [below](#offline-support)).
 
- * Create a way to give a document a title, author, language, and version,
-   like we did before.  But perhaps we can drop language?  Version?
  * Reference dependencies by URLs; these can be file:/// URLs, which is a
    reference to LocalStorage, or http:// URLs, which is a reference to
    `lurchmath.org`.
- * Cache the meaning computed from such files in local/Dropbox storage, so
-   that Lurch is usable offline.
- * This will impact the events of what needs to happen when files are
-   closed/opened, and what needs to be recomputed, based on whether or not
-   the dependencies changed.  Perhaps do what
-   [SCons does](http://www.scons.org/doc/0.98.4/HTML/scons-user/c779.html)
-   and use a combination of timestamps and MD5 hashes to tell whether you
-   need to bother recomputing the data from a dependency.  But where should
-   such data even be stored?  Design discussion to have...
+ * Provide a UI for editing the dependency list for a document.  Store this
+   data outside the document.
+ * Load/save that metadata using the `loadMetaData` and `saveMetaData`
+   members of the LoadSave plugin.
+ * Design what you will do when files are opened/closed, re: computation of
+   the meaning in them and their dependencies.  Issues to consider:
+   * If background computations are pending on a document, should the user
+     be permitted to save it?  What if it's used as a dependency elsewhere?
+     Will that cause it to be loaded in a permanently-paused-as-incomplete
+     state in the other document?
+   * Or does that imply that we should recompute lots of stuff about each
+     dependency as it's loaded, in invisible DOM elements somewhere?  That
+     sounds expensive and error-prone.
+   * Knowing whether recomputation is needed could be determined by
+     inspecting an MD5 hash of the document to see if it has changed since
+     the last computation.  This is what [SCons
+     does](http://www.scons.org/doc/0.98.4/HTML/scons-user/c779.html).
 
 ## Extending load and save
 
@@ -221,11 +229,13 @@ could be implemented.
      make it possible to use one codebase for both local storage and Dropbox
      storage, a very attractive option.
    * If Dropbox is not used, and thus the user's files are not present on
-     their own local machine, provide a way for the user to load/save files
-     into/out of web storage?
+     their own local machine, provide a way to transfer files from their
+     local filesystem to/from the browser's LocalStorage?
    * Add the ability to share documents with the world.  Options:
-     * Use something like [Firebase](https://www.firebase.com/)
-     * If using Dropbox, make files shared, if the API supports that
+     * Use something like [Firebase](https://www.firebase.com/).  (Too much
+       work, and requires integrating a whole new technology.)
+     * If using Dropbox, make files shared, if the API supports that.
+       (Again, too complex, and requires Dropbox.)
      * Create a wiki on `lurchmath.org` into which entire Lurch HTML files
        can be pasted as new pages, but only editable by the original author.
        This way instructors can post on that wiki core dependencies that
@@ -233,7 +243,28 @@ could be implemented.
        project!) is not dependent on the state of any individual's Dropbox
        folder.  (Note that external websites are not an option, since
        `XMLHttpRequest` restricts cross-domain access, unless you run a
-       proxy on `lurchmath.org`.)
+       proxy on `lurchmath.org`.)  This could be even better as follows:
+       * Write a plugin for the wiki that can access the same LocalStorage
+         filesystem that Lurch does, and can pop up dialogs with all your
+         Lurch documents.  Just choose one and the wiki will paste its
+         content cleanly into the page you're editing, or a new page, your
+         choice.
+       * Similarly, that same wiki plugin could be useful for extracting a
+         copy of a document in a wiki page into your Lurch filesystem, for
+         opening in the Lurch app itself thereafter.
+       * Make the transfer from Lurch to the wiki even easier by providing a
+         single button in Lurch that exports to the wiki in one click, using
+         some page naming convention based on your wiki username and the
+         local path and/or name of the file.  Or perhaps, even better, you
+         have a public subfolder of your Lurch filesystem that's synced, on
+         every document save or Manage Files event, to the wiki, through
+         `XMLHttpRequest` calls.
+       * Make the transfer from the wiki to Lurch even easier by providing a
+         single "Open in Lurch" button in the wiki that stores the document
+         content in a temporary file in your Lurch filesystem, then opens
+         Lurch in a new tab.  The Lurch app will then be smart enough to
+         open any such temporary file on launch, and then delete it (but the
+         user can choose to save it thereafter, of course).
 
 ### Math
 
@@ -266,6 +297,25 @@ similar projects for CKEditor as well.
 Build the 3 foundational Group types, according to Ken's new spec!
 
 ## For later
+
+### Making things more elegant
+
+ * Eventually, pull the LoadSave plugin out into its own repository on
+   GitHub, so that anyone can easily get and use that TinyMCE plugin, and
+   improve on its code.
+
+### Offline support
+
+To make an HTML5 app available offline, I believe the appropriate step is
+simply to provide an app manifest.  I'm verifying that with [this
+StackOverflow
+question](http://stackoverflow.com/questions/27136144/how-can-online-offline-versions-of-an-html5-app-access-the-same-localstorage).
+That question links to a tutorial on app manifests, if the answer turns out
+to be "yes" to that question.
+
+Once the app is usable offline, it will also be helpful to cache in
+LocalStorage the meaning computed from all dependencies, so that Lurch is
+usable offline even when dependencies of the current document are online.
 
 ### Ideas from various sources
 
