@@ -275,9 +275,9 @@ to gh-pages and merging in changes.
                     description : 'Committing changes... (which may fail if
                         there were no changes to the app itself; in that
                         case, just git checkout master and push.)'.green
-                ,
                     command : "git commit -a -m 'Updating gh-pages with
                         latest generated docs'"
+                ,
                     description : 'Going back to master...'.green
                     command : 'git checkout master'
                 ], ->
