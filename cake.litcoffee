@@ -41,7 +41,8 @@ These constants define how the functions below perform.
     testdir = './test/'
     repdir = './test/reports/'
     submodules = {
-        jsfs : 'npm install && ./node_modules/.bin/cake all'
+        jsfs : 'npm install && ./node_modules/.bin/cake all
+            && cp demo/*.js demo/*.map demo/*.litcoffee ../app/'
     }
 
 ## The `app` build process
@@ -265,11 +266,11 @@ to gh-pages and merging in changes.
             description : 'Merging in changes...'.green
             command : 'git merge master'
         ], ->
-            console.log 'Building app in gh-pages...'.green
-            build.enqueue 'app', ->
+            console.log 'Building app and submodules in gh-pages...'.green
+            build.enqueue 'app', 'submodules', ->
                 build.runShellCommands [
                     description : 'Committing changes... (which may fail if
-                        there were no changes to tha app itself; in that
+                        there were no changes to the app itself; in that
                         case, just git checkout master and push.)'.green
                 ,
                     command : "git commit -a -m 'Updating gh-pages with
