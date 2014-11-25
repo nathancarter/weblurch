@@ -1,10 +1,8 @@
 *.swp
 app/weblurch*.js
-app/tinymcedialog*.js
 app/app*.js
 app/weblurch.litcoffee
 app/app.litcoffee
-app/*.solo.*.map
 node_modules/*
 doc/test-results.md
 test/reports/*
