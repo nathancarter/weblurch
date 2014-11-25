@@ -432,10 +432,8 @@
               return function() {
                 var frame, frames, _i, _len;
                 frames = document.getElementsByTagName('iframe');
-                console.log(frames);
                 for (_i = 0, _len = frames.length; _i < _len; _i++) {
                   frame = frames[_i];
-                  console.log(frame.getAttribute('src'));
                   if ('filedialog/filedialog.html' === frame.getAttribute('src')) {
                     return frame.contentWindow.postMessage(['buttonClicked', 'New folder'], '*');
                   }

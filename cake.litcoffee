@@ -42,7 +42,10 @@ These constants define how the functions below perform.
     repdir = './test/reports/'
     submodules = {
         jsfs : 'npm install && ./node_modules/.bin/cake all
-            && cp demo/*.js demo/*.map demo/*.litcoffee ../app/filedialog/'
+            && cp demo/*.js demo/*.map demo/*.litcoffee
+                  demo/close.png demo/copy.png demo/delete.png
+                  demo/folder.png demo/move.png demo/text-file.png
+                  demo/up-arrow.png ../app/filedialog/'
     }
 
 ## The `app` build process
