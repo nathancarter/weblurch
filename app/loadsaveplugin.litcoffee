@@ -235,12 +235,13 @@ refresh the dialog in this case.
             @changedFolderHandler = ( newfolder ) -> filepath = newfolder
 
 Now we are sufficiently ready to pop up the dialog.  We use one made from
-[filedialog.html](filedialog.html), which was copied from [the jsfs
-submodule](../jsfs/demo) and modified to suit the needs of this application.
+[filedialog/filedialog.html](filedialog.html), which was copied from [the
+jsfs submodule](../jsfs/demo) and modified to suit the needs of this
+application.
 
             @editor.windowManager.open {
                 title : 'Save file...'
-                url : 'filedialog.html'
+                url : 'filedialog/filedialog.html'
                 width : 600
                 height : 400
                 buttons : [
@@ -321,12 +322,13 @@ refresh the dialog in this case.
             @changedFolderHandler = ( newfolder ) -> filepath = newfolder
 
 Now we are sufficiently ready to pop up the dialog.  We use one made from
-[filedialog.html](filedialog.html), which was copied from [the jsfs
-submodule](../jsfs/demo) and modified to suit the needs of this application.
+[filedialog/filedialog.html](filedialog.html), which was copied from [the
+jsfs submodule](../jsfs/demo) and modified to suit the needs of this
+application.
 
             @editor.windowManager.open {
                 title : 'Open file...'
-                url : 'filedialog.html'
+                url : 'filedialog/filedialog.html'
                 width : 600
                 height : 400
                 buttons : [
@@ -390,7 +392,7 @@ it and move, rename, and delete files, create folders, etc.
         manageFiles: ->
             @editor.windowManager.open {
                 title : 'Manage files'
-                url : 'filedialog.html'
+                url : 'filedialog/filedialog.html'
                 width : 700
                 height : 500
                 buttons : [
@@ -400,7 +402,8 @@ it and move, rename, and delete files, create folders, etc.
                         console.log frames
                         for frame in frames
                             console.log frame.getAttribute 'src'
-                            if 'filedialog.html' is frame.getAttribute 'src'
+                            if 'filedialog/filedialog.html' is
+                              frame.getAttribute 'src'
                                 return frame.contentWindow.postMessage \
                                     [ 'buttonClicked', 'New folder' ], '*'
                 ,
