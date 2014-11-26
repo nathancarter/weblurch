@@ -27,6 +27,14 @@ Plugin](../app/loadsaveplugin.litcoffee).
    behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
    menu.
 
+### Miscellaneous enhancements
+
+ * Add [the Lurch icon](../app/app-icon.png) to the left of the File menu.
+   The version linked to there is large; see [this folder](../app) for other
+   sizes, but you will still probably want a size even smaller than those.
+ * Make a link from one of the app menus to the GitHub project page, perhaps
+   through an "About" dialog.
+
 ## Extending the Editor
 
 ### Overlay plugin
@@ -322,11 +330,13 @@ own.  It might be advantageous to allow multiple users to edit the same
 Lurch document.  No idea if this is feasible or not, nor if it is even an
 idea worth pursuing.
 
-Imagine the whole Lurch experience being online, in the sense that our
-website could house a wiki-like thing of Lurch documents.  You want to share
-a document with your students? just get an instructor account, save the
-document from your weblurch to the wiki, then give the students the URL to
-use as a dependency.  True cloud lurch sharing.
+If we have the wiki integration as [described
+above](#extending-load-and-save), is it possible for the entire Lurch app to
+exist inside the wiki, so that editing a wiki page was done using Lurch as
+the editor?  That would be excellent for many use cases.  Offline use would
+still necessitate the normal app, and this would be tricky to accomplish,
+because wiki integration of something that complex will be touchy, but it
+would be impressive and intuitive.
 
 A web Lurch is trivially also a desktop Lurch, as follows.  You can, of
 course, write a stupid shell app that’s just a single web view that loads
