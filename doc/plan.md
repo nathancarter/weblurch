@@ -306,14 +306,6 @@ usable offline even when dependencies of the current document are online.
 
 ### Ideas from various sources
 
-Someday, when regular, automated testing becomes important, have a server do
-a nightly git pull of the latest version.  Once that's working, have it run
-a shell script that does the following.
- * Back up the old HTML version of the test suite output.
- * Run the test suite.
- * Email the developers if and only if the new output differs from the old
-   in an important way (i.e., not just timings, but results).
-
 Suggestion from Dana Ernst: Perhaps this is not necessary or feasible, but
 if you go with a web app, could you make it easy for teachers to "plug into"
 the common LMS's (e.g. Blackboard, Canvas, etc.)?  I'm envisioning students
