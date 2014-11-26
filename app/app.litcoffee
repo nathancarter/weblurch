@@ -250,6 +250,23 @@ refresh the dialog in this case.
             filepath = null
             @changedFolderHandler = ( newfolder ) -> filepath = newfolder
 
+Create a handler to receive the button clicks.  We do this here so that if
+the dialog clicks a button programmatically, which then passes to us a
+message that the button was clicked, we will still hear it through this
+handler, because the `window.onmessage` handler installed at the end of this
+file will call this function.
+
+            @buttonClickedHandler = ( name, args... ) =>
+                if name is 'Save'
+                    @setFilepath filepath
+                    @setFilename filename
+                    @editor.windowManager.close()
+                    result = @save() # save happens even if no callback
+                    callback? result
+                else if name is 'Cancel'
+                    @editor.windowManager.close()
+                    callback? no
+
 Now we are sufficiently ready to pop up the dialog.  We use one made from
 [filedialog/filedialog.html](filedialog.html), which was copied from [the
 jsfs submodule](../jsfs/demo) and modified to suit the needs of this
@@ -263,17 +280,10 @@ application.
                 buttons : [
                     text : 'Save'
                     subtype : 'primary'
-                    onclick : =>
-                        @setFilepath filepath
-                        @setFilename filename
-                        @editor.windowManager.close()
-                        result = @save() # save happens even if no callback
-                        callback? result
+                    onclick : => @buttonClickedHandler 'Save'
                 ,
                     text : 'Cancel'
-                    onclick : =>
-                        @editor.windowManager.close()
-                        callback? no
+                    onclick : => @buttonClickedHandler 'Cancel'
                 ]
             }, {
                 fsName : @fileSystem
@@ -339,6 +349,20 @@ refresh the dialog in this case.
             filepath = null
             @changedFolderHandler = ( newfolder ) -> filepath = newfolder
 
+Create a handler to receive the button clicks.  We do this here so that if
+the dialog clicks a button programmatically, which then passes to us a
+message that the button was clicked, we will still hear it through this
+handler, because the `window.onmessage` handler installed at the end of this
+file will call this function.
+
+            @buttonClickedHandler = ( name, args... ) =>
+                if name is 'Open'
+                    @editor.windowManager.close()
+                    callback? filepath, filename
+                else if name is 'Cancel'
+                    @editor.windowManager.close()
+                    callback? null, null
+
 Now we are sufficiently ready to pop up the dialog.  We use one made from
 [filedialog/filedialog.html](filedialog.html), which was copied from [the
 jsfs submodule](../jsfs/demo) and modified to suit the needs of this
@@ -352,14 +376,10 @@ application.
                 buttons : [
                     text : 'Open'
                     subtype : 'primary'
-                    onclick : =>
-                        @editor.windowManager.close()
-                        callback? filepath, filename
+                    onclick : => @buttonClickedHandler 'Open'
                 ,
                     text : 'Cancel'
-                    onclick : =>
-                        @editor.windowManager.close()
-                        callback? null, null
+                    onclick : => @buttonClickedHandler 'Cancel'
                 ]
             }, {
                 fsName : @fileSystem
