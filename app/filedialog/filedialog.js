@@ -317,7 +317,7 @@
     interior = makeTable(entries);
     titlebar = statusbar = '';
     if (features.fileNameTextBox) {
-      statusbar += "File name: <input id='saveFileName' type='text' size=40 onkeyup='enableOrDisableSaveButton();'/>";
+      statusbar += "File name: <input id='saveFileName' type='text' size=40 onkeyup='saveBoxKeyPressed(event);'/>";
     }
     if (features.extensionFilter) {
       extensions = (function() {
@@ -363,20 +363,26 @@
     if (oldIndex && (typeof fileFilter !== "undefined" && fileFilter !== null)) {
       fileFilter.selectedIndex = oldIndex;
     }
-    enableOrDisableSaveButton();
+    saveBoxKeyPressed();
     if (typeof saveFileName !== "undefined" && saveFileName !== null) {
       return saveFileName.focus();
     }
   };
 
-  window.enableOrDisableSaveButton = function() {
+  window.saveBoxKeyPressed = function(event) {
     var name;
     name = typeof saveFileName !== "undefined" && saveFileName !== null ? saveFileName.value : void 0;
     if (typeof statusBarButtonSave !== "undefined" && statusBarButtonSave !== null) {
       statusBarButtonSave.disabled = !name;
     }
     if (typeof name === 'string') {
-      return tellPage(['saveFileNameChanged', name]);
+      tellPage(['saveFileNameChanged', name]);
+    }
+    if ((event != null ? event.keyCode : void 0) === 13) {
+      return buttonClicked('Save');
+    }
+    if ((event != null ? event.keyCode : void 0) === 27) {
+      return buttonClicked('Cancel');
     }
   };
 
