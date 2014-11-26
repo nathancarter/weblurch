@@ -217,7 +217,7 @@
     };
 
     LoadSave.prototype.tryToSave = function(callback, filename) {
-      var filepath, refreshDialog, result;
+      var filepath, refreshDialog, result, saveWouldOverwrite;
       if (filename == null) {
         filename = this.filename;
       }
@@ -229,6 +229,9 @@
       refreshDialog = function() {
         var button, dialog, _i, _len, _ref, _results;
         dialog = document.getElementsByClassName('mce-window')[0];
+        if (!dialog) {
+          return;
+        }
         _ref = dialog.getElementsByTagName('button');
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -259,11 +262,25 @@
       this.changedFolderHandler = function(newfolder) {
         return filepath = newfolder;
       };
+      saveWouldOverwrite = (function(_this) {
+        return function(filepath, filename) {
+          var tmp;
+          tmp = new FileSystem(_this.fileSystem);
+          tmp.cd(filepath);
+          return null !== tmp.type(filename);
+        };
+      })(this);
       this.buttonClickedHandler = (function(_this) {
         return function() {
           var args, name;
           name = arguments[0], args = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
           if (name === 'Save') {
+            if (saveWouldOverwrite(filepath, filename)) {
+              if (!confirm("Are you sure you want to overwrite the file " + filename + "?")) {
+                _this.tellDialog('setFileBrowserMode', 'save file');
+                return;
+              }
+            }
             _this.setFilepath(filepath);
             _this.setFilename(filename);
             _this.editor.windowManager.close();
@@ -336,6 +353,9 @@
       refreshDialog = function() {
         var button, dialog, _i, _len, _ref, _results;
         dialog = document.getElementsByClassName('mce-window')[0];
+        if (!dialog) {
+          return;
+        }
         _ref = dialog.getElementsByTagName('button');
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -448,6 +468,18 @@
       });
     };
 
+    LoadSave.prototype.tellDialog = function() {
+      var args, frame, frames, _i, _len;
+      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      frames = document.getElementsByTagName('iframe');
+      for (_i = 0, _len = frames.length; _i < _len; _i++) {
+        frame = frames[_i];
+        if ('filedialog/filedialog.html' === frame.getAttribute('src')) {
+          return frame.contentWindow.postMessage(args, '*');
+        }
+      }
+    };
+
     LoadSave.prototype.manageFiles = function() {
       return this.editor.windowManager.open({
         title: 'Manage files',
@@ -459,14 +491,7 @@
             text: 'New folder',
             onclick: (function(_this) {
               return function() {
-                var frame, frames, _i, _len;
-                frames = document.getElementsByTagName('iframe');
-                for (_i = 0, _len = frames.length; _i < _len; _i++) {
-                  frame = frames[_i];
-                  if ('filedialog/filedialog.html' === frame.getAttribute('src')) {
-                    return frame.contentWindow.postMessage(['buttonClicked', 'New folder'], '*');
-                  }
-                }
+                return _this.tellDialog('buttonClicked', 'New folder');
               };
             })(this)
           }, {

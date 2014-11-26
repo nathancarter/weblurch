@@ -224,6 +224,7 @@ selected.
 
             refreshDialog = ->
                 dialog = document.getElementsByClassName( 'mce-window' )[0]
+                if not dialog then return
                 for button in dialog.getElementsByTagName 'button'
                     if button.textContent is 'Save'
                         if filename
@@ -250,6 +251,15 @@ refresh the dialog in this case.
             filepath = null
             @changedFolderHandler = ( newfolder ) -> filepath = newfolder
 
+We will also need to know whether the `save` function will overwrite an
+existing file, so that we can verify that the user actually wants to do so
+before we save.  The following function performs that check.
+
+            saveWouldOverwrite = ( filepath, filename ) =>
+                tmp = new FileSystem @fileSystem
+                tmp.cd filepath
+                null isnt tmp.type filename
+
 Create a handler to receive the button clicks.  We do this here so that if
 the dialog clicks a button programmatically, which then passes to us a
 message that the button was clicked, we will still hear it through this
@@ -258,6 +268,21 @@ file will call this function.
 
             @buttonClickedHandler = ( name, args... ) =>
                 if name is 'Save'
+
+If the file chosen already exists, ask the user if they're sure they want to
+overwrite it.  If they say no, then we go back to the save dialog.  However,
+the dialog, by default, resets itself to "manage files" mode whenever a
+button is clicked.  So we put it back in "save file" mode before exiting.
+
+                    if saveWouldOverwrite filepath, filename
+                        if not confirm "Are you sure you want to overwrite
+                          the file #{filename}?"
+                            @tellDialog 'setFileBrowserMode', 'save file'
+                            return
+
+Now that we're sure the user wants to save, we store the path and filename
+for use in later saves, and perform the save, closing the dialog.
+
                     @setFilepath filepath
                     @setFilename filename
                     @editor.windowManager.close()
@@ -323,6 +348,7 @@ an enabled/disabled Save button, based on whether there is a file selected.
 
             refreshDialog = ->
                 dialog = document.getElementsByClassName( 'mce-window' )[0]
+                if not dialog then return
                 for button in dialog.getElementsByTagName 'button'
                     if button.textContent is 'Open'
                         if filename
@@ -419,6 +445,20 @@ dialog box asking what they wish to do.
                 ]
             }
 
+## Communcating with dialogs
+
+When a dialog is open, it is in an `<iframe>` within the main page, which
+means that it can only communicate with the script environment of the main
+page through message-passing.  This function finds the `<iframe>` containing
+the file dialog and (if there was one) sends it the message given as the
+argument list.
+
+        tellDialog: ( args... ) ->
+            frames = document.getElementsByTagName 'iframe'
+            for frame in frames
+                if 'filedialog/filedialog.html' is frame.getAttribute 'src'
+                    return frame.contentWindow.postMessage args, '*'
+
 ## Managing files
 
 The final menu item is one that shows a dialog for managing files in the
@@ -435,13 +475,7 @@ it and move, rename, and delete files, create folders, etc.
                 height : 500
                 buttons : [
                     text : 'New folder'
-                    onclick : =>
-                        frames = document.getElementsByTagName 'iframe'
-                        for frame in frames
-                            if 'filedialog/filedialog.html' is
-                              frame.getAttribute 'src'
-                                return frame.contentWindow.postMessage \
-                                    [ 'buttonClicked', 'New folder' ], '*'
+                    onclick : => @tellDialog 'buttonClicked', 'New folder'
                 ,
                     text : 'Done'
                     onclick : => @editor.windowManager.close()

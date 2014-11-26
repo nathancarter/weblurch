@@ -251,7 +251,7 @@
         (function(file) {
           action = function() {
             saveFileName.value = file;
-            return enableOrDisableSaveButton();
+            return saveBoxKeyPressed();
           };
           I = makeActionLink(I, 'Save as ' + file, action);
           return T = makeActionLink(T, 'Save as ' + file, action);
