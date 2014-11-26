@@ -224,6 +224,7 @@ selected.
 
             refreshDialog = ->
                 dialog = document.getElementsByClassName( 'mce-window' )[0]
+                if not dialog then return
                 for button in dialog.getElementsByTagName 'button'
                     if button.textContent is 'Save'
                         if filename
@@ -347,6 +348,7 @@ an enabled/disabled Save button, based on whether there is a file selected.
 
             refreshDialog = ->
                 dialog = document.getElementsByClassName( 'mce-window' )[0]
+                if not dialog then return
                 for button in dialog.getElementsByTagName 'button'
                     if button.textContent is 'Open'
                         if filename
