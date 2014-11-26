@@ -27,11 +27,6 @@ Plugin](../app/loadsaveplugin.litcoffee).
    behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
    menu.
 
-### Missing functionality
-
- * Attempting to save over an existing file does not prompt to ask if you
-   are sure you want to replace it.  Add this check.
-
 ## Extending the Editor
 
 ### Overlay plugin
