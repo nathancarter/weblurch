@@ -580,10 +580,17 @@
       contextmenu: 'link image inserttable | cell row column deletetable',
       setup: function(editor) {
         return editor.on('init', function() {
+          var filemenu, icon;
           editor.getBody().style.fontSize = '16px';
           setTimeout((function() {
             return editor.execCommand('mceFullScreen');
           }), 0);
+          filemenu = (editor.getContainer().getElementsByClassName('mce-menubtn'))[0];
+          icon = document.createElement('img');
+          icon.setAttribute('src', 'icons/apple-touch-icon-76x76.png');
+          icon.style.width = icon.style.height = '26px';
+          icon.style.padding = '2px';
+          filemenu.insertBefore(icon, filemenu.childNodes[0]);
           return editor.getBody().addEventListener('focus', function() {
             if (editor.windowManager.getWindows().length !== 0) {
               return editor.windowManager.close();

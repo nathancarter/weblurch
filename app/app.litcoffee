@@ -623,6 +623,17 @@ Increase the default font size and maximize the editor to fill the page.
                     editor.getBody().style.fontSize = '16px'
                     setTimeout ( -> editor.execCommand 'mceFullScreen' ), 0
 
+Add Lurch icon to the left of the File menu.
+
+                    filemenu = ( editor.getContainer()
+                        .getElementsByClassName 'mce-menubtn' )[0]
+                    icon = document.createElement 'img'
+                    icon.setAttribute 'src',
+                        'icons/apple-touch-icon-76x76.png'
+                    icon.style.width = icon.style.height = '26px'
+                    icon.style.padding = '2px'
+                    filemenu.insertBefore icon, filemenu.childNodes[0]
+
 Workaround for [this bug](http://www.tinymce.com/develop/bugtracker_view.php?id=3162):
 
                     editor.getBody().addEventListener 'focus', ->

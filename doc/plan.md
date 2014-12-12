@@ -11,6 +11,11 @@ in chronological order, the first items being those that should be done
 next, and the later items those that must come after.  Necessarily, the
 later items are more vague than the earlier ones.
 
+## Miscellaneous enhancements
+
+ * Make a link from one of the app menus to the GitHub project page, perhaps
+   through an "About" dialog.
+
 ## Load and save
 
 The steps below are all work in [the Load/Save
@@ -306,14 +311,6 @@ usable offline even when dependencies of the current document are online.
 
 ### Ideas from various sources
 
-Someday, when regular, automated testing becomes important, have a server do
-a nightly git pull of the latest version.  Once that's working, have it run
-a shell script that does the following.
- * Back up the old HTML version of the test suite output.
- * Run the test suite.
- * Email the developers if and only if the new output differs from the old
-   in an important way (i.e., not just timings, but results).
-
 Suggestion from Dana Ernst: Perhaps this is not necessary or feasible, but
 if you go with a web app, could you make it easy for teachers to "plug into"
 the common LMS's (e.g. Blackboard, Canvas, etc.)?  I'm envisioning students
@@ -330,11 +327,13 @@ own.  It might be advantageous to allow multiple users to edit the same
 Lurch document.  No idea if this is feasible or not, nor if it is even an
 idea worth pursuing.
 
-Imagine the whole Lurch experience being online, in the sense that our
-website could house a wiki-like thing of Lurch documents.  You want to share
-a document with your students? just get an instructor account, save the
-document from your weblurch to the wiki, then give the students the URL to
-use as a dependency.  True cloud lurch sharing.
+If we have the wiki integration as [described
+above](#extending-load-and-save), is it possible for the entire Lurch app to
+exist inside the wiki, so that editing a wiki page was done using Lurch as
+the editor?  That would be excellent for many use cases.  Offline use would
+still necessitate the normal app, and this would be tricky to accomplish,
+because wiki integration of something that complex will be touchy, but it
+would be impressive and intuitive.
 
 A web Lurch is trivially also a desktop Lurch, as follows.  You can, of
 course, write a stupid shell app that’s just a single web view that loads
