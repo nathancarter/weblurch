@@ -16,7 +16,6 @@ later items are more vague than the earlier ones.
  * Add [the Lurch icon](../app/app-icon.png) to the left of the File menu.
    The version linked to there is large; see [this folder](../app) for other
    sizes, but you will still probably want a size even smaller than those.
- * Add a favicon to the site, a small version of the iOS app icon.
  * Make a link from one of the app menus to the GitHub project page, perhaps
    through an "About" dialog.
 
