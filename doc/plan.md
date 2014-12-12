@@ -11,17 +11,9 @@ in chronological order, the first items being those that should be done
 next, and the later items those that must come after.  Necessarily, the
 later items are more vague than the earlier ones.
 
-## Miscellaneous enhancements
+## Bug fixes
 
- * Make a link from one of the app menus to the GitHub project page, perhaps
-   through an "About" dialog.
-
-## Load and save
-
-The steps below are all work in [the Load/Save
-Plugin](../app/loadsaveplugin.litcoffee).
-
-### Bugs
+Load and save
 
  * Not all edits cause the document to be marked dirty.  Perhaps the TinyMCE
    events are not firing when I expect, or perhaps I am not handling them
@@ -31,6 +23,12 @@ Plugin](../app/loadsaveplugin.litcoffee).
  * Using the keyboard shortcut for New or Open on Mac triggers the Chrome
    behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
    menu.
+
+Unit Testing
+
+ * After running the unit tests, the `phantomjs` process remains running in
+   the background, and it is necessary to kill it manually (e.g., from the
+   Mac Activity Monitor app).
 
 ## Extending the Editor
 
