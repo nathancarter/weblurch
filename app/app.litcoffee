@@ -572,39 +572,35 @@ We then install two toolbars, with separators indicated by pipes (`|`).
 
 We then customize the menus' contents as follows.
 
-            menu : {
-                file : {
+            menu :
+                file :
                     title : 'File'
                     items : 'newfile openfile | savefile saveas
                            | managefiles | print'
-                }
-                edit : {
+                edit :
                     title : 'Edit'
                     items : 'undo redo
                            | cut copy paste pastetext
                            | selectall'
-                }
-                insert : {
+                insert :
                     title : 'Insert'
                     items : 'link media
                            | template hr'
-                }
-                view : {
+                view :
                     title : 'View'
                     items : 'visualaid'
-                }
-                format : {
+                format :
                     title : 'Format'
                     items : 'bold italic underline
                              strikethrough superscript subscript
                            | formats | removeformat'
-                }
-                table : {
+                table :
                     title : 'Table'
                     items : 'inserttable tableprops deletetable
                            | cell row column'
-                }
-            }
+                help :
+                    title : 'Help'
+                    items : 'about website'
 
 And, finally, we customize the context menu.
 
@@ -616,6 +612,19 @@ In our case, there will be only one, but this is how TinyMCE installs setup
 functions, regardless.
 
             setup : ( editor ) ->
+
+Add a Help menu.
+
+                editor.addMenuItem 'about',
+                    text : 'About...'
+                    context : 'help'
+                    onclick : -> alert 'webLurch\n\npre-alpha,
+                        not intended for general consumption!'
+                editor.addMenuItem 'website',
+                    text : 'Lurch website'
+                    context : 'help'
+                    onclick : -> window.open 'http://www.lurchmath.org',
+                        '_blank'
 
 Increase the default font size and maximize the editor to fill the page.
 

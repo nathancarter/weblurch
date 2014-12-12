@@ -575,10 +575,28 @@
         table: {
           title: 'Table',
           items: 'inserttable tableprops deletetable | cell row column'
+        },
+        help: {
+          title: 'Help',
+          items: 'about website'
         }
       },
       contextmenu: 'link image inserttable | cell row column deletetable',
       setup: function(editor) {
+        editor.addMenuItem('about', {
+          text: 'About...',
+          context: 'help',
+          onclick: function() {
+            return alert('webLurch\n\npre-alpha, not intended for general consumption!');
+          }
+        });
+        editor.addMenuItem('website', {
+          text: 'Lurch website',
+          context: 'help',
+          onclick: function() {
+            return window.open('http://www.lurchmath.org', '_blank');
+          }
+        });
         return editor.on('init', function() {
           var filemenu, icon;
           editor.getBody().style.fontSize = '16px';
