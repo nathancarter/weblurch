@@ -13,9 +13,6 @@ later items are more vague than the earlier ones.
 
 ## Miscellaneous enhancements
 
- * Add [the Lurch icon](../app/app-icon.png) to the left of the File menu.
-   The version linked to there is large; see [this folder](../app) for other
-   sizes, but you will still probably want a size even smaller than those.
  * Make a link from one of the app menus to the GitHub project page, perhaps
    through an "About" dialog.
 
