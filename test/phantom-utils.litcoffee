@@ -252,3 +252,14 @@ present, to overwrite any existing error stack.
         if @overrideStack_ and result.passed_ is no
             result.trace.stack = @overrideStack_
         oldFn.apply this, [ result ]
+
+Finally, we create a wrapper around the test-result-reporting routine, so
+that it kills the PhantomJS subprocess before the test process exits.
+Without this, we leave a child process hanging around every time the test
+suite is invoked.
+
+    oldObj = jasmine.getEnv().reporter
+    oldFn2 = oldObj.reportRunnerResults
+    oldObj.reportRunnerResults = ( arg ) ->
+        P?.phantom?.exit()
+        oldFn2.apply oldObj, [ arg ]

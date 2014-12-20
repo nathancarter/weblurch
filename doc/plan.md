@@ -24,12 +24,6 @@ Load and save
    behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
    menu.
 
-Unit Testing
-
- * After running the unit tests, the `phantomjs` process remains running in
-   the background, and it is necessary to kill it manually (e.g., from the
-   Mac Activity Monitor app).
-
 ## Extending the Editor
 
 ### Overlay plugin
