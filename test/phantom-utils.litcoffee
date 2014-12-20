@@ -30,8 +30,8 @@ This can easily be used within the asynchronous test framework in
 Here is a global variable in which I store the one PhantomJS instance I
 create.  (Creating many PhantomJS instances leads to errors about too many
 listeners for an `EventEmitter`, so I use one global PhantomJS instance.)
-It starts uninitialized, and I prove a function for querying whether it has
-been initialized since then.
+It starts uninitialized, and I provide a function for querying whether it
+has been initialized since then.
 
     P = phantom: null, page: null
     phantomInitialized = -> P?.phantom and P?.page
@@ -211,7 +211,7 @@ function signature, above.
 # Convenience function for tests
 
 In order to make writing tests shorter, we provide the following convenience
-function.  Consider the following idiom.
+function.  Consider the following idiom that we wish to avoid.
 
     # it 'name of test here', ( done ) =>
     #     @page.evaluate =>
@@ -339,8 +339,7 @@ First, we provide a function that can be used to set the stack trace.
     setErrorPoint = ->
         spec = jasmine?.getEnv().currentSpec
         if not spec
-            throw Error 'No current spec in which to
-                set error point'
+            throw Error 'No current spec in which to set error point'
 
 When we create a new stack trace, we remove from it the mention of this
 function (`setErrorPoint`) and the one that called it (which will be
