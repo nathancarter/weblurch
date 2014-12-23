@@ -8,7 +8,16 @@ access both.
 
 # `LoadSave` class
 
-We begin by defining a class that will contain all the information needed regarding loading and saving a document.  An instance of this class will be stored as a member in the TinyMCE editor object.
+We begin by defining a class that will contain all the information needed
+regarding loading and saving a document.  An instance of this class will be
+stored as a member in the TinyMCE editor object.
+
+This convention is adopted for all TinyMCE plugins in the Lurch project;
+each will come with a class, and an instance of that class will be stored as
+a member of the editor object when the plugin is installed in that editor.
+The presence of that member indicates that the plugin has been installed,
+and provides access to the full range of functionality that the plugin
+grants to that editor.
 
     class LoadSave
 

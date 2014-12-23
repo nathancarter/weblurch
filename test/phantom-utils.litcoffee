@@ -30,8 +30,8 @@ This can easily be used within the asynchronous test framework in
 Here is a global variable in which I store the one PhantomJS instance I
 create.  (Creating many PhantomJS instances leads to errors about too many
 listeners for an `EventEmitter`, so I use one global PhantomJS instance.)
-It starts uninitialized, and I prove a function for querying whether it has
-been initialized since then.
+It starts uninitialized, and I provide a function for querying whether it
+has been initialized since then.
 
     P = phantom: null, page: null
     phantomInitialized = -> P?.phantom and P?.page
@@ -102,116 +102,10 @@ Example use (note the very important `=>` for preserving `this`):
     #         expect( @page.loaded ).toBeTruthy()
     #         done()
 
-# Running test app histories
-
-Load [the testapp page](../testapp/index.html) and execute in it all the
-commands contained in the JSON data stored in the given file.  After each
-command, if the recorded state of the editor is marked as correct (or
-incorrect) in the JSON data, test to verify that the result in the page
-equals (or does not equal) that recorded state.
-
-The return value is the loaded JSON test history, because the caller
-accumulates all such test histories into one big data structure, for use in
-[the test app](../testapp/index.html).
-
-    exports.runTestHistory = ( filename ) ->
-        testHistory = null
-
-Start a test for the given filename, whether or not it even exists.
-
-        exports.phantomDescribe "Test history in #{filename}", \
-        './testapp/index.html', ->
-
-The first test it must pass is that the file must exist and be readable as
-the JSON data for an array.
-
-            fs = require 'fs'
-            canLoad = yes
-            try
-                testHistory = JSON.parse fs.readFileSync filename
-            catch error
-                canLoad = error
-            it 'exists on disk', ( done ) =>
-                expect( canLoad ).toEqual yes
-                done()
-            it 'contains a JSON array', ( done ) =>
-                expect( testHistory instanceof Array ).toBeTruthy()
-                done()
-
-Now we re-run, in the page, the entire test history.
-
-            it 'was correctly replayed (in full)', ( done ) =>
-                @page.evaluate ( history ) ->
-                    result = []
-                    for step, index in history
-
-For each step, if there is code to run (i.e., it's not the initialization
-step) then run it and be sure there are no errors. We include the index in
-the output so that if a test fails later, it will be obvious which step of
-the test failed.
-
-                        if step.code.length > 0
-                            try
-                                eval step.code
-                                result.push \
-                                    "no error in command #{index}"
-                            catch error
-                                result.push error
-                        else
-                            result.push \
-                                "no error in command #{index}"
-
-Now in case there is any comparison to do with the main div's state, we
-record that state here as a JSON string.
-
-                        result.push LE.getElement().toJSON()
-                    result
-                , ( err, result ) ->
-
-Now we repeat the same loop through the test history after we've obtained
-the page results, and verify that they're what they should be.  The first
-two lines pick out the two relelvant elements from the results array, one
-the result of running any code at that step and the other the DOM state
-achieved by that code.
-
-                    for step, index in testHistory
-                        codeResult = result[index*2]
-                        state = result[index*2+1]
-
-Verify that no errors occurred when the code ran.
-
-                        expect( codeResult ).toEqual \
-                            "no error in command #{index}"
-
-Now, in case one of the tests below fails, we'll want its index in the
-output, so we place that index in the objects here, just as a convenience to
-the reader.
-
-                        state.index = step.state.index = index
-
-Verify that the states match or do not match, whichever the test data
-requires.
-
-                        if step.correct is yes
-                            expect( state ).toEqual step.state
-                        else if step.correct is no
-                            expect( state ).not.toEqual step.state
-                    done()
-
-This is the additional (optional) parameter passed to the function that
-`@page.evaluate` will run, the test history as a big, JSONable object.
-
-                , testHistory
-
-Return the test history, as described in the documentation above the
-function signature, above.
-
-        testHistory
-
 # Convenience function for tests
 
 In order to make writing tests shorter, we provide the following convenience
-function.  Consider the following idiom.
+function.  Consider the following idiom that we wish to avoid.
 
     # it 'name of test here', ( done ) =>
     #     @page.evaluate =>
@@ -339,8 +233,7 @@ First, we provide a function that can be used to set the stack trace.
     setErrorPoint = ->
         spec = jasmine?.getEnv().currentSpec
         if not spec
-            throw Error 'No current spec in which to
-                set error point'
+            throw Error 'No current spec in which to set error point'
 
 When we create a new stack trace, we remove from it the mention of this
 function (`setErrorPoint`) and the one that called it (which will be
@@ -359,3 +252,14 @@ present, to overwrite any existing error stack.
         if @overrideStack_ and result.passed_ is no
             result.trace.stack = @overrideStack_
         oldFn.apply this, [ result ]
+
+Finally, we create a wrapper around the test-result-reporting routine, so
+that it kills the PhantomJS subprocess before the test process exits.
+Without this, we leave a child process hanging around every time the test
+suite is invoked.
+
+    oldObj = jasmine.getEnv().reporter
+    oldFn2 = oldObj.reportRunnerResults
+    oldObj.reportRunnerResults = ( arg ) ->
+        P?.phantom?.exit()
+        oldFn2.apply oldObj, [ arg ]

@@ -39,7 +39,7 @@ that begins with a hyphen is a local plugin written as part of this project.
 
             plugins : 'advlist table charmap colorpicker contextmenu image
                 link importcss paste print save searchreplace textcolor
-                fullscreen -loadsave'
+                fullscreen -loadsave -overlay'
 
 We then install two toolbars, with separators indicated by pipes (`|`).
 
