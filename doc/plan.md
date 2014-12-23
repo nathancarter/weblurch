@@ -26,12 +26,6 @@ Load and save
 
 ## Extending the Editor
 
-### Overlay plugin
-
- * Create an overlay plugin for TinyMCE that installs (and can later fetch)
-   the overlay canvas.
- * Use it in the main app.
-
 ### Groups plugin
 
  * Create a Groups plugin
