@@ -28,40 +28,49 @@ Load and save
 
 ### Groups plugin
 
- * Create a Groups plugin
-   * It should let you register any type of Group.
-   * It should provide a function for inserting open/close pairs, and easy
-     ways to create buttons and menu items for calling that insertion
-     function.  (Use classes to distinguish open and close groupers.)
-   * Give every matching pair of groupers a unique number at insertion time,
-     stored in their ids, as in `id='open3'` and `id='close3'`, for example.
-   * Create a `Group` class with the following features.
-     * integer id number
-     * array of child Groups
-     * pointer to parent Group, if any
-     * open and close groupers (DOM elements)
-   * Add a class method that scans the document, indexing all pairs of
-     groupers, in order, deleting each that doesn't match up with a
-     same-numbered partner.  From those that remain, build a hierarchy
-     stored in a class member `Group.tree`, as an array of `Group` object
-     instances.
-   * Call that scanning routine after each document change.
-   * Extend the scanning routine to also map all Group id numbers to the
-     object instances, and keep that mapping within the Group class itself,
-     as in `Group[7]`
-   * Write a class method `Group.numbers()`, which returns a list of all id
-     numbers that appear in `Group.tree`.  They should appear in tree order.
-     It should cache its results and only invalidate the cache when the
-     scanning routine is re-run.
-   * The plugin should provide a function for hiding/showing Group
-     boundaries, and a keyboard shortcut for it.
-   * The plugin should use the overlay plugin to draw bubbles around Groups
-     if and only if the cursor is inside them.
-   * Create an easy way to find the deepest Group surrounding any DOM Node.
-   * Make Group insertion only available when the base and anchor of the
-     selection are in the same Group.
-   * Extend the `Group` class with a way to get/set arbitrary data on a
-     Group as key-value pairs stored in the element attributes.
+Create a Groups plugin with the following features.
+
+ * Create a class method for registering new types of groups, by name.  That
+   name will be used as part of the grouper element's class name.
+ * Create a class method for inserting open/close grouper pairs.  Use
+   classes to distinguish group types, and ids to distinguish open vs.
+   close.  Give every matching pair of groupers a unique number at insertion
+   time, stored in their ids, as in `id='open3'` and `id='close3'`.
+ * Create convenience functions that create buttons and menu items that call
+   the insertion function.
+ * Create a constructor for the class that can accept a unique integer ID,
+   or a DOM element that is the open/close grouper.
+ * Extend Group instances with a getter for the integer id number.
+ * Extend Group instances with getters for the open/close grouper elements.
+ * Add a class method that scans the document, indexing all pairs of
+   groupers, in order, deleting each that doesn't match up with a
+   same-numbered partner.  From those that remain, build a hierarchy
+   stored in a class member `Group.tree`, as an array of `Group` object
+   instances.
+ * Call that scanning routine after each document change.
+ * Extend the scanning routine to also map all Group id numbers to the
+   object instances, and keep that mapping within the Group class itself, as
+   in `Group[7]`
+ * Write a class method `Group.numbers()`, which returns a list of all id
+   numbers that appear in `Group.tree`.  They should appear in tree order.
+   It should cache its results and only invalidate the cache when the
+   scanning routine is re-run.
+ * Extend Group instances with a function for getting the array of child
+   Groups.
+ * Extend Group instances with a function for getting the parent Group, if
+   there is one.
+ * Create a class method for hiding/showing Group boundaries, and a
+   convenience function for installing a keyboard shortcut that calls it.
+ * Use the overlay plugin to draw bubbles around Groups if and only if the
+   cursor is inside them.
+ * Extend the constructor so that it can take any DOM node and yield the
+   deepest Group instance surrounding it, if there is one.  (If this can't
+   be done with a constructor--since it may fail--use a class method
+   instead.)
+ * Enhance the Group insertion actions so that they are unavailable when the
+   base and anchor of the selection are not in the same Group.
+ * Add instance methods for getting/setting arbitrary data on a Group, as
+   key-value pairs stored in the open grouper DOM element attributes.
 
 ### Events
 

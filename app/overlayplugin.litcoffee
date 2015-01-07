@@ -104,11 +104,3 @@ The plugin, when initialized on an editor, places an instance of the
 
     tinymce.PluginManager.add 'overlay', ( editor, url ) ->
         editor.Overlay = new Overlay editor
-        editor.Overlay.addDrawHandler ( canvas, context ) ->
-            context.beginPath()
-            context.strokeStyle = '#996666'
-            context.lineWidth = 2
-            context.moveTo 10, 100
-            context.lineTo 50, 150
-            context.closePath()
-            context.stroke()
