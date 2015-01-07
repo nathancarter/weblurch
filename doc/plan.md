@@ -30,8 +30,6 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Create a class method for registering new types of groups, by name.  That
-   name will be used as part of the grouper element's class name.
  * Create a class method for inserting open/close grouper pairs.  Use
    classes to distinguish group types, and ids to distinguish open vs.
    close.  Give every matching pair of groupers a unique number at insertion

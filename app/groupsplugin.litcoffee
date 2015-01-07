@@ -45,6 +45,24 @@ since there can be more than one editor, we need separate instances of that
         constructor: ( @editor ) ->
             # nothing yet
 
+## Class variables
+
+We keep a global list of valid group types.
+
+        groupTypes: []
+
+To register a new type of group, simply provide its name, as a text string.
+That string should only contain alphabetic characters, a through z, case
+sensitive, or underscores.  All other characters are removed.  Adding a name
+twice is the same as adding it once; nothing happens the second time.  Empty
+names are not allowed, which includes names that become empty when all
+illegal characters have been removed.
+
+        @addGroupType: ( name ) ->
+            name = ( n for n in name when /[a-zA-Z_]/.test n ).join ''
+            if name is '' then return
+            Groups::groupTypes.push name if name not in Groups::groupTypes
+
 <font color=red>This class is not yet complete. See [the project
 plan](plan.md) for details of what's to come.</font>
 
