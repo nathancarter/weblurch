@@ -30,8 +30,6 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Just as the other two plugins install new class objects in the editor,
-   this plugin should as well, a class called `Group`.
  * Create a class method for registering new types of groups, by name.  That
    name will be used as part of the grouper element's class name.
  * Create a class method for inserting open/close grouper pairs.  Use
