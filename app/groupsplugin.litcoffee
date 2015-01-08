@@ -109,6 +109,17 @@ deleting it.
             @editor.selection.select cursor.get 0
             cursor.remove()
 
+## Hiding and showing "groupers"
+
+The word "grouper" refers to the objects that form the boundaries of a group, and thus define the group's extent.  Each is an image with specific classes that define its partner, type, visibility, etc.  The following method applies or removes the visibility flag to all groupers at once, thus toggling their visibility in the document.
+
+        hideOrShowGroupers: ->
+            groupers = $ @editor.getDoc().getElementsByClassName 'grouper'
+            if ( $ groupers?[0] ).hasClass 'hide'
+                groupers.removeClass 'hide'
+            else
+                groupers.addClass 'hide'
+
 <font color=red>This class is not yet complete. See [the project
 plan](plan.md) for details of what's to come.</font>
 

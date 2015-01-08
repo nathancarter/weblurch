@@ -30,7 +30,6 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Create a class method for hiding/showing Group boundaries.
  * Create a convenience function for installing a keyboard shortcut that
    calls the hide/show method.
  * Create a class method for inserting open/close grouper pairs.  Use
