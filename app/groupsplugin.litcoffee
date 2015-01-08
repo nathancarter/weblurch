@@ -85,6 +85,13 @@ Ignore attempts to insert invalid group types.
 
             if not @groupTypes.hasOwnProperty type then return
 
+Determine whether existing groupers are hidden or not, so that we insert the
+new ones to match.
+
+            groupers = $ @editor.getDoc().getElementsByClassName 'grouper'
+            hide = ( $ groupers?[0] ).hasClass 'hide'
+            hide = if hide then ' hide' else ''
+
 Create data to be used for open and close groupers, a cursor placeholder,
 and the current contents of the cursor selection.
 
@@ -92,8 +99,8 @@ and the current contents of the cursor selection.
                 'images/red-bracket-open.png'
             close = @groupTypes[type]['close-img'] or
                 'images/red-bracket-close.png'
-            open = "<img src='#{open}' class='grouper #{type}'>"
-            close = "<img src='#{close}' class='grouper #{type}'>"
+            open = "<img src='#{open}' class='grouper #{type}#{hide}'>"
+            close = "<img src='#{close}' class='grouper #{type}#{hide}'>"
             cursor = '<span id="put_cursor_here">\u200b</span>'
             content = @editor.selection.getContent()
 

@@ -32,8 +32,6 @@ Create a Groups plugin with the following features.
 
  * Create a convenience function for installing a keyboard shortcut that
    calls the hide/show method.
- * Create a class method for inserting open/close grouper pairs.  Use
-   classes to distinguish group types.
  * Create convenience functions that create buttons and menu items that call
    the insertion function.
  * Create the Group class with a constructor that can accept a DOM element
