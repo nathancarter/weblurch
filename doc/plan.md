@@ -30,37 +30,35 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Create a class method for registering new types of groups, by name.  That
-   name will be used as part of the grouper element's class name.
- * Create a class method for inserting open/close grouper pairs.  Use
-   classes to distinguish group types, and ids to distinguish open vs.
-   close.  Give every matching pair of groupers a unique number at insertion
-   time, stored in their ids, as in `id='open3'` and `id='close3'`.
+ * Create a convenience function for installing a keyboard shortcut that
+   calls the hide/show method.
  * Create convenience functions that create buttons and menu items that call
    the insertion function.
- * Create a constructor for the class that can accept a unique integer ID,
-   or a DOM element that is the open/close grouper.
- * Extend Group instances with a getter for the integer id number.
+ * Create the Group class with a constructor that can accept a DOM element
+   that is the open/close grouper, and it will find the other.
  * Extend Group instances with getters for the open/close grouper elements.
- * Add a class method that scans the document, indexing all pairs of
-   groupers, in order, deleting each that doesn't match up with a
-   same-numbered partner.  From those that remain, build a hierarchy
-   stored in a class member `Group.tree`, as an array of `Group` object
-   instances.
- * Call that scanning routine after each document change.
+ * Introduce unique IDs by doing the following enhancements as a unit.
+   * Give every matching pair of groupers a unique number at insertion time,
+     stored in their ids, as in `id='open3'` and `id='close3'`.
+   * Extend Group instances with a getter for the integer id number.
+   * Add a class method that scans the document, indexing all pairs of
+     groupers, in order, deleting each that doesn't match up with a
+     same-numbered partner.  From those that remain, build a hierarchy
+     stored in a class member `Groups.tree`, as an array of `Group` object
+     instances.  It also computes the list of unused ID numbers, so that
+     it's easy to determine the next available ID for insertion.
+   * Call that scanning routine after each document change.
  * Extend the scanning routine to also map all Group id numbers to the
-   object instances, and keep that mapping within the Group class itself, as
-   in `Group[7]`
- * Write a class method `Group.numbers()`, which returns a list of all id
-   numbers that appear in `Group.tree`.  They should appear in tree order.
-   It should cache its results and only invalidate the cache when the
-   scanning routine is re-run.
+   object instances, and keep that mapping within the Groups class itself,
+   as in `Groups[7]`
+ * Write a class method `Groups.numbers()`, which returns a list of all id
+   numbers that appear in `Groups.tree`.  They should appear in tree order.
+ * Have `Groups.numbers()` cache its results and only invalidate the cache
+   when the scanning routine is re-run.
  * Extend Group instances with a function for getting the array of child
    Groups.
  * Extend Group instances with a function for getting the parent Group, if
    there is one.
- * Create a class method for hiding/showing Group boundaries, and a
-   convenience function for installing a keyboard shortcut that calls it.
  * Use the overlay plugin to draw bubbles around Groups if and only if the
    cursor is inside them.
  * Extend the constructor so that it can take any DOM node and yield the
@@ -72,13 +70,35 @@ Create a Groups plugin with the following features.
  * Add instance methods for getting/setting arbitrary data on a Group, as
    key-value pairs stored in the open grouper DOM element attributes.
 
+### More sophisticated testing
+
+The first big change has just been completed.  Before this all we had done
+was import a well-tested project (TinyMCE) and integrate into it another
+well-tested project (jsfs).  Now we've added two of our own plugins, neither
+of which has a test suite associated with it.
+
+The problem is that we do not have experience in testing things that require
+the level of user interaction that testing these requires.  It is essential
+to pause here and learn how to create the tools you need for automating
+testing with user interactivity.  PhantomJS certainly permits automated
+typing, clicking, and screen capturing.  Learn those methods and how to use
+them to test the Groups plugin.
+
+Furthermore, factor out of that testing process the re-usable tools you
+create, so that testing the additional features you'll introduce below is
+easier, and thus more likely to be done, and done well.
+
 ### Events
 
  * Create a generic event system that can fire events and hear the collected
    responses from their event listeners.  You may be able to re-use one from
    the browser's JavaScript environment, or re-use the handlers package from
    the original Lurch; it is less than 150 lines of code, including
-   comments.
+   comments.  It should not be a TinyMCE plugin, because it should be able
+   to be used in many contexts, not just that of a TinyMCE editor.  It
+   should be a standalone class whose instances are individual event
+   systems, and each instance of the `Groups` class can have an instance of
+   this `Events` class as a member.
  * Create a `groupContentsChanged` event and fire it whenever the inside of
    a group is edited by the user, or any code writes to the Group's
    properties using the Group API.
@@ -89,7 +109,7 @@ Create a Groups plugin with the following features.
    * Clear that cache on `groupContentsChanged` for the group or any of its
      parents.
    * Draw such labels above the bubbles.
-   * Extend that algorithm so that labels never collide, as in the current
+   * Extend that algorithm so that labels never collide, as in the desktop
      Lurch.
  * Create a `groupMenuRequested` event, and use it as follows.
    * When the user right-clicks inside the group, fire this event and use
@@ -101,6 +121,32 @@ Create a Groups plugin with the following features.
    document and updating the cache of Group data, for any Group that has
    simply disappeared, or that half-disappeared and we were forced to remove
    the remaining, unmatched grouper.
+
+### Math
+
+Before proceeding with this section, do review what's already been done in
+this space, including
+[this](https://github.com/foraker/tinymce_equation_editor) and
+[this](https://github.com/efloti/plugin-mathjax-pour-tinymce).  There are
+similar projects for CKEditor as well.
+
+ * Create a button or keystroke that allows you to insert a
+   [MathQuill](http://mathquill.com/) instance in your document, and stores
+   it as a special kind of content.
+ * Whenever the cursor (the browser's one, not the model's one) is inside a
+   MathQuill instance, frequently recompute the content of that instance and
+   store it in that content object in the document.
+ * Make ordinary keyboard motions of the cursor able to enter and exit
+   MathQuill instances.
+ * Make keyboard and mouse actions that create/extend a selection (e.g.,
+   shift-arrows, shift-click, click-and-drag) unable to select only a
+   portion of a MathQuill object, but instead select all or none of it.
+ * Consider whether you can render the MathQuill using
+   [MathJax](http://www.mathjax.org/) when the cursor exits, to get prettier
+   results.
+ * Consider whether you can add the capability to do MathJax-rendered LaTeX
+   source, with a popup text box, like in the Simple Math Editor in the
+   desktop Lurch.
 
 ## Background processing
 
@@ -166,13 +212,30 @@ BackgroundFunction class.
      background function and argument list is already running, terminate it
      and delete it.
 
+At this point it may be worthwhile creating some non-Lurch application that
+uses the above technology, as a way to verify that it's behaving the way you
+expect.  That test application could become part of the test suite.  After
+all, the technology that exists to this point (groups and the background
+processing thereof) is complext and many-layered, and it would be good to
+have a thorough test at this level.
+
+That is the last work that can be done without there being additional design
+work completed.  The section on [Dependencies](#dependencies), below,
+requires us to design how background computation is paused/restarted when
+things are saved/loaded, including when they are dependencies.  The section
+thereafter is about building the symbolic manipulation core of Lurch itself,
+which is currently being redesigned by
+[Ken](http://mathweb.scranton.edu/ken/), and that design is not yet
+complete.
+
 ## Logical Foundation
 
 ### Dependencies
 
-This section connects tightly with the one after it, "Extending load and
-save."  Be sure to read both together.  Also, this will need to be extended
-later when enhancing Lurch to be usable offline (see [below](#offline-support)).
+This section connects tightly with [Extending load and
+save](#extending-load-and-save), below.  Be sure to read both together.
+Also, this will need to be extended later when enhancing Lurch to be usable
+offline; see [Offline support](#offline-support), below.
 
  * Reference dependencies by URLs; these can be file:/// URLs, which is a
    reference to LocalStorage, or http:// URLs, which is a reference to
@@ -195,7 +258,13 @@ later when enhancing Lurch to be usable offline (see [below](#offline-support)).
      the last computation.  This is what [SCons
      does](http://www.scons.org/doc/0.98.4/HTML/scons-user/c779.html).
 
-## Extending load and save
+## Real Lurch!
+
+Build the 3 foundational Group types, according to Ken's new spec!
+
+## For later
+
+### Extending load and save
 
 We may later want to add more load-and-save features, such as Dropbox
 integration.  See the following web links for details on how such extensions
@@ -252,38 +321,6 @@ could be implemented.
          Lurch in a new tab.  The Lurch app will then be smart enough to
          open any such temporary file on launch, and then delete it (but the
          user can choose to save it thereafter, of course).
-
-### Math
-
-Before proceeding with this section, do review what's already been done in
-this space, including
-[this](https://github.com/foraker/tinymce_equation_editor) and
-[this](https://github.com/efloti/plugin-mathjax-pour-tinymce).  There are
-similar projects for CKEditor as well.
-
- * Create a button or keystroke that allows you to insert a
-   [MathQuill](http://mathquill.com/) instance in your document, and stores
-   it as a special kind of content.
- * Whenever the cursor (the browser's one, not the model's one) is inside a
-   MathQuill instance, frequently recompute the content of that instance and
-   store it in that content object in the document.
- * Make ordinary keyboard motions of the cursor able to enter and exit
-   MathQuill instances.
- * Make keyboard and mouse actions that create/extend a selection (e.g.,
-   shift-arrows, shift-click, click-and-drag) unable to select only a
-   portion of a MathQuill object, but instead select all or none of it.
- * Consider whether you can render the MathQuill using
-   [MathJax](http://www.mathjax.org/) when the cursor exits, to get prettier
-   results.
- * Consider whether you can add the capability to do MathJax-rendered LaTeX
-   source, with a popup text box, like in the Simple Math Editor in the
-   desktop Lurch.
-
-## Real Lurch!
-
-Build the 3 foundational Group types, according to Ken's new spec!
-
-## For later
 
 ### Making things more elegant
 

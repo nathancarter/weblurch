@@ -6,14 +6,67 @@
   Groups = (function() {
     function Groups(editor) {
       this.editor = editor;
+      this.groupTypes = {};
     }
+
+    Groups.prototype.addGroupType = function(name, data) {
+      var n;
+      if (data == null) {
+        data = {};
+      }
+      name = ((function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = name.length; _i < _len; _i++) {
+          n = name[_i];
+          if (/[a-zA-Z_-]/.test(n)) {
+            _results.push(n);
+          }
+        }
+        return _results;
+      })()).join('');
+      return this.groupTypes[name] = data;
+    };
+
+    Groups.prototype.groupCurrentSelection = function(type) {
+      var close, content, cursor, groupers, hide, open;
+      if (!this.groupTypes.hasOwnProperty(type)) {
+        return;
+      }
+      groupers = $(this.editor.getDoc().getElementsByClassName('grouper'));
+      hide = ($(groupers != null ? groupers[0] : void 0)).hasClass('hide');
+      hide = hide ? ' hide' : '';
+      open = this.groupTypes[type]['open-img'] || 'images/red-bracket-open.png';
+      close = this.groupTypes[type]['close-img'] || 'images/red-bracket-close.png';
+      open = "<img src='" + open + "' class='grouper " + type + hide + "'>";
+      close = "<img src='" + close + "' class='grouper " + type + hide + "'>";
+      cursor = '<span id="put_cursor_here">\u200b</span>';
+      content = this.editor.selection.getContent();
+      this.editor.insertContent(open + content + cursor + close);
+      cursor = ($(this.editor.getBody())).find('put_cursor_here');
+      this.editor.selection.select(cursor.get(0));
+      return cursor.remove();
+    };
+
+    Groups.prototype.hideOrShowGroupers = function() {
+      var groupers;
+      groupers = $(this.editor.getDoc().getElementsByClassName('grouper'));
+      if (($(groupers != null ? groupers[0] : void 0)).hasClass('hide')) {
+        return groupers.removeClass('hide');
+      } else {
+        return groupers.addClass('hide');
+      }
+    };
 
     return Groups;
 
   })();
 
   tinymce.PluginManager.add('groups', function(editor, url) {
-    return editor.Groups = new Groups(editor);
+    editor.Groups = new Groups(editor);
+    return editor.on('init', function(event) {
+      return editor.dom.loadCSS('groupsplugin.css');
+    });
   });
 
   LoadSave = (function() {
