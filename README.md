@@ -20,8 +20,8 @@ Or just start here:
 
 Although you can [try the current version out
 online](http://nathancarter.github.io/weblurch/app/index.html), right now
-it's just a [TinyMCE](http://www.tinymce.com) instance with nothing else
-added.  The math-specific features are still to come.
+it's just a [TinyMCE](http://www.tinymce.com) instance that can load and
+save files.  The math-specific features are still to come.
 
 If you want to build any of the source code in this repository on your local
 machine, be sure that you have [node.js](http://nodejs.org) installed, and
@@ -35,6 +35,16 @@ $ git submodule update # downloads all files in all git submodules
 $ npm install          # installs required packages in ./node_modules
 $ npm test             # builds app and runs unit test suite
 ```
+
+To then run the app on your own local machine, you will need a web server
+(to avoid heightened browser security with `file:///` URLs).  If you have
+Python installed, this is trivial.  In the root of the project repository,
+run
+```
+python -m SimpleHTTPServer 8000
+```
+Then point your browser to `localhost:8000/app/index.html`.
+
 To build the app without running the tests, run `./node_modules/.bin/cake`.
 Since that's inconvenient, you can install
 [CoffeeScript](http://www.coffeescript.org) globally as follows, and `cake`
@@ -67,14 +77,11 @@ In the root folder of this repository you will find only a very few files.
 ### `app` folder
 
 The actual web app that this project defines gets built into this folder.
-Its main page is [index.html](app/index.html), but as of this writing,
-things are still very early in the development process, and thus the app
-doesn't do anything yet.  It's just a placeholder file into which working
-code and a UI will be added later.
+Its main page is [index.html](app/index.html).
 
-When that app becomes more than just a placeholder, it will be moved to the
-`gh-pages` branch, and made available for use online, served from GitHub.
-The link above will be updated at that time.
+That file also appears in the the `gh-pages` branch, and is therefore
+available for use online, served from GitHub.  The link in
+[the Getting Started section](#getting-started) leads to the live version.
 
 ### `src` folder
 
