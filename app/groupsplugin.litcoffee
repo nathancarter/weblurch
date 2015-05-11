@@ -112,7 +112,7 @@ placeholder after the old selection.
 Replace the placeholder with the actual cursor.  Do so by selecting it and
 deleting it.
 
-            cursor = ( $ @editor.getBody() ).find 'put_cursor_here'
+            cursor = ( $ @editor.getBody() ).find '#put_cursor_here'
             @editor.selection.select cursor.get 0
             cursor.remove()
 
