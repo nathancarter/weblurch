@@ -23,15 +23,14 @@ read much more details about these on the [Progress Page](progress.md) (what
 has been done so far) and the [Plan Page](plan.md) (what still must be
 done).
  1. Foundation - Add to a TinyMCE or CKEditor interface the ability to load
-    and save files to the browser's local storage.  *This is in process.
-    Note that when it is complete, it can be used in many projects, not just
-    Lurch.*
+    and save files to the browser's local storage.  *This is complete.
+    It can be used in many other projects, not just Lurch.*
  1. Basement - Add a layer of meaning on top of the plain editor.  In the
     desktop version of the software, this shows up as "bubbles," a UI
     familiar to anyone who has used Word's Equation Editor
     or [LyX](http://wiki.lyx.org/) or [the current version of *Lurch*](http://lurchmath.org/wordpress-temp/wp-content/uploads/2012/03/mathfest-2013-gcps.pdf).
-    *This has not yet begun. Note that when it is complete, it can be used
-    in many projects, not just Lurch.*
+    *This is in process.  Note that when it is complete, it can be used in
+    many projects, not just Lurch.*
  1. Lobby - Add tools for mathematical typesetting.  These might be done
     with [MathQuill](http://mathquill.com/) or
     [MathJax](http://www.mathjax.org/), [as in the desktop

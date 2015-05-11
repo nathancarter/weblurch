@@ -84,7 +84,8 @@ upon receipt.)
                     icon : data.icon
                     shortcut : data.shortcut
                     onclick : data.onclick
-                key = if data.icon then 'icon' else 'text'
+                    tooltip : data.tooltip
+                key = if data.icon? then 'icon' else 'text'
                 buttonData[key] = data[key]
                 @editor.addButton name, buttonData
                 @editor.addMenuItem name, data
@@ -93,12 +94,14 @@ upon receipt.)
                 icon : 'newdocument'
                 context : 'file'
                 shortcut : 'ctrl+N'
+                tooltip : 'New file'
                 onclick : => @tryToClear()
             control 'savefile',
                 text : 'Save'
                 icon : 'save'
                 context : 'file'
                 shortcut : 'ctrl+S'
+                tooltip : 'Save file'
                 onclick : => @tryToSave()
             @editor.addMenuItem 'saveas',
                 text : 'Save as...'
@@ -110,6 +113,7 @@ upon receipt.)
                 icon : 'browse'
                 context : 'file'
                 shortcut : 'ctrl+O'
+                tooltip : 'Open file...'
                 onclick : => @handleOpen()
             @editor.addMenuItem 'managefiles',
                 text : 'Manage files...'
@@ -129,23 +133,23 @@ name: document title \*", where the \* is only present if the document is
 dirty, and the app name (with colon) are omitted if none has been specified
 in code.
 
-        recomputePageTitle: ->
+        recomputePageTitle: =>
             document.title = "#{if @appName then @appName+': ' else ''}
                               #{@filename or '(untitled)'}
                               #{if @documentDirty then '*' else ''}"
-        setDocumentDirty: ( setting = yes ) ->
+        setDocumentDirty: ( setting = yes ) =>
             @documentDirty = setting
             @recomputePageTitle()
-        setFilename: ( newname = null ) ->
+        setFilename: ( newname = null ) =>
             @filename = newname
             @recomputePageTitle()
-        setFilepath: ( newpath = null ) -> @filepath = newpath
-        setAppName: ( newname = null ) ->
+        setFilepath: ( newpath = null ) => @filepath = newpath
+        setAppName: ( newname = null ) =>
             mustAlsoUpdateFileSystem = @appName is @fileSystem
             @appName = newname
             if mustAlsoUpdateFileSystem then @fileSystem = @appName
             @recomputePageTitle()
-        setFileSystem: ( newname = @appName ) -> @fileSystem = newname
+        setFileSystem: ( newname = @appName ) => @fileSystem = newname
 
 ## New documents
 
@@ -156,7 +160,7 @@ outright clears the editor.  It also clears the filename, so that if you
 create a new document and then save, it does not save over your last
 document.
 
-        clear: ->
+        clear: =>
             @editor.setContent ''
             @setDocumentDirty no
             @setFilename null
@@ -165,7 +169,7 @@ Unlike the previous, this function *does* first check to see if the contents
 of the editor need to be saved.  If they do, and they aren't saved (or if
 the user cancels), then the clear is aborted.  Otherwise, clear is run.
 
-        tryToClear: ->
+        tryToClear: =>
             if not @documentDirty
                 @clear()
                 @editor.focus()
@@ -196,7 +200,7 @@ failure.  If there is no filename in the `@filename` member, failure is
 returned and no action taken.  If the save succeeds, mark the document
 clean.
 
-        save: ->
+        save: =>
             if @filename is null then return
             tmp = new FileSystem @fileSystem
             tmp.cd @filepath
@@ -215,7 +219,7 @@ other filename as the optional second parameter.  To force "save as"
 behavior when there is a current `@filename`, pass null as the optional
 second parameter.
 
-        tryToSave: ( callback, filename = @filename ) ->
+        tryToSave: ( callback, filename = @filename ) =>
 
 If there is a filename for the current document already in this object's
 `@filename` member, then a save is done directly to that filename.  If there
@@ -250,7 +254,7 @@ Now we install a handler for when a file is selected, save that filename for
 possible later use, and refresh the dialog.
 
             filename = null
-            @saveFileNameChangedHandler = ( newname ) ->
+            @saveFileNameChangedHandler = ( newname ) =>
                 filename = newname
                 refreshDialog()
 
@@ -258,7 +262,7 @@ Do the same thing for when the folder changes, but there's no need to
 refresh the dialog in this case.
 
             filepath = null
-            @changedFolderHandler = ( newfolder ) -> filepath = newfolder
+            @changedFolderHandler = ( newfolder ) => filepath = newfolder
 
 We will also need to know whether the `save` function will overwrite an
 existing file, so that we can verify that the user actually wants to do so
@@ -331,7 +335,7 @@ must be a file containing a string of HTML, because that content will be
 directly used as the content of the editor.  The current path and filename
 of this plugin are set to be the parameters passed here.
 
-        load: ( filepath, filename ) ->
+        load: ( filepath, filename ) =>
             if filename is null then return
             if filepath is null then filepath = '.'
             tmp = new FileSystem @fileSystem
@@ -350,12 +354,12 @@ cancel the dialog instead, then null is passed to that callback to indicate
 the cancellation. It makes the most sense to leave the callback function the
 default, `@load`.
 
-        tryToOpen: ( callback = ( p, f ) => @load p, f ) ->
+        tryToOpen: ( callback = ( p, f ) => @load p, f ) =>
 
 First we create a routine for updating the dialog we're about to show with
 an enabled/disabled Save button, based on whether there is a file selected.
 
-            refreshDialog = ->
+            refreshDialog = =>
                 dialog = document.getElementsByClassName( 'mce-window' )[0]
                 if not dialog then return
                 for button in dialog.getElementsByTagName 'button'
@@ -426,7 +430,7 @@ The following handler for the "open" controls checks with the user to see if
 they wish to save their current document first, if and only if that document
 is dirty.  The user may save, or cancel, or discard the document.
 
-        handleOpen: ->
+        handleOpen: =>
 
 First, if the document does not need to be saved, just do a regular "open."
 
@@ -476,7 +480,7 @@ operating system comes with a file manager of its own.  In this web app,
 where we have a virtual filesystem, we must provide a file manager to access
 it and move, rename, and delete files, create folders, etc.
 
-        manageFiles: ->
+        manageFiles: =>
             @editor.windowManager.open {
                 title : 'Manage files'
                 url : 'filedialog/filedialog.html'

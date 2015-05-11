@@ -67,10 +67,34 @@ pairs.
    the open grouper is visible, defaults to `'images/red-bracket-open.png'`
  * key: `close-img`, complement to the previous, defaults to
    `'images/red-bracket-close.png'`
+ * any key-value pairs useful for placing the group into a menu or toolbar,
+   such as the keys `text`, `context`, `tooltip`, `shortcut`, `image`,
+   and/or `icon`
 
-        addGroupType: ( name, data = {} ) ->
+Clients don't actually need to call this function.  In their call to their
+editor's `init` function, they can include in the large, single object
+parameter a key-value pair with key `groupTypes` and value an array of
+objects.  Each should have the key `name` and all the other data that this
+routine needs, and they will be passed along directly.
+
+        addGroupType: ( name, data = {} ) =>
             name = ( n for n in name when /[a-zA-Z_-]/.test n ).join ''
             @groupTypes[name] = data
+            if data.hasOwnProperty 'text'
+                menuData =
+                    text : data.text
+                    context : data.context ? 'Insert'
+                    onclick : => @groupCurrentSelection name
+                if data.shortcut? then menuData.shortcut = data.shortcut
+                if data.icon? then menuData.icon = data.icon
+                @editor.addMenuItem name, menuData
+                buttonData =
+                    tooltip : data.tooltip
+                    onclick : => @groupCurrentSelection name
+                key = if data.image? then 'image' else \
+                    if data.icon? then 'icon' else 'text'
+                buttonData[key] = data[key]
+                @editor.addButton name, buttonData
 
 ## Inserting new groups
 
@@ -79,7 +103,7 @@ in groupers (i.e., group endpoints) of the given type.  The type must be on
 the list of valid types registered with `addGroupType`, above, or this will
 do nothing.
 
-        groupCurrentSelection: ( type ) ->
+        groupCurrentSelection: ( type ) =>
 
 Ignore attempts to insert invalid group types.
 
@@ -112,7 +136,7 @@ placeholder after the old selection.
 Replace the placeholder with the actual cursor.  Do so by selecting it and
 deleting it.
 
-            cursor = ( $ @editor.getBody() ).find 'put_cursor_here'
+            cursor = ( $ @editor.getBody() ).find '#put_cursor_here'
             @editor.selection.select cursor.get 0
             cursor.remove()
 
@@ -120,7 +144,7 @@ deleting it.
 
 The word "grouper" refers to the objects that form the boundaries of a group, and thus define the group's extent.  Each is an image with specific classes that define its partner, type, visibility, etc.  The following method applies or removes the visibility flag to all groupers at once, thus toggling their visibility in the document.
 
-        hideOrShowGroupers: ->
+        hideOrShowGroupers: =>
             groupers = $ @editor.getDoc().getElementsByClassName 'grouper'
             if ( $ groupers?[0] ).hasClass 'hide'
                 groupers.removeClass 'hide'
@@ -138,6 +162,8 @@ The plugin, when initialized on an editor, places an instance of the
     tinymce.PluginManager.add 'groups', ( editor, url ) ->
         editor.Groups = new Groups editor
         editor.on 'init', ( event ) -> editor.dom.loadCSS 'groupsplugin.css'
+        for type in editor.settings.groupTypes
+            editor.Groups.addGroupType type.name, type
 
 
 
@@ -226,7 +252,8 @@ upon receipt.)
                     icon : data.icon
                     shortcut : data.shortcut
                     onclick : data.onclick
-                key = if data.icon then 'icon' else 'text'
+                    tooltip : data.tooltip
+                key = if data.icon? then 'icon' else 'text'
                 buttonData[key] = data[key]
                 @editor.addButton name, buttonData
                 @editor.addMenuItem name, data
@@ -235,12 +262,14 @@ upon receipt.)
                 icon : 'newdocument'
                 context : 'file'
                 shortcut : 'ctrl+N'
+                tooltip : 'New file'
                 onclick : => @tryToClear()
             control 'savefile',
                 text : 'Save'
                 icon : 'save'
                 context : 'file'
                 shortcut : 'ctrl+S'
+                tooltip : 'Save file'
                 onclick : => @tryToSave()
             @editor.addMenuItem 'saveas',
                 text : 'Save as...'
@@ -252,6 +281,7 @@ upon receipt.)
                 icon : 'browse'
                 context : 'file'
                 shortcut : 'ctrl+O'
+                tooltip : 'Open file...'
                 onclick : => @handleOpen()
             @editor.addMenuItem 'managefiles',
                 text : 'Manage files...'
@@ -271,23 +301,23 @@ name: document title \*", where the \* is only present if the document is
 dirty, and the app name (with colon) are omitted if none has been specified
 in code.
 
-        recomputePageTitle: ->
+        recomputePageTitle: =>
             document.title = "#{if @appName then @appName+': ' else ''}
                               #{@filename or '(untitled)'}
                               #{if @documentDirty then '*' else ''}"
-        setDocumentDirty: ( setting = yes ) ->
+        setDocumentDirty: ( setting = yes ) =>
             @documentDirty = setting
             @recomputePageTitle()
-        setFilename: ( newname = null ) ->
+        setFilename: ( newname = null ) =>
             @filename = newname
             @recomputePageTitle()
-        setFilepath: ( newpath = null ) -> @filepath = newpath
-        setAppName: ( newname = null ) ->
+        setFilepath: ( newpath = null ) => @filepath = newpath
+        setAppName: ( newname = null ) =>
             mustAlsoUpdateFileSystem = @appName is @fileSystem
             @appName = newname
             if mustAlsoUpdateFileSystem then @fileSystem = @appName
             @recomputePageTitle()
-        setFileSystem: ( newname = @appName ) -> @fileSystem = newname
+        setFileSystem: ( newname = @appName ) => @fileSystem = newname
 
 ## New documents
 
@@ -298,7 +328,7 @@ outright clears the editor.  It also clears the filename, so that if you
 create a new document and then save, it does not save over your last
 document.
 
-        clear: ->
+        clear: =>
             @editor.setContent ''
             @setDocumentDirty no
             @setFilename null
@@ -307,7 +337,7 @@ Unlike the previous, this function *does* first check to see if the contents
 of the editor need to be saved.  If they do, and they aren't saved (or if
 the user cancels), then the clear is aborted.  Otherwise, clear is run.
 
-        tryToClear: ->
+        tryToClear: =>
             if not @documentDirty
                 @clear()
                 @editor.focus()
@@ -338,7 +368,7 @@ failure.  If there is no filename in the `@filename` member, failure is
 returned and no action taken.  If the save succeeds, mark the document
 clean.
 
-        save: ->
+        save: =>
             if @filename is null then return
             tmp = new FileSystem @fileSystem
             tmp.cd @filepath
@@ -357,7 +387,7 @@ other filename as the optional second parameter.  To force "save as"
 behavior when there is a current `@filename`, pass null as the optional
 second parameter.
 
-        tryToSave: ( callback, filename = @filename ) ->
+        tryToSave: ( callback, filename = @filename ) =>
 
 If there is a filename for the current document already in this object's
 `@filename` member, then a save is done directly to that filename.  If there
@@ -392,7 +422,7 @@ Now we install a handler for when a file is selected, save that filename for
 possible later use, and refresh the dialog.
 
             filename = null
-            @saveFileNameChangedHandler = ( newname ) ->
+            @saveFileNameChangedHandler = ( newname ) =>
                 filename = newname
                 refreshDialog()
 
@@ -400,7 +430,7 @@ Do the same thing for when the folder changes, but there's no need to
 refresh the dialog in this case.
 
             filepath = null
-            @changedFolderHandler = ( newfolder ) -> filepath = newfolder
+            @changedFolderHandler = ( newfolder ) => filepath = newfolder
 
 We will also need to know whether the `save` function will overwrite an
 existing file, so that we can verify that the user actually wants to do so
@@ -473,7 +503,7 @@ must be a file containing a string of HTML, because that content will be
 directly used as the content of the editor.  The current path and filename
 of this plugin are set to be the parameters passed here.
 
-        load: ( filepath, filename ) ->
+        load: ( filepath, filename ) =>
             if filename is null then return
             if filepath is null then filepath = '.'
             tmp = new FileSystem @fileSystem
@@ -492,12 +522,12 @@ cancel the dialog instead, then null is passed to that callback to indicate
 the cancellation. It makes the most sense to leave the callback function the
 default, `@load`.
 
-        tryToOpen: ( callback = ( p, f ) => @load p, f ) ->
+        tryToOpen: ( callback = ( p, f ) => @load p, f ) =>
 
 First we create a routine for updating the dialog we're about to show with
 an enabled/disabled Save button, based on whether there is a file selected.
 
-            refreshDialog = ->
+            refreshDialog = =>
                 dialog = document.getElementsByClassName( 'mce-window' )[0]
                 if not dialog then return
                 for button in dialog.getElementsByTagName 'button'
@@ -568,7 +598,7 @@ The following handler for the "open" controls checks with the user to see if
 they wish to save their current document first, if and only if that document
 is dirty.  The user may save, or cancel, or discard the document.
 
-        handleOpen: ->
+        handleOpen: =>
 
 First, if the document does not need to be saved, just do a regular "open."
 
@@ -618,7 +648,7 @@ operating system comes with a file manager of its own.  In this web app,
 where we have a virtual filesystem, we must provide a file manager to access
 it and move, rename, and delete files, create folders, etc.
 
-        manageFiles: ->
+        manageFiles: =>
             @editor.windowManager.open {
                 title : 'Manage files'
                 url : 'filedialog/filedialog.html'
@@ -784,8 +814,8 @@ creating the title for this page (e.g., to show up in the tab in Chrome).
 This file initializes a [TinyMCE](http://www.tinymce.com/) editor inside the
 [main app page](index.html).  It is designed to be used inside that page,
 where [jQuery](http://jquery.com/) has already been loaded, thus defining
-the `$` symbol used below.  It use in this context causes the function to be
-run only after the DOM has been fully loaded.
+the `$` symbol used below.  Its use in this context causes the function to
+be run only after the DOM has been fully loaded.
 
     $ ->
 
@@ -826,7 +856,7 @@ We then install two toolbars, with separators indicated by pipes (`|`).
                 'fontselect styleselect | bold italic underline
                     textcolor subscript superscript removeformat
                     | link unlink | charmap image
-                    | spellchecker searchreplace'
+                    | spellchecker searchreplace | me'
             ]
 
 We then customize the menus' contents as follows.
@@ -844,7 +874,8 @@ We then customize the menus' contents as follows.
                 insert :
                     title : 'Insert'
                     items : 'link media
-                           | template hr'
+                           | template hr
+                           | me'
                 view :
                     title : 'View'
                     items : 'visualaid'
@@ -907,3 +938,14 @@ Workaround for [this bug](http://www.tinymce.com/develop/bugtracker_view.php?id=
                     editor.getBody().addEventListener 'focus', ->
                         if editor.windowManager.getWindows().length isnt 0
                             editor.windowManager.close()
+
+After the initialization function above has been run, each plugin will be
+initialized.  The Groups plugin will look for the following data, so that it
+knows which group types to create.
+
+            groupTypes : [
+                name : 'me'
+                text : 'Meaningful expression'
+                image : './images/red-bracket-icon.png'
+                tooltip : 'Make text a meaningful expression'
+            ]

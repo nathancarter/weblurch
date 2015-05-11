@@ -30,10 +30,8 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Create a convenience function for installing a keyboard shortcut that
-   calls the hide/show method.
- * Create convenience functions that create buttons and menu items that call
-   the insertion function.
+ * Create a convenience function for installing a menu item (with a keyboard
+   shortcut) that calls the hide/show method.
  * Create the Group class with a constructor that can accept a DOM element
    that is the open/close grouper, and it will find the other.
  * Extend Group instances with getters for the open/close grouper elements.
@@ -127,8 +125,12 @@ easier, and thus more likely to be done, and done well.
 Before proceeding with this section, do review what's already been done in
 this space, including
 [this](https://github.com/foraker/tinymce_equation_editor) and
-[this](https://github.com/efloti/plugin-mathjax-pour-tinymce).  There are
-similar projects for CKEditor as well.
+[this](https://github.com/efloti/plugin-mathjax-pour-tinymce) and
+[this](http://www.wiris.com/solutions/tinymce) and
+[this](http://www.imathas.com/editordemo/demo.html) and
+[this](https://docs.moodle.org/26/en/TinyMCE_Mathslate) and
+[this](https://www.codecogs.com/latex/integration/tinymce_v4/install.php).
+There are similar projects for CKEditor as well.
 
  * Create a button or keystroke that allows you to insert a
    [MathQuill](http://mathquill.com/) instance in your document, and stores

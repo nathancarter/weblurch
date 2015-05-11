@@ -9,8 +9,8 @@ creating the title for this page (e.g., to show up in the tab in Chrome).
 This file initializes a [TinyMCE](http://www.tinymce.com/) editor inside the
 [main app page](index.html).  It is designed to be used inside that page,
 where [jQuery](http://jquery.com/) has already been loaded, thus defining
-the `$` symbol used below.  It use in this context causes the function to be
-run only after the DOM has been fully loaded.
+the `$` symbol used below.  Its use in this context causes the function to
+be run only after the DOM has been fully loaded.
 
     $ ->
 
@@ -51,7 +51,7 @@ We then install two toolbars, with separators indicated by pipes (`|`).
                 'fontselect styleselect | bold italic underline
                     textcolor subscript superscript removeformat
                     | link unlink | charmap image
-                    | spellchecker searchreplace'
+                    | spellchecker searchreplace | me'
             ]
 
 We then customize the menus' contents as follows.
@@ -69,7 +69,8 @@ We then customize the menus' contents as follows.
                 insert :
                     title : 'Insert'
                     items : 'link media
-                           | template hr'
+                           | template hr
+                           | me'
                 view :
                     title : 'View'
                     items : 'visualaid'
@@ -132,3 +133,14 @@ Workaround for [this bug](http://www.tinymce.com/develop/bugtracker_view.php?id=
                     editor.getBody().addEventListener 'focus', ->
                         if editor.windowManager.getWindows().length isnt 0
                             editor.windowManager.close()
+
+After the initialization function above has been run, each plugin will be
+initialized.  The Groups plugin will look for the following data, so that it
+knows which group types to create.
+
+            groupTypes : [
+                name : 'me'
+                text : 'Meaningful expression'
+                image : './images/red-bracket-icon.png'
+                tooltip : 'Make text a meaningful expression'
+            ]
