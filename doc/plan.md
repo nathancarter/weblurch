@@ -30,27 +30,29 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Create the Group class with a constructor that can accept a DOM element
-   that is the open/close grouper, and it will find the other.
- * Extend Group instances with getters for the open/close grouper elements.
- * Introduce unique IDs by doing the following enhancements as a unit.
-   * Give every matching pair of groupers a unique number at insertion time,
-     stored in their ids, as in `id='open3'` and `id='close3'`.
-   * Extend Group instances with a getter for the integer id number.
-   * Add a class method that scans the document, indexing all pairs of
-     groupers, in order, deleting each that doesn't match up with a
-     same-numbered partner.  From those that remain, build a hierarchy
-     stored in a class member `Groups.tree`, as an array of `Group` object
-     instances.  It also computes the list of unused ID numbers, so that
-     it's easy to determine the next available ID for insertion.
-   * Call that scanning routine after each document change.
- * Extend the scanning routine to also map all Group id numbers to the
-   object instances, and keep that mapping within the Groups class itself,
-   as in `Groups[7]`
+ * Create a class variable that stores the list of unused integer IDs for
+   groups.
+ * Give every matching pair of groupers a unique number at insertion time,
+   stored in their ids, as in `id='open3'` and `id='close3'`.  Use the
+   lowest unused ID.
+ * Add a class method that scans the document, indexing all pairs of
+   groupers, in order, deleting each that doesn't match up with a
+   same-numbered partner.  From those that remain, build a hierarchy
+   stored in a class member `Groups.tree`, as an array of `Group` object
+   instances.  It also computes the list of unused ID numbers, so that
+   it's easy to determine the next available ID for insertion.
+ * Call that scanning routine after each document change.
  * Write a class method `Groups.numbers()`, which returns a list of all id
    numbers that appear in `Groups.tree`.  They should appear in tree order.
  * Have `Groups.numbers()` cache its results and only invalidate the cache
    when the scanning routine is re-run.
+ * Create the Group class with a constructor that can accept a DOM element
+   that is the open/close grouper, and it will find the other.
+ * Extend Group instances with getters for the open/close grouper elements.
+ * Extend Group instances with a getter for the integer id number.
+ * Extend the scanning routine to also map all Group id numbers to the
+   object instances, and keep that mapping within the Groups class itself,
+   as in `Groups[7]`
  * Extend Group instances with a function for getting the array of child
    Groups.
  * Extend Group instances with a function for getting the parent Group, if
