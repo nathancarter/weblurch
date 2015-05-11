@@ -85,7 +85,7 @@ upon receipt.)
                     shortcut : data.shortcut
                     onclick : data.onclick
                     tooltip : data.tooltip
-                key = if data.icon then 'icon' else 'text'
+                key = if data.icon? then 'icon' else 'text'
                 buttonData[key] = data[key]
                 @editor.addButton name, buttonData
                 @editor.addMenuItem name, data

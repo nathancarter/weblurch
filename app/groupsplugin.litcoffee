@@ -67,10 +67,34 @@ pairs.
    the open grouper is visible, defaults to `'images/red-bracket-open.png'`
  * key: `close-img`, complement to the previous, defaults to
    `'images/red-bracket-close.png'`
+ * any key-value pairs useful for placing the group into a menu or toolbar,
+   such as the keys `text`, `context`, `tooltip`, `shortcut`, `image`,
+   and/or `icon`
+
+Clients don't actually need to call this function.  In their call to their
+editor's `init` function, they can include in the large, single object
+parameter a key-value pair with key `groupTypes` and value an array of
+objects.  Each should have the key `name` and all the other data that this
+routine needs, and they will be passed along directly.
 
         addGroupType: ( name, data = {} ) =>
             name = ( n for n in name when /[a-zA-Z_-]/.test n ).join ''
             @groupTypes[name] = data
+            if data.hasOwnProperty 'text'
+                menuData =
+                    text : data.text
+                    context : data.context ? 'Insert'
+                    onclick : => @groupCurrentSelection name
+                if data.shortcut? then menuData.shortcut = data.shortcut
+                if data.icon? then menuData.icon = data.icon
+                @editor.addMenuItem name, menuData
+                buttonData =
+                    tooltip : data.tooltip
+                    onclick : => @groupCurrentSelection name
+                key = if data.image? then 'image' else \
+                    if data.icon? then 'icon' else 'text'
+                buttonData[key] = data[key]
+                @editor.addButton name, buttonData
 
 ## Inserting new groups
 
@@ -138,3 +162,5 @@ The plugin, when initialized on an editor, places an instance of the
     tinymce.PluginManager.add 'groups', ( editor, url ) ->
         editor.Groups = new Groups editor
         editor.on 'init', ( event ) -> editor.dom.loadCSS 'groupsplugin.css'
+        for type in editor.settings.groupTypes
+            editor.Groups.addGroupType type.name, type
