@@ -96,18 +96,23 @@
   })();
 
   tinymce.PluginManager.add('groups', function(editor, url) {
-    var type, _i, _len, _ref, _results;
+    var type, _i, _len, _ref;
     editor.Groups = new Groups(editor);
     editor.on('init', function(event) {
       return editor.dom.loadCSS('groupsplugin.css');
     });
     _ref = editor.settings.groupTypes;
-    _results = [];
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       type = _ref[_i];
-      _results.push(editor.Groups.addGroupType(type.name, type));
+      editor.Groups.addGroupType(type.name, type);
     }
-    return _results;
+    return editor.addMenuItem('hideshowgroups', {
+      text: 'Hide/show groups',
+      context: 'View',
+      onclick: function() {
+        return editor.Groups.hideOrShowGroupers();
+      }
+    });
   });
 
   LoadSave = (function() {
@@ -778,7 +783,7 @@
         },
         view: {
           title: 'View',
-          items: 'visualaid'
+          items: 'visualaid hideshowgroups'
         },
         format: {
           title: 'Format',

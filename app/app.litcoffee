@@ -164,6 +164,10 @@ The plugin, when initialized on an editor, places an instance of the
         editor.on 'init', ( event ) -> editor.dom.loadCSS 'groupsplugin.css'
         for type in editor.settings.groupTypes
             editor.Groups.addGroupType type.name, type
+        editor.addMenuItem 'hideshowgroups',
+            text : 'Hide/show groups'
+            context : 'View'
+            onclick : -> editor.Groups.hideOrShowGroupers()
 
 
 
@@ -878,7 +882,7 @@ We then customize the menus' contents as follows.
                            | me'
                 view :
                     title : 'View'
-                    items : 'visualaid'
+                    items : 'visualaid hideshowgroups'
                 format :
                     title : 'Format'
                     items : 'bold italic underline
