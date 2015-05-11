@@ -68,7 +68,7 @@ pairs.
  * key: `close-img`, complement to the previous, defaults to
    `'images/red-bracket-close.png'`
 
-        addGroupType: ( name, data = {} ) ->
+        addGroupType: ( name, data = {} ) =>
             name = ( n for n in name when /[a-zA-Z_-]/.test n ).join ''
             @groupTypes[name] = data
 
@@ -79,7 +79,7 @@ in groupers (i.e., group endpoints) of the given type.  The type must be on
 the list of valid types registered with `addGroupType`, above, or this will
 do nothing.
 
-        groupCurrentSelection: ( type ) ->
+        groupCurrentSelection: ( type ) =>
 
 Ignore attempts to insert invalid group types.
 
@@ -120,7 +120,7 @@ deleting it.
 
 The word "grouper" refers to the objects that form the boundaries of a group, and thus define the group's extent.  Each is an image with specific classes that define its partner, type, visibility, etc.  The following method applies or removes the visibility flag to all groupers at once, thus toggling their visibility in the document.
 
-        hideOrShowGroupers: ->
+        hideOrShowGroupers: =>
             groupers = $ @editor.getDoc().getElementsByClassName 'grouper'
             if ( $ groupers?[0] ).hasClass 'hide'
                 groupers.removeClass 'hide'
