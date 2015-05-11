@@ -30,8 +30,6 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Create a convenience function for installing a menu item (with a keyboard
-   shortcut) that calls the hide/show method.
  * Create the Group class with a constructor that can accept a DOM element
    that is the open/close grouper, and it will find the other.
  * Extend Group instances with getters for the open/close grouper elements.

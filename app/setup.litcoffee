@@ -73,7 +73,7 @@ We then customize the menus' contents as follows.
                            | me'
                 view :
                     title : 'View'
-                    items : 'visualaid'
+                    items : 'visualaid hideshowgroups'
                 format :
                     title : 'Format'
                     items : 'bold italic underline
