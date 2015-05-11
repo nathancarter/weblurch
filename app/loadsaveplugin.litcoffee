@@ -84,6 +84,7 @@ upon receipt.)
                     icon : data.icon
                     shortcut : data.shortcut
                     onclick : data.onclick
+                    tooltip : data.tooltip
                 key = if data.icon then 'icon' else 'text'
                 buttonData[key] = data[key]
                 @editor.addButton name, buttonData
@@ -93,12 +94,14 @@ upon receipt.)
                 icon : 'newdocument'
                 context : 'file'
                 shortcut : 'ctrl+N'
+                tooltip : 'New file'
                 onclick : => @tryToClear()
             control 'savefile',
                 text : 'Save'
                 icon : 'save'
                 context : 'file'
                 shortcut : 'ctrl+S'
+                tooltip : 'Save file'
                 onclick : => @tryToSave()
             @editor.addMenuItem 'saveas',
                 text : 'Save as...'
@@ -110,6 +113,7 @@ upon receipt.)
                 icon : 'browse'
                 context : 'file'
                 shortcut : 'ctrl+O'
+                tooltip : 'Open file...'
                 onclick : => @handleOpen()
             @editor.addMenuItem 'managefiles',
                 text : 'Manage files...'
