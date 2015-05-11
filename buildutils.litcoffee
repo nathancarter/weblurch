@@ -188,7 +188,6 @@ the filename.
         [ all, path, file ] = /^(.*)\/([^\\]*)$/.exec srcfile
         base = /^(.*)\.[^.]*$/.exec( file )[1]
         p = require 'path'
-        console.log path
         coffee = p.resolve __dirname, 'node_modules', '.bin', 'coffee'
         uglify = p.resolve __dirname, 'node_modules', '.bin', 'uglifyjs'
 
