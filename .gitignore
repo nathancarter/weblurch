@@ -4,6 +4,10 @@ app/weblurch.litcoffee
 app/app.litcoffee
 app/*.map
 app/filedialog.litcoffee
+app/filedialog/*.png
+app/filedialog/*.js
+app/filedialog/*.litcoffee
+app/filedialog/*.map
 node_modules/*
 doc/*.litcoffee.html
 doc/*.md.html
