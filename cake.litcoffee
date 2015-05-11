@@ -34,18 +34,24 @@ These constants define how the functions below perform.
 
     p = require 'path'
     title = 'webLurch'
-    srcdir = './src/'
-    appdir = './app/'
+    srcdir = p.resolve __dirname, 'src'
+    appdir = p.resolve __dirname, 'app'
+    fddir = p.resolve appdir, 'filedialog'
     srcout = 'weblurch.litcoffee'
     appout = 'app.litcoffee'
-    testdir = './test/'
-    repdir = './test/reports/'
+    testdir = p.resolve __dirname, 'test'
+    testresults = p.resolve testdir, 'test-results.md'
+    repdir = p.resolve testdir, 'reports'
+    jasmine = p.resolve __dirname, 'node_modules', 'jasmine-node', 'lib',
+        'jasmine-node', 'cli.js'
     submodules = {
-        jsfs : 'npm install && ./node_modules/.bin/cake all
-            && cp demo/*.js demo/*.map demo/*.litcoffee
-                  demo/close.png demo/copy.png demo/delete.png
-                  demo/folder.png demo/move.png demo/text-file.png
-                  demo/up-arrow.png ../app/filedialog/'
+        jsfs : "npm install
+             && ./node_modules/.bin/cake all
+             && cp demo/*.js demo/*.map demo/*.litcoffee demo/close.png
+                   demo/copy.png demo/delete.png demo/folder.png
+                   demo/move.png demo/text-file.png demo/up-arrow.png
+                   node_modules/lz-string/libs/lz-string-1.3.3.js
+                   #{fddir}"
     }
 
 ## The `app` build process
@@ -60,7 +66,8 @@ Next concatenate all `.litcoffee` source files into one.
 
         all = ( fs.readFileSync name for name in \
             build.dir srcdir, /\.litcoffee$/ )
-        fs.writeFileSync appdir + srcout, all.join( '\n\n' ), 'utf8'
+        fs.writeFileSync p.resolve( appdir, srcout ), all.join( '\n\n' ),
+            'utf8'
 
 Also compile any files specific to the main app (as opposed to the test
 app), which will sit in the app folder rather than the source folder.  The
@@ -73,7 +80,8 @@ out.
             when name.indexOf( srcout ) is -1 and
                  name.indexOf( appout ) is -1 and
                  name[-15..] isnt '.solo.litcoffee' )
-        fs.writeFileSync appdir + appout, all.join( '\n\n' ), 'utf8'
+        fs.writeFileSync p.resolve( appdir, appout ), all.join( '\n\n' ),
+            'utf8'
 
 Run the compile process defined in [the build utilities
 module](buildutils.litcoffee.html).  This compiles, minifies, and generates
@@ -93,12 +101,12 @@ it as the last callback, below.  (Note that, although they are not indented,
 each new command below is nested one level deeper in callback functions,
 because of the `->` symbols at the end of each line.)
 
-        build.compile appdir + srcout, ->
-        build.compile appdir + appout, ->
+        build.compile p.resolve( appdir, srcout ), ->
+        build.compile p.resolve( appdir, appout ), ->
         build.runShellCommands [
             description : 'Copying lz-string into app folder...'
-            command : 'cp node_modules/lz-string/libs/lz-string-1.3.3.js
-                app/'
+            command : "cp node_modules/lz-string/libs/lz-string-1.3.3.js
+                          #{appdir}/"
         ], buildNext
 
 ## The `submodules` build process
@@ -131,9 +139,8 @@ output folder forever.
 Run [jasmine](http://jasmine.github.io/) on all files in the `test/` folder,
 and produce output in `junitreport` format (a bunch of XML files).
 
-        exec "node node_modules/jasmine-node/lib/jasmine-node/cli.js
-              --junitreport --output #{repdir} --verbose --coffee
-              --forceexit #{testdir}",
+        exec "node #{jasmine} --junitreport --output #{repdir} --verbose
+                   --coffee --forceexit #{testdir}",
         ( err, stdout, stderr ) ->
             console.log stdout + stderr if stdout + stderr
 
@@ -223,8 +230,7 @@ Create a footer for this test, summarizing its time and totals.
 That output file goes in the `doc/` folder for later processing by the doc
 task, defined above.
 
-            fs.writeFileSync "#{testdir}/test-results.md",
-                md, 'utf8'
+            fs.writeFileSync testresults, md, 'utf8'
 
 If a test failed, stop here and return the failure exit code, so that this
 script will indicate to the shell that the tests did not all pass.
