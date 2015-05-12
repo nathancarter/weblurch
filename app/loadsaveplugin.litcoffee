@@ -71,9 +71,7 @@ is called immediately after a document is loaded.
 Whenever the contents of the document changes, we mark the document dirty in
 this object, which therefore adds the \* marker to the page title.
 
-            @editor.on 'change', ( event ) =>
-                console.log 'change:', event
-                @setDocumentDirty yes
+            @editor.on 'change', ( event ) => @setDocumentDirty yes
 
 Now install into the editor controls that run methods in this object.  The
 `control` method does something seemingly inefficient to duplicate the input
@@ -230,7 +228,6 @@ is no filename, then a save dialog is shown.
             if filename
                 @setFilename filename
                 result = @save() # save happens even if no callback
-                @editor.focus()
                 return callback? result
 
 There is not a readily available filename, so we must pop up a "Save as"
@@ -257,7 +254,7 @@ Now we install a handler for when a file is selected, save that filename for
 possible later use, and refresh the dialog.
 
             filename = null
-            @saveFileNameChangedHandler = ( newname ) ->
+            @saveFileNameChangedHandler = ( newname ) =>
                 filename = newname
                 refreshDialog()
 
@@ -265,7 +262,7 @@ Do the same thing for when the folder changes, but there's no need to
 refresh the dialog in this case.
 
             filepath = null
-            @changedFolderHandler = ( newfolder ) -> filepath = newfolder
+            @changedFolderHandler = ( newfolder ) => filepath = newfolder
 
 We will also need to know whether the `save` function will overwrite an
 existing file, so that we can verify that the user actually wants to do so
@@ -345,7 +342,6 @@ of this plugin are set to be the parameters passed here.
             tmp.cd filepath
             [ content, metadata ] = tmp.read filename
             @editor.setContent content
-            @editor.focus()
             @setFilepath filepath
             @setFilename filename
             @setDocumentDirty no
