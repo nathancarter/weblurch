@@ -141,7 +141,7 @@ nonempty.
             for attribute in @attributes
                 result.attributes[attribute.name] = attribute.value
         if @childNodes.length
-            result.children = chi.toJSON verbose for chi in @childNodes
+            result.children = ( chi.toJSON verbose for chi in @childNodes )
 
 If verbosity is disabled, change all the object keys to one-letter
 abbreviations.

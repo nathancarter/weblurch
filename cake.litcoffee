@@ -44,7 +44,7 @@ These constants define how the functions below perform.
     repdir = p.resolve testdir, 'reports'
     jasmine = p.resolve __dirname, 'node_modules', 'jasmine-node', 'lib',
         'jasmine-node', 'cli.js'
-    submodules = {
+    submodules =
         jsfs : "npm install
              && ./node_modules/.bin/cake all
              && cp demo/*.js demo/*.map demo/*.litcoffee demo/close.png
@@ -52,7 +52,6 @@ These constants define how the functions below perform.
                    demo/move.png demo/text-file.png demo/up-arrow.png
                    node_modules/lz-string/libs/lz-string-1.3.3.js
                    #{fddir}"
-    }
 
 ## The `app` build process
 
@@ -134,7 +133,7 @@ output folder forever.
 
         fs.mkdirSync repdir unless fs.existsSync repdir
         for report in fs.readdirSync repdir
-            fs.unlinkSync repdir + report
+            fs.unlinkSync p.resolve repdir, report
 
 Run [jasmine](http://jasmine.github.io/) on all files in the `test/` folder,
 and produce output in `junitreport` format (a bunch of XML files).
@@ -155,7 +154,7 @@ test passes/failures with the appropriate CSS classes.
 
                  '''
             pass = '<span class="test-pass">Pass</span>'
-            re = /^([0-9]+): Expected (.*) to equal (.*)\.$/
+            re = /^Expected (.*) to equal (.*)\.$/
             fail = ( x ) ->
 
 The following if/try block is a simple attempt at formatting object code
@@ -166,15 +165,15 @@ developer can look there to help compare the unmatched objects.
 
                 if m = re.exec x
                     try
-                        obj1 = JSON.parse m[2] \
-                            .replace( /'/g, '"' ) \
+                        obj1 = JSON.parse m[1] \
+                            .replace( /&apos;/g, '"' ) \
                             .replace( /([{,])\s*(\w+)\s*:/g,
                                 '$1 "$2" :' )
-                        obj2 = JSON.parse m[3] \
-                            .replace( /'/g, '"' ) \
+                        obj2 = JSON.parse m[2] \
+                            .replace( /&apos;/g, '"' ) \
                             .replace( /([{,])\s*(\w+)\s*:/g,
                                 '$1 "$2" :' )
-                        x = "#{m[1]}: Expected these to be equal:
+                        x = "Expected these to be equal:
                             <br>
                             <table width=100% cellspacing=0
                                    cellpadding=0>
@@ -192,7 +191,7 @@ developer can look there to help compare the unmatched objects.
                             \n#{JSON.stringify obj2, null, 2}
                             \n```
                             \n</td></tr></table>"
-                "<span class='test-fail'>Failure #{x}</span>"
+                "<span class='test-fail'>Failure: #{x}</span>"
 
 Read those XML files and produce [Markdown](markdown) output, all together
 into a single output file.
@@ -215,7 +214,7 @@ there were no failures.
 
                             if c.failure
                                 for f in c.failure
-                                    md += " * #{fail f}\n\n"
+                                    md += " * #{fail f.$.message}\n\n"
                             else
                                 md += " * #{pass}\n\n"
 
