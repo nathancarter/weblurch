@@ -24,3 +24,42 @@ Just verify that the active TinyMCE editor has a Groups plugin.
 
         it 'should be installed', inPage ->
             pageExpects -> tinymce.activeEditor.Groups
+
+### nextFreeId() should count 0,1,2,...
+
+Calling `nextFreeId()` on a freshly created `Groups` plugin should keep
+yielding nonnegative integers starting with zero and counting upwards.  The
+resulting `freeIds` array should have in it just the next integer.
+
+        it 'nextFreeId() should count 0,1,2,...', inPage ->
+            pageDo -> window.gr = tinymce.activeEditor.Groups
+            pageExpects -> window.gr.freeIds
+            pageExpects ( -> window.gr.freeIds ), 'toEqual', [ 0 ]
+            pageExpects ( -> window.gr.nextFreeId() ), 'toEqual', 0
+            pageExpects ( -> window.gr.nextFreeId() ), 'toEqual', 1
+            pageExpects ( -> window.gr.nextFreeId() ), 'toEqual', 2
+            pageExpects ( -> window.gr.nextFreeId() ), 'toEqual', 3
+            pageExpects ( -> window.gr.freeIds ), 'toEqual', [ 4 ]
+
+### addFreeId() re-inserts in order
+
+After repeating the same four fetches of `nextFreeId()` as in the previous
+test, we then restore the id 2 to the "free" set.  This should put it back
+on the `freeIds` list in the correct spot, but restoring any id 4 or higher
+should do nothing.  Then calls to `nextFreeId` should yield 2, 4, 5, 6, ...
+
+        it 'addfreeId() re-inserts in order', inPage ->
+            pageDo -> window.gr = tinymce.activeEditor.Groups
+            pageExpects -> window.gr.freeIds
+            pageExpects ( -> window.gr.freeIds ), 'toEqual', [ 0 ]
+            pageDo -> window.gr.nextFreeId()
+            pageDo -> window.gr.nextFreeId()
+            pageDo -> window.gr.nextFreeId()
+            pageDo -> window.gr.nextFreeId()
+            pageExpects ( -> window.gr.freeIds ), 'toEqual', [ 4 ]
+            pageDo -> window.gr.addFreeId 2
+            pageExpects ( -> window.gr.freeIds ), 'toEqual', [ 2, 4 ]
+            pageExpects ( -> window.gr.nextFreeId() ), 'toEqual', 2
+            pageExpects ( -> window.gr.nextFreeId() ), 'toEqual', 4
+            pageExpects ( -> window.gr.nextFreeId() ), 'toEqual', 5
+            pageExpects ( -> window.gr.nextFreeId() ), 'toEqual', 6
