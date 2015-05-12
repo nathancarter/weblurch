@@ -50,6 +50,38 @@ Each editor has a mapping from valid group type names to their attributes.
 
             @groupTypes = {}
 
+The object maintains a list of unique integer ids for assigning to Groups in
+the editor.  The list `@freeIds` is a list `[a_1,...,a_n]` such that an id
+is available if and only if it's one of the `a_i` or is greater than `a_n`.
+For this reason, the list begins as `[ 0 ]`.
+
+            @freeIds = [ 0 ]
+
+When a free id is needed, we need a function that will give the next such
+free id and then mark that id as consumed from the list.
+
+        nextFreeId: =>
+            if @freeIds.length > 1 then @freeIds.shift() else @freeIds[0]++
+
+When an id in use becomes free, we need a function that will put it back
+into the list of free ids.
+
+        addFreeId: ( id ) =>
+            if id < @freeIds[@freeIds.length-1]
+                @freeIds.push id
+                @freeIds.sort()
+
+When a free id becomes used in some way other than through a call to
+`nextFreeId`, we will want to be able to record that fact.  The following
+function does so.
+
+        setUsedID: ( id ) =>
+            last = @freeIds[@freeIds.length-1]
+            while last < id then @freeIds.push ++last
+            i = @freeIds.indexOf id
+            @freeIds.splice i, 1
+            if i is @freeIds.length then @freeIds.push id + 1
+
 ## Registering group types
 
 To register a new type of group, simply provide its name, as a text string,

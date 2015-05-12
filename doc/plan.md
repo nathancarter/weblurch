@@ -15,14 +15,22 @@ later items are more vague than the earlier ones.
 
 Load and save
 
- * Not all edits cause the document to be marked dirty.  Perhaps the TinyMCE
-   events are not firing when I expect, or perhaps I am not handling them
-   correctly.  (No easily known way to reproduce this, yet.)
- * Using the keyboard shortcut for Save throws up a dialog with error
-   messages about invalid content.  (To reproduce: Open app, press Cmd+S.)
+ * Not all edits cause the document to be marked dirty.  TinyMCE events are
+   not firing correctly.  [Minimal working example created.](
+   http://www.tinymce.com/develop/bugtracker_view.php?id=7511)
+   [Or see this related issue.](
+   http://www.tinymce.com/develop/bugtracker_view.php?id=7304)
+   Use the responses from that to get this
+   problem fixed in Lurch, either by updating to a fixed version of TinyMCE
+   or by installing a workaround here.
+ * Document element is far smaller vertically than it ought to be (does not
+   take up 100% of height).
  * Using the keyboard shortcut for New or Open on Mac triggers the Chrome
    behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
-   menu.
+   menu.  See [my question about this on the TinyMCE forum,](
+   http://www.tinymce.com/forum/viewtopic.php?pid=116179) and the
+   StackOverflow page to which it links with information on how you might go
+   about building a workaround if one doesn't exist already.
 
 ## Extending the Editor
 

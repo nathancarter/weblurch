@@ -10,8 +10,40 @@
       this.hideOrShowGroupers = __bind(this.hideOrShowGroupers, this);
       this.groupCurrentSelection = __bind(this.groupCurrentSelection, this);
       this.addGroupType = __bind(this.addGroupType, this);
+      this.setUsedID = __bind(this.setUsedID, this);
+      this.addFreeId = __bind(this.addFreeId, this);
+      this.nextFreeId = __bind(this.nextFreeId, this);
       this.groupTypes = {};
+      this.freeIds = [0];
     }
+
+    Groups.prototype.nextFreeId = function() {
+      if (this.freeIds.length > 1) {
+        return this.freeIds.shift();
+      } else {
+        return this.freeIds[0]++;
+      }
+    };
+
+    Groups.prototype.addFreeId = function(id) {
+      if (id < this.freeIds[this.freeIds.length - 1]) {
+        this.freeIds.push(id);
+        return this.freeIds.sort();
+      }
+    };
+
+    Groups.prototype.setUsedID = function(id) {
+      var i, last;
+      last = this.freeIds[this.freeIds.length - 1];
+      while (last < id) {
+        this.freeIds.push(++last);
+      }
+      i = this.freeIds.indexOf(id);
+      this.freeIds.splice(i, 1);
+      if (i === this.freeIds.length) {
+        return this.freeIds.push(id + 1);
+      }
+    };
 
     Groups.prototype.addGroupType = function(name, data) {
       var buttonData, key, menuData, n, _ref;
@@ -163,6 +195,7 @@
       this.saveMetaData = this.loadMetaData = null;
       this.editor.on('change', (function(_this) {
         return function(event) {
+          console.log('change:', event);
           return _this.setDocumentDirty(true);
         };
       })(this));
@@ -354,6 +387,7 @@
       if (filename) {
         this.setFilename(filename);
         result = this.save();
+        this.editor.focus();
         return typeof callback === "function" ? callback(result) : void 0;
       }
       refreshDialog = function() {
@@ -384,18 +418,14 @@
         return _results;
       };
       filename = null;
-      this.saveFileNameChangedHandler = (function(_this) {
-        return function(newname) {
-          filename = newname;
-          return refreshDialog();
-        };
-      })(this);
+      this.saveFileNameChangedHandler = function(newname) {
+        filename = newname;
+        return refreshDialog();
+      };
       filepath = null;
-      this.changedFolderHandler = (function(_this) {
-        return function(newfolder) {
-          return filepath = newfolder;
-        };
-      })(this);
+      this.changedFolderHandler = function(newfolder) {
+        return filepath = newfolder;
+      };
       saveWouldOverwrite = (function(_this) {
         return function(filepath, filename) {
           var tmp;
@@ -467,6 +497,7 @@
       tmp.cd(filepath);
       _ref = tmp.read(filename), content = _ref[0], metadata = _ref[1];
       this.editor.setContent(content);
+      this.editor.focus();
       this.setFilepath(filepath);
       this.setFilename(filename);
       this.setDocumentDirty(false);
@@ -817,9 +848,26 @@
         return editor.on('init', function() {
           var filemenu, icon;
           editor.getBody().style.fontSize = '16px';
-          setTimeout((function() {
-            return editor.execCommand('mceFullScreen');
-          }), 0);
+          setTimeout(function() {
+            var h, walk, _i, _len, _ref, _results;
+            editor.execCommand('mceFullScreen');
+            walk = editor.iframeElement;
+            while (walk && walk !== editor.container) {
+              if (walk === editor.iframeElement.parentNode) {
+                walk.style.height = 'auto';
+              } else {
+                walk.style.height = '100%';
+              }
+              walk = walk.parentNode;
+            }
+            _ref = editor.getDoc().getElementsByTagName('html');
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              h = _ref[_i];
+              _results.push(h.style.height = 'auto');
+            }
+            return _results;
+          }, 0);
           filemenu = (editor.getContainer().getElementsByClassName('mce-menubtn'))[0];
           icon = document.createElement('img');
           icon.setAttribute('src', 'icons/apple-touch-icon-76x76.png');

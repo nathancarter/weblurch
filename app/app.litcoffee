@@ -50,6 +50,38 @@ Each editor has a mapping from valid group type names to their attributes.
 
             @groupTypes = {}
 
+The object maintains a list of unique integer ids for assigning to Groups in
+the editor.  The list `@freeIds` is a list `[a_1,...,a_n]` such that an id
+is available if and only if it's one of the `a_i` or is greater than `a_n`.
+For this reason, the list begins as `[ 0 ]`.
+
+            @freeIds = [ 0 ]
+
+When a free id is needed, we need a function that will give the next such
+free id and then mark that id as consumed from the list.
+
+        nextFreeId: =>
+            if @freeIds.length > 1 then @freeIds.shift() else @freeIds[0]++
+
+When an id in use becomes free, we need a function that will put it back
+into the list of free ids.
+
+        addFreeId: ( id ) =>
+            if id < @freeIds[@freeIds.length-1]
+                @freeIds.push id
+                @freeIds.sort()
+
+When a free id becomes used in some way other than through a call to
+`nextFreeId`, we will want to be able to record that fact.  The following
+function does so.
+
+        setUsedID: ( id ) =>
+            last = @freeIds[@freeIds.length-1]
+            while last < id then @freeIds.push ++last
+            i = @freeIds.indexOf id
+            @freeIds.splice i, 1
+            if i is @freeIds.length then @freeIds.push id + 1
+
 ## Registering group types
 
 To register a new type of group, simply provide its name, as a text string,
@@ -243,7 +275,9 @@ is called immediately after a document is loaded.
 Whenever the contents of the document changes, we mark the document dirty in
 this object, which therefore adds the \* marker to the page title.
 
-            @editor.on 'change', ( event ) => @setDocumentDirty yes
+            @editor.on 'change', ( event ) =>
+                console.log 'change:', event
+                @setDocumentDirty yes
 
 Now install into the editor controls that run methods in this object.  The
 `control` method does something seemingly inefficient to duplicate the input
@@ -400,6 +434,7 @@ is no filename, then a save dialog is shown.
             if filename
                 @setFilename filename
                 result = @save() # save happens even if no callback
+                @editor.focus()
                 return callback? result
 
 There is not a readily available filename, so we must pop up a "Save as"
@@ -426,7 +461,7 @@ Now we install a handler for when a file is selected, save that filename for
 possible later use, and refresh the dialog.
 
             filename = null
-            @saveFileNameChangedHandler = ( newname ) =>
+            @saveFileNameChangedHandler = ( newname ) ->
                 filename = newname
                 refreshDialog()
 
@@ -434,7 +469,7 @@ Do the same thing for when the folder changes, but there's no need to
 refresh the dialog in this case.
 
             filepath = null
-            @changedFolderHandler = ( newfolder ) => filepath = newfolder
+            @changedFolderHandler = ( newfolder ) -> filepath = newfolder
 
 We will also need to know whether the `save` function will overwrite an
 existing file, so that we can verify that the user actually wants to do so
@@ -514,6 +549,7 @@ of this plugin are set to be the parameters passed here.
             tmp.cd filepath
             [ content, metadata ] = tmp.read filename
             @editor.setContent content
+            @editor.focus()
             @setFilepath filepath
             @setFilename filename
             @setDocumentDirty no
@@ -921,10 +957,24 @@ Add a Help menu.
                         '_blank'
 
 Increase the default font size and maximize the editor to fill the page.
+This requires not only invoking the "mceFullScreen" command, but also then
+setting the height properties of many pieces of the DOM hierarchy (in a way
+that seems like it ought to be handled for us by the fullScreen plugin).
 
                 editor.on 'init', ->
                     editor.getBody().style.fontSize = '16px'
-                    setTimeout ( -> editor.execCommand 'mceFullScreen' ), 0
+                    setTimeout ->
+                        editor.execCommand 'mceFullScreen'
+                        walk = editor.iframeElement
+                        while walk and walk isnt editor.container
+                            if walk is editor.iframeElement.parentNode
+                                walk.style.height = 'auto'
+                            else
+                                walk.style.height = '100%'
+                            walk = walk.parentNode
+                        for h in editor.getDoc().getElementsByTagName 'html'
+                            h.style.height = 'auto'
+                    , 0
 
 Add Lurch icon to the left of the File menu.
 
