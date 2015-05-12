@@ -112,10 +112,24 @@ Add a Help menu.
                         '_blank'
 
 Increase the default font size and maximize the editor to fill the page.
+This requires not only invoking the "mceFullScreen" command, but also then
+setting the height properties of many pieces of the DOM hierarchy (in a way
+that seems like it ought to be handled for us by the fullScreen plugin).
 
                 editor.on 'init', ->
                     editor.getBody().style.fontSize = '16px'
-                    setTimeout ( -> editor.execCommand 'mceFullScreen' ), 0
+                    setTimeout ->
+                        editor.execCommand 'mceFullScreen'
+                        walk = editor.iframeElement
+                        while walk and walk isnt editor.container
+                            if walk is editor.iframeElement.parentNode
+                                walk.style.height = 'auto'
+                            else
+                                walk.style.height = '100%'
+                            walk = walk.parentNode
+                        for h in editor.getDoc().getElementsByTagName 'html'
+                            h.style.height = 'auto'
+                    , 0
 
 Add Lurch icon to the left of the File menu.
 
