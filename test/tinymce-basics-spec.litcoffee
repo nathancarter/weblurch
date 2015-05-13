@@ -5,7 +5,7 @@ Pull in the utility functions in `phantom-utils` that make it easier to
 write the tests below.
 
     { phantomDescribe, pageDo, pageExpects, inPage,
-      pageExpectsError } = require './phantom-utils'
+      pageExpectsError, pageType } = require './phantom-utils'
 
 <font color='red'>Right now this specification file is almost a stub.  It
 will be enhanced later with real tests of the TinyMCE Editor.  (That is not
@@ -36,12 +36,6 @@ editor.
         it 'should permit editing by typing', inPage =>
             pageExpects ( -> tinymce.activeEditor.getContent() ),
                 'toEqual', ''
-            @page.sendEvent 'keypress', 'e'
-            @page.sendEvent 'keypress', 'x'
-            @page.sendEvent 'keypress', 'a'
-            @page.sendEvent 'keypress', 'm'
-            @page.sendEvent 'keypress', 'p'
-            @page.sendEvent 'keypress', 'l'
-            @page.sendEvent 'keypress', 'e'
+            pageType 'Example.'
             pageExpects ( -> tinymce.activeEditor.getContent() ),
-                'toEqual', '<p>example</p>'
+                'toEqual', '<p>Example.</p>'

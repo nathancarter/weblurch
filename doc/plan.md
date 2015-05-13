@@ -13,6 +13,20 @@ later items are more vague than the earlier ones.
 
 ## Bug fixes
 
+Test Suite
+
+ * The test suite implements `pageDo`, `pageExpects`, and
+   `pageExpectsError`, all of which call `done()` at the end of their
+   execution.  The problem with this is that I intend to use multiple calls
+   of `pageDo` and `pageExpects` and `pageExpectsError` in each `it()` call,
+   but `done()` should be called only once, at the end of `it()`.
+   * Upgrade `pageDo`, `pageExpects`, and `pageExpectsError` so that they
+     queue up their work rather than executing it immediately, and start the
+     next item in the queue as soon as the previous finishes.
+   * Upgrade `inPage` so that it adds to that same work queue a single call
+     to `done()` after running its own argument, so that `done()` is
+     enqueued last.
+
 Load and save
 
  * Not all edits cause the document to be marked dirty.  TinyMCE events are
@@ -101,33 +115,12 @@ of which has a test suite associated with it.
 The problem is that we do not have experience in testing things that require
 the level of user interaction that testing these requires.  It is essential
 to pause here and learn how to create the tools you need for automating
-testing with user interactivity.  PhantomJS certainly permits automated
-typing, clicking, and screen capturing.  Learn those methods and how to use
-them to test the Groups plugin.
+testing with user interactivity.
 
-Furthermore, factor out of that testing process the re-usable tools you
-create, so that testing the additional features you'll introduce below is
-easier, and thus more likely to be done, and done well.  Here are some
-example functions that it would be nice to have.
- * `pageType( textString )` - types all the characters in the text string
-   into the page
- * `pageKey( keyCode )` - presses and releases the key whose code is given,
-   in the page; must come up with some way to include modifier keys here
- * `pageClick( x, y )` - clicks the mouse at the given coordinates within
-   the page; must come up with some way to include modifier keys here
- * `pageInteract( args... )` - loops through args and processes each in
-   order; strings are passed to `pageType`, key codes to `pageKey`, and
-   coordinate pairs to `pageClick`; again, need some way to handle modifier
-   keys
-
-This would enable testing like the following.
-```
-pageExpects -> not tinymce.activeEditor.isDirty()
-pageType 'Some text'
-pageExpects -> tinymce.activeEditor.isDirty()
-pageKey theCodeForCtrl_S
-pageExpects -> not tinymce.activeEditor.isDirty()
-```
+[PhantomJS certainly permits automated typing, clicking, and screen
+capturing.](http://phantomjs.org/api/webpage/method/send-event.html)  In
+fact, we've already begun using it in some unit tests, and in the `pageType`
+method of the [Phantom Utils](../test/phantom-utils.litcoffee) module.
 
 ### Events
 

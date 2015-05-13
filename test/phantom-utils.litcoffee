@@ -213,6 +213,52 @@ One can then do the following.
     #     pageExpects ( -> back to more tests here ),
     #         'toBeTruthyOrWhatever'
 
+# Simulating User Interaction
+
+Although the `page` object provides the `sendEvent` member for simulating
+mouse and keyboard interaction, the following convenience functions make
+using that functionality much easier.
+
+The first is for typing a string of text.
+
+    exports.pageType = ( text ) ->
+        for character in text
+            lower = character.toLowerCase()
+            code = lower.charCodeAt 0
+            if code > 255
+                throw Error 'Cannot type this into the page: ' + character
+            shiftOn = if lower is character then 0 else 0x02000000
+            P.page.sendEvent 'keypress', code, null, null, shiftOn
+
+The second is for pressing any of the special keys on the keyboard.  A full
+list of valid string arguments is available [here](
+http://phantomjs.org/api/webpage/method/send-event.html), but for some
+reason the alleged `page.events` object does not exist in this context.
+Thus I copy a selection of the most important ones into `export.pageKey`
+itself: `Left`, `Right`, `Up`, `Down`, `Backspace`, `Delete`, and `Tab`.
+
+    exports.pageKey = ( code, modifiers = 0 ) ->
+        P.page.sendEvent 'keypress', code, null, null, modifiers
+    exports.pageKey.shift = 0x02000000
+    exports.pageKey.ctrl = 0x04000000
+    exports.pageKey.alt = 0x08000000
+    exports.pageKey.meta = 0x10000000
+    exports.pageKey.keypad = 0x20000000
+    exports.pageKey.left = 16777234
+    exports.pageKey.right = 16777236
+    exports.pageKey.up = 16777235
+    exports.pageKey.down = 16777237
+    exports.pageKey.backspace = 16777219
+    exports.pageKey.delete = 16777223
+    exports.pageKey.tab = 16777217
+
+When you need lower-level functionality, refer to [the documentation on the
+PhantomJS homepage](
+http://phantomjs.org/api/webpage/method/send-event.html).
+
+In particular, not the useful command `P.page.sendEvent 'click', x, y`,
+which can be invoked from tests using `@page.sendEvent 'click', x, y`.
+
 # Jasmine modifications
 
 The `pageExpects` and `pageExpectsError` functions, above, make asynchronous
