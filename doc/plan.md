@@ -32,44 +32,62 @@ Load and save
    StackOverflow page to which it links with information on how you might go
    about building a workaround if one doesn't exist already.
 
+Groups
+
+ * Insert a table with some text in two cells.  Highlight both cells and
+   wrap them in a group.  It forces everything into the first cell.  Rework
+   `groupCurrentSelection()` so that it doesn't replace existing content,
+   but just inserts groupers on each end.  Although that might come with
+   its own problems of splitting the change into two parts...?
+
 ## Extending the Editor
 
 ### Groups plugin
 
 Create a Groups plugin with the following features.
 
- * Add a class method that scans the document, indexing all pairs of
-   groupers, in order, deleting each that doesn't match up with a
-   same-numbered partner.
- * Extend the scanning routine so that it builds a hierarchy of groups
-   stored in a class member `Groups.tree`.  Use nested arrays of `Group`
-   object instances.
+ * Add a method that scans the document, indexing all pairs of groupers, in
+   order, deleting each that doesn't match up with a same-numbered partner.
  * Extend the scanning routine to recompute the list of unused ID numbers,
    so that after loading a document you can ensure that that list is
    up-to-date.
+ * Create a Group class distinct from the Groups class.  Its constructor
+   takes two DOM nodes, an open and close grouper.  It performs no
+   validation on whether these have any particular form at all.
+ * Extend that class with a method that computes the ID if the group, if it
+   can be determined from the open grouper, or undefined if not.
+ * Add to the Groups class a method for registering a Group instance.  This
+   will do the following:
+   * Accept the open and close groupers as parameters.
+   * Construct a Group from them.
+   * Query its id.
+   * Assign `Groups[id]` to the Group in question.
+   * Return the id.
+ * Extend that registration routine so that if the group was already
+   registered, it is not reconstructed, but the existing version in
+   `Groups[id]` is returned instead.
+ * Extend the scanning routine to call the registration function on all
+   matched pairs of groupers it finds.  Before you run it, note which ids
+   have groups, and then which ids you register anew.  For those that did
+   not get re-registered, delete them from the mapping.
  * Call that scanning routine after each document change.
- * Write a class method `Groups.ids()`, which returns a list of all id
-   numbers that appear in `Groups.tree`.  They should appear in tree order.
+ * Extend the scanning routine so that it builds a hierarchy of groups
+   by storing top-level Groups in in a class member `Groups.topLevel`, then
+   giving each Group object an array of child Groups and a pointer to its
+   parent Group.  It should clear the top-level list and all child arrays
+   each time it re-scans, but re-use the Group objects themselves.
+ * Write a class method `Groups.ids()`, which returns a list of all ids that
+   appear in the Groups hierarchy, in tree order.
  * Have `Groups.ids()` cache its results and only invalidate the cache
    when the scanning routine is re-run.
- * Create a static function in the Group class that accepts a DOM element
-   that is an open/close grouper, and it finds the other if it exists and
-   returns a Group instance created from them.  If the input wasn't valid in
-   any way, return null.
- * Extend Group instances with getters for the open/close grouper elements.
- * Extend Group instances with a getter for the integer id number.
- * Extend the scanning routine to also map all Group id numbers to the
-   object instances, and keep that mapping within the Groups class itself,
-   as in `Groups[7]`
- * Extend Group instances with a function for getting the array of child
-   Groups.
- * Extend Group instances with a function for getting the parent Group, if
-   there is one.
- * Use the overlay plugin to draw bubbles around Groups if and only if the
-   cursor is inside them.
+ * Create a function in the Groups class that accepts a DOM element
+   that is an open/close grouper and returns the corresponding Group
+   instance if there is one, or null otherwise.
  * Create a static function in the Group class that accepts a DOM node and
    returns the deepest Group instance surrounding it, if there is one, or
    null if there isn't.
+ * Use the overlay plugin to draw bubbles around Groups if and only if the
+   cursor is inside them.
  * Enhance the Group insertion actions so that they are unavailable when the
    base and anchor of the selection are not in the same Group.
  * Add instance methods for getting/setting arbitrary data on a Group, as
