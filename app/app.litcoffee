@@ -155,8 +155,11 @@ and the current contents of the cursor selection.
                 'images/red-bracket-open.png'
             close = @groupTypes[type]['close-img'] or
                 'images/red-bracket-close.png'
-            open = "<img src='#{open}' class='grouper #{type}#{hide}'>"
-            close = "<img src='#{close}' class='grouper #{type}#{hide}'>"
+            id = @nextFreeId()
+            open = "<img src='#{open}' class='grouper #{type}#{hide}'
+                         id='open#{id}'>"
+            close = "<img src='#{close}' class='grouper #{type}#{hide}'
+                          id='close#{id}'>"
             cursor = '<span id="put_cursor_here">\u200b</span>'
             content = @editor.selection.getContent()
 
@@ -275,9 +278,7 @@ is called immediately after a document is loaded.
 Whenever the contents of the document changes, we mark the document dirty in
 this object, which therefore adds the \* marker to the page title.
 
-            @editor.on 'change', ( event ) =>
-                console.log 'change:', event
-                @setDocumentDirty yes
+            @editor.on 'change', ( event ) => @setDocumentDirty yes
 
 Now install into the editor controls that run methods in this object.  The
 `control` method does something seemingly inefficient to duplicate the input

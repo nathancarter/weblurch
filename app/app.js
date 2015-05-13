@@ -94,7 +94,7 @@
     };
 
     Groups.prototype.groupCurrentSelection = function(type) {
-      var close, content, cursor, groupers, hide, open;
+      var close, content, cursor, groupers, hide, id, open;
       if (!this.groupTypes.hasOwnProperty(type)) {
         return;
       }
@@ -103,8 +103,9 @@
       hide = hide ? ' hide' : '';
       open = this.groupTypes[type]['open-img'] || 'images/red-bracket-open.png';
       close = this.groupTypes[type]['close-img'] || 'images/red-bracket-close.png';
-      open = "<img src='" + open + "' class='grouper " + type + hide + "'>";
-      close = "<img src='" + close + "' class='grouper " + type + hide + "'>";
+      id = this.nextFreeId();
+      open = "<img src='" + open + "' class='grouper " + type + hide + "' id='open" + id + "'>";
+      close = "<img src='" + close + "' class='grouper " + type + hide + "' id='close" + id + "'>";
       cursor = '<span id="put_cursor_here">\u200b</span>';
       content = this.editor.selection.getContent();
       this.editor.insertContent(open + content + cursor + close);
@@ -195,7 +196,6 @@
       this.saveMetaData = this.loadMetaData = null;
       this.editor.on('change', (function(_this) {
         return function(event) {
-          console.log('change:', event);
           return _this.setDocumentDirty(true);
         };
       })(this));
