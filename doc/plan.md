@@ -46,8 +46,6 @@ Groups
 
 Create a Groups plugin with the following features.
 
- * Add a method that scans the document, indexing all pairs of groupers, in
-   order, deleting each that doesn't match up with a same-numbered partner.
  * Extend the scanning routine to recompute the list of unused ID numbers,
    so that after loading a document you can ensure that that list is
    up-to-date.
