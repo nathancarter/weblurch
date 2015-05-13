@@ -38,24 +38,27 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Create a class variable that stores the list of unused integer IDs for
-   groups.
  * Give every matching pair of groupers a unique number at insertion time,
    stored in their ids, as in `id='open3'` and `id='close3'`.  Use the
    lowest unused ID.
  * Add a class method that scans the document, indexing all pairs of
    groupers, in order, deleting each that doesn't match up with a
-   same-numbered partner.  From those that remain, build a hierarchy
-   stored in a class member `Groups.tree`, as an array of `Group` object
-   instances.  It also computes the list of unused ID numbers, so that
-   it's easy to determine the next available ID for insertion.
+   same-numbered partner.
+ * Extend the scanning routine so that it builds a hierarchy of groups
+   stored in a class member `Groups.tree`.  Use nested arrays of `Group`
+   object instances.
+ * Extend the scanning routine to recompute the list of unused ID numbers,
+   so that after loading a document you can ensure that that list is
+   up-to-date.
  * Call that scanning routine after each document change.
- * Write a class method `Groups.numbers()`, which returns a list of all id
+ * Write a class method `Groups.ids()`, which returns a list of all id
    numbers that appear in `Groups.tree`.  They should appear in tree order.
- * Have `Groups.numbers()` cache its results and only invalidate the cache
+ * Have `Groups.ids()` cache its results and only invalidate the cache
    when the scanning routine is re-run.
- * Create the Group class with a constructor that can accept a DOM element
-   that is the open/close grouper, and it will find the other.
+ * Create a static function in the Group class that accepts a DOM element
+   that is an open/close grouper, and it finds the other if it exists and
+   returns a Group instance created from them.  If the input wasn't valid in
+   any way, return null.
  * Extend Group instances with getters for the open/close grouper elements.
  * Extend Group instances with a getter for the integer id number.
  * Extend the scanning routine to also map all Group id numbers to the
@@ -67,10 +70,9 @@ Create a Groups plugin with the following features.
    there is one.
  * Use the overlay plugin to draw bubbles around Groups if and only if the
    cursor is inside them.
- * Extend the constructor so that it can take any DOM node and yield the
-   deepest Group instance surrounding it, if there is one.  (If this can't
-   be done with a constructor--since it may fail--use a class method
-   instead.)
+ * Create a static function in the Group class that accepts a DOM node and
+   returns the deepest Group instance surrounding it, if there is one, or
+   null if there isn't.
  * Enhance the Group insertion actions so that they are unavailable when the
    base and anchor of the selection are not in the same Group.
  * Add instance methods for getting/setting arbitrary data on a Group, as
@@ -92,7 +94,27 @@ them to test the Groups plugin.
 
 Furthermore, factor out of that testing process the re-usable tools you
 create, so that testing the additional features you'll introduce below is
-easier, and thus more likely to be done, and done well.
+easier, and thus more likely to be done, and done well.  Here are some
+example functions that it would be nice to have.
+ * `pageType( textString )` - types all the characters in the text string
+   into the page
+ * `pageKey( keyCode )` - presses and releases the key whose code is given,
+   in the page; must come up with some way to include modifier keys here
+ * `pageClick( x, y )` - clicks the mouse at the given coordinates within
+   the page; must come up with some way to include modifier keys here
+ * `pageInteract( args... )` - loops through args and processes each in
+   order; strings are passed to `pageType`, key codes to `pageKey`, and
+   coordinate pairs to `pageClick`; again, need some way to handle modifier
+   keys
+
+This would enable testing like the following.
+```
+pageExpects -> not tinymce.activeEditor.isDirty()
+pageType 'Some text'
+pageExpects -> tinymce.activeEditor.isDirty()
+pageKey theCodeForCtrl_S
+pageExpects -> not tinymce.activeEditor.isDirty()
+```
 
 ### Events
 
