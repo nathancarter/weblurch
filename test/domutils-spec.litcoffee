@@ -806,7 +806,7 @@ some don't.
 
 ### should build deep DOM trees
 
-        it 'should build depth-one DOM trees', inPage ->
+        it 'should build deep DOM trees', inPage ->
 
 This test is simply the inverse of the analogous test earlier. The routines
 for building DOM trees from JSON objects should be able to create
