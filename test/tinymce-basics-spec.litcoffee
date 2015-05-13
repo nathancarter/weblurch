@@ -27,3 +27,21 @@ Just verify that the page contains an active TinyMCE editor.
 
         it 'should exist', inPage ->
             pageExpects -> tinymce.activeEditor
+
+### should permit editing by typing
+
+Just verify that typing some letters in the page changes the contents of the
+editor.
+
+        it 'should permit editing by typing', inPage =>
+            pageExpects ( -> tinymce.activeEditor.getContent() ),
+                'toEqual', ''
+            @page.sendEvent 'keypress', 'e'
+            @page.sendEvent 'keypress', 'x'
+            @page.sendEvent 'keypress', 'a'
+            @page.sendEvent 'keypress', 'm'
+            @page.sendEvent 'keypress', 'p'
+            @page.sendEvent 'keypress', 'l'
+            @page.sendEvent 'keypress', 'e'
+            pageExpects ( -> tinymce.activeEditor.getContent() ),
+                'toEqual', '<p>example</p>'
