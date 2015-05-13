@@ -155,8 +155,11 @@ and the current contents of the cursor selection.
                 'images/red-bracket-open.png'
             close = @groupTypes[type]['close-img'] or
                 'images/red-bracket-close.png'
-            open = "<img src='#{open}' class='grouper #{type}#{hide}'>"
-            close = "<img src='#{close}' class='grouper #{type}#{hide}'>"
+            id = @nextFreeId()
+            open = "<img src='#{open}' class='grouper #{type}#{hide}'
+                         id='open#{id}'>"
+            close = "<img src='#{close}' class='grouper #{type}#{hide}'
+                          id='close#{id}'>"
             cursor = '<span id="put_cursor_here">\u200b</span>'
             content = @editor.selection.getContent()
 

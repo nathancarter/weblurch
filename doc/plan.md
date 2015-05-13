@@ -38,9 +38,6 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Give every matching pair of groupers a unique number at insertion time,
-   stored in their ids, as in `id='open3'` and `id='close3'`.  Use the
-   lowest unused ID.
  * Add a class method that scans the document, indexing all pairs of
    groupers, in order, deleting each that doesn't match up with a
    same-numbered partner.
