@@ -34,7 +34,6 @@ Just verify that typing some letters in the page changes the contents of the
 editor.
 
         it 'should permit editing by typing', inPage ->
-            pageWaitFor -> not tinymce.activeEditor.isHidden()
             pageExpects ( -> tinymce.activeEditor.getContent() ),
                 'toEqual', ''
             pageType 'EXAMPLE'
