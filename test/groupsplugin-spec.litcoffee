@@ -71,23 +71,136 @@ subsequent tests.
 
         grouper = ( type, id ) ->
             "<img id=\"#{type}#{id}\" class=\"grouper me\" src=\"images/red-bracket-#{type}.png\" alt=\"\" />"
+        open = ( id ) -> grouper 'open', id
+        close = ( id ) -> grouper 'close', id
 
 We test here the `groupCurrentSelection()` method of the Groups plugin.  It
 does exactly what its name says; it wraps the current selection in a group.
 We test here that this happens correctly in several situations.
 
         it 'wraps selections in groups', inPage ->
+
+Ensure the editor is empty, then type some text, and ensure it got there.
+
             pageExpects ( -> tinymce.activeEditor.getContent() ),
                 'toEqual', ''
-            pageType 'ONETWOTHR3'
+            pageType 'ONETWOTHREE'
             pageExpects ( -> tinymce.activeEditor.getContent() ),
-                'toEqual', '<p>ONETWOTHR3</p>'
-            pageKey pageKey.left for i in [1..4]
+                'toEqual', '<p>ONETWOTHREE</p>'
+
+Highlight the word TWO and wrap it in an ME Group.  Verify that this works.
+
+            pageKey pageKey.left for i in [1..5]
             pageKey pageKey.left, pageKey.shift for i in [1..3]
             pageExpects ( -> tinymce.activeEditor.getContent() ),
-                'toEqual', '<p>ONETWOTHR3</p>'
+                'toEqual', '<p>ONETWOTHREE</p>'
             pageExpects ( -> tinymce.activeEditor.selection.getContent() ),
                 'toEqual', 'TWO'
             pageDo -> tinymce.activeEditor.buttons.me.onclick()
             pageExpects ( -> tinymce.activeEditor.getContent() ), 'toEqual',
-                "<p>ONE#{grouper 'open', 0}TWO#{grouper 'close', 0}THR3</p>"
+                "<p>ONE#{open 0}TWO#{close 0}THREE</p>"
+
+Highlight the existing group plus two characters on either side.  Wrap it in
+another group and verify that this works.
+
+            pageKey pageKey.home
+            pageKey pageKey.right for i in [1..2]
+            pageKey pageKey.right, pageKey.shift for i in [1..7]
+            pageDo -> tinymce.activeEditor.buttons.me.onclick()
+            pageExpects ( -> tinymce.activeEditor.getContent() ), 'toEqual',
+                "<p>ON#{open 1}E#{open 0}TWO#{close 0}T#{close 1}HREE</p>"
+
+### wraps selections in groups across elements
+
+This function is much like the previous, except we put the two ends of the
+cursor in different HTML elements, to be sure the result comes out as we
+desire.
+
+        it 'wraps selections in groups across elements', inPage ->
+
+We will make use of the following auxiliary function for simplifying HTML
+strings.
+
+            shtml = ( html ) ->
+                html = html.replace />\s*</g, '><'
+                old = ''
+                while html isnt old
+                    old = html
+                    html = html.replace \
+                        /<span[^>]+Apple-style-span[^>]+>(.*?)<\/span>/g,
+                        '$1'
+                html
+            pageDo -> window.shtml = ( html ) ->
+                html = html.replace />\s*</g, '><'
+                old = ''
+                while html isnt old
+                    old = html
+                    html = html.replace \
+                        /<span[^>]+Apple-style-span[^>]+>(.*?)<\/span>/g,
+                        '$1'
+                html
+
+Ensure the editor is empty, then insert some complex content.
+
+            pageExpects ( -> tinymce.activeEditor.getContent() ),
+                'toEqual', ''
+            pageDo -> tinymce.activeEditor.setContent shtml \
+                '<table>
+                   <tbody>
+                     <tr>
+                       <td id="left">2 words</td>
+                       <td>even more</td>
+                     </tr>
+                   </tbody>
+                 </table>'
+            pageExpects ( -> shtml tinymce.activeEditor.getContent() ),
+                'toEqual', shtml \
+                '<table>
+                   <tbody>
+                     <tr>
+                       <td id="left">2 words</td>
+                       <td>even more</td>
+                     </tr>
+                   </tbody>
+                 </table>'
+
+Highlight the two words nearest to the column break and wrap them in an ME
+Group.  Verify that this works.
+
+            pageDo -> tinymce.activeEditor.selection.setCursorLocation \
+                tinymce.activeEditor.getDoc().getElementById( 'left' ) \
+                .childNodes[0], 2
+            pageKey pageKey.right, pageKey.shift for i in [1..10]
+            pageExpects ( -> tinymce.activeEditor.selection.getContent() ),
+                'toEqual', 'wordseven'
+            pageDo -> tinymce.activeEditor.buttons.me.onclick()
+            pageExpects ( -> shtml tinymce.activeEditor.getContent() ),
+                'toEqual', shtml \
+                "<table>
+                   <tbody>
+                     <tr>
+                       <td id=\"left\">2 #{open 0}words</td>
+                       <td>even#{close 0} more</td>
+                     </tr>
+                   </tbody>
+                 </table>"
+
+Highlight the whole table and wrap it in another group.  Verify that this
+works as well.
+
+            pageDo ->
+                tinymce.activeEditor.selection.select \
+                    tinymce.activeEditor.getBody(), no
+                tinymce.activeEditor.buttons.me.onclick()
+            pageExpects ( -> shtml tinymce.activeEditor.getContent() ),
+                'toEqual', shtml \
+                "<p>#{open 1}</p>
+                 <table>
+                   <tbody>
+                     <tr>
+                       <td id=\"left\">2 #{open 0}words</td>
+                       <td>even#{close 0} more</td>
+                     </tr>
+                   </tbody>
+                 </table>
+                 <p>#{close 1}<br /></p>"

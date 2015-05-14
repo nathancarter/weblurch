@@ -154,20 +154,41 @@ and the current contents of the cursor selection.
                 'images/red-bracket-open.png', 'open', id, hide
             close = @grouperHTML type, @groupTypes[type]['close-img'] ? \
                 'images/red-bracket-close.png', 'close', id, hide
-            cursor = '<span id="put_cursor_here">\u200b</span>'
-            content = @editor.selection.getContent()
 
 Wrap the current cursor selection in open/close groupers, with the cursor
 placeholder after the old selection.
 
-            @editor.insertContent open + content + cursor + close
+            sel = @editor.selection
+            if sel.getStart() is sel.getEnd()
 
-Replace the placeholder with the actual cursor.  Do so by selecting it and
-deleting it.
+If the whole selection is within one element, then we can just replace the
+selection's content with wrapped content, plus a cursor placeholder that we
+immediately remove after placing the cursor back there.
 
-            cursor = ( $ @editor.getBody() ).find '#put_cursor_here'
-            @editor.selection.select cursor.get 0
-            cursor.remove()
+                cursor = '<span id="put_cursor_here">\u200b</span>'
+                content = @editor.selection.getContent()
+                @editor.insertContent open + content + cursor + close
+                cursor = ( $ @editor.getBody() ).find '#put_cursor_here'
+                sel.select cursor.get 0
+                cursor.remove()
+            else
+
+But if the selection spans multiple elements, then we must handle each edge
+of the selection separately.  We cannot use this solution in general,
+because editing an element messes up cursor bookmarks within that element.
+
+                range = sel.getRng()
+                leftNode = range.startContainer
+                leftPos = range.startOffset
+                rightNode = range.endContainer
+                rightPos = range.endOffset
+                range.collapse no
+                sel.setRng range
+                @editor.insertContent close
+                range.setStart leftNode, leftPos
+                range.setEnd leftNode, leftPos
+                sel.setRng range
+                @editor.insertContent open
 
 The above method uses the following auxiliary method, which is followed by
 its inverse.

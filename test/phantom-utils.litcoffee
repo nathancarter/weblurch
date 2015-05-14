@@ -339,6 +339,9 @@ itself: `Left`, `Right`, `Up`, `Down`, `Backspace`, `Delete`, and `Tab`.
     exports.pageKey.backspace = 16777219
     exports.pageKey.delete = 16777223
     exports.pageKey.tab = 16777217
+    exports.pageKey.home = 16777232
+    exports.pageKey.end = 16777233
+    exports.pageKey.enter = 16777221
 
 When you need lower-level functionality, refer to [the documentation on the
 PhantomJS homepage](

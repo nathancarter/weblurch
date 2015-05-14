@@ -96,7 +96,7 @@
     };
 
     Groups.prototype.groupCurrentSelection = function(type) {
-      var close, content, cursor, hide, id, open, _ref, _ref1, _ref2;
+      var close, content, cursor, hide, id, leftNode, leftPos, open, range, rightNode, rightPos, sel, _ref, _ref1, _ref2;
       if (!this.groupTypes.hasOwnProperty(type)) {
         return;
       }
@@ -104,12 +104,28 @@
       id = this.nextFreeId();
       open = this.grouperHTML(type, (_ref1 = this.groupTypes[type]['open-img']) != null ? _ref1 : 'images/red-bracket-open.png', 'open', id, hide);
       close = this.grouperHTML(type, (_ref2 = this.groupTypes[type]['close-img']) != null ? _ref2 : 'images/red-bracket-close.png', 'close', id, hide);
-      cursor = '<span id="put_cursor_here">\u200b</span>';
-      content = this.editor.selection.getContent();
-      this.editor.insertContent(open + content + cursor + close);
-      cursor = ($(this.editor.getBody())).find('#put_cursor_here');
-      this.editor.selection.select(cursor.get(0));
-      return cursor.remove();
+      sel = this.editor.selection;
+      if (sel.getStart() === sel.getEnd()) {
+        cursor = '<span id="put_cursor_here">\u200b</span>';
+        content = this.editor.selection.getContent();
+        this.editor.insertContent(open + content + cursor + close);
+        cursor = ($(this.editor.getBody())).find('#put_cursor_here');
+        sel.select(cursor.get(0));
+        return cursor.remove();
+      } else {
+        range = sel.getRng();
+        leftNode = range.startContainer;
+        leftPos = range.startOffset;
+        rightNode = range.endContainer;
+        rightPos = range.endOffset;
+        range.collapse(false);
+        sel.setRng(range);
+        this.editor.insertContent(close);
+        range.setStart(leftNode, leftPos);
+        range.setEnd(leftNode, leftPos);
+        sel.setRng(range);
+        return this.editor.insertContent(open);
+      }
     };
 
     Groups.prototype.grouperHTML = function(typeName, image, openClose, id, hide) {
