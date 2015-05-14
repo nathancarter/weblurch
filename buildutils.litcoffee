@@ -59,9 +59,9 @@ Call the cake task function, but this time supply a different task execution
 function, one that does whatever the actual task function is, then calls
 dequeue.
 
-        task name, description, ->
+        task name, description, ( options ) ->
             console.log "Begin building #{name}..."
-            func()
+            func options
             console.log "Done building #{name}."
             exports.dequeue()
 
@@ -71,11 +71,12 @@ tasks whose task functions will take a `done` function that you should call
 when the task is done.
 
     exports.asyncTask = ( name, description, func ) ->
-        task name, description, ->
+        task name, description, ( options ) ->
             console.log "Begin building #{name}..."
             func ->
                 console.log "Done building #{name}."
                 exports.dequeue()
+            , options
 
 Those last lines mean that your asynchronous task function needs to take a
 `done` function as parameter, and call it when the task is finally complete.

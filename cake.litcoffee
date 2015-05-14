@@ -10,6 +10,15 @@ We keep a set of build utilities in a separate module, which we now load.
 
     build = require './buildutils'
 
+## Options
+
+All tests are run by default, but you can run just one if you prefer, with
+this option.  It takes either a full test name, or any prefix thereof.  It
+runs only one test, the first one whose filename matches the given name.  If
+none do, cake halts with an error.
+
+    option '-t', '--test [NAME]', 'Choose just one test to run'
+
 ## Easy way to build all
 
 If you want to build and test evertything, just run `cake all`. It simply
@@ -125,7 +134,7 @@ like this project does, because they are structured the same way.
 
 ## The `test` build process
 
-    build.asyncTask 'test', 'Run all unit tests', ( done ) ->
+    build.asyncTask 'test', 'Run unit tests', ( done, options ) ->
 
 First remove all old reports in the test reports folder. If we do not do
 this, then any deleted tests will still have their reports lingering in the
@@ -135,11 +144,26 @@ output folder forever.
         for report in fs.readdirSync repdir
             fs.unlinkSync p.resolve repdir, report
 
+If the `--test` option was used, then just run that one test instead.  In
+case the option precedes just a prefix of the test suite to run, search the
+test folder for all files that match, and use the first.
+
+        target = testdir
+        if options.test?
+            for testfile in fs.readdirSync testdir
+                if testfile[...options.test.length] is options.test
+                    target = p.resolve target, testfile
+                    break
+            if target is testdir
+                console.log "Found no tests starting with
+                    #{options.test}.".red
+                process.exit 1
+
 Run [jasmine](http://jasmine.github.io/) on all files in the `test/` folder,
 and produce output in `junitreport` format (a bunch of XML files).
 
         exec "node #{jasmine} --junitreport --output #{repdir} --verbose
-                   --coffee --forceexit #{testdir}",
+                   --coffee --forceexit #{target}",
         ( err, stdout, stderr ) ->
             console.log stdout + stderr if stdout + stderr
 
