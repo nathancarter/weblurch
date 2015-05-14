@@ -5,7 +5,7 @@ Pull in the utility functions in `phantom-utils` that make it easier to
 write the tests below.
 
     { phantomDescribe, pageDo, pageExpects, inPage,
-      pageExpectsError, pageType } = require './phantom-utils'
+      pageExpectsError, pageType, pageWaitFor } = require './phantom-utils'
 
 <font color='red'>Right now this specification file is almost a stub.  It
 will be enhanced later with real tests of the TinyMCE Editor.  (That is not
@@ -33,9 +33,10 @@ Just verify that the page contains an active TinyMCE editor.
 Just verify that typing some letters in the page changes the contents of the
 editor.
 
-        it 'should permit editing by typing', inPage =>
+        it 'should permit editing by typing', inPage ->
+            pageWaitFor -> not tinymce.activeEditor.isHidden()
             pageExpects ( -> tinymce.activeEditor.getContent() ),
                 'toEqual', ''
-            pageType 'Example.'
+            pageType 'EXAMPLE'
             pageExpects ( -> tinymce.activeEditor.getContent() ),
-                'toEqual', '<p>Example.</p>'
+                'toEqual', '<p>EXAMPLE</p>'

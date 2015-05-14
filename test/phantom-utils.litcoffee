@@ -33,7 +33,7 @@ listeners for an `EventEmitter`, so I use one global PhantomJS instance.)
 It starts uninitialized, and I provide a function for querying whether it
 has been initialized since then.
 
-    P = phantom: null, page: null
+    P = phantom: null, page: null, queue: [ ]
     phantomInitialized = -> P?.phantom and P?.page
 
 This function loads into that global instance any given URL. It does not
@@ -122,23 +122,80 @@ function.  Consider the following idiom that we wish to avoid.
     #         done()
 
 This pattern would appear throughout our testing suite, and thus can be made
-shorter by defining the following functions.  This one can be used as in the
-example below to store the `done` function in the global object `P` for
-later use.
+shorter by defining the following functions.
+
+Because calls to `P.page.evaluate` return immediately and send the results
+back asynchronously in a callback, there is a danger of sending several such
+messages before the first one completes running.  Thus we implement a job
+queue, using the following two functions.
+
+This function adds to the job queue a job that will call the given function
+on the given argument list.  It also adds to the job the current error
+stack, so that if an error occurs later when running the function, we can
+reference the point in the test suite at which the test is defined.  This is
+more helpful to clients.
+
+    addJob = ( func, args... ) ->
+        stack = Error().stack.split '\n'
+        P.queue.push
+            func : func
+            args : args
+            stack : [ stack[0], stack[4..]... ].join '\n'
+
+There is also a version that adds the job at top priority; this is used only
+by `pageWaitFor`, below.
+
+    addTopJob = ( func, args... ) ->
+        stack = Error().stack.split '\n'
+        P.queue.unshift
+            func : func
+            args : args
+            stack : [ stack[0], stack[4..]... ].join '\n'
+
+This function pops a job off the job queue and runs it.  It also stores in
+the current Jasmine test spec a copy of the error stack saved above, so that
+if the test fails, that stack can be used in error reporting.  (See
+[below](#jasmine-modifications).)
+
+    nextJob = ->
+        if P.queue.length is 0 then return
+        next = P.queue.shift()
+        spec = jasmine?.getEnv().currentSpec
+        if not spec
+            throw Error 'No current spec in which to set error point'
+        spec.overrideStack_ = next.stack
+        next.func.apply null, next.args
+
+Now we create a function to store the `done` function in the global object
+`P` for later use.  Although this function is a bit confusing at first, see
+the example code further below for how to use it with the functions defined
+hereafter.
 
     exports.inPage = ( func ) ->
         ( done ) ->
             P.done = done
+
+The following call will make many calls to `addJob()`, thus building up a
+queue of work to be done.
+
             func()
+
+At the end of the queue, we want Jasmine's `done` function to be called, so
+we add that as the last action on the queue, then start the queue running.
+
+            addJob done
+            nextJob()
+
+We now have some functions that can be used in place of the normal Jasmine
+test functions, to run tests in the Phantom page, rather than in this
+(node-based) JavaScript environment.
 
 This one can be used in place of `expect` to provide the extra checks we
 desire, and cause `done` to be called for us.  Note that the default value
 for `check` enables the idiom `pageExpects -> expression` as a shortcut for
 `pageExpects ( -> expression ), 'toBeTruthy'`.
 
-    exports.pageExpects =
-    ( func, check = 'toBeTruthy', args... ) ->
-        setErrorPoint()
+    pageExpects = ( func, check = 'toBeTruthy', args... ) ->
         P.page.evaluate ( evaluateThis ) ->
             result = try eval evaluateThis catch e then e
             if typeof result is 'undefined'
@@ -160,8 +217,10 @@ for `check` enables the idiom `pageExpects -> expression` as a shortcut for
                 expect( result )[check](args...)
             else
                 expect( undefined )[check](args...)
-            P.done()
+            nextJob()
         , "(#{func.toString()})()"
+    exports.pageExpects = ( func, check = 'toBeTruthy', args... ) ->
+        addJob pageExpects, func, check, args...
 
 The new idiom that can replace the old is therefore the following.
 
@@ -173,20 +232,41 @@ The new idiom that can replace the old is therefore the following.
     #     pageExpects ( -> statement3 we want to test ),
     #         'toEqual', soAndSo
 
+Sometimes a test may wish to wait until a specific condition is true in the
+page.  The following function is useful for that purpose.  It fails if the
+function to evaluate in the page causes an error, or returns false
+repeatedly until the time limit is exceeded (2 seconds by default).
+
+    pageWaitFor = ( func, waitUntil ) ->
+        P.page.evaluate ( evaluateThis ) ->
+            not not eval evaluateThis
+        , ( err, result ) ->
+            expect( err ).toBeNull()
+            if not result
+                if new Date < waitUntil
+                    addTopJob pageWaitFor, func, waitUntil
+                else
+                    expect( 'Waiting time expired' ).toBeFalsy() # fail
+            nextJob()
+        , "(#{func.toString()})()"
+    exports.pageWaitFor = ( func, maximumWaitTime = 2000 ) ->
+        addJob pageWaitFor, func, ( new Date ).getTime() + maximumWaitTime
+
 If you expect an error, you can do so with this routine.  The `check` and
 `args` parameters are optional, and will be used on the error object (if one
 exists) if and only if they're provided.
 
-    exports.pageExpectsError = ( func, check, args... ) ->
-        setErrorPoint()
+    pageExpectsError = ( func, check, args... ) ->
         P.page.evaluate ( evaluateThis ) ->
             try eval evaluateThis ; null catch e then e
         , ( err, result ) ->
             expect( err ).toBeNull()
             expect( result ).not.toBeNull()
             if check then expect( result.message )[check](args...)
-            P.done()
+            nextJob()
         , "(#{func.toString()})()"
+    exports.pageExpectsError = ( func, check, args... ) ->
+        addJob pageExpectsError, func, check, args...
 
 Use it as per the following examples.
 
@@ -199,10 +279,11 @@ Furthermore, if some setup code needs to be run in the page, which does not
 require any tests to be called on it, but still needs to run without errors,
 then the following may be useful.
 
-    exports.pageDo = ( func ) ->
+    pageDo = ( func ) ->
         P.page.evaluate func, ( err, result ) ->
             expect( err ).toBeNull()
-            P.done()
+            nextJob()
+    exports.pageDo = ( func ) -> addJob pageDo, func
 
 One can then do the following.
 
@@ -219,16 +300,20 @@ Although the `page` object provides the `sendEvent` member for simulating
 mouse and keyboard interaction, the following convenience functions make
 using that functionality much easier.
 
-The first is for typing a string of text.
+The first is for typing a string of text.  Currently this only functions for
+upper case letters, spaces, and digits.
 
-    exports.pageType = ( text ) ->
+    pageType = ( text ) ->
         for character in text
-            lower = character.toLowerCase()
-            code = lower.charCodeAt 0
-            if code > 255
+            code = character.toUpperCase().charCodeAt 0
+            if ( '0'.charCodeAt( 0 ) <= code <= '9'.charCodeAt( 0 ) ) or
+               ( 'A'.charCodeAt( 0 ) <= code <= 'Z'.charCodeAt( 0 ) ) or
+               ( ' '.charCodeAt( 0 ) is code )
+                P.page.sendEvent 'keypress', code, null, null, 0
+            else
                 throw Error 'Cannot type this into the page: ' + character
-            shiftOn = if lower is character then 0 else 0x02000000
-            P.page.sendEvent 'keypress', code, null, null, shiftOn
+        nextJob()
+    exports.pageType = ( text ) -> addJob pageType, text
 
 The second is for pressing any of the special keys on the keyboard.  A full
 list of valid string arguments is available [here](
@@ -237,8 +322,11 @@ reason the alleged `page.events` object does not exist in this context.
 Thus I copy a selection of the most important ones into `export.pageKey`
 itself: `Left`, `Right`, `Up`, `Down`, `Backspace`, `Delete`, and `Tab`.
 
-    exports.pageKey = ( code, modifiers = 0 ) ->
+    pageKey = ( code, modifiers = 0 ) ->
         P.page.sendEvent 'keypress', code, null, null, modifiers
+        nextJob()
+    exports.pageKey = ( code, modifiers = 0 ) ->
+        addJob pageKey, code, modifiers
     exports.pageKey.shift = 0x02000000
     exports.pageKey.ctrl = 0x04000000
     exports.pageKey.alt = 0x08000000
@@ -274,24 +362,16 @@ To fix this problem, we make some modifications to the Jasmine API, so that
 we can set the stack trace before the asynchronous code begins, and that
 stack trace will be used in later error reports.
 
-First, we provide a function that can be used to set the stack trace.
-
-    setErrorPoint = ->
-        spec = jasmine?.getEnv().currentSpec
-        if not spec
-            throw Error 'No current spec in which to set error point'
-
-When we create a new stack trace, we remove from it the mention of this
-function (`setErrorPoint`) and the one that called it (which will be
-`pageExpects`, above).
-
-        stack = ( new Error() ).stack.split '\n'
-        stack = [ stack[0] ].concat stack[3..]
-        spec.overrideStack_ = stack.join '\n'
+First, the `addJob()` and `nextJob()` functions defined
+[earlier](#convenience-function-for-tests) place into the
+currently-running-spec object an error stack that was created at the time
+that the job was placed onto the queue.  Such an error stack correctly
+points to where (in the test suite code) the test was defined, so that we
+can throw errors to that (more helpful) point if a test fails.
 
 Second, we wrap the `addMatcherResult` function in `jasmine.Spec` with a
-"before" clause that looks up the data stored above and uses it, if it's
-present, to overwrite any existing error stack.
+"before" clause that looks up the data stored in the spec, and uses it (if
+present) to overwrite any existing error stack.
 
     oldFn = jasmine.Spec.prototype.addMatcherResult
     jasmine.Spec.prototype.addMatcherResult = ( result ) ->

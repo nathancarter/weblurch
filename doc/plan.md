@@ -13,20 +13,6 @@ later items are more vague than the earlier ones.
 
 ## Bug fixes
 
-Test Suite
-
- * The test suite implements `pageDo`, `pageExpects`, and
-   `pageExpectsError`, all of which call `done()` at the end of their
-   execution.  The problem with this is that I intend to use multiple calls
-   of `pageDo` and `pageExpects` and `pageExpectsError` in each `it()` call,
-   but `done()` should be called only once, at the end of `it()`.
-   * Upgrade `pageDo`, `pageExpects`, and `pageExpectsError` so that they
-     queue up their work rather than executing it immediately, and start the
-     next item in the queue as soon as the previous finishes.
-   * Upgrade `inPage` so that it adds to that same work queue a single call
-     to `done()` after running its own argument, so that `done()` is
-     enqueued last.
-
 Load and save
 
  * Not all edits cause the document to be marked dirty.  TinyMCE events are
