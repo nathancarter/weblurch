@@ -4,8 +4,8 @@
 Pull in the utility functions in `phantom-utils` that make it easier to
 write the tests below.
 
-    { phantomDescribe, pageDo, pageExpects, inPage,
-      pageExpectsError } = require './phantom-utils'
+    { phantomDescribe, pageDo, pageExpects, inPage, pageWaitFor,
+      pageExpectsError, pageType, pageKey } = require './phantom-utils'
 
 <font color='red'>Right now this specification file is almost a stub.  It
 will be enhanced later with real tests of the Groups plugin.  For now, it
@@ -63,3 +63,31 @@ should do nothing.  Then calls to `nextFreeId` should yield 2, 4, 5, 6, ...
             pageExpects ( -> window.gr.nextFreeId() ), 'toEqual', 4
             pageExpects ( -> window.gr.nextFreeId() ), 'toEqual', 5
             pageExpects ( -> window.gr.nextFreeId() ), 'toEqual', 6
+
+### wraps selections in groups
+
+This auxiliary function creates the HTML code for a grouper, for use in the
+subsequent tests.
+
+        grouper = ( type, id ) ->
+            "<img id=\"#{type}#{id}\" class=\"grouper me\" src=\"images/red-bracket-#{type}.png\" alt=\"\" />"
+
+We test here the `groupCurrentSelection()` method of the Groups plugin.  It
+does exactly what its name says; it wraps the current selection in a group.
+We test here that this happens correctly in several situations.
+
+        it 'wraps selections in groups', inPage ->
+            pageExpects ( -> tinymce.activeEditor.getContent() ),
+                'toEqual', ''
+            pageType 'ONETWOTHR3'
+            pageExpects ( -> tinymce.activeEditor.getContent() ),
+                'toEqual', '<p>ONETWOTHR3</p>'
+            pageKey pageKey.left for i in [1..4]
+            pageKey pageKey.left, pageKey.shift for i in [1..3]
+            pageExpects ( -> tinymce.activeEditor.getContent() ),
+                'toEqual', '<p>ONETWOTHR3</p>'
+            pageExpects ( -> tinymce.activeEditor.selection.getContent() ),
+                'toEqual', 'TWO'
+            pageDo -> tinymce.activeEditor.buttons.me.onclick()
+            pageExpects ( -> tinymce.activeEditor.getContent() ), 'toEqual',
+                "<p>ONE#{grouper 'open', 0}TWO#{grouper 'close', 0}THR3</p>"

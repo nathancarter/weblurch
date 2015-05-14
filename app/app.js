@@ -7,7 +7,9 @@
   Groups = (function() {
     function Groups(editor) {
       this.editor = editor;
+      this.scanDocument = __bind(this.scanDocument, this);
       this.hideOrShowGroupers = __bind(this.hideOrShowGroupers, this);
+      this.allGroupers = __bind(this.allGroupers, this);
       this.groupCurrentSelection = __bind(this.groupCurrentSelection, this);
       this.addGroupType = __bind(this.addGroupType, this);
       this.setUsedID = __bind(this.setUsedID, this);
@@ -94,18 +96,14 @@
     };
 
     Groups.prototype.groupCurrentSelection = function(type) {
-      var close, content, cursor, groupers, hide, id, open;
+      var close, content, cursor, hide, id, open, _ref, _ref1, _ref2;
       if (!this.groupTypes.hasOwnProperty(type)) {
         return;
       }
-      groupers = $(this.editor.getDoc().getElementsByClassName('grouper'));
-      hide = ($(groupers != null ? groupers[0] : void 0)).hasClass('hide');
-      hide = hide ? ' hide' : '';
-      open = this.groupTypes[type]['open-img'] || 'images/red-bracket-open.png';
-      close = this.groupTypes[type]['close-img'] || 'images/red-bracket-close.png';
+      hide = ($((_ref = this.allGroupers()) != null ? _ref[0] : void 0)).hasClass('hide');
       id = this.nextFreeId();
-      open = "<img src='" + open + "' class='grouper " + type + hide + "' id='open" + id + "'>";
-      close = "<img src='" + close + "' class='grouper " + type + hide + "' id='close" + id + "'>";
+      open = this.grouperHTML(type, (_ref1 = this.groupTypes[type]['open-img']) != null ? _ref1 : 'images/red-bracket-open.png', 'open', id, hide);
+      close = this.grouperHTML(type, (_ref2 = this.groupTypes[type]['close-img']) != null ? _ref2 : 'images/red-bracket-close.png', 'close', id, hide);
       cursor = '<span id="put_cursor_here">\u200b</span>';
       content = this.editor.selection.getContent();
       this.editor.insertContent(open + content + cursor + close);
@@ -114,14 +112,73 @@
       return cursor.remove();
     };
 
+    Groups.prototype.grouperHTML = function(typeName, image, openClose, id, hide) {
+      if (hide == null) {
+        hide = true;
+      }
+      hide = hide ? ' hide' : '';
+      return "<img src='" + image + "' class='grouper " + typeName + hide + "' id='" + openClose + id + "'>";
+    };
+
+    Groups.prototype.grouperInfo = function(grouper) {
+      var info;
+      info = /^(open|close)([0-9]+)$/.exec(grouper != null ? typeof grouper.getAttribute === "function" ? grouper.getAttribute('id') : void 0 : void 0);
+      if (info) {
+        return {
+          type: info[1],
+          id: info[2]
+        };
+      } else {
+        return null;
+      }
+    };
+
+    Groups.prototype.allGroupers = function() {
+      return this.editor.getDoc().getElementsByClassName('grouper');
+    };
+
     Groups.prototype.hideOrShowGroupers = function() {
       var groupers;
-      groupers = $(this.editor.getDoc().getElementsByClassName('grouper'));
+      groupers = $(this.allGroupers());
       if (($(groupers != null ? groupers[0] : void 0)).hasClass('hide')) {
         return groupers.removeClass('hide');
       } else {
         return groupers.addClass('hide');
       }
+    };
+
+    Groups.prototype.scanDocument = function() {
+      var gpStack, grouper, groupers, idStack, index, info, _i, _len, _results;
+      groupers = Array.prototype.slice.apply(this.allGroupers());
+      idStack = [];
+      gpStack = [];
+      for (_i = 0, _len = groupers.length; _i < _len; _i++) {
+        grouper = groupers[_i];
+        if ((info = this.grouperInfo(grouper)) == null) {
+          ($(grouper)).remove();
+        } else if (info.type === 'open') {
+          idStack.unshift(info.id);
+          gpStack.unshift(grouper);
+        } else {
+          index = idStack.indexOf(info.id);
+          if (index === -1) {
+            ($(grouper)).remove();
+          } else {
+            while (idStack[0] !== info.id) {
+              idStack.shift();
+              ($(gpStack.shift())).remove();
+            }
+            idStack.shift();
+            gpStack.shift();
+          }
+        }
+      }
+      _results = [];
+      while (idStack.length > 0) {
+        idStack.shift();
+        _results.push(($(gpStack.shift())).remove());
+      }
+      return _results;
     };
 
     return Groups;

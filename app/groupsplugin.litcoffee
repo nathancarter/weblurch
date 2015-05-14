@@ -144,22 +144,16 @@ Ignore attempts to insert invalid group types.
 Determine whether existing groupers are hidden or not, so that we insert the
 new ones to match.
 
-            groupers = $ @editor.getDoc().getElementsByClassName 'grouper'
-            hide = ( $ groupers?[0] ).hasClass 'hide'
-            hide = if hide then ' hide' else ''
+            hide = ( $ @allGroupers()?[0] ).hasClass 'hide'
 
 Create data to be used for open and close groupers, a cursor placeholder,
 and the current contents of the cursor selection.
 
-            open = @groupTypes[type]['open-img'] or
-                'images/red-bracket-open.png'
-            close = @groupTypes[type]['close-img'] or
-                'images/red-bracket-close.png'
             id = @nextFreeId()
-            open = "<img src='#{open}' class='grouper #{type}#{hide}'
-                         id='open#{id}'>"
-            close = "<img src='#{close}' class='grouper #{type}#{hide}'
-                          id='close#{id}'>"
+            open = @grouperHTML type, @groupTypes[type]['open-img'] ? \
+                'images/red-bracket-open.png', 'open', id, hide
+            close = @grouperHTML type, @groupTypes[type]['close-img'] ? \
+                'images/red-bracket-close.png', 'close', id, hide
             cursor = '<span id="put_cursor_here">\u200b</span>'
             content = @editor.selection.getContent()
 
@@ -175,16 +169,86 @@ deleting it.
             @editor.selection.select cursor.get 0
             cursor.remove()
 
+The above method uses the following auxiliary method, which is followed by
+its inverse.
+
+        grouperHTML: ( typeName, image, openClose, id, hide = yes ) ->
+            hide = if hide then ' hide' else ''
+            "<img src='#{image}' class='grouper #{typeName}#{hide}'
+                  id='#{openClose}#{id}'>"
+        grouperInfo: ( grouper ) ->
+            info = /^(open|close)([0-9]+)$/.exec grouper?.getAttribute? 'id'
+            if info then type : info[1], id : info[2] else null
+
 ## Hiding and showing "groupers"
 
 The word "grouper" refers to the objects that form the boundaries of a group, and thus define the group's extent.  Each is an image with specific classes that define its partner, type, visibility, etc.  The following method applies or removes the visibility flag to all groupers at once, thus toggling their visibility in the document.
 
+        allGroupers: => @editor.getDoc().getElementsByClassName 'grouper'
         hideOrShowGroupers: =>
-            groupers = $ @editor.getDoc().getElementsByClassName 'grouper'
+            groupers = $ @allGroupers()
             if ( $ groupers?[0] ).hasClass 'hide'
                 groupers.removeClass 'hide'
             else
                 groupers.addClass 'hide'
+
+## Scanning
+
+Scanning is the process of reading the entire document and observing where
+groupers lie.  This has several purposes, including verifying that groups
+are well-formed (i.e., no unpaired groupers, no half-nesting), maintaining
+an in-memory hierarchy of Group objects, and more.
+
+        scanDocument: =>
+            groupers = Array::slice.apply @allGroupers()
+            idStack = [ ]
+            gpStack = [ ]
+
+Scanning processes each grouper in the document.
+
+            for grouper in groupers
+
+If it had the grouper class but wasn't really a grouper, delete it.
+
+                if not ( info = @grouperInfo grouper )?
+                    ( $ grouper ).remove()
+
+If it's an open grouper, push it onto the stack of nested ids we're
+tracking.
+
+                else if info.type is 'open'
+                    idStack.unshift info.id
+                    gpStack.unshift grouper
+
+Otherwise, it's a close grouper.  If it doesn't have a corresponding open
+grouper that we've already seen, delete it.
+
+                else
+                    index = idStack.indexOf info.id
+                    if index is -1
+                        ( $ grouper ).remove()
+
+If its corresponding open grouper wasn't the most recent thing we've seen,
+delete everything that's intervening, because they're incorrectly
+positioned.
+
+                    else
+                        while idStack[0] isnt info.id
+                            idStack.shift()
+                            ( $ gpStack.shift() ).remove()
+
+Then allow the grouper and its partner to remain in the document, and pop
+their id off the stack, because we've moved past the interior of that group.
+
+                        idStack.shift()
+                        gpStack.shift()
+
+Any groupers lingering on the "open" stack have no corresponding close
+groupers, and must therefore be deleted.
+
+            while idStack.length > 0
+                idStack.shift()
+                ( $ gpStack.shift() ).remove()
 
 <font color=red>This class is not yet complete. See [the project
 plan](plan.md) for details of what's to come.</font>
