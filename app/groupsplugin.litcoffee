@@ -14,11 +14,37 @@ It assumes that TinyMCE has been loaded into the global namespace, so that
 it can access it.  It also requires [the overlay
 plugin](overlayplugin.litcoffee) to be loaded in the same editor.
 
+# `Group` class
+
+This file defines two classes, this one called `Group` and another
+([below](#groups-class)) called `Groups`.  They are obviously quite
+similarly named, but here is the distinction:  An instance of the `Group`
+class represents a single section of text within the document that the user
+has "grouped" together.  Thus each document may have zero or more such
+instances.  Each editor, however, gets only one instance of the `Groups`
+class, which manages all the `Group` instances in that editor's document.
+
+## Constructor
+
+    class Group
+
+The constructor takes as parameters the two DOM nodes that are its open and
+close groupers (i.e., group boundary markers), respectively.  It does not
+validate that these are indeed open and close grouper nodes, but just stores
+them for later lookup.
+
+        constructor: ( @open, @close ) ->
+            'stub'
+
+<font color=red>This class is not yet complete. See [the project
+plan](plan.md) for details of what's to come.</font>
+
 # `Groups` class
 
-We begin by defining a class that will encapsulate all the functionality
-about groups in the editor.  An instance of this class will be stored as a
-member in the TinyMCE editor object.
+We then define a class that will encapsulate all the functionality about
+groups in the editor.  An instance of this class will be stored as a member
+in the TinyMCE editor object.  It will keep track of many instances of the
+`Group` class.
 
 This convention is adopted for all TinyMCE plugins in the Lurch project;
 each will come with a class, and an instance of that class will be stored as
