@@ -46,8 +46,6 @@ Groups
 
 Create a Groups plugin with the following features.
 
- * Extend that class with a method that computes the ID of the group, if it
-   can be determined from the open grouper, or undefined if not.
  * Add to the Groups class a method for registering a Group instance.  This
    will do the following:
    * Accept the open and close groupers as parameters.
