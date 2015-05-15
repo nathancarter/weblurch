@@ -199,7 +199,7 @@ its inverse.
                   id='#{openClose}#{id}'>"
         grouperInfo: ( grouper ) ->
             info = /^(open|close)([0-9]+)$/.exec grouper?.getAttribute? 'id'
-            if info then type : info[1], id : info[2] else null
+            if info then type : info[1], id : parseInt info[2] else null
 
 ## Hiding and showing "groupers"
 
@@ -216,14 +216,17 @@ The word "grouper" refers to the objects that form the boundaries of a group, an
 ## Scanning
 
 Scanning is the process of reading the entire document and observing where
-groupers lie.  This has several purposes, including verifying that groups
-are well-formed (i.e., no unpaired groupers, no half-nesting), maintaining
-an in-memory hierarchy of Group objects, and more.
+groupers lie.  This has several purposes.
+ * It verifyies that groups are well-formed (i.e., no unpaired groupers, no
+   half-nesting).
+ * It ensures the list of `@freeIds` is up-to-date.
+ * It maintains an in-memory hierarchy of Group objects (to be implemented).
 
         scanDocument: =>
             groupers = Array::slice.apply @allGroupers()
             idStack = [ ]
             gpStack = [ ]
+            usedIds = [ ]
 
 Scanning processes each grouper in the document.
 
@@ -261,7 +264,7 @@ positioned.
 Then allow the grouper and its partner to remain in the document, and pop
 their id off the stack, because we've moved past the interior of that group.
 
-                        idStack.shift()
+                        usedIds.push idStack.shift()
                         gpStack.shift()
 
 Any groupers lingering on the "open" stack have no corresponding close
@@ -270,6 +273,20 @@ groupers, and must therefore be deleted.
             while idStack.length > 0
                 idStack.shift()
                 ( $ gpStack.shift() ).remove()
+
+Now update the `@freeIds` list to be the complement of the `usedIds` array.
+
+            usedIds.sort()
+            count = 0
+            @freeIds = [ ]
+            while usedIds.length > 0
+                if count is usedIds[0]
+                    usedIds.shift()
+                else
+                    @freeIds.push count
+                count++
+                if count > 20 then break
+            @freeIds.push count
 
 <font color=red>This class is not yet complete. See [the project
 plan](plan.md) for details of what's to come.</font>

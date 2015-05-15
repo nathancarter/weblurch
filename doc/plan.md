@@ -46,9 +46,6 @@ Groups
 
 Create a Groups plugin with the following features.
 
- * Extend the scanning routine to recompute the list of unused ID numbers,
-   so that after loading a document you can ensure that that list is
-   up-to-date.
  * Create a Group class distinct from the Groups class.  Its constructor
    takes two DOM nodes, an open and close grouper.  It performs no
    validation on whether these have any particular form at all.
