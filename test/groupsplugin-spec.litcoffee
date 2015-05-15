@@ -7,9 +7,13 @@ write the tests below.
     { phantomDescribe, pageDo, pageExpects, inPage, pageWaitFor,
       pageExpectsError, pageType, pageKey } = require './phantom-utils'
 
-<font color='red'>Right now this specification file is almost a stub.  It
-will be enhanced later with real tests of the Groups plugin.  For now, it
-just does one or two simple tests that can be replaced later.</font>
+These auxiliary function creates the HTML code for groupers, for use in the
+tests below.
+
+    grouper = ( type, id ) ->
+        "<img id=\"#{type}#{id}\" class=\"grouper me\" src=\"images/red-bracket-#{type}.png\" alt=\"\" />"
+    open = ( id ) -> grouper 'open', id
+    close = ( id ) -> grouper 'close', id
 
 ## Groups plugin
 
@@ -23,6 +27,68 @@ Just verify that the active TinyMCE editor has a Groups plugin.
 
         it 'should be installed', inPage ->
             pageExpects -> tinymce.activeEditor.Groups
+
+## Group class
+
+Some aspects of this class can be tested independently of the editor, so we
+do so here, to do some tests in the simplest context possible.
+
+    phantomDescribe 'Group class', './app/index.html', ->
+
+First, a very simple test of the constructor, just ensuring that it's
+recording its two inputs.
+
+        it 'is constructible from any two inputs', inPage ->
+            pageDo -> window._tmp = new Group 1, 2
+            pageExpects ( -> window._tmp.open ), 'toEqual', 1
+            pageExpects ( -> window._tmp.close ), 'toEqual', 2
+            pageDo ->
+                open = document.createElement 'span'
+                open.textContent = 'uno'
+                close = document.createElement 'p'
+                close.setAttribute 'align', 'right'
+                window._tmp = new Group open, close
+            pageExpects ( -> window._tmp.open.outerHTML ), 'toEqual',
+                '<span>uno</span>'
+            pageExpects ( -> window._tmp.close.outerHTML ), 'toEqual',
+                '<p align="right"></p>'
+
+Second, we verify that `Group` instances can correctly look up their ID in
+their open groupers.
+
+        it 'can look up its ID from its open grouper', inPage ->
+            pageDo ->
+                htmlToNode = ( html ) ->
+                    container = document.createElement 'span'
+                    container.innerHTML = html
+                    container.childNodes[0]
+                open = htmlToNode grouperHTML 'test', 'open', 5
+                close = htmlToNode grouperHTML 'test', 'close', 5
+                window._tmp = new Group open, close
+            pageExpects ( -> window._tmp.id() ), 'toEqual', 5
+            pageDo ->
+                htmlToNode = ( html ) ->
+                    container = document.createElement 'span'
+                    container.innerHTML = html
+                    container.childNodes[0]
+                open = htmlToNode grouperHTML 'test', 'open', 2
+                close = htmlToNode grouperHTML 'test', 'close', 6
+                window._tmp = new Group open, close
+            pageExpects ( -> window._tmp.id() ), 'toEqual', 2
+
+Last, we verify that `Group` instances with invalid open groupers return
+null when we look up their IDs.
+
+        it 'returns a null ID if invalid open grouper', inPage ->
+            pageDo ->
+                htmlToNode = ( html ) ->
+                    container = document.createElement 'span'
+                    container.innerHTML = html
+                    container.childNodes[0]
+                open = 10
+                close = htmlToNode grouperHTML 'test', 'close', 5
+                window._tmp = new Group open, close
+            pageExpects ( -> window._tmp.id() ), 'toBeNull'
 
 ## ID tracking methods
 
@@ -71,14 +137,6 @@ should do nothing.  Then calls to `nextFreeId` should yield 2, 4, 5, 6, ...
             pageExpects ( -> window.gr.nextFreeId() ), 'toEqual', 6
 
 ## Grouping routines
-
-These auxiliary function creates the HTML code for groupers, for use in the
-subsequent tests.
-
-    grouper = ( type, id ) ->
-        "<img id=\"#{type}#{id}\" class=\"grouper me\" src=\"images/red-bracket-#{type}.png\" alt=\"\" />"
-    open = ( id ) -> grouper 'open', id
-    close = ( id ) -> grouper 'close', id
 
 Now we test the foundation of the Groups plugin, those routines that wrap
 sections of the document in groupers.
