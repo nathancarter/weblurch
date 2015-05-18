@@ -6,7 +6,7 @@ write the tests below.
 
     { phantomDescribe, pageDo, pageExpects, inPage, pageWaitFor,
       pageExpectsError, pageType, pageKey } = require './phantom-utils'
-    { transport } = require './app-test-utils'
+    { transport, shtml } = require './app-test-utils'
 
 These auxiliary function creates the HTML code for groupers, for use in the
 tests below.
@@ -190,18 +190,10 @@ desire.
 
         it 'wrap selections in groups across elements', inPage ->
 
-We will make use of the following auxiliary function for simplifying HTML
-strings, and copy it into the page's JavaScript environment as well.
+We will make use of the HTML-simplfying routine `shtml` in the following
+tests, so we need to be sure it's defined in the PhantomJS environment as
+well.
 
-            shtml = ( html ) ->
-                html = html.replace />\s*</g, '><'
-                old = ''
-                while html isnt old
-                    old = html
-                    html = html.replace \
-                        /<span[^>]+Apple-style-span[^>]+>(.*?)<\/span>/g,
-                        '$1'
-                html
             pageDo transport shtml, 'shtml'
 
 Ensure the editor is empty, then insert some complex content.

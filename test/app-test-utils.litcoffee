@@ -24,3 +24,19 @@ variables.)
 
     exports.transport = ( func, name ) ->
         eval "(function(){ window.#{name}=#{func.toString()}; })"
+
+## Simplifying HTML
+
+When comparing two strings containing HTML code, we want to ignore some
+irrelevant differences.  The following function simplifies HTML by removing
+all space between tags and all Apple-style spans that some WebKit-based
+browsers insert (including the headless testing browser in PhantomJS).
+
+    exports.shtml = ( html ) ->
+        html = html.replace />\s*</g, '><'
+        old = ''
+        while html isnt old
+            old = html
+            html = html.replace \
+                /<span[^>]+Apple-style-span[^>]+>(.*?)<\/span>/g, '$1'
+        html

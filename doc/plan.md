@@ -44,8 +44,6 @@ Groups
 
 These tools make testing the app UI easier.
 
- * Move the `shtml` function there (no need to keep two versions, now that
-   it's possible to inject it very easily).
  * Move `pageKey` and `pageType` there, perhaps renamed.
  * Create a function for invoking any editor command by name.
 
