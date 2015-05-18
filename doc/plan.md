@@ -44,9 +44,6 @@ Groups
 
 These tools make testing the app UI easier.
 
- * In that file, implement a routine for injecting an arbitrary function
-   into the page, assigned to a given global name.  It is probably just the
-   one-liner `pageDo eval "(function(){ window.#{name}=#{fn}; })()"`.
  * Move the `shtml` function there (no need to keep two versions, now that
    it's possible to inject it very easily).
  * Move `pageKey` and `pageType` there, perhaps renamed.
