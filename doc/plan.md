@@ -44,7 +44,6 @@ Groups
 
 These tools make testing the app UI easier.
 
- * Move `pageKey` and `pageType` there, perhaps renamed.
  * Create a function for invoking any editor command by name.
 
 ## Creating a test-building UI
