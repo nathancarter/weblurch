@@ -44,10 +44,6 @@ Groups
 
 These tools make testing the app UI easier.
 
- * Create `page-testing-utils.litcoffee` in the `test/` folder, much like
-   `phantom-utils.litcoffee` is now.  As you implement each of the following
-   things in that file, go to all the places where you currently use the
-   old versions of these things and update them to the new versions.
  * In that file, implement a routine for injecting an arbitrary function
    into the page, assigned to a given global name.  It is probably just the
    one-liner `pageDo eval "(function(){ window.#{name}=#{fn}; })()"`.
