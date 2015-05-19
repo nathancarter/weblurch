@@ -23,22 +23,12 @@ Load and save
    Use the responses from that to get this
    problem fixed in Lurch, either by updating to a fixed version of TinyMCE
    or by installing a workaround here.
- * Document element is far smaller vertically than it ought to be (does not
-   take up 100% of height).
  * Using the keyboard shortcut for New or Open on Mac triggers the Chrome
    behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
    menu.  See [my question about this on the TinyMCE forum,](
    http://www.tinymce.com/forum/viewtopic.php?pid=116179) and the
    StackOverflow page to which it links with information on how you might go
    about building a workaround if one doesn't exist already.
-
-Groups
-
- * Insert a table with some text in two cells.  Highlight both cells and
-   wrap them in a group.  It forces everything into the first cell.  Rework
-   `groupCurrentSelection()` so that it doesn't replace existing content,
-   but just inserts groupers on each end.  Although that might come with
-   its own problems of splitting the change into two parts...?
 
 ## Creating a test-building UI
 
