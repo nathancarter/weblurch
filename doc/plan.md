@@ -40,12 +40,6 @@ Groups
    but just inserts groupers on each end.  Although that might come with
    its own problems of splitting the change into two parts...?
 
-## Extensions to test suite
-
-These tools make testing the app UI easier.
-
- * Create a function for invoking any editor command by name.
-
 ## Creating a test-building UI
 
 The following UI will help those who are not project developers create unit
