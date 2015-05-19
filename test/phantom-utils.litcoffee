@@ -351,12 +351,17 @@ itself: `left`, `right`, `up`, `down`, `backspace`, `delete`, `tab`, `home`,
     exports.pageKey.end = 16777233
     exports.pageKey.enter = 16777221
 
-When you need lower-level functionality, refer to [the documentation on the
-PhantomJS homepage](
-http://phantomjs.org/api/webpage/method/send-event.html).
+The third and fourth are for clicking or double-clicking anywhere in the
+browser.
 
-In particular, not the useful command `P.page.sendEvent 'click', x, y`,
-which can be invoked from tests using `@page.sendEvent 'click', x, y`.
+    pageClick = ( x, y ) ->
+        P.page.sendEvent 'click', x, y
+        nextJob()
+    exports.pageClick = ( x, y ) -> addJob pageClick, x, y
+    pageDoubleClick = ( x, y ) ->
+        P.page.sendEvent 'doubleclick', x, y
+        nextJob()
+    exports.pageDoubleClick = ( x, y ) -> addJob pageDoubleClick, x, y
 
 # Jasmine modifications
 

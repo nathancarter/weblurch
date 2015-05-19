@@ -45,6 +45,13 @@ Now we setup timers that (in 0.1 seconds) will install in the editor
 listeners for various events that we want to record.
 
             do installListeners = ->
+                notSupported = ( whatYouDid ) ->
+                    alert "You #{whatYouDid}, which the test recorder does
+                        not yet support.  The current test has therefore
+                        become corrupted, and you should reload this page
+                        and start your test again.  You will need to limit
+                        yourself to using only supported keys, menu items,
+                        and mouse operations."
                 try
 
 If a keypress occurs for a key that can be typed (letter, number, space),
@@ -57,11 +64,8 @@ user that we can't yet record it, so the test is corrupted.
                             testwin.editorKeyPress event.keyCode,
                                 event.shiftKey, event.ctrlKey, event.altKey
                         else
-                            alert "You pressed the key with code
-                                #{event.keyCode}, which the test-recorder
-                                does not currently support.  The current
-                                test has been corrupted and you should
-                                reload this page and start again."
+                            notSupported "pressed the key with code
+                                #{event.keyCode}"
 
 If a keyup occurs for any key, do one of three things.  First, if it's a
 letter, ignore it, because the previous case handles that better.  Second,
@@ -90,10 +94,26 @@ so the test is corrupted.
                                 conversion[event.keyCode],
                                 event.shiftKey, event.ctrlKey, event.altKey
                         else
-                            alert "You pressed the key with code
-                                #{event.keyCode}, which the test-recorder
-                                does not currently support.  The current
-                                test has been corrupted and you should
-                                reload this page and start again."
+                            notSupported "pressed the key with code
+                                #{event.keyCode}"
+
+Tell the test recorder about any mouse clicks in the editor.  If the user
+is holding a ctrl, alt, or shift key while clicking, we cannot currently
+support that, so we warn the user if they try to record such an action.
+
+                    tinymce.activeEditor.on 'click', ( event ) ->
+                        if event.shiftKey
+                            notSupported "shift-clicked"
+                        else if event.ctrlKey
+                            notSupported "ctrl-clicked"
+                        else if event.altKey
+                            notSupported "alt-clicked"
+                        else
+                            testwin.editorMouseClick event.clientX,
+                                event.clientY
+
+If any of the above handler installations fail, the reason is probably that
+the editor hasn't been initialized yet.  So just wait 0.1sec and retry.
+
                 catch e
                     setTimeout installListeners, 100

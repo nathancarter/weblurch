@@ -73,6 +73,9 @@ representation of the `testState` global variable.
                 else if step.type is 'typing'
                     writeStep 'Simulate typing in the editor.',
                         "pageType '#{escapeApos step.content}'"
+                else if step.type is 'click'
+                    writeStep 'Simulate a mouse click in the editor.',
+                        "pageClick #{step.x}, #{step.y}"
                 # more cases to come
                 else
                     writeStep 'Unknown step type:',
@@ -155,4 +158,10 @@ handlers provided below, which the main page calls.
                 shift : shift
                 ctrl : ctrl
                 alt : alt
+        update()
+    window.editorMouseClick = ( x, y ) ->
+        testState.steps.push
+            type : 'click'
+            x : x
+            y : y
         update()
