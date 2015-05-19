@@ -49,6 +49,16 @@ representation of the `testState` global variable.
                     string = "'#{escapeApos step.content}'"
                     writeStep 'Check to be sure the editor contains the
                         correct content.', "pageExpects allContent, 'toBeSimilarHTML',\n#{indent string}"
+                else if step.type is 'wrong contents'
+                    string = "'TO BE EDITED: #{escapeApos step.content}'"
+                    writeStep "At this point the editor contains incorrect
+                        contents.  (The code below will need to be edited
+                        later to replace the incorrect expectation with a
+                        correct one.)\n
+                        \nExplanation of how the expectation below is
+                        incorrect:  #{step.explanation}",
+                        "pageExpects allContent,
+                        'toBeSimilarHTML',\n#{indent string}"
                 # more cases to come
                 else
                     writeStep 'Unknown step type:',
@@ -90,3 +100,20 @@ the editor as they stand.
                 type : 'check contents'
                 content : window.opener.tinymce.activeEditor.getContent()
             update()
+
+When the user clicks the "Call Editor Contents Incorrect" button, we add a
+step to the list of test steps, containing within it the full contents of
+the editor as they stand, plus an explanation the user provides about why
+the editor has incorrect contents.
+
+        ( $ '#contentsIncorrect' ).on 'click', ->
+            explanation = prompt 'Please provide an explanation of why the
+                editor\'s contents are incorrect.  Include a suggestion of
+                what they ought to be, if possible.', ''
+            if explanation isnt null
+                testState.steps.push
+                    type : 'wrong contents'
+                    content :
+                        window.opener.tinymce.activeEditor.getContent()
+                    explanation : explanation
+                update()

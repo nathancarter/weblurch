@@ -38,18 +38,6 @@ will create an interface in which testers can record keystrokes, mouse
 clicks, and other events in the form of code that can be dropped directly
 into the test suite.
 
- * Below those controls, place a button for inserting an assertion that the
-   editor's contents are incorrect as they are now.
- * On click of that button, add a step of type "wrong contents", with the
-   data being the editor's current contents, and further data being an
-   explanation of why those contents are wrong, which you get by prompting
-   the user for it.
- * Extend the update function to write code for steps of type "check
-   contents".  It should write a `pageExpects` call, but the value against
-   which to check the editor contents should be
-   "something besides #{editorContents}", followed by an unindented line
-   containing the user's explanation of why the editor's contents are wrong.
-   This can be used later to tweak the test to be what it ought to be.
  * When you install this test UI, also install a keyboard event handler that
    notices when the main editor receives keypress events.  It should either
    pop up an alert for characters it can't handle, or add a new step type
