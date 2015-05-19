@@ -38,17 +38,6 @@ will create an interface in which testers can record keystrokes, mouse
 clicks, and other events in the form of code that can be dropped directly
 into the test suite.
 
- * Next create a read-only textarea below that and give it a global name.
-   Put a title above it called "Recorded test code:".
- * Create a global object for storing the test state.
- * Create an update function that writes the current test state into that
-   textarea as code.  It should only put the focus back in the editor.
-   Later when you update this function, always end with that step.
- * Below the instructions, add a Set Test Title button.  Running it should
-   prompt the user for the test title, save it in that global test state
-   variable, then call the update function.
- * Change the update function to write the test title as `it "title here",
-   inPage ->` with null as the function body.  It should still write that
  * Below those controls, place an Insert Comment button.
  * Add to the test state a "steps" array.
  * On click of the button, push an object onto the steps array, of type

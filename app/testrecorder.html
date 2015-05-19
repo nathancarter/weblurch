@@ -3,11 +3,19 @@
         <link rel='stylesheet' href='default.css'/>
         <script src='http://code.jquery.com/jquery-2.1.1.min.js'>
         </script>
+        <script src='./testrecorder.solo.min.js'></script>
     </head>
     <body>
-        <h1>Test Recording</h1>
-        <p>This window is for recording tests of the webLurch app.
-            Scroll to the bottom for detailed instructions.</p>
-        <p>(This page is not yet complete.)</p>
+        <div width='100%'>
+            <h1>Test Recording</h1>
+            <p>This window is for recording tests of the webLurch app.
+                Scroll to the bottom for detailed instructions.</p>
+            <input type='button' value='Set Test Title' id='setTitle'/>
+            <p><i>Recorded test code:</i></p>
+            <textarea id='testCode' readonly style='font-family:monospace'
+                      cols=50 rows=30>
+            </textarea>
+            <p>(This page is not yet complete.)</p>
+        </div>
     </body>
 </html>
