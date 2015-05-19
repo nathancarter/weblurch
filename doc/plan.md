@@ -38,15 +38,6 @@ will create an interface in which testers can record keystrokes, mouse
 clicks, and other events in the form of code that can be dropped directly
 into the test suite.
 
- * When you install this test UI, also install a keyboard event handler that
-   notices when the main editor receives keypress events.  It should either
-   pop up an alert for characters it can't handle, or add a new step type
-   (keypress) to the steps array.
- * Extend the update function to write code for steps of type keypress.  It
-   should call the old `pageKey` function, or whatever you've updated it to.
-   Precede such calls with explanations (in unindented text) of what the
-   code does.  If there are multiple `pageKey` events in a row, just put one
-   comment in front of the chain of them.
  * When you install this test UI, also install a mouse event handler that
    notices when the main editor receives mouse events.  It should either
    pop up an alert for events it can't handle, or add a new step of type

@@ -39,4 +39,48 @@ If the browser blocked it, notify the user.
                     this popup to use test-recording mode.'
 
 If the browser did not block it, then it is loaded.  It loads its own
-scripts.
+scripts for handling UI events for controls in the popup window.
+
+Now we setup timers that (in 0.1 seconds) will install in the editor
+listeners for various events that we want to record.
+
+            do installListeners = ->
+                try
+                    tinymce.activeEditor.on 'keypress', ( event ) ->
+                        letter = String.fromCharCode event.keyCode
+                        if /[A-Za-z0-9 ]/.test letter
+                            testwin.editorKeyPress event.keyCode,
+                                event.shiftKey, event.ctrlKey, event.altKey
+                        else
+                            alert "You pressed the key with code
+                                #{event.keyCode}, which the test-recorder
+                                does not currently support.  The current
+                                test has been corrupted and you should
+                                reload this page and start again."
+                    tinymce.activeEditor.on 'keyup', ( event ) ->
+                        letter = String.fromCharCode event.keyCode
+                        if /[A-Za-z0-9 ]/.test letter then return
+                        ignore = [ 16, 17, 18, 91 ] # shift, ctrl, alt, meta
+                        if event.keyCode in ignore then return
+                        conversion =
+                            8 : 'backspace'
+                            13 : 'enter'
+                            35 : 'end'
+                            36 : 'home'
+                            37 : 'left'
+                            38 : 'up'
+                            39 : 'right'
+                            40 : 'down'
+                            46 : 'delete'
+                        if conversion.hasOwnProperty event.keyCode
+                            testwin.editorKeyPress \
+                                conversion[event.keyCode],
+                                event.shiftKey, event.ctrlKey, event.altKey
+                        else
+                            alert "You pressed the key with code
+                                #{event.keyCode}, which the test-recorder
+                                does not currently support.  The current
+                                test has been corrupted and you should
+                                reload this page and start again."
+                catch e
+                    setTimeout installListeners, 100

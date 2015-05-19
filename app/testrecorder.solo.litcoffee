@@ -31,9 +31,10 @@ representation of the `testState` global variable.
             code = '(no steps recorded yet)'
         else
             writeStep = ( explanation, codeString ) ->
-                code += "\n#{explanation}\n"
+                if explanation?
+                    code += "\n#{explanation}\n"
                 if codeString?
-                    code += '\n'
+                    if explanation? then code += '\n'
                     for line in codeString.split '\n'
                         code += "        #{line}\n"
             escapeApos = ( text ) -> text.replace /'/g, '\\\''
@@ -42,7 +43,7 @@ representation of the `testState` global variable.
             code = '\nTest built with webLurch test-recording mode.\n\n'
             title = testState.title or 'untitled test'
             code += "    it '#{escapeApos title}', inPage ->\n"
-            for step in testState.steps
+            for step, index in testState.steps
                 if step.type is 'comment'
                     writeStep step.content
                 else if step.type is 'check contents'
@@ -59,10 +60,23 @@ representation of the `testState` global variable.
                         incorrect:  #{step.explanation}",
                         "pageExpects allContent,
                         'toBeSimilarHTML',\n#{indent string}"
+                else if step.type is 'key press'
+                    explanation = if index > 0 and \
+                        testState.steps[index-1].type is 'key press' \
+                        then null else 'Simulate pressing one or more keys
+                        in the editor.'
+                    args = "'#{step.content}'"
+                    if step.shift then args += ", 'shift'"
+                    if step.ctrl then args += ", 'ctrl'"
+                    if step.alt then args += ", 'alt'"
+                    writeStep explanation, "pageKey #{args}"
+                else if step.type is 'typing'
+                    writeStep 'Simulate typing in the editor.',
+                        "pageType '#{escapeApos step.content}'"
                 # more cases to come
                 else
                     writeStep 'Unknown step type:',
-                        "'#{escapeApos step.type}'"
+                        "'#{escapeApos step.type}'\n# #{step.content}"
         document.getElementById( 'testCode' ).textContent = code
 
 The update function should be called as soon as the page has loaded.
@@ -117,3 +131,28 @@ the editor has incorrect contents.
                         window.opener.tinymce.activeEditor.getContent()
                     explanation : explanation
                 update()
+
+## Events from the main page
+
+The page with the editor in it will send us various events, such as key
+presses and menu clicks.  We will record them as part of the test using the
+handlers provided below, which the main page calls.
+
+    window.editorKeyPress = ( keyCode, shift, ctrl, alt ) ->
+        letter = String.fromCharCode keyCode
+        if /[a-zA-Z0-9 ]/.test letter
+            if testState.steps.length > 0 and \
+               testState.steps[testState.steps.length-1].type is 'typing'
+                testState.steps[testState.steps.length-1].content += letter
+            else
+                testState.steps.push
+                    type : 'typing'
+                    content : letter
+        else
+            testState.steps.push
+                type : 'key press'
+                content : keyCode
+                shift : shift
+                ctrl : ctrl
+                alt : alt
+        update()

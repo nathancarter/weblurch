@@ -310,10 +310,8 @@ upper case letters, spaces, and digits.
 
     pageType = ( text ) ->
         for character in text
-            code = character.toUpperCase().charCodeAt 0
-            if ( '0'.charCodeAt( 0 ) <= code <= '9'.charCodeAt( 0 ) ) or
-               ( 'A'.charCodeAt( 0 ) <= code <= 'Z'.charCodeAt( 0 ) ) or
-               ( ' '.charCodeAt( 0 ) is code )
+            if /[A-Za-z0-9 ]/.test character
+                code = character.toUpperCase().charCodeAt 0
                 P.page.sendEvent 'keypress', code, null, null, 0
             else
                 throw Error 'Cannot type this into the page: ' + character
@@ -325,7 +323,8 @@ list of valid string arguments is available [here](
 http://phantomjs.org/api/webpage/method/send-event.html), but for some
 reason the alleged `page.events` object does not exist in this context.
 Thus I copy a selection of the most important ones into `export.pageKey`
-itself: `left`, `right`, `up`, `down`, `backspace`, `delete`, and `tab`.
+itself: `left`, `right`, `up`, `down`, `backspace`, `delete`, `tab`, `home`,
+`end`, and `enter`.
 
     pageKey = ( code, modifiers = 0 ) ->
         P.page.sendEvent 'keypress', code, null, null, modifiers
