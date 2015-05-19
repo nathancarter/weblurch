@@ -38,14 +38,6 @@ will create an interface in which testers can record keystrokes, mouse
 clicks, and other events in the form of code that can be dropped directly
 into the test suite.
 
- * Below those controls, place an Insert Comment button.
- * Add to the test state a "steps" array.
- * On click of the button, push an object onto the steps array, of type
-   comment, with text given by a prompt dialog shown to the user.
- * Extend the update function to write the body of the test function by
-   converting each element of the steps array into a code.  For now, we have
-   only comment step types.  They translate as unindented text, because the
-   test code is in literate CoffeeScript.
  * Below those controls, place a button for inserting an assertion that the
    editor's contents are correct as they are now.
  * On click of that button, add a step of type "check contents", with the

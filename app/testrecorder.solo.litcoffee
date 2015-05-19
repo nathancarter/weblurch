@@ -18,7 +18,7 @@ That mode is implemented in two script files:
 
 The following variable stores the test state.
 
-    testState = { }
+    testState = steps : [ ]
 
 ## Update function
 
@@ -33,14 +33,17 @@ representation of the `testState` global variable.
             code = '\nTest built with webLurch test-recording mode.\n\n'
             title = testState.title or 'untitled test'
             code += "    it '#{title}', inPage ->\n"
-            if ( testState.steps ? [ ] ).length is 0
-                code += "\nThere are no steps in this test yet.\n
-                         \n        null\n"
-            else
-                for step in testState.steps
-                    code += "\nPut a comment here about the next step.\n
-                             \n        'Test code would go here.'\n"
-                    # not yet fully implemented
+            writeStep = ( explanation, codeString ) ->
+                code += "\n#{explanation}\n"
+                if codeString?
+                    for line in codeString.split '\n'
+                        code += "\n        #{line}\n"
+            for step in testState.steps
+                if step.type is 'comment'
+                    writeStep step.content
+                # more cases to come
+                else
+                    writeStep 'Unknown step type:', "'#{step.type}'"
         document.getElementById( 'testCode' ).textContent = code
 
 The update function should be called as soon as the page has loaded.
@@ -49,12 +52,22 @@ The update function should be called as soon as the page has loaded.
 
 ## Button click handlers
 
+    $ ->
+
 When the user clicks the "Set Test Title" button, we prompt them for a
 title, then update the code in the output area to reflect the change.
 
-    $ ->
         ( $ '#setTitle' ).on 'click', ->
             newTitle = prompt 'Enter new test title', testState.title ? ''
             if newTitle isnt null
                 testState.title = newTitle
+                update()
+
+When the user clicks the "Add a Comment" button, we prompt them for its
+contents, then add it to the steps array as a comment.
+
+        ( $ '#addComment' ).on 'click', ->
+            content = prompt 'Enter your comment here', ''
+            if content isnt null
+                testState.steps.push { type : 'comment', content : content }
                 update()
