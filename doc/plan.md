@@ -38,14 +38,6 @@ will create an interface in which testers can record keystrokes, mouse
 clicks, and other events in the form of code that can be dropped directly
 into the test suite.
 
- * Create a new script in the `app/` folder that gets compiled into the app.
- * Write a function in it that adds a new frame construction around the main
-   app UI, with a second frame on the right for the test-recording UI.
- * If the query string is "test" then run this routine before/after the
-   `setup()` call, whichever works better as you test it out.
- * Give the test pane a title that makes it clear what it is, plus a line
-   that says to scroll to the bottom for further instructions.  We will add
-   those instructions later.
  * Next create a read-only textarea below that and give it a global name.
    Put a title above it called "Recorded test code:".
  * Create a global object for storing the test state.

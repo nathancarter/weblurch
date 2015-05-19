@@ -20,6 +20,13 @@ Create a `<textarea>` to be used as the editor.
         editor.setAttribute 'id', 'editor'
         document.body.appendChild editor
 
+If the query string is telling us to switch the app into test-recording
+mode, then do so.  This uses the main function defined in
+[testrecorder.litcoffee](./testrecorder.litcoffee), which does nothing
+unless the query string contains the code that invokes test-recording mode.
+
+        maybeSetupTestRecorder()
+
 Install a TinyMCE instance in that text area, with specific plugins, toolbar
 buttons, and context menu items as given below.
 
