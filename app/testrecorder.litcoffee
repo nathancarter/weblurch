@@ -46,6 +46,11 @@ listeners for various events that we want to record.
 
             do installListeners = ->
                 try
+
+If a keypress occurs for a key that can be typed (letter, number, space),
+tell the test recorder window about it.  For any other type of key, tell the
+user that we can't yet record it, so the test is corrupted.
+
                     tinymce.activeEditor.on 'keypress', ( event ) ->
                         letter = String.fromCharCode event.keyCode
                         if /[A-Za-z0-9 ]/.test letter
@@ -57,6 +62,14 @@ listeners for various events that we want to record.
                                 does not currently support.  The current
                                 test has been corrupted and you should
                                 reload this page and start again."
+
+If a keyup occurs for any key, do one of three things.  First, if it's a
+letter, ignore it, because the previous case handles that better.  Second,
+if it's shift/ctrl/alt/meta, ignore it.  Finally, if it's one of the special
+keys we can handle (arrows, backspace, etc.), notify the test recorder about
+it.  For any other type of key, tell the user that we can't yet record it,
+so the test is corrupted.
+
                     tinymce.activeEditor.on 'keyup', ( event ) ->
                         letter = String.fromCharCode event.keyCode
                         if /[A-Za-z0-9 ]/.test letter then return
