@@ -213,6 +213,10 @@ for `check` enables the idiom `pageExpects -> expression` as a shortcut for
                 result = result[1]
             else
                 result = undefined
+            if check is 'toBeSimilarHTML'
+                check = 'toEqual'
+                result = simplifiedHTML "#{result}"
+                args[0] = simplifiedHTML "#{args[0]}"
             if typeof result isnt 'undefined'
                 expect( result )[check](args...)
             else
@@ -279,11 +283,12 @@ Furthermore, if some setup code needs to be run in the page, which does not
 require any tests to be called on it, but still needs to run without errors,
 then the following may be useful.
 
-    pageDo = ( func ) ->
+    pageDo = ( func, args... ) ->
         P.page.evaluate func, ( err, result ) ->
             expect( err ).toBeNull()
             nextJob()
-    exports.pageDo = ( func ) -> addJob pageDo, func
+        , args...
+    exports.pageDo = ( func, args... ) -> addJob pageDo, func, args...
 
 One can then do the following.
 
@@ -320,12 +325,16 @@ list of valid string arguments is available [here](
 http://phantomjs.org/api/webpage/method/send-event.html), but for some
 reason the alleged `page.events` object does not exist in this context.
 Thus I copy a selection of the most important ones into `export.pageKey`
-itself: `Left`, `Right`, `Up`, `Down`, `Backspace`, `Delete`, and `Tab`.
+itself: `left`, `right`, `up`, `down`, `backspace`, `delete`, and `tab`.
 
     pageKey = ( code, modifiers = 0 ) ->
         P.page.sendEvent 'keypress', code, null, null, modifiers
         nextJob()
     exports.pageKey = ( code, modifiers = 0 ) ->
+        if typeof code is 'string'
+            code = exports.pageKey[code.toLowerCase()]
+        if typeof modifiers is 'string'
+            modifiers = exports.pageKey[modifiers.toLowerCase()]
         addJob pageKey, code, modifiers
     exports.pageKey.shift = 0x02000000
     exports.pageKey.ctrl = 0x04000000
@@ -392,3 +401,19 @@ suite is invoked.
     oldObj.reportRunnerResults = ( arg ) ->
         P?.phantom?.exit()
         oldFn2.apply oldObj, [ arg ]
+
+# Utilities
+
+When comparing two strings containing HTML code, we want to ignore some
+irrelevant differences.  The following function simplifies HTML by removing
+all space between tags and all Apple-style spans that some WebKit-based
+browsers insert (including the headless testing browser in PhantomJS).
+
+    exports.simplifiedHTML = simplifiedHTML = ( html ) ->
+        html = html.replace />\s*</g, '><'
+        old = ''
+        while html isnt old
+            old = html
+            html = html.replace \
+                /<span[^>]+Apple-style-span[^>]+>(.*?)<\/span>/g, '$1'
+        html

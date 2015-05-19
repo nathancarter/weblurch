@@ -5,13 +5,18 @@ Pull in the utility functions in `phantom-utils` that make it easier to
 write the tests below.
 
     { phantomDescribe, pageDo, pageExpects, inPage, pageWaitFor,
-      pageExpectsError, pageType, pageKey } = require './phantom-utils'
+      simplifiedHTML, pageExpectsError, pageType,
+      pageKey } = require './phantom-utils'
+    { pageInstall, pageCommand, allContent, selectedContent,
+      setAllContent, setSelectedContent,
+      pageSelectAll } = require './app-test-utils'
 
 These auxiliary function creates the HTML code for groupers, for use in the
 tests below.
 
     grouper = ( type, id ) ->
-        "<img id=\"#{type}#{id}\" class=\"grouper me\" src=\"images/red-bracket-#{type}.png\" alt=\"\" />"
+        "<img id=\"#{type}#{id}\" class=\"grouper me\"
+          src=\"images/red-bracket-#{type}.png\" alt=\"\" />"
     open = ( id ) -> grouper 'open', id
     close = ( id ) -> grouper 'close', id
 
@@ -153,32 +158,28 @@ We test here that this happens correctly in several situations.
 
 Ensure the editor is empty, then type some text, and ensure it got there.
 
-            pageExpects ( -> tinymce.activeEditor.getContent() ),
-                'toEqual', ''
+            pageExpects allContent, 'toEqual', ''
             pageType 'ONETWOTHREE'
-            pageExpects ( -> tinymce.activeEditor.getContent() ),
-                'toEqual', '<p>ONETWOTHREE</p>'
+            pageExpects allContent, 'toEqual', '<p>ONETWOTHREE</p>'
 
 Highlight the word TWO and wrap it in an ME Group.  Verify that this works.
 
-            pageKey pageKey.left for i in [1..5]
-            pageKey pageKey.left, pageKey.shift for i in [1..3]
-            pageExpects ( -> tinymce.activeEditor.getContent() ),
-                'toEqual', '<p>ONETWOTHREE</p>'
-            pageExpects ( -> tinymce.activeEditor.selection.getContent() ),
-                'toEqual', 'TWO'
-            pageDo -> tinymce.activeEditor.buttons.me.onclick()
-            pageExpects ( -> tinymce.activeEditor.getContent() ), 'toEqual',
+            pageKey 'left' for i in [1..5]
+            pageKey 'left', 'shift' for i in [1..3]
+            pageExpects allContent, 'toEqual', '<p>ONETWOTHREE</p>'
+            pageExpects selectedContent, 'toEqual', 'TWO'
+            pageCommand 'me'
+            pageExpects allContent, 'toEqual',
                 "<p>ONE#{open 0}TWO#{close 0}THREE</p>"
 
 Highlight the existing group plus two characters on either side.  Wrap it in
 another group and verify that this works.
 
-            pageKey pageKey.home
-            pageKey pageKey.right for i in [1..2]
-            pageKey pageKey.right, pageKey.shift for i in [1..7]
-            pageDo -> tinymce.activeEditor.buttons.me.onclick()
-            pageExpects ( -> tinymce.activeEditor.getContent() ), 'toEqual',
+            pageKey 'home'
+            pageKey 'right' for i in [1..2]
+            pageKey 'right', 'shift' for i in [1..7]
+            pageCommand 'me'
+            pageExpects allContent, 'toEqual',
                 "<p>ON#{open 1}E#{open 0}TWO#{close 0}T#{close 1}HREE</p>"
 
 ### wrap selections in groups across elements
@@ -189,33 +190,10 @@ desire.
 
         it 'wrap selections in groups across elements', inPage ->
 
-We will make use of the following auxiliary function for simplifying HTML
-strings.
-
-            shtml = ( html ) ->
-                html = html.replace />\s*</g, '><'
-                old = ''
-                while html isnt old
-                    old = html
-                    html = html.replace \
-                        /<span[^>]+Apple-style-span[^>]+>(.*?)<\/span>/g,
-                        '$1'
-                html
-            pageDo -> window.shtml = ( html ) ->
-                html = html.replace />\s*</g, '><'
-                old = ''
-                while html isnt old
-                    old = html
-                    html = html.replace \
-                        /<span[^>]+Apple-style-span[^>]+>(.*?)<\/span>/g,
-                        '$1'
-                html
-
 Ensure the editor is empty, then insert some complex content.
 
-            pageExpects ( -> tinymce.activeEditor.getContent() ),
-                'toEqual', ''
-            pageDo -> tinymce.activeEditor.setContent shtml \
+            pageExpects allContent, 'toEqual', ''
+            setAllContent simplifiedHTML \
                 '<table>
                    <tbody>
                      <tr>
@@ -224,8 +202,7 @@ Ensure the editor is empty, then insert some complex content.
                      </tr>
                    </tbody>
                  </table>'
-            pageExpects ( -> shtml tinymce.activeEditor.getContent() ),
-                'toEqual', shtml \
+            pageExpects allContent, 'toBeSimilarHTML',
                 '<table>
                    <tbody>
                      <tr>
@@ -238,15 +215,14 @@ Ensure the editor is empty, then insert some complex content.
 Highlight the two words nearest to the column break and wrap them in an ME
 Group.  Verify that this works.
 
-            pageDo -> tinymce.activeEditor.selection.setCursorLocation \
-                tinymce.activeEditor.getDoc().getElementById( 'left' ) \
-                .childNodes[0], 2
-            pageKey pageKey.right, pageKey.shift for i in [1..10]
-            pageExpects ( -> tinymce.activeEditor.selection.getContent() ),
-                'toEqual', 'wordseven'
-            pageDo -> tinymce.activeEditor.buttons.me.onclick()
-            pageExpects ( -> shtml tinymce.activeEditor.getContent() ),
-                'toEqual', shtml \
+            pageDo ->
+                leftTD = tinymce.activeEditor.getDoc().getElementById 'left'
+                tinymce.activeEditor.selection.setCursorLocation \
+                    leftTD.childNodes[0], 2
+            pageKey 'right', 'shift' for i in [1..10]
+            pageExpects selectedContent, 'toEqual', 'wordseven'
+            pageCommand 'me'
+            pageExpects allContent, 'toBeSimilarHTML',
                 "<table>
                    <tbody>
                      <tr>
@@ -259,12 +235,9 @@ Group.  Verify that this works.
 Highlight the whole table and wrap it in another group.  Verify that this
 works as well.
 
-            pageDo ->
-                tinymce.activeEditor.selection.select \
-                    tinymce.activeEditor.getBody(), no
-                tinymce.activeEditor.buttons.me.onclick()
-            pageExpects ( -> shtml tinymce.activeEditor.getContent() ),
-                'toEqual', shtml \
+            pageSelectAll()
+            pageCommand 'me'
+            pageExpects allContent, 'toBeSimilarHTML',
                 "<p>#{open 1}</p>
                  <table>
                    <tbody>
@@ -293,56 +266,50 @@ that the list of free IDs is correct after each use.
 In an empty editor, the free IDs list should be `[ 0 ]` (all IDs free).
 This should hold true whether or not we have scanned the document.
 
-            pageExpects ( -> tinymce.activeEditor.Groups.freeIds ),
-                'toEqual', [ 0 ]
+            getFreeIds = -> tinymce.activeEditor.Groups.freeIds
+            pageExpects getFreeIds, 'toEqual', [ 0 ]
             pageDo -> tinymce.activeEditor.Groups.scanDocument()
-            pageExpects ( -> tinymce.activeEditor.Groups.freeIds ),
-                'toEqual', [ 0 ]
+            pageExpects getFreeIds, 'toEqual', [ 0 ]
 
 In an editor with content but no groups, the result should be the same.
 
             pageType 'ONETWOTHREE'
-            pageExpects ( -> tinymce.activeEditor.Groups.freeIds ),
-                'toEqual', [ 0 ]
+            pageExpects getFreeIds, 'toEqual', [ 0 ]
             pageDo -> tinymce.activeEditor.Groups.scanDocument()
-            pageExpects ( -> tinymce.activeEditor.Groups.freeIds ),
-                'toEqual', [ 0 ]
+            pageExpects getFreeIds, 'toEqual', [ 0 ]
 
 If we put a group in the document, then the first ID should be used up on
 that group.
 
-            pageKey pageKey.left for i in [1..5]
-            pageKey pageKey.left, pageKey.shift for i in [1..3]
-            pageDo -> tinymce.activeEditor.buttons.me.onclick()
-            pageExpects ( -> tinymce.activeEditor.getContent() ), 'toEqual',
+            pageKey 'left' for i in [1..5]
+            pageKey 'left', 'shift' for i in [1..3]
+            pageCommand 'me'
+            pageExpects allContent, 'toEqual',
                 "<p>ONE#{open 0}TWO#{close 0}THREE</p>"
             pageDo -> tinymce.activeEditor.Groups.scanDocument()
-            pageExpects ( -> tinymce.activeEditor.Groups.freeIds ),
-                'toEqual', [ 1 ]
+            pageExpects getFreeIds, 'toEqual', [ 1 ]
 
 If we nest that in a group, then the first two IDs should be used up.
 
-            pageKey pageKey.home
-            pageKey pageKey.right for i in [1..2]
-            pageKey pageKey.right, pageKey.shift for i in [1..7]
-            pageDo -> tinymce.activeEditor.buttons.me.onclick()
-            pageExpects ( -> tinymce.activeEditor.getContent() ), 'toEqual',
+            pageKey 'home'
+            pageKey 'right' for i in [1..2]
+            pageKey 'right', 'shift' for i in [1..7]
+            pageCommand 'me'
+            pageExpects allContent, 'toEqual',
                 "<p>ON#{open 1}E#{open 0}TWO#{close 0}T#{close 1}HREE</p>"
             pageDo -> tinymce.activeEditor.Groups.scanDocument()
-            pageExpects ( -> tinymce.activeEditor.Groups.freeIds ),
-                'toEqual', [ 2 ]
+            pageExpects getFreeIds, 'toEqual', [ 2 ]
 
 If we delete one of the inner groupers, then scanning the document will
 cause its partner to be deleted, and the correct list of free IDs to be
 created.
 
-            pageKey pageKey.home
-            pageKey pageKey.right for i in [1..5]
-            pageKey pageKey.backspace
-            pageExpects ( -> tinymce.activeEditor.getContent() ), 'toEqual',
+            pageKey 'home'
+            pageKey 'right' for i in [1..5]
+            pageKey 'backspace'
+            pageExpects allContent, 'toEqual',
                 "<p>ON#{open 1}ETWO#{close 0}T#{close 1}HREE</p>"
             pageDo -> tinymce.activeEditor.Groups.scanDocument()
-            pageExpects ( -> tinymce.activeEditor.getContent() ), 'toEqual',
+            pageExpects allContent, 'toEqual',
                 "<p>ON#{open 1}ETWOT#{close 1}HREE</p>"
-            pageExpects ( -> tinymce.activeEditor.Groups.freeIds ),
-                'toEqual', [ 0, 2 ]
+            pageExpects getFreeIds, 'toEqual', [ 0, 2 ]
