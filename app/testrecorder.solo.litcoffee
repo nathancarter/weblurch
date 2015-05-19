@@ -30,20 +30,29 @@ representation of the `testState` global variable.
         if not testState.title? and not testState.steps?
             code = '(no steps recorded yet)'
         else
-            code = '\nTest built with webLurch test-recording mode.\n\n'
-            title = testState.title or 'untitled test'
-            code += "    it '#{title}', inPage ->\n"
             writeStep = ( explanation, codeString ) ->
                 code += "\n#{explanation}\n"
                 if codeString?
+                    code += '\n'
                     for line in codeString.split '\n'
-                        code += "\n        #{line}\n"
+                        code += "        #{line}\n"
+            escapeApos = ( text ) -> text.replace /'/g, '\\\''
+            indent = ( text ) ->
+                '    ' + text.replace ( RegExp '\n', 'g' ), '\n    '
+            code = '\nTest built with webLurch test-recording mode.\n\n'
+            title = testState.title or 'untitled test'
+            code += "    it '#{escapeApos title}', inPage ->\n"
             for step in testState.steps
                 if step.type is 'comment'
                     writeStep step.content
+                else if step.type is 'check contents'
+                    string = "'#{escapeApos step.content}'"
+                    writeStep 'Check to be sure the editor contains the
+                        correct content.', "pageExpects allContent, 'toBeSimilarHTML',\n#{indent string}"
                 # more cases to come
                 else
-                    writeStep 'Unknown step type:', "'#{step.type}'"
+                    writeStep 'Unknown step type:',
+                        "'#{escapeApos step.type}'"
         document.getElementById( 'testCode' ).textContent = code
 
 The update function should be called as soon as the page has loaded.
@@ -71,3 +80,13 @@ contents, then add it to the steps array as a comment.
             if content isnt null
                 testState.steps.push { type : 'comment', content : content }
                 update()
+
+When the user clicks the "Call Editor Contents Correct" button, we add a
+step to the list of test steps, containing within it the full contents of
+the editor as they stand.
+
+        ( $ '#contentsCorrect' ).on 'click', ->
+            testState.steps.push
+                type : 'check contents'
+                content : window.opener.tinymce.activeEditor.getContent()
+            update()

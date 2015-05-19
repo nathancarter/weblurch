@@ -39,13 +39,6 @@ clicks, and other events in the form of code that can be dropped directly
 into the test suite.
 
  * Below those controls, place a button for inserting an assertion that the
-   editor's contents are correct as they are now.
- * On click of that button, add a step of type "check contents", with the
-   data being the editor's current contents.
- * Extend the update function to write code for steps of type "check
-   contents".  It should write a `pageExpects` call with unindented text
-   before it that explains what that code does.
- * Below those controls, place a button for inserting an assertion that the
    editor's contents are incorrect as they are now.
  * On click of that button, add a step of type "wrong contents", with the
    data being the editor's current contents, and further data being an
