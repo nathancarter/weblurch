@@ -50,6 +50,8 @@ put us into the ready state as soon as it has finished loading.
         while document.body.childNodes.length > 0
             ( $ document.body.childNodes[0] ).remove()
         document.body.appendChild node for node in waitingStorage
+        installButtonClickHandlers()
+        update()
     $ window.enterWaitingState
 
 ## Update function
@@ -128,7 +130,7 @@ representation of the `testState` global variable.
                 else
                     writeStep 'ERROR: Unknown step type:',
                         "'#{escapeApos step.type}'\n# #{step.content}"
-        document.getElementById( 'testCode' ).textContent = code
+        document.getElementById( 'testCode' )?.textContent = code
 
 The update function should be called as soon as the page has loaded.
 
@@ -136,7 +138,7 @@ The update function should be called as soon as the page has loaded.
 
 ## Button click handlers
 
-    $ ->
+    installButtonClickHandlers = ->
 
 When the user clicks the "Set Test Title" button, we prompt them for a
 title, then update the code in the output area to reflect the change.
