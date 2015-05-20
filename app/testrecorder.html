@@ -1,0 +1,99 @@
+<html>
+    <head>
+        <link rel='stylesheet' href='default.css'/>
+        <script src='http://code.jquery.com/jquery-2.1.1.min.js'>
+        </script>
+        <script src='./testrecorder.solo.min.js'></script>
+    </head>
+    <body>
+        <div width='100%'>
+            <h2 align=center>webLurch Test Recorder</h2>
+            <table border=0 width=100%><tr>
+            <td align=left>Scroll down for instructions.
+            </td><td align=right>
+            <input type='button' value='T' id='setTitle'
+                   title='Set Title'/>
+            <input type='button' value='&#x270D;' id='addComment'
+                   title='Add a Comment'/>
+            <input type='button' value='&lt;&gt;' id='seeContents'
+                   title='See Editor Contents'/>
+            <input type='button' value='&#x2714;' id='contentsCorrect'
+                   title='Mark Editor Contents as Correct'/>
+            <input type='button' value='&#x2718;' id='contentsIncorrect'
+                   title='Mark Editor Contents as Incorrect'/>
+            <input type='button' value='&#x2709;' id='emailTest'
+                   title='Email Generated Test to Developers'/>
+            </td></tr></table>
+            <textarea id='testCode' readonly style='font-family:monospace'
+                      cols=50 rows=30>
+            </textarea>
+            <h2 align=center>Instructions</h2>
+            <p>You are running webLurch in test-recording mode.  This mode
+                observes the interactions you make with the app (including
+                keystrokes, mouse clicks, and button presses) and records
+                them in the form of code that can be replayed as part of the
+                app's unit testing suite.  This makes it easy to create new
+                unit tests, much like recording a macro in an office
+                application.</p>
+            <p>This popup window shows a record of your interactions in the
+                main application, in the form of code, immediately above
+                these instructions.  If you type, click, or push a button in
+                the main window, you will see that event appended to the
+                code in this window.  To start over, close this window and
+                reload the main application.  Do not simply reload this
+                popup window.  The language in question is
+                <a href='http://www.coffeescript.org/#literate'>literate
+                CoffeeScript</a>, the same language used throughout the
+                webLurch source repository.</p>
+            <p>You will also notice that not all actions in the main
+                application are permitted.  Certain keystrokes are not yet
+                supported, and drop-down menus have been grayed out, because
+                they are also not supported.  This test application is new,
+                and still has some imperfections.</p>
+            <p>There are six buttons above the code that shows the recorded
+                test actions.  They are these:</p>
+            <ol>
+                <li>T: Set Title - This button will ask you to give your
+                    test a title, and will then alter the code to contain
+                    the title you've chosen.</li>
+                <li>&#x270D;: Add a Comment - This button will prompt you
+                    for comment text, then append that comment to the
+                    generated code.  You can use this to express intent,
+                    uncertainty, suspicion of problems, etc.</li>
+                <li>&lt;&gt;: See Editor Contents - This will show you the
+                    HTML contents of the current editor, so that you can
+                    determine wether they seem correct to you.</li>
+                <li>&#x2714;: Mark Editor Contents as Correct - This adds to
+                    the generated code an actual test command, one that will
+                    (when the test is later run) verify that the editor
+                    contents are (at that later time) equal to what they are
+                    now (in the testing application) in HTML form.</li>
+                <li>&#x2718;: Mark Editor Contents as Incorrect - This adds
+                    to the generated code an actual test command, one that
+                    will (when the test is later run) FAIL.  It contains the
+                    current contents of the editor in HTML form, but marks
+                    them as incorrect.  Before inserting this code, the test
+                    application will prompt you to explain why the
+                    application is in an incorrect state, and will add your
+                    explanation to the generated code.  Such generated code
+                    will probably need to be edited before it can be used in
+                    the real test suite for the application.</li>
+                <li>&#x2709;: Email Generated Test to Developers - Launches
+                    your email program and composes a message to the main
+                    webLurch developer with the current generated test code
+                    in the body.  You can then edit the code or add any
+                    other explanation you need, and choose whether to send
+                    it.  If the test is useful, the development team can
+                    then incorporate it into the unit testing suite in the
+                    webLurch source repository.</li>
+            </ol>
+            <p>The generated test code is read-only on this page, but you
+                can copy it out and paste it elsewhere and edit it if that
+                is useful to you, or edit it in your email client before
+                submitting it to the developers.  Also, you can feel free to
+                incorporate the unit testing code into the source repository
+                yourself and submit a pull request on GitHub.  Or just join
+                the development team!</p>
+        </div>
+    </body>
+</html>

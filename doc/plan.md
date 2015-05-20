@@ -23,112 +23,12 @@ Load and save
    Use the responses from that to get this
    problem fixed in Lurch, either by updating to a fixed version of TinyMCE
    or by installing a workaround here.
- * Document element is far smaller vertically than it ought to be (does not
-   take up 100% of height).
  * Using the keyboard shortcut for New or Open on Mac triggers the Chrome
    behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
    menu.  See [my question about this on the TinyMCE forum,](
    http://www.tinymce.com/forum/viewtopic.php?pid=116179) and the
    StackOverflow page to which it links with information on how you might go
    about building a workaround if one doesn't exist already.
-
-Groups
-
- * Insert a table with some text in two cells.  Highlight both cells and
-   wrap them in a group.  It forces everything into the first cell.  Rework
-   `groupCurrentSelection()` so that it doesn't replace existing content,
-   but just inserts groupers on each end.  Although that might come with
-   its own problems of splitting the change into two parts...?
-
-## Creating a test-building UI
-
-The following UI will help those who are not project developers create unit
-tests that expect specific actions in the UI to have specific results.  This
-will create an interface in which testers can record keystrokes, mouse
-clicks, and other events in the form of code that can be dropped directly
-into the test suite.
-
- * Create a new script in the `app/` folder that gets compiled into the app.
- * Write a function in it that adds a new frame construction around the main
-   app UI, with a second frame on the right for the test-recording UI.
- * If the query string is "test" then run this routine before/after the
-   `setup()` call, whichever works better as you test it out.
- * Give the test pane a title that makes it clear what it is, plus a line
-   that says to scroll to the bottom for further instructions.  We will add
-   those instructions later.
- * Next create a read-only textarea below that and give it a global name.
-   Put a title above it called "Recorded test code:".
- * Create a global object for storing the test state.
- * Create an update function that writes the current test state into that
-   textarea as code.  It should only put the focus back in the editor.
-   Later when you update this function, always end with that step.
- * Below the instructions, add a Set Test Title button.  Running it should
-   prompt the user for the test title, save it in that global test state
-   variable, then call the update function.
- * Change the update function to write the test title as `it "title here",
-   inPage ->` with null as the function body.  It should still write that
- * Below those controls, place an Insert Comment button.
- * Add to the test state a "steps" array.
- * On click of the button, push an object onto the steps array, of type
-   comment, with text given by a prompt dialog shown to the user.
- * Extend the update function to write the body of the test function by
-   converting each element of the steps array into a code.  For now, we have
-   only comment step types.  They translate as unindented text, because the
-   test code is in literate CoffeeScript.
- * Below those controls, place a button for inserting an assertion that the
-   editor's contents are correct as they are now.
- * On click of that button, add a step of type "check contents", with the
-   data being the editor's current contents.
- * Extend the update function to write code for steps of type "check
-   contents".  It should write a `pageExpects` call with unindented text
-   before it that explains what that code does.
- * Below those controls, place a button for inserting an assertion that the
-   editor's contents are incorrect as they are now.
- * On click of that button, add a step of type "wrong contents", with the
-   data being the editor's current contents, and further data being an
-   explanation of why those contents are wrong, which you get by prompting
-   the user for it.
- * Extend the update function to write code for steps of type "check
-   contents".  It should write a `pageExpects` call, but the value against
-   which to check the editor contents should be
-   "something besides #{editorContents}", followed by an unindented line
-   containing the user's explanation of why the editor's contents are wrong.
-   This can be used later to tweak the test to be what it ought to be.
- * When you install this test UI, also install a keyboard event handler that
-   notices when the main editor receives keypress events.  It should either
-   pop up an alert for characters it can't handle, or add a new step type
-   (keypress) to the steps array.
- * Extend the update function to write code for steps of type keypress.  It
-   should call the old `pageKey` function, or whatever you've updated it to.
-   Precede such calls with explanations (in unindented text) of what the
-   code does.  If there are multiple `pageKey` events in a row, just put one
-   comment in front of the chain of them.
- * When you install this test UI, also install a mouse event handler that
-   notices when the main editor receives mouse events.  It should either
-   pop up an alert for events it can't handle, or add a new step of type
-   click or doubleclick to the steps array.
- * Extend the update function to write code for steps of type [double]click.
-   It should write code that would send mouse events to the editor.
-   Precede such calls with explanations (in unindented text) of what the
-   code does.  If there are multiple mouse events in a row, just put one
-   comment in front of the chain of them.
- * When you install this test UI, also install a listener for when various
-   menu items are clicked in the editor.  It should either pop up an alert
-   for events it can't handle, or add a new step of type "command" to the
-   steps array.
- * Extend the update function to write code for steps of type command.  It
-   should write code that would call commands in the editor.
-   Precede such calls with explanations (in unindented text) of what the
-   code does.  If there are multiple command calls in a row, just put one
-   comment in front of the chain of them.
- * Add a button for emailing the generated code to the webLurch developers.
-   It should open a message in your default mail program with the test code
-   in the body, plus a header that asks the user to insert some comments
-   explaining anything they feel is not evident from the generated test
-   itself.
- * Add instructions to the bottom of the test pane, as promised at the
-   outset of its construction.  Include links to example test code in the
-   repository and the source code of the the test UI itself.
 
 ## Extending the Editor
 
