@@ -414,7 +414,9 @@ all space between tags and all Apple-style spans that some WebKit-based
 browsers insert (including the headless testing browser in PhantomJS).
 
     exports.simplifiedHTML = simplifiedHTML = ( html ) ->
-        html = html.replace />\s*</g, '><'
+        html = html.replace( />\s*</g, '><' )
+                   .replace( /[ ]data-mce-src="[^"]*"/g, '' )
+                   .replace( /\s\/>/g, '>' )
         old = ''
         while html isnt old
             old = html

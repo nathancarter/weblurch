@@ -2,8 +2,8 @@
 (function() {
   var Group, Groups, LoadSave, Overlay, grouperHTML, grouperInfo, maybeSetupTestRecorder,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
-    __slice = [].slice,
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+    __slice = [].slice;
 
   grouperHTML = function(typeName, openClose, id, hide, image) {
     if (hide == null) {
@@ -53,7 +53,10 @@
   Groups = (function() {
     function Groups(editor) {
       this.editor = editor;
+      this.registerGroup = __bind(this.registerGroup, this);
       this.scanDocument = __bind(this.scanDocument, this);
+      this.enableScanning = __bind(this.enableScanning, this);
+      this.disableScanning = __bind(this.disableScanning, this);
       this.hideOrShowGroupers = __bind(this.hideOrShowGroupers, this);
       this.allGroupers = __bind(this.allGroupers, this);
       this.groupCurrentSelection = __bind(this.groupCurrentSelection, this);
@@ -166,11 +169,13 @@
         rightPos = range.endOffset;
         range.collapse(false);
         sel.setRng(range);
+        this.disableScanning();
         this.editor.insertContent(close);
         range.setStart(leftNode, leftPos);
         range.setEnd(leftNode, leftPos);
         sel.setRng(range);
-        return this.editor.insertContent(open);
+        this.editor.insertContent(open);
+        return this.enableScanning();
       }
     };
 
@@ -188,12 +193,28 @@
       }
     };
 
+    Groups.prototype.disableScanning = function() {
+      return this.scanLocks = (this.scanLocks != null ? this.scanLocks : this.scanLocks = 0) + 1;
+    };
+
+    Groups.prototype.enableScanning = function() {
+      var _ref;
+      this.scanLocks = Math.max(((_ref = this.scanLocks) != null ? _ref : 0) - 1, 0);
+      if (this.scanLocks === 0) {
+        return this.scanDocument();
+      }
+    };
+
     Groups.prototype.scanDocument = function() {
-      var count, gpStack, grouper, groupers, idStack, index, info, usedIds, _i, _len;
+      var a, after, becameFree, before, count, gpStack, grouper, groupers, id, idStack, index, info, partner, usedIds, _i, _j, _len, _len1, _results;
+      if (this.scanLocks > 0) {
+        return;
+      }
       groupers = Array.prototype.slice.apply(this.allGroupers());
       idStack = [];
       gpStack = [];
       usedIds = [];
+      before = this.freeIds.slice(0);
       for (_i = 0, _len = groupers.length; _i < _len; _i++) {
         grouper = groupers[_i];
         if ((info = grouperInfo(grouper)) == null) {
@@ -211,7 +232,8 @@
               ($(gpStack.shift())).remove();
             }
             usedIds.push(idStack.shift());
-            gpStack.shift();
+            partner = gpStack.shift();
+            this.registerGroup(partner, grouper);
           }
         }
       }
@@ -233,7 +255,40 @@
           break;
         }
       }
-      return this.freeIds.push(count);
+      this.freeIds.push(count);
+      after = this.freeIds.slice(0);
+      while (before[before.length - 1] < after[after.length - 1]) {
+        before.push(before[before.length - 1] + 1);
+      }
+      while (after[after.length - 1] < before[before.length - 1]) {
+        after.push(after[after.length - 1] + 1);
+      }
+      becameFree = (function() {
+        var _j, _len1, _results;
+        _results = [];
+        for (_j = 0, _len1 = after.length; _j < _len1; _j++) {
+          a = after[_j];
+          if (__indexOf.call(before, a) < 0) {
+            _results.push(a);
+          }
+        }
+        return _results;
+      })();
+      _results = [];
+      for (_j = 0, _len1 = becameFree.length; _j < _len1; _j++) {
+        id = becameFree[_j];
+        _results.push(delete this[id]);
+      }
+      return _results;
+    };
+
+    Groups.prototype.registerGroup = function(open, close) {
+      var cached, id;
+      cached = this[id = grouperInfo(open).id];
+      if ((cached != null ? cached.open : void 0) !== open || (cached != null ? cached.close : void 0) !== close) {
+        this[id] = new Group(open, close);
+      }
+      return id;
     };
 
     return Groups;
@@ -251,12 +306,22 @@
       type = _ref[_i];
       editor.Groups.addGroupType(type.name, type);
     }
-    return editor.addMenuItem('hideshowgroups', {
+    editor.addMenuItem('hideshowgroups', {
       text: 'Hide/show groups',
       context: 'View',
       onclick: function() {
         return editor.Groups.hideOrShowGroupers();
       }
+    });
+    editor.on('change', function(event) {
+      return editor.Groups.scanDocument();
+    });
+    return editor.on('KeyUp', function(event) {
+      var _ref1;
+      if ((33 <= (_ref1 = event.keyCode) && _ref1 <= 40)) {
+        return;
+      }
+      return editor.Groups.scanDocument();
     });
   });
 

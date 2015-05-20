@@ -36,21 +36,6 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Add to the Groups class a method for registering a Group instance.  This
-   will do the following:
-   * Accept the open and close groupers as parameters.
-   * Construct a Group from them.
-   * Query its id.
-   * Assign `Groups[id]` to the Group in question.
-   * Return the id.
- * Extend that registration routine so that if the group was already
-   registered, it is not reconstructed, but the existing version in
-   `Groups[id]` is returned instead.
- * Extend the scanning routine to call the registration function on all
-   matched pairs of groupers it finds.  Before you run it, note which ids
-   have groups, and then which ids you register anew.  For those that did
-   not get re-registered, delete them from the mapping.
- * Call that scanning routine after each document change.
  * Extend the scanning routine so that it builds a hierarchy of groups
    by storing top-level Groups in in a class member `Groups.topLevel`, then
    giving each Group object an array of child Groups and a pointer to its
@@ -72,23 +57,6 @@ Create a Groups plugin with the following features.
    base and anchor of the selection are not in the same Group.
  * Add instance methods for getting/setting arbitrary data on a Group, as
    key-value pairs stored in the open grouper DOM element attributes.
-
-### More sophisticated testing
-
-The first big change has just been completed.  Before this all we had done
-was import a well-tested project (TinyMCE) and integrate into it another
-well-tested project (jsfs).  Now we've added two of our own plugins, neither
-of which has a test suite associated with it.
-
-The problem is that we do not have experience in testing things that require
-the level of user interaction that testing these requires.  It is essential
-to pause here and learn how to create the tools you need for automating
-testing with user interactivity.
-
-[PhantomJS certainly permits automated typing, clicking, and screen
-capturing.](http://phantomjs.org/api/webpage/method/send-event.html)  In
-fact, we've already begun using it in some unit tests, and in the `pageType`
-method of the [Phantom Utils](../test/phantom-utils.litcoffee) module.
 
 ### Events
 
