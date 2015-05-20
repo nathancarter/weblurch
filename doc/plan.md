@@ -59,23 +59,6 @@ Create a Groups plugin with the following features.
  * Add instance methods for getting/setting arbitrary data on a Group, as
    key-value pairs stored in the open grouper DOM element attributes.
 
-### More sophisticated testing
-
-The first big change has just been completed.  Before this all we had done
-was import a well-tested project (TinyMCE) and integrate into it another
-well-tested project (jsfs).  Now we've added two of our own plugins, neither
-of which has a test suite associated with it.
-
-The problem is that we do not have experience in testing things that require
-the level of user interaction that testing these requires.  It is essential
-to pause here and learn how to create the tools you need for automating
-testing with user interactivity.
-
-[PhantomJS certainly permits automated typing, clicking, and screen
-capturing.](http://phantomjs.org/api/webpage/method/send-event.html)  In
-fact, we've already begun using it in some unit tests, and in the `pageType`
-method of the [Phantom Utils](../test/phantom-utils.litcoffee) module.
-
 ### Events
 
  * Create a generic event system that can fire events and hear the collected
