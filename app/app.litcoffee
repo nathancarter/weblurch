@@ -1216,6 +1216,7 @@ scripts for handling UI events for controls in the popup window.
 Now we setup timers that (in 0.1 seconds) will install in the editor
 listeners for various events that we want to record.
 
+            installed = [ ]
             do installListeners = ->
                 notSupported = ( whatYouDid ) ->
                     alert "You #{whatYouDid}, which the test recorder does
@@ -1230,14 +1231,16 @@ If a keypress occurs for a key that can be typed (letter, number, space),
 tell the test recorder window about it.  For any other type of key, tell the
 user that we can't yet record it, so the test is corrupted.
 
-                    tinymce.activeEditor.on 'keypress', ( event ) ->
-                        letter = String.fromCharCode event.keyCode
-                        if /[A-Za-z0-9 ]/.test letter
-                            testwin.editorKeyPress event.keyCode,
-                                event.shiftKey, event.ctrlKey, event.altKey
-                        else
-                            notSupported "pressed the key with code
-                                #{event.keyCode}"
+                    if 'keypress' not in installed
+                        tinymce.activeEditor.on 'keypress', ( event ) ->
+                            letter = String.fromCharCode event.keyCode
+                            if /[A-Za-z0-9 ]/.test letter
+                                testwin.editorKeyPress event.keyCode,
+                                    event.shiftKey, event.ctrlKey, event.altKey
+                            else
+                                notSupported "pressed the key with code
+                                    #{event.keyCode}"
+                        installed.push 'keypress'
 
 If a keyup occurs for any key, do one of three things.  First, if it's a
 letter, ignore it, because the previous case handles that better.  Second,
@@ -1246,43 +1249,47 @@ keys we can handle (arrows, backspace, etc.), notify the test recorder about
 it.  For any other type of key, tell the user that we can't yet record it,
 so the test is corrupted.
 
-                    tinymce.activeEditor.on 'keyup', ( event ) ->
-                        letter = String.fromCharCode event.keyCode
-                        if /[A-Za-z0-9 ]/.test letter then return
-                        ignore = [ 16, 17, 18, 91 ] # shift, ctrl, alt, meta
-                        if event.keyCode in ignore then return
-                        conversion =
-                            8 : 'backspace'
-                            13 : 'enter'
-                            35 : 'end'
-                            36 : 'home'
-                            37 : 'left'
-                            38 : 'up'
-                            39 : 'right'
-                            40 : 'down'
-                            46 : 'delete'
-                        if conversion.hasOwnProperty event.keyCode
-                            testwin.editorKeyPress \
-                                conversion[event.keyCode],
-                                event.shiftKey, event.ctrlKey, event.altKey
-                        else
-                            notSupported "pressed the key with code
-                                #{event.keyCode}"
+                    if 'keyup' not in installed
+                        tinymce.activeEditor.on 'keyup', ( event ) ->
+                            letter = String.fromCharCode event.keyCode
+                            if /[A-Za-z0-9 ]/.test letter then return
+                            ignore = [ 16, 17, 18, 91 ] # shft,ctl,alt,meta
+                            if event.keyCode in ignore then return
+                            conversion =
+                                8 : 'backspace'
+                                13 : 'enter'
+                                35 : 'end'
+                                36 : 'home'
+                                37 : 'left'
+                                38 : 'up'
+                                39 : 'right'
+                                40 : 'down'
+                                46 : 'delete'
+                            if conversion.hasOwnProperty event.keyCode
+                                testwin.editorKeyPress \
+                                    conversion[event.keyCode],
+                                    event.shiftKey, event.ctrlKey, event.altKey
+                            else
+                                notSupported "pressed the key with code
+                                    #{event.keyCode}"
+                        installed.push 'keyup'
 
 Tell the test recorder about any mouse clicks in the editor.  If the user
 is holding a ctrl, alt, or shift key while clicking, we cannot currently
 support that, so we warn the user if they try to record such an action.
 
-                    tinymce.activeEditor.on 'click', ( event ) ->
-                        if event.shiftKey
-                            notSupported "shift-clicked"
-                        else if event.ctrlKey
-                            notSupported "ctrl-clicked"
-                        else if event.altKey
-                            notSupported "alt-clicked"
-                        else
-                            testwin.editorMouseClick event.clientX,
-                                event.clientY
+                    if 'click' not in installed
+                        tinymce.activeEditor.on 'click', ( event ) ->
+                            if event.shiftKey
+                                notSupported "shift-clicked"
+                            else if event.ctrlKey
+                                notSupported "ctrl-clicked"
+                            else if event.altKey
+                                notSupported "alt-clicked"
+                            else
+                                testwin.editorMouseClick event.clientX,
+                                    event.clientY
+                        installed.push 'click'
 
 Tell the test recorder about any toolbar buttons that are invoked in the
 editor.
@@ -1290,10 +1297,13 @@ editor.
                     findAll = ( type ) ->
                         Array::slice.apply \
                             tinymce.activeEditor.theme.panel.find type
-                    for button in findAll 'button'
-                        do ( button ) ->
-                            button.on 'click', ->
-                                testwin.buttonClicked button.settings.icon
+                    if 'buttons' not in installed
+                        for button in findAll 'button'
+                            do ( button ) ->
+                                button.on 'click', ->
+                                    testwin.buttonClicked \
+                                        button.settings.icon
+                        installed.push 'buttons'
 
 Disable any drop-down menu, for which I am (as yet) unable to attach event
 listeners.

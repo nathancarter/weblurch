@@ -1006,77 +1006,90 @@
   });
 
   maybeSetupTestRecorder = function() {
-    var installListeners, testwin;
+    var installListeners, installed, testwin;
     if (location.search === '?test') {
       testwin = open('./testrecorder.html', 'recording', "status=no, location=no, toolbar=no, menubar=no, left=" + (window.screenX + ($(window)).width()) + ", top=" + window.screenY + ", width=400, height=600");
       if (!testwin) {
         alert('You have asked to run webLurch in test-recording mode, which requires a popup window.  Your browser has blocked the popup window.  Change its settings or allow this popup to use test-recording mode.');
       }
+      installed = [];
       return (installListeners = function() {
         var button, e, findAll, notSupported, object, _fn, _i, _j, _len, _len1, _ref, _ref1;
         notSupported = function(whatYouDid) {
           return alert("You " + whatYouDid + ", which the test recorder does not yet support.  The current test has therefore become corrupted, and you should reload this page and start your test again.  You will need to limit yourself to using only supported keys, menu items, and mouse operations.");
         };
         try {
-          tinymce.activeEditor.on('keypress', function(event) {
-            var letter;
-            letter = String.fromCharCode(event.keyCode);
-            if (/[A-Za-z0-9 ]/.test(letter)) {
-              return testwin.editorKeyPress(event.keyCode, event.shiftKey, event.ctrlKey, event.altKey);
-            } else {
-              return notSupported("pressed the key with code " + event.keyCode);
-            }
-          });
-          tinymce.activeEditor.on('keyup', function(event) {
-            var conversion, ignore, letter, _ref;
-            letter = String.fromCharCode(event.keyCode);
-            if (/[A-Za-z0-9 ]/.test(letter)) {
-              return;
-            }
-            ignore = [16, 17, 18, 91];
-            if (_ref = event.keyCode, __indexOf.call(ignore, _ref) >= 0) {
-              return;
-            }
-            conversion = {
-              8: 'backspace',
-              13: 'enter',
-              35: 'end',
-              36: 'home',
-              37: 'left',
-              38: 'up',
-              39: 'right',
-              40: 'down',
-              46: 'delete'
-            };
-            if (conversion.hasOwnProperty(event.keyCode)) {
-              return testwin.editorKeyPress(conversion[event.keyCode], event.shiftKey, event.ctrlKey, event.altKey);
-            } else {
-              return notSupported("pressed the key with code " + event.keyCode);
-            }
-          });
-          tinymce.activeEditor.on('click', function(event) {
-            if (event.shiftKey) {
-              return notSupported("shift-clicked");
-            } else if (event.ctrlKey) {
-              return notSupported("ctrl-clicked");
-            } else if (event.altKey) {
-              return notSupported("alt-clicked");
-            } else {
-              return testwin.editorMouseClick(event.clientX, event.clientY);
-            }
-          });
+          if (__indexOf.call(installed, 'keypress') < 0) {
+            tinymce.activeEditor.on('keypress', function(event) {
+              var letter;
+              letter = String.fromCharCode(event.keyCode);
+              if (/[A-Za-z0-9 ]/.test(letter)) {
+                return testwin.editorKeyPress(event.keyCode, event.shiftKey, event.ctrlKey, event.altKey);
+              } else {
+                return notSupported("pressed the key with code " + event.keyCode);
+              }
+            });
+            installed.push('keypress');
+          }
+          if (__indexOf.call(installed, 'keyup') < 0) {
+            tinymce.activeEditor.on('keyup', function(event) {
+              var conversion, ignore, letter, _ref;
+              letter = String.fromCharCode(event.keyCode);
+              if (/[A-Za-z0-9 ]/.test(letter)) {
+                return;
+              }
+              ignore = [16, 17, 18, 91];
+              if (_ref = event.keyCode, __indexOf.call(ignore, _ref) >= 0) {
+                return;
+              }
+              conversion = {
+                8: 'backspace',
+                13: 'enter',
+                35: 'end',
+                36: 'home',
+                37: 'left',
+                38: 'up',
+                39: 'right',
+                40: 'down',
+                46: 'delete'
+              };
+              if (conversion.hasOwnProperty(event.keyCode)) {
+                return testwin.editorKeyPress(conversion[event.keyCode], event.shiftKey, event.ctrlKey, event.altKey);
+              } else {
+                return notSupported("pressed the key with code " + event.keyCode);
+              }
+            });
+            installed.push('keyup');
+          }
+          if (__indexOf.call(installed, 'click') < 0) {
+            tinymce.activeEditor.on('click', function(event) {
+              if (event.shiftKey) {
+                return notSupported("shift-clicked");
+              } else if (event.ctrlKey) {
+                return notSupported("ctrl-clicked");
+              } else if (event.altKey) {
+                return notSupported("alt-clicked");
+              } else {
+                return testwin.editorMouseClick(event.clientX, event.clientY);
+              }
+            });
+            installed.push('click');
+          }
           findAll = function(type) {
             return Array.prototype.slice.apply(tinymce.activeEditor.theme.panel.find(type));
           };
-          _ref = findAll('button');
-          _fn = function(button) {
-            return button.on('click', function() {
-              return testwin.buttonClicked(button.settings.icon);
-            });
-          };
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            button = _ref[_i];
-            _fn(button);
+          if (__indexOf.call(installed, 'buttons') < 0) {
+            _ref = findAll('button');
+            _fn = function(button) {
+              return button.on('click', function() {
+                return testwin.buttonClicked(button.settings.icon);
+              });
+            };
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              button = _ref[_i];
+              _fn(button);
+            }
+            installed.push('buttons');
           }
           _ref1 = __slice.call(findAll('splitbutton')).concat(__slice.call(findAll('listbox')), __slice.call(findAll('menubutton')));
           for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
