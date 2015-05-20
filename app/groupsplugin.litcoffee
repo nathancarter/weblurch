@@ -295,10 +295,13 @@ Now the routine itself.
         scanDocument: =>
             if @scanLocks > 0 then return
             groupers = Array::slice.apply @allGroupers()
-            idStack = [ ]
             gpStack = [ ]
             usedIds = [ ]
             before = @freeIds[..]
+            index = ( id ) ->
+                for gp, i in gpStack
+                    if gp.id is id then return i
+                -1
 
 Scanning processes each grouper in the document.
 
@@ -313,40 +316,35 @@ If it's an open grouper, push it onto the stack of nested ids we're
 tracking.
 
                 else if info.type is 'open'
-                    idStack.unshift info.id
-                    gpStack.unshift grouper
+                    gpStack.unshift id : info.id, grouper : grouper
 
 Otherwise, it's a close grouper.  If it doesn't have a corresponding open
 grouper that we've already seen, delete it.
 
                 else
-                    index = idStack.indexOf info.id
-                    if index is -1
+                    if index( info.id ) is -1
                         ( $ grouper ).remove()
-
-If its corresponding open grouper wasn't the most recent thing we've seen,
-delete everything that's intervening, because they're incorrectly
-positioned.
-
                     else
-                        while idStack[0] isnt info.id
-                            idStack.shift()
-                            ( $ gpStack.shift() ).remove()
+
+It has an open grouper.  In case that open grouper wasn't the most recent
+thing we've seen, delete everything that's intervening, because they're
+incorrectly positioned.
+
+                        while gpStack[0].id isnt info.id
+                            ( $ gpStack.shift().grouper ).remove()
 
 Then allow the grouper and its partner to remain in the document, and pop
-their id off the stack, because we've moved past the interior of that group.
+the stack, because we've moved past the interior of that group.
 Furthermore, register the group and its ID in this Groups object.
 
-                        usedIds.push idStack.shift()
-                        partner = gpStack.shift()
-                        @registerGroup partner, grouper
+                        usedIds.push info.id
+                        @registerGroup gpStack.shift().grouper, grouper
 
 Any groupers lingering on the "open" stack have no corresponding close
 groupers, and must therefore be deleted.
 
-            while idStack.length > 0
-                idStack.shift()
-                ( $ gpStack.shift() ).remove()
+            while gpStack.length > 0
+                ( $ gpStack.shift().grouper ).remove()
 
 Now update the `@freeIds` list to be the complement of the `usedIds` array.
 
