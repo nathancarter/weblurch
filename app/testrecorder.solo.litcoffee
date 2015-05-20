@@ -151,6 +151,15 @@ the editor has incorrect contents.
                     explanation : explanation
                 update()
 
+When the user clicks the "See Editor Contents" button, we pop up an alert
+dialog containing the editor contents for the user to view.
+
+        ( $ '#seeContents' ).on 'click', ->
+            result = window.opener.tinymce.activeEditor.getContent()
+            if result is '' then alert 'Editor is empty.'
+            else alert 'The editor contents are represented in HTML format
+                below.\n\n' + result
+
 ## Events from the main page
 
 The page with the editor in it will send us various events, such as key
