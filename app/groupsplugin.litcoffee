@@ -282,6 +282,7 @@ groupers lie.  This has several purposes.
             idStack = [ ]
             gpStack = [ ]
             usedIds = [ ]
+            before = @freeIds[..]
 
 Scanning processes each grouper in the document.
 
@@ -318,9 +319,11 @@ positioned.
 
 Then allow the grouper and its partner to remain in the document, and pop
 their id off the stack, because we've moved past the interior of that group.
+Furthermore, register the group and its ID in this Groups object.
 
                         usedIds.push idStack.shift()
-                        gpStack.shift()
+                        partner = gpStack.shift()
+                        @registerGroup partner, grouper
 
 Any groupers lingering on the "open" stack have no corresponding close
 groupers, and must therefore be deleted.
@@ -342,6 +345,27 @@ Now update the `@freeIds` list to be the complement of the `usedIds` array.
                 count++
                 if count > 20 then break
             @freeIds.push count
+
+And any ID that is free now but wasn't before must have its group deleted
+from this object's internal cache.
+
+            after = @freeIds[..]
+            while before[before.length-1] < after[after.length-1]
+                before.push before[before.length-1] + 1
+            while after[after.length-1] < before[before.length-1]
+                after.push after[after.length-1] + 1
+            becameFree = ( a for a in after when a not in before )
+            delete @[id] for id in becameFree
+
+The above function needs to create instances of the `Group` class, and
+associate them with their IDs.  The following function does so, re-using
+copies from the cache when possible.
+
+        registerGroup: ( open, close ) =>
+            cached = @[id = grouperInfo( open ).id]
+            if cached?.open isnt open or cached?.close isnt close
+                @[id] = new Group open, close
+            id
 
 <font color=red>This class is not yet complete. See [the project
 plan](plan.md) for details of what's to come.</font>

@@ -36,20 +36,6 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Add to the Groups class a method for registering a Group instance.  This
-   will do the following:
-   * Accept the open and close groupers as parameters.
-   * Construct a Group from them.
-   * Query its id.
-   * Assign `Groups[id]` to the Group in question.
-   * Return the id.
- * Extend that registration routine so that if the group was already
-   registered, it is not reconstructed, but the existing version in
-   `Groups[id]` is returned instead.
- * Extend the scanning routine to call the registration function on all
-   matched pairs of groupers it finds.  Before you run it, note which ids
-   have groups, and then which ids you register anew.  For those that did
-   not get re-registered, delete them from the mapping.
  * Call that scanning routine after each document change.
  * Extend the scanning routine so that it builds a hierarchy of groups
    by storing top-level Groups in in a class member `Groups.topLevel`, then
