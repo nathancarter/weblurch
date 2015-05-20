@@ -30,18 +30,6 @@ Load and save
    StackOverflow page to which it links with information on how you might go
    about building a workaround if one doesn't exist already.
 
-## Creating a test-building UI
-
-The following UI will help those who are not project developers create unit
-tests that expect specific actions in the UI to have specific results.  This
-will create an interface in which testers can record keystrokes, mouse
-clicks, and other events in the form of code that can be dropped directly
-into the test suite.
-
- * Add instructions to the bottom of the test pane, as promised at the
-   outset of its construction.  Include links to example test code in the
-   repository and the source code of the the test UI itself.
-
 ## Extending the Editor
 
 ### Groups plugin
