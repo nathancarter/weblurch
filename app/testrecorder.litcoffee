@@ -131,6 +131,11 @@ listeners.
                           findAll( 'listbox' )...,
                           findAll( 'menubutton' )... ]
 
+Tell the test recording page that the main page has finished loading, and it
+can show its contents.
+
+                    testwin.enterReadyState()
+
 If any of the above handler installations fail, the reason is probably that
 the editor hasn't been initialized yet.  So just wait 0.1sec and retry.
 

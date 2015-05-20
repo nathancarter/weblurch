@@ -20,6 +20,38 @@ The following variable stores the test state.
 
     testState = steps : [ ]
 
+This one marks us as waiting for the main application page to tell us that
+it's ready to talk to us.
+
+    waitingForMainApplication = yes
+
+## Protection against page reloading
+
+If the user reloads this test recording page, it will return to its initial
+state, even though the main application is not in its initial state.  This
+is undesirable, because the two must remain in sync.
+
+Thus we create two functions, one that puts this page in a waiting state and
+one that puts it into a ready state.  We enter the waiting state as soon as
+the page is loaded, and the main application will use the second function to
+put us into the ready state as soon as it has finished loading.
+
+    waitingStorage = [ ]
+    window.enterWaitingState = ->
+        while document.body.childNodes.length > 0
+            toStore = document.body.childNodes[0]
+            waitingStorage.push toStore
+            ( $ toStore ).remove()
+        document.body.innerHTML =
+            'Waiting for main application page to load...<br>
+            (If you reloaded this window by itself, you done wrong.
+            Instead, close this window and reload the main application.)'
+    window.enterReadyState = ->
+        while document.body.childNodes.length > 0
+            ( $ document.body.childNodes[0] ).remove()
+        document.body.appendChild node for node in waitingStorage
+    $ window.enterWaitingState
+
 ## Update function
 
 The update function fills the code output area with the in-code
