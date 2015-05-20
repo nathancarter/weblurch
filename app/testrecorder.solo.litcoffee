@@ -160,6 +160,34 @@ dialog containing the editor contents for the user to view.
             else alert 'The editor contents are represented in HTML format
                 below.\n\n' + result
 
+When the user clicks the "Email Generated Test to Developers" button, we
+create an email-sending link and navigate to it.  However, if the current
+test doesn't actually contain any calls to `pageExpects`, then we inform the
+user that they haven't actually tested anything yet.
+
+        ( $ '#emailTest' ).on 'click', ->
+            somethingIsTested = no
+            for step in testState.steps
+                if step.type[-9..] is ' contents'
+                    somethingIsTested = yes
+                    break
+            if not somethingIsTested
+                alert 'You have not made any assertions yet in the test.
+                    You must at some point mark the editor contents as
+                    correct or incorrect in order for the generated code to
+                    actually contain an assertion to be tested.'
+                return
+            recipient = 'ncarter@bentley.edu'
+            subject = 'webLurch: recorded unit test'
+            body = encodeURIComponent "\n
+                \nThe following unit test was recorded on #{new Date}.\n
+                \n(Before sending this email, feel free to add any extra
+                    information you have here.)\n
+                \n-----------begin test code------------\n
+                #{document.getElementById( 'testCode' ).textContent}"
+            window.location.href =
+                "mailto:#{recipient}?subject=#{subject}&body=#{body}"
+
 ## Events from the main page
 
 The page with the editor in it will send us various events, such as key

@@ -38,11 +38,6 @@ will create an interface in which testers can record keystrokes, mouse
 clicks, and other events in the form of code that can be dropped directly
 into the test suite.
 
- * Add a button for emailing the generated code to the webLurch developers.
-   It should open a message in your default mail program with the test code
-   in the body, plus a header that asks the user to insert some comments
-   explaining anything they feel is not evident from the generated test
-   itself.
  * Add instructions to the bottom of the test pane, as promised at the
    outset of its construction.  Include links to example test code in the
    repository and the source code of the the test UI itself.
