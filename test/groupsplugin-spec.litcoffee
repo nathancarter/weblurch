@@ -279,17 +279,20 @@ In an editor with content but no groups, the result should be the same.
             pageExpects getFreeIds, 'toEqual', [ 0 ]
 
 If we put a group in the document, then the first ID should be used up on
-that group.
+that group.  This is true whether or not we explicitly scan the document,
+because changes should trigger such scanning automatically.
 
             pageKey 'left' for i in [1..5]
             pageKey 'left', 'shift' for i in [1..3]
             pageCommand 'me'
             pageExpects allContent, 'toBeSimilarHTML',
                 "<p>ONE#{open 0}TWO#{close 0}THREE</p>"
+            pageExpects getFreeIds, 'toEqual', [ 1 ]
             pageDo -> tinymce.activeEditor.Groups.scanDocument()
             pageExpects getFreeIds, 'toEqual', [ 1 ]
 
-If we nest that in a group, then the first two IDs should be used up.
+If we nest that in a group, then the first two IDs should be used up.  As
+above, this is true before or after a document scan.
 
             pageKey 'home'
             pageKey 'right' for i in [1..2]
@@ -297,19 +300,17 @@ If we nest that in a group, then the first two IDs should be used up.
             pageCommand 'me'
             pageExpects allContent, 'toBeSimilarHTML',
                 "<p>ON#{open 1}E#{open 0}TWO#{close 0}T#{close 1}HREE</p>"
+            pageExpects getFreeIds, 'toEqual', [ 2 ]
             pageDo -> tinymce.activeEditor.Groups.scanDocument()
             pageExpects getFreeIds, 'toEqual', [ 2 ]
 
 If we delete one of the inner groupers, then scanning the document will
-cause its partner to be deleted, and the correct list of free IDs to be
-created.
+automatically occur, and will cause its partner to be deleted, and the
+correct list of free IDs to be created.
 
             pageKey 'home'
             pageKey 'right' for i in [1..5]
             pageKey 'backspace'
-            pageExpects allContent, 'toBeSimilarHTML',
-                "<p>ON#{open 1}ETWO#{close 0}T#{close 1}HREE</p>"
-            pageDo -> tinymce.activeEditor.Groups.scanDocument()
             pageExpects allContent, 'toBeSimilarHTML',
                 "<p>ON#{open 1}ETWOT#{close 1}HREE</p>"
             pageExpects getFreeIds, 'toEqual', [ 0, 2 ]
@@ -353,13 +354,19 @@ In an editor with content but no groups, the result should be the same.
             pageExpects getGroup( 2 ), 'toBeUndefined',
 
 If we put a group in the document, then the index 0 should point to that
-group, but higher indices should have no objects stored under them.
+group, but higher indices should have no objects stored under them.  As in
+previous tests, whether or not we have scanned the document should be
+irrelevant, because scanning should be automatically triggered by editing.
 
             pageKey 'left' for i in [1..5]
             pageKey 'left', 'shift' for i in [1..3]
             pageCommand 'me'
             pageExpects allContent, 'toBeSimilarHTML',
                 "<p>ONE#{open 0}TWO#{close 0}THREE</p>"
+            pageExpects getOpen( 0 ), 'toBeSimilarHTML', open 0
+            pageExpects getGroup( 1 ), 'toBeUndefined',
+            pageExpects getGroup( 2 ), 'toBeUndefined',
+            pageExpects getGroup( 3 ), 'toBeUndefined',
             pageDo -> tinymce.activeEditor.Groups.scanDocument()
             pageExpects getOpen( 0 ), 'toBeSimilarHTML', open 0
             pageExpects getGroup( 1 ), 'toBeUndefined',
@@ -367,7 +374,8 @@ group, but higher indices should have no objects stored under them.
             pageExpects getGroup( 3 ), 'toBeUndefined',
 
 If we nest that in a group, then the first two IDs should point to stored
-Group instances, but any thereafter should not.
+Group instances, but any thereafter should not.  Again, scanning should not
+change the results.
 
             pageKey 'home'
             pageKey 'right' for i in [1..2]
@@ -375,6 +383,11 @@ Group instances, but any thereafter should not.
             pageCommand 'me'
             pageExpects allContent, 'toBeSimilarHTML',
                 "<p>ON#{open 1}E#{open 0}TWO#{close 0}T#{close 1}HREE</p>"
+            pageExpects getOpen( 0 ), 'toBeSimilarHTML', open 0
+            pageExpects getOpen( 1 ), 'toBeSimilarHTML', open 1
+            pageExpects getGroup( 2 ), 'toBeUndefined',
+            pageExpects getGroup( 3 ), 'toBeUndefined',
+            pageExpects getGroup( 4 ), 'toBeUndefined',
             pageDo -> tinymce.activeEditor.Groups.scanDocument()
             pageExpects getOpen( 0 ), 'toBeSimilarHTML', open 0
             pageExpects getOpen( 1 ), 'toBeSimilarHTML', open 1
@@ -384,14 +397,12 @@ Group instances, but any thereafter should not.
 
 If we delete one of the inner groupers, then scanning the document will
 cause its partner to be deleted, and only the index 1 will point to a stored
-Group instance.
+Group instance.  We have no need to scan the document manually, because
+pressing backspace will do it automatically.
 
             pageKey 'home'
             pageKey 'right' for i in [1..5]
             pageKey 'backspace'
-            pageExpects allContent, 'toBeSimilarHTML',
-                "<p>ON#{open 1}ETWO#{close 0}T#{close 1}HREE</p>"
-            pageDo -> tinymce.activeEditor.Groups.scanDocument()
             pageExpects allContent, 'toBeSimilarHTML',
                 "<p>ON#{open 1}ETWOT#{close 1}HREE</p>"
             pageExpects getGroup( 0 ), 'toBeUndefined',

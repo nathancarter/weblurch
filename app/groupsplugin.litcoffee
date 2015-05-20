@@ -56,7 +56,7 @@ has "grouped" together.  Thus each document may have zero or more such
 instances.  Each editor, however, gets only one instance of the `Groups`
 class, which manages all the `Group` instances in that editor's document.
 
-## Constructor
+## Group constructor
 
     class Group
 
@@ -106,7 +106,7 @@ methods of the `Groups` class into class methods of the `Group` class.  But
 since there can be more than one editor, we need separate instances of that
 "global" context for each, so we use a `Groups` class to do so.
 
-## Constructor
+## Groups constructor
 
     class Groups
 
@@ -250,11 +250,13 @@ because editing an element messes up cursor bookmarks within that element.
                 rightPos = range.endOffset
                 range.collapse no
                 sel.setRng range
+                @disableScanning()
                 @editor.insertContent close
                 range.setStart leftNode, leftPos
                 range.setEnd leftNode, leftPos
                 sel.setRng range
                 @editor.insertContent open
+                @enableScanning()
 
 ## Hiding and showing "groupers"
 
@@ -277,7 +279,21 @@ groupers lie.  This has several purposes.
  * It ensures the list of `@freeIds` is up-to-date.
  * It maintains an in-memory hierarchy of Group objects (to be implemented).
 
+There are times when we need programmatically to make several edits to the
+document, and want them to happen as a single unit, without the
+`scanDocument` function altering the document's structure admist the work.
+Document scanning can be disabled by adding a scan lock.  Do so with the
+following two convenience functions.
+
+        disableScanning: => @scanLocks = ( @scanLocks ?= 0 ) + 1
+        enableScanning: =>
+            @scanLocks = Math.max ( @scanLocks ? 0 ) - 1, 0
+            if @scanLocks is 0 then @scanDocument()
+
+Now the routine itself.
+
         scanDocument: =>
+            if @scanLocks > 0 then return
             groupers = Array::slice.apply @allGroupers()
             idStack = [ ]
             gpStack = [ ]
@@ -384,3 +400,7 @@ The plugin, when initialized on an editor, places an instance of the
             text : 'Hide/show groups'
             context : 'View'
             onclick : -> editor.Groups.hideOrShowGroupers()
+        editor.on 'change', ( event ) -> editor.Groups.scanDocument()
+        editor.on 'KeyUp', ( event ) ->
+            if 33 <= event.keyCode <= 40 then return
+            editor.Groups.scanDocument()

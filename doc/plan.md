@@ -36,7 +36,6 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Call that scanning routine after each document change.
  * Extend the scanning routine so that it builds a hierarchy of groups
    by storing top-level Groups in in a class member `Groups.topLevel`, then
    giving each Group object an array of child Groups and a pointer to its
