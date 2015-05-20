@@ -43,7 +43,15 @@ representation of the `testState` global variable.
             code = '\nTest built with webLurch test-recording mode.\n\n'
             title = testState.title or 'untitled test'
             code += "    it '#{escapeApos title}', inPage ->\n"
-            for step, index in testState.steps
+            ary = testState.steps
+            for step, index in ary
+                if index > 0 and ary[index].type is ary[index-1].type
+                    count = 0
+                else
+                    count = 1
+                    while ( index+count < ary.length ) and \
+                          ( ary[index].type is ary[index+count].type )
+                        count++
                 if step.type is 'comment'
                     writeStep step.content
                 else if step.type is 'check contents'
@@ -61,10 +69,10 @@ representation of the `testState` global variable.
                         "pageExpects allContent,
                         'toBeSimilarHTML',\n#{indent string}"
                 else if step.type is 'key press'
-                    explanation = if index > 0 and \
-                        testState.steps[index-1].type is 'key press' \
-                        then null else 'Simulate pressing one or more keys
-                        in the editor.'
+                    explanation = switch count
+                        when 0 then null
+                        when 1 then 'Simulate pressing a key in the editor.'
+                        else 'Simulate pressing keys in the editor.'
                     args = "'#{step.content}'"
                     if step.shift then args += ", 'shift'"
                     if step.ctrl then args += ", 'ctrl'"
@@ -76,9 +84,17 @@ representation of the `testState` global variable.
                 else if step.type is 'click'
                     writeStep 'Simulate a mouse click in the editor.',
                         "pageClick #{step.x}, #{step.y}"
-                # more cases to come
+                else if step.type is 'button'
+                    explanation = switch count
+                        when 0 then null
+                        when 1 then 'Simulate clicking a command button
+                            in the editor.'
+                        else 'Simulate clicking command buttons
+                            in the editor.'
+                    writeStep explanation,
+                        "pageCommand '#{escapeApos step.content}'"
                 else
-                    writeStep 'Unknown step type:',
+                    writeStep 'ERROR: Unknown step type:',
                         "'#{escapeApos step.type}'\n# #{step.content}"
         document.getElementById( 'testCode' ).textContent = code
 
@@ -164,4 +180,9 @@ handlers provided below, which the main page calls.
             type : 'click'
             x : x
             y : y
+        update()
+    window.buttonClicked = ( name ) ->
+        testState.steps.push
+            type : 'button'
+            content : name
         update()

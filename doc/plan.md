@@ -38,15 +38,6 @@ will create an interface in which testers can record keystrokes, mouse
 clicks, and other events in the form of code that can be dropped directly
 into the test suite.
 
- * When you install this test UI, also install a listener for when various
-   menu items are clicked in the editor.  It should either pop up an alert
-   for events it can't handle, or add a new step of type "command" to the
-   steps array.
- * Extend the update function to write code for steps of type command.  It
-   should write code that would call commands in the editor.
-   Precede such calls with explanations (in unindented text) of what the
-   code does.  If there are multiple command calls in a row, just put one
-   comment in front of the chain of them.
  * Add a button for emailing the generated code to the webLurch developers.
    It should open a message in your default mail program with the test code
    in the body, plus a header that asks the user to insert some comments

@@ -112,6 +112,25 @@ support that, so we warn the user if they try to record such an action.
                             testwin.editorMouseClick event.clientX,
                                 event.clientY
 
+Tell the test recorder about any toolbar buttons that are invoked in the
+editor.
+
+                    findAll = ( type ) ->
+                        Array::slice.apply \
+                            tinymce.activeEditor.theme.panel.find type
+                    for button in findAll 'button'
+                        do ( button ) ->
+                            button.on 'click', ->
+                                testwin.buttonClicked button.settings.icon
+
+Disable any drop-down menu, for which I am (as yet) unable to attach event
+listeners.
+
+                    object.disabled yes for object in \
+                        [ findAll( 'splitbutton' )...,
+                          findAll( 'listbox' )...,
+                          findAll( 'menubutton' )... ]
+
 If any of the above handler installations fail, the reason is probably that
 the editor hasn't been initialized yet.  So just wait 0.1sec and retry.
 
