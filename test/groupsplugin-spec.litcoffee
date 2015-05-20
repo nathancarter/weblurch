@@ -16,7 +16,7 @@ tests below.
 
     grouper = ( type, id ) ->
         "<img id=\"#{type}#{id}\" class=\"grouper me\"
-          src=\"images/red-bracket-#{type}.png\" alt=\"\" />"
+          src=\"images/red-bracket-#{type}.png\" alt=\"\">"
     open = ( id ) -> grouper 'open', id
     close = ( id ) -> grouper 'close', id
 
@@ -169,7 +169,7 @@ Highlight the word TWO and wrap it in an ME Group.  Verify that this works.
             pageExpects allContent, 'toEqual', '<p>ONETWOTHREE</p>'
             pageExpects selectedContent, 'toEqual', 'TWO'
             pageCommand 'me'
-            pageExpects allContent, 'toEqual',
+            pageExpects allContent, 'toBeSimilarHTML',
                 "<p>ONE#{open 0}TWO#{close 0}THREE</p>"
 
 Highlight the existing group plus two characters on either side.  Wrap it in
@@ -179,7 +179,7 @@ another group and verify that this works.
             pageKey 'right' for i in [1..2]
             pageKey 'right', 'shift' for i in [1..7]
             pageCommand 'me'
-            pageExpects allContent, 'toEqual',
+            pageExpects allContent, 'toBeSimilarHTML',
                 "<p>ON#{open 1}E#{open 0}TWO#{close 0}T#{close 1}HREE</p>"
 
 ### wrap selections in groups across elements
@@ -247,7 +247,7 @@ works as well.
                      </tr>
                    </tbody>
                  </table>
-                 <p>#{close 1}<br /></p>"
+                 <p>#{close 1}<br></p>"
 
 ## Group hierarchy
 
@@ -284,7 +284,7 @@ that group.
             pageKey 'left' for i in [1..5]
             pageKey 'left', 'shift' for i in [1..3]
             pageCommand 'me'
-            pageExpects allContent, 'toEqual',
+            pageExpects allContent, 'toBeSimilarHTML',
                 "<p>ONE#{open 0}TWO#{close 0}THREE</p>"
             pageDo -> tinymce.activeEditor.Groups.scanDocument()
             pageExpects getFreeIds, 'toEqual', [ 1 ]
@@ -295,7 +295,7 @@ If we nest that in a group, then the first two IDs should be used up.
             pageKey 'right' for i in [1..2]
             pageKey 'right', 'shift' for i in [1..7]
             pageCommand 'me'
-            pageExpects allContent, 'toEqual',
+            pageExpects allContent, 'toBeSimilarHTML',
                 "<p>ON#{open 1}E#{open 0}TWO#{close 0}T#{close 1}HREE</p>"
             pageDo -> tinymce.activeEditor.Groups.scanDocument()
             pageExpects getFreeIds, 'toEqual', [ 2 ]
@@ -307,9 +307,95 @@ created.
             pageKey 'home'
             pageKey 'right' for i in [1..5]
             pageKey 'backspace'
-            pageExpects allContent, 'toEqual',
+            pageExpects allContent, 'toBeSimilarHTML',
                 "<p>ON#{open 1}ETWO#{close 0}T#{close 1}HREE</p>"
             pageDo -> tinymce.activeEditor.Groups.scanDocument()
-            pageExpects allContent, 'toEqual',
+            pageExpects allContent, 'toBeSimilarHTML',
                 "<p>ON#{open 1}ETWOT#{close 1}HREE</p>"
             pageExpects getFreeIds, 'toEqual', [ 0, 2 ]
+
+### registers group instances correctly
+
+We use `groupCurrentSelection()` from the Groups plugin, then check to see
+that there are Group instances registered and stored under the appropriate
+indices in the Groups plugin object itself.
+
+        it 'registers group instances correctly', inPage ->
+
+In an empty editor, the Groups plugin should have no objects stored in it
+under integer indices.  This should hold true whether or not we have scanned
+the document.
+
+            getGroup = ( index ) ->
+                eval "(function(){ return
+                    tinymce.activeEditor.Groups[#{index}]; })"
+            getOpen = ( index ) ->
+                eval "(function(){ return
+                    tinymce.activeEditor.Groups[#{index}].open.outerHTML;
+                })"
+            pageExpects getGroup( 0 ), 'toBeUndefined',
+            pageExpects getGroup( 1 ), 'toBeUndefined',
+            pageExpects getGroup( 2 ), 'toBeUndefined',
+            pageDo -> tinymce.activeEditor.Groups.scanDocument()
+            pageExpects getGroup( 0 ), 'toBeUndefined',
+            pageExpects getGroup( 1 ), 'toBeUndefined',
+            pageExpects getGroup( 2 ), 'toBeUndefined',
+
+In an editor with content but no groups, the result should be the same.
+
+            pageType 'ONETWOTHREE'
+            pageExpects getGroup( 0 ), 'toBeUndefined',
+            pageExpects getGroup( 1 ), 'toBeUndefined',
+            pageExpects getGroup( 2 ), 'toBeUndefined',
+            pageDo -> tinymce.activeEditor.Groups.scanDocument()
+            pageExpects getGroup( 0 ), 'toBeUndefined',
+            pageExpects getGroup( 1 ), 'toBeUndefined',
+            pageExpects getGroup( 2 ), 'toBeUndefined',
+
+If we put a group in the document, then the index 0 should point to that
+group, but higher indices should have no objects stored under them.
+
+            pageKey 'left' for i in [1..5]
+            pageKey 'left', 'shift' for i in [1..3]
+            pageCommand 'me'
+            pageExpects allContent, 'toBeSimilarHTML',
+                "<p>ONE#{open 0}TWO#{close 0}THREE</p>"
+            pageDo -> tinymce.activeEditor.Groups.scanDocument()
+            pageExpects getOpen( 0 ), 'toBeSimilarHTML', open 0
+            pageExpects getGroup( 1 ), 'toBeUndefined',
+            pageExpects getGroup( 2 ), 'toBeUndefined',
+            pageExpects getGroup( 3 ), 'toBeUndefined',
+
+If we nest that in a group, then the first two IDs should point to stored
+Group instances, but any thereafter should not.
+
+            pageKey 'home'
+            pageKey 'right' for i in [1..2]
+            pageKey 'right', 'shift' for i in [1..7]
+            pageCommand 'me'
+            pageExpects allContent, 'toBeSimilarHTML',
+                "<p>ON#{open 1}E#{open 0}TWO#{close 0}T#{close 1}HREE</p>"
+            pageDo -> tinymce.activeEditor.Groups.scanDocument()
+            pageExpects getOpen( 0 ), 'toBeSimilarHTML', open 0
+            pageExpects getOpen( 1 ), 'toBeSimilarHTML', open 1
+            pageExpects getGroup( 2 ), 'toBeUndefined',
+            pageExpects getGroup( 3 ), 'toBeUndefined',
+            pageExpects getGroup( 4 ), 'toBeUndefined',
+
+If we delete one of the inner groupers, then scanning the document will
+cause its partner to be deleted, and only the index 1 will point to a stored
+Group instance.
+
+            pageKey 'home'
+            pageKey 'right' for i in [1..5]
+            pageKey 'backspace'
+            pageExpects allContent, 'toBeSimilarHTML',
+                "<p>ON#{open 1}ETWO#{close 0}T#{close 1}HREE</p>"
+            pageDo -> tinymce.activeEditor.Groups.scanDocument()
+            pageExpects allContent, 'toBeSimilarHTML',
+                "<p>ON#{open 1}ETWOT#{close 1}HREE</p>"
+            pageExpects getGroup( 0 ), 'toBeUndefined',
+            pageExpects getOpen( 1 ), 'toBeSimilarHTML', open 1
+            pageExpects getGroup( 2 ), 'toBeUndefined',
+            pageExpects getGroup( 3 ), 'toBeUndefined',
+            pageExpects getGroup( 4 ), 'toBeUndefined',
