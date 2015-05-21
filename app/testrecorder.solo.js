@@ -36,18 +36,20 @@
   $(window.enterWaitingState);
 
   update = function() {
-    var args, ary, code, count, escapeApos, explanation, indent, index, step, string, title, writeStep, _i, _len, _ref;
+    var args, ary, code, count, escapeApos, explanation, indent, index, showComments, step, string, title, writeStep, _i, _len, _ref;
     code = '';
     if ((testState.title == null) && (testState.steps == null)) {
       code = '(no steps recorded yet)';
     } else {
+      showComments = ($('#showComments')).is(':checked');
+      console.log($('#showComments'), showComments);
       writeStep = function(explanation, codeString) {
         var line, _i, _len, _ref, _results;
-        if (explanation != null) {
+        if (showComments && (explanation != null)) {
           code += "\n" + explanation + "\n";
         }
         if (codeString != null) {
-          if (explanation != null) {
+          if (showComments && (explanation != null)) {
             code += '\n';
           }
           _ref = codeString.split('\n');
@@ -183,7 +185,7 @@
         return alert('The editor contents are represented in HTML format below.\n\n' + result);
       }
     });
-    return ($('#emailTest')).on('click', function() {
+    ($('#emailTest')).on('click', function() {
       var body, recipient, somethingIsTested, step, subject, _i, _len, _ref;
       somethingIsTested = false;
       _ref = testState.steps;
@@ -202,6 +204,10 @@
       subject = 'webLurch: recorded unit test';
       body = encodeURIComponent("\n \nThe following unit test was recorded on " + (new Date) + ".\n \n(Before sending this email, feel free to add any extra information you have here.)\n \n-----------begin test code------------\n " + (document.getElementById('testCode').textContent));
       return window.location.href = "mailto:" + recipient + "?subject=" + subject + "&body=" + body;
+    });
+    return ($('#showComments')).on('change', function() {
+      console.log('checkbox changed');
+      return update();
     });
   };
 

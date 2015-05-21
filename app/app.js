@@ -53,6 +53,9 @@
   Groups = (function() {
     function Groups(editor) {
       this.editor = editor;
+      this.groupAboveNode = __bind(this.groupAboveNode, this);
+      this.grouperToGroup = __bind(this.grouperToGroup, this);
+      this.ids = __bind(this.ids, this);
       this.registerGroup = __bind(this.registerGroup, this);
       this.scanDocument = __bind(this.scanDocument, this);
       this.enableScanning = __bind(this.enableScanning, this);
@@ -65,6 +68,7 @@
       this.addFreeId = __bind(this.addFreeId, this);
       this.nextFreeId = __bind(this.nextFreeId, this);
       this.groupTypes = {};
+      this.topLevel = [];
       this.freeIds = [0];
     }
 
@@ -159,8 +163,11 @@
         content = this.editor.selection.getContent();
         this.editor.insertContent(open + content + cursor + close);
         cursor = ($(this.editor.getBody())).find('#put_cursor_here');
+        close = cursor.get(0).nextSibling;
         sel.select(cursor.get(0));
-        return cursor.remove();
+        cursor.remove();
+        sel.select(close);
+        return sel.collapse(true);
       } else {
         range = sel.getRng();
         leftNode = range.startContainer;
@@ -206,40 +213,63 @@
     };
 
     Groups.prototype.scanDocument = function() {
-      var a, after, becameFree, before, count, gpStack, grouper, groupers, id, idStack, index, info, partner, usedIds, _i, _j, _len, _len1, _results;
+      var a, after, becameFree, before, child, count, gpStack, groupData, grouper, groupers, id, index, info, newGroup, usedIds, _i, _j, _k, _len, _len1, _len2, _ref;
       if (this.scanLocks > 0) {
         return;
       }
       groupers = Array.prototype.slice.apply(this.allGroupers());
-      idStack = [];
       gpStack = [];
       usedIds = [];
+      this.topLevel = [];
       before = this.freeIds.slice(0);
+      index = function(id) {
+        var gp, i, _i, _len;
+        for (i = _i = 0, _len = gpStack.length; _i < _len; i = ++_i) {
+          gp = gpStack[i];
+          if (gp.id === id) {
+            return i;
+          }
+        }
+        return -1;
+      };
       for (_i = 0, _len = groupers.length; _i < _len; _i++) {
         grouper = groupers[_i];
         if ((info = grouperInfo(grouper)) == null) {
           ($(grouper)).remove();
         } else if (info.type === 'open') {
-          idStack.unshift(info.id);
-          gpStack.unshift(grouper);
+          gpStack.unshift({
+            id: info.id,
+            grouper: grouper,
+            children: []
+          });
         } else {
-          index = idStack.indexOf(info.id);
-          if (index === -1) {
+          if (index(info.id) === -1) {
             ($(grouper)).remove();
           } else {
-            while (idStack[0] !== info.id) {
-              idStack.shift();
-              ($(gpStack.shift())).remove();
+            while (gpStack[0].id !== info.id) {
+              ($(gpStack.shift().grouper)).remove();
             }
-            usedIds.push(idStack.shift());
-            partner = gpStack.shift();
-            this.registerGroup(partner, grouper);
+            groupData = gpStack.shift();
+            usedIds.push(info.id);
+            this.registerGroup(groupData.grouper, grouper);
+            newGroup = this[info.id];
+            newGroup.children = groupData.children;
+            _ref = newGroup.children;
+            for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+              child = _ref[_j];
+              child.parent = newGroup;
+            }
+            if (gpStack.length > 0) {
+              gpStack[0].children.push(newGroup);
+            } else {
+              this.topLevel.push(newGroup);
+              newGroup.parent = null;
+            }
           }
         }
       }
-      while (idStack.length > 0) {
-        idStack.shift();
-        ($(gpStack.shift())).remove();
+      while (gpStack.length > 0) {
+        ($(gpStack.shift().grouper)).remove();
       }
       usedIds.sort();
       count = 0;
@@ -264,22 +294,21 @@
         after.push(after[after.length - 1] + 1);
       }
       becameFree = (function() {
-        var _j, _len1, _results;
+        var _k, _len2, _results;
         _results = [];
-        for (_j = 0, _len1 = after.length; _j < _len1; _j++) {
-          a = after[_j];
+        for (_k = 0, _len2 = after.length; _k < _len2; _k++) {
+          a = after[_k];
           if (__indexOf.call(before, a) < 0) {
             _results.push(a);
           }
         }
         return _results;
       })();
-      _results = [];
-      for (_j = 0, _len1 = becameFree.length; _j < _len1; _j++) {
-        id = becameFree[_j];
-        _results.push(delete this[id]);
+      for (_k = 0, _len2 = becameFree.length; _k < _len2; _k++) {
+        id = becameFree[_k];
+        delete this[id];
       }
-      return _results;
+      return delete this.idsCache;
     };
 
     Groups.prototype.registerGroup = function(open, close) {
@@ -289,6 +318,102 @@
         this[id] = new Group(open, close);
       }
       return id;
+    };
+
+    Groups.prototype.ids = function() {
+      var group, recur, _i, _len, _ref;
+      if (this.idsCache == null) {
+        this.idsCache = [];
+        recur = (function(_this) {
+          return function(g) {
+            var child, _i, _len, _ref, _results;
+            _this.idsCache.push(g.id());
+            _ref = g.children;
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              child = _ref[_i];
+              _results.push(recur(child));
+            }
+            return _results;
+          };
+        })(this);
+        _ref = this.topLevel;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          group = _ref[_i];
+          recur(group);
+        }
+      }
+      return this.idsCache;
+    };
+
+    Groups.prototype.grouperToGroup = function(grouper) {
+      var id, _ref;
+      if ((id = (_ref = grouperInfo(grouper)) != null ? _ref.id : void 0) != null) {
+        return this[id];
+      } else {
+        return null;
+      }
+    };
+
+    Groups.prototype.groupAboveNode = function(node) {
+      var all, group, left, less, middle, right;
+      if ((all = this.allGroupers()).length === 0) {
+        return null;
+      }
+      less = function(a, b) {
+        return Node.DOCUMENT_POSITION_FOLLOWING & a.compareDocumentPosition(b);
+      };
+      left = {
+        index: 0,
+        grouper: all[0],
+        leftOfNode: true
+      };
+      if (left.grouper === node) {
+        return this.grouperToGroup(left.grouper);
+      }
+      if (!less(left.grouper, node)) {
+        return null;
+      }
+      right = {
+        index: all.length - 1,
+        grouper: all[all.length - 1]
+      };
+      if (right.grouper === node) {
+        return this.grouperToGroup(right.grouper);
+      }
+      if (less(right.grouper, node)) {
+        return null;
+      }
+      while (true) {
+        if (left.grouper === node) {
+          return this.grouperToGroup(left.grouper);
+        }
+        if (right.grouper === node) {
+          return this.grouperToGroup(right.grouper);
+        }
+        if (left.index + 1 === right.index) {
+          group = this.grouperToGroup(left.grouper);
+          if (left.grouper === group.open) {
+            return group;
+          } else {
+            return group.parent;
+          }
+        }
+        middle = Math.floor((left.index + right.index) / 2);
+        if (less(all[middle], node)) {
+          left = {
+            index: middle,
+            grouper: all[middle],
+            leftOfNode: true
+          };
+        } else {
+          right = {
+            index: middle,
+            grouper: all[middle],
+            leftOfNode: false
+          };
+        }
+      }
     };
 
     return Groups;
@@ -313,7 +438,7 @@
         return editor.Groups.hideOrShowGroupers();
       }
     });
-    editor.on('change', function(event) {
+    editor.on('change SetContent', function(event) {
       return editor.Groups.scanDocument();
     });
     return editor.on('KeyUp', function(event) {

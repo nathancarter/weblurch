@@ -116,6 +116,11 @@ Each editor has a mapping from valid group type names to their attributes.
 
             @groupTypes = {}
 
+It also has a list of the top-level groups in the editor, which is a forest
+in which each node is a group, and groups are nested as hierarchies/trees.
+
+            @topLevel = [ ]
+
 The object maintains a list of unique integer ids for assigning to Groups in
 the editor.  The list `@freeIds` is a list `[a_1,...,a_n]` such that an id
 is available if and only if it's one of the `a_i` or is greater than `a_n`.
@@ -229,14 +234,20 @@ placeholder after the old selection.
 
 If the whole selection is within one element, then we can just replace the
 selection's content with wrapped content, plus a cursor placeholder that we
-immediately remove after placing the cursor back there.
+immediately remove after placing the cursor back there.  We also keep track
+of the close grouper element so that we can place the cursor immediatel to
+its left after removing the cursor placeholder (or else the cursor may leap
+to the start of the document).
 
                 cursor = '<span id="put_cursor_here">\u200b</span>'
                 content = @editor.selection.getContent()
                 @editor.insertContent open + content + cursor + close
                 cursor = ( $ @editor.getBody() ).find '#put_cursor_here'
+                close = cursor.get( 0 ).nextSibling
                 sel.select cursor.get 0
                 cursor.remove()
+                sel.select close
+                sel.collapse yes
             else
 
 But if the selection spans multiple elements, then we must handle each edge
@@ -295,10 +306,14 @@ Now the routine itself.
         scanDocument: =>
             if @scanLocks > 0 then return
             groupers = Array::slice.apply @allGroupers()
-            idStack = [ ]
             gpStack = [ ]
             usedIds = [ ]
+            @topLevel = [ ]
             before = @freeIds[..]
+            index = ( id ) ->
+                for gp, i in gpStack
+                    if gp.id is id then return i
+                -1
 
 Scanning processes each grouper in the document.
 
@@ -313,40 +328,53 @@ If it's an open grouper, push it onto the stack of nested ids we're
 tracking.
 
                 else if info.type is 'open'
-                    idStack.unshift info.id
-                    gpStack.unshift grouper
+                    gpStack.unshift
+                        id : info.id
+                        grouper : grouper
+                        children : [ ]
 
 Otherwise, it's a close grouper.  If it doesn't have a corresponding open
 grouper that we've already seen, delete it.
 
                 else
-                    index = idStack.indexOf info.id
-                    if index is -1
+                    if index( info.id ) is -1
                         ( $ grouper ).remove()
-
-If its corresponding open grouper wasn't the most recent thing we've seen,
-delete everything that's intervening, because they're incorrectly
-positioned.
-
                     else
-                        while idStack[0] isnt info.id
-                            idStack.shift()
-                            ( $ gpStack.shift() ).remove()
+
+It has an open grouper.  In case that open grouper wasn't the most recent
+thing we've seen, delete everything that's intervening, because they're
+incorrectly positioned.
+
+                        while gpStack[0].id isnt info.id
+                            ( $ gpStack.shift().grouper ).remove()
 
 Then allow the grouper and its partner to remain in the document, and pop
-their id off the stack, because we've moved past the interior of that group.
+the stack, because we've moved past the interior of that group.
 Furthermore, register the group and its ID in this Groups object.
 
-                        usedIds.push idStack.shift()
-                        partner = gpStack.shift()
-                        @registerGroup partner, grouper
+                        groupData = gpStack.shift()
+                        usedIds.push info.id
+                        @registerGroup groupData.grouper, grouper
+                        newGroup = @[info.id]
+
+Assign parent and child relationships, and store this just-created group on
+either the list of children for the next parent outwards in the hierarchy,
+or the "top level" list if there is no surrounding group.
+
+                        newGroup.children = groupData.children
+                        for child in newGroup.children
+                            child.parent = newGroup
+                        if gpStack.length > 0
+                            gpStack[0].children.push newGroup
+                        else
+                            @topLevel.push newGroup
+                            newGroup.parent = null
 
 Any groupers lingering on the "open" stack have no corresponding close
 groupers, and must therefore be deleted.
 
-            while idStack.length > 0
-                idStack.shift()
-                ( $ gpStack.shift() ).remove()
+            while gpStack.length > 0
+                ( $ gpStack.shift().grouper ).remove()
 
 Now update the `@freeIds` list to be the complement of the `usedIds` array.
 
@@ -373,6 +401,12 @@ from this object's internal cache.
             becameFree = ( a for a in after when a not in before )
             delete @[id] for id in becameFree
 
+Invalidate the `ids()` cache ([defined below](
+#querying-the-group-hierarchy)) so that the next time that function is run,
+it recomputes its results from the newly-generated hierarchy in `topLevel`.
+
+            delete @idsCache
+
 The above function needs to create instances of the `Group` class, and
 associate them with their IDs.  The following function does so, re-using
 copies from the cache when possible.
@@ -382,6 +416,67 @@ copies from the cache when possible.
             if cached?.open isnt open or cached?.close isnt close
                 @[id] = new Group open, close
             id
+
+## Querying the group hierarchy
+
+The results of the scanning process in [the previous section](#scanning) are
+readable through the following functions.
+
+The following method returns a list of all ids that appear in the Groups
+hierarchy, in tree order.
+
+        ids: =>
+            if not @idsCache?
+                @idsCache = [ ]
+                recur = ( g ) =>
+                    @idsCache.push g.id()
+                    recur child for child in g.children
+                recur group for group in @topLevel
+            @idsCache
+
+The following method finds the group for a given open/close grouper element
+from the DOM.  It returns null if the given object is not an open/close
+grouper, or does not appear in the group hierarchy.
+
+        grouperToGroup: ( grouper ) =>
+            if ( id = grouperInfo( grouper )?.id )? then @[id] else null
+
+The following method finds the deepest group containing a given DOM Node.
+It does so by a binary search through the groupers array for the closest
+grouper before the node.  If it is an open grouper, the node is in that
+group.  If it is a close grouper, the node is in its parent group.
+
+        groupAboveNode: ( node ) =>
+            if ( all = @allGroupers() ).length is 0 then return null
+            less = ( a, b ) ->
+                Node.DOCUMENT_POSITION_FOLLOWING & \
+                    a.compareDocumentPosition( b )
+            left = index : 0, grouper : all[0], leftOfNode : yes
+            return @grouperToGroup left.grouper if left.grouper is node
+            return null if not less left.grouper, node
+            right = index : all.length - 1, grouper : all[all.length - 1]
+            return @grouperToGroup right.grouper if right.grouper is node
+            return null if less right.grouper, node
+            loop
+                if left.grouper is node
+                    return @grouperToGroup left.grouper
+                if right.grouper is node
+                    return @grouperToGroup right.grouper
+                if left.index + 1 is right.index
+                    group = @grouperToGroup left.grouper
+                    return if left.grouper is group.open then group \
+                        else group.parent
+                middle = Math.floor ( left.index + right.index ) / 2
+                if less all[middle], node
+                    left =
+                        index : middle
+                        grouper : all[middle]
+                        leftOfNode : yes
+                else
+                    right =
+                        index : middle
+                        grouper : all[middle]
+                        leftOfNode : no
 
 <font color=red>This class is not yet complete. See [the project
 plan](plan.md) for details of what's to come.</font>
@@ -400,7 +495,16 @@ The plugin, when initialized on an editor, places an instance of the
             text : 'Hide/show groups'
             context : 'View'
             onclick : -> editor.Groups.hideOrShowGroupers()
-        editor.on 'change', ( event ) -> editor.Groups.scanDocument()
+
+The document needs to be scanned (to rebuild the groups hierarchy) whenever
+it changes.  The editor's change event is not reliable, in that it fires
+only once at the beginning of any sequence of typing.  Thus we watch not
+only for change events, but also for KeyUp events.  We filter the latter so
+that we do not rescan the document if the key in question was only an arrow
+key or home/end/pgup/pgdn.
+
+        editor.on 'change SetContent', ( event ) ->
+            editor.Groups.scanDocument()
         editor.on 'KeyUp', ( event ) ->
             if 33 <= event.keyCode <= 40 then return
             editor.Groups.scanDocument()

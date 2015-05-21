@@ -410,3 +410,373 @@ pressing backspace will do it automatically.
             pageExpects getGroup( 2 ), 'toBeUndefined',
             pageExpects getGroup( 3 ), 'toBeUndefined',
             pageExpects getGroup( 4 ), 'toBeUndefined',
+
+### builds group hierarchy correctly
+
+We create a document with many nested groups, then check to see if the
+Groups plugin has correctly constructed a hierarchy of them in memory.  We
+will test both the `topLevel` field and the `ids()` member function of the
+`Groups` class.
+
+        it 'builds group hierarchy correctly', inPage ->
+
+We create a simple function that turns the group hierarchy into a simplified
+JSON structure that can be transported back from the headless testing
+browser into this environment for comparisons.
+
+            getTree = ->
+                tree = ( group ) ->
+                    id : group.id()
+                    children : ( tree g for g in group.children )
+                tree g for g in tinymce.activeEditor.Groups.topLevel
+
+Ensure that the group hierarchy, at first, is completely empty.
+
+            pageExpects ( -> tinymce.activeEditor.Groups.topLevel ),
+                'toEqual', [ ]
+            pageExpects getTree, 'toEqual', [ ]
+            pageExpects ( -> tinymce.activeEditor.Groups.ids() ), 'toEqual',
+                [ ]
+
+We now create a function that will quickly create a nested group structure
+based on a readable English description that looks like the document we want
+to create.
+
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'me'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+
+We use it to create a document with a trivial group hierarchy.
+
+            createHierarchy '[text]'
+
+Verify that a one-group hierarchy has been created.
+
+            pageExpects getTree, 'toEqual', [ id : 0, children : [ ] ]
+            pageExpects ( -> tinymce.activeEditor.Groups.ids() ), 'toEqual',
+                [ 0 ]
+
+Verify that calling `ids()` repeatedly returns the exact same object, thus
+demonstrating that it is re-using the result from cache.
+
+            pageExpects -> tinymce.activeEditor.Groups.ids() is \
+                           tinymce.activeEditor.Groups.ids()
+
+Clear out the document and verify that the hierarchy is empty again.
+
+            pageDo -> tinymce.activeEditor.setContent ''
+            pageExpects ( -> tinymce.activeEditor.Groups.topLevel ),
+                'toEqual', [ ]
+            pageExpects getTree, 'toEqual', [ ]
+            pageExpects ( -> tinymce.activeEditor.Groups.ids() ), 'toEqual',
+                [ ]
+
+Verify that calling `ids()` repeatedly returns the exact same object, thus
+demonstrating that it is re-using the result from cache.
+
+            pageExpects -> tinymce.activeEditor.Groups.ids() is \
+                           tinymce.activeEditor.Groups.ids()
+
+Now create a document with a nontrivial group hierarchy.
+
+            createHierarchy 'initial text
+                [ start of big group [ foo [ bar ] baz ] [ 1 ] [ 2 ] ]
+                [ a second [ group after ] the first big one ]
+                final text'
+
+Verify that a deep hierarchy has been created that matches the text above.
+
+            pageExpects getTree, 'toEqual', [
+                {
+                    id : 0
+                    children : [
+                        { id : 1, children : [ id : 2, children : [ ] ] }
+                        { id : 3, children : [ ] }
+                        { id : 4, children : [ ] }
+                    ]
+                }
+                { id : 5, children : [ id : 6, children : [ ] ] }
+            ]
+            pageExpects ( -> tinymce.activeEditor.Groups.ids() ), 'toEqual',
+                [ 0, 1, 2, 3, 4, 5, 6 ]
+
+Verify that calling `ids()` repeatedly returns the exact same object, thus
+demonstrating that it is re-using the result from cache.
+
+            pageExpects -> tinymce.activeEditor.Groups.ids() is \
+                           tinymce.activeEditor.Groups.ids()
+
+## Hierarchy queries
+
+Now we test those functions that build on the ability to construct a groups
+hierarchy, by querying that already-constructed hierarchy in various ways.
+
+    phantomDescribe 'Hierarchy queries', './app/index.html', ->
+
+### can convert groupers to groups
+
+We create a document with many nested groups, then query various parts of
+the resulting hierarchy.  We aim to test the `grouperToGroup` function in
+the Groups plugin.
+
+        it 'can convert groupers to groups', inPage ->
+
+Construct the same simple hierarchy as in the previous test.
+
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'me'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+            createHierarchy '[text]'
+
+Find its open and close groupers in the editor, and store them in global
+variables for use in the tests below.
+
+            pageDo ->
+                window._test_mainParagraph =
+                    tinymce.activeEditor.getBody().childNodes[0]
+                window._test_open =
+                    window._test_mainParagraph.childNodes[0]
+                window._test_close =
+                    window._test_mainParagraph.childNodes[2]
+
+Verify that these are open and close groupers with ID 0.
+
+            pageExpects ( -> window._test_open.outerHTML ),
+                'toBeSimilarHTML', open 0
+            pageExpects ( -> window._test_close.outerHTML ),
+                'toBeSimilarHTML', close 0
+
+Verify that Group 0 in the Groups hierarchy has these two elements as its
+open and close groupers.
+
+            pageExpects ( -> tinymce.activeEditor.Groups[0].open is \
+                             window._test_open )
+            pageExpects ( -> tinymce.activeEditor.Groups[0].close is \
+                             window._test_close )
+
+And now, what we're focusing on testing in this test:  If we ask the Groups
+plugin for the group corresponding to either of those groupers, it should
+give us group #0 in the hierarchy.
+
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_open ) is tinymce.activeEditor.Groups[0]
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_close ) is tinymce.activeEditor.Groups[0]
+
+Verify that if we call `grouperToGroup` on some other objects, we get null.
+
+            pageExpects ( -> tinymce.activeEditor.Groups.grouperToGroup 5 ),
+                'toBeNull'
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup null
+            , 'toBeNull'
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup \
+                    tinymce.activeEditor.getBody()
+            , 'toBeNull'
+            pageExpects ->
+                text = window._test_open.nextSibling
+                tinymce.activeEditor.Groups.grouperToGroup text
+            , 'toBeNull'
+
+Construct the complex hierarchy as in the previous test.
+
+            pageDo -> tinymce.activeEditor.setContent ''
+            createHierarchy 'initial text
+                [ start of big group [ foo [ bar ] baz ] [ 1 ] [ 2 ] ]
+                [ a second [ group after ] the first big one ]
+                final text'
+
+Find a few open and close groupers in the editor, and store them in global
+variables for use in the tests below.
+
+            pageDo ->
+                window._test_mainParagraph =
+                    tinymce.activeEditor.getBody().childNodes[0]
+                window._test_open_0 =
+                    window._test_mainParagraph.childNodes[1]
+                window._test_open_1 =
+                    window._test_open_0.nextSibling.nextSibling
+                window._test_open_2 =
+                    window._test_open_1.nextSibling.nextSibling
+                window._test_close_2 =
+                    window._test_open_2.nextSibling.nextSibling
+                all = tinymce.activeEditor.Groups.allGroupers()
+                window._test_close_5 = all[all.length - 1]
+                window._test_close_6 = all[all.length - 2]
+
+Verify that these are open and close groupers with the IDs that I expect,
+based on the naming convention I used above.
+
+            pageExpects ( -> window._test_open_0.outerHTML ),
+                'toBeSimilarHTML', open 0
+            pageExpects ( -> window._test_open_1.outerHTML ),
+                'toBeSimilarHTML', open 1
+            pageExpects ( -> window._test_open_2.outerHTML ),
+                'toBeSimilarHTML', open 2
+            pageExpects ( -> window._test_close_2.outerHTML ),
+                'toBeSimilarHTML', close 2
+            pageExpects ( -> window._test_close_5.outerHTML ),
+                'toBeSimilarHTML', close 5
+            pageExpects ( -> window._test_close_6.outerHTML ),
+                'toBeSimilarHTML', close 6
+
+Verify that groups 0, 1, 2, 5, and 6 in the Groups hierarchy have the
+open/close groupers chosen above.
+
+            pageExpects ( -> tinymce.activeEditor.Groups[0].open is \
+                             window._test_open_0 )
+            pageExpects ( -> tinymce.activeEditor.Groups[1].open is \
+                             window._test_open_1 )
+            pageExpects ( -> tinymce.activeEditor.Groups[2].open is \
+                             window._test_open_2 )
+            pageExpects ( -> tinymce.activeEditor.Groups[2].close is \
+                             window._test_close_2 )
+            pageExpects ( -> tinymce.activeEditor.Groups[5].close is \
+                             window._test_close_5 )
+            pageExpects ( -> tinymce.activeEditor.Groups[6].close is \
+                             window._test_close_6 )
+
+And now, what we're focusing on testing in this test:  If we ask the Groups
+plugin for the group corresponding to any of those groupers, it should
+give us the correct group in the hierarchy.
+
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_open_0 ) is tinymce.activeEditor.Groups[0]
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_open_1 ) is tinymce.activeEditor.Groups[1]
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_open_2 ) is tinymce.activeEditor.Groups[2]
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_close_2 ) is tinymce.activeEditor.Groups[2]
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_close_5 ) is tinymce.activeEditor.Groups[5]
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_close_6 ) is tinymce.activeEditor.Groups[6]
+
+Verify that if we call `grouperToGroup` on some other objects, we get null.
+
+            pageExpects ->
+                text = window._test_open_0.nextSibling
+                tinymce.activeEditor.Groups.grouperToGroup text
+            , 'toBeNull'
+            pageExpects ->
+                paragraph = window._test_open_0.parentNode
+                tinymce.activeEditor.Groups.grouperToGroup paragraph
+            , 'toBeNull'
+
+### can convert any node to a group
+
+We create a document with many nested groups, then query various parts of
+the resulting hierarchy.  We aim to test the `groupAboveNode` function in
+the Groups plugin.
+
+        it 'can convert any node to a group', inPage ->
+
+Construct the same simple hierarchy as in the previous two tests.
+
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'me'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+            createHierarchy '[text]'
+
+Find a few nodes in the editor, and store them in global variables for use
+in the tests below.
+
+            pageDo ->
+                window._test_mainParagraph =
+                    tinymce.activeEditor.getBody().childNodes[0]
+                window._test_open = window._test_mainParagraph.childNodes[0]
+                window._test_text = window._test_open.nextSibling
+                window._test_close = window._test_text.nextSibling
+
+Verify that the group containing the whole body is null.
+
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode \
+                    window._test_mainParagraph
+            , 'toBeNull'
+
+Verify that the group containing any of the other three nodes is the one
+group in the document.
+
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_open ).id()
+            , 'toEqual', 0
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_text ).id()
+            , 'toEqual', 0
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_close ).id()
+            , 'toEqual', 0
+
+Construct the complex hierarchy as in the previous test.
+
+            pageDo -> tinymce.activeEditor.setContent ''
+            createHierarchy 'initial text
+                [ start of big group [ foo [ bar ] baz ] [ 1 ] [ 2 ] ]
+                [ a second [ group after ] the first big one ]
+                final text'
+
+Find a few nodes in the editor, and store them in global variables for use
+in the tests below.
+
+            pageDo ->
+                window._test_mainParagraph =
+                    tinymce.activeEditor.getBody().childNodes[0]
+                window._test_open_0 =
+                    window._test_mainParagraph.childNodes[1]
+                window._text_in_0 = window._test_open_0.nextSibling
+                window._test_open_1 = window._text_in_0.nextSibling
+                window._text_in_1 = window._test_open_1.nextSibling
+                window._test_open_2 = window._text_in_1.nextSibling
+                window._text_before_0 = window._test_open_0.previousSibling
+                window._text_after_0 =
+                    tinymce.activeEditor.Groups.grouperToGroup(
+                        window._test_open_0 ).close.nextSibling
+
+And now, what we're focusing on testing in this test:  If we ask the Groups
+plugin for the group above any of those nodes, it should give us the correct
+group in the hierarchy.
+
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_open_0 ) is tinymce.activeEditor.Groups[0]
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._text_in_0 ) is tinymce.activeEditor.Groups[0]
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_open_1 ) is tinymce.activeEditor.Groups[1]
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._text_in_1 ) is tinymce.activeEditor.Groups[1]
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_open_2 ) is tinymce.activeEditor.Groups[2]
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_before_0 ) is null
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_after_0 ) is null

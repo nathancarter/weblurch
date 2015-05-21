@@ -30,27 +30,16 @@ Load and save
    StackOverflow page to which it links with information on how you might go
    about building a workaround if one doesn't exist already.
 
+## Miscellaneous enhancements
+
+ * Move all plugin files into the `src/` folder, if possible.
+
 ## Extending the Editor
 
 ### Groups plugin
 
 Create a Groups plugin with the following features.
 
- * Extend the scanning routine so that it builds a hierarchy of groups
-   by storing top-level Groups in in a class member `Groups.topLevel`, then
-   giving each Group object an array of child Groups and a pointer to its
-   parent Group.  It should clear the top-level list and all child arrays
-   each time it re-scans, but re-use the Group objects themselves.
- * Write a class method `Groups.ids()`, which returns a list of all ids that
-   appear in the Groups hierarchy, in tree order.
- * Have `Groups.ids()` cache its results and only invalidate the cache
-   when the scanning routine is re-run.
- * Create a function in the Groups class that accepts a DOM element
-   that is an open/close grouper and returns the corresponding Group
-   instance if there is one, or null otherwise.
- * Create a static function in the Group class that accepts a DOM node and
-   returns the deepest Group instance surrounding it, if there is one, or
-   null if there isn't.
  * Use the overlay plugin to draw bubbles around Groups if and only if the
    cursor is inside them.
  * Enhance the Group insertion actions so that they are unavailable when the
