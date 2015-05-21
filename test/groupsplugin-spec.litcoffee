@@ -459,6 +459,12 @@ Verify that a one-group hierarchy has been created.
             pageExpects ( -> tinymce.activeEditor.Groups.ids() ), 'toEqual',
                 [ 0 ]
 
+Verify that calling `ids()` repeatedly returns the exact same object, thus
+demonstrating that it is re-using the result from cache.
+
+            pageExpects -> tinymce.activeEditor.Groups.ids() is \
+                           tinymce.activeEditor.Groups.ids()
+
 Clear out the document and verify that the hierarchy is empty again.
 
             pageDo -> tinymce.activeEditor.setContent ''
@@ -467,6 +473,12 @@ Clear out the document and verify that the hierarchy is empty again.
             pageExpects getTree, 'toEqual', [ ]
             pageExpects ( -> tinymce.activeEditor.Groups.ids() ), 'toEqual',
                 [ ]
+
+Verify that calling `ids()` repeatedly returns the exact same object, thus
+demonstrating that it is re-using the result from cache.
+
+            pageExpects -> tinymce.activeEditor.Groups.ids() is \
+                           tinymce.activeEditor.Groups.ids()
 
 Now create a document with a nontrivial group hierarchy.
 
@@ -490,3 +502,9 @@ Verify that a deep hierarchy has been created that matches the text above.
             ]
             pageExpects ( -> tinymce.activeEditor.Groups.ids() ), 'toEqual',
                 [ 0, 1, 2, 3, 4, 5, 6 ]
+
+Verify that calling `ids()` repeatedly returns the exact same object, thus
+demonstrating that it is re-using the result from cache.
+
+            pageExpects -> tinymce.activeEditor.Groups.ids() is \
+                           tinymce.activeEditor.Groups.ids()

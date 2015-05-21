@@ -40,8 +40,6 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Have `Groups.ids()` cache its results and only invalidate the cache
-   when the scanning routine is re-run.
  * Create a function in the Groups class that accepts a DOM element
    that is an open/close grouper and returns the corresponding Group
    instance if there is one, or null otherwise.

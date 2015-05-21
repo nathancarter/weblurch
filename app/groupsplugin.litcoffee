@@ -400,6 +400,12 @@ from this object's internal cache.
             becameFree = ( a for a in after when a not in before )
             delete @[id] for id in becameFree
 
+Invalidate the `ids()` cache ([defined below](
+#querying-the-group-hierarchy)) so that the next time that function is run,
+it recomputes its results from the newly-generated hierarchy in `topLevel`.
+
+            delete @idsCache
+
 The above function needs to create instances of the `Group` class, and
 associate them with their IDs.  The following function does so, re-using
 copies from the cache when possible.
@@ -419,12 +425,13 @@ The `ids()` method returns a list of all ids that appear in the Groups
 hierarchy, in tree order.
 
         ids: =>
-            result = [ ]
-            recur = ( g ) ->
-                result.push g.id()
-                recur child for child in g.children
-            recur group for group in @topLevel
-            result
+            if not @idsCache?
+                @idsCache = [ ]
+                recur = ( g ) =>
+                    @idsCache.push g.id()
+                    recur child for child in g.children
+                recur group for group in @topLevel
+            @idsCache
 
 <font color=red>This class is not yet complete. See [the project
 plan](plan.md) for details of what's to come.</font>
