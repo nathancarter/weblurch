@@ -398,6 +398,14 @@ The plugin, when initialized on an editor, places an instance of the
             text : 'Hide/show groups'
             context : 'View'
             onclick : -> editor.Groups.hideOrShowGroupers()
+
+The document needs to be scanned (to rebuild the groups hierarchy) whenever
+it changes.  The editor's change event is not reliable, in that it fires
+only once at the beginning of any sequence of typing.  Thus we watch not
+only for change events, but also for KeyUp events.  We filter the latter so
+that we do not rescan the document if the key in question was only an arrow
+key or home/end/pgup/pgdn.
+
         editor.on 'change', ( event ) -> editor.Groups.scanDocument()
         editor.on 'KeyUp', ( event ) ->
             if 33 <= event.keyCode <= 40 then return
