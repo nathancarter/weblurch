@@ -64,11 +64,13 @@ representation of the `testState` global variable.
         if not testState.title? and not testState.steps?
             code = '(no steps recorded yet)'
         else
+            showComments = ( $ '#showComments' ).is ':checked'
+            console.log ( $ '#showComments' ), showComments
             writeStep = ( explanation, codeString ) ->
-                if explanation?
+                if showComments and explanation?
                     code += "\n#{explanation}\n"
                 if codeString?
-                    if explanation? then code += '\n'
+                    if showComments and explanation? then code += '\n'
                     for line in codeString.split '\n'
                         code += "        #{line}\n"
             escapeApos = ( text ) -> text.replace /'/g, '\\\''
@@ -221,6 +223,13 @@ user that they haven't actually tested anything yet.
                 #{document.getElementById( 'testCode' ).textContent}"
             window.location.href =
                 "mailto:#{recipient}?subject=#{subject}&body=#{body}"
+
+When the checkbox for whether to include comments in code changes, update
+the generated code.
+
+        ( $ '#showComments' ).on 'change', ->
+            console.log 'checkbox changed'
+            update()
 
 ## Events from the main page
 
