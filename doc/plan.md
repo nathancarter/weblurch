@@ -40,8 +40,6 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Write a class method `Groups.ids()`, which returns a list of all ids that
-   appear in the Groups hierarchy, in tree order.
  * Have `Groups.ids()` cache its results and only invalidate the cache
    when the scanning routine is re-run.
  * Create a function in the Groups class that accepts a DOM element

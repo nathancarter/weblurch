@@ -414,7 +414,9 @@ pressing backspace will do it automatically.
 ### builds group hierarchy correctly
 
 We create a document with many nested groups, then check to see if the
-Groups plugin has correctly constructed a hierarchy of them in memory.
+Groups plugin has correctly constructed a hierarchy of them in memory.  We
+will test both the `topLevel` field and the `ids()` member function of the
+`Groups` class.
 
         it 'builds group hierarchy correctly', inPage ->
 
@@ -433,6 +435,8 @@ Ensure that the group hierarchy, at first, is completely empty.
             pageExpects ( -> tinymce.activeEditor.Groups.topLevel ),
                 'toEqual', [ ]
             pageExpects getTree, 'toEqual', [ ]
+            pageExpects ( -> tinymce.activeEditor.Groups.ids() ), 'toEqual',
+                [ ]
 
 We now create a function that will quickly create a nested group structure
 based on a readable English description that looks like the document we want
@@ -452,6 +456,8 @@ We use it to create a document with a trivial group hierarchy.
 Verify that a one-group hierarchy has been created.
 
             pageExpects getTree, 'toEqual', [ id : 0, children : [ ] ]
+            pageExpects ( -> tinymce.activeEditor.Groups.ids() ), 'toEqual',
+                [ 0 ]
 
 Clear out the document and verify that the hierarchy is empty again.
 
@@ -459,6 +465,8 @@ Clear out the document and verify that the hierarchy is empty again.
             pageExpects ( -> tinymce.activeEditor.Groups.topLevel ),
                 'toEqual', [ ]
             pageExpects getTree, 'toEqual', [ ]
+            pageExpects ( -> tinymce.activeEditor.Groups.ids() ), 'toEqual',
+                [ ]
 
 Now create a document with a nontrivial group hierarchy.
 
@@ -480,3 +488,5 @@ Verify that a deep hierarchy has been created that matches the text above.
                 }
                 { id : 5, children : [ id : 6, children : [ ] ] }
             ]
+            pageExpects ( -> tinymce.activeEditor.Groups.ids() ), 'toEqual',
+                [ 0, 1, 2, 3, 4, 5, 6 ]

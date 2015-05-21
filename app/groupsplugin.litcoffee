@@ -410,6 +410,22 @@ copies from the cache when possible.
                 @[id] = new Group open, close
             id
 
+## Querying the group hierarchy
+
+The results of the scanning process in [the previous section](#scanning) are
+readable through the following functions.
+
+The `ids()` method returns a list of all ids that appear in the Groups
+hierarchy, in tree order.
+
+        ids: =>
+            result = [ ]
+            recur = ( g ) ->
+                result.push g.id()
+                recur child for child in g.children
+            recur group for group in @topLevel
+            result
+
 <font color=red>This class is not yet complete. See [the project
 plan](plan.md) for details of what's to come.</font>
 
