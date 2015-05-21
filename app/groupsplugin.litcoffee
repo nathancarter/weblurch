@@ -116,6 +116,11 @@ Each editor has a mapping from valid group type names to their attributes.
 
             @groupTypes = {}
 
+It also has a list of the top-level groups in the editor, which is a forest
+in which each node is a group, and groups are nested as hierarchies/trees.
+
+            @topLevel = [ ]
+
 The object maintains a list of unique integer ids for assigning to Groups in
 the editor.  The list `@freeIds` is a list `[a_1,...,a_n]` such that an id
 is available if and only if it's one of the `a_i` or is greater than `a_n`.
@@ -229,14 +234,20 @@ placeholder after the old selection.
 
 If the whole selection is within one element, then we can just replace the
 selection's content with wrapped content, plus a cursor placeholder that we
-immediately remove after placing the cursor back there.
+immediately remove after placing the cursor back there.  We also keep track
+of the close grouper element so that we can place the cursor immediatel to
+its left after removing the cursor placeholder (or else the cursor may leap
+to the start of the document).
 
                 cursor = '<span id="put_cursor_here">\u200b</span>'
                 content = @editor.selection.getContent()
                 @editor.insertContent open + content + cursor + close
                 cursor = ( $ @editor.getBody() ).find '#put_cursor_here'
+                close = cursor.get( 0 ).nextSibling
                 sel.select cursor.get 0
                 cursor.remove()
+                sel.select close
+                sel.collapse yes
             else
 
 But if the selection spans multiple elements, then we must handle each edge
@@ -297,6 +308,7 @@ Now the routine itself.
             groupers = Array::slice.apply @allGroupers()
             gpStack = [ ]
             usedIds = [ ]
+            @topLevel = [ ]
             before = @freeIds[..]
             index = ( id ) ->
                 for gp, i in gpStack
@@ -316,7 +328,10 @@ If it's an open grouper, push it onto the stack of nested ids we're
 tracking.
 
                 else if info.type is 'open'
-                    gpStack.unshift id : info.id, grouper : grouper
+                    gpStack.unshift
+                        id : info.id
+                        grouper : grouper
+                        children : [ ]
 
 Otherwise, it's a close grouper.  If it doesn't have a corresponding open
 grouper that we've already seen, delete it.
@@ -337,8 +352,22 @@ Then allow the grouper and its partner to remain in the document, and pop
 the stack, because we've moved past the interior of that group.
 Furthermore, register the group and its ID in this Groups object.
 
+                        groupData = gpStack.shift()
                         usedIds.push info.id
-                        @registerGroup gpStack.shift().grouper, grouper
+                        @registerGroup groupData.grouper, grouper
+                        newGroup = @[info.id]
+
+Assign parent and child relationships, and store this just-created group on
+either the list of children for the next parent outwards in the hierarchy,
+or the "top level" list if there is no surrounding group.
+
+                        newGroup.children = groupData.children
+                        for child in newGroup.children
+                            child.parent = newGroup
+                        if gpStack.length > 0
+                            gpStack[0].children.push newGroup
+                        else
+                            @topLevel.push newGroup
 
 Any groupers lingering on the "open" stack have no corresponding close
 groupers, and must therefore be deleted.
@@ -406,7 +435,8 @@ only for change events, but also for KeyUp events.  We filter the latter so
 that we do not rescan the document if the key in question was only an arrow
 key or home/end/pgup/pgdn.
 
-        editor.on 'change', ( event ) -> editor.Groups.scanDocument()
+        editor.on 'change SetContent', ( event ) ->
+            editor.Groups.scanDocument()
         editor.on 'KeyUp', ( event ) ->
             if 33 <= event.keyCode <= 40 then return
             editor.Groups.scanDocument()

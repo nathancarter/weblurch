@@ -410,3 +410,73 @@ pressing backspace will do it automatically.
             pageExpects getGroup( 2 ), 'toBeUndefined',
             pageExpects getGroup( 3 ), 'toBeUndefined',
             pageExpects getGroup( 4 ), 'toBeUndefined',
+
+### builds group hierarchy correctly
+
+We create a document with many nested groups, then check to see if the
+Groups plugin has correctly constructed a hierarchy of them in memory.
+
+        it 'builds group hierarchy correctly', inPage ->
+
+We create a simple function that turns the group hierarchy into a simplified
+JSON structure that can be transported back from the headless testing
+browser into this environment for comparisons.
+
+            getTree = ->
+                tree = ( group ) ->
+                    id : group.id()
+                    children : ( tree g for g in group.children )
+                tree g for g in tinymce.activeEditor.Groups.topLevel
+
+Ensure that the group hierarchy, at first, is completely empty.
+
+            pageExpects ( -> tinymce.activeEditor.Groups.topLevel ),
+                'toEqual', [ ]
+            pageExpects getTree, 'toEqual', [ ]
+
+We now create a function that will quickly create a nested group structure
+based on a readable English description that looks like the document we want
+to create.
+
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'me'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+
+We use it to create a document with a trivial group hierarchy.
+
+            createHierarchy '[text]'
+
+Verify that a one-group hierarchy has been created.
+
+            pageExpects getTree, 'toEqual', [ id : 0, children : [ ] ]
+
+Clear out the document and verify that the hierarchy is empty again.
+
+            pageDo -> tinymce.activeEditor.setContent ''
+            pageExpects ( -> tinymce.activeEditor.Groups.topLevel ),
+                'toEqual', [ ]
+            pageExpects getTree, 'toEqual', [ ]
+
+Now create a document with a nontrivial group hierarchy.
+
+            createHierarchy 'initial text
+                [ start of big group [ foo [ bar ] baz ] [ 1 ] [ 2 ] ]
+                [ a second [ group after ] the first big one ]
+                final text'
+
+Verify that a deep hierarchy has been created that matches the text above.
+
+            pageExpects getTree, 'toEqual', [
+                {
+                    id : 0
+                    children : [
+                        { id : 1, children : [ id : 2, children : [ ] ] }
+                        { id : 3, children : [ ] }
+                        { id : 4, children : [ ] }
+                    ]
+                }
+                { id : 5, children : [ id : 6, children : [ ] ] }
+            ]
