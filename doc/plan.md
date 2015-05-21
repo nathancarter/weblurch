@@ -40,9 +40,6 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Create a function in the Groups class that accepts a DOM element
-   that is an open/close grouper and returns the corresponding Group
-   instance if there is one, or null otherwise.
  * Create a static function in the Group class that accepts a DOM node and
    returns the deepest Group instance surrounding it, if there is one, or
    null if there isn't.

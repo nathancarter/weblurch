@@ -508,3 +508,172 @@ demonstrating that it is re-using the result from cache.
 
             pageExpects -> tinymce.activeEditor.Groups.ids() is \
                            tinymce.activeEditor.Groups.ids()
+
+## Hierarchy queries
+
+Now we test those functions that build on the ability to construct a groups
+hierarchy, by querying that already-constructed hierarchy in various ways.
+
+    phantomDescribe 'Hierarchy queries', './app/index.html', ->
+
+### can convert groupers to groups
+
+We create a document with many nested groups, then query various parts of
+the resulting hierarchy.
+
+        it 'can convert groupers to groups', inPage ->
+
+Construct the same simple hierarchy as in the previous test.
+
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'me'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+            createHierarchy '[text]'
+
+Find its open and close groupers in the editor, and store them in global
+variables for use in the tests below.
+
+            pageDo ->
+                window._test_mainParagraph =
+                    tinymce.activeEditor.getBody().childNodes[0]
+                window._test_open =
+                    window._test_mainParagraph.childNodes[0]
+                window._test_close =
+                    window._test_mainParagraph.childNodes[2]
+
+Verify that these are open and close groupers with ID 0.
+
+            pageExpects ( -> window._test_open.outerHTML ),
+                'toBeSimilarHTML', open 0
+            pageExpects ( -> window._test_close.outerHTML ),
+                'toBeSimilarHTML', close 0
+
+Verify that Group 0 in the Groups hierarchy has these two elements as its
+open and close groupers.
+
+            pageExpects ( -> tinymce.activeEditor.Groups[0].open is \
+                             window._test_open )
+            pageExpects ( -> tinymce.activeEditor.Groups[0].close is \
+                             window._test_close )
+
+And now, what we're focusing on testing in this test:  If we ask the Groups
+plugin for the group corresponding to either of those groupers, it should
+give us group #0 in the hierarchy.
+
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_open ) is tinymce.activeEditor.Groups[0]
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_close ) is tinymce.activeEditor.Groups[0]
+
+Verify that if we call `grouperToGroup` on some other objects, we get null.
+
+            pageExpects ( -> tinymce.activeEditor.Groups.grouperToGroup 5 ),
+                'toBeNull'
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup null
+            , 'toBeNull'
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup \
+                    tinymce.activeEditor.getBody()
+            , 'toBeNull'
+            pageExpects ->
+                text = window._test_open.nextSibling
+                tinymce.activeEditor.Groups.grouperToGroup text
+            , 'toBeNull'
+
+Construct the complex hierarchy as in the previous test.
+
+            pageDo -> tinymce.activeEditor.setContent ''
+            createHierarchy 'initial text
+                [ start of big group [ foo [ bar ] baz ] [ 1 ] [ 2 ] ]
+                [ a second [ group after ] the first big one ]
+                final text'
+
+Find a few open and close groupers in the editor, and store them in global
+variables for use in the tests below.
+
+            pageDo ->
+                window._test_mainParagraph =
+                    tinymce.activeEditor.getBody().childNodes[0]
+                window._test_open_0 =
+                    window._test_mainParagraph.childNodes[1]
+                window._test_open_1 =
+                    window._test_open_0.nextSibling.nextSibling
+                window._test_open_2 =
+                    window._test_open_1.nextSibling.nextSibling
+                window._test_close_2 =
+                    window._test_open_2.nextSibling.nextSibling
+                all = tinymce.activeEditor.Groups.allGroupers()
+                window._test_close_5 = all[all.length - 1]
+                window._test_close_6 = all[all.length - 2]
+
+Verify that these are open and close groupers with the IDs that I expect,
+based on the naming convention I used above.
+
+            pageExpects ( -> window._test_open_0.outerHTML ),
+                'toBeSimilarHTML', open 0
+            pageExpects ( -> window._test_open_1.outerHTML ),
+                'toBeSimilarHTML', open 1
+            pageExpects ( -> window._test_open_2.outerHTML ),
+                'toBeSimilarHTML', open 2
+            pageExpects ( -> window._test_close_2.outerHTML ),
+                'toBeSimilarHTML', close 2
+            pageExpects ( -> window._test_close_5.outerHTML ),
+                'toBeSimilarHTML', close 5
+            pageExpects ( -> window._test_close_6.outerHTML ),
+                'toBeSimilarHTML', close 6
+
+Verify that groups 0, 1, 2, 5, and 6 in the Groups hierarchy have the
+open/close groupers chosen above.
+
+            pageExpects ( -> tinymce.activeEditor.Groups[0].open is \
+                             window._test_open_0 )
+            pageExpects ( -> tinymce.activeEditor.Groups[1].open is \
+                             window._test_open_1 )
+            pageExpects ( -> tinymce.activeEditor.Groups[2].open is \
+                             window._test_open_2 )
+            pageExpects ( -> tinymce.activeEditor.Groups[2].close is \
+                             window._test_close_2 )
+            pageExpects ( -> tinymce.activeEditor.Groups[5].close is \
+                             window._test_close_5 )
+            pageExpects ( -> tinymce.activeEditor.Groups[6].close is \
+                             window._test_close_6 )
+
+And now, what we're focusing on testing in this test:  If we ask the Groups
+plugin for the group corresponding to any of those groupers, it should
+give us the correct group in the hierarchy.
+
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_open_0 ) is tinymce.activeEditor.Groups[0]
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_open_1 ) is tinymce.activeEditor.Groups[1]
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_open_2 ) is tinymce.activeEditor.Groups[2]
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_close_2 ) is tinymce.activeEditor.Groups[2]
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_close_5 ) is tinymce.activeEditor.Groups[5]
+            pageExpects ->
+                tinymce.activeEditor.Groups.grouperToGroup(
+                    window._test_close_6 ) is tinymce.activeEditor.Groups[6]
+
+Verify that if we call `grouperToGroup` on some other objects, we get null.
+
+            pageExpects ->
+                text = window._test_open_0.nextSibling
+                tinymce.activeEditor.Groups.grouperToGroup text
+            , 'toBeNull'
+            pageExpects ->
+                paragraph = window._test_open_0.parentNode
+                tinymce.activeEditor.Groups.grouperToGroup paragraph
+            , 'toBeNull'

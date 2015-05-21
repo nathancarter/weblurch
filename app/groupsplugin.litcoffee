@@ -421,7 +421,7 @@ copies from the cache when possible.
 The results of the scanning process in [the previous section](#scanning) are
 readable through the following functions.
 
-The `ids()` method returns a list of all ids that appear in the Groups
+The following method returns a list of all ids that appear in the Groups
 hierarchy, in tree order.
 
         ids: =>
@@ -432,6 +432,13 @@ hierarchy, in tree order.
                     recur child for child in g.children
                 recur group for group in @topLevel
             @idsCache
+
+The following method finds the group for a given open/close grouper element
+from the DOM.  It returns null if the given object is not an open/close
+grouper, or does not appear in the group hierarchy.
+
+        grouperToGroup: ( grouper ) =>
+            if ( id = grouperInfo( grouper )?.id )? then @[id] else null
 
 <font color=red>This class is not yet complete. See [the project
 plan](plan.md) for details of what's to come.</font>
