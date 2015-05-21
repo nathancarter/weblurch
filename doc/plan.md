@@ -40,9 +40,6 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Create a static function in the Group class that accepts a DOM node and
-   returns the deepest Group instance surrounding it, if there is one, or
-   null if there isn't.
  * Use the overlay plugin to draw bubbles around Groups if and only if the
    cursor is inside them.
  * Enhance the Group insertion actions so that they are unavailable when the

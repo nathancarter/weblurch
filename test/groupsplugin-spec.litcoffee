@@ -519,7 +519,8 @@ hierarchy, by querying that already-constructed hierarchy in various ways.
 ### can convert groupers to groups
 
 We create a document with many nested groups, then query various parts of
-the resulting hierarchy.
+the resulting hierarchy.  We aim to test the `grouperToGroup` function in
+the Groups plugin.
 
         it 'can convert groupers to groups', inPage ->
 
@@ -677,3 +678,105 @@ Verify that if we call `grouperToGroup` on some other objects, we get null.
                 paragraph = window._test_open_0.parentNode
                 tinymce.activeEditor.Groups.grouperToGroup paragraph
             , 'toBeNull'
+
+### can convert any node to a group
+
+We create a document with many nested groups, then query various parts of
+the resulting hierarchy.  We aim to test the `groupAboveNode` function in
+the Groups plugin.
+
+        it 'can convert any node to a group', inPage ->
+
+Construct the same simple hierarchy as in the previous two tests.
+
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'me'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+            createHierarchy '[text]'
+
+Find a few nodes in the editor, and store them in global variables for use
+in the tests below.
+
+            pageDo ->
+                window._test_mainParagraph =
+                    tinymce.activeEditor.getBody().childNodes[0]
+                window._test_open = window._test_mainParagraph.childNodes[0]
+                window._test_text = window._test_open.nextSibling
+                window._test_close = window._test_text.nextSibling
+
+Verify that the group containing the whole body is null.
+
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode \
+                    window._test_mainParagraph
+            , 'toBeNull'
+
+Verify that the group containing any of the other three nodes is the one
+group in the document.
+
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_open ).id()
+            , 'toEqual', 0
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_text ).id()
+            , 'toEqual', 0
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_close ).id()
+            , 'toEqual', 0
+
+Construct the complex hierarchy as in the previous test.
+
+            pageDo -> tinymce.activeEditor.setContent ''
+            createHierarchy 'initial text
+                [ start of big group [ foo [ bar ] baz ] [ 1 ] [ 2 ] ]
+                [ a second [ group after ] the first big one ]
+                final text'
+
+Find a few nodes in the editor, and store them in global variables for use
+in the tests below.
+
+            pageDo ->
+                window._test_mainParagraph =
+                    tinymce.activeEditor.getBody().childNodes[0]
+                window._test_open_0 =
+                    window._test_mainParagraph.childNodes[1]
+                window._text_in_0 = window._test_open_0.nextSibling
+                window._test_open_1 = window._text_in_0.nextSibling
+                window._text_in_1 = window._test_open_1.nextSibling
+                window._test_open_2 = window._text_in_1.nextSibling
+                window._text_before_0 = window._test_open_0.previousSibling
+                window._text_after_0 =
+                    tinymce.activeEditor.Groups.grouperToGroup(
+                        window._test_open_0 ).close.nextSibling
+
+And now, what we're focusing on testing in this test:  If we ask the Groups
+plugin for the group above any of those nodes, it should give us the correct
+group in the hierarchy.
+
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_open_0 ) is tinymce.activeEditor.Groups[0]
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._text_in_0 ) is tinymce.activeEditor.Groups[0]
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_open_1 ) is tinymce.activeEditor.Groups[1]
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._text_in_1 ) is tinymce.activeEditor.Groups[1]
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_open_2 ) is tinymce.activeEditor.Groups[2]
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_before_0 ) is null
+            pageExpects ->
+                tinymce.activeEditor.Groups.groupAboveNode(
+                    window._test_after_0 ) is null

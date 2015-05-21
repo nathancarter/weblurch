@@ -368,6 +368,7 @@ or the "top level" list if there is no surrounding group.
                             gpStack[0].children.push newGroup
                         else
                             @topLevel.push newGroup
+                            newGroup.parent = null
 
 Any groupers lingering on the "open" stack have no corresponding close
 groupers, and must therefore be deleted.
@@ -439,6 +440,43 @@ grouper, or does not appear in the group hierarchy.
 
         grouperToGroup: ( grouper ) =>
             if ( id = grouperInfo( grouper )?.id )? then @[id] else null
+
+The following method finds the deepest group containing a given DOM Node.
+It does so by a binary search through the groupers array for the closest
+grouper before the node.  If it is an open grouper, the node is in that
+group.  If it is a close grouper, the node is in its parent group.
+
+        groupAboveNode: ( node ) =>
+            if ( all = @allGroupers() ).length is 0 then return null
+            less = ( a, b ) ->
+                Node.DOCUMENT_POSITION_FOLLOWING & \
+                    a.compareDocumentPosition( b )
+            left = index : 0, grouper : all[0], leftOfNode : yes
+            return @grouperToGroup left.grouper if left.grouper is node
+            return null if not less left.grouper, node
+            right = index : all.length - 1, grouper : all[all.length - 1]
+            return @grouperToGroup right.grouper if right.grouper is node
+            return null if less right.grouper, node
+            loop
+                if left.grouper is node
+                    return @grouperToGroup left.grouper
+                if right.grouper is node
+                    return @grouperToGroup right.grouper
+                if left.index + 1 is right.index
+                    group = @grouperToGroup left.grouper
+                    return if left.grouper is group.open then group \
+                        else group.parent
+                middle = Math.floor ( left.index + right.index ) / 2
+                if less all[middle], node
+                    left =
+                        index : middle
+                        grouper : all[middle]
+                        leftOfNode : yes
+                else
+                    right =
+                        index : middle
+                        grouper : all[middle]
+                        leftOfNode : no
 
 <font color=red>This class is not yet complete. See [the project
 plan](plan.md) for details of what's to come.</font>
