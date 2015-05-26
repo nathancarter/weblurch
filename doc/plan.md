@@ -22,7 +22,9 @@ Load and save
    http://www.tinymce.com/develop/bugtracker_view.php?id=7304)
    Use the responses from that to get this
    problem fixed in Lurch, either by updating to a fixed version of TinyMCE
-   or by installing a workaround here.
+   or by installing a workaround here.  Although you've heard about the
+   KeyUp and SetContent events that you're using in the Groups package, so
+   you may be able to correct this problem partially with those events.
  * Using the keyboard shortcut for New or Open on Mac triggers the Chrome
    behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
    menu.  See [my question about this on the TinyMCE forum,](

@@ -35,31 +35,36 @@ attribute for ignoring mouse clicks, and the fact that the canvas is a child
 of the same container as the editor itself.
 
             @editor.on 'init', =>
+                @container = @editor.getContentAreaContainer()
                 @canvas = document.createElement 'canvas'
-                @editor.getContentAreaContainer().appendChild @canvas
+                ( $ @container ).after @canvas
                 @canvas.style.position = 'absolute'
-                @canvas.style.top = @canvas.style.left = '0px'
                 @canvas.style['background-color'] = 'rgba(0,0,0,0)'
                 @canvas.style['pointer-events'] = 'none'
                 @canvas.style['z-index'] = '10'
 
-We then allow any client to register a drawing routine with this plugin, and
+We then allow any client to register drawing routines with this plugin, and
 all registered routines will be called (in the order in which they were
-registered) every time the canvas needs to be redrawn.  Thus the following
-line initializes the list of drawing handlers to empty, and the subsequent
-function installs an event handler that, each time something in the document
-changes, repositions the canvas, clears it, and runs all drawing handlers.
+registered) every time the canvas needs to be redrawn.  The following line
+initializes the list of drawing handlers to empty.
 
             @drawHandlers = []
-            @editor.on 'NodeChange', ( event ) =>
-                @positionCanvas()
-                context = @canvas.getContext '2d'
-                @clearCanvas context
-                for doDrawing in @drawHandlers
-                    try
-                        doDrawing @canvas, context
-                    catch e
-                        console.log "Error in overlay draw function: #{e}"
+            @editor.on 'NodeChange', @redrawContents
+            ( $ window ).resize @redrawContents
+
+This function installs an event handler that, each time something in the
+document changes, repositions the canvas, clears it, and runs all drawing
+handlers.
+
+        redrawContents: ( event ) =>
+            @positionCanvas()
+            context = @canvas.getContext '2d'
+            @clearCanvas context
+            for doDrawing in @drawHandlers
+                try
+                    doDrawing @canvas, context
+                catch e
+                    console.log "Error in overlay draw function: #{e}"
 
 The following function permits the installation of new drawing handlers.
 Each will receive two parameters (as shown in the code immediately above),
@@ -83,13 +88,12 @@ resized, then before redrawing takes place, the canvas reacts accordingly.
 This is called only by the handler installed in the constructor, above.
 
         positionCanvas: ->
-            @canvas.width = @canvas.parentNode.offsetWidth
-            @canvas.height = @canvas.parentNode.offsetHeight
-            orig = walk = @getEditorFrame()
-            isBody = ( e ) -> tinymce.DOM.hasClass e, 'mce-container-body'
-            walk = walk.parentNode while walk and not isBody walk
-            if walk
-                @canvas.style.top = walk.clientHeight - orig.clientHeight
+            con = $ @container
+            can = $ @canvas
+            can.css 'top', con.position().top
+            can.css 'left', con.position().left
+            can.width con.width()
+            can.height con.height()
 
 This function clears the canvas before drawing.  It is called only by the
 handler installed in the constructor, above.
