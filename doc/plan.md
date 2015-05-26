@@ -34,6 +34,7 @@ Load and save
 
 ## Miscellaneous enhancements
 
+ * Disable resizing of grouper objects as if they were normal images
  * Move all plugin files into the `src/` folder, if possible.
 
 ## Extending the Editor
@@ -42,8 +43,6 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Use the overlay plugin to draw bubbles around Groups if and only if the
-   cursor is inside them.
  * Enhance the Group insertion actions so that they are unavailable when the
    base and anchor of the selection are not in the same Group.
  * Add instance methods for getting/setting arbitrary data on a Group, as

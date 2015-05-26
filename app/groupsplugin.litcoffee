@@ -128,6 +128,11 @@ For this reason, the list begins as `[ 0 ]`.
 
             @freeIds = [ 0 ]
 
+Install in the Overlay plugin for the same editor object a handler that
+draws the groups surrounding the user's cursor.
+
+            @editor.Overlay.addDrawHandler @drawGroups
+
 When a free id is needed, we need a function that will give the next such
 free id and then mark that id as consumed from the list.
 
@@ -407,6 +412,15 @@ it recomputes its results from the newly-generated hierarchy in `topLevel`.
 
             delete @idsCache
 
+If the Overlay plugin is in use, it should now redraw, since the list of
+groups may have changed.  We put it on a slight delay, because there may
+still be some pending cursor movements that we want to ensure have finished
+before this drawing routine is called.
+
+            setTimeout =>
+                @editor.Overlay?.redrawContents()
+            , 0
+
 The above function needs to create instances of the `Group` class, and
 associate them with their IDs.  The following function does so, re-using
 copies from the cache when possible.
@@ -477,6 +491,128 @@ group.  If it is a close grouper, the node is in its parent group.
                         index : middle
                         grouper : all[middle]
                         leftOfNode : no
+
+The following method is like the previous, but instead of computing the
+deepest group above a given node, it computes the deepest group above a
+given cursor position.  This must be presented to the method in the form of
+an HTML Range object that has the same start and end nodes and offsets, such
+as one that has been collapsed.
+
+        groupAboveCursor: ( cursor ) =>
+            if cursor.startContainer instanceof @editor.getWin().Text
+                return @groupAboveNode cursor.startContainer
+            if cursor.startContainer.childNodes.length > cursor.startOffset
+                elementAfter =
+                    cursor.startContainer.childNodes[cursor.startOffset]
+                itsGroup = @groupAboveNode elementAfter
+                return if itsGroup?.open is elementAfter \
+                    then itsGroup.parent else itsGroup
+            if cursor.startContainer.childNodes.length > 0
+                elementBefore =
+                    cursor.startContainer.childNodes[cursor.startOffset - 1]
+                itsGroup = @groupAboveNode elementBefore
+                return if itsGroup?.close is elementBefore \
+                    then itsGroup.parent else itsGroup
+            @groupAboveNode cursor.startContainer
+
+The following method generalizes the previous to HTML Range objects that do
+not have the same starting and ending points.  The group returned will be
+the deepest group containing both ends of the cursor.
+
+        groupAboveSelection: ( range ) =>
+
+Compute the complete ancestor chain of the left end of the range.
+
+            left = range.cloneRange()
+            left.collapse yes
+            left = @groupAboveCursor left
+            leftChain = [ ]
+            while left isnt null
+                leftChain.unshift left
+                left = left.parent
+
+Compute the complete ancestor chain of the right end of the range.
+
+            right = range.cloneRange()
+            right.collapse no
+            right = @groupAboveCursor right
+            rightChain = [ ]
+            while right isnt null
+                rightChain.unshift right
+                right = right.parent
+
+Find the deepest group in both ancestor chains.
+
+            result = null
+            while leftChain.length > 0 and rightChain.length > 0 and \
+                  leftChain[0] is rightChain[0]
+                result = leftChain.shift()
+                rightChain.shift()
+            result
+
+## Drawing Groups
+
+The following function draws groups around the user's cursor, if any.  It is
+installed in [the constructor](#groups-constructor) and called by [the
+Overay plugin](overlayplugin.litcoffee).
+
+        drawGroups: ( canvas, context ) =>
+            group = @groupAboveSelection @editor.selection.getRng()
+            while group
+
+Compute the sizes and positions of the open and close groupers.
+
+                open = $ group.open
+                close = $ group.close
+                p = open.position()
+                open =
+                    top : p.top
+                    left : p.left
+                    bottom : p.top + open.height()
+                    right : p.left + open.width()
+                p = close.position()
+                close =
+                    top : p.top
+                    left : p.left
+                    bottom : p.top + close.height()
+                    right : p.left + close.width()
+
+If any of them has zero size, then that means that an image file (for an
+open/close grouper) isn't yet loaded.  Thus we need to stop here and queue
+up a later call to this same drawing routine, at which time the image file
+may be loaded.
+
+                if open.top is open.bottom or close.top is close.bottom or \
+                   open.left is open.right or close.left is close.right
+                    setTimeout =>
+                        @editor.Overlay?.redrawContents()
+                    , 100
+                    return
+
+Draw this group and then move one step up the group hierarchy, ready to draw
+the next one on the next pass through the loop.
+
+                context.fillStyle = '#ff0000'
+                context.globalAlpha = 0.2
+                context.beginPath()
+                if open.top is close.top
+                    context.moveTo open.left, open.top
+                    context.lineTo close.right, open.top
+                    context.lineTo close.right, close.bottom
+                    context.lineTo open.left, close.bottom
+                    context.lineTo open.left, open.top
+                else
+                    context.moveTo open.left, open.top
+                    context.lineTo canvas.width, open.top
+                    context.lineTo canvas.width, close.top
+                    context.lineTo close.right, close.top
+                    context.lineTo close.right, close.bottom
+                    context.lineTo 0, close.bottom
+                    context.lineTo 0, open.bottom
+                    context.lineTo open.left, open.bottom
+                    context.lineTo open.left, open.top
+                context.fill()
+                group = group.parent
 
 <font color=red>This class is not yet complete. See [the project
 plan](plan.md) for details of what's to come.</font>

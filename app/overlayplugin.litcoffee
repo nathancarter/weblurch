@@ -58,7 +58,7 @@ handlers.
 
         redrawContents: ( event ) =>
             @positionCanvas()
-            context = @canvas.getContext '2d'
+            if not context = @canvas?.getContext '2d' then return
             @clearCanvas context
             for doDrawing in @drawHandlers
                 try
@@ -90,10 +90,13 @@ This is called only by the handler installed in the constructor, above.
         positionCanvas: ->
             con = $ @container
             can = $ @canvas
+            if not con.position()? then return
             can.css 'top', con.position().top
             can.css 'left', con.position().left
             can.width con.width()
             can.height con.height()
+            @canvas.width = can.width()
+            @canvas.height = can.height()
 
 This function clears the canvas before drawing.  It is called only by the
 handler installed in the constructor, above.
