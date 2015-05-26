@@ -53,6 +53,9 @@
   Groups = (function() {
     function Groups(editor) {
       this.editor = editor;
+      this.drawGroups = __bind(this.drawGroups, this);
+      this.groupAboveSelection = __bind(this.groupAboveSelection, this);
+      this.groupAboveCursor = __bind(this.groupAboveCursor, this);
       this.groupAboveNode = __bind(this.groupAboveNode, this);
       this.grouperToGroup = __bind(this.grouperToGroup, this);
       this.ids = __bind(this.ids, this);
@@ -70,6 +73,7 @@
       this.groupTypes = {};
       this.topLevel = [];
       this.freeIds = [0];
+      this.editor.Overlay.addDrawHandler(this.drawGroups);
     }
 
     Groups.prototype.nextFreeId = function() {
@@ -308,7 +312,13 @@
         id = becameFree[_k];
         delete this[id];
       }
-      return delete this.idsCache;
+      delete this.idsCache;
+      return setTimeout((function(_this) {
+        return function() {
+          var _ref1;
+          return (_ref1 = _this.editor.Overlay) != null ? _ref1.redrawContents() : void 0;
+        };
+      })(this), 0);
     };
 
     Groups.prototype.registerGroup = function(open, close) {
@@ -413,6 +423,112 @@
             leftOfNode: false
           };
         }
+      }
+    };
+
+    Groups.prototype.groupAboveCursor = function(cursor) {
+      var elementAfter, elementBefore, itsGroup;
+      if (cursor.startContainer instanceof this.editor.getWin().Text) {
+        return this.groupAboveNode(cursor.startContainer);
+      }
+      if (cursor.startContainer.childNodes.length > cursor.startOffset) {
+        elementAfter = cursor.startContainer.childNodes[cursor.startOffset];
+        itsGroup = this.groupAboveNode(elementAfter);
+        if ((itsGroup != null ? itsGroup.open : void 0) === elementAfter) {
+          return itsGroup.parent;
+        } else {
+          return itsGroup;
+        }
+      }
+      if (cursor.startContainer.childNodes.length > 0) {
+        elementBefore = cursor.startContainer.childNodes[cursor.startOffset - 1];
+        itsGroup = this.groupAboveNode(elementBefore);
+        if ((itsGroup != null ? itsGroup.close : void 0) === elementBefore) {
+          return itsGroup.parent;
+        } else {
+          return itsGroup;
+        }
+      }
+      return this.groupAboveNode(cursor.startContainer);
+    };
+
+    Groups.prototype.groupAboveSelection = function(range) {
+      var left, leftChain, result, right, rightChain;
+      left = range.cloneRange();
+      left.collapse(true);
+      left = this.groupAboveCursor(left);
+      leftChain = [];
+      while (left !== null) {
+        leftChain.unshift(left);
+        left = left.parent;
+      }
+      right = range.cloneRange();
+      right.collapse(false);
+      right = this.groupAboveCursor(right);
+      rightChain = [];
+      while (right !== null) {
+        rightChain.unshift(right);
+        right = right.parent;
+      }
+      result = null;
+      while (leftChain.length > 0 && rightChain.length > 0 && leftChain[0] === rightChain[0]) {
+        result = leftChain.shift();
+        rightChain.shift();
+      }
+      return result;
+    };
+
+    Groups.prototype.drawGroups = function(canvas, context) {
+      var close, group, open, p;
+      group = this.groupAboveSelection(this.editor.selection.getRng());
+      while (group) {
+        open = $(group.open);
+        close = $(group.close);
+        p = open.position();
+        open = {
+          top: p.top,
+          left: p.left,
+          bottom: p.top + open.height(),
+          right: p.left + open.width()
+        };
+        p = close.position();
+        close = {
+          top: p.top,
+          left: p.left,
+          bottom: p.top + close.height(),
+          right: p.left + close.width()
+        };
+        if (open.top === open.bottom || close.top === close.bottom || open.left === open.right || close.left === close.right) {
+          setTimeout((function(_this) {
+            return function() {
+              var _ref;
+              return (_ref = _this.editor.Overlay) != null ? _ref.redrawContents() : void 0;
+            };
+          })(this), 100);
+          return;
+        }
+        context.fillStyle = '#ff0000';
+        context.globalAlpha = 0.2;
+        context.beginPath();
+        if (open.top === close.top) {
+          context.moveTo(open.left, open.top);
+          context.lineTo(close.right, open.top);
+          context.lineTo(close.right, close.bottom);
+          context.lineTo(open.left, close.bottom);
+          context.lineTo(open.left, open.top);
+        } else {
+          context.moveTo(open.left, open.top);
+          context.lineTo(canvas.width, open.top);
+          context.lineTo(canvas.width, close.top);
+          context.lineTo(close.right, close.top);
+          context.lineTo(close.right, close.bottom);
+          context.lineTo(0, close.bottom);
+          context.lineTo(0, open.bottom);
+          context.lineTo(open.left, open.bottom);
+          context.lineTo(open.left, open.top);
+        }
+        context.fill();
+        group = group.parent;
       }
     };
 
@@ -1008,39 +1124,43 @@
   Overlay = (function() {
     function Overlay(editor) {
       this.editor = editor;
+      this.redrawContents = __bind(this.redrawContents, this);
       this.editor.on('init', (function(_this) {
         return function() {
+          _this.container = _this.editor.getContentAreaContainer();
           _this.canvas = document.createElement('canvas');
-          _this.editor.getContentAreaContainer().appendChild(_this.canvas);
+          ($(_this.container)).after(_this.canvas);
           _this.canvas.style.position = 'absolute';
-          _this.canvas.style.top = _this.canvas.style.left = '0px';
           _this.canvas.style['background-color'] = 'rgba(0,0,0,0)';
           _this.canvas.style['pointer-events'] = 'none';
           return _this.canvas.style['z-index'] = '10';
         };
       })(this));
       this.drawHandlers = [];
-      this.editor.on('NodeChange', (function(_this) {
-        return function(event) {
-          var context, doDrawing, e, _i, _len, _ref, _results;
-          _this.positionCanvas();
-          context = _this.canvas.getContext('2d');
-          _this.clearCanvas(context);
-          _ref = _this.drawHandlers;
-          _results = [];
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            doDrawing = _ref[_i];
-            try {
-              _results.push(doDrawing(_this.canvas, context));
-            } catch (_error) {
-              e = _error;
-              _results.push(console.log("Error in overlay draw function: " + e));
-            }
-          }
-          return _results;
-        };
-      })(this));
+      this.editor.on('NodeChange', this.redrawContents);
+      ($(window)).resize(this.redrawContents);
     }
+
+    Overlay.prototype.redrawContents = function(event) {
+      var context, doDrawing, e, _i, _len, _ref, _ref1, _results;
+      this.positionCanvas();
+      if (!(context = (_ref = this.canvas) != null ? _ref.getContext('2d') : void 0)) {
+        return;
+      }
+      this.clearCanvas(context);
+      _ref1 = this.drawHandlers;
+      _results = [];
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        doDrawing = _ref1[_i];
+        try {
+          _results.push(doDrawing(this.canvas, context));
+        } catch (_error) {
+          e = _error;
+          _results.push(console.log("Error in overlay draw function: " + e));
+        }
+      }
+      return _results;
+    };
 
     Overlay.prototype.addDrawHandler = function(drawFunction) {
       return this.drawHandlers.push(drawFunction);
@@ -1059,19 +1179,18 @@
     };
 
     Overlay.prototype.positionCanvas = function() {
-      var isBody, orig, walk;
-      this.canvas.width = this.canvas.parentNode.offsetWidth;
-      this.canvas.height = this.canvas.parentNode.offsetHeight;
-      orig = walk = this.getEditorFrame();
-      isBody = function(e) {
-        return tinymce.DOM.hasClass(e, 'mce-container-body');
-      };
-      while (walk && !isBody(walk)) {
-        walk = walk.parentNode;
+      var can, con;
+      con = $(this.container);
+      can = $(this.canvas);
+      if (con.position() == null) {
+        return;
       }
-      if (walk) {
-        return this.canvas.style.top = walk.clientHeight - orig.clientHeight;
-      }
+      can.css('top', con.position().top);
+      can.css('left', con.position().left);
+      can.width(con.width());
+      can.height(con.height());
+      this.canvas.width = can.width();
+      return this.canvas.height = can.height();
     };
 
     Overlay.prototype.clearCanvas = function(context) {

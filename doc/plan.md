@@ -22,7 +22,9 @@ Load and save
    http://www.tinymce.com/develop/bugtracker_view.php?id=7304)
    Use the responses from that to get this
    problem fixed in Lurch, either by updating to a fixed version of TinyMCE
-   or by installing a workaround here.
+   or by installing a workaround here.  Although you've heard about the
+   KeyUp and SetContent events that you're using in the Groups package, so
+   you may be able to correct this problem partially with those events.
  * Using the keyboard shortcut for New or Open on Mac triggers the Chrome
    behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
    menu.  See [my question about this on the TinyMCE forum,](
@@ -32,6 +34,7 @@ Load and save
 
 ## Miscellaneous enhancements
 
+ * Disable resizing of grouper objects as if they were normal images
  * Move all plugin files into the `src/` folder, if possible.
 
 ## Extending the Editor
@@ -40,8 +43,6 @@ Load and save
 
 Create a Groups plugin with the following features.
 
- * Use the overlay plugin to draw bubbles around Groups if and only if the
-   cursor is inside them.
  * Enhance the Group insertion actions so that they are unavailable when the
    base and anchor of the selection are not in the same Group.
  * Add instance methods for getting/setting arbitrary data on a Group, as
