@@ -43,7 +43,11 @@ data is not available in the expected format, it returns `null`.
 
     grouperInfo = ( grouper ) ->
         info = /^(open|close)([0-9]+)$/.exec grouper?.getAttribute? 'id'
-        if info then type : info[1], id : parseInt info[2] else null
+        if not info then return null
+        result = openOrClose : info[1], id : parseInt info[2]
+        more = /^grouper ([^ ]+)/.exec grouper?.getAttribute? 'class'
+        if more then result.type = more[1]
+        result
     window.grouperInfo = grouperInfo
 
 # `Group` class
@@ -70,10 +74,11 @@ them for later lookup.
 This method returns the ID of the group, if it is available within the open
 grouper.
 
-        id: -> grouperInfo( @open )?.id ? null
+        id: => grouperInfo( @open )?.id ? null
 
-<font color=red>This class is not yet complete. See [the project
-plan](plan.md) for details of what's to come.</font>
+This method returns the name of the type of the group, as a string.
+
+        typeName: => grouperInfo( @open )?.type
 
 The `Group` class should be accessible globally.
 
@@ -332,7 +337,7 @@ If it had the grouper class but wasn't really a grouper, delete it.
 If it's an open grouper, push it onto the stack of nested ids we're
 tracking.
 
-                else if info.type is 'open'
+                else if info.openOrClose is 'open'
                     gpStack.unshift
                         id : info.id
                         grouper : grouper
@@ -477,7 +482,7 @@ group.  If it is a close grouper, the node is in its parent group.
                 if right.grouper is node
                     return @grouperToGroup right.grouper
                 if left.index + 1 is right.index
-                    group = @grouperToGroup left.grouper
+                    return null unless group = @grouperToGroup left.grouper
                     return if left.grouper is group.open then group \
                         else group.parent
                 middle = Math.floor ( left.index + right.index ) / 2
@@ -558,7 +563,12 @@ Overay plugin](overlayplugin.litcoffee).
 
         drawGroups: ( canvas, context ) =>
             group = @groupAboveSelection @editor.selection.getRng()
+            bodyStyle = null
+            pad = padStep = 1
+            radius = 4
+            p4 = Math.pi / 4
             while group
+                color = @groupTypes?[group?.typeName()]?.color ? '#444444'
 
 Compute the sizes and positions of the open and close groupers.
 
@@ -592,27 +602,54 @@ may be loaded.
 Draw this group and then move one step up the group hierarchy, ready to draw
 the next one on the next pass through the loop.
 
-                context.fillStyle = '#ff0000'
-                context.globalAlpha = 0.2
+                x1 = open.left - pad/3
+                y1 = open.top - pad
+                x2 = close.right + pad/3
+                y2 = close.bottom + pad
+                context.fillStyle = context.strokeStyle = color
                 context.beginPath()
                 if open.top is close.top
-                    context.moveTo open.left, open.top
-                    context.lineTo close.right, open.top
-                    context.lineTo close.right, close.bottom
-                    context.lineTo open.left, close.bottom
-                    context.lineTo open.left, open.top
+
+A rounded rectangle from open's top left to close's bottom right, padded by
+`pad/3` in the x direction, `pad` in the y direction, and with corner radius
+`radius`.
+
+                    context.moveTo x1 + radius, y1
+                    context.lineTo x2 - radius, y1
+                    context.arcTo x2, y1, x2, y1 + radius, radius
+                    context.lineTo x2, y2 - radius
+                    context.arcTo x2, y2, x2 - radius, y2, radius
+                    context.lineTo x1 + radius, y2
+                    context.arcTo x1, y2, x1, y2 - radius, radius
+                    context.lineTo x1, y1 + radius
+                    context.arcTo x1, y1, x1 + radius, y1, radius
                 else
-                    context.moveTo open.left, open.top
-                    context.lineTo canvas.width, open.top
-                    context.lineTo canvas.width, close.top
-                    context.lineTo close.right, close.top
-                    context.lineTo close.right, close.bottom
-                    context.lineTo 0, close.bottom
-                    context.lineTo 0, open.bottom
-                    context.lineTo open.left, open.bottom
-                    context.lineTo open.left, open.top
+                    if not bodyStyle?
+                        bodyStyle = getComputedStyle @editor.getBody()
+                        leftMar = parseInt bodyStyle['margin-left']
+                        rightMar = parseInt bodyStyle['margin-right']
+                    xL = leftMar
+                    xR = canvas.width - rightMar
+                    yT = open.bottom
+                    yB = close.top
+                    context.moveTo x1 + radius, y1
+                    context.lineTo xR, y1
+                    context.lineTo xR, yB
+                    context.lineTo x2, yB
+                    context.lineTo x2, y2 - radius
+                    context.arcTo x2, y2, x2 - radius, y2, radius
+                    context.lineTo xL, y2
+                    context.lineTo xL, yT
+                    context.lineTo x1, yT
+                    context.lineTo x1, y1 + radius
+                    context.arcTo x1, y1, x1 + radius, y1, radius
+                context.globalAlpha = 1.0
+                context.lineWidth = 1.0
+                context.stroke()
+                context.globalAlpha = 0.3
                 context.fill()
                 group = group.parent
+                pad += padStep
 
 <font color=red>This class is not yet complete. See [the project
 plan](plan.md) for details of what's to come.</font>

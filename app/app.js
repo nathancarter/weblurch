@@ -19,16 +19,20 @@
   window.grouperHTML = grouperHTML;
 
   grouperInfo = function(grouper) {
-    var info;
+    var info, more, result;
     info = /^(open|close)([0-9]+)$/.exec(grouper != null ? typeof grouper.getAttribute === "function" ? grouper.getAttribute('id') : void 0 : void 0);
-    if (info) {
-      return {
-        type: info[1],
-        id: parseInt(info[2])
-      };
-    } else {
+    if (!info) {
       return null;
     }
+    result = {
+      openOrClose: info[1],
+      id: parseInt(info[2])
+    };
+    more = /^grouper ([^ ]+)/.exec(grouper != null ? typeof grouper.getAttribute === "function" ? grouper.getAttribute('class') : void 0 : void 0);
+    if (more) {
+      result.type = more[1];
+    }
+    return result;
   };
 
   window.grouperInfo = grouperInfo;
@@ -37,11 +41,18 @@
     function Group(open, close) {
       this.open = open;
       this.close = close;
+      this.typeName = __bind(this.typeName, this);
+      this.id = __bind(this.id, this);
     }
 
     Group.prototype.id = function() {
       var _ref, _ref1;
       return (_ref = (_ref1 = grouperInfo(this.open)) != null ? _ref1.id : void 0) != null ? _ref : null;
+    };
+
+    Group.prototype.typeName = function() {
+      var _ref;
+      return (_ref = grouperInfo(this.open)) != null ? _ref.type : void 0;
     };
 
     return Group;
@@ -240,7 +251,7 @@
         grouper = groupers[_i];
         if ((info = grouperInfo(grouper)) == null) {
           ($(grouper)).remove();
-        } else if (info.type === 'open') {
+        } else if (info.openOrClose === 'open') {
           gpStack.unshift({
             id: info.id,
             grouper: grouper,
@@ -402,7 +413,9 @@
           return this.grouperToGroup(right.grouper);
         }
         if (left.index + 1 === right.index) {
-          group = this.grouperToGroup(left.grouper);
+          if (!(group = this.grouperToGroup(left.grouper))) {
+            return null;
+          }
           if (left.grouper === group.open) {
             return group;
           } else {
@@ -479,9 +492,14 @@
     };
 
     Groups.prototype.drawGroups = function(canvas, context) {
-      var close, group, open, p;
+      var bodyStyle, close, color, group, leftMar, open, p, p4, pad, padStep, radius, rightMar, x1, x2, xL, xR, y1, y2, yB, yT, _ref, _ref1, _ref2;
       group = this.groupAboveSelection(this.editor.selection.getRng());
+      bodyStyle = null;
+      pad = padStep = 1;
+      radius = 4;
+      p4 = Math.pi / 4;
       while (group) {
+        color = (_ref = (_ref1 = this.groupTypes) != null ? (_ref2 = _ref1[group != null ? group.typeName() : void 0]) != null ? _ref2.color : void 0 : void 0) != null ? _ref : '#444444';
         open = $(group.open);
         close = $(group.close);
         p = open.position();
@@ -501,34 +519,57 @@
         if (open.top === open.bottom || close.top === close.bottom || open.left === open.right || close.left === close.right) {
           setTimeout((function(_this) {
             return function() {
-              var _ref;
-              return (_ref = _this.editor.Overlay) != null ? _ref.redrawContents() : void 0;
+              var _ref3;
+              return (_ref3 = _this.editor.Overlay) != null ? _ref3.redrawContents() : void 0;
             };
           })(this), 100);
           return;
         }
-        context.fillStyle = '#ff0000';
-        context.globalAlpha = 0.2;
+        x1 = open.left - pad / 3;
+        y1 = open.top - pad;
+        x2 = close.right + pad / 3;
+        y2 = close.bottom + pad;
+        context.fillStyle = context.strokeStyle = color;
         context.beginPath();
         if (open.top === close.top) {
-          context.moveTo(open.left, open.top);
-          context.lineTo(close.right, open.top);
-          context.lineTo(close.right, close.bottom);
-          context.lineTo(open.left, close.bottom);
-          context.lineTo(open.left, open.top);
+          context.moveTo(x1 + radius, y1);
+          context.lineTo(x2 - radius, y1);
+          context.arcTo(x2, y1, x2, y1 + radius, radius);
+          context.lineTo(x2, y2 - radius);
+          context.arcTo(x2, y2, x2 - radius, y2, radius);
+          context.lineTo(x1 + radius, y2);
+          context.arcTo(x1, y2, x1, y2 - radius, radius);
+          context.lineTo(x1, y1 + radius);
+          context.arcTo(x1, y1, x1 + radius, y1, radius);
         } else {
-          context.moveTo(open.left, open.top);
-          context.lineTo(canvas.width, open.top);
-          context.lineTo(canvas.width, close.top);
-          context.lineTo(close.right, close.top);
-          context.lineTo(close.right, close.bottom);
-          context.lineTo(0, close.bottom);
-          context.lineTo(0, open.bottom);
-          context.lineTo(open.left, open.bottom);
-          context.lineTo(open.left, open.top);
+          if (bodyStyle == null) {
+            bodyStyle = getComputedStyle(this.editor.getBody());
+            leftMar = parseInt(bodyStyle['margin-left']);
+            rightMar = parseInt(bodyStyle['margin-right']);
+          }
+          xL = leftMar;
+          xR = canvas.width - rightMar;
+          yT = open.bottom;
+          yB = close.top;
+          context.moveTo(x1 + radius, y1);
+          context.lineTo(xR, y1);
+          context.lineTo(xR, yB);
+          context.lineTo(x2, yB);
+          context.lineTo(x2, y2 - radius);
+          context.arcTo(x2, y2, x2 - radius, y2, radius);
+          context.lineTo(xL, y2);
+          context.lineTo(xL, yT);
+          context.lineTo(x1, yT);
+          context.lineTo(x1, y1 + radius);
+          context.arcTo(x1, y1, x1 + radius, y1, radius);
         }
+        context.globalAlpha = 1.0;
+        context.lineWidth = 1.0;
+        context.stroke();
+        context.globalAlpha = 0.3;
         context.fill();
         group = group.parent;
+        pad += padStep;
       }
     };
 
@@ -1156,7 +1197,7 @@
           _results.push(doDrawing(this.canvas, context));
         } catch (_error) {
           e = _error;
-          _results.push(console.log("Error in overlay draw function: " + e));
+          _results.push(console.log("Error in overlay draw function: " + e.stack));
         }
       }
       return _results;
@@ -1308,7 +1349,8 @@
           name: 'me',
           text: 'Meaningful expression',
           image: './images/red-bracket-icon.png',
-          tooltip: 'Make text a meaningful expression'
+          tooltip: 'Make text a meaningful expression',
+          color: '#996666'
         }
       ]
     });
