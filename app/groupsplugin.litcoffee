@@ -477,7 +477,7 @@ group.  If it is a close grouper, the node is in its parent group.
                 if right.grouper is node
                     return @grouperToGroup right.grouper
                 if left.index + 1 is right.index
-                    group = @grouperToGroup left.grouper
+                    return null unless group = @grouperToGroup left.grouper
                     return if left.grouper is group.open then group \
                         else group.parent
                 middle = Math.floor ( left.index + right.index ) / 2
@@ -558,6 +558,7 @@ Overay plugin](overlayplugin.litcoffee).
 
         drawGroups: ( canvas, context ) =>
             group = @groupAboveSelection @editor.selection.getRng()
+            bodyStyle = null
             while group
 
 Compute the sizes and positions of the open and close groupers.
@@ -602,13 +603,17 @@ the next one on the next pass through the loop.
                     context.lineTo open.left, close.bottom
                     context.lineTo open.left, open.top
                 else
+                    if not bodyStyle?
+                        bodyStyle = getComputedStyle @editor.getBody()
+                        leftMar = parseInt bodyStyle['margin-left']
+                        rightMar = parseInt bodyStyle['margin-right']
                     context.moveTo open.left, open.top
-                    context.lineTo canvas.width, open.top
-                    context.lineTo canvas.width, close.top
+                    context.lineTo canvas.width - rightMar, open.top
+                    context.lineTo canvas.width - rightMar, close.top
                     context.lineTo close.right, close.top
                     context.lineTo close.right, close.bottom
-                    context.lineTo 0, close.bottom
-                    context.lineTo 0, open.bottom
+                    context.lineTo leftMar, close.bottom
+                    context.lineTo leftMar, open.bottom
                     context.lineTo open.left, open.bottom
                     context.lineTo open.left, open.top
                 context.fill()

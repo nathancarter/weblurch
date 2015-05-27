@@ -43,7 +43,6 @@ Load and save
 
 Complete the Groups plugin by adding the following features.
 
- * Respect document margins when drawing bubbles.
  * Give bubbles an inner padding amount.
  * Make the inner padding amount for bubbles increase as you move upward in
    the parent chain of nested groups.
