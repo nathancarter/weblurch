@@ -43,7 +43,11 @@ data is not available in the expected format, it returns `null`.
 
     grouperInfo = ( grouper ) ->
         info = /^(open|close)([0-9]+)$/.exec grouper?.getAttribute? 'id'
-        if info then type : info[1], id : parseInt info[2] else null
+        if not info then return null
+        result = openOrClose : info[1], id : parseInt info[2]
+        more = /^grouper ([^ ]+)/.exec grouper?.getAttribute? 'class'
+        if more then result.type = more[1]
+        result
     window.grouperInfo = grouperInfo
 
 # `Group` class
@@ -70,10 +74,11 @@ them for later lookup.
 This method returns the ID of the group, if it is available within the open
 grouper.
 
-        id: -> grouperInfo( @open )?.id ? null
+        id: => grouperInfo( @open )?.id ? null
 
-<font color=red>This class is not yet complete. See [the project
-plan](plan.md) for details of what's to come.</font>
+This method returns the name of the type of the group, as a string.
+
+        typeName: => grouperInfo( @open )?.type
 
 The `Group` class should be accessible globally.
 
@@ -332,7 +337,7 @@ If it had the grouper class but wasn't really a grouper, delete it.
 If it's an open grouper, push it onto the stack of nested ids we're
 tracking.
 
-                else if info.type is 'open'
+                else if info.openOrClose is 'open'
                     gpStack.unshift
                         id : info.id
                         grouper : grouper
@@ -563,6 +568,7 @@ Overay plugin](overlayplugin.litcoffee).
             radius = 4
             p4 = Math.pi / 4
             while group
+                color = @groupTypes?[group?.typeName()]?.color ? '#444444'
 
 Compute the sizes and positions of the open and close groupers.
 
@@ -600,7 +606,7 @@ the next one on the next pass through the loop.
                 y1 = open.top - pad
                 x2 = close.right + pad/3
                 y2 = close.bottom + pad
-                context.fillStyle = context.strokeStyle = '#ff0000'
+                context.fillStyle = context.strokeStyle = color
                 context.beginPath()
                 if open.top is close.top
 
@@ -638,8 +644,9 @@ A rounded rectangle from open's top left to close's bottom right, padded by
                     context.lineTo x1, y1 + radius
                     context.arcTo x1, y1, x1 + radius, y1, radius
                 context.globalAlpha = 1.0
+                context.lineWidth = 1.0
                 context.stroke()
-                context.globalAlpha = 0.2
+                context.globalAlpha = 0.3
                 context.fill()
                 group = group.parent
                 pad += padStep

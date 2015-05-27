@@ -164,4 +164,5 @@ knows which group types to create.
                 text : 'Meaningful expression'
                 image : './images/red-bracket-icon.png'
                 tooltip : 'Make text a meaningful expression'
+                color : '#996666'
             ]

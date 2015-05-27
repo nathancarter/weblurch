@@ -43,8 +43,6 @@ Load and save
 
 Complete the Groups plugin by adding the following features.
 
- * Do not hard-code a color into the bubble-drawing routine, but lift the
-   color from the data about the group's own type.  Default to gray.
  * Enhance the Group insertion actions so that they are unavailable when the
    base and anchor of the selection are not in the same Group.
  * Add instance methods for getting/setting arbitrary data on a Group, as
