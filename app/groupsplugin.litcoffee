@@ -194,20 +194,46 @@ routine needs, and they will be passed along directly.
             name = ( n for n in name when /[a-zA-Z_-]/.test n ).join ''
             @groupTypes[name] = data
             if data.hasOwnProperty 'text'
+                plugin = this
                 menuData =
                     text : data.text
                     context : data.context ? 'Insert'
                     onclick : => @groupCurrentSelection name
+                    onPostRender : -> # must use -> here to access "this":
+                        plugin.groupTypes[name].menuItem = this
+                        plugin.updateButtonsAndMenuItems()
                 if data.shortcut? then menuData.shortcut = data.shortcut
                 if data.icon? then menuData.icon = data.icon
                 @editor.addMenuItem name, menuData
                 buttonData =
                     tooltip : data.tooltip
                     onclick : => @groupCurrentSelection name
+                    onPostRender : -> # must use -> here to access "this":
+                        plugin.groupTypes[name].button = this
+                        plugin.updateButtonsAndMenuItems()
                 key = if data.image? then 'image' else \
                     if data.icon? then 'icon' else 'text'
                 buttonData[key] = data[key]
                 @editor.addButton name, buttonData
+
+The above function calls `updateButtonsAndMenuItems()` whenever a new button
+or menu item is first drawn.  That function is also called whenever the
+cursor in the document moves or the groups are rescanned.  It enables or
+disables the group-insertion routines based on whether the selection should
+be allowed to be wrapped in a group.  This is determined based on whether
+the two ends of the selection are inside the same deepest group.
+
+        updateButtonsAndMenuItems: =>
+            left = @editor?.selection?.getRng()?.cloneRange()
+            if not left then return
+            right = left.cloneRange()
+            left.collapse yes
+            right.collapse no
+            inSameGroup =
+                @groupAboveCursor( left ) is @groupAboveCursor( right )
+            for own name, type of @groupTypes
+                type?.button?.disabled not inSameGroup
+                type?.menuItem?.disabled not inSameGroup
 
 ## Inserting new groups
 
@@ -420,10 +446,12 @@ it recomputes its results from the newly-generated hierarchy in `topLevel`.
 If the Overlay plugin is in use, it should now redraw, since the list of
 groups may have changed.  We put it on a slight delay, because there may
 still be some pending cursor movements that we want to ensure have finished
-before this drawing routine is called.
+before this drawing routine is called.  At the same time, we also update
+the enabled/disabled state of group-insertion buttons and menu items.
 
             setTimeout =>
                 @editor.Overlay?.redrawContents()
+                @updateButtonsAndMenuItems()
             , 0
 
 The above function needs to create instances of the `Group` class, and
@@ -651,9 +679,6 @@ A rounded rectangle from open's top left to close's bottom right, padded by
                 group = group.parent
                 pad += padStep
 
-<font color=red>This class is not yet complete. See [the project
-plan](plan.md) for details of what's to come.</font>
-
 # Installing the plugin
 
 The plugin, when initialized on an editor, places an instance of the
@@ -681,3 +706,9 @@ key or home/end/pgup/pgdn.
         editor.on 'KeyUp', ( event ) ->
             if 33 <= event.keyCode <= 40 then return
             editor.Groups.scanDocument()
+
+Whenever the cursor moves, we should update whether the group-insertion
+buttons and menu items are enabled.
+
+        editor.on 'NodeChange', ( event ) ->
+            editor.Groups.updateButtonsAndMenuItems()

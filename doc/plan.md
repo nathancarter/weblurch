@@ -43,8 +43,6 @@ Load and save
 
 Complete the Groups plugin by adding the following features.
 
- * Enhance the Group insertion actions so that they are unavailable when the
-   base and anchor of the selection are not in the same Group.
  * Add instance methods for getting/setting arbitrary data on a Group, as
    key-value pairs stored in the open grouper DOM element attributes.
 
