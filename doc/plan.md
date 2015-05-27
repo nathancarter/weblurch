@@ -43,7 +43,6 @@ Load and save
 
 Complete the Groups plugin by adding the following features.
 
- * Use rounded rectangles for bubbles.
  * Do not hard-code a color into the bubble-drawing routine, but lift the
    color from the data about the group's own type.  Default to gray.
  * Enhance the Group insertion actions so that they are unavailable when the

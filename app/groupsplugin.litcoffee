@@ -560,6 +560,8 @@ Overay plugin](overlayplugin.litcoffee).
             group = @groupAboveSelection @editor.selection.getRng()
             bodyStyle = null
             pad = padStep = 1
+            radius = 4
+            p4 = Math.pi / 4
             while group
 
 Compute the sizes and positions of the open and close groupers.
@@ -594,28 +596,47 @@ may be loaded.
 Draw this group and then move one step up the group hierarchy, ready to draw
 the next one on the next pass through the loop.
 
+                x1 = open.left - pad/3
+                y1 = open.top - pad
+                x2 = close.right + pad/3
+                y2 = close.bottom + pad
                 context.fillStyle = context.strokeStyle = '#ff0000'
                 context.beginPath()
                 if open.top is close.top
-                    context.moveTo open.left - pad/3, open.top - pad
-                    context.lineTo close.right + pad/3, open.top - pad
-                    context.lineTo close.right + pad/3, close.bottom + pad
-                    context.lineTo open.left - pad/3, close.bottom + pad
-                    context.lineTo open.left - pad/3, open.top - pad
+
+A rounded rectangle from open's top left to close's bottom right, padded by
+`pad/3` in the x direction, `pad` in the y direction, and with corner radius
+`radius`.
+
+                    context.moveTo x1 + radius, y1
+                    context.lineTo x2 - radius, y1
+                    context.arcTo x2, y1, x2, y1 + radius, radius
+                    context.lineTo x2, y2 - radius
+                    context.arcTo x2, y2, x2 - radius, y2, radius
+                    context.lineTo x1 + radius, y2
+                    context.arcTo x1, y2, x1, y2 - radius, radius
+                    context.lineTo x1, y1 + radius
+                    context.arcTo x1, y1, x1 + radius, y1, radius
                 else
                     if not bodyStyle?
                         bodyStyle = getComputedStyle @editor.getBody()
                         leftMar = parseInt bodyStyle['margin-left']
                         rightMar = parseInt bodyStyle['margin-right']
-                    context.moveTo open.left - pad/3, open.top - pad
-                    context.lineTo canvas.width - rightMar, open.top - pad
-                    context.lineTo canvas.width - rightMar, close.top
-                    context.lineTo close.right + pad/3, close.top
-                    context.lineTo close.right + pad/3, close.bottom + pad
-                    context.lineTo leftMar, close.bottom + pad
-                    context.lineTo leftMar, open.bottom + pad
-                    context.lineTo open.left - pad/3, open.bottom + pad
-                    context.lineTo open.left - pad/3, open.top - pad
+                    xL = leftMar
+                    xR = canvas.width - rightMar
+                    yT = open.bottom
+                    yB = close.top
+                    context.moveTo x1 + radius, y1
+                    context.lineTo xR, y1
+                    context.lineTo xR, yB
+                    context.lineTo x2, yB
+                    context.lineTo x2, y2 - radius
+                    context.arcTo x2, y2, x2 - radius, y2, radius
+                    context.lineTo xL, y2
+                    context.lineTo xL, yT
+                    context.lineTo x1, yT
+                    context.lineTo x1, y1 + radius
+                    context.arcTo x1, y1, x1 + radius, y1, radius
                 context.globalAlpha = 1.0
                 context.stroke()
                 context.globalAlpha = 0.2
