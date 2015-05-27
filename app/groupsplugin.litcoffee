@@ -594,8 +594,7 @@ may be loaded.
 Draw this group and then move one step up the group hierarchy, ready to draw
 the next one on the next pass through the loop.
 
-                context.fillStyle = '#ff0000'
-                context.globalAlpha = 0.2
+                context.fillStyle = context.strokeStyle = '#ff0000'
                 context.beginPath()
                 if open.top is close.top
                     context.moveTo open.left - pad/3, open.top - pad
@@ -617,6 +616,9 @@ the next one on the next pass through the loop.
                     context.lineTo leftMar, open.bottom + pad
                     context.lineTo open.left - pad/3, open.bottom + pad
                     context.lineTo open.left - pad/3, open.top - pad
+                context.globalAlpha = 1.0
+                context.stroke()
+                context.globalAlpha = 0.2
                 context.fill()
                 group = group.parent
                 pad += padStep
