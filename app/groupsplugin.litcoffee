@@ -595,27 +595,28 @@ the next one on the next pass through the loop.
 
                 context.fillStyle = '#ff0000'
                 context.globalAlpha = 0.2
+                pad = 2
                 context.beginPath()
                 if open.top is close.top
-                    context.moveTo open.left, open.top
-                    context.lineTo close.right, open.top
-                    context.lineTo close.right, close.bottom
-                    context.lineTo open.left, close.bottom
-                    context.lineTo open.left, open.top
+                    context.moveTo open.left - pad, open.top - pad
+                    context.lineTo close.right + pad, open.top - pad
+                    context.lineTo close.right + pad, close.bottom + pad
+                    context.lineTo open.left - pad, close.bottom + pad
+                    context.lineTo open.left - pad, open.top - pad
                 else
                     if not bodyStyle?
                         bodyStyle = getComputedStyle @editor.getBody()
                         leftMar = parseInt bodyStyle['margin-left']
                         rightMar = parseInt bodyStyle['margin-right']
-                    context.moveTo open.left, open.top
-                    context.lineTo canvas.width - rightMar, open.top
+                    context.moveTo open.left - pad, open.top - pad
+                    context.lineTo canvas.width - rightMar, open.top - pad
                     context.lineTo canvas.width - rightMar, close.top
-                    context.lineTo close.right, close.top
-                    context.lineTo close.right, close.bottom
-                    context.lineTo leftMar, close.bottom
-                    context.lineTo leftMar, open.bottom
-                    context.lineTo open.left, open.bottom
-                    context.lineTo open.left, open.top
+                    context.lineTo close.right + pad, close.top
+                    context.lineTo close.right + pad, close.bottom + pad
+                    context.lineTo leftMar, close.bottom + pad
+                    context.lineTo leftMar, open.bottom + pad
+                    context.lineTo open.left - pad, open.bottom + pad
+                    context.lineTo open.left - pad, open.top - pad
                 context.fill()
                 group = group.parent
 
