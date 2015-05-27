@@ -64,7 +64,7 @@ handlers.
                 try
                     doDrawing @canvas, context
                 catch e
-                    console.log "Error in overlay draw function: #{e}"
+                    console.log "Error in overlay draw function: #{e.stack}"
 
 The following function permits the installation of new drawing handlers.
 Each will receive two parameters (as shown in the code immediately above),
