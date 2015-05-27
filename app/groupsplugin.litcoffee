@@ -559,6 +559,7 @@ Overay plugin](overlayplugin.litcoffee).
         drawGroups: ( canvas, context ) =>
             group = @groupAboveSelection @editor.selection.getRng()
             bodyStyle = null
+            pad = padStep = 1
             while group
 
 Compute the sizes and positions of the open and close groupers.
@@ -595,30 +596,30 @@ the next one on the next pass through the loop.
 
                 context.fillStyle = '#ff0000'
                 context.globalAlpha = 0.2
-                pad = 2
                 context.beginPath()
                 if open.top is close.top
-                    context.moveTo open.left - pad, open.top - pad
-                    context.lineTo close.right + pad, open.top - pad
-                    context.lineTo close.right + pad, close.bottom + pad
-                    context.lineTo open.left - pad, close.bottom + pad
-                    context.lineTo open.left - pad, open.top - pad
+                    context.moveTo open.left - pad/3, open.top - pad
+                    context.lineTo close.right + pad/3, open.top - pad
+                    context.lineTo close.right + pad/3, close.bottom + pad
+                    context.lineTo open.left - pad/3, close.bottom + pad
+                    context.lineTo open.left - pad/3, open.top - pad
                 else
                     if not bodyStyle?
                         bodyStyle = getComputedStyle @editor.getBody()
                         leftMar = parseInt bodyStyle['margin-left']
                         rightMar = parseInt bodyStyle['margin-right']
-                    context.moveTo open.left - pad, open.top - pad
+                    context.moveTo open.left - pad/3, open.top - pad
                     context.lineTo canvas.width - rightMar, open.top - pad
                     context.lineTo canvas.width - rightMar, close.top
-                    context.lineTo close.right + pad, close.top
-                    context.lineTo close.right + pad, close.bottom + pad
+                    context.lineTo close.right + pad/3, close.top
+                    context.lineTo close.right + pad/3, close.bottom + pad
                     context.lineTo leftMar, close.bottom + pad
                     context.lineTo leftMar, open.bottom + pad
-                    context.lineTo open.left - pad, open.bottom + pad
-                    context.lineTo open.left - pad, open.top - pad
+                    context.lineTo open.left - pad/3, open.bottom + pad
+                    context.lineTo open.left - pad/3, open.top - pad
                 context.fill()
                 group = group.parent
+                pad += padStep
 
 <font color=red>This class is not yet complete. See [the project
 plan](plan.md) for details of what's to come.</font>

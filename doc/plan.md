@@ -43,8 +43,6 @@ Load and save
 
 Complete the Groups plugin by adding the following features.
 
- * Make the inner padding amount for bubbles increase as you move upward in
-   the parent chain of nested groups.
  * Use rounded rectangles for bubbles.
  * Draw an opaque boundary around bubbles.
  * Do not hard-code a color into the bubble-drawing routine, but lift the
