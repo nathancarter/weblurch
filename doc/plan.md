@@ -41,76 +41,51 @@ Load and save
 
 ### Groups plugin
 
-Create a Groups plugin with the following features.
+Complete the Groups plugin by adding the following features.
 
+ * Respect document margins when drawing bubbles.
+ * Give bubbles an inner padding amount.
+ * Make the inner padding amount for bubbles increase as you move upward in
+   the parent chain of nested groups.
+ * Use rounded rectangles for bubbles.
+ * Draw an opaque boundary around bubbles.
+ * Do not hard-code a color into the bubble-drawing routine, but lift the
+   color from the data about the group's own type.  Default to gray.
  * Enhance the Group insertion actions so that they are unavailable when the
    base and anchor of the selection are not in the same Group.
  * Add instance methods for getting/setting arbitrary data on a Group, as
    key-value pairs stored in the open grouper DOM element attributes.
 
-### Events
+### Functions in Group Types
 
- * Create a generic event system that can fire events and hear the collected
-   responses from their event listeners.  You may be able to re-use one from
-   the browser's JavaScript environment, or re-use the handlers package from
-   the original Lurch; it is less than 150 lines of code, including
-   comments.  It should not be a TinyMCE plugin, because it should be able
-   to be used in many contexts, not just that of a TinyMCE editor.  It
-   should be a standalone class whose instances are individual event
-   systems, and each instance of the `Groups` class can have an instance of
-   this `Events` class as a member.
- * Create a `groupContentsChanged` event and fire it whenever the inside of
-   a group is edited by the user, or any code writes to the Group's
-   properties using the Group API.
- * Create a `groupTagRequested` event, and use it as follows.
-   * When planning to draw bubbles, fire this event for each Group
-     containing the cursor.
-   * Cache the aggregated results from any listeners in the Group.
-   * Clear that cache on `groupContentsChanged` for the group or any of its
-     parents.
-   * Draw such labels above the bubbles.
-   * Extend that algorithm so that labels never collide, as in the desktop
-     Lurch.
- * Create a `groupMenuRequested` event, and use it as follows.
-   * When the user right-clicks inside the group, fire this event and use
-     the aggregated results from any listeners to extend the context menu
-     that's shown.
-   * When the user clicks inside the bubble tag, do the same.
- * Create a `groupAdded` event and fire it when inserting new Groups.
- * Create a `groupDeleted` event and fire it when processing the whole
-   document and updating the cache of Group data, for any Group that has
-   simply disappeared, or that half-disappeared and we were forced to remove
-   the remaining, unmatched grouper.
-
-### Math
-
-Before proceeding with this section, do review what's already been done in
-this space, including
-[this](https://github.com/foraker/tinymce_equation_editor) and
-[this](https://github.com/efloti/plugin-mathjax-pour-tinymce) and
-[this](http://www.wiris.com/solutions/tinymce) and
-[this](http://www.imathas.com/editordemo/demo.html) and
-[this](https://docs.moodle.org/26/en/TinyMCE_Mathslate) and
-[this](https://www.codecogs.com/latex/integration/tinymce_v4/install.php).
-There are similar projects for CKEditor as well.
-
- * Create a button or keystroke that allows you to insert a
-   [MathQuill](http://mathquill.com/) instance in your document, and stores
-   it as a special kind of content.
- * Whenever the cursor (the browser's one, not the model's one) is inside a
-   MathQuill instance, frequently recompute the content of that instance and
-   store it in that content object in the document.
- * Make ordinary keyboard motions of the cursor able to enter and exit
-   MathQuill instances.
- * Make keyboard and mouse actions that create/extend a selection (e.g.,
-   shift-arrows, shift-click, click-and-drag) unable to select only a
-   portion of a MathQuill object, but instead select all or none of it.
- * Consider whether you can render the MathQuill using
-   [MathJax](http://www.mathjax.org/) when the cursor exits, to get prettier
-   results.
- * Consider whether you can add the capability to do MathJax-rendered LaTeX
-   source, with a popup text box, like in the Simple Math Editor in the
-   desktop Lurch.
+ * When drawing a group, run a function defined in its type that will
+   compute, from the group's existing data, the contents of its bubble tag.
+   Do not re-run the computation if the data has not changed.  For now, just
+   output the tag contents to the console.
+ * Extend the bubble-drawing routine with an opaque tag on top of the
+   bubble, a rounded rectangle containing the text computed as the tag
+   contents.
+ * Enhance the drawing of nested bubbles so that tags do not obscure one
+   another, but become taller to peek out from behind those in front.  You
+   must therefore draw tags from outermost to innermost.
+ * Extend tag rendering to support arbitrary HTML rather than just simple
+   text, by using [the techniques in this article](
+   https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Drawing_DOM_objects_into_a_canvas)
+   or [this Node project that implements them](
+   http://cburgmer.github.io/rasterizeHTML.js/).
+ * Whenever the inside of a group is edited by the user, or any code writes
+   to the Group's properties using the Group API, call a function in the
+   Group type that handles group contents changes.
+ * When the user right-clicks inside a group, call a function in the Group
+   type to determine what should be on the context menu.  Extend the context
+   menu as that function suggests.
+ * When the user clicks inside a group's tag, call a function in the Group
+   type to determine what should be on the context menu.  Extend the context
+   menu as that function suggests.
+ * Create a function in Group types for handling the setup of newly inserted
+   Groups.  Call it whenever a new group is created.
+ * Create a function in Group types for handling the finalization of just-
+   deleted Groups.  Call it whenever a group is removed.
 
 ## Background processing
 
@@ -176,12 +151,46 @@ BackgroundFunction class.
      background function and argument list is already running, terminate it
      and delete it.
 
-At this point it may be worthwhile creating some non-Lurch application that
-uses the above technology, as a way to verify that it's behaving the way you
-expect.  That test application could become part of the test suite.  After
-all, the technology that exists to this point (groups and the background
-processing thereof) is complext and many-layered, and it would be good to
-have a thorough test at this level.
+## Example Application
+
+Create some non-Lurch application that uses the above technology, as a way
+to verify that it's behaving the way you expect.  That test application
+could become part of the test suite.  After all, the technology that exists
+to this point (groups and the background processing thereof) is complex and
+many-layered, and it would be good to have a thorough test at this level.
+
+For example, consider making a simple computation engine using
+[MathJS](http://mathjs.org/index.html).
+
+## Math
+
+Before proceeding with this section, do review what's already been done in
+this space, including
+[this](https://github.com/foraker/tinymce_equation_editor) and
+[this](https://github.com/efloti/plugin-mathjax-pour-tinymce) and
+[this](http://www.wiris.com/solutions/tinymce) and
+[this](http://www.imathas.com/editordemo/demo.html) and
+[this](https://docs.moodle.org/26/en/TinyMCE_Mathslate) and
+[this](https://www.codecogs.com/latex/integration/tinymce_v4/install.php).
+There are similar projects for CKEditor as well.
+
+ * Create a button or keystroke that allows you to insert a
+   [MathQuill](http://mathquill.com/) instance in your document, and stores
+   it as a special kind of content.
+ * Whenever the cursor (the browser's one, not the model's one) is inside a
+   MathQuill instance, frequently recompute the content of that instance and
+   store it in that content object in the document.
+ * Make ordinary keyboard motions of the cursor able to enter and exit
+   MathQuill instances.
+ * Make keyboard and mouse actions that create/extend a selection (e.g.,
+   shift-arrows, shift-click, click-and-drag) unable to select only a
+   portion of a MathQuill object, but instead select all or none of it.
+ * Consider whether you can render the MathQuill using
+   [MathJax](http://www.mathjax.org/) when the cursor exits, to get prettier
+   results.
+ * Consider whether you can add the capability to do MathJax-rendered LaTeX
+   source, with a popup text box, like in the Simple Math Editor in the
+   desktop Lurch.
 
 That is the last work that can be done without there being additional design
 work completed.  The section on [Dependencies](#dependencies), below,
