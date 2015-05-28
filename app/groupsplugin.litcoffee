@@ -675,9 +675,7 @@ may be loaded.
 
                 if open.top is open.bottom or close.top is close.bottom or \
                    open.left is open.right or close.left is close.right
-                    setTimeout =>
-                        @editor.Overlay?.redrawContents()
-                    , 100
+                    setTimeout ( => @editor.Overlay?.redrawContents() ), 100
                     return
 
 Compute the group's tag contents, if any, and store where and how to draw
@@ -693,7 +691,8 @@ them.
                         content : tagString
                         corner : { x : x1, y : y1 }
                         color : color
-                        font : style.font
+                        style : "font-size:#{style.fontSize};
+                                 font-family:#{style.fontFamily};"
 
 Draw this group and then move one step up the group hierarchy, ready to draw
 the next one on the next pass through the loop.
@@ -736,11 +735,12 @@ was, so that the rectangle actually just got taller.
             while tags.length > 0
                 tag = tags.shift()
                 context.font = tag.font
-                approxHeight = context.measureText( 'm' ).width * 1.2
-                width = context.measureText( tag.content ).width
+                if not size = context.measureHTML tag.content, tag.style
+                    setTimeout ( => @editor.Overlay?.redrawContents() ), 10
+                    return
                 x1 = tag.corner.x - padStep
-                y1 = tag.corner.y - approxHeight - 2*padStep
-                x2 = x1 + 2*padStep + width
+                y1 = tag.corner.y - size.height - 2*padStep
+                x2 = x1 + 2*padStep + size.width
                 y2 = tag.corner.y
                 for old in tagsToDraw
                     if rectanglesCollide x1, y1, x2, y2, old.x1, old.y1, \
@@ -768,8 +768,8 @@ loop.
                 context.fill()
                 context.fillStyle = '#000000'
                 context.globalAlpha = 1.0
-                context.fillText tag.content, tag.x1,
-                    tag.y1 + 0.9 * approxHeight
+                context.drawHTML tag.content, tag.x1 + padStep, tag.y1,
+                    tag.style
 
 # Installing the plugin
 

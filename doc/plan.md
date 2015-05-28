@@ -36,6 +36,7 @@ Other
 
  * Disable resizing of grouper objects as if they were normal images
  * Formats menu is currently empty
+ * URGENT: Bubbles are not drawn when groupers are hidden.
 
 ## Miscellaneous enhancements
 
@@ -46,11 +47,6 @@ Other
 
 ## Functions in Group Types
 
- * Extend tag rendering to support arbitrary HTML rather than just simple
-   text, by using [the techniques in this article](
-   https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Drawing_DOM_objects_into_a_canvas)
-   or [this Node project that implements them](
-   http://cburgmer.github.io/rasterizeHTML.js/).
  * Whenever the inside of a group is edited by the user, or any code writes
    to the Group's properties using the Group API, call a function in the
    Group type that handles group contents changes.
