@@ -1076,3 +1076,109 @@ one which it was set, yields undefined as the result.
                 'toBeUndefined'
             pageExpects ( -> tinymce.activeEditor.Groups[2].get 'thing' ),
                 'toBeUndefined'
+
+### trigger document change events
+
+This test verifies that modifying a group object counts as a modification to
+the document, from TinyMCE's point of view.  That is, "change" events should
+be triggered, and the document should be marked dirty.
+
+        it 'trigger document change events', inPage ->
+
+We begin by installing a change handler that will set a global variable
+whenever the editor's "change" event is called.  This way we can verify that
+it has been called when we expect.
+
+            pageDo ->
+                window.changeEventCalled = no
+                tinymce.activeEditor.on 'change', ->
+                    window.changeEventCalled = yes
+
+Verify that, initially, the document is not dirty.
+
+            pageExpects -> not window.changeEventCalled
+            pageExpects -> not tinymce.activeEditor.isDirty()
+
+We create a few groups and set a few attributes on some subset of them.  I
+re-use here the same setup as in the previous test.
+
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'me'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+            createHierarchy 'A [b] [c[d]e] and then [eff]'
+
+Verify that, after that insertion, the document has become dirty.
+
+            pageExpects -> window.changeEventCalled
+            pageExpects -> tinymce.activeEditor.isDirty()
+
+Mark the document as clean at this point, to create a new baseline.
+
+            pageDo ->
+                window.changeEventCalled = no
+                tinymce.activeEditor.isNotDirty = yes
+            pageExpects -> not window.changeEventCalled
+            pageExpects -> not tinymce.activeEditor.isDirty()
+
+Now we will set attributes on some of those groups, again, re-using the same
+configuration as in the previous test.
+
+            pageDo -> tinymce.activeEditor.Groups[0].set 'one', [1,2,3]
+
+Verify that, after that insertion, the document has become dirty.
+
+            pageExpects -> window.changeEventCalled
+            pageExpects -> tinymce.activeEditor.isDirty()
+
+Mark the document as clean at this point, to create a new baseline.
+
+            pageDo ->
+                window.changeEventCalled = no
+                tinymce.activeEditor.isNotDirty = yes
+            pageExpects -> not window.changeEventCalled
+            pageExpects -> not tinymce.activeEditor.isDirty()
+
+Repeat the same test, but now on a different attribute of a different group.
+
+            pageDo -> tinymce.activeEditor.Groups[1].set 'X', [ [ [ ] ] ]
+
+Verify the same things, then reset the changed/dirty indicators, as before.
+
+            pageExpects -> window.changeEventCalled
+            pageExpects -> tinymce.activeEditor.isDirty()
+            pageDo ->
+                window.changeEventCalled = no
+                tinymce.activeEditor.isNotDirty = yes
+            pageExpects -> not window.changeEventCalled
+            pageExpects -> not tinymce.activeEditor.isDirty()
+
+Repeat the same test, but now on a different attribute of a different group.
+
+            pageDo -> tinymce.activeEditor.Groups[1].set 'Y-2', 'Han Solo'
+
+Verify the same things, then reset the changed/dirty indicators, as before.
+
+            pageExpects -> window.changeEventCalled
+            pageExpects -> tinymce.activeEditor.isDirty()
+            pageDo ->
+                window.changeEventCalled = no
+                tinymce.activeEditor.isNotDirty = yes
+            pageExpects -> not window.changeEventCalled
+            pageExpects -> not tinymce.activeEditor.isDirty()
+
+Repeat the same test, but now on a different attribute of a different group.
+
+            pageDo -> tinymce.activeEditor.Groups[3].set 'thing', { 1 : 9 }
+
+Verify the same things, then reset the changed/dirty indicators, as before.
+
+            pageExpects -> window.changeEventCalled
+            pageExpects -> tinymce.activeEditor.isDirty()
+            pageDo ->
+                window.changeEventCalled = no
+                tinymce.activeEditor.isNotDirty = yes
+            pageExpects -> not window.changeEventCalled
+            pageExpects -> not tinymce.activeEditor.isDirty()

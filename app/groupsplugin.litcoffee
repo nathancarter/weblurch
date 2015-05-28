@@ -67,9 +67,12 @@ class, which manages all the `Group` instances in that editor's document.
 The constructor takes as parameters the two DOM nodes that are its open and
 close groupers (i.e., group boundary markers), respectively.  It does not
 validate that these are indeed open and close grouper nodes, but just stores
-them for later lookup.
+them for later lookup.  The final parameter is an instance of the Groups
+class, which is the plugin defined in this file.  Thus each group will know
+in which environment it sits, and be able to communicate with that
+environment.
 
-        constructor: ( @open, @close ) -> # no body needed
+        constructor: ( @open, @close, @plugin ) -> # no body needed
 
 This method returns the ID of the group, if it is available within the open
 grouper.
@@ -94,6 +97,8 @@ be amenable to JSON stringification.
         set: ( key, value ) =>
             if not /^[a-zA-Z0-9-]+$/.test key then return
             @open.setAttribute "data-#{key}", JSON.stringify [ value ]
+            @plugin?.editor.fire 'change', { group : this, key : key }
+            @plugin?.editor.isNotDirty = no
         get: ( key ) =>
             try
                 JSON.parse( @open.getAttribute "data-#{key}" )[0]
@@ -481,7 +486,7 @@ copies from the cache when possible.
         registerGroup: ( open, close ) =>
             cached = @[id = grouperInfo( open ).id]
             if cached?.open isnt open or cached?.close isnt close
-                @[id] = new Group open, close
+                @[id] = new Group open, close, this
             id
 
 ## Querying the group hierarchy

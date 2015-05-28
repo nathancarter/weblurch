@@ -39,8 +39,8 @@ Load and save
 
 ## Groups plugin
 
- * Ensure that setting attributes on groups triggers change events in the
-   document and marks it dirty.
+ * Create a function in the group class for querying the content of the
+   group, as text, or as an HTML fragment.
 
 ## Functions in Group Types
 
