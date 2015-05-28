@@ -36,7 +36,6 @@ Other
 
  * Disable resizing of grouper objects as if they were normal images
  * Formats menu is currently empty
- * URGENT: Bubbles are not drawn when groupers are hidden.
 
 ## Miscellaneous enhancements
 
