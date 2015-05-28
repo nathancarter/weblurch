@@ -46,9 +46,6 @@ Other
 
 ## Functions in Group Types
 
- * Enhance the drawing of nested bubbles so that tags do not obscure one
-   another, but become taller to peek out from behind those in front.  You
-   must therefore draw tags from outermost to innermost.
  * Extend tag rendering to support arbitrary HTML rather than just simple
    text, by using [the techniques in this article](
    https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Drawing_DOM_objects_into_a_canvas)

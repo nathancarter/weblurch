@@ -739,10 +739,21 @@ A rounded rectangle from open's top left to close's bottom right, padded by
                 pad += padStep
 
 Now draw the tags on all the bubbles just drawn.  We proceed in reverse
-order, so that outer tags are drawn behind inner ones.
+order, so that outer tags are drawn behind inner ones.  We also track the
+rectangles we've covered, and move any later ones upward so as not to
+collide with ones drawn earlier.
 
+We begin by measuring the sizes of the rectangles, and checking for
+collisions.  Those that collide with previously-scanned rectangles are slid
+upwards so that they don't collide anymore.  After all collisions have been
+resolved, the rectangle's bottom boundary is reset to what it originally
+was, so that the rectangle actually just got taller.
+
+            tagsToDraw = [ ]
+            rectanglesCollide = ( x1, y1, x2, y2, x3, y3, x4, y4 ) ->
+                not ( x3 >= x2 or x4 <= x1 or y3 >= y2 or y4 <= y1 )
             while tags.length > 0
-                tag = tags.pop()
+                tag = tags.shift()
                 context.font = tag.font
                 approxHeight = context.measureText( 'm' ).width * 1.2
                 width = context.measureText( tag.content ).width
@@ -750,16 +761,34 @@ order, so that outer tags are drawn behind inner ones.
                 y1 = tag.corner.y - approxHeight - 2*padStep
                 x2 = x1 + 2*padStep + width
                 y2 = tag.corner.y
+                for old in tagsToDraw
+                    if rectanglesCollide x1, y1, x2, y2, old.x1, old.y1, \
+                                         old.x2, old.y2
+                        moveBy = old.y1 - y2
+                        y1 += moveBy
+                        y2 += moveBy
+                y2 = tag.corner.y
+                [ tag.x1, tag.y1, tag.x2, tag.y2 ] = [ x1, y1, x2, y2 ]
+                tagsToDraw.unshift tag
+
+Now we draw the tags that have already been sized for us by the previous
+loop.
+
+            for tag in tagsToDraw
                 context.beginPath()
-                context.moveTo x1 + radius, y1
-                context.lineTo x2 - radius, y1
-                context.arcTo x2, y1, x2, y1 + radius, radius
-                context.lineTo x2, y2 - radius
-                context.arcTo x2, y2, x2 - radius, y2, radius
-                context.lineTo x1 + radius, y2
-                context.arcTo x1, y2, x1, y2 - radius, radius
-                context.lineTo x1, y1 + radius
-                context.arcTo x1, y1, x1 + radius, y1, radius
+                context.moveTo tag.x1 + radius, tag.y1
+                context.lineTo tag.x2 - radius, tag.y1
+                context.arcTo tag.x2, tag.y1, tag.x2, tag.y1 + radius,
+                    radius
+                context.lineTo tag.x2, tag.y2 - radius
+                context.arcTo tag.x2, tag.y2, tag.x2 - radius, tag.y2,
+                    radius
+                context.lineTo tag.x1 + radius, tag.y2
+                context.arcTo tag.x1, tag.y2, tag.x1, tag.y2 - radius,
+                    radius
+                context.lineTo tag.x1, tag.y1 + radius
+                context.arcTo tag.x1, tag.y1, tag.x1 + radius, tag.y1,
+                    radius
                 context.closePath()
                 context.globalAlpha = 1.0
                 context.fillStyle = '#ffffff'
@@ -772,8 +801,8 @@ order, so that outer tags are drawn behind inner ones.
                 context.fill()
                 context.fillStyle = '#000000'
                 context.globalAlpha = 1.0
-                context.fillText tag.content, tag.corner.x,
-                    tag.corner.y - 0.2 * approxHeight
+                context.fillText tag.content, tag.x1,
+                    tag.y1 + 0.9 * approxHeight
 
 # Installing the plugin
 

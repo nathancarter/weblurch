@@ -165,5 +165,6 @@ knows which group types to create.
                 image : './images/red-bracket-icon.png'
                 tooltip : 'Make text a meaningful expression'
                 color : '#996666'
-                tagContents : ( group ) -> group.contentAsText()?.length
+                tagContents : ( group ) ->
+                    "#{group.contentAsText()?.length} characters"
             ]
