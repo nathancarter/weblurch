@@ -43,6 +43,8 @@
       this.open = open;
       this.close = close;
       this.plugin = plugin;
+      this.outerRange = __bind(this.outerRange, this);
+      this.innerRange = __bind(this.innerRange, this);
       this.contentAsHTML = __bind(this.contentAsHTML, this);
       this.contentAsFragment = __bind(this.contentAsFragment, this);
       this.contentAsText = __bind(this.contentAsText, this);
@@ -88,19 +90,11 @@
     };
 
     Group.prototype.contentAsText = function() {
-      var range;
-      range = this.open.ownerDocument.createRange();
-      range.setStartAfter(this.open);
-      range.setEndBefore(this.close);
-      return range.toString();
+      return this.innerRange().toString();
     };
 
     Group.prototype.contentAsFragment = function() {
-      var range;
-      range = this.open.ownerDocument.createRange();
-      range.setStartAfter(this.open);
-      range.setEndBefore(this.close);
-      return range.cloneContents();
+      return this.innerRange.cloneContents();
     };
 
     Group.prototype.contentAsHTML = function() {
@@ -108,6 +102,22 @@
       tmp = this.open.ownerDocument.createElement('div');
       tmp.appendChild(this.contentAsFragment());
       return tmp.innerHTML;
+    };
+
+    Group.prototype.innerRange = function() {
+      var range;
+      range = this.open.ownerDocument.createRange();
+      range.setStartAfter(this.open);
+      range.setEndBefore(this.close);
+      return range;
+    };
+
+    Group.prototype.outerRange = function() {
+      var range;
+      range = this.open.ownerDocument.createRange();
+      range.setStartBefore(this.open);
+      range.setEndAfter(this.close);
+      return range;
     };
 
     return Group;
@@ -585,7 +595,7 @@
     };
 
     Groups.prototype.drawGroups = function(canvas, context) {
-      var approxHeight, bodyStyle, close, color, group, leftMar, moveBy, old, open, p, p4, pad, padStep, radius, rectanglesCollide, rightMar, style, tag, tagString, tags, tagsToDraw, type, width, x1, x2, xL, xR, y1, y2, yB, yT, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
+      var bodyStyle, close, color, group, leftMar, moveBy, old, open, p, p4, pad, padStep, radius, rightMar, size, style, tag, tagString, tags, tagsToDraw, type, x1, x2, y1, y2, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
       group = this.groupAboveSelection(this.editor.selection.getRng());
       bodyStyle = null;
       pad = padStep = 1;
@@ -612,12 +622,12 @@
           right: p.left + close.width()
         };
         if (open.top === open.bottom || close.top === close.bottom || open.left === open.right || close.left === close.right) {
-          setTimeout((function(_this) {
+          setTimeout(((function(_this) {
             return function() {
               var _ref2;
               return (_ref2 = _this.editor.Overlay) != null ? _ref2.redrawContents() : void 0;
             };
-          })(this), 100);
+          })(this)), 100);
           return;
         }
         x1 = open.left - pad / 3;
@@ -633,44 +643,20 @@
               y: y1
             },
             color: color,
-            font: style.font
+            style: "font-size:" + style.fontSize + "; font-family:" + style.fontFamily + ";"
           });
         }
         context.fillStyle = context.strokeStyle = color;
-        context.beginPath();
         if (open.top === close.top) {
-          context.moveTo(x1 + radius, y1);
-          context.lineTo(x2 - radius, y1);
-          context.arcTo(x2, y1, x2, y1 + radius, radius);
-          context.lineTo(x2, y2 - radius);
-          context.arcTo(x2, y2, x2 - radius, y2, radius);
-          context.lineTo(x1 + radius, y2);
-          context.arcTo(x1, y2, x1, y2 - radius, radius);
-          context.lineTo(x1, y1 + radius);
-          context.arcTo(x1, y1, x1 + radius, y1, radius);
+          context.roundedRect(x1, y1, x2, y2, radius);
         } else {
           if (bodyStyle == null) {
             bodyStyle = getComputedStyle(this.editor.getBody());
             leftMar = parseInt(bodyStyle['margin-left']);
             rightMar = parseInt(bodyStyle['margin-right']);
           }
-          xL = leftMar;
-          xR = canvas.width - rightMar;
-          yT = open.bottom;
-          yB = close.top;
-          context.moveTo(x1 + radius, y1);
-          context.lineTo(xR, y1);
-          context.lineTo(xR, yB);
-          context.lineTo(x2, yB);
-          context.lineTo(x2, y2 - radius);
-          context.arcTo(x2, y2, x2 - radius, y2, radius);
-          context.lineTo(xL, y2);
-          context.lineTo(xL, yT);
-          context.lineTo(x1, yT);
-          context.lineTo(x1, y1 + radius);
-          context.arcTo(x1, y1, x1 + radius, y1, radius);
+          context.roundedZone(x1, y1, x2, y2, open.bottom, close.top, leftMar, rightMar, radius);
         }
-        context.closePath();
         context.globalAlpha = 1.0;
         context.lineWidth = 1.5;
         context.stroke();
@@ -680,17 +666,21 @@
         pad += padStep;
       }
       tagsToDraw = [];
-      rectanglesCollide = function(x1, y1, x2, y2, x3, y3, x4, y4) {
-        return !(x3 >= x2 || x4 <= x1 || y3 >= y2 || y4 <= y1);
-      };
       while (tags.length > 0) {
         tag = tags.shift();
         context.font = tag.font;
-        approxHeight = context.measureText('m').width * 1.2;
-        width = context.measureText(tag.content).width;
+        if (!(size = context.measureHTML(tag.content, tag.style))) {
+          setTimeout(((function(_this) {
+            return function() {
+              var _ref2;
+              return (_ref2 = _this.editor.Overlay) != null ? _ref2.redrawContents() : void 0;
+            };
+          })(this)), 10);
+          return;
+        }
         x1 = tag.corner.x - padStep;
-        y1 = tag.corner.y - approxHeight - 2 * padStep;
-        x2 = x1 + 2 * padStep + width;
+        y1 = tag.corner.y - size.height - 2 * padStep;
+        x2 = x1 + 2 * padStep + size.width;
         y2 = tag.corner.y;
         for (_i = 0, _len = tagsToDraw.length; _i < _len; _i++) {
           old = tagsToDraw[_i];
@@ -707,17 +697,7 @@
       _results = [];
       for (_j = 0, _len1 = tagsToDraw.length; _j < _len1; _j++) {
         tag = tagsToDraw[_j];
-        context.beginPath();
-        context.moveTo(tag.x1 + radius, tag.y1);
-        context.lineTo(tag.x2 - radius, tag.y1);
-        context.arcTo(tag.x2, tag.y1, tag.x2, tag.y1 + radius, radius);
-        context.lineTo(tag.x2, tag.y2 - radius);
-        context.arcTo(tag.x2, tag.y2, tag.x2 - radius, tag.y2, radius);
-        context.lineTo(tag.x1 + radius, tag.y2);
-        context.arcTo(tag.x1, tag.y2, tag.x1, tag.y2 - radius, radius);
-        context.lineTo(tag.x1, tag.y1 + radius);
-        context.arcTo(tag.x1, tag.y1, tag.x1 + radius, tag.y1, radius);
-        context.closePath();
+        context.roundedRect(tag.x1, tag.y1, tag.x2, tag.y2, radius);
         context.globalAlpha = 1.0;
         context.fillStyle = '#ffffff';
         context.fill();
@@ -729,7 +709,7 @@
         context.fill();
         context.fillStyle = '#000000';
         context.globalAlpha = 1.0;
-        _results.push(context.fillText(tag.content, tag.x1, tag.y1 + 0.9 * approxHeight));
+        _results.push(context.drawHTML(tag.content, tag.x1 + padStep, tag.y1, tag.style));
       }
       return _results;
     };

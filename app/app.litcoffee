@@ -110,20 +110,26 @@ computations on that group can use its contents to determine how to act.  We
 provide functions for fetching the contents of the group as plain text, as
 an HTML `DocumentFragment` object, or as an HTML string.
 
-        contentAsText: =>
-            range = @open.ownerDocument.createRange()
-            range.setStartAfter @open
-            range.setEndBefore @close
-            range.toString()
-        contentAsFragment: =>
-            range = @open.ownerDocument.createRange()
-            range.setStartAfter @open
-            range.setEndBefore @close
-            range.cloneContents()
+        contentAsText: => @innerRange().toString()
+        contentAsFragment: => @innerRange.cloneContents()
         contentAsHTML: =>
             tmp = @open.ownerDocument.createElement 'div'
             tmp.appendChild @contentAsFragment()
             tmp.innerHTML
+
+Those functions rely on the `innerRange()` function, defined below, with a
+corresponding `outerRange` function for the sake of completeness.
+
+        innerRange: =>
+            range = @open.ownerDocument.createRange()
+            range.setStartAfter @open
+            range.setEndBefore @close
+            range
+        outerRange: =>
+            range = @open.ownerDocument.createRange()
+            range.setStartBefore @open
+            range.setEndAfter @close
+            range
 
 The `Group` class should be accessible globally.
 
@@ -669,9 +675,7 @@ may be loaded.
 
                 if open.top is open.bottom or close.top is close.bottom or \
                    open.left is open.right or close.left is close.right
-                    setTimeout =>
-                        @editor.Overlay?.redrawContents()
-                    , 100
+                    setTimeout ( => @editor.Overlay?.redrawContents() ), 100
                     return
 
 Compute the group's tag contents, if any, and store where and how to draw
@@ -687,49 +691,27 @@ them.
                         content : tagString
                         corner : { x : x1, y : y1 }
                         color : color
-                        font : style.font
+                        style : "font-size:#{style.fontSize};
+                                 font-family:#{style.fontFamily};"
 
 Draw this group and then move one step up the group hierarchy, ready to draw
 the next one on the next pass through the loop.
 
                 context.fillStyle = context.strokeStyle = color
-                context.beginPath()
                 if open.top is close.top
 
 A rounded rectangle from open's top left to close's bottom right, padded by
 `pad/3` in the x direction, `pad` in the y direction, and with corner radius
 `radius`.
 
-                    context.moveTo x1 + radius, y1
-                    context.lineTo x2 - radius, y1
-                    context.arcTo x2, y1, x2, y1 + radius, radius
-                    context.lineTo x2, y2 - radius
-                    context.arcTo x2, y2, x2 - radius, y2, radius
-                    context.lineTo x1 + radius, y2
-                    context.arcTo x1, y2, x1, y2 - radius, radius
-                    context.lineTo x1, y1 + radius
-                    context.arcTo x1, y1, x1 + radius, y1, radius
+                    context.roundedRect x1, y1, x2, y2, radius
                 else
                     if not bodyStyle?
                         bodyStyle = getComputedStyle @editor.getBody()
                         leftMar = parseInt bodyStyle['margin-left']
                         rightMar = parseInt bodyStyle['margin-right']
-                    xL = leftMar
-                    xR = canvas.width - rightMar
-                    yT = open.bottom
-                    yB = close.top
-                    context.moveTo x1 + radius, y1
-                    context.lineTo xR, y1
-                    context.lineTo xR, yB
-                    context.lineTo x2, yB
-                    context.lineTo x2, y2 - radius
-                    context.arcTo x2, y2, x2 - radius, y2, radius
-                    context.lineTo xL, y2
-                    context.lineTo xL, yT
-                    context.lineTo x1, yT
-                    context.lineTo x1, y1 + radius
-                    context.arcTo x1, y1, x1 + radius, y1, radius
-                context.closePath()
+                    context.roundedZone x1, y1, x2, y2, open.bottom,
+                        close.top, leftMar, rightMar, radius
                 context.globalAlpha = 1.0
                 context.lineWidth = 1.5
                 context.stroke()
@@ -750,16 +732,15 @@ resolved, the rectangle's bottom boundary is reset to what it originally
 was, so that the rectangle actually just got taller.
 
             tagsToDraw = [ ]
-            rectanglesCollide = ( x1, y1, x2, y2, x3, y3, x4, y4 ) ->
-                not ( x3 >= x2 or x4 <= x1 or y3 >= y2 or y4 <= y1 )
             while tags.length > 0
                 tag = tags.shift()
                 context.font = tag.font
-                approxHeight = context.measureText( 'm' ).width * 1.2
-                width = context.measureText( tag.content ).width
+                if not size = context.measureHTML tag.content, tag.style
+                    setTimeout ( => @editor.Overlay?.redrawContents() ), 10
+                    return
                 x1 = tag.corner.x - padStep
-                y1 = tag.corner.y - approxHeight - 2*padStep
-                x2 = x1 + 2*padStep + width
+                y1 = tag.corner.y - size.height - 2*padStep
+                x2 = x1 + 2*padStep + size.width
                 y2 = tag.corner.y
                 for old in tagsToDraw
                     if rectanglesCollide x1, y1, x2, y2, old.x1, old.y1, \
@@ -775,21 +756,7 @@ Now we draw the tags that have already been sized for us by the previous
 loop.
 
             for tag in tagsToDraw
-                context.beginPath()
-                context.moveTo tag.x1 + radius, tag.y1
-                context.lineTo tag.x2 - radius, tag.y1
-                context.arcTo tag.x2, tag.y1, tag.x2, tag.y1 + radius,
-                    radius
-                context.lineTo tag.x2, tag.y2 - radius
-                context.arcTo tag.x2, tag.y2, tag.x2 - radius, tag.y2,
-                    radius
-                context.lineTo tag.x1 + radius, tag.y2
-                context.arcTo tag.x1, tag.y2, tag.x1, tag.y2 - radius,
-                    radius
-                context.lineTo tag.x1, tag.y1 + radius
-                context.arcTo tag.x1, tag.y1, tag.x1 + radius, tag.y1,
-                    radius
-                context.closePath()
+                context.roundedRect tag.x1, tag.y1, tag.x2, tag.y2, radius
                 context.globalAlpha = 1.0
                 context.fillStyle = '#ffffff'
                 context.fill()
@@ -801,8 +768,8 @@ loop.
                 context.fill()
                 context.fillStyle = '#000000'
                 context.globalAlpha = 1.0
-                context.fillText tag.content, tag.x1,
-                    tag.y1 + 0.9 * approxHeight
+                context.drawHTML tag.content, tag.x1 + padStep, tag.y1,
+                    tag.style
 
 # Installing the plugin
 
