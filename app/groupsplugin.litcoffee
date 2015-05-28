@@ -367,6 +367,8 @@ The word "grouper" refers to the objects that form the boundaries of a group, an
                 groupers.removeClass 'hide'
             else
                 groupers.addClass 'hide'
+            @editor.Overlay?.redrawContents()
+            @editor.focus()
 
 ## Scanning
 
