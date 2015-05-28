@@ -36,11 +36,9 @@ Load and save
 
  * Disable resizing of grouper objects as if they were normal images
  * Move all plugin files into the `src/` folder, if possible.
-
-## Groups plugin
-
- * Create a function in the group class for querying the content of the
-   group, as text, or as an HTML fragment.
+ * Make unit tests for `Group.contentAsText`, `Group.contentAsFragment`, and
+   `Group.contentAsHTML`.  All were tested informally in the browser, but
+   have not yet become unit tests.
 
 ## Functions in Group Types
 

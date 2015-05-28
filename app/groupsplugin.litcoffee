@@ -105,6 +105,26 @@ be amenable to JSON stringification.
             catch e
                 undefined
 
+We will need to be able to query the contents of a group, so that later
+computations on that group can use its contents to determine how to act.  We
+provide functions for fetching the contents of the group as plain text, as
+an HTML `DocumentFragment` object, or as an HTML string.
+
+        contentAsText: =>
+            range = document.createRange()
+            range.setStartAfter @open
+            range.setEndBefore @close
+            range.toString()
+        contentAsFragment: =>
+            range = document.createRange()
+            range.setStartAfter @open
+            range.setEndBefore @close
+            range.cloneContents()
+        contentAsHTML: =>
+            tmp = document.createElement 'div'
+            tmp.appendChild @contentAsFragment()
+            tmp.innerHTML
+
 The `Group` class should be accessible globally.
 
     window.Group = Group
