@@ -780,3 +780,299 @@ group in the hierarchy.
             pageExpects ->
                 tinymce.activeEditor.Groups.groupAboveNode(
                     window._test_after_0 ) is null
+
+## Group attributes
+
+Now we test the ability to store hidden attributes in groups and retrieve
+them again later.
+
+    phantomDescribe 'Group attributes', './app/index.html', ->
+
+### support atomic values
+
+We test to be sure we can read and write atomic values (numbers, strings,
+and booleans) and read them back again.
+
+        it 'support atomic values', inPage ->
+
+Construct the same simple hierarchy as in the previous test.  Ensure that
+Group 0 exists and Group 1 does not.
+
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'me'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+            createHierarchy '[text]'
+            pageExpects -> tinymce.activeEditor.Groups[0]?
+            pageExpects -> not tinymce.activeEditor.Groups[1]?
+
+Write a few numbers as attributes of Group 0 and be sure that you can
+accurately read them back again.
+
+            pageDo -> tinymce.activeEditor.Groups[0].set 'x', 0
+            pageDo -> tinymce.activeEditor.Groups[0].set 'thingy-do', 100
+            pageDo -> tinymce.activeEditor.Groups[0].set 'y', -0.1698
+            pageExpects ( -> tinymce.activeEditor.Groups[0].get 'x' ),
+                'toEqual', 0
+            pageExpects (
+                -> tinymce.activeEditor.Groups[0].get 'thingy-do'
+            ), 'toEqual', 100
+            pageExpects ( -> tinymce.activeEditor.Groups[0].get 'y' ),
+                'toEqual', -0.1698
+
+Write a few strings as attributes of Group 0 and be sure that you can
+accurately read them back again.
+
+            pageDo -> tinymce.activeEditor.Groups[0].set 'x', 'ex'
+            pageDo -> tinymce.activeEditor.Groups[0].set 'speech',
+                'Four score and seven years ago our fathers brought forth on
+                this continent, a new nation, conceived in Liberty, and
+                dedicated to the proposition that all men are created
+                equal.'
+            pageExpects ( -> tinymce.activeEditor.Groups[0].get 'x' ),
+                'toEqual', 'ex'
+            pageExpects (
+                -> tinymce.activeEditor.Groups[0].get 'speech'
+            ), 'toEqual', 'Four score and seven years ago our fathers
+                brought forth on this continent, a new nation, conceived in
+                Liberty, and dedicated to the proposition that all men are
+                created equal.'
+
+Write a few booleans as attributes of Group 0 and be sure that you can
+accurately read them back again.
+
+            pageDo -> tinymce.activeEditor.Groups[0].set 'speech', yes
+            pageDo -> tinymce.activeEditor.Groups[0].set 'nay', no
+            pageExpects ( -> tinymce.activeEditor.Groups[0].get 'speech' ),
+                'toEqual', yes
+            pageExpects ( -> tinymce.activeEditor.Groups[0].get 'nay' ),
+                'toEqual', no
+
+### support arrays
+
+We test to be sure we can read and write non-atomic values in the form of
+arrays, and read them back again.
+
+        it 'support arrays', inPage ->
+
+Construct the same simple hierarchy as in the previous test.  Ensure that
+Group 0 exists and Group 1 does not.
+
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'me'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+            createHierarchy '[text]'
+            pageExpects -> tinymce.activeEditor.Groups[0]?
+            pageExpects -> not tinymce.activeEditor.Groups[1]?
+
+Write a few arrays of atomic values as attributes of Group 0 and be sure
+that you can accurately read them back again.
+
+            pageDo -> tinymce.activeEditor.Groups[0].set 'one', [1,2,3]
+            pageDo -> tinymce.activeEditor.Groups[0].set 'colors',
+                [ 'red', 'green', 'blue', 'cyan', 'magenta', 'yellow' ]
+            pageExpects ( -> tinymce.activeEditor.Groups[0].get 'one' ),
+                'toEqual', [1,2,3]
+            pageExpects ( -> tinymce.activeEditor.Groups[0].get 'colors' ),
+                'toEqual',
+                [ 'red', 'green', 'blue', 'cyan', 'magenta', 'yellow' ]
+
+Write an array of arrays as an attribute of Group 0 and be sure that you can
+accurately read them back again.
+
+            pageDo -> tinymce.activeEditor.Groups[0].set 'colors',
+                [ [ 'red', 'green', 'blue' ],
+                  [ 'cyan', 'magenta', 'yellow' ],
+                  'grayscale' ]
+            pageExpects ( -> tinymce.activeEditor.Groups[0].get 'colors' ),
+                'toEqual',
+                [ [ 'red', 'green', 'blue' ],
+                  [ 'cyan', 'magenta', 'yellow' ],
+                  'grayscale' ]
+
+### support objects
+
+We test to be sure we can read and write non-atomic values in the form of
+objects, and read them back again.
+
+        it 'support objects', inPage ->
+
+Construct the same simple hierarchy as in the previous test.  Ensure that
+Group 0 exists and Group 1 does not.
+
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'me'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+            createHierarchy '[text]'
+            pageExpects -> tinymce.activeEditor.Groups[0]?
+            pageExpects -> not tinymce.activeEditor.Groups[1]?
+
+Write a few objects with keys and values all atomic, as attributes of Group
+0, and be sure that you can accurately read them back again.
+
+            pageDo -> tinymce.activeEditor.Groups[0].set 'obj',
+                { a : 1, b : 2, c : 3 }
+            pageDo -> tinymce.activeEditor.Groups[0].set 'tryNumber2',
+                { someBoolean : true, someString : 'foo', someNumber : 3 }
+            pageExpects ( -> tinymce.activeEditor.Groups[0].get 'obj' ),
+                'toEqual', { a : 1, b : 2, c : 3 }
+            pageExpects (
+                -> tinymce.activeEditor.Groups[0].get 'tryNumber2'
+            ), 'toEqual',
+                { someBoolean : true, someString : 'foo', someNumber : 3 }
+
+Write two complex objects that nest objects and arrays inside one another,
+as attributes of Group 0, and be sure that you can accurately read them back
+again.
+
+            pageDo -> tinymce.activeEditor.Groups[0].set 'color-spaces',
+                {
+                    rgbColorSpace : [ 'red', 'green', 'blue' ]
+                    cmyColorSpace : [ 'cyan', 'magenta', 'yellow' ]
+                    anotherColorSpace : 'grayscale'
+                }
+            pageDo -> tinymce.activeEditor.Groups[0].set 'randomData',
+                [
+                    { x : 'one', y : -2, z : 0.03 }
+                    { title : 'Prof.', first : 'James', last : 'Moriarity' }
+                ]
+            pageExpects (
+                -> tinymce.activeEditor.Groups[0].get 'color-spaces'
+            ),
+                'toEqual',
+                {
+                    rgbColorSpace : [ 'red', 'green', 'blue' ]
+                    cmyColorSpace : [ 'cyan', 'magenta', 'yellow' ]
+                    anotherColorSpace : 'grayscale'
+                }
+            pageExpects (
+                -> tinymce.activeEditor.Groups[0].get 'randomData'
+            ),
+                'toEqual',
+                [
+                    { x : 'one', y : -2, z : 0.03 }
+                    { title : 'Prof.', first : 'James', last : 'Moriarity' }
+                ]
+
+### reject bad keys
+
+We test to be sure that when we use invalid keys (i.e., keys containing some
+character that is neither alphanumeric nor a hyphen) that there is no change
+to the open grouper's HTML code, and thus no change to its attributes.
+
+        it 'reject bad keys', inPage ->
+
+Construct the same simple hierarchy as in the previous test.  Ensure that
+Group 0 exists and Group 1 does not.
+
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'me'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+            createHierarchy '[text]'
+            pageExpects -> tinymce.activeEditor.Groups[0]?
+            pageExpects -> not tinymce.activeEditor.Groups[1]?
+
+Attempt to write to a few invalid keys, and ensure that after every stop,
+the result is the same open grouper we had at the start.  Begin by
+establishing a baseline.
+
+            check = ->
+                pageExpects (
+                    -> tinymce.activeEditor.Groups[0].open.outerHTML
+                ), 'toBeSimilarHTML', grouper 'open', 0
+            check()
+            pageDo -> tinymce.activeEditor.Groups[0].set 'in valid', 0
+            check()
+            pageDo -> tinymce.activeEditor.Groups[0].set { }, 0
+            check()
+            pageDo -> tinymce.activeEditor.Groups[0].set 'under_score', 0
+            check()
+            pageDo -> tinymce.activeEditor.Groups[0].set '2+3', 0
+            check()
+            pageDo -> tinymce.activeEditor.Groups[0].set '13.45', 0
+            check()
+
+### distinguish among multiple groups
+
+For simplicity, all the previous tests used only one group.  Now we verify
+that when setting attributes on one group, it does not impact any other
+group in the document.
+
+        it 'distinguish among multiple groups', inPage ->
+
+We create a few groups, set a few attributes on some subset of them, and
+verify that those same attributes did not appear on any of the groups other
+than the ones on which they were set.
+
+Construct a simple hierarchy, but this time not the same as in the previous
+tests.  Ensure that Groups 0 through 3 exist, and Group 4 does not.
+
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'me'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+            createHierarchy 'A [b] [c[d]e] and then [eff]'
+            pageExpects -> tinymce.activeEditor.Groups[0]?
+            pageExpects -> tinymce.activeEditor.Groups[1]?
+            pageExpects -> tinymce.activeEditor.Groups[2]?
+            pageExpects -> tinymce.activeEditor.Groups[3]?
+            pageExpects -> not tinymce.activeEditor.Groups[4]?
+
+Set one attribute in Group 0, two in Group 1, and another in Group 3.
+
+            pageDo -> tinymce.activeEditor.Groups[0].set 'one', [1,2,3]
+            pageDo -> tinymce.activeEditor.Groups[1].set 'X', [ [ [ ] ] ]
+            pageDo -> tinymce.activeEditor.Groups[1].set 'Y-2', 'Han Solo'
+            pageDo -> tinymce.activeEditor.Groups[3].set 'thing', { 1 : 9 }
+
+Verify that all were set correctly.
+
+            pageExpects ( -> tinymce.activeEditor.Groups[0].get 'one' ),
+                'toEqual', [1,2,3]
+            pageExpects ( -> tinymce.activeEditor.Groups[1].get 'X' ),
+                'toEqual', [ [ [ ] ] ]
+            pageExpects ( -> tinymce.activeEditor.Groups[1].get 'Y-2' ),
+                'toEqual', 'Han Solo'
+            pageExpects ( -> tinymce.activeEditor.Groups[3].get 'thing' ),
+                'toEqual', { 1 : 9 }
+
+Verify that any of those same keys, queried on any group other than the one
+one which it was set, yields undefined as the result.
+
+            pageExpects ( -> tinymce.activeEditor.Groups[1].get 'one' ),
+                'toBeUndefined'
+            pageExpects ( -> tinymce.activeEditor.Groups[2].get 'one' ),
+                'toBeUndefined'
+            pageExpects ( -> tinymce.activeEditor.Groups[3].get 'one' ),
+                'toBeUndefined'
+            pageExpects ( -> tinymce.activeEditor.Groups[0].get 'X' ),
+                'toBeUndefined'
+            pageExpects ( -> tinymce.activeEditor.Groups[2].get 'X' ),
+                'toBeUndefined'
+            pageExpects ( -> tinymce.activeEditor.Groups[3].get 'X' ),
+                'toBeUndefined'
+            pageExpects ( -> tinymce.activeEditor.Groups[0].get 'Y-2' ),
+                'toBeUndefined'
+            pageExpects ( -> tinymce.activeEditor.Groups[2].get 'Y-2' ),
+                'toBeUndefined'
+            pageExpects ( -> tinymce.activeEditor.Groups[3].get 'Y-2' ),
+                'toBeUndefined'
+            pageExpects ( -> tinymce.activeEditor.Groups[0].get 'thing' ),
+                'toBeUndefined'
+            pageExpects ( -> tinymce.activeEditor.Groups[1].get 'thing' ),
+                'toBeUndefined'
+            pageExpects ( -> tinymce.activeEditor.Groups[2].get 'thing' ),
+                'toBeUndefined'

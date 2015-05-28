@@ -80,6 +80,26 @@ This method returns the name of the type of the group, as a string.
 
         typeName: => grouperInfo( @open )?.type
 
+We provide the following two simple methods for getting and setting
+arbitrary data within a group.  Clients should use these methods rather than
+write to fields in a group instance itself, because these (a) guarantee no
+collisions with existing properties/methods, and (b) mark that group (and
+thus the document) dirty, and ensure that changes to a group's data bring
+about any recomputation/reprocessing of that group in the document.
+
+Because we use HTML data attributes to store the data, the keys must be
+alphanumeric, optionally with dashes.  Furthermore, the data must be able to
+be amenable to JSON stringification.
+
+        set: ( key, value ) =>
+            if not /^[a-zA-Z0-9-]+$/.test key then return
+            @open.setAttribute "data-#{key}", JSON.stringify [ value ]
+        get: ( key ) =>
+            try
+                JSON.parse( @open.getAttribute "data-#{key}" )[0]
+            catch e
+                undefined
+
 The `Group` class should be accessible globally.
 
     window.Group = Group

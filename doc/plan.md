@@ -37,16 +37,12 @@ Load and save
  * Disable resizing of grouper objects as if they were normal images
  * Move all plugin files into the `src/` folder, if possible.
 
-## Extending the Editor
+## Groups plugin
 
-### Groups plugin
+ * Ensure that setting attributes on groups triggers change events in the
+   document and marks it dirty.
 
-Complete the Groups plugin by adding the following features.
-
- * Add instance methods for getting/setting arbitrary data on a Group, as
-   key-value pairs stored in the open grouper DOM element attributes.
-
-### Functions in Group Types
+## Functions in Group Types
 
  * When drawing a group, run a function defined in its type that will
    compute, from the group's existing data, the contents of its bubble tag.
