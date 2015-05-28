@@ -367,6 +367,8 @@ The word "grouper" refers to the objects that form the boundaries of a group, an
                 groupers.removeClass 'hide'
             else
                 groupers.addClass 'hide'
+            @editor.Overlay?.redrawContents()
+            @editor.focus()
 
 ## Scanning
 
@@ -643,7 +645,8 @@ Overay plugin](overlayplugin.litcoffee).
         drawGroups: ( canvas, context ) =>
             group = @groupAboveSelection @editor.selection.getRng()
             bodyStyle = null
-            pad = padStep = 1
+            pad = 3
+            padStep = 2
             radius = 4
             p4 = Math.pi / 4
             tags = [ ]
@@ -673,8 +676,11 @@ open/close grouper) isn't yet loaded.  Thus we need to stop here and queue
 up a later call to this same drawing routine, at which time the image file
 may be loaded.
 
-                if open.top is open.bottom or close.top is close.bottom or \
-                   open.left is open.right or close.left is close.right
+                if ( open.top is open.bottom or \
+                     close.top is close.bottom or \
+                     open.left is open.right or \
+                     close.left is close.right ) and \
+                   not ( $ group.open ).hasClass 'hide'
                     setTimeout ( => @editor.Overlay?.redrawContents() ), 100
                     return
 

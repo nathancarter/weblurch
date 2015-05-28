@@ -306,13 +306,17 @@
     };
 
     Groups.prototype.hideOrShowGroupers = function() {
-      var groupers;
+      var groupers, _ref;
       groupers = $(this.allGroupers());
       if (($(groupers != null ? groupers[0] : void 0)).hasClass('hide')) {
-        return groupers.removeClass('hide');
+        groupers.removeClass('hide');
       } else {
-        return groupers.addClass('hide');
+        groupers.addClass('hide');
       }
+      if ((_ref = this.editor.Overlay) != null) {
+        _ref.redrawContents();
+      }
+      return this.editor.focus();
     };
 
     Groups.prototype.disableScanning = function() {
@@ -598,7 +602,8 @@
       var bodyStyle, close, color, group, leftMar, moveBy, old, open, p, p4, pad, padStep, radius, rightMar, size, style, tag, tagString, tags, tagsToDraw, type, x1, x2, y1, y2, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
       group = this.groupAboveSelection(this.editor.selection.getRng());
       bodyStyle = null;
-      pad = padStep = 1;
+      pad = 3;
+      padStep = 2;
       radius = 4;
       p4 = Math.pi / 4;
       tags = [];
@@ -621,7 +626,7 @@
           bottom: p.top + close.height(),
           right: p.left + close.width()
         };
-        if (open.top === open.bottom || close.top === close.bottom || open.left === open.right || close.left === close.right) {
+        if ((open.top === open.bottom || close.top === close.bottom || open.left === open.right || close.left === close.right) && !($(group.open)).hasClass('hide')) {
           setTimeout(((function(_this) {
             return function() {
               var _ref2;
