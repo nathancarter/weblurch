@@ -640,8 +640,10 @@ Overay plugin](overlayplugin.litcoffee).
             pad = padStep = 1
             radius = 4
             p4 = Math.pi / 4
+            tags = [ ]
             while group
-                color = @groupTypes?[group?.typeName()]?.color ? '#444444'
+                type = @groupTypes?[group?.typeName()]
+                color = type?.color ? '#444444'
 
 Compute the sizes and positions of the open and close groupers.
 
@@ -672,13 +674,24 @@ may be loaded.
                     , 100
                     return
 
-Draw this group and then move one step up the group hierarchy, ready to draw
-the next one on the next pass through the loop.
+Compute the group's tag contents, if any, and store where and how to draw
+them.
 
                 x1 = open.left - pad/3
                 y1 = open.top - pad
                 x2 = close.right + pad/3
                 y2 = close.bottom + pad
+                if tagString = type?.tagContents? group
+                    style = @editor.getWin().getComputedStyle group.open
+                    tags.push
+                        content : tagString
+                        corner : { x : x1, y : y1 }
+                        color : color
+                        font : style.font
+
+Draw this group and then move one step up the group hierarchy, ready to draw
+the next one on the next pass through the loop.
+
                 context.fillStyle = context.strokeStyle = color
                 context.beginPath()
                 if open.top is close.top
@@ -716,13 +729,51 @@ A rounded rectangle from open's top left to close's bottom right, padded by
                     context.lineTo x1, yT
                     context.lineTo x1, y1 + radius
                     context.arcTo x1, y1, x1 + radius, y1, radius
+                context.closePath()
                 context.globalAlpha = 1.0
-                context.lineWidth = 1.0
+                context.lineWidth = 1.5
                 context.stroke()
                 context.globalAlpha = 0.3
                 context.fill()
                 group = group.parent
                 pad += padStep
+
+Now draw the tags on all the bubbles just drawn.  We proceed in reverse
+order, so that outer tags are drawn behind inner ones.
+
+            while tags.length > 0
+                tag = tags.pop()
+                context.font = tag.font
+                approxHeight = context.measureText( 'm' ).width * 1.2
+                width = context.measureText( tag.content ).width
+                x1 = tag.corner.x - padStep
+                y1 = tag.corner.y - approxHeight - 2*padStep
+                x2 = x1 + 2*padStep + width
+                y2 = tag.corner.y
+                context.beginPath()
+                context.moveTo x1 + radius, y1
+                context.lineTo x2 - radius, y1
+                context.arcTo x2, y1, x2, y1 + radius, radius
+                context.lineTo x2, y2 - radius
+                context.arcTo x2, y2, x2 - radius, y2, radius
+                context.lineTo x1 + radius, y2
+                context.arcTo x1, y2, x1, y2 - radius, radius
+                context.lineTo x1, y1 + radius
+                context.arcTo x1, y1, x1 + radius, y1, radius
+                context.closePath()
+                context.globalAlpha = 1.0
+                context.fillStyle = '#ffffff'
+                context.fill()
+                context.lineWidth = 1.5
+                context.strokeStyle = tag.color
+                context.stroke()
+                context.globalAlpha = 0.7
+                context.fillStyle = tag.color
+                context.fill()
+                context.fillStyle = '#000000'
+                context.globalAlpha = 1.0
+                context.fillText tag.content, tag.corner.x,
+                    tag.corner.y - 0.2 * approxHeight
 
 # Installing the plugin
 
