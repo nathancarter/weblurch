@@ -32,34 +32,20 @@ Load and save
    StackOverflow page to which it links with information on how you might go
    about building a workaround if one doesn't exist already.
 
-## Miscellaneous enhancements
+Other
 
  * Disable resizing of grouper objects as if they were normal images
+ * Formats menu is currently empty
+
+## Miscellaneous enhancements
+
  * Move all plugin files into the `src/` folder, if possible.
+ * Make unit tests for `Group.contentAsText`, `Group.contentAsFragment`, and
+   `Group.contentAsHTML`.  All were tested informally in the browser, but
+   have not yet become unit tests.
 
-## Extending the Editor
+## Functions in Group Types
 
-### Groups plugin
-
-Complete the Groups plugin by adding the following features.
-
- * Enhance the Group insertion actions so that they are unavailable when the
-   base and anchor of the selection are not in the same Group.
- * Add instance methods for getting/setting arbitrary data on a Group, as
-   key-value pairs stored in the open grouper DOM element attributes.
-
-### Functions in Group Types
-
- * When drawing a group, run a function defined in its type that will
-   compute, from the group's existing data, the contents of its bubble tag.
-   Do not re-run the computation if the data has not changed.  For now, just
-   output the tag contents to the console.
- * Extend the bubble-drawing routine with an opaque tag on top of the
-   bubble, a rounded rectangle containing the text computed as the tag
-   contents.
- * Enhance the drawing of nested bubbles so that tags do not obscure one
-   another, but become taller to peek out from behind those in front.  You
-   must therefore draw tags from outermost to innermost.
  * Extend tag rendering to support arbitrary HTML rather than just simple
    text, by using [the techniques in this article](
    https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Drawing_DOM_objects_into_a_canvas)

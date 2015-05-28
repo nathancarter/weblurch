@@ -2,6 +2,7 @@
 (function() {
   var Group, Groups, LoadSave, Overlay, grouperHTML, grouperInfo, maybeSetupTestRecorder,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    __hasProp = {}.hasOwnProperty,
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
     __slice = [].slice;
 
@@ -38,9 +39,15 @@
   window.grouperInfo = grouperInfo;
 
   Group = (function() {
-    function Group(open, close) {
+    function Group(open, close, plugin) {
       this.open = open;
       this.close = close;
+      this.plugin = plugin;
+      this.contentAsHTML = __bind(this.contentAsHTML, this);
+      this.contentAsFragment = __bind(this.contentAsFragment, this);
+      this.contentAsText = __bind(this.contentAsText, this);
+      this.get = __bind(this.get, this);
+      this.set = __bind(this.set, this);
       this.typeName = __bind(this.typeName, this);
       this.id = __bind(this.id, this);
     }
@@ -53,6 +60,54 @@
     Group.prototype.typeName = function() {
       var _ref;
       return (_ref = grouperInfo(this.open)) != null ? _ref.type : void 0;
+    };
+
+    Group.prototype.set = function(key, value) {
+      var _ref, _ref1;
+      if (!/^[a-zA-Z0-9-]+$/.test(key)) {
+        return;
+      }
+      this.open.setAttribute("data-" + key, JSON.stringify([value]));
+      if ((_ref = this.plugin) != null) {
+        _ref.editor.fire('change', {
+          group: this,
+          key: key
+        });
+      }
+      return (_ref1 = this.plugin) != null ? _ref1.editor.isNotDirty = false : void 0;
+    };
+
+    Group.prototype.get = function(key) {
+      var e;
+      try {
+        return JSON.parse(this.open.getAttribute("data-" + key))[0];
+      } catch (_error) {
+        e = _error;
+        return void 0;
+      }
+    };
+
+    Group.prototype.contentAsText = function() {
+      var range;
+      range = this.open.ownerDocument.createRange();
+      range.setStartAfter(this.open);
+      range.setEndBefore(this.close);
+      return range.toString();
+    };
+
+    Group.prototype.contentAsFragment = function() {
+      var range;
+      range = this.open.ownerDocument.createRange();
+      range.setStartAfter(this.open);
+      range.setEndBefore(this.close);
+      return range.cloneContents();
+    };
+
+    Group.prototype.contentAsHTML = function() {
+      var tmp;
+      tmp = this.open.ownerDocument.createElement('div');
+      tmp.appendChild(this.contentAsFragment());
+      return tmp.innerHTML;
     };
 
     return Group;
@@ -77,6 +132,7 @@
       this.hideOrShowGroupers = __bind(this.hideOrShowGroupers, this);
       this.allGroupers = __bind(this.allGroupers, this);
       this.groupCurrentSelection = __bind(this.groupCurrentSelection, this);
+      this.updateButtonsAndMenuItems = __bind(this.updateButtonsAndMenuItems, this);
       this.addGroupType = __bind(this.addGroupType, this);
       this.setUsedID = __bind(this.setUsedID, this);
       this.addFreeId = __bind(this.addFreeId, this);
@@ -116,7 +172,7 @@
     };
 
     Groups.prototype.addGroupType = function(name, data) {
-      var buttonData, key, menuData, n, _ref;
+      var buttonData, key, menuData, n, plugin, _ref;
       if (data == null) {
         data = {};
       }
@@ -133,6 +189,7 @@
       })()).join('');
       this.groupTypes[name] = data;
       if (data.hasOwnProperty('text')) {
+        plugin = this;
         menuData = {
           text: data.text,
           context: (_ref = data.context) != null ? _ref : 'Insert',
@@ -140,7 +197,11 @@
             return function() {
               return _this.groupCurrentSelection(name);
             };
-          })(this)
+          })(this),
+          onPostRender: function() {
+            plugin.groupTypes[name].menuItem = this;
+            return plugin.updateButtonsAndMenuItems();
+          }
         };
         if (data.shortcut != null) {
           menuData.shortcut = data.shortcut;
@@ -155,12 +216,41 @@
             return function() {
               return _this.groupCurrentSelection(name);
             };
-          })(this)
+          })(this),
+          onPostRender: function() {
+            plugin.groupTypes[name].button = this;
+            return plugin.updateButtonsAndMenuItems();
+          }
         };
         key = data.image != null ? 'image' : data.icon != null ? 'icon' : 'text';
         buttonData[key] = data[key];
         return this.editor.addButton(name, buttonData);
       }
+    };
+
+    Groups.prototype.updateButtonsAndMenuItems = function() {
+      var inSameGroup, left, name, right, type, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _results;
+      left = (_ref = this.editor) != null ? (_ref1 = _ref.selection) != null ? (_ref2 = _ref1.getRng()) != null ? _ref2.cloneRange() : void 0 : void 0 : void 0;
+      if (!left) {
+        return;
+      }
+      right = left.cloneRange();
+      left.collapse(true);
+      right.collapse(false);
+      inSameGroup = this.groupAboveCursor(left) === this.groupAboveCursor(right);
+      _ref3 = this.groupTypes;
+      _results = [];
+      for (name in _ref3) {
+        if (!__hasProp.call(_ref3, name)) continue;
+        type = _ref3[name];
+        if (type != null) {
+          if ((_ref4 = type.button) != null) {
+            _ref4.disabled(!inSameGroup);
+          }
+        }
+        _results.push(type != null ? (_ref5 = type.menuItem) != null ? _ref5.disabled(!inSameGroup) : void 0 : void 0);
+      }
+      return _results;
     };
 
     Groups.prototype.groupCurrentSelection = function(type) {
@@ -327,7 +417,10 @@
       return setTimeout((function(_this) {
         return function() {
           var _ref1;
-          return (_ref1 = _this.editor.Overlay) != null ? _ref1.redrawContents() : void 0;
+          if ((_ref1 = _this.editor.Overlay) != null) {
+            _ref1.redrawContents();
+          }
+          return _this.updateButtonsAndMenuItems();
         };
       })(this), 0);
     };
@@ -336,7 +429,7 @@
       var cached, id;
       cached = this[id = grouperInfo(open).id];
       if ((cached != null ? cached.open : void 0) !== open || (cached != null ? cached.close : void 0) !== close) {
-        this[id] = new Group(open, close);
+        this[id] = new Group(open, close, this);
       }
       return id;
     };
@@ -492,14 +585,16 @@
     };
 
     Groups.prototype.drawGroups = function(canvas, context) {
-      var bodyStyle, close, color, group, leftMar, open, p, p4, pad, padStep, radius, rightMar, x1, x2, xL, xR, y1, y2, yB, yT, _ref, _ref1, _ref2;
+      var approxHeight, bodyStyle, close, color, group, leftMar, moveBy, old, open, p, p4, pad, padStep, radius, rectanglesCollide, rightMar, style, tag, tagString, tags, tagsToDraw, type, width, x1, x2, xL, xR, y1, y2, yB, yT, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
       group = this.groupAboveSelection(this.editor.selection.getRng());
       bodyStyle = null;
       pad = padStep = 1;
       radius = 4;
       p4 = Math.pi / 4;
+      tags = [];
       while (group) {
-        color = (_ref = (_ref1 = this.groupTypes) != null ? (_ref2 = _ref1[group != null ? group.typeName() : void 0]) != null ? _ref2.color : void 0 : void 0) != null ? _ref : '#444444';
+        type = (_ref = this.groupTypes) != null ? _ref[group != null ? group.typeName() : void 0] : void 0;
+        color = (_ref1 = type != null ? type.color : void 0) != null ? _ref1 : '#444444';
         open = $(group.open);
         close = $(group.close);
         p = open.position();
@@ -519,8 +614,8 @@
         if (open.top === open.bottom || close.top === close.bottom || open.left === open.right || close.left === close.right) {
           setTimeout((function(_this) {
             return function() {
-              var _ref3;
-              return (_ref3 = _this.editor.Overlay) != null ? _ref3.redrawContents() : void 0;
+              var _ref2;
+              return (_ref2 = _this.editor.Overlay) != null ? _ref2.redrawContents() : void 0;
             };
           })(this), 100);
           return;
@@ -529,6 +624,18 @@
         y1 = open.top - pad;
         x2 = close.right + pad / 3;
         y2 = close.bottom + pad;
+        if (tagString = type != null ? typeof type.tagContents === "function" ? type.tagContents(group) : void 0 : void 0) {
+          style = this.editor.getWin().getComputedStyle(group.open);
+          tags.push({
+            content: tagString,
+            corner: {
+              x: x1,
+              y: y1
+            },
+            color: color,
+            font: style.font
+          });
+        }
         context.fillStyle = context.strokeStyle = color;
         context.beginPath();
         if (open.top === close.top) {
@@ -563,14 +670,68 @@
           context.lineTo(x1, y1 + radius);
           context.arcTo(x1, y1, x1 + radius, y1, radius);
         }
+        context.closePath();
         context.globalAlpha = 1.0;
-        context.lineWidth = 1.0;
+        context.lineWidth = 1.5;
         context.stroke();
         context.globalAlpha = 0.3;
         context.fill();
         group = group.parent;
         pad += padStep;
       }
+      tagsToDraw = [];
+      rectanglesCollide = function(x1, y1, x2, y2, x3, y3, x4, y4) {
+        return !(x3 >= x2 || x4 <= x1 || y3 >= y2 || y4 <= y1);
+      };
+      while (tags.length > 0) {
+        tag = tags.shift();
+        context.font = tag.font;
+        approxHeight = context.measureText('m').width * 1.2;
+        width = context.measureText(tag.content).width;
+        x1 = tag.corner.x - padStep;
+        y1 = tag.corner.y - approxHeight - 2 * padStep;
+        x2 = x1 + 2 * padStep + width;
+        y2 = tag.corner.y;
+        for (_i = 0, _len = tagsToDraw.length; _i < _len; _i++) {
+          old = tagsToDraw[_i];
+          if (rectanglesCollide(x1, y1, x2, y2, old.x1, old.y1, old.x2, old.y2)) {
+            moveBy = old.y1 - y2;
+            y1 += moveBy;
+            y2 += moveBy;
+          }
+        }
+        y2 = tag.corner.y;
+        _ref2 = [x1, y1, x2, y2], tag.x1 = _ref2[0], tag.y1 = _ref2[1], tag.x2 = _ref2[2], tag.y2 = _ref2[3];
+        tagsToDraw.unshift(tag);
+      }
+      _results = [];
+      for (_j = 0, _len1 = tagsToDraw.length; _j < _len1; _j++) {
+        tag = tagsToDraw[_j];
+        context.beginPath();
+        context.moveTo(tag.x1 + radius, tag.y1);
+        context.lineTo(tag.x2 - radius, tag.y1);
+        context.arcTo(tag.x2, tag.y1, tag.x2, tag.y1 + radius, radius);
+        context.lineTo(tag.x2, tag.y2 - radius);
+        context.arcTo(tag.x2, tag.y2, tag.x2 - radius, tag.y2, radius);
+        context.lineTo(tag.x1 + radius, tag.y2);
+        context.arcTo(tag.x1, tag.y2, tag.x1, tag.y2 - radius, radius);
+        context.lineTo(tag.x1, tag.y1 + radius);
+        context.arcTo(tag.x1, tag.y1, tag.x1 + radius, tag.y1, radius);
+        context.closePath();
+        context.globalAlpha = 1.0;
+        context.fillStyle = '#ffffff';
+        context.fill();
+        context.lineWidth = 1.5;
+        context.strokeStyle = tag.color;
+        context.stroke();
+        context.globalAlpha = 0.7;
+        context.fillStyle = tag.color;
+        context.fill();
+        context.fillStyle = '#000000';
+        context.globalAlpha = 1.0;
+        _results.push(context.fillText(tag.content, tag.x1, tag.y1 + 0.9 * approxHeight));
+      }
+      return _results;
     };
 
     return Groups;
@@ -598,12 +759,15 @@
     editor.on('change SetContent', function(event) {
       return editor.Groups.scanDocument();
     });
-    return editor.on('KeyUp', function(event) {
+    editor.on('KeyUp', function(event) {
       var _ref1;
       if ((33 <= (_ref1 = event.keyCode) && _ref1 <= 40)) {
         return;
       }
       return editor.Groups.scanDocument();
+    });
+    return editor.on('NodeChange', function(event) {
+      return editor.Groups.updateButtonsAndMenuItems();
     });
   });
 
@@ -1350,7 +1514,11 @@
           text: 'Meaningful expression',
           image: './images/red-bracket-icon.png',
           tooltip: 'Make text a meaningful expression',
-          color: '#996666'
+          color: '#996666',
+          tagContents: function(group) {
+            var _ref;
+            return "" + ((_ref = group.contentAsText()) != null ? _ref.length : void 0) + " characters";
+          }
         }
       ]
     });

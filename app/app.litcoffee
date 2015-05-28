@@ -67,9 +67,12 @@ class, which manages all the `Group` instances in that editor's document.
 The constructor takes as parameters the two DOM nodes that are its open and
 close groupers (i.e., group boundary markers), respectively.  It does not
 validate that these are indeed open and close grouper nodes, but just stores
-them for later lookup.
+them for later lookup.  The final parameter is an instance of the Groups
+class, which is the plugin defined in this file.  Thus each group will know
+in which environment it sits, and be able to communicate with that
+environment.
 
-        constructor: ( @open, @close ) -> # no body needed
+        constructor: ( @open, @close, @plugin ) -> # no body needed
 
 This method returns the ID of the group, if it is available within the open
 grouper.
@@ -79,6 +82,48 @@ grouper.
 This method returns the name of the type of the group, as a string.
 
         typeName: => grouperInfo( @open )?.type
+
+We provide the following two simple methods for getting and setting
+arbitrary data within a group.  Clients should use these methods rather than
+write to fields in a group instance itself, because these (a) guarantee no
+collisions with existing properties/methods, and (b) mark that group (and
+thus the document) dirty, and ensure that changes to a group's data bring
+about any recomputation/reprocessing of that group in the document.
+
+Because we use HTML data attributes to store the data, the keys must be
+alphanumeric, optionally with dashes.  Furthermore, the data must be able to
+be amenable to JSON stringification.
+
+        set: ( key, value ) =>
+            if not /^[a-zA-Z0-9-]+$/.test key then return
+            @open.setAttribute "data-#{key}", JSON.stringify [ value ]
+            @plugin?.editor.fire 'change', { group : this, key : key }
+            @plugin?.editor.isNotDirty = no
+        get: ( key ) =>
+            try
+                JSON.parse( @open.getAttribute "data-#{key}" )[0]
+            catch e
+                undefined
+
+We will need to be able to query the contents of a group, so that later
+computations on that group can use its contents to determine how to act.  We
+provide functions for fetching the contents of the group as plain text, as
+an HTML `DocumentFragment` object, or as an HTML string.
+
+        contentAsText: =>
+            range = @open.ownerDocument.createRange()
+            range.setStartAfter @open
+            range.setEndBefore @close
+            range.toString()
+        contentAsFragment: =>
+            range = @open.ownerDocument.createRange()
+            range.setStartAfter @open
+            range.setEndBefore @close
+            range.cloneContents()
+        contentAsHTML: =>
+            tmp = @open.ownerDocument.createElement 'div'
+            tmp.appendChild @contentAsFragment()
+            tmp.innerHTML
 
 The `Group` class should be accessible globally.
 
@@ -194,20 +239,46 @@ routine needs, and they will be passed along directly.
             name = ( n for n in name when /[a-zA-Z_-]/.test n ).join ''
             @groupTypes[name] = data
             if data.hasOwnProperty 'text'
+                plugin = this
                 menuData =
                     text : data.text
                     context : data.context ? 'Insert'
                     onclick : => @groupCurrentSelection name
+                    onPostRender : -> # must use -> here to access "this":
+                        plugin.groupTypes[name].menuItem = this
+                        plugin.updateButtonsAndMenuItems()
                 if data.shortcut? then menuData.shortcut = data.shortcut
                 if data.icon? then menuData.icon = data.icon
                 @editor.addMenuItem name, menuData
                 buttonData =
                     tooltip : data.tooltip
                     onclick : => @groupCurrentSelection name
+                    onPostRender : -> # must use -> here to access "this":
+                        plugin.groupTypes[name].button = this
+                        plugin.updateButtonsAndMenuItems()
                 key = if data.image? then 'image' else \
                     if data.icon? then 'icon' else 'text'
                 buttonData[key] = data[key]
                 @editor.addButton name, buttonData
+
+The above function calls `updateButtonsAndMenuItems()` whenever a new button
+or menu item is first drawn.  That function is also called whenever the
+cursor in the document moves or the groups are rescanned.  It enables or
+disables the group-insertion routines based on whether the selection should
+be allowed to be wrapped in a group.  This is determined based on whether
+the two ends of the selection are inside the same deepest group.
+
+        updateButtonsAndMenuItems: =>
+            left = @editor?.selection?.getRng()?.cloneRange()
+            if not left then return
+            right = left.cloneRange()
+            left.collapse yes
+            right.collapse no
+            inSameGroup =
+                @groupAboveCursor( left ) is @groupAboveCursor( right )
+            for own name, type of @groupTypes
+                type?.button?.disabled not inSameGroup
+                type?.menuItem?.disabled not inSameGroup
 
 ## Inserting new groups
 
@@ -420,10 +491,12 @@ it recomputes its results from the newly-generated hierarchy in `topLevel`.
 If the Overlay plugin is in use, it should now redraw, since the list of
 groups may have changed.  We put it on a slight delay, because there may
 still be some pending cursor movements that we want to ensure have finished
-before this drawing routine is called.
+before this drawing routine is called.  At the same time, we also update
+the enabled/disabled state of group-insertion buttons and menu items.
 
             setTimeout =>
                 @editor.Overlay?.redrawContents()
+                @updateButtonsAndMenuItems()
             , 0
 
 The above function needs to create instances of the `Group` class, and
@@ -433,7 +506,7 @@ copies from the cache when possible.
         registerGroup: ( open, close ) =>
             cached = @[id = grouperInfo( open ).id]
             if cached?.open isnt open or cached?.close isnt close
-                @[id] = new Group open, close
+                @[id] = new Group open, close, this
             id
 
 ## Querying the group hierarchy
@@ -567,8 +640,10 @@ Overay plugin](overlayplugin.litcoffee).
             pad = padStep = 1
             radius = 4
             p4 = Math.pi / 4
+            tags = [ ]
             while group
-                color = @groupTypes?[group?.typeName()]?.color ? '#444444'
+                type = @groupTypes?[group?.typeName()]
+                color = type?.color ? '#444444'
 
 Compute the sizes and positions of the open and close groupers.
 
@@ -599,13 +674,24 @@ may be loaded.
                     , 100
                     return
 
-Draw this group and then move one step up the group hierarchy, ready to draw
-the next one on the next pass through the loop.
+Compute the group's tag contents, if any, and store where and how to draw
+them.
 
                 x1 = open.left - pad/3
                 y1 = open.top - pad
                 x2 = close.right + pad/3
                 y2 = close.bottom + pad
+                if tagString = type?.tagContents? group
+                    style = @editor.getWin().getComputedStyle group.open
+                    tags.push
+                        content : tagString
+                        corner : { x : x1, y : y1 }
+                        color : color
+                        font : style.font
+
+Draw this group and then move one step up the group hierarchy, ready to draw
+the next one on the next pass through the loop.
+
                 context.fillStyle = context.strokeStyle = color
                 context.beginPath()
                 if open.top is close.top
@@ -643,16 +729,80 @@ A rounded rectangle from open's top left to close's bottom right, padded by
                     context.lineTo x1, yT
                     context.lineTo x1, y1 + radius
                     context.arcTo x1, y1, x1 + radius, y1, radius
+                context.closePath()
                 context.globalAlpha = 1.0
-                context.lineWidth = 1.0
+                context.lineWidth = 1.5
                 context.stroke()
                 context.globalAlpha = 0.3
                 context.fill()
                 group = group.parent
                 pad += padStep
 
-<font color=red>This class is not yet complete. See [the project
-plan](plan.md) for details of what's to come.</font>
+Now draw the tags on all the bubbles just drawn.  We proceed in reverse
+order, so that outer tags are drawn behind inner ones.  We also track the
+rectangles we've covered, and move any later ones upward so as not to
+collide with ones drawn earlier.
+
+We begin by measuring the sizes of the rectangles, and checking for
+collisions.  Those that collide with previously-scanned rectangles are slid
+upwards so that they don't collide anymore.  After all collisions have been
+resolved, the rectangle's bottom boundary is reset to what it originally
+was, so that the rectangle actually just got taller.
+
+            tagsToDraw = [ ]
+            rectanglesCollide = ( x1, y1, x2, y2, x3, y3, x4, y4 ) ->
+                not ( x3 >= x2 or x4 <= x1 or y3 >= y2 or y4 <= y1 )
+            while tags.length > 0
+                tag = tags.shift()
+                context.font = tag.font
+                approxHeight = context.measureText( 'm' ).width * 1.2
+                width = context.measureText( tag.content ).width
+                x1 = tag.corner.x - padStep
+                y1 = tag.corner.y - approxHeight - 2*padStep
+                x2 = x1 + 2*padStep + width
+                y2 = tag.corner.y
+                for old in tagsToDraw
+                    if rectanglesCollide x1, y1, x2, y2, old.x1, old.y1, \
+                                         old.x2, old.y2
+                        moveBy = old.y1 - y2
+                        y1 += moveBy
+                        y2 += moveBy
+                y2 = tag.corner.y
+                [ tag.x1, tag.y1, tag.x2, tag.y2 ] = [ x1, y1, x2, y2 ]
+                tagsToDraw.unshift tag
+
+Now we draw the tags that have already been sized for us by the previous
+loop.
+
+            for tag in tagsToDraw
+                context.beginPath()
+                context.moveTo tag.x1 + radius, tag.y1
+                context.lineTo tag.x2 - radius, tag.y1
+                context.arcTo tag.x2, tag.y1, tag.x2, tag.y1 + radius,
+                    radius
+                context.lineTo tag.x2, tag.y2 - radius
+                context.arcTo tag.x2, tag.y2, tag.x2 - radius, tag.y2,
+                    radius
+                context.lineTo tag.x1 + radius, tag.y2
+                context.arcTo tag.x1, tag.y2, tag.x1, tag.y2 - radius,
+                    radius
+                context.lineTo tag.x1, tag.y1 + radius
+                context.arcTo tag.x1, tag.y1, tag.x1 + radius, tag.y1,
+                    radius
+                context.closePath()
+                context.globalAlpha = 1.0
+                context.fillStyle = '#ffffff'
+                context.fill()
+                context.lineWidth = 1.5
+                context.strokeStyle = tag.color
+                context.stroke()
+                context.globalAlpha = 0.7
+                context.fillStyle = tag.color
+                context.fill()
+                context.fillStyle = '#000000'
+                context.globalAlpha = 1.0
+                context.fillText tag.content, tag.x1,
+                    tag.y1 + 0.9 * approxHeight
 
 # Installing the plugin
 
@@ -681,6 +831,12 @@ key or home/end/pgup/pgdn.
         editor.on 'KeyUp', ( event ) ->
             if 33 <= event.keyCode <= 40 then return
             editor.Groups.scanDocument()
+
+Whenever the cursor moves, we should update whether the group-insertion
+buttons and menu items are enabled.
+
+        editor.on 'NodeChange', ( event ) ->
+            editor.Groups.updateButtonsAndMenuItems()
 
 
 
@@ -1496,6 +1652,8 @@ knows which group types to create.
                 image : './images/red-bracket-icon.png'
                 tooltip : 'Make text a meaningful expression'
                 color : '#996666'
+                tagContents : ( group ) ->
+                    "#{group.contentAsText()?.length} characters"
             ]
 
 
