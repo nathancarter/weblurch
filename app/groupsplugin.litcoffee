@@ -111,17 +111,17 @@ provide functions for fetching the contents of the group as plain text, as
 an HTML `DocumentFragment` object, or as an HTML string.
 
         contentAsText: =>
-            range = document.createRange()
+            range = @open.ownerDocument.createRange()
             range.setStartAfter @open
             range.setEndBefore @close
             range.toString()
         contentAsFragment: =>
-            range = document.createRange()
+            range = @open.ownerDocument.createRange()
             range.setStartAfter @open
             range.setEndBefore @close
             range.cloneContents()
         contentAsHTML: =>
-            tmp = document.createElement 'div'
+            tmp = @open.ownerDocument.createElement 'div'
             tmp.appendChild @contentAsFragment()
             tmp.innerHTML
 
