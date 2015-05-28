@@ -110,20 +110,26 @@ computations on that group can use its contents to determine how to act.  We
 provide functions for fetching the contents of the group as plain text, as
 an HTML `DocumentFragment` object, or as an HTML string.
 
-        contentAsText: =>
-            range = @open.ownerDocument.createRange()
-            range.setStartAfter @open
-            range.setEndBefore @close
-            range.toString()
-        contentAsFragment: =>
-            range = @open.ownerDocument.createRange()
-            range.setStartAfter @open
-            range.setEndBefore @close
-            range.cloneContents()
+        contentAsText: => @innerRange().toString()
+        contentAsFragment: => @innerRange.cloneContents()
         contentAsHTML: =>
             tmp = @open.ownerDocument.createElement 'div'
             tmp.appendChild @contentAsFragment()
             tmp.innerHTML
+
+Those functions rely on the `innerRange()` function, defined below, with a
+corresponding `outerRange` function for the sake of completeness.
+
+        innerRange: =>
+            range = @open.ownerDocument.createRange()
+            range.setStartAfter @open
+            range.setEndBefore @close
+            range
+        outerRange: =>
+            range = @open.ownerDocument.createRange()
+            range.setStartBefore @open
+            range.setEndAfter @close
+            range
 
 The `Group` class should be accessible globally.
 
@@ -693,43 +699,20 @@ Draw this group and then move one step up the group hierarchy, ready to draw
 the next one on the next pass through the loop.
 
                 context.fillStyle = context.strokeStyle = color
-                context.beginPath()
                 if open.top is close.top
 
 A rounded rectangle from open's top left to close's bottom right, padded by
 `pad/3` in the x direction, `pad` in the y direction, and with corner radius
 `radius`.
 
-                    context.moveTo x1 + radius, y1
-                    context.lineTo x2 - radius, y1
-                    context.arcTo x2, y1, x2, y1 + radius, radius
-                    context.lineTo x2, y2 - radius
-                    context.arcTo x2, y2, x2 - radius, y2, radius
-                    context.lineTo x1 + radius, y2
-                    context.arcTo x1, y2, x1, y2 - radius, radius
-                    context.lineTo x1, y1 + radius
-                    context.arcTo x1, y1, x1 + radius, y1, radius
+                    context.roundedRect x1, y1, x2, y2, radius
                 else
                     if not bodyStyle?
                         bodyStyle = getComputedStyle @editor.getBody()
                         leftMar = parseInt bodyStyle['margin-left']
                         rightMar = parseInt bodyStyle['margin-right']
-                    xL = leftMar
-                    xR = canvas.width - rightMar
-                    yT = open.bottom
-                    yB = close.top
-                    context.moveTo x1 + radius, y1
-                    context.lineTo xR, y1
-                    context.lineTo xR, yB
-                    context.lineTo x2, yB
-                    context.lineTo x2, y2 - radius
-                    context.arcTo x2, y2, x2 - radius, y2, radius
-                    context.lineTo xL, y2
-                    context.lineTo xL, yT
-                    context.lineTo x1, yT
-                    context.lineTo x1, y1 + radius
-                    context.arcTo x1, y1, x1 + radius, y1, radius
-                context.closePath()
+                    context.roundedZone x1, y1, x2, y2, open.bottom,
+                        close.top, leftMar, rightMar, radius
                 context.globalAlpha = 1.0
                 context.lineWidth = 1.5
                 context.stroke()
@@ -750,8 +733,6 @@ resolved, the rectangle's bottom boundary is reset to what it originally
 was, so that the rectangle actually just got taller.
 
             tagsToDraw = [ ]
-            rectanglesCollide = ( x1, y1, x2, y2, x3, y3, x4, y4 ) ->
-                not ( x3 >= x2 or x4 <= x1 or y3 >= y2 or y4 <= y1 )
             while tags.length > 0
                 tag = tags.shift()
                 context.font = tag.font
@@ -775,21 +756,7 @@ Now we draw the tags that have already been sized for us by the previous
 loop.
 
             for tag in tagsToDraw
-                context.beginPath()
-                context.moveTo tag.x1 + radius, tag.y1
-                context.lineTo tag.x2 - radius, tag.y1
-                context.arcTo tag.x2, tag.y1, tag.x2, tag.y1 + radius,
-                    radius
-                context.lineTo tag.x2, tag.y2 - radius
-                context.arcTo tag.x2, tag.y2, tag.x2 - radius, tag.y2,
-                    radius
-                context.lineTo tag.x1 + radius, tag.y2
-                context.arcTo tag.x1, tag.y2, tag.x1, tag.y2 - radius,
-                    radius
-                context.lineTo tag.x1, tag.y1 + radius
-                context.arcTo tag.x1, tag.y1, tag.x1 + radius, tag.y1,
-                    radius
-                context.closePath()
+                context.roundedRect tag.x1, tag.y1, tag.x2, tag.y2, radius
                 context.globalAlpha = 1.0
                 context.fillStyle = '#ffffff'
                 context.fill()
