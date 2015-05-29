@@ -67,12 +67,20 @@ class, which manages all the `Group` instances in that editor's document.
 The constructor takes as parameters the two DOM nodes that are its open and
 close groupers (i.e., group boundary markers), respectively.  It does not
 validate that these are indeed open and close grouper nodes, but just stores
-them for later lookup.  The final parameter is an instance of the Groups
-class, which is the plugin defined in this file.  Thus each group will know
-in which environment it sits, and be able to communicate with that
-environment.
+them for later lookup.
 
-        constructor: ( @open, @close, @plugin ) -> # no body needed
+The final parameter is an instance of the Groups class, which is the plugin
+defined in this file.  Thus each group will know in which environment it
+sits, and be able to communicate with that environment.  If that parameter
+is not provided, the constructor will attempt to correctly detect it, but
+providing the parameter is more efficient.
+
+        constructor: ( @open, @close, @plugin ) ->
+            if not @plugin?
+                for editor in tinymce.editors
+                    if editor.getDoc() is @open.ownerDocument
+                        @plugin = editor.Groups
+                        break
 
 This method returns the ID of the group, if it is available within the open
 grouper.

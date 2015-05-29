@@ -43,12 +43,30 @@ Other
  * Make unit tests for `Group.contentAsText`, `Group.contentAsFragment`, and
    `Group.contentAsHTML`.  All were tested informally in the browser, but
    have not yet become unit tests.
+ * Bubble tags are not drawn at retina resolution on Macs with retina
+   displays.  [See my question about how to fix this problem here.](http://stackoverflow.com/questions/30537138/rendering-html-to-canvas-on-retina-displays)
 
 ## Functions in Group Types
 
- * Whenever the inside of a group is edited by the user, or any code writes
-   to the Group's properties using the Group API, call a function in the
-   Group type that handles group contents changes.
+ * React to Group content changes
+   * Create a Group method for fetching the type object for the group, from
+     the plugin.
+   * Create a Group method that should be called whenever the contents of
+     the group may have changed.  Have it call, in the group type, the
+     method for handling group changes, if the type and that method exist.
+   * After it calls the type's method for handling changes, have it also
+     call the change method in its parent group, unless an optional
+     parameter is passed that disables this feature.
+   * Call that method from the `set` method in the Group class.
+   * Call that method for every newly-inserted group, in `scanDocument`.
+   * Create a Groups method that takes a Range object and calls the Group
+     changed method for every group whose interior intersects that Range.
+   * Enhance that method to organize the set of groups in bottom-up order,
+     and call the change methods in each of them separately in that order,
+     passing the optional parameter that disables their automatical upward
+     propagation.
+   * Call that method from the "change" and "KeyUp" events in the Groups
+     package (appx. lines 800-825).
  * When the user right-clicks inside a group, call a function in the Group
    type to determine what should be on the context menu.  Extend the context
    menu as that function suggests.
