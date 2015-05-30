@@ -75,12 +75,18 @@ sits, and be able to communicate with that environment.  If that parameter
 is not provided, the constructor will attempt to correctly detect it, but
 providing the parameter is more efficient.
 
+We call the contents changed event as soon as the group is created, because
+any newly-created group needs to have its contents processed for the first
+time (assuming a processing routine exists, otherwise the call does
+nothing).
+
         constructor: ( @open, @close, @plugin ) ->
             if not @plugin?
                 for editor in tinymce.editors
                     if editor.getDoc() is @open.ownerDocument
                         @plugin = editor.Groups
                         break
+            @contentsChanged()
 
 This method returns the ID of the group, if it is available within the open
 grouper.
@@ -108,8 +114,12 @@ be amenable to JSON stringification.
         set: ( key, value ) =>
             if not /^[a-zA-Z0-9-]+$/.test key then return
             @open.setAttribute "data-#{key}", JSON.stringify [ value ]
-            @plugin?.editor.fire 'change', { group : this, key : key }
-            @plugin?.editor.isNotDirty = no
+            if @plugin?
+                orig = @plugin.editor.selection.getBookmark()
+                @plugin.editor.selection.select @open
+                @plugin.editor.fire 'change'
+                @plugin.editor.isNotDirty = no
+                @plugin.editor.selection.moveToBookmark orig
         get: ( key ) =>
             try
                 JSON.parse( @open.getAttribute "data-#{key}" )[0]
@@ -141,6 +151,18 @@ corresponding `outerRange` function for the sake of completeness.
             range.setStartBefore @open
             range.setEndAfter @close
             range
+
+The following function should be called whenever the contents of the group
+have changed.  It notifies the group's type, so that the requisite
+processing, if any, of the new contents can take place.  It is called
+automatically by some handlers in the `Groups` class, below.
+
+By default, it propagates the change event up the ancestor chain in the
+group hierarchy, but that can be disabled by passing false as the parameter.
+
+        contentsChanged: ( propagate = yes ) =>
+            @type()?.contentsChanged? this
+            if propagate then @parent?.contentsChanged yes
 
 The `Group` class should be accessible globally.
 

@@ -49,24 +49,17 @@ Other
 ## Functions in Group Types
 
  * React to Group content changes
-   * Create a Group method that should be called whenever the contents of
-     the group may have changed.  Have it call, in the group type, the
-     method for handling group changes, if the type and that method exist.
-   * After it calls the type's method for handling changes, have it also
-     call the change method in its parent group, unless an optional
-     parameter is passed that disables this feature.
-   * Call that method from the `set` method in the Group class.
-   * Call that method for every newly-inserted group, in `scanDocument`.
-   * Create a Groups method that takes a Range object and calls the Group
-     changed method for every group whose interior intersects that Range.
-   * Enhance that method to organize the set of groups in bottom-up order,
-     and call the change methods in each of them separately in that order,
-     passing the optional parameter that disables their automatical upward
-     propagation.
-   * Call that method from the "change" and "KeyUp" events in the Groups
-     package (appx. lines 810-815).  Code for converting a KeyUp event into
-     a range is just `editor.selection.getRng()`.  Code for converting
-     change events into ranges is as follows.
+   * Create a Groups method `rangeChanged` that takes a Range object and
+     calls the Group changed method for every group whose interior
+     intersects that Range.
+   * Enhance `rangeChanged` to organize the set of groups in bottom-up
+     order, and call the change methods in each of them separately in that
+     order, passing the optional parameter that disables their automatic
+     upward propagation.
+   * Call `rangeChanged` from the "change" and "KeyUp" events in the Groups
+     package (appx. lines 810-815).  To convert a KeyUp event into a range,
+     use `editor.selection.getRng()`.  To convert a change event into a
+     range, do the following.
 ```
     orig = editor.selection.getBookmark()
     editor.selection.moveToBookmark changeEvent.level.bookmark
