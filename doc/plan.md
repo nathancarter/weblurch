@@ -49,8 +49,6 @@ Other
 ## Functions in Group Types
 
  * React to Group content changes
-   * Create a Group method for fetching the type object for the group, from
-     the plugin.
    * Create a Group method that should be called whenever the contents of
      the group may have changed.  Have it call, in the group type, the
      method for handling group changes, if the type and that method exist.
@@ -66,7 +64,17 @@ Other
      passing the optional parameter that disables their automatical upward
      propagation.
    * Call that method from the "change" and "KeyUp" events in the Groups
-     package (appx. lines 800-825).
+     package (appx. lines 810-815).  Code for converting a KeyUp event into
+     a range is just `editor.selection.getRng()`.  Code for converting
+     change events into ranges is as follows.
+```
+    orig = editor.selection.getBookmark()
+    editor.selection.moveToBookmark changeEvent.level.bookmark
+    rng = editor.selection.getRng()
+    editor.selection.moveToBookmark orig
+```
+   * Document the fact that, for `setContents` events, the client must call
+     the change handlers themselves.
  * When the user right-clicks inside a group, call a function in the Group
    type to determine what should be on the context menu.  Extend the context
    menu as that function suggests.

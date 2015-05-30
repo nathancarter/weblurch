@@ -87,9 +87,12 @@ grouper.
 
         id: => grouperInfo( @open )?.id ? null
 
-This method returns the name of the type of the group, as a string.
+The first of the following methods returns the name of the type of the
+group, as a string.  The second returns the type as an object, as long as
+the type exists in the plugin stored in `@plugin`.
 
         typeName: => grouperInfo( @open )?.type
+        type: => @plugin?.grouperTypes?[@typeName()]
 
 We provide the following two simple methods for getting and setting
 arbitrary data within a group.  Clients should use these methods rather than
@@ -659,7 +662,7 @@ Overay plugin](overlayplugin.litcoffee).
             p4 = Math.pi / 4
             tags = [ ]
             while group
-                type = @groupTypes?[group?.typeName()]
+                type = group.type()
                 color = type?.color ? '#444444'
 
 Compute the sizes and positions of the open and close groupers.
