@@ -43,23 +43,20 @@ Other
  * Make unit tests for `Group.contentAsText`, `Group.contentAsFragment`, and
    `Group.contentAsHTML`.  All were tested informally in the browser, but
    have not yet become unit tests.
+ * Extend the overlay so that it also covers the menus and toolbars.  Have
+   the overlay plugin perform a transform so that (0,0) is still the top
+   left corner of the document.  But negative y values will then still be
+   able to draw on top of the menus and toolbars.
  * Bubble tags are not drawn at retina resolution on Macs with retina
    displays.  [See my question about how to fix this problem here.](http://stackoverflow.com/questions/30537138/rendering-html-to-canvas-on-retina-displays)
 
 ## Functions in Group Types
 
  * React to Group content changes
-   * Create a Groups method `rangeChanged` that takes a Range object and
-     calls the Group changed method for every group whose interior
-     intersects that Range.
-   * Enhance `rangeChanged` to organize the set of groups in bottom-up
-     order, and call the change methods in each of them separately in that
-     order, passing the optional parameter that disables their automatic
-     upward propagation.
    * Call `rangeChanged` from the "change" and "KeyUp" events in the Groups
-     package (appx. lines 810-815).  To convert a KeyUp event into a range,
-     use `editor.selection.getRng()`.  To convert a change event into a
-     range, do the following.
+     package (appx. lines 810-815), after the calls to `scanDocument`.  To
+     convert a KeyUp event into a range, use `editor.selection.getRng()`.
+     To convert a change event into a range, do the following.
 ```
     orig = editor.selection.getBookmark()
     editor.selection.moveToBookmark changeEvent.level.bookmark

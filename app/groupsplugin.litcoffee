@@ -98,7 +98,7 @@ group, as a string.  The second returns the type as an object, as long as
 the type exists in the plugin stored in `@plugin`.
 
         typeName: => grouperInfo( @open )?.type
-        type: => @plugin?.grouperTypes?[@typeName()]
+        type: => @plugin?.groupTypes?[@typeName()]
 
 We provide the following two simple methods for getting and setting
 arbitrary data within a group.  Clients should use these methods rather than
@@ -132,7 +132,7 @@ provide functions for fetching the contents of the group as plain text, as
 an HTML `DocumentFragment` object, or as an HTML string.
 
         contentAsText: => @innerRange().toString()
-        contentAsFragment: => @innerRange.cloneContents()
+        contentAsFragment: => @innerRange().cloneContents()
         contentAsHTML: =>
             tmp = @open.ownerDocument.createElement 'div'
             tmp.appendChild @contentAsFragment()
@@ -668,6 +668,100 @@ Find the deepest group in both ancestor chains.
                 result = leftChain.shift()
                 rightChain.shift()
             result
+
+## Change Events
+
+The following function can be called whenever a certain range in the
+document has changed, and groups touching that range need to be updated.  It
+assumes that `scanDocument()` was recently called, so that the group
+hierarchy is up-to-date.  The parameter must be a DOM Range object.
+
+        rangeChanged: ( range ) =>
+            group.contentsChanged no for group in @groupsTouchingRange range
+
+That method uses `@groupsTouchingRange()`, which is implemented below.  It
+uses the previous to get a list of all groups that intersect the given DOM
+Range object, in the order in which their close groupers appear (which means
+that child groups are guaranteed to appear earlier in the list than their
+parent groups).
+
+This routine requires that `scanDocument` has recently been called, so that
+groupers appear in perfectly matched pairs, correctly nested.
+
+        groupsTouchingRange: ( range ) =>
+            if ( all = @allGroupers() ).length is 0 then return [ ]
+            firstInRange = 1 + @grouperIndexOfRangeEndpoint range, yes, all
+            lastInRange = @grouperIndexOfRangeEndpoint range, no, all
+
+If there are no groupers in the selected range at all, then just create the
+parent chain of groups above the closest node to the selection.
+
+            if firstInRange > lastInRange
+                node = range.startContainer
+                if node instanceof @editor.getWin().Element
+                    node = node[range.startOffset]
+                result = [ @groupAboveNode node ]
+                while maybeOneMore = result[result.length-1]?.parent
+                    result.push maybeOneMore
+                return result
+
+Otherwise walk through all the groupers in the selection and push their
+groups onto a stack in the order that the close groupers are encountered.
+
+            stack = [ ]
+            result = [ ]
+            for index in [firstInRange..lastInRange]
+                group = @grouperToGroup all[index]
+                if all[index] is group.open
+                    stack.push group
+                else
+                    result.push group
+                    stack.pop()
+
+Then push onto the stack any open groupers that aren't yet closed, and any
+ancestor groups of the last big group encountered, the only one whose parent
+groups may not have been seen as open groupers.
+
+            while stack.length > 0 then result.push stack.pop()
+            while maybeOneMore = result[result.length-1].parent
+                result.push maybeOneMore
+            result
+
+The above method uses `@grouperIndexOfRangeEndpoint`, which is defined here.
+It locates the endpoint of a DOM Range object in the list of groupers in the
+editor.  It performs a binary search through the ordered list of groupers.
+
+The `range` parameter must be a DOM Range object.  The `left` paramter
+should be true if you're asking about the left end of the range, false if
+you're asking about the right end.
+
+The return value will be the index into `@allGroupers()` of the last grouper
+before the range endpoint.  Clearly, then, the grouper on the other side of
+the range endpoint is the return value plus 1.  If no groupers are before
+the range endpoint, this return value will be -1; a special case of this is
+when there are no groupers at all.
+
+The final parameter is optional; it prevents having to compute
+`@allGroupers()`, in case you already have that data available.
+
+        grouperIndexOfRangeEndpoint: ( range, left, all ) =>
+            if ( all ?= @allGroupers() ).length is 0 then return -1
+            endpoint = if left then Range.END_TO_START else Range.END_TO_END
+            isLeftOfEndpoint = ( grouper ) =>
+                grouperRange = @editor.getDoc().createRange()
+                grouperRange.selectNode grouper
+                range.compareBoundaryPoints( endpoint, grouperRange ) > -1
+            left = 0
+            return -1 if not isLeftOfEndpoint all[left]
+            right = all.length - 1
+            return right if isLeftOfEndpoint all[right]
+            loop
+                return left if left + 1 is right
+                middle = Math.floor ( left + right ) / 2
+                if isLeftOfEndpoint all[middle]
+                    left = middle
+                else
+                    right = middle
 
 ## Drawing Groups
 
