@@ -169,7 +169,7 @@ knows which group types to create.
                 color : '#996666'
                 tagContents : ( group ) ->
                     "#{group.contentAsText()?.length} characters"
-                contentsChanged : ( group ) ->
-                    # just for debugging purposes, for now
-                    console.log 'Contents changed in', group
+                # contentsChanged : ( group ) ->
+                #     # just for debugging purposes, for now
+                #     console.log 'Contents changed in', group
             ]
