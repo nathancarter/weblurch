@@ -49,6 +49,9 @@ Other
    able to draw on top of the menus and toolbars.
  * Bubble tags are not drawn at retina resolution on Macs with retina
    displays.  [See my question about how to fix this problem here.](http://stackoverflow.com/questions/30537138/rendering-html-to-canvas-on-retina-displays)
+ * Complete [the unit test for the DOM Utils
+   package](../test/domutils-spec.litcoffee).  See the end of that file for
+   the few missing tests.
 
 ## Functions in Group Types
 
