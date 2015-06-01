@@ -20,15 +20,65 @@ tests below.
     open = ( id ) -> grouper 'open', id
     close = ( id ) -> grouper 'close', id
 
-## Groups plugin
+## Change members in Group class
 
-Start with a simple test to verify that the plugin has been loaded.
+    phantomDescribe 'Change members in Group class', './app/index.html', ->
 
-    phantomDescribe 'Groups plugin', './app/index.html', ->
+### should call contentsChanged() upon construction
 
-### should be installed
+New instances should fire `contentsChanged()` immediately upon construction.
 
-Just verify that the active TinyMCE editor has a Groups plugin.
+        it 'should call contentsChanged() on construction', inPage ->
+            console.log 'test not yet written'
 
-        it 'should be installed', inPage ->
-            pageExpects -> tinymce.activeEditor.Groups
+### should fire a change event for attribute changes
+
+Instances should fire editor change events when their attributes are changed
+with `set()` calls.
+
+        it 'should fire a change event for attribute changes', inPage ->
+            console.log 'test not yet written'
+
+### should propagate contentsChanged() to ancestors
+
+Whenever `contentsChanged()` is called in a group, it should automatically
+call the same function in parent, grandparent, etc. groups.
+
+        it 'should propagate contentsChanged() to ancestors', inPage ->
+            console.log 'test not yet written'
+
+## Change support in Groups plugin
+
+    phantomDescribe 'Change support in Groups plugin', './app/index.html',
+    ->
+
+### grouperIndexOfRangeEndpoint() must work correctly
+
+These tests cover several use cases of the `grouperIndexOfRangeEndpoint()`
+function.
+
+        it 'grouperIndexOfRangeEndpoint() must work correctly', inPage ->
+            console.log 'test not yet written'
+
+### groupsTouchingRange() must work correctly
+
+These tests cover several use cases of the `groupsTouchingRange()` function.
+
+        it 'groupsTouchingRange() must work correctly', inPage ->
+            console.log 'test not yet written'
+
+### rangeChanged() must work correctly
+
+These tests cover several use cases of the `rangeChanged()` function.
+
+        it 'rangeChanged() must work correctly', inPage ->
+            console.log 'test not yet written'
+
+### changes in the editor must trigger rangeChanged()
+
+Typing, etc. in the editor must trigger a call to the `rangeChanged()`
+function in the Groups plugin, which then triggers appropriate calls to the
+`contentsChanged()` functions in all groups that touch the range.
+
+        it 'changes in the editor must trigger rangeChanged()', inPage ->
+            console.log 'test not yet written'
