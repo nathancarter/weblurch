@@ -9,10 +9,19 @@ provides the following functionality for working with groups in a document.
  * provides methods for installing UI elements for creating and interacting
    with groups in the document
  * shows groups visually on screen in a variety of ways
+ * calls update routines whenever group contents change, so that they can be
+   updated/processed
 
 It assumes that TinyMCE has been loaded into the global namespace, so that
 it can access it.  It also requires [the overlay
 plugin](overlayplugin.litcoffee) to be loaded in the same editor.
+
+All changes made to the document by the user are tracked so that appropriate
+events can be called in this plugin to update group objects.  The one
+exception to this rule is that calls to the `setContents()` method of the
+editor's selection, made by a client, cannot be tracked.  Thus if you call
+such a method, you should call `groupChanged()` in any groups whose contents
+have changed based on your call to `setContents()`.
 
 # Global functions
 
@@ -698,9 +707,11 @@ parent chain of groups above the closest node to the selection.
 
             if firstInRange > lastInRange
                 node = range.startContainer
-                if node instanceof @editor.getWin().Element
-                    node = node[range.startOffset]
-                result = [ @groupAboveNode node ]
+                if node instanceof @editor.getWin().Element and \
+                   range.startOffset < node.childNodes.length
+                    node = node.childNodes[range.startOffset]
+                group = @groupAboveNode node
+                result = if group then [ group ] else [ ]
                 while maybeOneMore = result[result.length-1]?.parent
                     result.push maybeOneMore
                 return result
@@ -926,11 +937,25 @@ only for change events, but also for KeyUp events.  We filter the latter so
 that we do not rescan the document if the key in question was only an arrow
 key or home/end/pgup/pgdn.
 
+In addition to rescanning the document, we also call the `rangeChanged`
+event of the Groups plugin, to update any groups that overlap the range in
+which the document was modified.
+
         editor.on 'change SetContent', ( event ) ->
             editor.Groups.scanDocument()
+            if event?.level?.bookmark
+                orig = editor.selection.getBookmark()
+                editor.selection.moveToBookmark event.level.bookmark
+                range = editor.selection.getRng()
+                editor.selection.moveToBookmark orig
+                editor.Groups.rangeChanged range
         editor.on 'KeyUp', ( event ) ->
-            if 33 <= event.keyCode <= 40 then return
+            movements = [ 33..40 ] # arrows, pgup/pgdn/home/end
+            modifiers = [ 16, 17, 18, 91 ] # alt, shift, ctrl, meta
+            if event.keyCode in movements or event.keyCode in modifiers
+                return
             editor.Groups.scanDocument()
+            editor.Groups.rangeChanged editor.selection.getRng()
 
 Whenever the cursor moves, we should update whether the group-insertion
 buttons and menu items are enabled.

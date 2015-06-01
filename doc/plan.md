@@ -52,19 +52,6 @@ Other
 
 ## Functions in Group Types
 
- * React to Group content changes
-   * Call `rangeChanged` from the "change" and "KeyUp" events in the Groups
-     package (appx. lines 810-815), after the calls to `scanDocument`.  To
-     convert a KeyUp event into a range, use `editor.selection.getRng()`.
-     To convert a change event into a range, do the following.
-```
-    orig = editor.selection.getBookmark()
-    editor.selection.moveToBookmark changeEvent.level.bookmark
-    rng = editor.selection.getRng()
-    editor.selection.moveToBookmark orig
-```
-   * Document the fact that, for `setContents` events, the client must call
-     the change handlers themselves.
  * When the user right-clicks inside a group, call a function in the Group
    type to determine what should be on the context menu.  Extend the context
    menu as that function suggests.
