@@ -50,9 +50,6 @@ Other
 
 ## Functions in Group Types
 
- * When the user right-clicks inside a group, call a function in the Group
-   type to determine what should be on the context menu.  Extend the context
-   menu as that function suggests.
  * When the user clicks inside a group's tag, call a function in the Group
    type to determine what should be on the context menu.  Extend the context
    menu as that function suggests.

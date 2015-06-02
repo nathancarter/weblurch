@@ -44,8 +44,8 @@ that no server-side callback needs to be done for spellchecking.
 Not all of the following plugins are working yet, but most are.  A plugin
 that begins with a hyphen is a local plugin written as part of this project.
 
-            plugins : 'advlist table charmap colorpicker contextmenu image
-                link importcss paste print save searchreplace textcolor
+            plugins : 'advlist table charmap colorpicker image link
+                importcss paste print save searchreplace textcolor
                 fullscreen -loadsave -overlay -groups'
 
 The groups plugin requires that we add the following, to prevent resizing of
@@ -177,4 +177,9 @@ knows which group types to create.
                 # contentsChanged : ( group ) ->
                 #     # just for debugging purposes, for now
                 #     console.log 'Contents changed in', group
+                contextMenuItems : ( group ) ->
+                    [
+                        text : group.contentAsText()
+                        onclick : -> alert 'Example code for testing'
+                    ]
             ]

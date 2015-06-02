@@ -983,3 +983,46 @@ buttons and menu items are enabled.
 
         editor.on 'NodeChange', ( event ) ->
             editor.Groups.updateButtonsAndMenuItems()
+
+The following handler installs a context menu that is exactly like that
+created by the TinyMCE context menu plugin, except that it appends to it
+any custom menu items needed by any groups inside which the user clicked.
+
+        editor.on 'contextMenu', ( event ) ->
+
+Prevent the browser's context menu.
+
+            event.preventDefault()
+
+Figure out where the user clicked, and whether there are any groups there.
+
+            x = event.clientX
+            y = event.clientY
+            if node = editor.getDoc().nodeFromPoint x, y
+                group = editor.Groups.groupAboveNode node
+
+Compute the list of normal context menu items.
+
+            contextmenu = editor.settings.contextmenu or \
+                'link image inserttable | cell row column deletetable'
+            items = [ ]
+            for name in contextmenu.split /[ ,]/
+                item = editor.menuItems[name]
+                if name is '|' then item = text : name
+                if item then item.shortcut = '' ; items.push item
+
+Add any group-specific context menu items.
+
+            if newitems = group?.type()?.contextMenuItems group
+                items.push text : '|'
+                items = items.concat newitems
+
+Construct the menu and show it on screen.
+
+            menu = new tinymce.ui.Menu(
+                items : items
+                context : 'contextmenu'
+            ).addClass( 'contextmenu' ).renderTo()
+            editor.on 'remove', -> menu.remove() ; menu = null
+            pos = ( $ editor.getContentAreaContainer() ).position()
+            menu.moveTo x + pos.left, y + pos.top
