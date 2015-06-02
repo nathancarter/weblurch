@@ -43,10 +43,6 @@ Other
  * Make unit tests for `Group.contentAsText`, `Group.contentAsFragment`, and
    `Group.contentAsHTML`.  All were tested informally in the browser, but
    have not yet become unit tests.
- * Extend the overlay so that it also covers the menus and toolbars.  Have
-   the overlay plugin perform a transform so that (0,0) is still the top
-   left corner of the document.  But negative y values will then still be
-   able to draw on top of the menus and toolbars.
  * Bubble tags are not drawn at retina resolution on Macs with retina
    displays.  [See my question about how to fix this problem here.](http://stackoverflow.com/questions/30537138/rendering-html-to-canvas-on-retina-displays)
  * Complete [the unit test for the DOM Utils
