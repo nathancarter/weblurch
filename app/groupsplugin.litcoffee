@@ -779,6 +779,13 @@ installed in [the constructor](#groups-constructor) and called by [the
 Overay plugin](overlayplugin.litcoffee).
 
         drawGroups: ( canvas, context ) =>
+
+We do not draw the groups if document scanning is disabled, because it means
+that we are in the middle of a change to the group hierarchy, which means
+that calls to the functions we'll need to figure out what to draw will give
+unstable/incorrect results.
+
+            if @scanLocks > 0 then return
             group = @groupAboveSelection @editor.selection.getRng()
             bodyStyle = null
             pad = 3
