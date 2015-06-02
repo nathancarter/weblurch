@@ -48,6 +48,11 @@ that begins with a hyphen is a local plugin written as part of this project.
                 link importcss paste print save searchreplace textcolor
                 fullscreen -loadsave -overlay -groups'
 
+The groups plugin requires that we add the following, to prevent resizing of
+group boundary images.
+
+            object_resizing : ':not(img.grouper)'
+
 We then install two toolbars, with separators indicated by pipes (`|`).
 
             toolbar : [

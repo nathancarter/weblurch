@@ -34,7 +34,6 @@ Load and save
 
 Other
 
- * Disable resizing of grouper objects as if they were normal images
  * Formats menu is currently empty
 
 ## Miscellaneous enhancements
