@@ -124,11 +124,9 @@ be amenable to JSON stringification.
             if not /^[a-zA-Z0-9-]+$/.test key then return
             @open.setAttribute "data-#{key}", JSON.stringify [ value ]
             if @plugin?
-                orig = @plugin.editor.selection.getBookmark()
-                @plugin.editor.selection.select @open
                 @plugin.editor.fire 'change'
                 @plugin.editor.isNotDirty = no
-                @plugin.editor.selection.moveToBookmark orig
+                @contentsChanged()
         get: ( key ) =>
             try
                 JSON.parse( @open.getAttribute "data-#{key}" )[0]

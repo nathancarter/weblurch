@@ -90,10 +90,35 @@ Verify that there have not yet been any recently changed groups.
 
             pageExpects ( -> recents() ), 'toEqual', [ ]
 
-This test is not yet done being written.  It is a stub for now, with the
-following note that will be replaced with real test code later.
+Construct two groups, then clear the log messages, because the constructors
+will store entries in the log (as verified in the previous test).  Verify
+that the log is empty.
 
-            console.log 'test not yet complete'
+            pageDo ->
+                open = htmlToNode grouperHTML 'logger', 'open', 0
+                close = htmlToNode grouperHTML 'logger', 'close', 0
+                window._tmp0 = new Group open, close, null
+                open = htmlToNode grouperHTML 'logger', 'open', 1
+                close = htmlToNode grouperHTML 'logger', 'close', 1
+                window._tmp1 = new Group open, close, null
+                clearRecents()
+            pageExpects ( -> recents() ), 'toEqual', [ ]
+
+Change a few attributes on the two groups, and ensure that after each
+change, the log has had an entry added for that group.
+
+            pageDo -> _tmp0.set 'example', 5
+            pageExpects ( -> recents().length ), 'toEqual', 1
+            pageExpects -> recents()[0] is _tmp0
+            pageDo -> _tmp1.set 'another', { a : -300, b : [ 'smile' ] }
+            pageExpects ( -> recents().length ), 'toEqual', 2
+            pageExpects -> recents()[0] is _tmp0
+            pageExpects -> recents()[1] is _tmp1
+            pageDo -> _tmp0.set 'non-example', -5
+            pageExpects ( -> recents().length ), 'toEqual', 3
+            pageExpects -> recents()[0] is _tmp0
+            pageExpects -> recents()[1] is _tmp1
+            pageExpects -> recents()[2] is _tmp0
 
 ### should propagate contentsChanged() to ancestors
 

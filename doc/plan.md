@@ -36,6 +36,10 @@ Other
 
  * Disable resizing of grouper objects as if they were normal images
  * Formats menu is currently empty
+ * Attribute changes for groups do not go onto the undo/redo stack, but
+   should.  In fact, we need a general API for performing edits to the
+   document as a chunk and putting an appropriate entry on the undo/redo
+   stack at the same time.
 
 ## Miscellaneous enhancements
 
