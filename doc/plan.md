@@ -36,10 +36,6 @@ Other
 
  * Disable resizing of grouper objects as if they were normal images
  * Formats menu is currently empty
- * Attribute changes for groups do not go onto the undo/redo stack, but
-   should.  In fact, we need a general API for performing edits to the
-   document as a chunk and putting an appropriate entry on the undo/redo
-   stack at the same time.
 
 ## Miscellaneous enhancements
 
@@ -69,6 +65,19 @@ Other
    Groups.  Call it whenever a new group is created.
  * Create a function in Group types for handling the finalization of just-
    deleted Groups.  Call it whenever a group is removed.
+
+## Undo/redo support
+
+Any changes to a group instance will need to go onto the undo/redo stack,
+but we do not yet have a way to do so.
+
+ * Investigate the TinyMCE undo/redo stack API until you can answer the
+   following questions and/or accomplish the following tasks.
+ * What does the undo action do, at present, immediately after the
+   wrap-current-selection-in-a-group action has been executed?  If it does
+   not do the correct thing, how can we fix it so that it does?
+ * Create a general way to create an entry on the undo/redo stack that
+   contains modifications to one or more groups within it.
 
 ## Background processing
 

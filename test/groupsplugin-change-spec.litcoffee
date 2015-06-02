@@ -131,10 +131,45 @@ Verify that there have not yet been any recently changed groups.
 
             pageExpects ( -> recents() ), 'toEqual', [ ]
 
-This test is not yet done being written.  It is a stub for now, with the
-following note that will be replaced with real test code later.
+Create a group in the editor and fill it with text and an inner group.
 
-            console.log 'test not yet complete'
+            pageCommand 'logger'
+            pageType 'text before inner group'
+            pageCommand 'logger'
+            pageType 'text inside inner group'
+            pageKey 'right'
+            pageType 'text after inner group'
+
+This will, of course, have caused a great number of change events.  Verify
+this, then clear them out.
+
+            pageExpects ( -> recents().length ), 'toBeGreaterThan', 0
+            pageDo -> clearRecents()
+
+Verify that there are two groups, and that the second is a child of the
+first.
+
+            pageExpects -> tinymce.activeEditor.Groups[0]?
+            pageExpects -> tinymce.activeEditor.Groups[1]?
+            pageExpects -> not tinymce.activeEditor.Groups[2]?
+            pageExpects ->
+                tinymce.activeEditor.Groups[0].children.length
+            , 'toEqual', 1
+            pageExpects ->
+                tinymce.activeEditor.Groups[0].children[0] is \
+                    tinymce.activeEditor.Groups[1]
+            pageExpects ->
+                tinymce.activeEditor.Groups[1].parent is \
+                    tinymce.activeEditor.Groups[0]
+
+Make a change to an attribute of the inner group, and verify that this also
+causes a change call in the outer group.
+
+            pageExpects ( -> recents() ), 'toEqual', [ ]
+            pageDo -> tinymce.activeEditor.Groups[1].set 'x', 'y'
+            pageExpects ( -> recents().length ), 'toEqual', 2
+            pageExpects -> recents()[0] is tinymce.activeEditor.Groups[1]
+            pageExpects -> recents()[1] is tinymce.activeEditor.Groups[0]
 
 ## Change support in Groups plugin
 
