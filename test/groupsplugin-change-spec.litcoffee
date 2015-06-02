@@ -285,6 +285,8 @@ Cursor spanning positions 6 through 9 should give left 5 and right 8.
 ### groupsTouchingRange() must work correctly
 
 These tests cover several use cases of the `groupsTouchingRange()` function.
+They also serve as a proxy for the `rangeChanged()` function, because it is
+simply a loop over the results of `groupsTouchingRange()`.
 
         it 'groupsTouchingRange() must work correctly', inPage ->
 
@@ -402,21 +404,6 @@ that order.
             pageExpects -> _tmp[0] is tinymce.activeEditor.Groups[1]
             pageExpects -> _tmp[1] is tinymce.activeEditor.Groups[0]
             pageExpects -> _tmp[2] is tinymce.activeEditor.Groups[4]
-
-### rangeChanged() must work correctly
-
-These tests cover several use cases of the `rangeChanged()` function.
-
-        it 'rangeChanged() must work correctly', inPage ->
-
-Verify that there have not yet been any recently changed groups.
-
-            pageExpects ( -> recents() ), 'toEqual', [ ]
-
-This test is not yet done being written.  It is a stub for now, with the
-following note that will be replaced with real test code later.
-
-            console.log 'test not yet complete'
 
 ### changes in the editor must trigger rangeChanged()
 
