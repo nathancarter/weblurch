@@ -188,10 +188,99 @@ Verify that there have not yet been any recently changed groups.
 
             pageExpects ( -> recents() ), 'toEqual', [ ]
 
-This test is not yet done being written.  It is a stub for now, with the
-following note that will be replaced with real test code later.
+Construct the pattern of open and close groupers `[[[][]]][]` in the editor.
 
-            console.log 'test not yet complete'
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'me'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+            createHierarchy '[[[][]]][]'
+
+Define two convenience functions for calling the
+`grouperIndexOfRangeEndpoint` function on the editor's current selection,
+for either the left or right end of that selection.
+
+            testLeft = ->
+                E = tinymce.activeEditor
+                E.Groups.grouperIndexOfRangeEndpoint E.selection.getRng(),
+                    yes
+            testRight = ->
+                E = tinymce.activeEditor
+                E.Groups.grouperIndexOfRangeEndpoint E.selection.getRng(),
+                    no
+
+Cursor at the far right should give left 9 and right 9.
+
+            pageExpects testLeft, 'toEqual', 9
+            pageExpects testRight, 'toEqual', 9
+
+Cursor at the far left should give left -1 and right -1.
+
+            pageKey 'home'
+            pageExpects testLeft, 'toEqual', -1
+            pageExpects testRight, 'toEqual', -1
+
+Cursor at position 1 should give left 0 and right 0.
+
+            pageKey 'right'
+            pageExpects testLeft, 'toEqual', 0
+            pageExpects testRight, 'toEqual', 0
+
+Cursor at position 2 should give left 1 and right 1.
+
+            pageKey 'right'
+            pageExpects testLeft, 'toEqual', 1
+            pageExpects testRight, 'toEqual', 1
+
+Cursor at position 3 should give left 2 and right 2.
+
+            pageKey 'right'
+            pageExpects testLeft, 'toEqual', 2
+            pageExpects testRight, 'toEqual', 2
+
+Cursor at position 4 should give left 3 and right 3.
+
+            pageKey 'right'
+            pageExpects testLeft, 'toEqual', 3
+            pageExpects testRight, 'toEqual', 3
+
+Cursor at position 8 should give left 7 and right 7.
+
+            pageKey 'right'
+            pageKey 'right'
+            pageKey 'right'
+            pageKey 'right'
+            pageExpects testLeft, 'toEqual', 7
+            pageExpects testRight, 'toEqual', 7
+
+Cursor spanning positions 0 through 3 should give left -1 and right 2.
+
+            pageKey 'home'
+            pageKey 'right', 'shift'
+            pageKey 'right', 'shift'
+            pageKey 'right', 'shift'
+            pageExpects testLeft, 'toEqual', -1
+            pageExpects testRight, 'toEqual', 2
+
+Cursor spanning positions 3 through 5 should give left 2 and right 4.
+
+            pageKey 'right'
+            pageKey 'right', 'shift'
+            pageKey 'right', 'shift'
+            pageExpects testLeft, 'toEqual', 2
+            pageExpects testRight, 'toEqual', 4
+
+Cursor spanning positions 6 through 9 should give left 5 and right 8.
+
+            pageKey 'right'
+            pageKey 'right'
+            pageKey 'right', 'shift'
+            pageKey 'right', 'shift'
+            pageKey 'right', 'shift'
+            pageExpects testLeft, 'toEqual', 5
+            pageExpects testRight, 'toEqual', 8
 
 ### groupsTouchingRange() must work correctly
 
