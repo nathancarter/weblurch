@@ -292,10 +292,116 @@ Verify that there have not yet been any recently changed groups.
 
             pageExpects ( -> recents() ), 'toEqual', [ ]
 
-This test is not yet done being written.  It is a stub for now, with the
-following note that will be replaced with real test code later.
+Construct the pattern of open and close groupers `[[[][]]][]` in the editor.
 
-            console.log 'test not yet complete'
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'me'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+            createHierarchy '[[[][]]][]'
+
+Create a convenience function for computing and storing in a global variable
+the set of groups touching the current cursor selection.
+
+            computeGroupsTouching = ->
+                pageDo ->
+                    window._tmp =
+                        tinymce.activeEditor.Groups.groupsTouchingRange \
+                            tinymce.activeEditor.selection.getRng()
+
+Cursor at the far right should give an empty list.
+
+            computeGroupsTouching()
+            pageExpects ( -> _tmp ), 'toEqual', [ ]
+
+Cursor at the far left should give an empty list.
+
+            pageKey 'home'
+            computeGroupsTouching()
+            pageExpects ( -> _tmp ), 'toEqual', [ ]
+
+Cursor at position 1 should give group 0.
+
+            pageKey 'right'
+            computeGroupsTouching()
+            pageExpects ( -> _tmp.length ), 'toEqual', 1
+            pageExpects -> _tmp[0] is tinymce.activeEditor.Groups[0]
+
+Cursor at position 2 should give groups 1 and 0, in that order.
+
+            pageKey 'right'
+            computeGroupsTouching()
+            pageExpects ( -> _tmp.length ), 'toEqual', 2
+            pageExpects -> _tmp[0] is tinymce.activeEditor.Groups[1]
+            pageExpects -> _tmp[1] is tinymce.activeEditor.Groups[0]
+
+Cursor at position 3 should give groups 2, 1, and 0, in that order.
+
+            pageKey 'right'
+            computeGroupsTouching()
+            pageExpects ( -> _tmp.length ), 'toEqual', 3
+            pageExpects -> _tmp[0] is tinymce.activeEditor.Groups[2]
+            pageExpects -> _tmp[1] is tinymce.activeEditor.Groups[1]
+            pageExpects -> _tmp[2] is tinymce.activeEditor.Groups[0]
+
+Cursor at position 4 should give groups 1 and 0, in that order.
+
+            pageKey 'right'
+            computeGroupsTouching()
+            pageExpects ( -> _tmp.length ), 'toEqual', 2
+            pageExpects -> _tmp[0] is tinymce.activeEditor.Groups[1]
+            pageExpects -> _tmp[1] is tinymce.activeEditor.Groups[0]
+
+Cursor at position 8 should give an empty list.
+
+            pageKey 'right'
+            pageKey 'right'
+            pageKey 'right'
+            pageKey 'right'
+            computeGroupsTouching()
+            pageExpects ( -> _tmp ), 'toEqual', [ ]
+
+Cursor spanning positions 0 through 3 should give groups 2, 1, and 0, in
+that order.
+
+            pageKey 'home'
+            pageKey 'right', 'shift'
+            pageKey 'right', 'shift'
+            pageKey 'right', 'shift'
+            computeGroupsTouching()
+            pageExpects ( -> _tmp.length ), 'toEqual', 3
+            pageExpects -> _tmp[0] is tinymce.activeEditor.Groups[2]
+            pageExpects -> _tmp[1] is tinymce.activeEditor.Groups[1]
+            pageExpects -> _tmp[2] is tinymce.activeEditor.Groups[0]
+
+Cursor spanning positions 3 through 5 should give groups 2, 3, 1, and 0, in
+that order.
+
+            pageKey 'right'
+            pageKey 'right', 'shift'
+            pageKey 'right', 'shift'
+            computeGroupsTouching()
+            pageExpects ( -> _tmp.length ), 'toEqual', 4
+            pageExpects -> _tmp[0] is tinymce.activeEditor.Groups[2]
+            pageExpects -> _tmp[1] is tinymce.activeEditor.Groups[3]
+            pageExpects -> _tmp[2] is tinymce.activeEditor.Groups[1]
+            pageExpects -> _tmp[3] is tinymce.activeEditor.Groups[0]
+
+Cursor spanning positions 6 through 9 should give groups 1, 0, and 4, in
+that order.
+
+            pageKey 'right'
+            pageKey 'right'
+            pageKey 'right', 'shift'
+            pageKey 'right', 'shift'
+            pageKey 'right', 'shift'
+            computeGroupsTouching()
+            pageExpects ( -> _tmp.length ), 'toEqual', 3
+            pageExpects -> _tmp[0] is tinymce.activeEditor.Groups[1]
+            pageExpects -> _tmp[1] is tinymce.activeEditor.Groups[0]
+            pageExpects -> _tmp[2] is tinymce.activeEditor.Groups[4]
 
 ### rangeChanged() must work correctly
 

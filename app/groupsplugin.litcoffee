@@ -692,6 +692,12 @@ Range object, in the order in which their close groupers appear (which means
 that child groups are guaranteed to appear earlier in the list than their
 parent groups).
 
+The return value will include all groups whose interior or groupers
+intersect the interior of the range.  This includes groups that intersect
+the range only indirectly, by being parents whose children intersect the
+range, and so on for grandparent groups, etc.  When the selection is
+collapsed, the only "leaf" group intersecting it is the one containing it.
+
 This routine requires that `scanDocument` has recently been called, so that
 groupers appear in perfectly matched pairs, correctly nested.
 
@@ -709,7 +715,13 @@ parent chain of groups above the closest node to the selection.
                    range.startOffset < node.childNodes.length
                     node = node.childNodes[range.startOffset]
                 group = @groupAboveNode node
-                result = if group then [ group ] else [ ]
+                result = if group
+                    if group.open is node
+                        if group.parent then [ group.parent ] else [ ]
+                    else
+                        [ group ]
+                else
+                    [ ]
                 while maybeOneMore = result[result.length-1]?.parent
                     result.push maybeOneMore
                 return result
