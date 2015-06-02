@@ -375,6 +375,8 @@ to the start of the document).
                 cursor.remove()
                 sel.select close
                 sel.collapse yes
+                newGroup = @grouperToGroup close
+                newGroup.parent?.contentsChanged()
             else
 
 But if the selection spans multiple elements, then we must handle each edge
@@ -384,8 +386,6 @@ because editing an element messes up cursor bookmarks within that element.
                 range = sel.getRng()
                 leftNode = range.startContainer
                 leftPos = range.startOffset
-                rightNode = range.endContainer
-                rightPos = range.endOffset
                 range.collapse no
                 sel.setRng range
                 @disableScanning()
@@ -395,6 +395,10 @@ because editing an element messes up cursor bookmarks within that element.
                 sel.setRng range
                 @editor.insertContent open
                 @enableScanning()
+                range.setStart leftNode, leftPos
+                range.setEnd leftNode, leftPos
+                parentOfNewGroup = @groupAboveCursor range
+                parentOfNewGroup?.contentsChanged()
 
 ## Hiding and showing "groupers"
 

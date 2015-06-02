@@ -417,7 +417,102 @@ Verify that there have not yet been any recently changed groups.
 
             pageExpects ( -> recents() ), 'toEqual', [ ]
 
-This test is not yet done being written.  It is a stub for now, with the
-following note that will be replaced with real test code later.
+Construct the pattern of open and close groupers `[[[][]]][]` in the editor.
 
-            console.log 'test not yet complete'
+            createHierarchy = ( description ) ->
+                for letter in description
+                    switch letter
+                        when '[' then pageCommand 'logger'
+                        when ']' then pageKey 'right'
+                        else pageType letter
+            createHierarchy '[[[][]]][]'
+
+This will, of course, have caused a great number of change events.  Verify
+this, then clear them out.
+
+            pageExpects ( -> recents().length ), 'toBeGreaterThan', 0
+            pageDo -> clearRecents()
+
+Type some characters after all the groups and verify that no change events
+for groups get called at all.  Then do the same before all the groups.
+
+            pageType 'test'
+            pageExpects ( -> recents() ), 'toEqual', [ ]
+            pageKey 'home'
+            pageType 'test'
+            pageExpects ( -> recents() ), 'toEqual', [ ]
+
+Now type some characters inside group 0 and verify that only group 0 gets
+change events.
+
+            pageKey 'right'
+            pageType 'test'
+            pageExpects ( -> recents().length ), 'toEqual', 4
+            pageExpects -> recents()[0] is tinymce.activeEditor.Groups[0]
+            pageExpects -> recents()[1] is tinymce.activeEditor.Groups[0]
+            pageExpects -> recents()[2] is tinymce.activeEditor.Groups[0]
+            pageExpects -> recents()[3] is tinymce.activeEditor.Groups[0]
+
+Repeat the same test but more deeply nested, and verify that repeated chains
+of groups are added to the recents list.
+
+Moving the cursor two steps inward actually triggers a TinyMCE change event,
+for reasons unimportant here and specific only to TinyMCE.  So we clear the
+recents list after moving the cursor to the new position.
+
+            pageKey 'right'
+            pageKey 'right'
+            pageDo -> clearRecents()
+            pageExpects ( -> recents() ), 'toEqual', [ ]
+            pageType 'xy'
+            pageExpects ( -> recents().length ), 'toEqual', 6
+            pageExpects -> recents()[0] is tinymce.activeEditor.Groups[2]
+            pageExpects -> recents()[1] is tinymce.activeEditor.Groups[1]
+            pageExpects -> recents()[2] is tinymce.activeEditor.Groups[0]
+            pageExpects -> recents()[3] is tinymce.activeEditor.Groups[2]
+            pageExpects -> recents()[4] is tinymce.activeEditor.Groups[1]
+            pageExpects -> recents()[5] is tinymce.activeEditor.Groups[0]
+
+Now delete the two inner groupers that are adjacent, `][`, belonging to two
+separate inner (sibling) groups.  Verify that change events are sent for
+only their ancestor groups.
+
+            pageKey 'right', 'shift'
+            pageKey 'right', 'shift'
+            pageDo -> clearRecents()
+            pageExpects ( -> recents() ), 'toEqual', [ ]
+            pageKey 'delete'
+            pageExpects ( -> recents().length ), 'toEqual', 2
+            pageExpects -> recents()[0] is tinymce.activeEditor.Groups[1]
+            pageExpects -> recents()[1] is tinymce.activeEditor.Groups[0]
+
+Add a group inside the final group in the document, and verify that both the
+new group and its parent had change events fired, but no other groups did.
+
+In fact, the change events will be fired as follows: parent, then new child,
+then parent again.  This is because the parent experiences a change when its
+child groupers are introduced, but at that point the child group hasn't
+experienced its own change event, since it hasn't even been constructed from
+its groupers.  When the child has been so constructed and had a change
+event fired (which may result in the child being modified), the parent will
+then experience the change event again as it propagates upward.
+
+Note that the newly created group will have ID 2, because the original group
+2 was deleted in the previous steps.
+
+            pageKey 'end'
+            pageKey 'left'
+            pageKey 'left'
+            pageKey 'left'
+            pageKey 'left'
+            pageKey 'left'
+            pageDo -> clearRecents()
+            pageExpects ( -> recents() ), 'toEqual', [ ]
+            pageCommand 'logger'
+            pageDo ->
+                for r, i in recents()
+                    console.log 'recents #', i, 'is group #', r.id()
+            pageExpects ( -> recents().length ), 'toEqual', 3
+            pageExpects -> recents()[0] is tinymce.activeEditor.Groups[4]
+            pageExpects -> recents()[1] is tinymce.activeEditor.Groups[2]
+            pageExpects -> recents()[2] is tinymce.activeEditor.Groups[4]

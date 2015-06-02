@@ -181,10 +181,6 @@ in the case when a valid group type is provided.
                 open = htmlToNode grouperHTML 'exa', 'open', 2
                 close = htmlToNode grouperHTML 'exa', 'close', 2
                 window._tmp = new Group open, close
-                console.log 'window._tmp.plugin', window._tmp.plugin
-                console.log 'its groupTypes', window._tmp.plugin.groupTypes,
-                    Object.keys window._tmp.plugin.groupTypes
-                console.log 'the typeName', window._tmp.typeName()
             pageExpects ->
                 window._tmp.open.ownerDocument() is \
                     tinymce.activeEditor.getDoc()
