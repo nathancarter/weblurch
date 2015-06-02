@@ -200,6 +200,20 @@ addresses relative to that element.
                 'toEqual', [ 1, 0, 1 ]
             pageExpects ( -> elts[8].address elts[2] ), 'toEqual', [ 1, 1 ]
 
+### should work in the iframe also
+
+We repeat a small subset of the above tests inside the TinyMCE editor's
+iframe, to ensure that the tools are working there as well.
+
+        it 'should work in the iframe also', inPage ->
+            pageExpects -> tinymce.activeEditor.getWin().Node::address
+            pageExpects ( -> tinymce.activeEditor.getDoc().address() ),
+                'toEqual', [ ]
+            pageExpects ->
+                tinymce.activeEditor.getDoc().childNodes[0].address \
+                    tinymce.activeEditor.getDoc()
+            , 'toEqual', [ 0 ]
+
 ## index member function of Node class
 
 The tests in this section test the `index` member function in the `Node`
@@ -398,6 +412,20 @@ returned from the page as valid JSON.
                 'toEqual', 'undefined'
             pageExpects ( -> typeof div.index [ 0, 'ponies' ] ),
                 'toEqual', 'undefined'
+
+### should work in the iframe also
+
+We repeat a small subset of the above tests inside the TinyMCE editor's
+iframe, to ensure that the tools are working there as well.
+
+        it 'should work in the iframe also', inPage ->
+            pageExpects -> tinymce.activeEditor.getWin().Node::index
+            pageExpects ->
+                tinymce.activeEditor.getDoc() is \
+                    tinymce.activeEditor.getDoc().index []
+            pageExpects ->
+                tinymce.activeEditor.getDoc().childNodes[0] is \
+                    tinymce.activeEditor.getDoc().index [ 0 ]
 
 ## Node toJSON conversion
 
@@ -663,6 +691,29 @@ Here we do only one, brief test of each of the types tested above.
                         c : [ 'quux' ]
                     ]
 
+### should work in the iframe also
+
+We repeat a small subset of the above tests inside the TinyMCE editor's
+iframe, to ensure that the tools are working there as well.
+
+        it 'should work in the iframe also', inPage ->
+            pageExpects -> tinymce.activeEditor.getWin().Node::toJSON
+            pageDo ->
+                window.textNode =
+                    tinymce.activeEditor.getDoc().createTextNode 'foo'
+                window.div =
+                    tinymce.activeEditor.getDoc().createElement 'div'
+                div.innerHTML = '<i>italic</i> not italic'
+            pageExpects ( -> textNode.toJSON() ), 'toEqual', 'foo'
+            pageExpects ( -> div.toJSON() ), 'toEqual',
+                tagName : 'DIV'
+                children : [
+                    tagName : 'I'
+                    children : [ 'italic' ]
+                ,
+                    ' not italic'
+                ]
+
 ## Node fromJSON conversion
 
 The tests in this section test the `fromJSON` member function in the `Node`
@@ -847,6 +898,20 @@ in one, large test, to be sure that this works.
                 'style="padding : 5px;"><span><span>' +
                 'way inside</span></span></div></div>'
 
+### should work in the iframe also
+
+We repeat a small subset of the above tests inside the TinyMCE editor's
+iframe, to ensure that the tools are working there as well.
+
+        it 'should work in the iframe also', inPage ->
+            pageExpects -> tinymce.activeEditor.getWin().Node.fromJSON
+            pageDo -> window.node = Node.fromJSON 'just a string'
+            pageExpects -> node instanceof Node
+            pageExpects -> node instanceof Text
+            pageExpects -> node not instanceof Comment
+            pageExpects -> node not instanceof Element
+            pageExpects ( -> node.textContent ), 'toEqual', 'just a string'
+
 ## leaf navigation in Node class
 
 The tests in this section test the `nextLeaf` and `previousLeaf` member
@@ -873,12 +938,110 @@ immediate sibling nodes that are also leaves, and thus which should be
 returned by the functions.  We work within the following environment.
 
             pageDo ->
-                window.div = document.createElement 'div'
+                window.div =
+                    tinymce.activeEditor.getDoc().createElement 'div'
                 div.innerHTML = 'A section of text.
                                  <br><hr>Yet more text.'
+
+First, verify that these tests are being run where we think they are.
+
+            pageExpects ->
+                div.ownerDocument is tinymce.activeEditor.getDoc()
+            pageExpects ->
+                div instanceof tinymce.activeEditor.getWin().Element
 
 Within the div we find just four leaf nodes.  Let's ensure that the
 functions work correctly among those four.
 
+            pageExpects -> div.childNodes[0].nextLeaf() is div.childNodes[1]
+            pageExpects -> div.childNodes[1].nextLeaf() is div.childNodes[2]
+            pageExpects -> div.childNodes[2].nextLeaf() is div.childNodes[3]
+            pageExpects -> div.childNodes[3].nextLeaf() is null
+            pageExpects -> div.childNodes[0].previousLeaf() is null
             pageExpects ->
-                div.childNodes[0].nextLeaf() is div.childNodes[1]
+                div.childNodes[1].previousLeaf() is div.childNodes[0]
+            pageExpects ->
+                div.childNodes[2].previousLeaf() is div.childNodes[1]
+            pageExpects ->
+                div.childNodes[3].previousLeaf() is div.childNodes[2]
+
+### should work in larger hierarchies
+
+        it 'should work in larger hierarchies', inPage ->
+
+We test a few more advanced example cases here, where the navigation is not
+merely among sibling leaves.  We work with the following DOM structure.
+
+            pageDo ->
+                window.div =
+                    tinymce.activeEditor.getDoc().createElement 'div'
+                div.innerHTML = '<span>Text in a span</span>' + \
+                                '<span>Text <i>italic</i></span>' + \
+                                '<span><span>Nested</span>' + \
+                                      '<span>spans</span></span>'
+
+Within the div we select several leaves and give them natural names for
+convenience in comparison.
+
+            pageDo ->
+                window.textInASpan = div.childNodes[0].childNodes[0]
+                window.text = div.childNodes[1].childNodes[0]
+                window.italic =
+                    div.childNodes[1].childNodes[1].childNodes[0]
+                window.nested =
+                    div.childNodes[2].childNodes[0].childNodes[0]
+                window.spans = div.childNodes[2].childNodes[1].childNodes[0]
+
+Next, verify that these tests are being run where we think they are.
+
+            pageExpects ->
+                div.ownerDocument is tinymce.activeEditor.getDoc()
+            pageExpects ->
+                div instanceof tinymce.activeEditor.getWin().Element
+            pageExpects ->
+                text instanceof tinymce.activeEditor.getWin().Text
+
+Now verify that moving among those leaves works as expected.
+
+            pageExpects -> textInASpan.nextLeaf() is text
+            pageExpects -> text.nextLeaf() is italic
+            pageExpects -> italic.nextLeaf() is nested
+            pageExpects -> nested.nextLeaf() is spans
+            pageExpects -> spans.nextLeaf() is null
+            pageExpects -> spans.previousLeaf() is nested
+            pageExpects -> nested.previousLeaf() is italic
+            pageExpects -> italic.previousLeaf() is text
+            pageExpects -> text.previousLeaf() is textInASpan
+
+Give names to some of their parents and grandparents, and check leaf
+navigation from those higher-level nodes as well.
+
+            pageDo ->
+                window.outerSpan1 = textInASpan.parentNode
+                window.outerSpan2 = text.parentNode
+                window.innerSpan1 = nested.parentNode
+                window.innerSpan2 = spans.parentNode
+                window.outerSpan3 = innerSpan1.parentNode
+            pageExpects -> outerSpan1.previousLeaf() is null
+            pageExpects -> outerSpan1.nextLeaf() is text
+            pageExpects -> outerSpan2.previousLeaf() is textInASpan
+            pageExpects -> outerSpan2.nextLeaf() is nested
+            pageExpects -> outerSpan3.previousLeaf() is italic
+            pageExpects -> outerSpan3.nextLeaf() is null
+            pageExpects -> innerSpan1.previousLeaf() is italic
+            pageExpects -> innerSpan1.nextLeaf() is spans
+            pageExpects -> innerSpan2.previousLeaf() is nested
+            pageExpects -> innerSpan2.nextLeaf() is null
+
+## This Unit Test Incomplete
+
+We need to add here unit tests for the following functions:
+
+ * `Node.remove()`
+ * `Element::hasClass()`
+ * `Element::addClass()`
+ * `Element::removeClass()`
+
+Alternately, we need to simply rely on jQuery for those features, and
+remove from the codebase all reference to the versions defined in
+[the DOMUtils module](../src/domutils.litcoffee).

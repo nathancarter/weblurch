@@ -14,9 +14,9 @@ write the tests below.
 These auxiliary function creates the HTML code for groupers, for use in the
 tests below.
 
-    grouper = ( type, id ) ->
-        "<img id=\"#{type}#{id}\" class=\"grouper me\"
-          src=\"images/red-bracket-#{type}.png\" alt=\"\">"
+    grouper = ( openClose, id, typeName = 'me' ) ->
+        "<img id=\"#{openClose}#{id}\" class=\"grouper #{typeName}\"
+          src=\"images/red-bracket-#{openClose}.png\" alt=\"\">"
     open = ( id ) -> grouper 'open', id
     close = ( id ) -> grouper 'close', id
 
@@ -33,7 +33,7 @@ Just verify that the active TinyMCE editor has a Groups plugin.
         it 'should be installed', inPage ->
             pageExpects -> tinymce.activeEditor.Groups
 
-## Group class
+## Group instances
 
 Some aspects of this class can be tested independently of the editor, so we
 do so here, to do some tests in the simplest context possible.
@@ -43,7 +43,9 @@ do so here, to do some tests in the simplest context possible.
 First, a very simple test of the constructor, just ensuring that it's
 recording its two inputs.
 
-        it 'is constructible from any two inputs', inPage ->
+### are constructible from any two inputs
+
+        it 'are constructible from any two inputs', inPage ->
             pageDo -> window._tmp = new Group 1, 2
             pageExpects ( -> window._tmp.open ), 'toEqual', 1
             pageExpects ( -> window._tmp.close ), 'toEqual', 2
@@ -61,7 +63,9 @@ recording its two inputs.
 Second, we verify that `Group` instances can correctly look up their ID in
 their open groupers.
 
-        it 'can look up its ID from its open grouper', inPage ->
+### can look up their IDs from their open groupers
+
+        it 'can look up their IDs from their open groupers', inPage ->
             pageDo ->
                 htmlToNode = ( html ) ->
                     container = document.createElement 'span'
@@ -84,7 +88,9 @@ their open groupers.
 Last, we verify that `Group` instances with invalid open groupers return
 null when we look up their IDs.
 
-        it 'returns a null ID if invalid open grouper', inPage ->
+### return a null ID if the open grouper is invalid
+
+        it 'return a null ID if the open grouper is invalid', inPage ->
             pageDo ->
                 htmlToNode = ( html ) ->
                     container = document.createElement 'span'
@@ -94,6 +100,91 @@ null when we look up their IDs.
                 close = htmlToNode grouperHTML 'test', 'close', 5
                 window._tmp = new Group open, close
             pageExpects ( -> window._tmp.id() ), 'toBeNull'
+
+### return their type name correctly
+
+This test is simpler than the subsequent one, because the type name is just
+a string that is lifted out of the open grouper.
+
+        it 'return their type name correctly', inPage ->
+            pageDo ->
+                htmlToNode = ( html ) ->
+                    container = document.createElement 'span'
+                    container.innerHTML = html
+                    container.childNodes[0]
+                open = htmlToNode grouperHTML 'test', 'open', 5
+                close = htmlToNode grouperHTML 'test', 'close', 5
+                window._tmp1 = new Group open, close
+                open = htmlToNode grouperHTML 'foo', 'open', 0
+                close = htmlToNode grouperHTML 'foo', 'close', 0
+                window._tmp2 = new Group open, close
+            pageExpects ( -> window._tmp1.typeName() ), 'toEqual', 'test'
+            pageExpects ( -> window._tmp2.typeName() ), 'toEqual', 'foo'
+
+### return their type object correctly
+
+This test is more complex than the previous.  Each of its sub-cases is
+commented on below.
+
+        it 'return their type object correctly', inPage ->
+            pageDo ->
+                window.htmlToNode = ( html ) ->
+                    container =
+                        tinymce.activeEditor.getDoc().createElement 'span'
+                    container.innerHTML = html
+                    container.childNodes[0]
+
+It should return undefined if the group was constructed with no Groups
+plugin provided.
+
+            pageDo ->
+                open = htmlToNode grouperHTML 'foo', 'open', 0
+                close = htmlToNode grouperHTML 'foo', 'close', 0
+                window._tmp = new Group open, close, null
+            pageExpects ->
+                window._tmp.open.ownerDocument() is \
+                    tinymce.activeEditor.getDoc()
+            pageExpects ( -> window._tmp.type() ), 'toBeUndefined'
+
+It should return undefined if the group was constructed with a type name
+that doesn't appear in its plugin's list of registered group names.
+
+            pageDo ->
+                open = htmlToNode grouperHTML 'test', 'open', 5
+                close = htmlToNode grouperHTML 'test', 'close', 5
+                window._tmp = new Group open, close
+            pageExpects ->
+                window._tmp.open.ownerDocument() is \
+                    tinymce.activeEditor.getDoc()
+            pageExpects ( -> window._tmp.type() ), 'toBeUndefined'
+
+It should return an object, if the name of a valid group type provided at
+the time the group was constructed.
+
+            pageDo ->
+                open = htmlToNode grouperHTML 'me', 'open', 1
+                close = htmlToNode grouperHTML 'me', 'close', 1
+                window._tmp = new Group open, close
+            pageExpects ->
+                window._tmp.open.ownerDocument() is \
+                    tinymce.activeEditor.getDoc()
+            pageExpects ( -> window._tmp.type() ), 'toBeTruthy'
+
+The object returned should be the same one used when registering the group,
+in the case when a valid group type is provided.
+
+            pageDo ->
+                window.example =
+                    text : 'Name of group here'
+                    other : 'attributes would go here'
+                tinymce.activeEditor.Groups.addGroupType 'exa', example
+                open = htmlToNode grouperHTML 'exa', 'open', 2
+                close = htmlToNode grouperHTML 'exa', 'close', 2
+                window._tmp = new Group open, close
+            pageExpects ->
+                window._tmp.open.ownerDocument() is \
+                    tinymce.activeEditor.getDoc()
+            pageExpects -> window._tmp.type() is example
 
 ## ID tracking methods
 

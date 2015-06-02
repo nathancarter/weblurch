@@ -40,9 +40,11 @@
 
   Group = (function() {
     function Group(open, close, plugin) {
+      var editor, _i, _len, _ref;
       this.open = open;
       this.close = close;
       this.plugin = plugin;
+      this.contentsChanged = __bind(this.contentsChanged, this);
       this.outerRange = __bind(this.outerRange, this);
       this.innerRange = __bind(this.innerRange, this);
       this.contentAsHTML = __bind(this.contentAsHTML, this);
@@ -50,8 +52,20 @@
       this.contentAsText = __bind(this.contentAsText, this);
       this.get = __bind(this.get, this);
       this.set = __bind(this.set, this);
+      this.type = __bind(this.type, this);
       this.typeName = __bind(this.typeName, this);
       this.id = __bind(this.id, this);
+      if (this.plugin == null) {
+        _ref = tinymce.editors;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          editor = _ref[_i];
+          if (editor.getDoc() === this.open.ownerDocument) {
+            this.plugin = editor.Groups;
+            break;
+          }
+        }
+      }
+      this.contentsChanged();
     }
 
     Group.prototype.id = function() {
@@ -64,19 +78,21 @@
       return (_ref = grouperInfo(this.open)) != null ? _ref.type : void 0;
     };
 
-    Group.prototype.set = function(key, value) {
+    Group.prototype.type = function() {
       var _ref, _ref1;
+      return (_ref = this.plugin) != null ? (_ref1 = _ref.groupTypes) != null ? _ref1[this.typeName()] : void 0 : void 0;
+    };
+
+    Group.prototype.set = function(key, value) {
       if (!/^[a-zA-Z0-9-]+$/.test(key)) {
         return;
       }
       this.open.setAttribute("data-" + key, JSON.stringify([value]));
-      if ((_ref = this.plugin) != null) {
-        _ref.editor.fire('change', {
-          group: this,
-          key: key
-        });
+      if (this.plugin != null) {
+        this.plugin.editor.fire('change');
+        this.plugin.editor.isNotDirty = false;
+        return this.contentsChanged();
       }
-      return (_ref1 = this.plugin) != null ? _ref1.editor.isNotDirty = false : void 0;
     };
 
     Group.prototype.get = function(key) {
@@ -94,7 +110,7 @@
     };
 
     Group.prototype.contentAsFragment = function() {
-      return this.innerRange.cloneContents();
+      return this.innerRange().cloneContents();
     };
 
     Group.prototype.contentAsHTML = function() {
@@ -120,6 +136,21 @@
       return range;
     };
 
+    Group.prototype.contentsChanged = function(propagate) {
+      var _ref, _ref1;
+      if (propagate == null) {
+        propagate = true;
+      }
+      if ((_ref = this.type()) != null) {
+        if (typeof _ref.contentsChanged === "function") {
+          _ref.contentsChanged(this);
+        }
+      }
+      if (propagate) {
+        return (_ref1 = this.parent) != null ? _ref1.contentsChanged(true) : void 0;
+      }
+    };
+
     return Group;
 
   })();
@@ -130,6 +161,9 @@
     function Groups(editor) {
       this.editor = editor;
       this.drawGroups = __bind(this.drawGroups, this);
+      this.grouperIndexOfRangeEndpoint = __bind(this.grouperIndexOfRangeEndpoint, this);
+      this.groupsTouchingRange = __bind(this.groupsTouchingRange, this);
+      this.rangeChanged = __bind(this.rangeChanged, this);
       this.groupAboveSelection = __bind(this.groupAboveSelection, this);
       this.groupAboveCursor = __bind(this.groupAboveCursor, this);
       this.groupAboveNode = __bind(this.groupAboveNode, this);
@@ -264,7 +298,7 @@
     };
 
     Groups.prototype.groupCurrentSelection = function(type) {
-      var close, content, cursor, hide, id, leftNode, leftPos, open, range, rightNode, rightPos, sel, _ref;
+      var close, content, cursor, hide, id, leftNode, leftPos, newGroup, open, parentOfNewGroup, range, sel, _ref, _ref1;
       if (!this.groupTypes.hasOwnProperty(type)) {
         return;
       }
@@ -282,13 +316,13 @@
         sel.select(cursor.get(0));
         cursor.remove();
         sel.select(close);
-        return sel.collapse(true);
+        sel.collapse(true);
+        newGroup = this.grouperToGroup(close);
+        return (_ref1 = newGroup.parent) != null ? _ref1.contentsChanged() : void 0;
       } else {
         range = sel.getRng();
         leftNode = range.startContainer;
         leftPos = range.startOffset;
-        rightNode = range.endContainer;
-        rightPos = range.endOffset;
         range.collapse(false);
         sel.setRng(range);
         this.disableScanning();
@@ -297,7 +331,11 @@
         range.setEnd(leftNode, leftPos);
         sel.setRng(range);
         this.editor.insertContent(open);
-        return this.enableScanning();
+        this.enableScanning();
+        range.setStart(leftNode, leftPos);
+        range.setEnd(leftNode, leftPos);
+        parentOfNewGroup = this.groupAboveCursor(range);
+        return parentOfNewGroup != null ? parentOfNewGroup.contentsChanged() : void 0;
       }
     };
 
@@ -598,8 +636,96 @@
       return result;
     };
 
+    Groups.prototype.rangeChanged = function(range) {
+      var group, _i, _len, _ref, _results;
+      _ref = this.groupsTouchingRange(range);
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        group = _ref[_i];
+        _results.push(group.contentsChanged(false));
+      }
+      return _results;
+    };
+
+    Groups.prototype.groupsTouchingRange = function(range) {
+      var all, firstInRange, group, index, lastInRange, maybeOneMore, node, result, stack, _i, _ref;
+      if ((all = this.allGroupers()).length === 0) {
+        return [];
+      }
+      firstInRange = 1 + this.grouperIndexOfRangeEndpoint(range, true, all);
+      lastInRange = this.grouperIndexOfRangeEndpoint(range, false, all);
+      if (firstInRange > lastInRange) {
+        node = range.startContainer;
+        if (node instanceof this.editor.getWin().Element && range.startOffset < node.childNodes.length) {
+          node = node.childNodes[range.startOffset];
+        }
+        group = this.groupAboveNode(node);
+        result = group ? group.open === node ? group.parent ? [group.parent] : [] : [group] : [];
+        while (maybeOneMore = (_ref = result[result.length - 1]) != null ? _ref.parent : void 0) {
+          result.push(maybeOneMore);
+        }
+        return result;
+      }
+      stack = [];
+      result = [];
+      for (index = _i = firstInRange; firstInRange <= lastInRange ? _i <= lastInRange : _i >= lastInRange; index = firstInRange <= lastInRange ? ++_i : --_i) {
+        group = this.grouperToGroup(all[index]);
+        if (all[index] === group.open) {
+          stack.push(group);
+        } else {
+          result.push(group);
+          stack.pop();
+        }
+      }
+      while (stack.length > 0) {
+        result.push(stack.pop());
+      }
+      while (maybeOneMore = result[result.length - 1].parent) {
+        result.push(maybeOneMore);
+      }
+      return result;
+    };
+
+    Groups.prototype.grouperIndexOfRangeEndpoint = function(range, left, all) {
+      var endpoint, isLeftOfEndpoint, middle, right;
+      if ((all != null ? all : all = this.allGroupers()).length === 0) {
+        return -1;
+      }
+      endpoint = left ? Range.END_TO_START : Range.END_TO_END;
+      isLeftOfEndpoint = (function(_this) {
+        return function(grouper) {
+          var grouperRange;
+          grouperRange = _this.editor.getDoc().createRange();
+          grouperRange.selectNode(grouper);
+          return range.compareBoundaryPoints(endpoint, grouperRange) > -1;
+        };
+      })(this);
+      left = 0;
+      if (!isLeftOfEndpoint(all[left])) {
+        return -1;
+      }
+      right = all.length - 1;
+      if (isLeftOfEndpoint(all[right])) {
+        return right;
+      }
+      while (true) {
+        if (left + 1 === right) {
+          return left;
+        }
+        middle = Math.floor((left + right) / 2);
+        if (isLeftOfEndpoint(all[middle])) {
+          left = middle;
+        } else {
+          right = middle;
+        }
+      }
+    };
+
     Groups.prototype.drawGroups = function(canvas, context) {
-      var bodyStyle, close, color, group, leftMar, moveBy, old, open, p, p4, pad, padStep, radius, rightMar, size, style, tag, tagString, tags, tagsToDraw, type, x1, x2, y1, y2, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
+      var bodyStyle, close, color, group, leftMar, moveBy, old, open, p, p4, pad, padStep, radius, rightMar, size, style, tag, tagString, tags, tagsToDraw, type, x1, x2, y1, y2, _i, _j, _len, _len1, _ref, _ref1, _results;
+      if (this.scanLocks > 0) {
+        return;
+      }
       group = this.groupAboveSelection(this.editor.selection.getRng());
       bodyStyle = null;
       pad = 3;
@@ -608,8 +734,8 @@
       p4 = Math.pi / 4;
       tags = [];
       while (group) {
-        type = (_ref = this.groupTypes) != null ? _ref[group != null ? group.typeName() : void 0] : void 0;
-        color = (_ref1 = type != null ? type.color : void 0) != null ? _ref1 : '#444444';
+        type = group.type();
+        color = (_ref = type != null ? type.color : void 0) != null ? _ref : '#444444';
         open = $(group.open);
         close = $(group.close);
         p = open.position();
@@ -629,8 +755,8 @@
         if ((open.top === open.bottom || close.top === close.bottom || open.left === open.right || close.left === close.right) && !($(group.open)).hasClass('hide')) {
           setTimeout(((function(_this) {
             return function() {
-              var _ref2;
-              return (_ref2 = _this.editor.Overlay) != null ? _ref2.redrawContents() : void 0;
+              var _ref1;
+              return (_ref1 = _this.editor.Overlay) != null ? _ref1.redrawContents() : void 0;
             };
           })(this)), 100);
           return;
@@ -677,8 +803,8 @@
         if (!(size = context.measureHTML(tag.content, tag.style))) {
           setTimeout(((function(_this) {
             return function() {
-              var _ref2;
-              return (_ref2 = _this.editor.Overlay) != null ? _ref2.redrawContents() : void 0;
+              var _ref1;
+              return (_ref1 = _this.editor.Overlay) != null ? _ref1.redrawContents() : void 0;
             };
           })(this)), 10);
           return;
@@ -696,7 +822,7 @@
           }
         }
         y2 = tag.corner.y;
-        _ref2 = [x1, y1, x2, y2], tag.x1 = _ref2[0], tag.y1 = _ref2[1], tag.x2 = _ref2[2], tag.y2 = _ref2[3];
+        _ref1 = [x1, y1, x2, y2], tag.x1 = _ref1[0], tag.y1 = _ref1[1], tag.x2 = _ref1[2], tag.y2 = _ref1[3];
         tagsToDraw.unshift(tag);
       }
       _results = [];
@@ -742,14 +868,25 @@
       }
     });
     editor.on('change SetContent', function(event) {
-      return editor.Groups.scanDocument();
+      var orig, range, _ref1;
+      editor.Groups.scanDocument();
+      if (event != null ? (_ref1 = event.level) != null ? _ref1.bookmark : void 0 : void 0) {
+        orig = editor.selection.getBookmark();
+        editor.selection.moveToBookmark(event.level.bookmark);
+        range = editor.selection.getRng();
+        editor.selection.moveToBookmark(orig);
+        return editor.Groups.rangeChanged(range);
+      }
     });
     editor.on('KeyUp', function(event) {
-      var _ref1;
-      if ((33 <= (_ref1 = event.keyCode) && _ref1 <= 40)) {
+      var modifiers, movements, _ref1, _ref2;
+      movements = [33, 34, 35, 36, 37, 38, 39, 40];
+      modifiers = [16, 17, 18, 91];
+      if ((_ref1 = event.keyCode, __indexOf.call(movements, _ref1) >= 0) || (_ref2 = event.keyCode, __indexOf.call(modifiers, _ref2) >= 0)) {
         return;
       }
-      return editor.Groups.scanDocument();
+      editor.Groups.scanDocument();
+      return editor.Groups.rangeChanged(editor.selection.getRng());
     });
     return editor.on('NodeChange', function(event) {
       return editor.Groups.updateButtonsAndMenuItems();
@@ -1447,7 +1584,7 @@
           text: 'About...',
           context: 'help',
           onclick: function() {
-            return alert('webLurch\n\npre-alpha, not intended for general consumption!');
+            return alert('webLurch\n\npre-alpha, not yet intended for general consumption!');
           }
         });
         editor.addMenuItem('website', {
@@ -1459,6 +1596,7 @@
         });
         return editor.on('init', function() {
           var filemenu, icon;
+          installDOMUtilitiesIn(editor.getWin());
           editor.getBody().style.fontSize = '16px';
           setTimeout(function() {
             var h, walk, _i, _len, _ref, _results;

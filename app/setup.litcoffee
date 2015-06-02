@@ -111,19 +111,21 @@ Add a Help menu.
                     text : 'About...'
                     context : 'help'
                     onclick : -> alert 'webLurch\n\npre-alpha,
-                        not intended for general consumption!'
+                        not yet intended for general consumption!'
                 editor.addMenuItem 'website',
                     text : 'Lurch website'
                     context : 'help'
                     onclick : -> window.open 'http://www.lurchmath.org',
                         '_blank'
 
+Install our DOM utilities in the TinyMCE's iframe's window instance.
 Increase the default font size and maximize the editor to fill the page.
 This requires not only invoking the "mceFullScreen" command, but also then
 setting the height properties of many pieces of the DOM hierarchy (in a way
 that seems like it ought to be handled for us by the fullScreen plugin).
 
                 editor.on 'init', ->
+                    installDOMUtilitiesIn editor.getWin()
                     editor.getBody().style.fontSize = '16px'
                     setTimeout ->
                         editor.execCommand 'mceFullScreen'
@@ -167,4 +169,7 @@ knows which group types to create.
                 color : '#996666'
                 tagContents : ( group ) ->
                     "#{group.contentAsText()?.length} characters"
+                # contentsChanged : ( group ) ->
+                #     # just for debugging purposes, for now
+                #     console.log 'Contents changed in', group
             ]

@@ -108,7 +108,7 @@
     };
     image.onerror = function(error) {
       addToCache(html, style, new Image());
-      return console.log('Improperly formed HTML:', html);
+      return console.log('Failed to load SVG with this <foreignObject> div content:', html);
     };
     image.src = url;
     return false;
@@ -152,217 +152,211 @@
     }
   };
 
-  Node.prototype.address = function(ancestor) {
-    var recur;
-    if (ancestor == null) {
-      ancestor = null;
-    }
-    if (this === ancestor) {
-      return [];
-    }
-    if (!this.parentNode) {
-      if (ancestor) {
-        return null;
-      } else {
+  window.installDOMUtilitiesIn = function(window) {
+    window.Node.prototype.address = function(ancestor) {
+      var recur;
+      if (ancestor == null) {
+        ancestor = null;
+      }
+      if (this === ancestor) {
         return [];
       }
-    }
-    recur = this.parentNode.address(ancestor);
-    if (recur === null) {
-      return null;
-    }
-    return recur.concat([this.indexInParent()]);
-  };
-
-  Node.prototype.indexInParent = function() {
-    if (this.parentNode) {
-      return Array.prototype.slice.apply(this.parentNode.childNodes).indexOf(this);
-    } else {
-      return -1;
-    }
-  };
-
-  Node.prototype.index = function(address) {
-    var _ref;
-    if (!(address instanceof Array)) {
-      throw Error('Node address function requires an array');
-    }
-    if (address.length === 0) {
-      return this;
-    }
-    if (typeof address[0] !== 'number') {
-      return void 0;
-    }
-    return (_ref = this.childNodes[address[0]]) != null ? _ref.index(address.slice(1)) : void 0;
-  };
-
-  Node.prototype.toJSON = function(verbose) {
-    var attribute, chi, result, _i, _len, _ref;
-    if (verbose == null) {
-      verbose = true;
-    }
-    if (this instanceof Text) {
-      return this.textContent;
-    }
-    if (this instanceof Comment) {
-      if (verbose) {
-        return {
-          comment: true,
-          content: this.textContent
-        };
-      } else {
-        return {
-          m: true,
-          n: this.textContent
-        };
+      if (!this.parentNode) {
+        if (ancestor) {
+          return null;
+        } else {
+          return [];
+        }
       }
-    }
-    if (!(this instanceof Element)) {
-      throw Error("Cannot serialize this node: " + this);
-    }
-    result = {
-      tagName: this.tagName
+      recur = this.parentNode.address(ancestor);
+      if (recur === null) {
+        return null;
+      }
+      return recur.concat([this.indexInParent()]);
     };
-    if (this.attributes.length) {
-      result.attributes = {};
-      _ref = this.attributes;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        attribute = _ref[_i];
-        result.attributes[attribute.name] = attribute.value;
+    window.Node.prototype.indexInParent = function() {
+      if (this.parentNode) {
+        return Array.prototype.slice.apply(this.parentNode.childNodes).indexOf(this);
+      } else {
+        return -1;
       }
-    }
-    if (this.childNodes.length) {
-      result.children = (function() {
-        var _j, _len1, _ref1, _results;
-        _ref1 = this.childNodes;
+    };
+    window.Node.prototype.index = function(address) {
+      var _ref;
+      if (!(address instanceof Array)) {
+        throw Error('Node address function requires an array');
+      }
+      if (address.length === 0) {
+        return this;
+      }
+      if (typeof address[0] !== 'number') {
+        return void 0;
+      }
+      return (_ref = this.childNodes[address[0]]) != null ? _ref.index(address.slice(1)) : void 0;
+    };
+    window.Node.prototype.toJSON = function(verbose) {
+      var attribute, chi, result, _i, _len, _ref;
+      if (verbose == null) {
+        verbose = true;
+      }
+      if (this instanceof window.Text) {
+        return this.textContent;
+      }
+      if (this instanceof window.Comment) {
+        if (verbose) {
+          return {
+            comment: true,
+            content: this.textContent
+          };
+        } else {
+          return {
+            m: true,
+            n: this.textContent
+          };
+        }
+      }
+      if (!(this instanceof window.Element)) {
+        throw Error("Cannot serialize this node: " + this);
+      }
+      result = {
+        tagName: this.tagName
+      };
+      if (this.attributes.length) {
+        result.attributes = {};
+        _ref = this.attributes;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          attribute = _ref[_i];
+          result.attributes[attribute.name] = attribute.value;
+        }
+      }
+      if (this.childNodes.length) {
+        result.children = (function() {
+          var _j, _len1, _ref1, _results;
+          _ref1 = this.childNodes;
+          _results = [];
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            chi = _ref1[_j];
+            _results.push(chi.toJSON(verbose));
+          }
+          return _results;
+        }).call(this);
+      }
+      if (!verbose) {
+        result.t = result.tagName;
+        delete result.tagName;
+        result.a = result.attributes;
+        delete result.attributes;
+        result.c = result.children;
+        delete result.children;
+      }
+      return result;
+    };
+    window.Node.fromJSON = function(json) {
+      var attributes, child, children, key, result, value, _i, _len;
+      if (typeof json === 'string') {
+        return window.document.createTextNode(json);
+      }
+      if ('comment' in json && json.comment) {
+        return window.document.createComment(json.content);
+      }
+      if ('m' in json && json.m) {
+        return window.document.createComment(json.n);
+      }
+      if (!'tagName' in json && !'t' in json) {
+        throw Error("Object has no t[agName]: " + this);
+      }
+      result = window.document.createElement(json.tagName || json.t);
+      if (attributes = json.attributes || json.a) {
+        for (key in attributes) {
+          if (!__hasProp.call(attributes, key)) continue;
+          value = attributes[key];
+          result.setAttribute(key, value);
+        }
+      }
+      if (children = json.children || json.c) {
+        for (_i = 0, _len = children.length; _i < _len; _i++) {
+          child = children[_i];
+          result.appendChild(Node.fromJSON(child));
+        }
+      }
+      return result;
+    };
+    window.Node.prototype.nextLeaf = function(container) {
+      var walk;
+      if (container == null) {
+        container = null;
+      }
+      walk = this;
+      while (walk && walk !== container && !walk.nextSibling) {
+        walk = walk.parentNode;
+      }
+      walk = walk != null ? walk.nextSibling : void 0;
+      if (!walk) {
+        return null;
+      }
+      while (walk.childNodes.length > 0) {
+        walk = walk.childNodes[0];
+      }
+      return walk;
+    };
+    window.Node.prototype.previousLeaf = function(container) {
+      var walk;
+      if (container == null) {
+        container = null;
+      }
+      walk = this;
+      while (walk && walk !== container && !walk.previousSibling) {
+        walk = walk.parentNode;
+      }
+      walk = walk != null ? walk.previousSibling : void 0;
+      if (!walk) {
+        return null;
+      }
+      while (walk.childNodes.length > 0) {
+        walk = walk.childNodes[walk.childNodes.length - 1];
+      }
+      return walk;
+    };
+    window.Node.prototype.remove = function() {
+      var _ref;
+      return (_ref = this.parentNode) != null ? _ref.removeChild(this) : void 0;
+    };
+    window.Element.prototype.hasClass = function(name) {
+      var classes, _ref;
+      classes = (_ref = this.getAttribute('class')) != null ? _ref.split(/\s+/) : void 0;
+      return classes && __indexOf.call(classes, name) >= 0;
+    };
+    window.Element.prototype.addClass = function(name) {
+      var classes, _ref;
+      classes = ((_ref = this.getAttribute('class')) != null ? _ref.split(/\s+/) : void 0) || [];
+      if (__indexOf.call(classes, name) < 0) {
+        classes.push(name);
+      }
+      return this.setAttribute('class', classes.join(' '));
+    };
+    return window.Element.prototype.removeClass = function(name) {
+      var c, classes, _ref;
+      classes = ((_ref = this.getAttribute('class')) != null ? _ref.split(/\s+/) : void 0) || [];
+      classes = (function() {
+        var _i, _len, _results;
         _results = [];
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          chi = _ref1[_j];
-          _results.push(chi.toJSON(verbose));
+        for (_i = 0, _len = classes.length; _i < _len; _i++) {
+          c = classes[_i];
+          if (c !== name) {
+            _results.push(c);
+          }
         }
         return _results;
-      }).call(this);
-    }
-    if (!verbose) {
-      result.t = result.tagName;
-      delete result.tagName;
-      result.a = result.attributes;
-      delete result.attributes;
-      result.c = result.children;
-      delete result.children;
-    }
-    return result;
-  };
-
-  Node.fromJSON = function(json) {
-    var attributes, child, children, key, result, value, _i, _len;
-    if (typeof json === 'string') {
-      return document.createTextNode(json);
-    }
-    if ('comment' in json && json.comment) {
-      return document.createComment(json.content);
-    }
-    if ('m' in json && json.m) {
-      return document.createComment(json.n);
-    }
-    if (!'tagName' in json && !'t' in json) {
-      throw Error("Object has no t[agName]: " + this);
-    }
-    result = document.createElement(json.tagName || json.t);
-    if (attributes = json.attributes || json.a) {
-      for (key in attributes) {
-        if (!__hasProp.call(attributes, key)) continue;
-        value = attributes[key];
-        result.setAttribute(key, value);
+      })();
+      if (classes.length > 0) {
+        return this.setAttribute('class', classes.join(' '));
+      } else {
+        return this.removeAttribute('class');
       }
-    }
-    if (children = json.children || json.c) {
-      for (_i = 0, _len = children.length; _i < _len; _i++) {
-        child = children[_i];
-        result.appendChild(Node.fromJSON(child));
-      }
-    }
-    return result;
+    };
   };
 
-  Node.prototype.nextLeaf = function(container) {
-    var walk;
-    if (container == null) {
-      container = null;
-    }
-    walk = this;
-    while (walk && walk !== container && !walk.nextSibling) {
-      walk = walk.parentNode;
-    }
-    walk = walk != null ? walk.nextSibling : void 0;
-    if (!walk) {
-      return null;
-    }
-    while (walk.childNodes.length > 0) {
-      walk = walk.childNodes[0];
-    }
-    return walk;
-  };
-
-  Node.prototype.previousLeaf = function(container) {
-    var walk;
-    if (container == null) {
-      container = null;
-    }
-    walk = this;
-    while (walk && walk !== container && !walk.previousSibling) {
-      walk = walk.parentNode;
-    }
-    walk = walk != null ? walk.previousSibling : void 0;
-    if (!walk) {
-      return null;
-    }
-    while (walk.childNodes.length > 0) {
-      walk = walk.childNodes[walk.childNodes.length - 1];
-    }
-    return walk;
-  };
-
-  Node.prototype.remove = function() {
-    var _ref;
-    return (_ref = this.parentNode) != null ? _ref.removeChild(this) : void 0;
-  };
-
-  Element.prototype.hasClass = function(name) {
-    var classes, _ref;
-    classes = (_ref = this.getAttribute('class')) != null ? _ref.split(/\s+/) : void 0;
-    return classes && __indexOf.call(classes, name) >= 0;
-  };
-
-  Element.prototype.addClass = function(name) {
-    var classes, _ref;
-    classes = ((_ref = this.getAttribute('class')) != null ? _ref.split(/\s+/) : void 0) || [];
-    if (__indexOf.call(classes, name) < 0) {
-      classes.push(name);
-    }
-    return this.setAttribute('class', classes.join(' '));
-  };
-
-  Element.prototype.removeClass = function(name) {
-    var c, classes, _ref;
-    classes = ((_ref = this.getAttribute('class')) != null ? _ref.split(/\s+/) : void 0) || [];
-    classes = (function() {
-      var _i, _len, _results;
-      _results = [];
-      for (_i = 0, _len = classes.length; _i < _len; _i++) {
-        c = classes[_i];
-        if (c !== name) {
-          _results.push(c);
-        }
-      }
-      return _results;
-    })();
-    if (classes.length > 0) {
-      return this.setAttribute('class', classes.join(' '));
-    } else {
-      return this.removeAttribute('class');
-    }
-  };
+  installDOMUtilitiesIn(window);
 
   JSON.equals = function(x, y) {
     var key, xkeys, ykeys, _i, _len;

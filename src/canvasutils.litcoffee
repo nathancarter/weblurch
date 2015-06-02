@@ -158,7 +158,8 @@ Finally, render that SVG to an image, and wait until it's complete.
             ( window.URL ? window.webkitURL ? window ).revokeObjectURL url
         image.onerror = ( error ) ->
             addToCache html, style, new Image()
-            console.log 'Improperly formed HTML:', html
+            console.log 'Failed to load SVG with this <foreignObject> div
+                content:', html
         image.src = url
         no
 

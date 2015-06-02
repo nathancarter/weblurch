@@ -9,10 +9,19 @@ provides the following functionality for working with groups in a document.
  * provides methods for installing UI elements for creating and interacting
    with groups in the document
  * shows groups visually on screen in a variety of ways
+ * calls update routines whenever group contents change, so that they can be
+   updated/processed
 
 It assumes that TinyMCE has been loaded into the global namespace, so that
 it can access it.  It also requires [the overlay
 plugin](overlayplugin.litcoffee) to be loaded in the same editor.
+
+All changes made to the document by the user are tracked so that appropriate
+events can be called in this plugin to update group objects.  The one
+exception to this rule is that calls to the `setContents()` method of the
+editor's selection, made by a client, cannot be tracked.  Thus if you call
+such a method, you should call `groupChanged()` in any groups whose contents
+have changed based on your call to `setContents()`.
 
 # Global functions
 
@@ -67,21 +76,38 @@ class, which manages all the `Group` instances in that editor's document.
 The constructor takes as parameters the two DOM nodes that are its open and
 close groupers (i.e., group boundary markers), respectively.  It does not
 validate that these are indeed open and close grouper nodes, but just stores
-them for later lookup.  The final parameter is an instance of the Groups
-class, which is the plugin defined in this file.  Thus each group will know
-in which environment it sits, and be able to communicate with that
-environment.
+them for later lookup.
 
-        constructor: ( @open, @close, @plugin ) -> # no body needed
+The final parameter is an instance of the Groups class, which is the plugin
+defined in this file.  Thus each group will know in which environment it
+sits, and be able to communicate with that environment.  If that parameter
+is not provided, the constructor will attempt to correctly detect it, but
+providing the parameter is more efficient.
+
+We call the contents changed event as soon as the group is created, because
+any newly-created group needs to have its contents processed for the first
+time (assuming a processing routine exists, otherwise the call does
+nothing).
+
+        constructor: ( @open, @close, @plugin ) ->
+            if not @plugin?
+                for editor in tinymce.editors
+                    if editor.getDoc() is @open.ownerDocument
+                        @plugin = editor.Groups
+                        break
+            @contentsChanged()
 
 This method returns the ID of the group, if it is available within the open
 grouper.
 
         id: => grouperInfo( @open )?.id ? null
 
-This method returns the name of the type of the group, as a string.
+The first of the following methods returns the name of the type of the
+group, as a string.  The second returns the type as an object, as long as
+the type exists in the plugin stored in `@plugin`.
 
         typeName: => grouperInfo( @open )?.type
+        type: => @plugin?.groupTypes?[@typeName()]
 
 We provide the following two simple methods for getting and setting
 arbitrary data within a group.  Clients should use these methods rather than
@@ -97,8 +123,10 @@ be amenable to JSON stringification.
         set: ( key, value ) =>
             if not /^[a-zA-Z0-9-]+$/.test key then return
             @open.setAttribute "data-#{key}", JSON.stringify [ value ]
-            @plugin?.editor.fire 'change', { group : this, key : key }
-            @plugin?.editor.isNotDirty = no
+            if @plugin?
+                @plugin.editor.fire 'change'
+                @plugin.editor.isNotDirty = no
+                @contentsChanged()
         get: ( key ) =>
             try
                 JSON.parse( @open.getAttribute "data-#{key}" )[0]
@@ -111,7 +139,7 @@ provide functions for fetching the contents of the group as plain text, as
 an HTML `DocumentFragment` object, or as an HTML string.
 
         contentAsText: => @innerRange().toString()
-        contentAsFragment: => @innerRange.cloneContents()
+        contentAsFragment: => @innerRange().cloneContents()
         contentAsHTML: =>
             tmp = @open.ownerDocument.createElement 'div'
             tmp.appendChild @contentAsFragment()
@@ -130,6 +158,18 @@ corresponding `outerRange` function for the sake of completeness.
             range.setStartBefore @open
             range.setEndAfter @close
             range
+
+The following function should be called whenever the contents of the group
+have changed.  It notifies the group's type, so that the requisite
+processing, if any, of the new contents can take place.  It is called
+automatically by some handlers in the `Groups` class, below.
+
+By default, it propagates the change event up the ancestor chain in the
+group hierarchy, but that can be disabled by passing false as the parameter.
+
+        contentsChanged: ( propagate = yes ) =>
+            @type()?.contentsChanged? this
+            if propagate then @parent?.contentsChanged yes
 
 The `Group` class should be accessible globally.
 
@@ -335,6 +375,8 @@ to the start of the document).
                 cursor.remove()
                 sel.select close
                 sel.collapse yes
+                newGroup = @grouperToGroup close
+                newGroup.parent?.contentsChanged()
             else
 
 But if the selection spans multiple elements, then we must handle each edge
@@ -344,8 +386,6 @@ because editing an element messes up cursor bookmarks within that element.
                 range = sel.getRng()
                 leftNode = range.startContainer
                 leftPos = range.startOffset
-                rightNode = range.endContainer
-                rightPos = range.endOffset
                 range.collapse no
                 sel.setRng range
                 @disableScanning()
@@ -355,6 +395,10 @@ because editing an element messes up cursor bookmarks within that element.
                 sel.setRng range
                 @editor.insertContent open
                 @enableScanning()
+                range.setStart leftNode, leftPos
+                range.setEnd leftNode, leftPos
+                parentOfNewGroup = @groupAboveCursor range
+                parentOfNewGroup?.contentsChanged()
 
 ## Hiding and showing "groupers"
 
@@ -636,6 +680,114 @@ Find the deepest group in both ancestor chains.
                 rightChain.shift()
             result
 
+## Change Events
+
+The following function can be called whenever a certain range in the
+document has changed, and groups touching that range need to be updated.  It
+assumes that `scanDocument()` was recently called, so that the group
+hierarchy is up-to-date.  The parameter must be a DOM Range object.
+
+        rangeChanged: ( range ) =>
+            group.contentsChanged no for group in @groupsTouchingRange range
+
+That method uses `@groupsTouchingRange()`, which is implemented below.  It
+uses the previous to get a list of all groups that intersect the given DOM
+Range object, in the order in which their close groupers appear (which means
+that child groups are guaranteed to appear earlier in the list than their
+parent groups).
+
+The return value will include all groups whose interior or groupers
+intersect the interior of the range.  This includes groups that intersect
+the range only indirectly, by being parents whose children intersect the
+range, and so on for grandparent groups, etc.  When the selection is
+collapsed, the only "leaf" group intersecting it is the one containing it.
+
+This routine requires that `scanDocument` has recently been called, so that
+groupers appear in perfectly matched pairs, correctly nested.
+
+        groupsTouchingRange: ( range ) =>
+            if ( all = @allGroupers() ).length is 0 then return [ ]
+            firstInRange = 1 + @grouperIndexOfRangeEndpoint range, yes, all
+            lastInRange = @grouperIndexOfRangeEndpoint range, no, all
+
+If there are no groupers in the selected range at all, then just create the
+parent chain of groups above the closest node to the selection.
+
+            if firstInRange > lastInRange
+                node = range.startContainer
+                if node instanceof @editor.getWin().Element and \
+                   range.startOffset < node.childNodes.length
+                    node = node.childNodes[range.startOffset]
+                group = @groupAboveNode node
+                result = if group
+                    if group.open is node
+                        if group.parent then [ group.parent ] else [ ]
+                    else
+                        [ group ]
+                else
+                    [ ]
+                while maybeOneMore = result[result.length-1]?.parent
+                    result.push maybeOneMore
+                return result
+
+Otherwise walk through all the groupers in the selection and push their
+groups onto a stack in the order that the close groupers are encountered.
+
+            stack = [ ]
+            result = [ ]
+            for index in [firstInRange..lastInRange]
+                group = @grouperToGroup all[index]
+                if all[index] is group.open
+                    stack.push group
+                else
+                    result.push group
+                    stack.pop()
+
+Then push onto the stack any open groupers that aren't yet closed, and any
+ancestor groups of the last big group encountered, the only one whose parent
+groups may not have been seen as open groupers.
+
+            while stack.length > 0 then result.push stack.pop()
+            while maybeOneMore = result[result.length-1].parent
+                result.push maybeOneMore
+            result
+
+The above method uses `@grouperIndexOfRangeEndpoint`, which is defined here.
+It locates the endpoint of a DOM Range object in the list of groupers in the
+editor.  It performs a binary search through the ordered list of groupers.
+
+The `range` parameter must be a DOM Range object.  The `left` paramter
+should be true if you're asking about the left end of the range, false if
+you're asking about the right end.
+
+The return value will be the index into `@allGroupers()` of the last grouper
+before the range endpoint.  Clearly, then, the grouper on the other side of
+the range endpoint is the return value plus 1.  If no groupers are before
+the range endpoint, this return value will be -1; a special case of this is
+when there are no groupers at all.
+
+The final parameter is optional; it prevents having to compute
+`@allGroupers()`, in case you already have that data available.
+
+        grouperIndexOfRangeEndpoint: ( range, left, all ) =>
+            if ( all ?= @allGroupers() ).length is 0 then return -1
+            endpoint = if left then Range.END_TO_START else Range.END_TO_END
+            isLeftOfEndpoint = ( grouper ) =>
+                grouperRange = @editor.getDoc().createRange()
+                grouperRange.selectNode grouper
+                range.compareBoundaryPoints( endpoint, grouperRange ) > -1
+            left = 0
+            return -1 if not isLeftOfEndpoint all[left]
+            right = all.length - 1
+            return right if isLeftOfEndpoint all[right]
+            loop
+                return left if left + 1 is right
+                middle = Math.floor ( left + right ) / 2
+                if isLeftOfEndpoint all[middle]
+                    left = middle
+                else
+                    right = middle
+
 ## Drawing Groups
 
 The following function draws groups around the user's cursor, if any.  It is
@@ -643,6 +795,13 @@ installed in [the constructor](#groups-constructor) and called by [the
 Overay plugin](overlayplugin.litcoffee).
 
         drawGroups: ( canvas, context ) =>
+
+We do not draw the groups if document scanning is disabled, because it means
+that we are in the middle of a change to the group hierarchy, which means
+that calls to the functions we'll need to figure out what to draw will give
+unstable/incorrect results.
+
+            if @scanLocks > 0 then return
             group = @groupAboveSelection @editor.selection.getRng()
             bodyStyle = null
             pad = 3
@@ -651,7 +810,7 @@ Overay plugin](overlayplugin.litcoffee).
             p4 = Math.pi / 4
             tags = [ ]
             while group
-                type = @groupTypes?[group?.typeName()]
+                type = group.type()
                 color = type?.color ? '#444444'
 
 Compute the sizes and positions of the open and close groupers.
@@ -799,11 +958,25 @@ only for change events, but also for KeyUp events.  We filter the latter so
 that we do not rescan the document if the key in question was only an arrow
 key or home/end/pgup/pgdn.
 
+In addition to rescanning the document, we also call the `rangeChanged`
+event of the Groups plugin, to update any groups that overlap the range in
+which the document was modified.
+
         editor.on 'change SetContent', ( event ) ->
             editor.Groups.scanDocument()
+            if event?.level?.bookmark
+                orig = editor.selection.getBookmark()
+                editor.selection.moveToBookmark event.level.bookmark
+                range = editor.selection.getRng()
+                editor.selection.moveToBookmark orig
+                editor.Groups.rangeChanged range
         editor.on 'KeyUp', ( event ) ->
-            if 33 <= event.keyCode <= 40 then return
+            movements = [ 33..40 ] # arrows, pgup/pgdn/home/end
+            modifiers = [ 16, 17, 18, 91 ] # alt, shift, ctrl, meta
+            if event.keyCode in movements or event.keyCode in modifiers
+                return
             editor.Groups.scanDocument()
+            editor.Groups.rangeChanged editor.selection.getRng()
 
 Whenever the cursor moves, we should update whether the group-insertion
 buttons and menu items are enabled.
@@ -1571,19 +1744,21 @@ Add a Help menu.
                     text : 'About...'
                     context : 'help'
                     onclick : -> alert 'webLurch\n\npre-alpha,
-                        not intended for general consumption!'
+                        not yet intended for general consumption!'
                 editor.addMenuItem 'website',
                     text : 'Lurch website'
                     context : 'help'
                     onclick : -> window.open 'http://www.lurchmath.org',
                         '_blank'
 
+Install our DOM utilities in the TinyMCE's iframe's window instance.
 Increase the default font size and maximize the editor to fill the page.
 This requires not only invoking the "mceFullScreen" command, but also then
 setting the height properties of many pieces of the DOM hierarchy (in a way
 that seems like it ought to be handled for us by the fullScreen plugin).
 
                 editor.on 'init', ->
+                    installDOMUtilitiesIn editor.getWin()
                     editor.getBody().style.fontSize = '16px'
                     setTimeout ->
                         editor.execCommand 'mceFullScreen'
@@ -1627,6 +1802,9 @@ knows which group types to create.
                 color : '#996666'
                 tagContents : ( group ) ->
                     "#{group.contentAsText()?.length} characters"
+                # contentsChanged : ( group ) ->
+                #     # just for debugging purposes, for now
+                #     console.log 'Contents changed in', group
             ]
 
 
