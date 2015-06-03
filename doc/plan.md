@@ -50,54 +50,102 @@ Other
 
 ## Background processing
 
-Build a BackgroundFunction class with the following API.
- * One can create new instances of BackgroundFunction objects by calling a
-   constructor and passing the name of a previously-registered function.
-   This should create a web worker that has the following capabilities.
-   * It has the registered function precompiled into the worker.
-     Be sure to use the [Function constructor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
-     to build the function on the worker side, because it compiles the code
-     rather than interpreting it, and is much faster. See [this blog post](http://www.scottlogic.com/blog/2011/02/24/web-workers-part-3-creating-a-generic-worker.html)
-     for details.
-   * On the worker side there are functions for starting that function on a
-     single argument list or an array of argument lists, and returning
-     either a single result or an array of results, respectively.  Both the
-     call and return happen by posting messages.
- * Add a member `call` that takes an array as inputs and posts the message
-   that sends that array as the argument list to the background thread, thus
-   starting the computation.  Return a `Promise` object.
-   * In a `Promise`, one can call `sendTo` and provide a callback that
-     registers that callback as the handler for the completion of the
-     background task, receiving the computed results.  This method returns
-     the same `Promise`, for chaining.
-   * Also in the `Promise` one can call `orElse` and provide an
-     error-handling callback.
- * Extend `call` to take an array of arrays, and send them as an array of
-   argument lists to the background thread.  Further extend the `Promise`
-   class so that when it receives an array of results, it calls the
-   appropriate callback for each one.
-
-Return to the BackgroundComputation class, now improving it by means of the
-BackgroundFunction class.
- * The second implementation can be two-threaded, without any optimizations,
-   by doing the exact same thing as the single-threaded implementation,
-   except in one background thread. (But still waiting for each task to
-   complete before starting another one.)
- * The third implementation can be many-threaded, using $n-1$ threads, where
-   $n$ is the optimal number of concurrent threads for the client's
-   hardware.  The top $n-1$ items on the queue can be run in parallel.
- * The final implementation can add various optimizations to the previous
-   implementation.
-   * When starting a background computation, take several other waiting
-     computations with the same background function, and start all at once,
-     on the array of argument lists, so that only one message passing need
-     occur.
-   * When enqueueing a background computation, if another with the same
-     background function and argument list is already waiting to be run,
-     delete it.
-   * When enqueueing a background computation, if another with the same
-     background function and argument list is already running, terminate it
-     and delete it.
+ * Create a BackgroundFunction constructor that takes any function as its
+   sole argument.  Make it a stub at first.
+ * Implement the constructor to store the function in a member variable.
+ * Implement a `call` member that does the following.
+   * Construct an empty object and store it in the BackgroundFunction object
+     for later return as a promise.
+   * Implement the promise object's `sendTo` method so that if the promise
+     object already has a "result" member, it immediately passes it to the
+     `sendTo` method, and if not, just stores the `sendTo` method for later.
+     It should return the promise object.
+   * Implement the promise object's `orElse` method so that if the promise
+     object already has an "error" member, it immediately passes it to the
+     `orElse` method, and if not, just stores the `orElse` method for later.
+     It should return the promise object.
+   * Setup a zero timer that will run the stored function on the given
+     arguments.  If there are any errors, it will first place the error
+     object in the promise's error member, and then if there is a stored
+     `orElse` member, call it on the error.  If there were not any errors,
+     then first place the result in the promise's result member, then if
+     there is a stored `sendTo` member, call it on the result.
+   * Return the promise object.
+ * Integrate BackgroundFunction objects thoroughly throughout the Background
+   module and any of its clients
+   * `addTask` should construct a new BackgroundFunction instance every time
+     it's called, and throw it away afterwards.
+   * Still wait for each task to complete before starting the next one, so
+     that at most one background thread is running at once (for now).
+ * Create a `worker.solo.litcoffee` script file in `src/` that is compiled
+   into its own `worker.solo.js` file that lives in the app folder.  This
+   will require updating the build process.  That file can be a stub at
+   first.
+ * Implement the worker script with the following code [modeled after this
+   blog post](
+   http://www.scottlogic.com/blog/2011/02/24/web-workers-part-3-creating-a-generic-worker.html).
+```
+self.addEventListener 'message', ( event ) ->
+    if event.hasOwnProperty 'setFunction'
+        funcStr = event.data.setFunction
+    	argList = funcStr.substring funcStr.indexOf( '(' ) + 1,
+                                    funcStr.indexOf( ')' )
+    	body = funcStr.substring funcStr.indexOf( '{' ) + 1,
+                                 funcStr.lastIndexOf( '}' )
+    	self.action = new Function argList, body
+    if event.hasOwnProperty 'runOn'
+        self.postMessage self.action event.data.runOn
+, no
+```
+ * Enhance the constructor for BackgroundFunction so that, if
+   `window.Worker` is defined, then it constructs a worker that knows about
+   the function in question, as follows.  This, too, comes from the same
+   blog post.
+```
+( @worker = new Worker 'worker.solo.js' ).postMessage \
+    setFunction : "#{func}"
+worker.addEventListener 'message', ( event ) ->
+    @promise.sendTo? @promise.result = event.data
+, no
+worker.addEventListener 'error', ( event ) ->
+	@promise.orElse? @promise.error = event
+, no
+```
+ * Enhance the `call` member of BackgroundFunction so that, if `@worker` is
+   defined, then rather than using the current implementation, it does this:
+```
+@promise = { }
+worker.postMessage runOn : arguments
+@promise
+```
+ * Test to verify that this still works in all situations in which the old
+   version worked.
+ * Efficiency improvement:  Do not throw away BackgroundFunction instances,
+   but keep them associated with registered functions so that they can be
+   re-used without being recreated from scratch.
+ * Enhance this implementation so that it runs
+   `navigator.getHardwareConcurrency()` immediately upon page load, then
+   knows the number of threads to use as
+   `Math.min 2, navigator.hardwareConcurrency ? 1`.  The queue should always
+   be running that many concurrent threads (minus 1, for the UI thread) at a
+   time, if there are enough available to run.  This will require storing
+   (usually) more than one BackgroundFunction instance for each registered
+   function, so that if the function is on the queue several times with
+   several different arguments, they can all be running in parallel.
+ * Efficiency improvement:  When enqueueing a background computation, if
+   another with the same background function and argument list is already
+   waiting to be run, delete it.
+ * Efficiency improvement:  When enqueueing a background computation, if
+   another with the same background function and argument list is already
+   running, terminate it and delete it.
+ * Design and implement how this could be extended to support passing arrays
+   of argument lists and receiving arrays of results, to minimize the
+   overhead of message-passing.
+ * Leverage the previous change to make the current implementation more
+   efficient as follows:  When starting a background computation, take
+   several other waiting computations with the same background function, and
+   start all at once, on the array of argument lists, so that only one
+   message passing need occur.
 
 ## Example Application
 
