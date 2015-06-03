@@ -129,6 +129,15 @@ that stack, you should obey the following coding pattern.
    `editor.undoManager.beforeChange()`.
  * After you've made all of your changes, call `editor.undoManager.add()`.
 
+You may or may not wish to have your changes stored on the undo/redo stack.
+In general, if the change you're making to the group is in direct and
+immediate response to the user's actions, then it should be on the undo/redo
+stack, so that the user can change their mind.  However, if the change is
+the result of a background computation, which was therefore not in direct
+response to one of the user's actions, they will probably not expect to be
+able to undo it, and thus you should not place the change on the undo/redo
+stack.
+
         set: ( key, value ) =>
             if not /^[a-zA-Z0-9-]+$/.test key then return
             @open.setAttribute "data-#{key}", JSON.stringify [ value ]
