@@ -50,22 +50,6 @@ Other
 
 ## Background processing
 
- * Implement the worker script with the following code [modeled after this
-   blog post](
-   http://www.scottlogic.com/blog/2011/02/24/web-workers-part-3-creating-a-generic-worker.html).
-```
-self.addEventListener 'message', ( event ) ->
-    if event.hasOwnProperty 'setFunction'
-        funcStr = event.data.setFunction
-    	argList = funcStr.substring funcStr.indexOf( '(' ) + 1,
-                                    funcStr.indexOf( ')' )
-    	body = funcStr.substring funcStr.indexOf( '{' ) + 1,
-                                 funcStr.lastIndexOf( '}' )
-    	self.action = new Function argList, body
-    if event.hasOwnProperty 'runOn'
-        self.postMessage self.action event.data.runOn
-, no
-```
  * Enhance the constructor for BackgroundFunction so that, if
    `window.Worker` is defined, then it constructs a worker that knows about
    the function in question, as follows.  This, too, comes from the same
