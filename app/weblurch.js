@@ -334,7 +334,7 @@
       }
       return this.setAttribute('class', classes.join(' '));
     };
-    return window.Element.prototype.removeClass = function(name) {
+    window.Element.prototype.removeClass = function(name) {
       var c, classes, _ref;
       classes = ((_ref = this.getAttribute('class')) != null ? _ref.split(/\s+/) : void 0) || [];
       classes = (function() {
@@ -353,6 +353,26 @@
       } else {
         return this.removeAttribute('class');
       }
+    };
+    return window.document.nodeFromPoint = function(x, y) {
+      var elt, node, range, rect, _i, _j, _len, _len1, _ref, _ref1;
+      elt = window.document.elementFromPoint(x, y);
+      _ref = elt.childNodes;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        node = _ref[_i];
+        if (node instanceof window.Text) {
+          range = window.document.createRange();
+          range.selectNode(node);
+          _ref1 = range.getClientRects();
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            rect = _ref1[_j];
+            if ((rect.left < x && x < rect.right) && (rect.top < y && y < rect.bottom)) {
+              return node;
+            }
+          }
+        }
+      }
+      return elt;
     };
   };
 

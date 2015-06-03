@@ -44,9 +44,14 @@ that no server-side callback needs to be done for spellchecking.
 Not all of the following plugins are working yet, but most are.  A plugin
 that begins with a hyphen is a local plugin written as part of this project.
 
-            plugins : 'advlist table charmap colorpicker contextmenu image
-                link importcss paste print save searchreplace textcolor
+            plugins : 'advlist table charmap colorpicker image link
+                importcss paste print save searchreplace textcolor
                 fullscreen -loadsave -overlay -groups'
+
+The groups plugin requires that we add the following, to prevent resizing of
+group boundary images.
+
+            object_resizing : ':not(img.grouper)'
 
 We then install two toolbars, with separators indicated by pipes (`|`).
 
@@ -167,9 +172,35 @@ knows which group types to create.
                 image : './images/red-bracket-icon.png'
                 tooltip : 'Make text a meaningful expression'
                 color : '#996666'
+
+All of the following code is here only for testing the features it
+leverages.  Later we will actually make bubbles that have sensible
+behaviors, but for now we're just doing very simple things for testing
+purposes.
+
                 tagContents : ( group ) ->
                     "#{group.contentAsText()?.length} characters"
-                # contentsChanged : ( group ) ->
-                #     # just for debugging purposes, for now
-                #     console.log 'Contents changed in', group
+                contentsChanged : ( group, firstTime ) ->
+                    if firstTime
+                        console.log 'Initialized this group:', group
+                deleted : ( group ) ->
+                    console.log 'You deleted this group:', group
+                contextMenuItems : ( group ) ->
+                    [
+                        text : group.contentAsText()
+                        onclick : -> alert 'Example code for testing'
+                    ]
+                tagMenuItems : ( group ) ->
+                    [
+                        text : 'Compute'
+                        onclick : ->
+                            text = group.contentAsText()
+                            if not /^[0-9+*/ -]+$/.test text
+                                alert 'Not a mathematical expression'
+                                return
+                            try
+                                alert "#{text} evaluates to:\n#{eval text}"
+                            catch e
+                                alert "Error in #{text}:\n#{e}"
+                    ]
             ]

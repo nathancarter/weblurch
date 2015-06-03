@@ -60,6 +60,7 @@ handlers.
             @positionCanvas()
             if not context = @canvas?.getContext '2d' then return
             @clearCanvas context
+            context.translate 0, ( $ @container ).position().top
             for doDrawing in @drawHandlers
                 try
                     doDrawing @canvas, context
@@ -91,10 +92,10 @@ This is called only by the handler installed in the constructor, above.
             con = $ @container
             can = $ @canvas
             if not con.position()? then return
-            can.css 'top', con.position().top
+            can.css 'top', 0
             can.css 'left', con.position().left
             can.width con.width()
-            can.height con.height()
+            can.height con.position().top + con.height()
             @canvas.width = can.width()
             @canvas.height = can.height()
 

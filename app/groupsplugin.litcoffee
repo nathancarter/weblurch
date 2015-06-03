@@ -87,7 +87,9 @@ providing the parameter is more efficient.
 We call the contents changed event as soon as the group is created, because
 any newly-created group needs to have its contents processed for the first
 time (assuming a processing routine exists, otherwise the call does
-nothing).
+nothing).  We pass "yes" as the second parameter to indicate that this is
+the first call ever to `contentsChanged`, and thus the group type may wish
+to do some initial setup.
 
         constructor: ( @open, @close, @plugin ) ->
             if not @plugin?
@@ -95,7 +97,7 @@ nothing).
                     if editor.getDoc() is @open.ownerDocument
                         @plugin = editor.Groups
                         break
-            @contentsChanged()
+            @contentsChanged yes, yes
 
 This method returns the ID of the group, if it is available within the open
 grouper.
@@ -167,8 +169,13 @@ automatically by some handlers in the `Groups` class, below.
 By default, it propagates the change event up the ancestor chain in the
 group hierarchy, but that can be disabled by passing false as the parameter.
 
-        contentsChanged: ( propagate = yes ) =>
-            @type()?.contentsChanged? this
+The second parameter indicates whether this is the first `contentsChanged`
+call since the group was constructed.  By default, this is false, but is set
+to true from the one call made to this function from the group's
+constructor.
+
+        contentsChanged: ( propagate = yes, firstTime = no ) =>
+            @type()?.contentsChanged? this, firstTime
             if propagate then @parent?.contentsChanged yes
 
 The `Group` class should be accessible globally.
@@ -524,7 +531,9 @@ Now update the `@freeIds` list to be the complement of the `usedIds` array.
             @freeIds.push count
 
 And any ID that is free now but wasn't before must have its group deleted
-from this object's internal cache.
+from this object's internal cache.  After we delete all of them from the
+cache, we also call the group type's `deleted` method on each one, to permit
+finalization code to run.
 
             after = @freeIds[..]
             while before[before.length-1] < after[after.length-1]
@@ -532,7 +541,11 @@ from this object's internal cache.
             while after[after.length-1] < before[before.length-1]
                 after.push after[after.length-1] + 1
             becameFree = ( a for a in after when a not in before )
-            delete @[id] for id in becameFree
+            deleted = [ ]
+            for id in becameFree
+                deleted.push @[id]
+                delete @[id]
+            group?.type()?.deleted? group for group in deleted
 
 Invalidate the `ids()` cache ([defined below](
 #querying-the-group-hierarchy)) so that the next time that function is run,
@@ -795,6 +808,7 @@ installed in [the constructor](#groups-constructor) and called by [the
 Overay plugin](overlayplugin.litcoffee).
 
         drawGroups: ( canvas, context ) =>
+            @bubbleTags = [ ]
 
 We do not draw the groups if document scanning is disabled, because it means
 that we are in the middle of a change to the group hierarchy, which means
@@ -858,6 +872,7 @@ them.
                         color : color
                         style : "font-size:#{style.fontSize};
                                  font-family:#{style.fontFamily};"
+                        group : group
 
 Draw this group and then move one step up the group hierarchy, ready to draw
 the next one on the next pass through the loop.
@@ -935,6 +950,7 @@ loop.
                 context.globalAlpha = 1.0
                 context.drawHTML tag.content, tag.x1 + padStep, tag.y1,
                     tag.style
+                @bubbleTags.unshift tag
 
 # Installing the plugin
 
@@ -983,3 +999,75 @@ buttons and menu items are enabled.
 
         editor.on 'NodeChange', ( event ) ->
             editor.Groups.updateButtonsAndMenuItems()
+
+The following handler installs a context menu that is exactly like that
+created by the TinyMCE context menu plugin, except that it appends to it
+any custom menu items needed by any groups inside which the user clicked.
+
+        editor.on 'contextMenu', ( event ) ->
+
+Prevent the browser's context menu.
+
+            event.preventDefault()
+
+Figure out where the user clicked, and whether there are any groups there.
+
+            x = event.clientX
+            y = event.clientY
+            if node = editor.getDoc().nodeFromPoint x, y
+                group = editor.Groups.groupAboveNode node
+
+Compute the list of normal context menu items.
+
+            contextmenu = editor.settings.contextmenu or \
+                'link image inserttable | cell row column deletetable'
+            items = [ ]
+            for name in contextmenu.split /[ ,]/
+                item = editor.menuItems[name]
+                if name is '|' then item = text : name
+                if item then item.shortcut = '' ; items.push item
+
+Add any group-specific context menu items.
+
+            if newItems = group?.type()?.contextMenuItems group
+                items.push text : '|'
+                items = items.concat newItems
+
+Construct the menu and show it on screen.
+
+            menu = new tinymce.ui.Menu(
+                items : items
+                context : 'contextmenu'
+            ).addClass( 'contextmenu' ).renderTo()
+            editor.on 'remove', -> menu.remove() ; menu = null
+            pos = ( $ editor.getContentAreaContainer() ).position()
+            menu.moveTo x + pos.left, y + pos.top
+
+When the user clicks in a bubble tag, we must discern which bubble tag
+received the click, and trigger the tag menu for that group, if it defines
+one.
+
+We use the mousedown event rather than the click event, because the
+mousedown event is the only one for which `preventDefault()` can function.
+By the time the click event happens (strictly after mousedown), it is too
+late to prevent the default handling of the event.
+
+        editor.on 'mousedown', ( event ) ->
+            x = event.clientX
+            y = event.clientY
+            for tag in editor.Groups.bubbleTags
+                if tag.x1 < x < tag.x2 and tag.y1 < y < tag.y2
+                    menuItems = tag.group?.type()?.tagMenuItems tag.group
+                    menuItems ?= [
+                        text : 'no actions available'
+                        disabled : true
+                    ]
+                    menu = new tinymce.ui.Menu(
+                        items : menuItems
+                        context : 'contextmenu'
+                    ).addClass( 'contextmenu' ).renderTo()
+                    editor.on 'remove', -> menu.remove() ; menu = null
+                    pos = ( $ editor.getContentAreaContainer() ).position()
+                    menu.moveTo x + pos.left, y + pos.top
+                    event.preventDefault()
+                    break

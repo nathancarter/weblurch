@@ -34,7 +34,6 @@ Load and save
 
 Other
 
- * Disable resizing of grouper objects as if they were normal images
  * Formats menu is currently empty
 
 ## Miscellaneous enhancements
@@ -43,28 +42,11 @@ Other
  * Make unit tests for `Group.contentAsText`, `Group.contentAsFragment`, and
    `Group.contentAsHTML`.  All were tested informally in the browser, but
    have not yet become unit tests.
- * Extend the overlay so that it also covers the menus and toolbars.  Have
-   the overlay plugin perform a transform so that (0,0) is still the top
-   left corner of the document.  But negative y values will then still be
-   able to draw on top of the menus and toolbars.
  * Bubble tags are not drawn at retina resolution on Macs with retina
    displays.  [See my question about how to fix this problem here.](http://stackoverflow.com/questions/30537138/rendering-html-to-canvas-on-retina-displays)
  * Complete [the unit test for the DOM Utils
    package](../test/domutils-spec.litcoffee).  See the end of that file for
    the few missing tests.
-
-## Functions in Group Types
-
- * When the user right-clicks inside a group, call a function in the Group
-   type to determine what should be on the context menu.  Extend the context
-   menu as that function suggests.
- * When the user clicks inside a group's tag, call a function in the Group
-   type to determine what should be on the context menu.  Extend the context
-   menu as that function suggests.
- * Create a function in Group types for handling the setup of newly inserted
-   Groups.  Call it whenever a new group is created.
- * Create a function in Group types for handling the finalization of just-
-   deleted Groups.  Call it whenever a group is removed.
 
 ## Undo/redo support
 

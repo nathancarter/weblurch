@@ -491,6 +491,23 @@ Last, for removing one:
             else
                 @removeAttribute 'class'
 
+## Converting (x,y) coordinates to nodes
+
+The browser will convert an (x,y) coordinate to an element, but not to a
+text node within the element.  The following routine fills that gap.  Thanks
+to [this StackOverflow answer](http://stackoverflow.com/a/13789789/670492).
+
+        window.document.nodeFromPoint = ( x, y ) ->
+            elt = window.document.elementFromPoint x, y
+            for node in elt.childNodes
+                if node instanceof window.Text
+                    range = window.document.createRange()
+                    range.selectNode node
+                    for rect in range.getClientRects()
+                        if rect.left < x < rect.right and \
+                           rect.top < y < rect.bottom then return node
+            return elt
+
 ## Installation into main window global namespace
 
 As mentioned above, we defined all of the functions in one big `installIn`

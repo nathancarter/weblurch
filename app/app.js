@@ -65,7 +65,7 @@
           }
         }
       }
-      this.contentsChanged();
+      this.contentsChanged(true, true);
     }
 
     Group.prototype.id = function() {
@@ -136,14 +136,17 @@
       return range;
     };
 
-    Group.prototype.contentsChanged = function(propagate) {
+    Group.prototype.contentsChanged = function(propagate, firstTime) {
       var _ref, _ref1;
       if (propagate == null) {
         propagate = true;
       }
+      if (firstTime == null) {
+        firstTime = false;
+      }
       if ((_ref = this.type()) != null) {
         if (typeof _ref.contentsChanged === "function") {
-          _ref.contentsChanged(this);
+          _ref.contentsChanged(this, firstTime);
         }
       }
       if (propagate) {
@@ -370,7 +373,7 @@
     };
 
     Groups.prototype.scanDocument = function() {
-      var a, after, becameFree, before, child, count, gpStack, groupData, grouper, groupers, id, index, info, newGroup, usedIds, _i, _j, _k, _len, _len1, _len2, _ref;
+      var a, after, becameFree, before, child, count, deleted, gpStack, group, groupData, grouper, groupers, id, index, info, newGroup, usedIds, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1;
       if (this.scanLocks > 0) {
         return;
       }
@@ -461,16 +464,28 @@
         }
         return _results;
       })();
+      deleted = [];
       for (_k = 0, _len2 = becameFree.length; _k < _len2; _k++) {
         id = becameFree[_k];
+        deleted.push(this[id]);
         delete this[id];
+      }
+      for (_l = 0, _len3 = deleted.length; _l < _len3; _l++) {
+        group = deleted[_l];
+        if (group != null) {
+          if ((_ref1 = group.type()) != null) {
+            if (typeof _ref1.deleted === "function") {
+              _ref1.deleted(group);
+            }
+          }
+        }
       }
       delete this.idsCache;
       return setTimeout((function(_this) {
         return function() {
-          var _ref1;
-          if ((_ref1 = _this.editor.Overlay) != null) {
-            _ref1.redrawContents();
+          var _ref2;
+          if ((_ref2 = _this.editor.Overlay) != null) {
+            _ref2.redrawContents();
           }
           return _this.updateButtonsAndMenuItems();
         };
@@ -723,6 +738,7 @@
 
     Groups.prototype.drawGroups = function(canvas, context) {
       var bodyStyle, close, color, group, leftMar, moveBy, old, open, p, p4, pad, padStep, radius, rightMar, size, style, tag, tagString, tags, tagsToDraw, type, x1, x2, y1, y2, _i, _j, _len, _len1, _ref, _ref1, _results;
+      this.bubbleTags = [];
       if (this.scanLocks > 0) {
         return;
       }
@@ -774,7 +790,8 @@
               y: y1
             },
             color: color,
-            style: "font-size:" + style.fontSize + "; font-family:" + style.fontFamily + ";"
+            style: "font-size:" + style.fontSize + "; font-family:" + style.fontFamily + ";",
+            group: group
           });
         }
         context.fillStyle = context.strokeStyle = color;
@@ -840,7 +857,8 @@
         context.fill();
         context.fillStyle = '#000000';
         context.globalAlpha = 1.0;
-        _results.push(context.drawHTML(tag.content, tag.x1 + padStep, tag.y1, tag.style));
+        context.drawHTML(tag.content, tag.x1 + padStep, tag.y1, tag.style);
+        _results.push(this.bubbleTags.unshift(tag));
       }
       return _results;
     };
@@ -888,8 +906,85 @@
       editor.Groups.scanDocument();
       return editor.Groups.rangeChanged(editor.selection.getRng());
     });
-    return editor.on('NodeChange', function(event) {
+    editor.on('NodeChange', function(event) {
       return editor.Groups.updateButtonsAndMenuItems();
+    });
+    editor.on('contextMenu', function(event) {
+      var contextmenu, group, item, items, menu, name, newItems, node, pos, x, y, _j, _len1, _ref1, _ref2;
+      event.preventDefault();
+      x = event.clientX;
+      y = event.clientY;
+      if (node = editor.getDoc().nodeFromPoint(x, y)) {
+        group = editor.Groups.groupAboveNode(node);
+      }
+      contextmenu = editor.settings.contextmenu || 'link image inserttable | cell row column deletetable';
+      items = [];
+      _ref1 = contextmenu.split(/[ ,]/);
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        name = _ref1[_j];
+        item = editor.menuItems[name];
+        if (name === '|') {
+          item = {
+            text: name
+          };
+        }
+        if (item) {
+          item.shortcut = '';
+          items.push(item);
+        }
+      }
+      if (newItems = group != null ? (_ref2 = group.type()) != null ? _ref2.contextMenuItems(group) : void 0 : void 0) {
+        items.push({
+          text: '|'
+        });
+        items = items.concat(newItems);
+      }
+      menu = new tinymce.ui.Menu({
+        items: items,
+        context: 'contextmenu'
+      }).addClass('contextmenu').renderTo();
+      editor.on('remove', function() {
+        menu.remove();
+        return menu = null;
+      });
+      pos = ($(editor.getContentAreaContainer())).position();
+      return menu.moveTo(x + pos.left, y + pos.top);
+    });
+    return editor.on('mousedown', function(event) {
+      var menu, menuItems, pos, tag, x, y, _j, _len1, _ref1, _ref2, _ref3, _results;
+      x = event.clientX;
+      y = event.clientY;
+      _ref1 = editor.Groups.bubbleTags;
+      _results = [];
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        tag = _ref1[_j];
+        if ((tag.x1 < x && x < tag.x2) && (tag.y1 < y && y < tag.y2)) {
+          menuItems = (_ref2 = tag.group) != null ? (_ref3 = _ref2.type()) != null ? _ref3.tagMenuItems(tag.group) : void 0 : void 0;
+          if (menuItems == null) {
+            menuItems = [
+              {
+                text: 'no actions available',
+                disabled: true
+              }
+            ];
+          }
+          menu = new tinymce.ui.Menu({
+            items: menuItems,
+            context: 'contextmenu'
+          }).addClass('contextmenu').renderTo();
+          editor.on('remove', function() {
+            menu.remove();
+            return menu = null;
+          });
+          pos = ($(editor.getContentAreaContainer())).position();
+          menu.moveTo(x + pos.left, y + pos.top);
+          event.preventDefault();
+          break;
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
     });
   });
 
@@ -1475,6 +1570,7 @@
         return;
       }
       this.clearCanvas(context);
+      context.translate(0, ($(this.container)).position().top);
       _ref1 = this.drawHandlers;
       _results = [];
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
@@ -1512,10 +1608,10 @@
       if (con.position() == null) {
         return;
       }
-      can.css('top', con.position().top);
+      can.css('top', 0);
       can.css('left', con.position().left);
       can.width(con.width());
-      can.height(con.height());
+      can.height(con.position().top + con.height());
       this.canvas.width = can.width();
       return this.canvas.height = can.height();
     };
@@ -1546,7 +1642,8 @@
       browser_spellcheck: true,
       gecko_spellcheck: true,
       statusbar: false,
-      plugins: 'advlist table charmap colorpicker contextmenu image link importcss paste print save searchreplace textcolor fullscreen -loadsave -overlay -groups',
+      plugins: 'advlist table charmap colorpicker image link importcss paste print save searchreplace textcolor fullscreen -loadsave -overlay -groups',
+      object_resizing: ':not(img.grouper)',
       toolbar: ['newfile openfile savefile managefiles | print | undo redo | cut copy paste | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent blockquote | table', 'fontselect styleselect | bold italic underline textcolor subscript superscript removeformat | link unlink | charmap image | spellchecker searchreplace | me'],
       menu: {
         file: {
@@ -1641,6 +1738,45 @@
           tagContents: function(group) {
             var _ref;
             return "" + ((_ref = group.contentAsText()) != null ? _ref.length : void 0) + " characters";
+          },
+          contentsChanged: function(group, firstTime) {
+            if (firstTime) {
+              return console.log('Initialized this group:', group);
+            }
+          },
+          deleted: function(group) {
+            return console.log('You deleted this group:', group);
+          },
+          contextMenuItems: function(group) {
+            return [
+              {
+                text: group.contentAsText(),
+                onclick: function() {
+                  return alert('Example code for testing');
+                }
+              }
+            ];
+          },
+          tagMenuItems: function(group) {
+            return [
+              {
+                text: 'Compute',
+                onclick: function() {
+                  var e, text;
+                  text = group.contentAsText();
+                  if (!/^[0-9+*/ -]+$/.test(text)) {
+                    alert('Not a mathematical expression');
+                    return;
+                  }
+                  try {
+                    return alert("" + text + " evaluates to:\n" + (eval(text)));
+                  } catch (_error) {
+                    e = _error;
+                    return alert("Error in " + text + ":\n" + e);
+                  }
+                }
+              }
+            ];
           }
         }
       ]
