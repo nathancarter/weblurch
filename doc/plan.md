@@ -48,19 +48,6 @@ Other
    package](../test/domutils-spec.litcoffee).  See the end of that file for
    the few missing tests.
 
-## Undo/redo support
-
-Any changes to a group instance will need to go onto the undo/redo stack,
-but we do not yet have a way to do so.
-
- * Investigate the TinyMCE undo/redo stack API until you can answer the
-   following questions and/or accomplish the following tasks.
- * What does the undo action do, at present, immediately after the
-   wrap-current-selection-in-a-group action has been executed?  If it does
-   not do the correct thing, how can we fix it so that it does?
- * Create a general way to create an entry on the undo/redo stack that
-   contains modifications to one or more groups within it.
-
 ## Background processing
 
 Import [this polyfill](https://github.com/oftn/core-estimator) for

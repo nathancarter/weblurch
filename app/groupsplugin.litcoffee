@@ -122,6 +122,13 @@ Because we use HTML data attributes to store the data, the keys must be
 alphanumeric, optionally with dashes.  Furthermore, the data must be able to
 be amenable to JSON stringification.
 
+IMPORTANT:  If you call `set()` in a group, the changes you make will NOT be
+stored on the TinyMCE undo/redo stack.  If you want your changes stored on
+that stack, you should obey the following coding pattern.
+ * Before you make any of your changes, call
+   `editor.undoManager.beforeChange()`.
+ * After you've made all of your changes, call `editor.undoManager.add()`.
+
         set: ( key, value ) =>
             if not /^[a-zA-Z0-9-]+$/.test key then return
             @open.setAttribute "data-#{key}", JSON.stringify [ value ]
