@@ -180,23 +180,26 @@ purposes.
 
                 tagContents : ( group ) ->
                     "#{group.contentAsText()?.length} characters"
-                contentsChanged : ( group, firstTime ) ->
-                    Background.addTask 'arith', [ group ], ( result ) ->
-                        text = group.contentAsText()
-                        if result isnt text
-                            lhs = text.split( '=' )[0]
-                            before = group.plugin?.editor.selection.getRng()
-                            textNode = group.open.nextSibling
-                            if before.startContainer is textNode
-                                origPos = before.startOffset
-                            group.setContentAsText result
-                            textNode = group.open.nextSibling
-                            range = group.open.ownerDocument.createRange()
-                            if not origPos? or origPos > lhs.length
-                                origPos = lhs.length
-                            range.setStart textNode, origPos
-                            range.setEnd textNode, origPos
-                            group.plugin?.editor.selection.setRng range
+                # contentsChanged : ( group, firstTime ) ->
+                #     Background.addTask 'arith', [ group ], ( result ) ->
+                #         if group.deleted or not result? then return
+                #         text = group.contentAsText()
+                #         if result isnt text
+                #             lhs = text.split( '=' )[0]
+                #             before = group.plugin?.editor.selection.getRng()
+                #             textNode = group.open.nextSibling
+                #             if before.startContainer is textNode
+                #                 origPos = before.startOffset
+                #             group.setContentAsText result
+                #             if not textNode = group.open.nextSibling
+                #                 return
+                #             range = textNode.ownerDocument.createRange()
+                #             origPos ?= lhs.length
+                #             if origPos > textNode.textContent.length
+                #                 origPos = textNode.textContent.length
+                #             range.setStart textNode, origPos
+                #             range.setEnd textNode, origPos
+                #             group.plugin?.editor.selection.setRng range
                 deleted : ( group ) ->
                     console.log 'You deleted this group:', group
                 contextMenuItems : ( group ) ->
@@ -224,8 +227,10 @@ in `contentsChanged`.  Again, this is just very simple and not very useful
 code, except for its value in testing the underlying structure of the app.
 
     Background.registerFunction 'arith', ( group ) ->
-        lhs = group.contentAsText().split( '=' )[0]
-        "#{lhs}=" + if /^[0-9+*/ ()-]+$/.test lhs
-            try eval lhs catch e then '???'
+        if lhs = group?.contentAsText()?.split( '=' )?[0]
+            "#{lhs}=" + if /^[0-9+*/ ()-]+$/.test lhs
+                try eval lhs catch e then '???'
+            else
+                '???'
         else
-            '???'
+            null
