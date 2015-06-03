@@ -50,19 +50,9 @@ Other
 
 ## Background processing
 
-Build a BackgroundComputation class with the following API.
- * There is one function to enqueue a computation based on the name of the
-   background function to be called, and the list of groups to use as
-   arguments.
- * The first implementation can simply be single-threaded, by using
-   `setInterval` and dequeueing a new task every so often, if and only if
-   the previous one has completed.
-
 Build a BackgroundFunction class with the following API.
- * One can register new functions to be run in the background, by mapping
-   any string name to any JS function.  This is a class method.
  * One can create new instances of BackgroundFunction objects by calling a
-   constructor and passing the name of a previously- registered function.
+   constructor and passing the name of a previously-registered function.
    This should create a web worker that has the following capabilities.
    * It has the registered function precompiled into the worker.
      Be sure to use the [Function constructor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
