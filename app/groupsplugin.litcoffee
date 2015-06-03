@@ -87,7 +87,9 @@ providing the parameter is more efficient.
 We call the contents changed event as soon as the group is created, because
 any newly-created group needs to have its contents processed for the first
 time (assuming a processing routine exists, otherwise the call does
-nothing).
+nothing).  We pass "yes" as the second parameter to indicate that this is
+the first call ever to `contentsChanged`, and thus the group type may wish
+to do some initial setup.
 
         constructor: ( @open, @close, @plugin ) ->
             if not @plugin?
@@ -95,7 +97,7 @@ nothing).
                     if editor.getDoc() is @open.ownerDocument
                         @plugin = editor.Groups
                         break
-            @contentsChanged()
+            @contentsChanged yes, yes
 
 This method returns the ID of the group, if it is available within the open
 grouper.
@@ -167,8 +169,13 @@ automatically by some handlers in the `Groups` class, below.
 By default, it propagates the change event up the ancestor chain in the
 group hierarchy, but that can be disabled by passing false as the parameter.
 
-        contentsChanged: ( propagate = yes ) =>
-            @type()?.contentsChanged? this
+The second parameter indicates whether this is the first `contentsChanged`
+call since the group was constructed.  By default, this is false, but is set
+to true from the one call made to this function from the group's
+constructor.
+
+        contentsChanged: ( propagate = yes, firstTime = no ) =>
+            @type()?.contentsChanged? this, firstTime
             if propagate then @parent?.contentsChanged yes
 
 The `Group` class should be accessible globally.
@@ -524,7 +531,9 @@ Now update the `@freeIds` list to be the complement of the `usedIds` array.
             @freeIds.push count
 
 And any ID that is free now but wasn't before must have its group deleted
-from this object's internal cache.
+from this object's internal cache.  After we delete all of them from the
+cache, we also call the group type's `deleted` method on each one, to permit
+finalization code to run.
 
             after = @freeIds[..]
             while before[before.length-1] < after[after.length-1]
@@ -532,7 +541,11 @@ from this object's internal cache.
             while after[after.length-1] < before[before.length-1]
                 after.push after[after.length-1] + 1
             becameFree = ( a for a in after when a not in before )
-            delete @[id] for id in becameFree
+            deleted = [ ]
+            for id in becameFree
+                deleted.push @[id]
+                delete @[id]
+            group?.type()?.deleted? group for group in deleted
 
 Invalidate the `ids()` cache ([defined below](
 #querying-the-group-hierarchy)) so that the next time that function is run,

@@ -180,9 +180,11 @@ purposes.
 
                 tagContents : ( group ) ->
                     "#{group.contentAsText()?.length} characters"
-                # contentsChanged : ( group ) ->
-                #     # just for debugging purposes, for now
-                #     console.log 'Contents changed in', group
+                contentsChanged : ( group, firstTime ) ->
+                    if firstTime
+                        console.log 'Initialized this group:', group
+                deleted : ( group ) ->
+                    console.log 'You deleted this group:', group
                 contextMenuItems : ( group ) ->
                     [
                         text : group.contentAsText()

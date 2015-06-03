@@ -48,13 +48,6 @@ Other
    package](../test/domutils-spec.litcoffee).  See the end of that file for
    the few missing tests.
 
-## Functions in Group Types
-
- * Create a function in Group types for handling the setup of newly inserted
-   Groups.  Call it whenever a new group is created.
- * Create a function in Group types for handling the finalization of just-
-   deleted Groups.  Call it whenever a group is removed.
-
 ## Undo/redo support
 
 Any changes to a group instance will need to go onto the undo/redo stack,
