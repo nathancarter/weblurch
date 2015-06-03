@@ -50,24 +50,6 @@ Other
 
 ## Background processing
 
- * Implement a `call` member that does the following.
-   * Construct an empty object and store it in the BackgroundFunction object
-     for later return as a promise.
-   * Implement the promise object's `sendTo` method so that if the promise
-     object already has a "result" member, it immediately passes it to the
-     `sendTo` method, and if not, just stores the `sendTo` method for later.
-     It should return the promise object.
-   * Implement the promise object's `orElse` method so that if the promise
-     object already has an "error" member, it immediately passes it to the
-     `orElse` method, and if not, just stores the `orElse` method for later.
-     It should return the promise object.
-   * Setup a zero timer that will run the stored function on the given
-     arguments.  If there are any errors, it will first place the error
-     object in the promise's error member, and then if there is a stored
-     `orElse` member, call it on the error.  If there were not any errors,
-     then first place the result in the promise's result member, then if
-     there is a stored `sendTo` member, call it on the result.
-   * Return the promise object.
  * Integrate BackgroundFunction objects thoroughly throughout the Background
    module and any of its clients
    * `addTask` should construct a new BackgroundFunction instance every time

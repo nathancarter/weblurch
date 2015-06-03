@@ -84,3 +84,48 @@ The constructor just stores in the `@function` member the function that this
 object is able to run in the background.
 
        constructor : ( @function ) -> # no body needed
+
+Background functions need to be callable.  Calling them returns a promise
+object into which we can install callbacks for when the result is computed,
+or when an error occurs.
+
+        call : =>
+
+The promise object, which will be returned, permits chaining.  Thus all of
+its method return the promise object itself.  There are only two methods,
+`sendTo`, for specifying the result callback, and `orElse`, for specifying
+the error callback.  Thus the use of this call function looks like
+`bgfunc.call( args... ).sendTo( resultHandler ).orElse( errorHandler )`.
+
+            @promise =
+                sendTo : ( callback ) =>
+                    @promise.resultCallback = callback
+                    if @promise.hasOwnProperty 'result'
+                        @promise.resultCallback @promise.result
+                    @promise
+                orElse : ( callback ) =>
+                    @promise.errorCallback = callback
+                    if @promise.hasOwnProperty 'error'
+                        @promise.errorCallback @promise.error
+                    @promise
+
+Run the computation soon, but not now.  When it is run, store the result or
+error in the promise, and call the result or error handler, whichever is
+appropriate, assuming it has been defined by then.  If it hasn't been
+defined at that time, the result/error will be stored and set to the result
+or error callback the moment one is registered, using one of the two
+functions defined above, in the promise object.
+
+            setTimeout =>
+                try
+                    @promise.result = @function arguments...
+                catch e
+                    @promise.error = e
+                    @promise.errorCallback? @promise.error
+                    return
+                @promise.resultCallback? @promise.result
+            , 0
+
+Return the promise object, for chaining.
+
+            @promise
