@@ -172,6 +172,12 @@ knows which group types to create.
                 image : './images/red-bracket-icon.png'
                 tooltip : 'Make text a meaningful expression'
                 color : '#996666'
+
+All of the following code is here only for testing the features it
+leverages.  Later we will actually make bubbles that have sensible
+behaviors, but for now we're just doing very simple things for testing
+purposes.
+
                 tagContents : ( group ) ->
                     "#{group.contentAsText()?.length} characters"
                 # contentsChanged : ( group ) ->
@@ -181,5 +187,18 @@ knows which group types to create.
                     [
                         text : group.contentAsText()
                         onclick : -> alert 'Example code for testing'
+                    ]
+                tagMenuItems : ( group ) ->
+                    [
+                        text : 'Compute'
+                        onclick : ->
+                            text = group.contentAsText()
+                            if not /^[0-9+*/ -]+$/.test text
+                                alert 'Not a mathematical expression'
+                                return
+                            try
+                                alert "#{text} evaluates to:\n#{eval text}"
+                            catch e
+                                alert "Error in #{text}:\n#{e}"
                     ]
             ]

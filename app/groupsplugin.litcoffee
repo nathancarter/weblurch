@@ -795,6 +795,7 @@ installed in [the constructor](#groups-constructor) and called by [the
 Overay plugin](overlayplugin.litcoffee).
 
         drawGroups: ( canvas, context ) =>
+            @bubbleTags = [ ]
 
 We do not draw the groups if document scanning is disabled, because it means
 that we are in the middle of a change to the group hierarchy, which means
@@ -858,6 +859,7 @@ them.
                         color : color
                         style : "font-size:#{style.fontSize};
                                  font-family:#{style.fontFamily};"
+                        group : group
 
 Draw this group and then move one step up the group hierarchy, ready to draw
 the next one on the next pass through the loop.
@@ -935,6 +937,7 @@ loop.
                 context.globalAlpha = 1.0
                 context.drawHTML tag.content, tag.x1 + padStep, tag.y1,
                     tag.style
+                @bubbleTags.unshift tag
 
 # Installing the plugin
 
@@ -1013,9 +1016,9 @@ Compute the list of normal context menu items.
 
 Add any group-specific context menu items.
 
-            if newitems = group?.type()?.contextMenuItems group
+            if newItems = group?.type()?.contextMenuItems group
                 items.push text : '|'
-                items = items.concat newitems
+                items = items.concat newItems
 
 Construct the menu and show it on screen.
 
@@ -1026,3 +1029,32 @@ Construct the menu and show it on screen.
             editor.on 'remove', -> menu.remove() ; menu = null
             pos = ( $ editor.getContentAreaContainer() ).position()
             menu.moveTo x + pos.left, y + pos.top
+
+When the user clicks in a bubble tag, we must discern which bubble tag
+received the click, and trigger the tag menu for that group, if it defines
+one.
+
+We use the mousedown event rather than the click event, because the
+mousedown event is the only one for which `preventDefault()` can function.
+By the time the click event happens (strictly after mousedown), it is too
+late to prevent the default handling of the event.
+
+        editor.on 'mousedown', ( event ) ->
+            x = event.clientX
+            y = event.clientY
+            for tag in editor.Groups.bubbleTags
+                if tag.x1 < x < tag.x2 and tag.y1 < y < tag.y2
+                    menuItems = tag.group?.type()?.tagMenuItems tag.group
+                    menuItems ?= [
+                        text : 'no actions available'
+                        disabled : true
+                    ]
+                    menu = new tinymce.ui.Menu(
+                        items : menuItems
+                        context : 'contextmenu'
+                    ).addClass( 'contextmenu' ).renderTo()
+                    editor.on 'remove', -> menu.remove() ; menu = null
+                    pos = ( $ editor.getContentAreaContainer() ).position()
+                    menu.moveTo x + pos.left, y + pos.top
+                    event.preventDefault()
+                    break

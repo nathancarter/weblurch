@@ -50,9 +50,6 @@ Other
 
 ## Functions in Group Types
 
- * When the user clicks inside a group's tag, call a function in the Group
-   type to determine what should be on the context menu.  Extend the context
-   menu as that function suggests.
  * Create a function in Group types for handling the setup of newly inserted
    Groups.  Call it whenever a new group is created.
  * Create a function in Group types for handling the finalization of just-
