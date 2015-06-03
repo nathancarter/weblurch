@@ -50,10 +50,6 @@ Other
 
 ## Background processing
 
- * Create a `worker.solo.litcoffee` script file in `src/` that is compiled
-   into its own `worker.solo.js` file that lives in the app folder.  This
-   will require updating the build process.  That file can be a stub at
-   first.
  * Implement the worker script with the following code [modeled after this
    blog post](
    http://www.scottlogic.com/blog/2011/02/24/web-workers-part-3-creating-a-generic-worker.html).
