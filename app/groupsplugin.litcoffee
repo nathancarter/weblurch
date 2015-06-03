@@ -163,6 +163,13 @@ an HTML `DocumentFragment` object, or as an HTML string.
             tmp.appendChild @contentAsFragment()
             tmp.innerHTML
 
+We can also set the contents of a group with the following function.  This
+function can only work if `@plugin` is a `Groups` class instance.
+
+        setContentAsText: ( text ) =>
+            @plugin?.editor.selection.setRng @innerRange()
+            @plugin?.editor.selection.setContent text
+
 Those functions rely on the `innerRange()` function, defined below, with a
 corresponding `outerRange` function for the sake of completeness.
 

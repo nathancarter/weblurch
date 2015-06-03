@@ -62,5 +62,6 @@ dequeue the next computation and run it.
                     window.Background.functions[task.name] task.inputs...
             catch e
                 console.log "Error running #{task.name} task: #{e.stack}"
-            setTimeout window.Background.doNextTask, 10
-            callback result
+            if window.Background.tasks.length > 0
+                setTimeout window.Background.doNextTask, 10
+            task.callback result
