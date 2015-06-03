@@ -50,9 +50,6 @@ Other
 
 ## Background processing
 
- * Create a BackgroundFunction constructor that takes any function as its
-   sole argument.  Make it a stub at first.
- * Implement the constructor to store the function in a member variable.
  * Implement a `call` member that does the following.
    * Construct an empty object and store it in the BackgroundFunction object
      for later return as a promise.

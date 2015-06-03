@@ -5,6 +5,8 @@ This module defines an API for enqueueing background computations on groups
 in webLurch.  It provides an efficient means for running those computations,
 no matter how numerous they might be, while keeping the UI responsive.
 
+## Global Background object
+
 The first object defined herein is the global `Background` object, which
 encapsulates all activity that will take place "in the background."  This
 means that such activity, will not begin immediately, but will be queued for
@@ -50,13 +52,16 @@ complexity.
                 name : funcName
                 inputs : inputGroups
                 callback : callback
-            setTimeout window.Background.doNextTask, 10
+            if window.Background.tasks.length is 1
+                setTimeout window.Background.doNextTask, 10
 
 This function is not part of the public API.  It is used internally to
 dequeue the next computation and run it.
 
         doNextTask : ->
             task = window.Background.tasks.shift()
+            for group in task.inputs
+                if group.deleted then return
             try
                 result =
                     window.Background.functions[task.name] task.inputs...
@@ -65,3 +70,17 @@ dequeue the next computation and run it.
             if window.Background.tasks.length > 0
                 setTimeout window.Background.doNextTask, 10
             task.callback result
+
+## `BackgroundFunction` class
+
+We define the following class for encapsulating functions that are ready to
+be run in the background.  For now, it runs them in the main thread, but
+this abstraction is ready for later changes when we add support for Web
+Workers.
+
+    BackgroundFunction = class
+
+The constructor just stores in the `@function` member the function that this
+object is able to run in the background.
+
+       constructor : ( @function ) -> # no body needed
