@@ -200,6 +200,9 @@ purposes.
                 #             range.setStart textNode, origPos
                 #             range.setEnd textNode, origPos
                 #             group.plugin?.editor.selection.setRng range
+                contentsChanged : ( group, firstTime ) ->
+                    Background.addTask 'notify', [ group ], ( result ) ->
+                        console.log 'This group has been updated:', result
                 deleted : ( group ) ->
                     console.log 'You deleted this group:', group
                 contextMenuItems : ( group ) ->
@@ -234,3 +237,5 @@ code, except for its value in testing the underlying structure of the app.
                 '???'
         else
             null
+    Background.registerFunction 'notify', ( group ) ->
+        group?.contentAsText()

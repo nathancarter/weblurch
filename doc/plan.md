@@ -50,12 +50,6 @@ Other
 
 ## Background processing
 
- * Integrate BackgroundFunction objects thoroughly throughout the Background
-   module and any of its clients
-   * `addTask` should construct a new BackgroundFunction instance every time
-     it's called, and throw it away afterwards.
-   * Still wait for each task to complete before starting the next one, so
-     that at most one background thread is running at once (for now).
  * Create a `worker.solo.litcoffee` script file in `src/` that is compiled
    into its own `worker.solo.js` file that lives in the app folder.  This
    will require updating the build process.  That file can be a stub at

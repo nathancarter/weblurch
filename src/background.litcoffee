@@ -46,30 +46,12 @@ UI thread, and thus must be lightweight.  The function whose name is
 complexity.
 
         addTask : ( funcName, inputGroups, callback ) ->
-            if not window.Background.functions.hasOwnProperty funcName
-                return
-            ( window.Background.tasks ?= [ ] ).push
-                name : funcName
-                inputs : inputGroups
-                callback : callback
-            if window.Background.tasks.length is 1
-                setTimeout window.Background.doNextTask, 10
-
-This function is not part of the public API.  It is used internally to
-dequeue the next computation and run it.
-
-        doNextTask : ->
-            task = window.Background.tasks.shift()
-            for group in task.inputs
-                if group.deleted then return
-            try
-                result =
-                    window.Background.functions[task.name] task.inputs...
-            catch e
-                console.log "Error running #{task.name} task: #{e.stack}"
-            if window.Background.tasks.length > 0
-                setTimeout window.Background.doNextTask, 10
-            task.callback result
+            if ( func = window.Background.functions[funcName] )?
+                bgfunction = new BackgroundFunction ( groups ) ->
+                    for group in groups
+                        if group.deleted then return
+                    func groups...
+                bgfunction.call( inputGroups ).sendTo callback
 
 ## `BackgroundFunction` class
 
@@ -83,7 +65,7 @@ Workers.
 The constructor just stores in the `@function` member the function that this
 object is able to run in the background.
 
-       constructor : ( @function ) -> # no body needed
+        constructor : ( @function ) -> # no body needed
 
 Background functions need to be callable.  Calling them returns a promise
 object into which we can install callbacks for when the result is computed,
@@ -116,9 +98,10 @@ defined at that time, the result/error will be stored and set to the result
 or error callback the moment one is registered, using one of the two
 functions defined above, in the promise object.
 
+            args = arguments
             setTimeout =>
                 try
-                    @promise.result = @function arguments...
+                    @promise.result = @function args...
                 catch e
                     @promise.error = e
                     @promise.errorCallback? @promise.error
