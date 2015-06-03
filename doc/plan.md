@@ -50,9 +50,6 @@ Other
 
 ## Background processing
 
-Import [this polyfill](https://github.com/oftn/core-estimator) for
-estimating the optimal number of cores for use by background threads.
-
 Build a BackgroundComputation class with the following API.
  * There is one function to enqueue a computation based on the name of the
    background function to be called, and the list of groups to use as

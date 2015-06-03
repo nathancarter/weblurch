@@ -1,3 +1,6 @@
 [submodule "jsfs"]
 	path = jsfs
 	url = https://github.com/nathancarter/jsfs.git
+[submodule "app/core-estimator"]
+	path = app/core-estimator
+	url = https://github.com/oftn/core-estimator.git
