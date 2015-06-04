@@ -56,6 +56,13 @@ $ npm install -g coffee-script
 Browse this repository for more information.  The source code is
 literate, so there's lots of documentation embedded in it, by nature.
 
+## Building your own app
+
+You can learn how to create your own apps based on webLurch's foundation by
+checking out the file for
+[a simple example](app/simple-example.solo.litcoffee) and then for
+[a complex example](app/complex-example.solo.litcoffee).
+
 ## Repository contents
 
 All source code in this repository is written in [literate
