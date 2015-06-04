@@ -122,6 +122,22 @@ Because we use HTML data attributes to store the data, the keys must be
 alphanumeric, optionally with dashes.  Furthermore, the data must be able to
 be amenable to JSON stringification.
 
+IMPORTANT:  If you call `set()` in a group, the changes you make will NOT be
+stored on the TinyMCE undo/redo stack.  If you want your changes stored on
+that stack, you should obey the following coding pattern.
+ * Before you make any of your changes, call
+   `editor.undoManager.beforeChange()`.
+ * After you've made all of your changes, call `editor.undoManager.add()`.
+
+You may or may not wish to have your changes stored on the undo/redo stack.
+In general, if the change you're making to the group is in direct and
+immediate response to the user's actions, then it should be on the undo/redo
+stack, so that the user can change their mind.  However, if the change is
+the result of a background computation, which was therefore not in direct
+response to one of the user's actions, they will probably not expect to be
+able to undo it, and thus you should not place the change on the undo/redo
+stack.
+
         set: ( key, value ) =>
             if not /^[a-zA-Z0-9-]+$/.test key then return
             @open.setAttribute "data-#{key}", JSON.stringify [ value ]
@@ -140,26 +156,42 @@ computations on that group can use its contents to determine how to act.  We
 provide functions for fetching the contents of the group as plain text, as
 an HTML `DocumentFragment` object, or as an HTML string.
 
-        contentAsText: => @innerRange().toString()
-        contentAsFragment: => @innerRange().cloneContents()
+        contentAsText: => @innerRange()?.toString()
+        contentAsFragment: => @innerRange()?.cloneContents()
         contentAsHTML: =>
+            if not fragment = @contentAsFragment() then return null
             tmp = @open.ownerDocument.createElement 'div'
-            tmp.appendChild @contentAsFragment()
+            tmp.appendChild fragment
             tmp.innerHTML
 
+We can also set the contents of a group with the following function.  This
+function can only work if `@plugin` is a `Groups` class instance.
+
+        setContentAsText: ( text ) =>
+            if not inside = @innerRange() then return
+            @plugin?.editor.selection.setRng inside
+            @plugin?.editor.selection.setContent text
+
 Those functions rely on the `innerRange()` function, defined below, with a
-corresponding `outerRange` function for the sake of completeness.
+corresponding `outerRange` function for the sake of completeness.  We use a
+`try`/`catch` block because it's possible that the group has been removed
+from the document, and thus we can no longer set range start and end points
+relative to the group's open and close groupers.
 
         innerRange: =>
             range = @open.ownerDocument.createRange()
-            range.setStartAfter @open
-            range.setEndBefore @close
-            range
+            try
+                range.setStartAfter @open
+                range.setEndBefore @close
+                range
+            catch e then null
         outerRange: =>
             range = @open.ownerDocument.createRange()
-            range.setStartBefore @open
-            range.setEndAfter @close
-            range
+            try
+                range.setStartBefore @open
+                range.setEndAfter @close
+                range
+            catch e then null
 
 The following function should be called whenever the contents of the group
 have changed.  It notifies the group's type, so that the requisite
@@ -177,6 +209,26 @@ constructor.
         contentsChanged: ( propagate = yes, firstTime = no ) =>
             @type()?.contentsChanged? this, firstTime
             if propagate then @parent?.contentsChanged yes
+
+The following serialization routine is useful for sending groups to a Web
+Worker for background processing.
+
+        toJSON: =>
+            data = { }
+            for attr in @open.attributes
+                if attr.nodeName[..5] is 'data-' and \
+                   attr.nodeName[..9] isnt 'data-mce-'
+                    try
+                        data[attr.nodeName] =
+                            JSON.parse( attr.nodeValue )[0]
+            id : @id()
+            typeName : @typeName()
+            deleted : @deleted
+            text : @contentAsText()
+            html : @contentAsHTML()
+            parent : @parent?.id() ? null
+            children : ( child?.id() ? null for child in @children ? [ ] )
+            data : data
 
 The `Group` class should be accessible globally.
 
@@ -533,7 +585,10 @@ Now update the `@freeIds` list to be the complement of the `usedIds` array.
 And any ID that is free now but wasn't before must have its group deleted
 from this object's internal cache.  After we delete all of them from the
 cache, we also call the group type's `deleted` method on each one, to permit
-finalization code to run.
+finalization code to run.  We also mark each with a "deleted" attribute set
+to true, so that if there are any pending computations about that group,
+they know not to bother actually modifying the group when they complete,
+because it is no longer in the document anyway.
 
             after = @freeIds[..]
             while before[before.length-1] < after[after.length-1]
@@ -544,6 +599,7 @@ finalization code to run.
             deleted = [ ]
             for id in becameFree
                 deleted.push @[id]
+                @[id]?.deleted = yes
                 delete @[id]
             group?.type()?.deleted? group for group in deleted
 

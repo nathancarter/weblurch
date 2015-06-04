@@ -29,23 +29,24 @@ done).
     desktop version of the software, this shows up as "bubbles," a UI
     familiar to anyone who has used Word's Equation Editor
     or [LyX](http://wiki.lyx.org/) or [the current version of *Lurch*](http://lurchmath.org/wordpress-temp/wp-content/uploads/2012/03/mathfest-2013-gcps.pdf).
-    *This is in process.  Note that when it is complete, it can be used in
-    many projects, not just Lurch.*
+    *This is complete.  It can be used in many other projects, not just
+    Lurch.  Watch this space for links to a tutorial, coming soon.*
  1. Lobby - Add tools for mathematical typesetting.  These might be done
     with [MathQuill](http://mathquill.com/) or
     [MathJax](http://www.mathjax.org/), [as in the desktop
     version](https://www.youtube.com/watch?v=xvVz0xdqi-8).
-    *This is not yet built, but others [have](
-    https://github.com/foraker/tinymce_equation_editor) [built](
-    http://ckeditor.com/addon/mathjax) [similar](
-    https://github.com/rikuhaa/mathedit) [plugins](
-    https://github.com/efloti/plugin-mathjax-pour-tinymce) already.
-    This item could be done at this point, or earlier or later; it is
-    somewhat orthogonal to the rest.*
+    *This is not yet built, but others ([1](
+    https://github.com/foraker/tinymce_equation_editor), [2](
+    http://ckeditor.com/addon/mathjax), [3](
+    https://github.com/rikuhaa/mathedit), [4](
+    https://github.com/efloti/plugin-mathjax-pour-tinymce)) have built
+    similar plugins already.  This item could be done at this point, or
+    earlier or later; it is somewhat orthogonal to the rest.*
  1. Guest rooms - Add a facility for easy background processing of document
     content.  This allows developers to extend the version with useless
     bubbles to a version in which the bubbles can be used for any of a wide
-    variety of results.  *This is designed but not yet begun.*
+    variety of results.  *This is in process.  Note that when it is
+    complete, it can be used in many projects, not just Lurch.*
  1. Penthouse suite - Apply the previous layer to the specific needs of
     *Lurch*, adding dependencies, meaning, rules, etc.
     *This is not yet fully designed, but when it has been both designed and

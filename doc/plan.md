@@ -11,119 +11,11 @@ in chronological order, the first items being those that should be done
 next, and the later items those that must come after.  Necessarily, the
 later items are more vague than the earlier ones.
 
-## Bug fixes
-
-Load and save
-
- * Not all edits cause the document to be marked dirty.  TinyMCE events are
-   not firing correctly.  [Minimal working example created.](
-   http://www.tinymce.com/develop/bugtracker_view.php?id=7511)
-   [Or see this related issue.](
-   http://www.tinymce.com/develop/bugtracker_view.php?id=7304)
-   Use the responses from that to get this
-   problem fixed in Lurch, either by updating to a fixed version of TinyMCE
-   or by installing a workaround here.  Although you've heard about the
-   KeyUp and SetContent events that you're using in the Groups package, so
-   you may be able to correct this problem partially with those events.
- * Using the keyboard shortcut for New or Open on Mac triggers the Chrome
-   behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
-   menu.  See [my question about this on the TinyMCE forum,](
-   http://www.tinymce.com/forum/viewtopic.php?pid=116179) and the
-   StackOverflow page to which it links with information on how you might go
-   about building a workaround if one doesn't exist already.
-
-Other
-
- * Formats menu is currently empty
-
-## Miscellaneous enhancements
-
- * Move all plugin files into the `src/` folder, if possible.
- * Make unit tests for `Group.contentAsText`, `Group.contentAsFragment`, and
-   `Group.contentAsHTML`.  All were tested informally in the browser, but
-   have not yet become unit tests.
- * Bubble tags are not drawn at retina resolution on Macs with retina
-   displays.  [See my question about how to fix this problem here.](http://stackoverflow.com/questions/30537138/rendering-html-to-canvas-on-retina-displays)
- * Complete [the unit test for the DOM Utils
-   package](../test/domutils-spec.litcoffee).  See the end of that file for
-   the few missing tests.
-
-## Undo/redo support
-
-Any changes to a group instance will need to go onto the undo/redo stack,
-but we do not yet have a way to do so.
-
- * Investigate the TinyMCE undo/redo stack API until you can answer the
-   following questions and/or accomplish the following tasks.
- * What does the undo action do, at present, immediately after the
-   wrap-current-selection-in-a-group action has been executed?  If it does
-   not do the correct thing, how can we fix it so that it does?
- * Create a general way to create an entry on the undo/redo stack that
-   contains modifications to one or more groups within it.
-
-## Background processing
-
-Import [this polyfill](https://github.com/oftn/core-estimator) for
-estimating the optimal number of cores for use by background threads.
-
-Build a BackgroundComputation class with the following API.
- * There is one function to enqueue a computation based on the name of the
-   background function to be called, and the list of groups to use as
-   arguments.
- * The first implementation can simply be single-threaded, by using
-   `setInterval` and dequeueing a new task every so often, if and only if
-   the previous one has completed.
-
-Build a BackgroundFunction class with the following API.
- * One can register new functions to be run in the background, by mapping
-   any string name to any JS function.  This is a class method.
- * One can create new instances of BackgroundFunction objects by calling a
-   constructor and passing the name of a previously- registered function.
-   This should create a web worker that has the following capabilities.
-   * It has the registered function precompiled into the worker.
-     Be sure to use the [Function constructor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
-     to build the function on the worker side, because it compiles the code
-     rather than interpreting it, and is much faster. See [this blog post](http://www.scottlogic.com/blog/2011/02/24/web-workers-part-3-creating-a-generic-worker.html)
-     for details.
-   * On the worker side there are functions for starting that function on a
-     single argument list or an array of argument lists, and returning
-     either a single result or an array of results, respectively.  Both the
-     call and return happen by posting messages.
- * Add a member `call` that takes an array as inputs and posts the message
-   that sends that array as the argument list to the background thread, thus
-   starting the computation.  Return a `Promise` object.
-   * In a `Promise`, one can call `sendTo` and provide a callback that
-     registers that callback as the handler for the completion of the
-     background task, receiving the computed results.  This method returns
-     the same `Promise`, for chaining.
-   * Also in the `Promise` one can call `orElse` and provide an
-     error-handling callback.
- * Extend `call` to take an array of arrays, and send them as an array of
-   argument lists to the background thread.  Further extend the `Promise`
-   class so that when it receives an array of results, it calls the
-   appropriate callback for each one.
-
-Return to the BackgroundComputation class, now improving it by means of the
-BackgroundFunction class.
- * The second implementation can be two-threaded, without any optimizations,
-   by doing the exact same thing as the single-threaded implementation,
-   except in one background thread. (But still waiting for each task to
-   complete before starting another one.)
- * The third implementation can be many-threaded, using $n-1$ threads, where
-   $n$ is the optimal number of concurrent threads for the client's
-   hardware.  The top $n-1$ items on the queue can be run in parallel.
- * The final implementation can add various optimizations to the previous
-   implementation.
-   * When starting a background computation, take several other waiting
-     computations with the same background function, and start all at once,
-     on the array of argument lists, so that only one message passing need
-     occur.
-   * When enqueueing a background computation, if another with the same
-     background function and argument list is already waiting to be run,
-     delete it.
-   * When enqueueing a background computation, if another with the same
-     background function and argument list is already running, terminate it
-     and delete it.
+Note also that there are some [known bugs and planned enhancements](
+bugs-and-enhancements.md) not listed in this file, because they are not part
+of the linear progression of the project.  They can be addressed whenever it
+becomes convenient or useful; this document lists things in a more-or-less
+required order of completion.
 
 ## Example Application
 
@@ -135,6 +27,33 @@ many-layered, and it would be good to have a thorough test at this level.
 
 For example, consider making a simple computation engine using
 [MathJS](http://mathjs.org/index.html).
+
+Here are the specific steps.
+ * Create a new file `app/simple-example.solo.litcoffee`.
+ * Move into that CoffeeScript file the `groupTypes` data that is at the end
+   of `app/setup.litcoffee` at the moment.  Have it assign that data
+   structure to a global variable `groupTypes`.
+ * Remove all the debugging functions and so forth from
+   `app/setup.litcoffee`.
+ * Verify that `index.html` supports actionless red ME bubbles only.
+ * Copy of `app/index.html` to `app/simple-example.html`.
+ * In that copy, import the compiled result of
+   `simple-example.solo.litcoffee`.
+ * Update `app/setup.litcoffee` so that it only uses the actionless red ME
+   bubbles if the global variable `groupTypes` is undefined; if it is
+   defined, then its data is used instead.
+ * Verify that `app/simple-example.html` supports the more advanced groups
+   features defined in `app/simple-example.solo.litcoffee`.  Feel free to
+   uncomment in that file the complex interactions, such as destructive
+   changes to bubble contents.
+ * Verify that the entire unit test suite passes, because the destructive
+   bubble-editing features are not imported into `app/index.html`, which is
+   what's used in the test suite.
+ * Copy `app/simple-example.*` to `app/math-example.*` and increase their
+   complexity accordingly, using something like MathJS, linked to above.
+ * Create a tutorial page in the repository (as a `.md` file) on how the
+   reader can create their own webLurch-based applications.  Link to it from
+   [the main README file](../README.md).
 
 ## Math
 

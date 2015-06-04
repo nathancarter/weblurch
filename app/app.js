@@ -44,9 +44,11 @@
       this.open = open;
       this.close = close;
       this.plugin = plugin;
+      this.toJSON = __bind(this.toJSON, this);
       this.contentsChanged = __bind(this.contentsChanged, this);
       this.outerRange = __bind(this.outerRange, this);
       this.innerRange = __bind(this.innerRange, this);
+      this.setContentAsText = __bind(this.setContentAsText, this);
       this.contentAsHTML = __bind(this.contentAsHTML, this);
       this.contentAsFragment = __bind(this.contentAsFragment, this);
       this.contentAsText = __bind(this.contentAsText, this);
@@ -106,34 +108,60 @@
     };
 
     Group.prototype.contentAsText = function() {
-      return this.innerRange().toString();
+      var _ref;
+      return (_ref = this.innerRange()) != null ? _ref.toString() : void 0;
     };
 
     Group.prototype.contentAsFragment = function() {
-      return this.innerRange().cloneContents();
+      var _ref;
+      return (_ref = this.innerRange()) != null ? _ref.cloneContents() : void 0;
     };
 
     Group.prototype.contentAsHTML = function() {
-      var tmp;
+      var fragment, tmp;
+      if (!(fragment = this.contentAsFragment())) {
+        return null;
+      }
       tmp = this.open.ownerDocument.createElement('div');
-      tmp.appendChild(this.contentAsFragment());
+      tmp.appendChild(fragment);
       return tmp.innerHTML;
     };
 
+    Group.prototype.setContentAsText = function(text) {
+      var inside, _ref, _ref1;
+      if (!(inside = this.innerRange())) {
+        return;
+      }
+      if ((_ref = this.plugin) != null) {
+        _ref.editor.selection.setRng(inside);
+      }
+      return (_ref1 = this.plugin) != null ? _ref1.editor.selection.setContent(text) : void 0;
+    };
+
     Group.prototype.innerRange = function() {
-      var range;
+      var e, range;
       range = this.open.ownerDocument.createRange();
-      range.setStartAfter(this.open);
-      range.setEndBefore(this.close);
-      return range;
+      try {
+        range.setStartAfter(this.open);
+        range.setEndBefore(this.close);
+        return range;
+      } catch (_error) {
+        e = _error;
+        return null;
+      }
     };
 
     Group.prototype.outerRange = function() {
-      var range;
+      var e, range;
       range = this.open.ownerDocument.createRange();
-      range.setStartBefore(this.open);
-      range.setEndAfter(this.close);
-      return range;
+      try {
+        range.setStartBefore(this.open);
+        range.setEndAfter(this.close);
+        return range;
+      } catch (_error) {
+        e = _error;
+        return null;
+      }
     };
 
     Group.prototype.contentsChanged = function(propagate, firstTime) {
@@ -152,6 +180,39 @@
       if (propagate) {
         return (_ref1 = this.parent) != null ? _ref1.contentsChanged(true) : void 0;
       }
+    };
+
+    Group.prototype.toJSON = function() {
+      var attr, child, data, _i, _len, _ref, _ref1, _ref2;
+      data = {};
+      _ref = this.open.attributes;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        attr = _ref[_i];
+        if (attr.nodeName.slice(0, 6) === 'data-' && attr.nodeName.slice(0, 10) !== 'data-mce-') {
+          try {
+            data[attr.nodeName] = JSON.parse(attr.nodeValue)[0];
+          } catch (_error) {}
+        }
+      }
+      return {
+        id: this.id(),
+        typeName: this.typeName(),
+        deleted: this.deleted,
+        text: this.contentAsText(),
+        html: this.contentAsHTML(),
+        parent: (_ref1 = (_ref2 = this.parent) != null ? _ref2.id() : void 0) != null ? _ref1 : null,
+        children: (function() {
+          var _j, _len1, _ref3, _ref4, _ref5, _results;
+          _ref4 = (_ref3 = this.children) != null ? _ref3 : [];
+          _results = [];
+          for (_j = 0, _len1 = _ref4.length; _j < _len1; _j++) {
+            child = _ref4[_j];
+            _results.push((_ref5 = child != null ? child.id() : void 0) != null ? _ref5 : null);
+          }
+          return _results;
+        }).call(this),
+        data: data
+      };
     };
 
     return Group;
@@ -373,7 +434,7 @@
     };
 
     Groups.prototype.scanDocument = function() {
-      var a, after, becameFree, before, child, count, deleted, gpStack, group, groupData, grouper, groupers, id, index, info, newGroup, usedIds, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1;
+      var a, after, becameFree, before, child, count, deleted, gpStack, group, groupData, grouper, groupers, id, index, info, newGroup, usedIds, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2;
       if (this.scanLocks > 0) {
         return;
       }
@@ -468,14 +529,17 @@
       for (_k = 0, _len2 = becameFree.length; _k < _len2; _k++) {
         id = becameFree[_k];
         deleted.push(this[id]);
+        if ((_ref1 = this[id]) != null) {
+          _ref1.deleted = true;
+        }
         delete this[id];
       }
       for (_l = 0, _len3 = deleted.length; _l < _len3; _l++) {
         group = deleted[_l];
         if (group != null) {
-          if ((_ref1 = group.type()) != null) {
-            if (typeof _ref1.deleted === "function") {
-              _ref1.deleted(group);
+          if ((_ref2 = group.type()) != null) {
+            if (typeof _ref2.deleted === "function") {
+              _ref2.deleted(group);
             }
           }
         }
@@ -483,9 +547,9 @@
       delete this.idsCache;
       return setTimeout((function(_this) {
         return function() {
-          var _ref2;
-          if ((_ref2 = _this.editor.Overlay) != null) {
-            _ref2.redrawContents();
+          var _ref3;
+          if ((_ref3 = _this.editor.Overlay) != null) {
+            _ref3.redrawContents();
           }
           return _this.updateButtonsAndMenuItems();
         };
@@ -1740,9 +1804,9 @@
             return "" + ((_ref = group.contentAsText()) != null ? _ref.length : void 0) + " characters";
           },
           contentsChanged: function(group, firstTime) {
-            if (firstTime) {
-              return console.log('Initialized this group:', group);
-            }
+            return Background.addTask('notify', [group], function(result) {
+              return console.log(result);
+            });
           },
           deleted: function(group) {
             return console.log('You deleted this group:', group);
@@ -1781,6 +1845,40 @@
         }
       ]
     });
+  });
+
+  Background.registerFunction('arith', function(group) {
+    var e, lhs, _ref, _ref1;
+    if (lhs = group != null ? (_ref = group.text) != null ? (_ref1 = _ref.split('=')) != null ? _ref1[0] : void 0 : void 0 : void 0) {
+      return ("" + lhs + "=") + (function() {
+        if (/^[0-9+*/ ()-]+$/.test(lhs)) {
+          try {
+            return eval(lhs);
+          } catch (_error) {
+            e = _error;
+            return '???';
+          }
+        } else {
+          return '???';
+        }
+      })();
+    } else {
+      return null;
+    }
+  });
+
+  Background.registerFunction('notify', function(group) {
+    return group != null ? group.text : void 0;
+  });
+
+  Background.registerFunction('count', function(group) {
+    var counter, endAt;
+    counter = 0;
+    endAt = (new Date).getTime() + 1000;
+    while ((new Date).getTime() < endAt) {
+      counter++;
+    }
+    return "from " + (endAt - 1000) + " to " + endAt + ", counted " + counter;
   });
 
   maybeSetupTestRecorder = function() {
