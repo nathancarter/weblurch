@@ -1694,12 +1694,42 @@
 
   setAppName('Lurch');
 
+  if (window.groupTypes == null) {
+    window.groupTypes = [
+      {
+        name: 'me',
+        text: 'Meaningful expression',
+        image: './images/red-bracket-icon.png',
+        tooltip: 'Make text a meaningful expression',
+        color: '#996666'
+      }
+    ];
+  }
+
+  if (window.menuBarIcon == null) {
+    window.menuBarIcon = {
+      src: 'icons/apple-touch-icon-76x76.png',
+      width: '26px',
+      height: '26px',
+      padding: '2px'
+    };
+  }
+
   $(function() {
-    var editor;
+    var editor, groupTypeNames, type;
     editor = document.createElement('textarea');
     editor.setAttribute('id', 'editor');
     document.body.appendChild(editor);
     maybeSetupTestRecorder();
+    groupTypeNames = (function() {
+      var _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = groupTypes.length; _i < _len; _i++) {
+        type = groupTypes[_i];
+        _results.push(type.name);
+      }
+      return _results;
+    })();
     return tinymce.init({
       selector: '#editor',
       auto_focus: 'editor',
@@ -1708,7 +1738,7 @@
       statusbar: false,
       plugins: 'advlist table charmap colorpicker image link importcss paste print save searchreplace textcolor fullscreen -loadsave -overlay -groups',
       object_resizing: ':not(img.grouper)',
-      toolbar: ['newfile openfile savefile managefiles | print | undo redo | cut copy paste | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent blockquote | table', 'fontselect styleselect | bold italic underline textcolor subscript superscript removeformat | link unlink | charmap image | spellchecker searchreplace | me'],
+      toolbar: ['newfile openfile savefile managefiles | print | undo redo | cut copy paste | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent blockquote | table', 'fontselect styleselect | bold italic underline textcolor subscript superscript removeformat | link unlink | charmap image | spellchecker searchreplace | ' + groupTypeNames.join(' ')],
       menu: {
         file: {
           title: 'File',
@@ -1740,6 +1770,7 @@
         }
       },
       contextmenu: 'link image inserttable | cell row column deletetable',
+      groupTypes: groupTypes,
       setup: function(editor) {
         editor.addMenuItem('about', {
           text: 'About...',
@@ -1756,7 +1787,7 @@
           }
         });
         return editor.on('init', function() {
-          var filemenu, icon;
+          var filemenu, icon, _ref;
           installDOMUtilitiesIn(editor.getWin());
           editor.getBody().style.fontSize = '16px';
           setTimeout(function() {
@@ -1779,106 +1810,23 @@
             }
             return _results;
           }, 0);
-          filemenu = (editor.getContainer().getElementsByClassName('mce-menubtn'))[0];
-          icon = document.createElement('img');
-          icon.setAttribute('src', 'icons/apple-touch-icon-76x76.png');
-          icon.style.width = icon.style.height = '26px';
-          icon.style.padding = '2px';
-          filemenu.insertBefore(icon, filemenu.childNodes[0]);
+          if (((_ref = window.menuBarIcon) != null ? _ref.src : void 0) != null) {
+            filemenu = (editor.getContainer().getElementsByClassName('mce-menubtn'))[0];
+            icon = document.createElement('img');
+            icon.setAttribute('src', window.menuBarIcon.src);
+            icon.style.width = window.menuBarIcon.width;
+            icon.style.height = window.menuBarIcon.height;
+            icon.style.padding = window.menuBarIcon.padding;
+            filemenu.insertBefore(icon, filemenu.childNodes[0]);
+          }
           return editor.getBody().addEventListener('focus', function() {
             if (editor.windowManager.getWindows().length !== 0) {
               return editor.windowManager.close();
             }
           });
         });
-      },
-      groupTypes: [
-        {
-          name: 'me',
-          text: 'Meaningful expression',
-          image: './images/red-bracket-icon.png',
-          tooltip: 'Make text a meaningful expression',
-          color: '#996666',
-          tagContents: function(group) {
-            var _ref;
-            return "" + ((_ref = group.contentAsText()) != null ? _ref.length : void 0) + " characters";
-          },
-          contentsChanged: function(group, firstTime) {
-            return Background.addTask('notify', [group], function(result) {
-              return console.log(result);
-            });
-          },
-          deleted: function(group) {
-            return console.log('You deleted this group:', group);
-          },
-          contextMenuItems: function(group) {
-            return [
-              {
-                text: group.contentAsText(),
-                onclick: function() {
-                  return alert('Example code for testing');
-                }
-              }
-            ];
-          },
-          tagMenuItems: function(group) {
-            return [
-              {
-                text: 'Compute',
-                onclick: function() {
-                  var e, text;
-                  text = group.contentAsText();
-                  if (!/^[0-9+*/ -]+$/.test(text)) {
-                    alert('Not a mathematical expression');
-                    return;
-                  }
-                  try {
-                    return alert("" + text + " evaluates to:\n" + (eval(text)));
-                  } catch (_error) {
-                    e = _error;
-                    return alert("Error in " + text + ":\n" + e);
-                  }
-                }
-              }
-            ];
-          }
-        }
-      ]
+      }
     });
-  });
-
-  Background.registerFunction('arith', function(group) {
-    var e, lhs, _ref, _ref1;
-    if (lhs = group != null ? (_ref = group.text) != null ? (_ref1 = _ref.split('=')) != null ? _ref1[0] : void 0 : void 0 : void 0) {
-      return ("" + lhs + "=") + (function() {
-        if (/^[0-9+*/ ()-]+$/.test(lhs)) {
-          try {
-            return eval(lhs);
-          } catch (_error) {
-            e = _error;
-            return '???';
-          }
-        } else {
-          return '???';
-        }
-      })();
-    } else {
-      return null;
-    }
-  });
-
-  Background.registerFunction('notify', function(group) {
-    return group != null ? group.text : void 0;
-  });
-
-  Background.registerFunction('count', function(group) {
-    var counter, endAt;
-    counter = 0;
-    endAt = (new Date).getTime() + 1000;
-    while ((new Date).getTime() < endAt) {
-      counter++;
-    }
-    return "from " + (endAt - 1000) + " to " + endAt + ", counted " + counter;
   });
 
   maybeSetupTestRecorder = function() {

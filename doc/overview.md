@@ -45,8 +45,10 @@ done).
  1. Guest rooms - Add a facility for easy background processing of document
     content.  This allows developers to extend the version with useless
     bubbles to a version in which the bubbles can be used for any of a wide
-    variety of results.  *This is in process.  Note that when it is
-    complete, it can be used in many projects, not just Lurch.*
+    variety of results.  *This is nearly complete.  It can be used in many
+    projects, not just Lurch.  See the
+    [simple example](../app/simple-example.solo.litcoffee) and
+    [complex example](../app/complex-example.solo.litcoffee) to see how.*
  1. Penthouse suite - Apply the previous layer to the specific needs of
     *Lurch*, adding dependencies, meaning, rules, etc.
     *This is not yet fully designed, but when it has been both designed and

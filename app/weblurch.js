@@ -285,8 +285,8 @@
     span.innerHTML = html;
     document.body.appendChild(span);
     span = $(span);
-    width = span.width();
-    height = span.height();
+    width = span.width() + 2;
+    height = span.height() + 2;
     span.remove();
     data = "<svg xmlns='http://www.w3.org/2000/svg' width='" + width + "' height='" + height + "'><foreignObject width='100%' height='100%'><div xmlns='http://www.w3.org/1999/xhtml' style='" + style + "'>" + html + "</div></foreignObject></svg>";
     svg = makeBlob(data, 'image/svg+xml;charset=utf-8');

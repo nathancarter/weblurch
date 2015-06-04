@@ -1,10 +1,37 @@
 
-# Add an editor to the app
+# App Setup Script
+
+## Specify app settings
 
 First, specify that the app's name is "Lurch," so that will be used when
 creating the title for this page (e.g., to show up in the tab in Chrome).
 
     setAppName 'Lurch'
+
+Second, we initialize a very simple default configuration for the Groups
+plugin.  It can be overridden by having any script assign to the global
+variable `groupTypes`, overwriting this data.  Such a change must be done
+before the page is fully loaded, when the `tinymce.init` call, below, takes
+place.
+
+    window.groupTypes ?= [
+        name : 'me'
+        text : 'Meaningful expression'
+        image : './images/red-bracket-icon.png'
+        tooltip : 'Make text a meaningful expression'
+        color : '#996666'
+    ]
+
+We also specify an icon to appear on the menu bar, at the very left.  This
+can be overridden, in the same way as `window.groupTypes`, above.
+
+    window.menuBarIcon ?=
+        src : 'icons/apple-touch-icon-76x76.png'
+        width : '26px'
+        height : '26px'
+        padding : '2px'
+
+## Add an editor to the app
 
 This file initializes a [TinyMCE](http://www.tinymce.com/) editor inside the
 [main app page](index.html).  It is designed to be used inside that page,
@@ -26,6 +53,11 @@ mode, then do so.  This uses the main function defined in
 unless the query string contains the code that invokes test-recording mode.
 
         maybeSetupTestRecorder()
+
+We need the list of group types names so that we can include them in the
+toolbar and menu initializations below.
+
+        groupTypeNames = ( type.name for type in groupTypes )
 
 Install a TinyMCE instance in that text area, with specific plugins, toolbar
 buttons, and context menu items as given below.
@@ -63,7 +95,8 @@ We then install two toolbars, with separators indicated by pipes (`|`).
                 'fontselect styleselect | bold italic underline
                     textcolor subscript superscript removeformat
                     | link unlink | charmap image
-                    | spellchecker searchreplace | me'
+                    | spellchecker searchreplace | ' + \
+                    groupTypeNames.join ' '
             ]
 
 We then customize the menus' contents as follows.
@@ -99,10 +132,15 @@ We then customize the menus' contents as follows.
                     title : 'Help'
                     items : 'about website'
 
-And, finally, we customize the context menu.
+Then we customize the context menu.
 
             contextmenu : 'link image inserttable
                 | cell row column deletetable'
+
+And finally, we include in the editor's initialization the data needed by
+the Groups plugin, so that it can find it when that plugin is initialized.
+
+            groupTypes : groupTypes
 
 Each editor created will have the following `setup` function called on it.
 In our case, there will be only one, but this is how TinyMCE installs setup
@@ -145,16 +183,17 @@ that seems like it ought to be handled for us by the fullScreen plugin).
                             h.style.height = 'auto'
                     , 0
 
-Add Lurch icon to the left of the File menu.
+Add an icon to the left of the File menu, if one has been specified.
 
-                    filemenu = ( editor.getContainer()
-                        .getElementsByClassName 'mce-menubtn' )[0]
-                    icon = document.createElement 'img'
-                    icon.setAttribute 'src',
-                        'icons/apple-touch-icon-76x76.png'
-                    icon.style.width = icon.style.height = '26px'
-                    icon.style.padding = '2px'
-                    filemenu.insertBefore icon, filemenu.childNodes[0]
+                    if window.menuBarIcon?.src?
+                        filemenu = ( editor.getContainer()
+                            .getElementsByClassName 'mce-menubtn' )[0]
+                        icon = document.createElement 'img'
+                        icon.setAttribute 'src', window.menuBarIcon.src
+                        icon.style.width = window.menuBarIcon.width
+                        icon.style.height = window.menuBarIcon.height
+                        icon.style.padding = window.menuBarIcon.padding
+                        filemenu.insertBefore icon, filemenu.childNodes[0]
 
 Workaround for [this bug](http://www.tinymce.com/develop/bugtracker_view.php?id=3162):
 
@@ -163,83 +202,5 @@ Workaround for [this bug](http://www.tinymce.com/develop/bugtracker_view.php?id=
                             editor.windowManager.close()
 
 After the initialization function above has been run, each plugin will be
-initialized.  The Groups plugin will look for the following data, so that it
-knows which group types to create.
-
-            groupTypes : [
-                name : 'me'
-                text : 'Meaningful expression'
-                image : './images/red-bracket-icon.png'
-                tooltip : 'Make text a meaningful expression'
-                color : '#996666'
-
-All of the following code is here only for testing the features it
-leverages.  Later we will actually make bubbles that have sensible
-behaviors, but for now we're just doing very simple things for testing
-purposes.
-
-                tagContents : ( group ) ->
-                    "#{group.contentAsText()?.length} characters"
-                # contentsChanged : ( group, firstTime ) ->
-                #     Background.addTask 'arith', [ group ], ( result ) ->
-                #         if group.deleted or not result? then return
-                #         text = group.contentAsText()
-                #         if result isnt text
-                #             lhs = text.split( '=' )[0]
-                #             before = group.plugin?.editor.selection.getRng()
-                #             textNode = group.open.nextSibling
-                #             if before.startContainer is textNode
-                #                 origPos = before.startOffset
-                #             group.setContentAsText result
-                #             if not textNode = group.open.nextSibling
-                #                 return
-                #             range = textNode.ownerDocument.createRange()
-                #             origPos ?= lhs.length
-                #             if origPos > textNode.textContent.length
-                #                 origPos = textNode.textContent.length
-                #             range.setStart textNode, origPos
-                #             range.setEnd textNode, origPos
-                #             group.plugin?.editor.selection.setRng range
-                contentsChanged : ( group, firstTime ) ->
-                    Background.addTask 'notify', [ group ], ( result ) ->
-                        console.log result
-                deleted : ( group ) ->
-                    console.log 'You deleted this group:', group
-                contextMenuItems : ( group ) ->
-                    [
-                        text : group.contentAsText()
-                        onclick : -> alert 'Example code for testing'
-                    ]
-                tagMenuItems : ( group ) ->
-                    [
-                        text : 'Compute'
-                        onclick : ->
-                            text = group.contentAsText()
-                            if not /^[0-9+*/ -]+$/.test text
-                                alert 'Not a mathematical expression'
-                                return
-                            try
-                                alert "#{text} evaluates to:\n#{eval text}"
-                            catch e
-                                alert "Error in #{text}:\n#{e}"
-                    ]
-            ]
-
-Here we register the background function used by the testing routine above
-in `contentsChanged`.  Again, this is just very simple and not very useful
-code, except for its value in testing the underlying structure of the app.
-
-    Background.registerFunction 'arith', ( group ) ->
-        if lhs = group?.text?.split( '=' )?[0]
-            "#{lhs}=" + if /^[0-9+*/ ()-]+$/.test lhs
-                try eval lhs catch e then '???'
-            else
-                '???'
-        else
-            null
-    Background.registerFunction 'notify', ( group ) -> group?.text
-    Background.registerFunction 'count', ( group ) ->
-        counter = 0
-        endAt = ( new Date ).getTime() + 1000
-        while ( new Date ).getTime() < endAt then counter++
-        "from #{endAt-1000} to #{endAt}, counted #{counter}"
+initialized.  The Groups plugin uses the following entry to know which group
+types to create.
