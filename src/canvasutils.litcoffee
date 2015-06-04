@@ -137,8 +137,8 @@ First, compute its dimensions using a temporary span in the document.
         span.innerHTML = html
         document.body.appendChild span
         span = $ span
-        width = span.width()
-        height = span.height()
+        width = span.width() + 2 # cushion for error
+        height = span.height() + 2
         span.remove()
 
 Next, create an SVG that contains the HTML as a foreign object.
