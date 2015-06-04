@@ -29,26 +29,6 @@ For example, consider making a simple computation engine using
 [MathJS](http://mathjs.org/index.html).
 
 Here are the specific steps.
- * Create a new file `app/simple-example.solo.litcoffee`.
- * Move into that CoffeeScript file the `groupTypes` data that is at the end
-   of `app/setup.litcoffee` at the moment.  Have it assign that data
-   structure to a global variable `groupTypes`.
- * Remove all the debugging functions and so forth from
-   `app/setup.litcoffee`.
- * Verify that `index.html` supports actionless red ME bubbles only.
- * Copy of `app/index.html` to `app/simple-example.html`.
- * In that copy, import the compiled result of
-   `simple-example.solo.litcoffee`.
- * Update `app/setup.litcoffee` so that it only uses the actionless red ME
-   bubbles if the global variable `groupTypes` is undefined; if it is
-   defined, then its data is used instead.
- * Verify that `app/simple-example.html` supports the more advanced groups
-   features defined in `app/simple-example.solo.litcoffee`.  Feel free to
-   uncomment in that file the complex interactions, such as destructive
-   changes to bubble contents.
- * Verify that the entire unit test suite passes, because the destructive
-   bubble-editing features are not imported into `app/index.html`, which is
-   what's used in the test suite.
  * Copy `app/simple-example.*` to `app/math-example.*` and increase their
    complexity accordingly, using something like MathJS, linked to above.
  * Create a tutorial page in the repository (as a `.md` file) on how the
