@@ -53,9 +53,6 @@ Other
 
  * Efficiency improvement:  When enqueueing a background computation, if
    another with the same background function and argument list is already
-   waiting to be run, delete it.
- * Efficiency improvement:  When enqueueing a background computation, if
-   another with the same background function and argument list is already
    running, terminate it and delete it.
  * Design and implement how this could be extended to support passing arrays
    of argument lists and receiving arrays of results, to minimize the

@@ -49,10 +49,31 @@ complexity.
         runningTasks : [ ]
         waitingTasks : [ ]
         addTask : ( funcName, inputGroups, callback ) ->
-            window.Background.waitingTasks.push
+            newTask =
                 name : funcName
                 inputs : inputGroups
                 callback : callback
+                id : "#{name} #{group.id() for group in inputGroups}"
+
+Before we add the function to the queue, we filter the current "waiting"
+queue so that any previous copy of this exact same computation (same
+function name and input group list) is removed.  (If there were such a one,
+it would mean that it had been enqueued before some change in the document,
+which necessitated recomputing the same values based on new data.  Thus we
+throw out the old computation and keep the new, later one, since it may sit
+chronologically among a list of waiting-to-run computations in a way in
+which order is important.)  We only need to seek one such copy, since we
+filter every time one is added, so there cannot be more than one.
+
+            for task, index in window.Background.waitingTasks
+                if task.id is newTask.id
+                    window.Background.waitingTasks.splice index, 1
+                    break
+
+Now we can enqueue the task and call `update()` to possibly begin processing
+it.
+
+            window.Background.waitingTasks.push newTask
             window.Background.update()
 
 The update function just mentioned will verify that as many tasks as
