@@ -34,6 +34,19 @@ I have implemented [jsfs](http://github.com/nathancarter/jsfs), a tool for
 storing files in the browser's LocalStorage as if it were a filesystem.
 This will be useful to import into Lurch.
 
+## Groups/Bubbles
+
+Groups are sections of the document that have been marked by the user as
+needing special treatment (e.g., a set of symbols that should be seen as an
+equation, or a paragraph that expresses a change in the application's
+settings).  In [the desktop version of Lurch](http://lurchmath.org), these
+were displayed as red, green, and blue bubbles in the user interface.
+
+This project contains
+[a TinyMCE plugin for Groups](../app/groupsplugin.litcoffee) that allows a
+programmer to customize what types of groups the user can add to his or her
+document, and how those groups behave.
+
 ## More to come
 
 To see detailed plans for how this project will proceed from its
