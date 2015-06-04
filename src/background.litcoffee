@@ -47,11 +47,8 @@ complexity.
 
         addTask : ( funcName, inputGroups, callback ) ->
             if ( func = window.Background.functions[funcName] )?
-                bgfunction = new BackgroundFunction ( groups ) ->
-                    for group in groups
-                        if group.deleted then return
-                    func groups...
-                bgfunction.call( inputGroups ).sendTo callback
+                ( new BackgroundFunction func ).call( inputGroups... ) \
+                    .sendTo( callback )
 
 ## `BackgroundFunction` class
 
@@ -62,22 +59,17 @@ Workers.
 
     BackgroundFunction = class
 
-The constructor just stores in the `@function` member the function that this
+The constructor stores in the `@function` member the function that this
 object is able to run in the background.
 
-        constructor : ( @function ) -> # no body needed
+        constructor : ( @function ) ->
 
-Background functions need to be callable.  Calling them returns a promise
-object into which we can install callbacks for when the result is computed,
-or when an error occurs.
-
-        call : =>
-
-The promise object, which will be returned, permits chaining.  Thus all of
-its method return the promise object itself.  There are only two methods,
-`sendTo`, for specifying the result callback, and `orElse`, for specifying
-the error callback.  Thus the use of this call function looks like
-`bgfunc.call( args... ).sendTo( resultHandler ).orElse( errorHandler )`.
+The promise object, which will be returned from the `call` member, permits
+chaining.  Thus all of its method return the promise object itself.  There
+are only two methods, `sendTo`, for specifying the result callback, and
+`orElse`, for specifying the error callback.  Thus the use of the call
+member looks like `bgfunc.call( args... ).sendTo( resultHandler ).orElse(
+errorHandler )`.
 
             @promise =
                 sendTo : ( callback ) =>
@@ -91,6 +83,43 @@ the error callback.  Thus the use of this call function looks like
                         @promise.errorCallback @promise.error
                     @promise
 
+If Web Workers are supported in the current environment, we create one for
+this background function.  Otherwise, we do not, and we will have to fall
+back on a much simpler technique later.
+
+            if window.Worker
+                @worker = new window.Worker 'worker.solo.js'
+                @worker.addEventListener 'message', ( event ) =>
+                    @promise.result = event.data
+                    @promise?.resultCallback? event.data
+                , no
+                @worker.addEventListener 'error', ( event ) =>
+                    @promise.error = event
+                    @promise?.errorCallback? event
+                , no
+                @worker.postMessage setFunction : "#{@function}"
+
+Background functions need to be callable.  Calling them returns the promise
+object defined in the constructor, into which we can install callbacks for
+when the result is computed, or when an error occurs.
+
+        call : ( args... ) =>
+
+First, clear out any old callbacks in the promise object from a previous
+call of this background function.
+
+            delete @promise.resultCallback
+            delete @promise.errorCallback
+
+Second, prepare all arguments (which must be Group objects) for use in the
+worker thread by serializing them.  If any of the groups on which we should
+run this function have been deleted since it was created, we quit and do
+nothing.
+
+            for group in arguments
+                if group.deleted then return
+            groups = ( group.toJSON() for group in args )
+
 Run the computation soon, but not now.  When it is run, store the result or
 error in the promise, and call the result or error handler, whichever is
 appropriate, assuming it has been defined by then.  If it hasn't been
@@ -98,16 +127,27 @@ defined at that time, the result/error will be stored and set to the result
 or error callback the moment one is registered, using one of the two
 functions defined above, in the promise object.
 
-            args = arguments
-            setTimeout =>
-                try
-                    @promise.result = @function args...
-                catch e
-                    @promise.error = e
-                    @promise.errorCallback? @promise.error
-                    return
-                @promise.resultCallback? @promise.result
-            , 0
+If Web Workers are supported, we use the one constructed in this object's
+constructor.  If not, we fall back on simply using a zero timer, the poor
+man's "background" processing.
+
+When Web Workers are used, we must first serialize each group passed to the
+web worker, because it cannot be passed as is, containing DOM objects.  So
+we do that in both cases, so that functions can be consistent, and not need
+to know whether they're running in a worker or not.
+
+            if @worker?
+                @worker.postMessage runOn : groups
+            else
+                setTimeout =>
+                    try
+                        @promise.result = @function groups...
+                    catch e
+                        @promise.error = e
+                        @promise.errorCallback? @promise.error
+                        return
+                    @promise.resultCallback? @promise.result
+                , 0
 
 Return the promise object, for chaining.
 

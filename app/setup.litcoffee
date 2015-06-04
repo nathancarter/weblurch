@@ -230,12 +230,11 @@ in `contentsChanged`.  Again, this is just very simple and not very useful
 code, except for its value in testing the underlying structure of the app.
 
     Background.registerFunction 'arith', ( group ) ->
-        if lhs = group?.contentAsText()?.split( '=' )?[0]
+        if lhs = group?.text?.split( '=' )?[0]
             "#{lhs}=" + if /^[0-9+*/ ()-]+$/.test lhs
                 try eval lhs catch e then '???'
             else
                 '???'
         else
             null
-    Background.registerFunction 'notify', ( group ) ->
-        group?.contentAsText()
+    Background.registerFunction 'notify', ( group ) -> group?.text

@@ -35,6 +35,7 @@ Load and save
 Other
 
  * Formats menu is currently empty
+ * Inserting a group sometimes still leaves the put_cursor_here span in it.
 
 ## Miscellaneous enhancements
 
@@ -50,29 +51,6 @@ Other
 
 ## Background processing
 
- * Enhance the constructor for BackgroundFunction so that, if
-   `window.Worker` is defined, then it constructs a worker that knows about
-   the function in question, as follows.  This, too, comes from the same
-   blog post.
-```
-( @worker = new Worker 'worker.solo.js' ).postMessage \
-    setFunction : "#{func}"
-worker.addEventListener 'message', ( event ) ->
-    @promise.sendTo? @promise.result = event.data
-, no
-worker.addEventListener 'error', ( event ) ->
-	@promise.orElse? @promise.error = event
-, no
-```
- * Enhance the `call` member of BackgroundFunction so that, if `@worker` is
-   defined, then rather than using the current implementation, it does this:
-```
-@promise = { }
-worker.postMessage runOn : arguments
-@promise
-```
- * Test to verify that this still works in all situations in which the old
-   version worked.
  * Efficiency improvement:  Do not throw away BackgroundFunction instances,
    but keep them associated with registered functions so that they can be
    re-used without being recreated from scratch.
