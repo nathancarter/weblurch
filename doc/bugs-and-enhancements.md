@@ -47,6 +47,15 @@ Miscellaneous
    package](../test/domutils-spec.litcoffee).  See the end of that file for
    the few missing tests.
 
+New members for the Group class that will be needed as we create more
+complex webLurch-based applications
+
+ * `saveCursorPosition()`, which returns a bookmark
+ * `restoreCursorPosition()`, which returns to a bookmark you provide
+ * `allContents()`, which returns an array of alternating strings and groups
+ * `indexInParent`, computed by `scanDocument()`
+ * `nextSibling` and `previousSibling`, also computed by `scanDocument()`
+
 Background processing efficiency
 
  * Design and implement how this could be extended to support passing arrays
