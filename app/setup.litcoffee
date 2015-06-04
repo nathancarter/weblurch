@@ -6,6 +6,20 @@ creating the title for this page (e.g., to show up in the tab in Chrome).
 
     setAppName 'Lurch'
 
+Second, we initialize a very simple default configuration for the Groups
+plugin.  It can be overridden by having any script assign to the global
+variable `groupTypes`, overwriting this data.  Such a change must be done
+before the page is fully loaded, when the `tinymce.init` call, below, takes
+place.
+
+    window.groupTypes ?= [
+        name : 'me'
+        text : 'Meaningful expression'
+        image : './images/red-bracket-icon.png'
+        tooltip : 'Make text a meaningful expression'
+        color : '#996666'
+    ]
+
 This file initializes a [TinyMCE](http://www.tinymce.com/) editor inside the
 [main app page](index.html).  It is designed to be used inside that page,
 where [jQuery](http://jquery.com/) has already been loaded, thus defining
@@ -26,6 +40,11 @@ mode, then do so.  This uses the main function defined in
 unless the query string contains the code that invokes test-recording mode.
 
         maybeSetupTestRecorder()
+
+We need the list of group types names so that we can include them in the
+toolbar and menu initializations below.
+
+        groupTypeNames = ( type.name for type in groupTypes )
 
 Install a TinyMCE instance in that text area, with specific plugins, toolbar
 buttons, and context menu items as given below.
@@ -63,7 +82,8 @@ We then install two toolbars, with separators indicated by pipes (`|`).
                 'fontselect styleselect | bold italic underline
                     textcolor subscript superscript removeformat
                     | link unlink | charmap image
-                    | spellchecker searchreplace | me'
+                    | spellchecker searchreplace | ' + \
+                    groupTypeNames.join ' '
             ]
 
 We then customize the menus' contents as follows.
@@ -99,10 +119,15 @@ We then customize the menus' contents as follows.
                     title : 'Help'
                     items : 'about website'
 
-And, finally, we customize the context menu.
+Then we customize the context menu.
 
             contextmenu : 'link image inserttable
                 | cell row column deletetable'
+
+And finally, we include in the editor's initialization the data needed by
+the Groups plugin, so that it can find it when that plugin is initialized.
+
+            groupTypes : groupTypes
 
 Each editor created will have the following `setup` function called on it.
 In our case, there will be only one, but this is how TinyMCE installs setup
@@ -163,15 +188,5 @@ Workaround for [this bug](http://www.tinymce.com/develop/bugtracker_view.php?id=
                             editor.windowManager.close()
 
 After the initialization function above has been run, each plugin will be
-initialized.  The Groups plugin will look for the following data, so that it
-knows which group types to create.  We provide here a very simple default,
-but it can be overridden by having any script assign to the global variable
-`groupTypes` before the page is fully loaded, and this script has run.
-
-            groupTypes : window.groupTypes ? [
-                name : 'me'
-                text : 'Meaningful expression'
-                image : './images/red-bracket-icon.png'
-                tooltip : 'Make text a meaningful expression'
-                color : '#996666'
-            ]
+initialized.  The Groups plugin uses the following entry to know which group
+types to create.

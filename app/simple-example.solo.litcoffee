@@ -13,86 +13,68 @@ applications could be built on the same foundation, not just proof-checking.
 This file shows how to make an extremely simple application of that type.
 Consider it the "hello world" of webLurch application development.
 
+This file is the more important of two files that make up the example
+application.  The other is [simple-example.html](simple-example.html), which
+is almost entirely boilerplate code (as commented in its source), plus one
+line that imports the compiled version of this file.
+
+You can [see a live version of the resulting application online now](
+http://nathancarter.github.io/weblurch/app/simple-example.html).
+
+## Specify the app name
+
+We make one global function call to change the app name, which appears in
+the browser's/tab's title bar.
+
+    setAppName 'ExampleApp'
+
 ## Define one group type
 
-After the initialization function above has been run, each plugin will be
-initialized.  The Groups plugin will look for the following data, so that it
-knows which group types to create.
+We assign to a global variable the array of group types we'd like to have in
+our word processor.  The setup routine for the webLurch application will
+look for this global variable, and if it exists, respect its settings.  If
+it does not exist, a very simple default setup is used instead.
+
+In this case, we will make the array have length one,
+as we are adding just one type.
 
     window.groupTypes = [
-        name : 'me'
-        text : 'Meaningful expression'
+        name : 'reporter'
+        text : 'Simple Event Reporter'
         image : './images/red-bracket-icon.png'
-        tooltip : 'Make text a meaningful expression'
-        color : '#996666'
 
-All of the following code is here only for testing the features it
-leverages.  Later we will actually make bubbles that have sensible
-behaviors, but for now we're just doing very simple things for testing
-purposes.
+The `tagContents` function is called on a group whenever that group is about
+to have its bubble drawn.  Thus this function should be extremely fast to
+compute, possibly even just reporting the results of previously executed
+(and stored) computations.
+
+In this case, we do a very simple example:  Just report how many characters
+are in the group.
 
         tagContents : ( group ) ->
             "#{group.contentAsText()?.length} characters"
-        # contentsChanged : ( group, firstTime ) ->
-        #     Background.addTask 'arith', [ group ], ( result ) ->
-        #         if group.deleted or not result? then return
-        #         text = group.contentAsText()
-        #         if result isnt text
-        #             lhs = text.split( '=' )[0]
-        #             before = group.plugin?.editor.selection.getRng()
-        #             textNode = group.open.nextSibling
-        #             if before.startContainer is textNode
-        #                 origPos = before.startOffset
-        #             group.setContentAsText result
-        #             if not textNode = group.open.nextSibling
-        #                 return
-        #             range = textNode.ownerDocument.createRange()
-        #             origPos ?= lhs.length
-        #             if origPos > textNode.textContent.length
-        #                 origPos = textNode.textContent.length
-        #             range.setStart textNode, origPos
-        #             range.setEnd textNode, origPos
-        #             group.plugin?.editor.selection.setRng range
+
+The `contentsChanged` function is called on a group whenever that group just
+had its contents changed.  The `firstTime` parameter is true when the group
+was just constructed, and false every time thereafter; if any particular
+initialization of a newly constructed group of this type needed to happen,
+it could check the `firstTime` parameter and behave accordingly.
+
         contentsChanged : ( group, firstTime ) ->
-            Background.addTask 'notify', [ group ], ( result ) ->
-                console.log result
+            console.log 'This group just changed:', group.contentAsText()
+
+The `deleted` function is called on a group immediately after it has been
+removed from the document (for example, by the user deleting one or both of
+its endpoints).  The group does not exist in the document at the time of
+this function call.  Any finalization that may need to be done could be
+placed in this function.  Because it is run in the UI thread, it, too, must
+be very short.
+
         deleted : ( group ) ->
             console.log 'You deleted this group:', group
-        contextMenuItems : ( group ) ->
-            [
-                text : group.contentAsText()
-                onclick : -> alert 'Example code for testing'
-            ]
-        tagMenuItems : ( group ) ->
-            [
-                text : 'Compute'
-                onclick : ->
-                    text = group.contentAsText()
-                    if not /^[0-9+*/ -]+$/.test text
-                        alert 'Not a mathematical expression'
-                        return
-                    try
-                        alert "#{text} evaluates to:\n#{eval text}"
-                    catch e
-                        alert "Error in #{text}:\n#{e}"
-            ]
     ]
 
-Here we register the background function used by the testing routine above
-in `contentsChanged`.  Again, this is just very simple and not very useful
-code, except for its value in testing the underlying structure of the app.
-
-    Background.registerFunction 'arith', ( group ) ->
-        if lhs = group?.text?.split( '=' )?[0]
-            "#{lhs}=" + if /^[0-9+*/ ()-]+$/.test lhs
-                try eval lhs catch e then '???'
-            else
-                '???'
-        else
-            null
-    Background.registerFunction 'notify', ( group ) -> group?.text
-    Background.registerFunction 'count', ( group ) ->
-        counter = 0
-        endAt = ( new Date ).getTime() + 1000
-        while ( new Date ).getTime() < endAt then counter++
-        "from #{endAt-1000} to #{endAt}, counted #{counter}"
+Functions that need to do lengthy computations can run them in the
+background.  webLurch has a built-in mechanism to make this easy.  To see
+how to use it, see
+[the more complex example application](complex-example.solo.litcoffee).
