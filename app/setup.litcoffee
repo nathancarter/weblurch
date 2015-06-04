@@ -1,5 +1,7 @@
 
-# Add an editor to the app
+# App Setup Script
+
+## Specify app settings
 
 First, specify that the app's name is "Lurch," so that will be used when
 creating the title for this page (e.g., to show up in the tab in Chrome).
@@ -19,6 +21,17 @@ place.
         tooltip : 'Make text a meaningful expression'
         color : '#996666'
     ]
+
+We also specify an icon to appear on the menu bar, at the very left.  This
+can be overridden, in the same way as `window.groupTypes`, above.
+
+    window.menuBarIcon ?=
+        src : 'icons/apple-touch-icon-76x76.png'
+        width : '26px'
+        height : '26px'
+        padding : '2px'
+
+## Add an editor to the app
 
 This file initializes a [TinyMCE](http://www.tinymce.com/) editor inside the
 [main app page](index.html).  It is designed to be used inside that page,
@@ -170,16 +183,17 @@ that seems like it ought to be handled for us by the fullScreen plugin).
                             h.style.height = 'auto'
                     , 0
 
-Add Lurch icon to the left of the File menu.
+Add an icon to the left of the File menu, if one has been specified.
 
-                    filemenu = ( editor.getContainer()
-                        .getElementsByClassName 'mce-menubtn' )[0]
-                    icon = document.createElement 'img'
-                    icon.setAttribute 'src',
-                        'icons/apple-touch-icon-76x76.png'
-                    icon.style.width = icon.style.height = '26px'
-                    icon.style.padding = '2px'
-                    filemenu.insertBefore icon, filemenu.childNodes[0]
+                    if window.menuBarIcon?.src?
+                        filemenu = ( editor.getContainer()
+                            .getElementsByClassName 'mce-menubtn' )[0]
+                        icon = document.createElement 'img'
+                        icon.setAttribute 'src', window.menuBarIcon.src
+                        icon.style.width = window.menuBarIcon.width
+                        icon.style.height = window.menuBarIcon.height
+                        icon.style.padding = window.menuBarIcon.padding
+                        filemenu.insertBefore icon, filemenu.childNodes[0]
 
 Workaround for [this bug](http://www.tinymce.com/develop/bugtracker_view.php?id=3162):
 

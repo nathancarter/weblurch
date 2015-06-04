@@ -9,6 +9,7 @@ application is just a few steps more complex.  There is yet another example
 of a more complex and robust webLurch application coming soon.
 
     setAppName 'ComplexApp'
+    window.menuBarIcon = { }
 
 [See a live version of this application online here.](
 http://nathancarter.github.io/weblurch/app/simple-example.html)

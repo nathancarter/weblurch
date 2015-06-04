@@ -28,6 +28,10 @@ the browser's/tab's title bar.
 
     setAppName 'ExampleApp'
 
+Clear out the default Lurch icon that appears to the left of the File menu.
+
+    window.menuBarIcon = { }
+
 ## Define one group type
 
 We assign to a global variable the array of group types we'd like to have in
