@@ -116,7 +116,12 @@ all `.solo.litcoffee` files in the src and app folders.
                     build.runShellCommands ( for result in toMove
                         description : "Moving #{result} into app/..."
                         command : "mv #{result} app/"
-                    ), buildNext
+                    ), ->
+                        build.runShellCommands [
+                            description : "Copying src/#{prefix}litcoffee
+                                into app/..."
+                            command : "cp src/#{prefix}litcoffee app/"
+                        ], buildNext
             else
                 done()
 
