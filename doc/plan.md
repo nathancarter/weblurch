@@ -51,18 +51,12 @@ Other
 
 ## Background processing
 
- * Efficiency improvement:  Do not throw away BackgroundFunction instances,
-   but keep them associated with registered functions so that they can be
-   re-used without being recreated from scratch.
- * Enhance this implementation so that it runs
-   `navigator.getHardwareConcurrency()` immediately upon page load, then
-   knows the number of threads to use as
-   `Math.min 2, navigator.hardwareConcurrency ? 1`.  The queue should always
-   be running that many concurrent threads (minus 1, for the UI thread) at a
-   time, if there are enough available to run.  This will require storing
-   (usually) more than one BackgroundFunction instance for each registered
-   function, so that if the function is on the queue several times with
-   several different arguments, they can all be running in parallel.
+ * Enhance the background processing queue to always be running the maximum
+   number of concurrent threads at a time (if there are enough available to
+   run) but no more.  This will require storing (usually) more than one
+   BackgroundFunction instance for each registered function, so that if the
+   function is on the queue several times with several different arguments,
+   they can all be running in parallel.
  * Efficiency improvement:  When enqueueing a background computation, if
    another with the same background function and argument list is already
    waiting to be run, delete it.
@@ -112,6 +106,9 @@ Here are the specific steps.
    what's used in the test suite.
  * Copy `app/simple-example.*` to `app/math-example.*` and increase their
    complexity accordingly, using something like MathJS, linked to above.
+ * Create a tutorial page in the repository (as a `.md` file) on how the
+   reader can create their own webLurch-based applications.  Link to it from
+   [the main README file](../README.md).
 
 ## Math
 

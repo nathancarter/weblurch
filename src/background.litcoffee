@@ -50,6 +50,26 @@ complexity.
                 ( new BackgroundFunction func ).call( inputGroups... ) \
                     .sendTo( callback )
 
+Because the Background object will be used to run tasks in the background,
+it will need to know how many concurrent tasks it should attempt to run.
+The answer is one per available core on the client's machine.  The client's
+machine will have some number, n, of cores, one of which will be for the UI.
+Thus n-1 will be available for background tasks.  We need to know n.  The
+following function (defined in
+[this polyfill](https://github.com/oftn/core-estimator), which this project
+imports) computes that value for later use.
+
+    navigator.getHardwareConcurrency -> # no body
+
+We then write the following function to compute the number of background
+tasks we should attempt to run concurrently.  It returns n-1, as described
+above.  It rounds that value up to 1, however, in the event that the machine
+has only 1 core.  Also, if the number of cores could not be (or has not yet
+been) computed, it returns 1.
+
+    window.Background.concurrency = ->
+        Math.max 1, ( navigator.hardwareConcurrency ? 1 ) - 1
+
 ## `BackgroundFunction` class
 
 We define the following class for encapsulating functions that are ready to
