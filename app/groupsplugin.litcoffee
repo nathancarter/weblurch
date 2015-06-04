@@ -159,7 +159,7 @@ an HTML `DocumentFragment` object, or as an HTML string.
         contentAsText: => @innerRange()?.toString()
         contentAsFragment: => @innerRange()?.cloneContents()
         contentAsHTML: =>
-            if not fragment = @contentAsFragment then return null
+            if not fragment = @contentAsFragment() then return null
             tmp = @open.ownerDocument.createElement 'div'
             tmp.appendChild fragment
             tmp.innerHTML
@@ -209,6 +209,26 @@ constructor.
         contentsChanged: ( propagate = yes, firstTime = no ) =>
             @type()?.contentsChanged? this, firstTime
             if propagate then @parent?.contentsChanged yes
+
+The following serialization routine is useful for sending groups to a Web
+Worker for background processing.
+
+        toJSON: =>
+            data = { }
+            for attr in @open.attributes
+                if attr.nodeName[..5] is 'data-' and \
+                   attr.nodeName[..9] isnt 'data-mce-'
+                    try
+                        data[attr.nodeName] =
+                            JSON.parse( attr.nodeValue )[0]
+            id : @id()
+            typeName : @typeName()
+            deleted : @deleted
+            text : @contentAsText()
+            html : @contentAsHTML()
+            parent : @parent?.id() ? null
+            children : ( child?.id() ? null for child in @children ? [ ] )
+            data : data
 
 The `Group` class should be accessible globally.
 
