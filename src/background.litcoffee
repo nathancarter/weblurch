@@ -53,7 +53,7 @@ complexity.
                 name : funcName
                 inputs : inputGroups
                 callback : callback
-                id : "#{name} #{group.id() for group in inputGroups}"
+                id : "#{funcName},#{group.id() for group in inputGroups}"
 
 Before we add the function to the queue, we filter the current "waiting"
 queue so that any previous copy of this exact same computation (same
@@ -70,6 +70,15 @@ filter every time one is added, so there cannot be more than one.
                     window.Background.waitingTasks.splice index, 1
                     break
 
+Then repeat the same procedure with the currently running tasks, except also
+call `terminate()` in the running task before deleting it.
+
+            for task, index in window.Background.runningTasks
+                if task.id is newTask.id
+                    task.runner?.worker?.terminate?()
+                    window.Background.runningTasks.splice index, 1
+                    break
+
 Now we can enqueue the task and call `update()` to possibly begin processing
 it.
 
@@ -84,8 +93,7 @@ implemented here.
         available : { }
         update : ->
             B = window.Background
-            ideal = B.concurrency()
-            while B.runningTasks.length < ideal
+            while B.runningTasks.length < B.concurrency()
                 if not ( toStart = B.waitingTasks.shift() )? then return
 
 If we have a `BackgroundFunction` object that's not running, and is of the
@@ -98,6 +106,7 @@ appropriate `BackgroundFunction` instance.
                     func = B.functions[toStart.name]
                     if not func? then continue
                     runner = new BackgroundFunction func
+                toStart.runner = runner
                 B.runningTasks.push toStart
 
 From here onward, we will be creating some callbacks, and thus need to
