@@ -51,12 +51,6 @@ Other
 
 ## Background processing
 
- * Enhance the background processing queue to always be running the maximum
-   number of concurrent threads at a time (if there are enough available to
-   run) but no more.  This will require storing (usually) more than one
-   BackgroundFunction instance for each registered function, so that if the
-   function is on the queue several times with several different arguments,
-   they can all be running in parallel.
  * Efficiency improvement:  When enqueueing a background computation, if
    another with the same background function and argument list is already
    waiting to be run, delete it.

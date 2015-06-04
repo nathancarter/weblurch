@@ -202,7 +202,7 @@ purposes.
                 #             group.plugin?.editor.selection.setRng range
                 contentsChanged : ( group, firstTime ) ->
                     Background.addTask 'notify', [ group ], ( result ) ->
-                        console.log 'This group has been updated:', result
+                        console.log result
                 deleted : ( group ) ->
                     console.log 'You deleted this group:', group
                 contextMenuItems : ( group ) ->
@@ -238,3 +238,8 @@ code, except for its value in testing the underlying structure of the app.
         else
             null
     Background.registerFunction 'notify', ( group ) -> group?.text
+    Background.registerFunction 'count', ( group ) ->
+        counter = 0
+        endAt = ( new Date ).getTime() + 1000
+        while ( new Date ).getTime() < endAt then counter++
+        "from #{endAt-1000} to #{endAt}, counted #{counter}"

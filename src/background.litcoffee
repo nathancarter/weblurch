@@ -23,8 +23,9 @@ used in the background.  Code cannot be run in the backgorund unless it has
 first been added to this global library of background-runnable functions,
 using this very API.
 
+        functions : { }
         registerFunction : ( name, func ) ->
-            ( window.Background.functions ?= { } )[name] = func
+            window.Background.functions[name] = func
 
 The first public API this global object provides is the `addTask` function,
 which lets you add a task to the background processing queue, to be handled
@@ -45,10 +46,68 @@ UI thread, and thus must be lightweight.  The function whose name is
 `funcName` will be run in the background, and thus can have arbitrary
 complexity.
 
+        runningTasks : [ ]
+        waitingTasks : [ ]
         addTask : ( funcName, inputGroups, callback ) ->
-            if ( func = window.Background.functions[funcName] )?
-                ( new BackgroundFunction func ).call( inputGroups... ) \
-                    .sendTo( callback )
+            window.Background.waitingTasks.push
+                name : funcName
+                inputs : inputGroups
+                callback : callback
+            window.Background.update()
+
+The update function just mentioned will verify that as many tasks as
+possible are running concurrently.  That number will be determined by [the
+code below](#ideal-amount-of-concurrency).  The update function, however, is
+implemented here.
+
+        available : { }
+        update : ->
+            B = window.Background
+            ideal = B.concurrency()
+            while B.runningTasks.length < ideal
+                if not ( toStart = B.waitingTasks.shift() )? then return
+
+If we have a `BackgroundFunction` object that's not running, and is of the
+appropriate type, let's re-use it.  Otherwise, we must create a new one.
+Either way, add it to the running tasks list if we were able to create an
+appropriate `BackgroundFunction` instance.
+
+                runner = B.available[toStart.name]?.pop()
+                if not runner?
+                    func = B.functions[toStart.name]
+                    if not func? then continue
+                    runner = new BackgroundFunction func
+                B.runningTasks.push toStart
+
+From here onward, we will be creating some callbacks, and thus need to
+protect the variable `toStart` from changes in later loop iterations.
+
+                do ( toStart ) ->
+
+When the task completes, we will want to remove it from the list of running
+tasks and place `runner` on the `available` list for reuse.  Then we should
+make another call to this very update function, in case the end of this task
+makes possible the start of another task, within the limits of ideal
+concurrency.
+
+We define this cleanup function to do all that, so we can use
+it in two cases below.
+
+                    cleanup = ->
+                        index = B.runningTasks.indexOf toStart
+                        B.runningTasks.splice index, 1
+                        ( B.available[toStart.name] ?= [ ] ).push runner
+                        window.Background.update()
+
+Start the background process.  Call `cleanup` whether the task succeeds or
+has an error, but only call the callback if it succeeds.
+
+                    runner.call( toStart.inputs... ).sendTo ( result ) ->
+                        cleanup()
+                        toStart.callback? result
+                    .orElse cleanup
+
+## Ideal amount of concurrency
 
 Because the Background object will be used to run tasks in the background,
 it will need to know how many concurrent tasks it should attempt to run.
@@ -125,10 +184,12 @@ when the result is computed, or when an error occurs.
 
         call : ( args... ) =>
 
-First, clear out any old callbacks in the promise object from a previous
-call of this background function.
+First, clear out any old data in the promise object from a previous call of
+this background function.
 
+            delete @promise.result
             delete @promise.resultCallback
+            delete @promise.error
             delete @promise.errorCallback
 
 Second, prepare all arguments (which must be Group objects) for use in the
