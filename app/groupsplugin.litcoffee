@@ -326,10 +326,14 @@ illegal characters have been removed.
 Re-registering the same name with a new data object will overwrite the old
 data object with the new one.  Data objects may have the following key-value
 pairs.
- * key: `open-img`, value: a string pointing to the image file to use when
+ * key: `openImage`, value: a string pointing to the image file to use when
    the open grouper is visible, defaults to `'images/red-bracket-open.png'`
- * key: `close-img`, complement to the previous, defaults to
+ * If instead you provide the `openImageHTML` tag, an image will be created
+   for you by rendering the HTML you provide, and you need not provide an
+   `openImage` key-value pair.
+ * key: `closeImage`, complement to the previous, defaults to
    `'images/red-bracket-close.png'`
+ * Similarly, `closeImageHTML` functions like `openImageHTML`.
  * any key-value pairs useful for placing the group into a menu or toolbar,
    such as the keys `text`, `context`, `tooltip`, `shortcut`, `image`,
    and/or `icon`
@@ -345,6 +349,25 @@ routine needs, and they will be passed along directly.
             @groupTypes[name] = data
             if data.hasOwnProperty 'text'
                 plugin = this
+                style = ->
+                    result = [ ]
+                    for own key, value of window.defaultEditorStyles
+                        newkey = ''
+                        for letter in key
+                            if letter.toUpperCase() is letter
+                                newkey += '-' + letter.toLowerCase()
+                            else
+                                newkey += letter
+                        result.push "#{newkey}:#{value};"
+                    result.join ' '
+                if data.imageHTML?
+                    data.image = imageURLForHTML data.imageHTML, style()
+                if data.openImageHTML?
+                    data.openImage = imageURLForHTML data.openImageHTML,
+                        style()
+                if data.closeImageHTML?
+                    data.closeImage = imageURLForHTML data.closeImageHTML,
+                        style()
                 menuData =
                     text : data.text
                     context : data.context ? 'Insert'
@@ -408,9 +431,9 @@ and the current contents of the cursor selection.
 
             id = @nextFreeId()
             open = grouperHTML type, 'open', id, hide,
-                @groupTypes[type]['open-img']
+                @groupTypes[type].openImage
             close = grouperHTML type, 'close', id, hide,
-                @groupTypes[type]['close-img']
+                @groupTypes[type].closeImage
 
 Wrap the current cursor selection in open/close groupers, with the cursor
 placeholder after the old selection.

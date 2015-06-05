@@ -31,6 +31,12 @@ can be overridden, in the same way as `window.groupTypes`, above.
         height : '26px'
         padding : '2px'
 
+We also provide a set of styles to be added to the editor by default.
+Clients can also override this object if they wish different styles.
+
+    window.defaultEditorStyles ?=
+        fontSize : '16px'
+
 ## Add an editor to the app
 
 This file initializes a [TinyMCE](http://www.tinymce.com/) editor inside the
@@ -169,7 +175,8 @@ that seems like it ought to be handled for us by the fullScreen plugin).
 
                 editor.on 'init', ->
                     installDOMUtilitiesIn editor.getWin()
-                    editor.getBody().style.fontSize = '16px'
+                    for own key, value of window.defaultEditorStyles
+                        editor.getBody().style[key] = value
                     setTimeout ->
                         editor.execCommand 'mceFullScreen'
                         walk = editor.iframeElement
