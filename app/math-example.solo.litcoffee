@@ -10,6 +10,10 @@ This application is more useful than either of those.
 
     setAppName 'MathApp'
     window.menuBarIcon = { }
+    window.helpAboutText =
+        'See the fully documented source code for this demo app at the
+        following URL:\n
+        \nhttps://github.com/nathancarter/weblurch/blob/master/app/math-example.solo.litcoffee'
 
 [See a live version of this application online here.](
 http://nathancarter.github.io/weblurch/app/math-example.html)

@@ -10,6 +10,10 @@ of a more complex and robust webLurch application coming soon.
 
     setAppName 'ComplexApp'
     window.menuBarIcon = { }
+    window.helpAboutText =
+        'See the fully documented source code for this demo app at the
+        following URL:\n
+        \nhttps://github.com/nathancarter/weblurch/blob/master/app/complex-example.solo.litcoffee'
 
 [See a live version of this application online here.](
 http://nathancarter.github.io/weblurch/app/complex-example.html)

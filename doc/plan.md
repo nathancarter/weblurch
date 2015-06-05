@@ -17,23 +17,7 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Example Application
-
-Create some non-Lurch application that uses the above technology, as a way
-to verify that it's behaving the way you expect.  That test application
-could become part of the test suite.  After all, the technology that exists
-to this point (groups and the background processing thereof) is complex and
-many-layered, and it would be good to have a thorough test at this level.
-
-For example, consider making a simple computation engine using
-[MathJS](http://mathjs.org/index.html).
-
-Here are the specific steps.
- * Create a tutorial page in the repository (as a `.md` file) on how the
-   reader can create their own webLurch-based applications.  Link to it from
-   [the main README file](../README.md).
-
-## Math
+## Typeset Mathematics
 
 Before proceeding with this section, do review what's already been done in
 this space, including

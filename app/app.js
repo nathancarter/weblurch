@@ -1750,6 +1750,10 @@
     };
   }
 
+  if (window.helpAboutText == null) {
+    window.helpAboutText = 'webLurch\n\nalpha\n\nnot yet intended for non-developer use';
+  }
+
   $(function() {
     var editor, groupTypeNames, type;
     editor = document.createElement('textarea');
@@ -1811,7 +1815,7 @@
           text: 'About...',
           context: 'help',
           onclick: function() {
-            return alert('webLurch\n\npre-alpha, not yet intended for general consumption!');
+            return alert(window.helpAboutText);
           }
         });
         editor.addMenuItem('website', {

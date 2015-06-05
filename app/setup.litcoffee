@@ -12,7 +12,10 @@ Second, we initialize a very simple default configuration for the Groups
 plugin.  It can be overridden by having any script assign to the global
 variable `groupTypes`, overwriting this data.  Such a change must be done
 before the page is fully loaded, when the `tinymce.init` call, below, takes
-place.
+place.  For examples of how to do this, see
+[the simple example app](simple-example.solo.litcoffee),
+[the complex example app](complex-example.solo.litcoffee), and
+[the mathematical example app](math-example.solo.litcoffee).
 
     window.groupTypes ?= [
         name : 'me'
@@ -23,7 +26,8 @@ place.
     ]
 
 We also specify an icon to appear on the menu bar, at the very left.  This
-can be overridden, in the same way as `window.groupTypes`, above.
+can be overridden, in the same way as `window.groupTypes`, above.  (See the
+same examples apps for specific code.)
 
     window.menuBarIcon ?=
         src : 'icons/apple-touch-icon-76x76.png'
@@ -32,10 +36,18 @@ can be overridden, in the same way as `window.groupTypes`, above.
         padding : '2px'
 
 We also provide a set of styles to be added to the editor by default.
-Clients can also override this object if they wish different styles.
+Clients can also override this object if they wish different styles.  (See
+the same examples apps for specific code.)
 
     window.defaultEditorStyles ?=
         fontSize : '16px'
+
+We can also provide the text for the Help/About menu item by overriding the
+following in a separate configuration file.  (See the same examples apps for
+specific code.)
+
+    window.helpAboutText ?=
+        'webLurch\n\nalpha\n\nnot yet intended for non-developer use'
 
 ## Add an editor to the app
 
@@ -159,8 +171,7 @@ Add a Help menu.
                 editor.addMenuItem 'about',
                     text : 'About...'
                     context : 'help'
-                    onclick : -> alert 'webLurch\n\npre-alpha,
-                        not yet intended for general consumption!'
+                    onclick : -> alert window.helpAboutText
                 editor.addMenuItem 'website',
                     text : 'Lurch website'
                     context : 'help'

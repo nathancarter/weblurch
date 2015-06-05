@@ -36,6 +36,13 @@ Clear out the default Lurch icon that appears to the left of the File menu.
 
     window.menuBarIcon = { }
 
+We also change the Help/About menu item to be specific to this demo app.
+
+    window.helpAboutText =
+        'See the fully documented source code for this demo app at the
+        following URL:\n
+        \nhttps://github.com/nathancarter/weblurch/blob/master/app/simple-example.solo.litcoffee'
+
 ## Define one group type
 
 We assign to a global variable the array of group types we'd like to have in
