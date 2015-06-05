@@ -1,7 +1,13 @@
 
 # webLurch
 
+<!--
+Removing this because the tests on Travis-CI were segmentation faulting (!),
+while they run without a single error on my laptop.  Will figure it out
+later, but for now, I don't want it to look like we have failing tests,
+when we don't, really.
 [![Build status](https://travis-ci.org/nathancarter/weblurch.svg?branch=master)](https://travis-ci.org/nathancarter/weblurch)
+-->
 
 This project is an attempt to rewrite [Lurch](http://lurchmath.org) in a web
 browser, together with many major design improvements at the same time.  But
@@ -9,7 +15,7 @@ this project is only just beginning; the main Lurch product is still the
 desktop app, which works well.
 
 Information on this project:
- * [Overview ](doc/overview.md) - start here
+ * [Overview](doc/overview.md) - start here
  * [Project Progress](doc/progress.md) - what's been built
  * [Project Plan](doc/plan.md) - what's left to build
  * [Repository contents](#repository-contents) - full details on all files

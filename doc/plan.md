@@ -29,8 +29,6 @@ For example, consider making a simple computation engine using
 [MathJS](http://mathjs.org/index.html).
 
 Here are the specific steps.
- * Copy `app/simple-example.*` to `app/math-example.*` and increase their
-   complexity accordingly, using something like MathJS, linked to above.
  * Create a tutorial page in the repository (as a `.md` file) on how the
    reader can create their own webLurch-based applications.  Link to it from
    [the main README file](../README.md).

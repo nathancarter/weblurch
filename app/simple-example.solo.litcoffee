@@ -21,6 +21,10 @@ line that imports the compiled version of this file.
 You can [see a live version of the resulting application online now](
 http://nathancarter.github.io/weblurch/app/simple-example.html).
 
+After you've gained what you can from this example app, you might consider
+reading [the complex example app](complex-example.solo.litcoffee), and then
+[the (real) math app](math-example.solo.litcoffee).
+
 ## Specify the app name
 
 We make one global function call to change the app name, which appears in
