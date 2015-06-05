@@ -229,6 +229,44 @@
     return !(x3 >= x2 || x4 <= x1 || y3 >= y2 || y4 <= y1);
   };
 
+  window.imageURLForHTML = function(html, style) {
+    var data, height, span, width, _ref, _ref1;
+    if (style == null) {
+      style = 'font-size:12px';
+    }
+    span = document.createElement('span');
+    span.setAttribute('style', style);
+    span.innerHTML = html;
+    document.body.appendChild(span);
+    span = $(span);
+    width = span.width() + 2;
+    height = span.height() + 2;
+    span.remove();
+    data = "<svg xmlns='http://www.w3.org/2000/svg' width='" + width + "' height='" + height + "'><foreignObject width='100%' height='100%'><div xmlns='http://www.w3.org/1999/xhtml' style='" + style + "'>" + html + "</div></foreignObject></svg>";
+    return ((_ref = (_ref1 = window.URL) != null ? _ref1 : window.webkitURL) != null ? _ref : window).createObjectURL(makeBlob(data, 'image/svg+xml;charset=utf-8'));
+  };
+
+  makeBlob = function(data, type) {
+    var bb, e, _ref, _ref1, _ref2;
+    try {
+      return new Blob([data], {
+        type: type
+      });
+    } catch (_error) {
+      e = _error;
+      window.BlobBuilder = (_ref = (_ref1 = (_ref2 = window.BlobBuilder) != null ? _ref2 : window.WebKitBlobBuilder) != null ? _ref1 : window.MozBlobBuilder) != null ? _ref : window.MSBlobBuilder;
+      if (e.name === 'TypeError' && (window.BlobBuilder != null)) {
+        bb = new BlobBuilder();
+        bb.append(data.buffer);
+        return bb.getBlob(type);
+      } else if (e.name === 'InvalidStateError') {
+        return new Blob([data.buffer], {
+          type: type
+        });
+      }
+    }
+  };
+
   drawHTMLCache = {
     order: [],
     maxSize: 100
@@ -271,7 +309,7 @@
   };
 
   CanvasRenderingContext2D.prototype.drawHTML = function(html, x, y, style) {
-    var data, height, image, span, svg, url, width, _ref, _ref1;
+    var image, url;
     if (style == null) {
       style = 'font-size:12px';
     }
@@ -280,22 +318,12 @@
       markUsed(html, style);
       return true;
     }
-    span = document.createElement('span');
-    span.setAttribute('style', style);
-    span.innerHTML = html;
-    document.body.appendChild(span);
-    span = $(span);
-    width = span.width() + 2;
-    height = span.height() + 2;
-    span.remove();
-    data = "<svg xmlns='http://www.w3.org/2000/svg' width='" + width + "' height='" + height + "'><foreignObject width='100%' height='100%'><div xmlns='http://www.w3.org/1999/xhtml' style='" + style + "'>" + html + "</div></foreignObject></svg>";
-    svg = makeBlob(data, 'image/svg+xml;charset=utf-8');
-    url = ((_ref = (_ref1 = window.URL) != null ? _ref1 : window.webkitURL) != null ? _ref : window).createObjectURL(svg);
+    url = imageURLForHTML(html, style);
     image = new Image();
     image.onload = function() {
-      var _ref2, _ref3;
+      var _ref, _ref1;
       addToCache(html, style, image);
-      return ((_ref2 = (_ref3 = window.URL) != null ? _ref3 : window.webkitURL) != null ? _ref2 : window).revokeObjectURL(url);
+      return ((_ref = (_ref1 = window.URL) != null ? _ref1 : window.webkitURL) != null ? _ref : window).revokeObjectURL(url);
     };
     image.onerror = function(error) {
       addToCache(html, style, new Image());
@@ -303,27 +331,6 @@
     };
     image.src = url;
     return false;
-  };
-
-  makeBlob = function(data, type) {
-    var bb, e, _ref, _ref1, _ref2;
-    try {
-      return new Blob([data], {
-        type: type
-      });
-    } catch (_error) {
-      e = _error;
-      window.BlobBuilder = (_ref = (_ref1 = (_ref2 = window.BlobBuilder) != null ? _ref2 : window.WebKitBlobBuilder) != null ? _ref1 : window.MozBlobBuilder) != null ? _ref : window.MSBlobBuilder;
-      if (e.name === 'TypeError' && (window.BlobBuilder != null)) {
-        bb = new BlobBuilder();
-        bb.append(data.buffer);
-        return bb.getBlob(type);
-      } else if (e.name === 'InvalidStateError') {
-        return new Blob([data.buffer], {
-          type: type
-        });
-      }
-    }
   };
 
   CanvasRenderingContext2D.prototype.measureHTML = function(html, style) {

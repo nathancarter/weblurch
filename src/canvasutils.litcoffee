@@ -83,14 +83,73 @@ The routine returns true iff the interior of the rectangles intersect.
     window.rectanglesCollide = ( x1, y1, x2, y2, x3, y3, x4, y4 ) ->
         not ( x3 >= x2 or x4 <= x1 or y3 >= y2 or y4 <= y1 )
 
-## Rendering HTML
+## Rendering HTML to Images and/or Canvases
 
-A routine below renders the HTML to the canvas, but it does so
-asynchronously.  If the routine returns false, then it did not render, but
-rather began preparing the HTML for rendering (by initiating the background
-rendering of the HTML to an image).  Those results will then be cached, so
-later calls to this routine will return true, indicating success (immediate
-rendering).
+This section provides two routines, one for converting arbitrary HTML to
+object URLs for images of the HTML rendered, and another for rendering such
+images onto a canvas.  Here is the first of those two routines.
+
+It returns a URL created by `createObjectURL`, and thus if this routine is
+called repeatedly, will use up client resources.  Thus when you are done
+with the URL returned from here (e.g., after you've created an Image object
+that has loaded the data from the URL) you should call `revokeObjectURL` to
+clean up resources.
+
+Because this function makes use of the document's body, it can only be
+called once page loading has completed.
+
+    window.imageURLForHTML = ( html, style = 'font-size:12px' ) ->
+
+First, compute its dimensions using a temporary span in the document.
+
+        span = document.createElement 'span'
+        span.setAttribute 'style', style
+        span.innerHTML = html
+        document.body.appendChild span
+        span = $ span
+        width = span.width() + 2 # cushion for error
+        height = span.height() + 2
+        span.remove()
+
+Then build an SVG and store it as blob data.  (See the next function in this
+file for how the blob is built.)
+
+        data = "<svg xmlns='http://www.w3.org/2000/svg' width='#{width}'
+                height='#{height}'><foreignObject width='100%'
+                height='100%'><div xmlns='http://www.w3.org/1999/xhtml'
+                style='#{style}'>#{html}</div></foreignObject></svg>"
+        ( window.URL ? window.webkitURL ? window ).createObjectURL \
+            makeBlob data, 'image/svg+xml;charset=utf-8'
+
+The previous function makes use of the following cross-browser Blob-building
+utility gleaned from [this StackOverflow
+post](http://stackoverflow.com/questions/15293694/blob-constructor-browser-compatibility).
+
+    makeBlob = ( data, type ) ->
+        try
+            new Blob [ data ], type : type
+        catch e
+            # TypeError old chrome and FF
+            window.BlobBuilder = window.BlobBuilder ?
+                                 window.WebKitBlobBuilder ?
+                                 window.MozBlobBuilder ?
+                                 window.MSBlobBuilder
+            if e.name is 'TypeError' and window.BlobBuilder?
+                bb = new BlobBuilder()
+                bb.append data.buffer
+                bb.getBlob type
+            else if e.name is 'InvalidStateError'
+                # InvalidStateError (tested on FF13 WinXP)
+                new Blob [ data.buffer ], type : type
+
+Now we move on to the routine for rendering arbitrary HTML to a canvas, but
+there are some preliminaries we need to build first.
+
+Canvas rendering happens asynchronously.  If the routine returns false, then
+it did not render, but rather began preparing the HTML for rendering (by
+initiating the background rendering of the HTML to an image).  Those results
+will then be cached, so later calls to this routine will return true,
+indicating success (immediate rendering).
 
 To support this, we need a cache.  The following routines define the cache.
 
@@ -128,30 +187,11 @@ cache, just use that immediately and return success.
             return yes
 
 Otherwise, begin rendering that HTML to an image, for later insertion into
-the cache, and return (temporary) failure.
+the cache, and return (temporary) failure.  Start by creating the image and
+assign its URL, so that when rendering completes asynchronously, we can
+store the results in the cache.
 
-First, compute its dimensions using a temporary span in the document.
-
-        span = document.createElement 'span'
-        span.setAttribute 'style', style
-        span.innerHTML = html
-        document.body.appendChild span
-        span = $ span
-        width = span.width() + 2 # cushion for error
-        height = span.height() + 2
-        span.remove()
-
-Next, create an SVG that contains the HTML as a foreign object.
-
-        data = "<svg xmlns='http://www.w3.org/2000/svg' width='#{width}'
-                height='#{height}'><foreignObject width='100%'
-                height='100%'><div xmlns='http://www.w3.org/1999/xhtml'
-                style='#{style}'>#{html}</div></foreignObject></svg>"
-        svg = makeBlob data, 'image/svg+xml;charset=utf-8'
-
-Finally, render that SVG to an image, and wait until it's complete.
-
-        url = ( window.URL ? window.webkitURL ? window ).createObjectURL svg
+        url = imageURLForHTML html, style
         image = new Image()
         image.onload = ->
             addToCache html, style, image
@@ -162,27 +202,6 @@ Finally, render that SVG to an image, and wait until it's complete.
                 content:', html
         image.src = url
         no
-
-The previous function makes use of the following cross-browser Blob-building
-utility gleaned from [this StackOverflow
-post](http://stackoverflow.com/questions/15293694/blob-constructor-browser-compatibility).
-
-    makeBlob = ( data, type ) ->
-        try
-            new Blob [ data ], type : type
-        catch e
-            # TypeError old chrome and FF
-            window.BlobBuilder = window.BlobBuilder ?
-                                 window.WebKitBlobBuilder ?
-                                 window.MozBlobBuilder ?
-                                 window.MSBlobBuilder
-            if e.name is 'TypeError' and window.BlobBuilder?
-                bb = new BlobBuilder()
-                bb.append data.buffer
-                bb.getBlob type
-            else if e.name is 'InvalidStateError'
-                # InvalidStateError (tested on FF13 WinXP)
-                new Blob [ data.buffer ], type : type
 
 The following routine queries the same cache to determine the width and
 height of a given piece of HTML that could be rendered to the canvas.  If

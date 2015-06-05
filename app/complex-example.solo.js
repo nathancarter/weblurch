@@ -13,6 +13,9 @@
       image: './images/red-bracket-icon.png',
       tooltip: 'Make selection a computation',
       color: '#996666',
+      imageHTML: '<font color="#996666"><b>[ ]</b></font>',
+      openImageHTML: '<font color="#996666"><b>[</b></font>',
+      closeImageHTML: '<font color="#996666"><b>]</b></font>',
       tagContents: function(group) {
         var leftHandSide, _ref, _ref1;
         leftHandSide = (_ref = group.contentAsText()) != null ? (_ref1 = _ref.split('=')) != null ? _ref1[0] : void 0 : void 0;
@@ -59,7 +62,10 @@
       text: 'Group of words',
       image: './images/red-bracket-icon.png',
       tooltip: 'Make selection about words',
-      color: '#996666',
+      color: '#669966',
+      imageHTML: '<font color="#669966"><b>( )</b></font>',
+      openImageHTML: '<font color="#669966"><b>(</b></font>',
+      closeImageHTML: '<font color="#669966"><b>)</b></font>',
       tagContents: function(group) {
         return mightBeAName(group.contentAsText());
       },

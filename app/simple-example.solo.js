@@ -8,7 +8,9 @@
     {
       name: 'reporter',
       text: 'Simple Event Reporter',
-      image: './images/red-bracket-icon.png',
+      imageHTML: '[ ]',
+      openImageHTML: '[',
+      closeImageHTML: ']',
       tagContents: function(group) {
         var _ref;
         return "" + ((_ref = group.contentAsText()) != null ? _ref.length : void 0) + " characters";

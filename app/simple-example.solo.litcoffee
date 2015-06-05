@@ -45,7 +45,9 @@ as we are adding just one type.
     window.groupTypes = [
         name : 'reporter'
         text : 'Simple Event Reporter'
-        image : './images/red-bracket-icon.png'
+        imageHTML : '[ ]'
+        openImageHTML : '['
+        closeImageHTML : ']'
 
 The `tagContents` function is called on a group whenever that group is about
 to have its bubble drawn.  Thus this function should be extremely fast to
@@ -64,6 +66,10 @@ was just constructed, and false every time thereafter; if any particular
 initialization of a newly constructed group of this type needed to happen,
 it could check the `firstTime` parameter and behave accordingly.
 
+In this simple example, we just write to the browser console a notification
+that the group contents have changed.  Open your browser console to see
+notifications stream by as you type inside a "reporter" group.
+
         contentsChanged : ( group, firstTime ) ->
             console.log 'This group just changed:', group.contentAsText()
 
@@ -73,6 +79,10 @@ its endpoints).  The group does not exist in the document at the time of
 this function call.  Any finalization that may need to be done could be
 placed in this function.  Because it is run in the UI thread, it, too, must
 be very short.
+
+In this simple example, we just write to the browser console a notification
+that the group was deleted.  Open your browser console to see notifications
+appear whenever you delete a "reporter" group.
 
         deleted : ( group ) ->
             console.log 'You deleted this group:', group

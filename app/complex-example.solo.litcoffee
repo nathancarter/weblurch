@@ -33,6 +33,9 @@ be transformed into 3+2=5, with the cursor position preserved.
         image : './images/red-bracket-icon.png'
         tooltip : 'Make selection a computation'
         color : '#996666'
+        imageHTML : '<font color="#996666"><b>[ ]</b></font>'
+        openImageHTML : '<font color="#996666"><b>[</b></font>'
+        closeImageHTML : '<font color="#996666"><b>]</b></font>'
 
 The tag on a bubble will either classify it as an arithmetic expression or
 not, just as an example use of the tag as a status indicator.  The
@@ -124,7 +127,10 @@ the context menu and/or the bubble tag menu.
         text : 'Group of words'
         image : './images/red-bracket-icon.png'
         tooltip : 'Make selection about words'
-        color : '#996666'
+        color : '#669966'
+        imageHTML : '<font color="#669966"><b>( )</b></font>'
+        openImageHTML : '<font color="#669966"><b>(</b></font>'
+        closeImageHTML : '<font color="#669966"><b>)</b></font>'
 
 The tag on a bubble will either classify it as something that might be a
 proper name, or somethign that probably isn't.  The function defining what

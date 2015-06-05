@@ -280,7 +280,7 @@
     };
 
     Groups.prototype.addGroupType = function(name, data) {
-      var buttonData, key, menuData, n, plugin, _ref;
+      var buttonData, key, menuData, n, plugin, style, _ref;
       if (data == null) {
         data = {};
       }
@@ -298,6 +298,35 @@
       this.groupTypes[name] = data;
       if (data.hasOwnProperty('text')) {
         plugin = this;
+        style = function() {
+          var key, letter, newkey, result, value, _i, _len, _ref;
+          result = [];
+          _ref = window.defaultEditorStyles;
+          for (key in _ref) {
+            if (!__hasProp.call(_ref, key)) continue;
+            value = _ref[key];
+            newkey = '';
+            for (_i = 0, _len = key.length; _i < _len; _i++) {
+              letter = key[_i];
+              if (letter.toUpperCase() === letter) {
+                newkey += '-' + letter.toLowerCase();
+              } else {
+                newkey += letter;
+              }
+            }
+            result.push("" + newkey + ":" + value + ";");
+          }
+          return result.join(' ');
+        };
+        if (data.imageHTML != null) {
+          data.image = imageURLForHTML(data.imageHTML, style());
+        }
+        if (data.openImageHTML != null) {
+          data.openImage = imageURLForHTML(data.openImageHTML, style());
+        }
+        if (data.closeImageHTML != null) {
+          data.closeImage = imageURLForHTML(data.closeImageHTML, style());
+        }
         menuData = {
           text: data.text,
           context: (_ref = data.context) != null ? _ref : 'Insert',
@@ -368,8 +397,8 @@
       }
       hide = ($((_ref = this.allGroupers()) != null ? _ref[0] : void 0)).hasClass('hide');
       id = this.nextFreeId();
-      open = grouperHTML(type, 'open', id, hide, this.groupTypes[type]['open-img']);
-      close = grouperHTML(type, 'close', id, hide, this.groupTypes[type]['close-img']);
+      open = grouperHTML(type, 'open', id, hide, this.groupTypes[type].openImage);
+      close = grouperHTML(type, 'close', id, hide, this.groupTypes[type].closeImage);
       sel = this.editor.selection;
       if (sel.getStart() === sel.getEnd()) {
         cursor = '<span id="put_cursor_here">\u200b</span>';
@@ -1715,6 +1744,12 @@
     };
   }
 
+  if (window.defaultEditorStyles == null) {
+    window.defaultEditorStyles = {
+      fontSize: '16px'
+    };
+  }
+
   $(function() {
     var editor, groupTypeNames, type;
     editor = document.createElement('textarea');
@@ -1787,11 +1822,16 @@
           }
         });
         return editor.on('init', function() {
-          var filemenu, icon, _ref;
+          var filemenu, icon, key, value, _ref, _ref1;
           installDOMUtilitiesIn(editor.getWin());
-          editor.getBody().style.fontSize = '16px';
+          _ref = window.defaultEditorStyles;
+          for (key in _ref) {
+            if (!__hasProp.call(_ref, key)) continue;
+            value = _ref[key];
+            editor.getBody().style[key] = value;
+          }
           setTimeout(function() {
-            var h, walk, _i, _len, _ref, _results;
+            var h, walk, _i, _len, _ref1, _results;
             editor.execCommand('mceFullScreen');
             walk = editor.iframeElement;
             while (walk && walk !== editor.container) {
@@ -1802,15 +1842,15 @@
               }
               walk = walk.parentNode;
             }
-            _ref = editor.getDoc().getElementsByTagName('html');
+            _ref1 = editor.getDoc().getElementsByTagName('html');
             _results = [];
-            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-              h = _ref[_i];
+            for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+              h = _ref1[_i];
               _results.push(h.style.height = 'auto');
             }
             return _results;
           }, 0);
-          if (((_ref = window.menuBarIcon) != null ? _ref.src : void 0) != null) {
+          if (((_ref1 = window.menuBarIcon) != null ? _ref1.src : void 0) != null) {
             filemenu = (editor.getContainer().getElementsByClassName('mce-menubtn'))[0];
             icon = document.createElement('img');
             icon.setAttribute('src', window.menuBarIcon.src);
