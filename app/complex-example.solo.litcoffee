@@ -12,7 +12,7 @@ of a more complex and robust webLurch application coming soon.
     window.menuBarIcon = { }
 
 [See a live version of this application online here.](
-http://nathancarter.github.io/weblurch/app/simple-example.html)
+http://nathancarter.github.io/weblurch/app/complex-example.html)
 
 ## Define two group types
 
@@ -105,7 +105,11 @@ Set the contents of the group to be the equation we desire.
                 group.setContentAsText "#{leftHandSide}=#{result}"
 
 Try to put the cursor back at approximately the same place that it was
-before.
+before.  (This is actually often annoying to the user, because they may have
+moved the cursor outside this group in the 1 second since the change that
+triggered the computation, and this simple attempt to preserve cursor
+location forces it back inside the group.  But in a real application, you
+could use more care to prevent that annoyance.  This is just an example.)
 
                 if not textNode = group.open.nextSibling then return
                 range = textNode.ownerDocument.createRange()
