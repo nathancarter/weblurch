@@ -1878,6 +1878,12 @@ toolbar and menu initializations below.
 
         groupTypeNames = ( type.name for type in groupTypes )
 
+Before loading TinyMCE, we load [a third-party plugin for editing math
+equations](eqed/).
+
+        tinymce.PluginManager.load 'equationeditor',
+            '/app/eqed/plugins/equationeditor/plugin.min.js'
+
 Install a TinyMCE instance in that text area, with specific plugins, toolbar
 buttons, and context menu items as given below.
 
@@ -1897,7 +1903,11 @@ that begins with a hyphen is a local plugin written as part of this project.
 
             plugins : 'advlist table charmap colorpicker image link
                 importcss paste print save searchreplace textcolor
-                fullscreen -loadsave -overlay -groups'
+                fullscreen -loadsave -overlay -groups equationeditor'
+
+The third-party plugin for math equations requires the following stylesheet.
+
+            content_css : 'eqed/mathquill.css'
 
 The groups plugin requires that we add the following, to prevent resizing of
 group boundary images.
@@ -1914,7 +1924,7 @@ We then install two toolbars, with separators indicated by pipes (`|`).
                 'fontselect styleselect | bold italic underline
                     textcolor subscript superscript removeformat
                     | link unlink | charmap image
-                    | spellchecker searchreplace | ' + \
+                    | spellchecker searchreplace | equationeditor | ' + \
                     groupTypeNames.join ' '
             ]
 

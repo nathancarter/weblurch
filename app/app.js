@@ -1769,15 +1769,17 @@
       }
       return _results;
     })();
+    tinymce.PluginManager.load('equationeditor', '/app/eqed/plugins/equationeditor/plugin.min.js');
     return tinymce.init({
       selector: '#editor',
       auto_focus: 'editor',
       browser_spellcheck: true,
       gecko_spellcheck: true,
       statusbar: false,
-      plugins: 'advlist table charmap colorpicker image link importcss paste print save searchreplace textcolor fullscreen -loadsave -overlay -groups',
+      plugins: 'advlist table charmap colorpicker image link importcss paste print save searchreplace textcolor fullscreen -loadsave -overlay -groups equationeditor',
+      content_css: 'eqed/mathquill.css',
       object_resizing: ':not(img.grouper)',
-      toolbar: ['newfile openfile savefile managefiles | print | undo redo | cut copy paste | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent blockquote | table', 'fontselect styleselect | bold italic underline textcolor subscript superscript removeformat | link unlink | charmap image | spellchecker searchreplace | ' + groupTypeNames.join(' ')],
+      toolbar: ['newfile openfile savefile managefiles | print | undo redo | cut copy paste | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent blockquote | table', 'fontselect styleselect | bold italic underline textcolor subscript superscript removeformat | link unlink | charmap image | spellchecker searchreplace | equationeditor | ' + groupTypeNames.join(' ')],
       menu: {
         file: {
           title: 'File',
