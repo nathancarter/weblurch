@@ -69,7 +69,7 @@ Before loading TinyMCE, we load [a third-party plugin for editing math
 equations](eqed/).
 
         tinymce.PluginManager.load 'equationeditor',
-            '/app/eqed/plugins/equationeditor/plugin.min.js'
+            '/weblurch/app/eqed/plugins/equationeditor/plugin.min.js'
 
 Install a TinyMCE instance in that text area, with specific plugins, toolbar
 buttons, and context menu items as given below.
