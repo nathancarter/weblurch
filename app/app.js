@@ -1769,7 +1769,7 @@
       }
       return _results;
     })();
-    tinymce.PluginManager.load('equationeditor', '/app/eqed/plugins/equationeditor/plugin.min.js');
+    tinymce.PluginManager.load('equationeditor', '/weblurch/app/eqed/plugins/equationeditor/plugin.min.js');
     return tinymce.init({
       selector: '#editor',
       auto_focus: 'editor',
