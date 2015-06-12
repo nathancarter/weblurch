@@ -361,13 +361,14 @@ routine needs, and they will be passed along directly.
                         result.push "#{newkey}:#{value};"
                     result.join ' '
                 if data.imageHTML?
-                    data.image = imageURLForHTML data.imageHTML, style()
+                    data.image = objectURLForBlob svgBlobForHTML \
+                        data.imageHTML, style()
                 if data.openImageHTML?
-                    data.openImage = imageURLForHTML data.openImageHTML,
-                        style()
+                    data.openImage = objectURLForBlob svgBlobForHTML \
+                        data.openImageHTML, style()
                 if data.closeImageHTML?
-                    data.closeImage = imageURLForHTML data.closeImageHTML,
-                        style()
+                    data.closeImage = objectURLForBlob svgBlobForHTML \
+                        data.closeImageHTML, style()
                 menuData =
                     text : data.text
                     context : data.context ? 'Insert'

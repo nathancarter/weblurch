@@ -85,20 +85,14 @@ The routine returns true iff the interior of the rectangles intersect.
 
 ## Rendering HTML to Images and/or Canvases
 
-This section provides two routines, one for converting arbitrary HTML to
-object URLs for images of the HTML rendered, and another for rendering such
-images onto a canvas.  Here is the first of those two routines.
-
-It returns a URL created by `createObjectURL`, and thus if this routine is
-called repeatedly, will use up client resources.  Thus when you are done
-with the URL returned from here (e.g., after you've created an Image object
-that has loaded the data from the URL) you should call `revokeObjectURL` to
-clean up resources.
+This section provides two routines, one for converting arbitrary HTML to an
+SVG Blob object, and another for rendering such SVGs onto a canvas.  Here is
+the first of those two routines.
 
 Because this function makes use of the document's body, it can only be
 called once page loading has completed.
 
-    window.imageURLForHTML = ( html, style = 'font-size:12px' ) ->
+    window.svgBlobForHTML = ( html, style = 'font-size:12px' ) ->
 
 First, compute its dimensions using a temporary span in the document.
 
@@ -114,12 +108,11 @@ First, compute its dimensions using a temporary span in the document.
 Then build an SVG and store it as blob data.  (See the next function in this
 file for how the blob is built.)
 
-        data = "<svg xmlns='http://www.w3.org/2000/svg' width='#{width}'
-                height='#{height}'><foreignObject width='100%'
-                height='100%'><div xmlns='http://www.w3.org/1999/xhtml'
-                style='#{style}'>#{html}</div></foreignObject></svg>"
-        ( window.URL ? window.webkitURL ? window ).createObjectURL \
-            makeBlob data, 'image/svg+xml;charset=utf-8'
+        makeBlob "<svg xmlns='http://www.w3.org/2000/svg' width='#{width}'
+                  height='#{height}'><foreignObject width='100%'
+                  height='100%'><div xmlns='http://www.w3.org/1999/xhtml'
+                  style='#{style}'>#{html}</div></foreignObject></svg>",
+                 'image/svg+xml;charset=utf-8'
 
 The previous function makes use of the following cross-browser Blob-building
 utility gleaned from [this StackOverflow
@@ -191,7 +184,7 @@ the cache, and return (temporary) failure.  Start by creating the image and
 assign its URL, so that when rendering completes asynchronously, we can
 store the results in the cache.
 
-        url = imageURLForHTML html, style
+        url = objectURLForBlob svgBlobForHTML html, style
         image = new Image()
         image.onload = ->
             addToCache html, style, image
@@ -202,6 +195,22 @@ store the results in the cache.
                 content:', html
         image.src = url
         no
+
+The above function makes use of the following routine, which converts a Blob
+into an image URL using `createObjectURL`.
+
+    window.objectURLForBlob = ( blob ) ->
+        ( window.URL ? window.webkitURL ? window ).createObjectURL blob
+
+The following does the same thing, but creates a URL with the base-64
+encoding of the blob in it.  This must be done asynchronously, but then the
+URL can be used anywhere, not just in this script environment.  The result
+is sent to the given callback.
+
+    window.base64URLForBlob = ( blob, callback ) ->
+        reader = new FileReader
+        reader.onload = ( event ) -> callback event.target.result
+        reader.readAsDataURL blob
 
 The following routine queries the same cache to determine the width and
 height of a given piece of HTML that could be rendered to the canvas.  If
