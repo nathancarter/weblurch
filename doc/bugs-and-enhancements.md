@@ -36,16 +36,20 @@ Load and save
 Other
 
  * Formats menu is currently empty
- * Inserting a group sometimes still leaves the put_cursor_here span in it.
 
 ## Enhancements
 
 Features needed for real Lurch
 
  * We do not yet have a way to place visible indicators at the end of groups
-   (like the thumbs or traffic lights used in the desktop version).  This
-   may require replacing IMG tags for groupers with spans that have the
-   contenteditable=false property, and can contain arbitrary data.
+   (like the thumbs or traffic lights used in the desktop version).  The
+   first solution that comes to mind is replacing IMG tags for groupers with
+   spans that have the contenteditable=false property, and can contain
+   arbitrary data, like the MathQuill plugin does.  However, doing so draws
+   the cursor very poorly and confusingly, especially near grouper
+   boundaries.  Thus the best way to go is probably to create a new custom
+   image for each type of indicator-grouper pair, and switch the src of the
+   groupers in question to update their appearance.
  * The matching package in the desktop Lurch needs re-implementing on the
    web, preferably as a function that takes very little input, so that it's
    easy to use in a BackgroundFunction.  Furthermore, that package's

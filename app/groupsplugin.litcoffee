@@ -449,15 +449,11 @@ of the close grouper element so that we can place the cursor immediatel to
 its left after removing the cursor placeholder (or else the cursor may leap
 to the start of the document).
 
-                cursor = '<span id="put_cursor_here">\u200b</span>'
                 content = @editor.selection.getContent()
-                @editor.insertContent open + content + cursor + close
-                cursor = ( $ @editor.getBody() ).find '#put_cursor_here'
-                close = cursor.get( 0 ).nextSibling
-                sel.select cursor.get 0
-                cursor.remove()
-                sel.select close
-                sel.collapse yes
+                @editor.insertContent open + content + '{$caret}' + close
+                cursor = @editor.selection.getRng()
+                close = cursor.endContainer.childNodes[cursor.endOffset]
+                console.log cursor.endContainer, cursor.endOffset, close
                 newGroup = @grouperToGroup close
                 newGroup.parent?.contentsChanged()
             else
