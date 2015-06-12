@@ -11,11 +11,6 @@ the main project plan without these bug fixes or enhancements.
 
 Load and save
 
- * Do groupers load and save correctly now, or does the fact that their src
-   attributes refer to blobs foil that?  If it does, find a way to convert
-   such blob URLs into inline images (with base-64 encoding).  Also, check
-   how things copy and paste from the browser to other environments, such as
-   wikis, Microsoft Word, etc.
  * Not all edits cause the document to be marked dirty.  TinyMCE events are
    not firing correctly.  [Minimal working example created.](
    http://www.tinymce.com/develop/bugtracker_view.php?id=7511)
