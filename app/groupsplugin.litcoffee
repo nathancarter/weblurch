@@ -361,13 +361,18 @@ routine needs, and they will be passed along directly.
                         result.push "#{newkey}:#{value};"
                     result.join ' '
                 if data.imageHTML?
-                    data.image = imageURLForHTML data.imageHTML, style()
+                    data.image = objectURLForBlob svgBlobForHTML \
+                        data.imageHTML, style()
                 if data.openImageHTML?
-                    data.openImage = imageURLForHTML data.openImageHTML,
-                        style()
+                    blob = svgBlobForHTML data.openImageHTML, style()
+                    data.openImage = objectURLForBlob blob
+                    base64URLForBlob blob, ( result ) ->
+                        data.openImage = result
                 if data.closeImageHTML?
-                    data.closeImage = imageURLForHTML data.closeImageHTML,
-                        style()
+                    blob = svgBlobForHTML data.closeImageHTML, style()
+                    data.closeImage = objectURLForBlob blob
+                    base64URLForBlob blob, ( result ) ->
+                        data.closeImage = result
                 menuData =
                     text : data.text
                     context : data.context ? 'Insert'
@@ -448,15 +453,11 @@ of the close grouper element so that we can place the cursor immediatel to
 its left after removing the cursor placeholder (or else the cursor may leap
 to the start of the document).
 
-                cursor = '<span id="put_cursor_here">\u200b</span>'
                 content = @editor.selection.getContent()
-                @editor.insertContent open + content + cursor + close
-                cursor = ( $ @editor.getBody() ).find '#put_cursor_here'
-                close = cursor.get( 0 ).nextSibling
-                sel.select cursor.get 0
-                cursor.remove()
-                sel.select close
-                sel.collapse yes
+                @editor.insertContent open + content + '{$caret}' + close
+                cursor = @editor.selection.getRng()
+                close = cursor.endContainer.childNodes[cursor.endOffset] ?
+                    cursor.endContainer.nextSibling
                 newGroup = @grouperToGroup close
                 newGroup.parent?.contentsChanged()
             else
@@ -468,19 +469,24 @@ because editing an element messes up cursor bookmarks within that element.
                 range = sel.getRng()
                 leftNode = range.startContainer
                 leftPos = range.startOffset
+                rightNode = range.endContainer
+                rightPos = range.endOffset
                 range.collapse no
                 sel.setRng range
                 @disableScanning()
-                @editor.insertContent close
+                @editor.insertContent '{$caret}' + close
+                range = sel.getRng()
+                close = range.endContainer.childNodes[range.endOffset] ?
+                    range.endContainer.nextSibling
                 range.setStart leftNode, leftPos
                 range.setEnd leftNode, leftPos
                 sel.setRng range
                 @editor.insertContent open
                 @enableScanning()
-                range.setStart leftNode, leftPos
-                range.setEnd leftNode, leftPos
-                parentOfNewGroup = @groupAboveCursor range
-                parentOfNewGroup?.contentsChanged()
+                @editor.selection.select close
+                @editor.selection.collapse yes
+                newGroup = @grouperToGroup close
+                newGroup.parent?.contentsChanged()
 
 ## Hiding and showing "groupers"
 

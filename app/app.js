@@ -280,7 +280,7 @@
     };
 
     Groups.prototype.addGroupType = function(name, data) {
-      var buttonData, key, menuData, n, plugin, style, _ref;
+      var blob, buttonData, key, menuData, n, plugin, style, _ref;
       if (data == null) {
         data = {};
       }
@@ -319,13 +319,21 @@
           return result.join(' ');
         };
         if (data.imageHTML != null) {
-          data.image = imageURLForHTML(data.imageHTML, style());
+          data.image = objectURLForBlob(svgBlobForHTML(data.imageHTML, style()));
         }
         if (data.openImageHTML != null) {
-          data.openImage = imageURLForHTML(data.openImageHTML, style());
+          blob = svgBlobForHTML(data.openImageHTML, style());
+          data.openImage = objectURLForBlob(blob);
+          base64URLForBlob(blob, function(result) {
+            return data.openImage = result;
+          });
         }
         if (data.closeImageHTML != null) {
-          data.closeImage = imageURLForHTML(data.closeImageHTML, style());
+          blob = svgBlobForHTML(data.closeImageHTML, style());
+          data.closeImage = objectURLForBlob(blob);
+          base64URLForBlob(blob, function(result) {
+            return data.closeImage = result;
+          });
         }
         menuData = {
           text: data.text,
@@ -391,7 +399,7 @@
     };
 
     Groups.prototype.groupCurrentSelection = function(type) {
-      var close, content, cursor, hide, id, leftNode, leftPos, newGroup, open, parentOfNewGroup, range, sel, _ref, _ref1;
+      var close, content, cursor, hide, id, leftNode, leftPos, newGroup, open, range, rightNode, rightPos, sel, _ref, _ref1, _ref2, _ref3, _ref4;
       if (!this.groupTypes.hasOwnProperty(type)) {
         return;
       }
@@ -401,34 +409,33 @@
       close = grouperHTML(type, 'close', id, hide, this.groupTypes[type].closeImage);
       sel = this.editor.selection;
       if (sel.getStart() === sel.getEnd()) {
-        cursor = '<span id="put_cursor_here">\u200b</span>';
         content = this.editor.selection.getContent();
-        this.editor.insertContent(open + content + cursor + close);
-        cursor = ($(this.editor.getBody())).find('#put_cursor_here');
-        close = cursor.get(0).nextSibling;
-        sel.select(cursor.get(0));
-        cursor.remove();
-        sel.select(close);
-        sel.collapse(true);
+        this.editor.insertContent(open + content + '{$caret}' + close);
+        cursor = this.editor.selection.getRng();
+        close = (_ref1 = cursor.endContainer.childNodes[cursor.endOffset]) != null ? _ref1 : cursor.endContainer.nextSibling;
         newGroup = this.grouperToGroup(close);
-        return (_ref1 = newGroup.parent) != null ? _ref1.contentsChanged() : void 0;
+        return (_ref2 = newGroup.parent) != null ? _ref2.contentsChanged() : void 0;
       } else {
         range = sel.getRng();
         leftNode = range.startContainer;
         leftPos = range.startOffset;
+        rightNode = range.endContainer;
+        rightPos = range.endOffset;
         range.collapse(false);
         sel.setRng(range);
         this.disableScanning();
-        this.editor.insertContent(close);
+        this.editor.insertContent('{$caret}' + close);
+        range = sel.getRng();
+        close = (_ref3 = range.endContainer.childNodes[range.endOffset]) != null ? _ref3 : range.endContainer.nextSibling;
         range.setStart(leftNode, leftPos);
         range.setEnd(leftNode, leftPos);
         sel.setRng(range);
         this.editor.insertContent(open);
         this.enableScanning();
-        range.setStart(leftNode, leftPos);
-        range.setEnd(leftNode, leftPos);
-        parentOfNewGroup = this.groupAboveCursor(range);
-        return parentOfNewGroup != null ? parentOfNewGroup.contentsChanged() : void 0;
+        this.editor.selection.select(close);
+        this.editor.selection.collapse(true);
+        newGroup = this.grouperToGroup(close);
+        return (_ref4 = newGroup.parent) != null ? _ref4.contentsChanged() : void 0;
       }
     };
 
@@ -1776,6 +1783,7 @@
       browser_spellcheck: true,
       gecko_spellcheck: true,
       statusbar: false,
+      paste_data_images: true,
       plugins: 'advlist table charmap colorpicker image link importcss paste print save searchreplace textcolor fullscreen -loadsave -overlay -groups equationeditor',
       content_css: 'eqed/mathquill.css',
       object_resizing: ':not(img.grouper)',

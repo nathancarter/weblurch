@@ -96,6 +96,7 @@ that no server-side callback needs to be done for spellchecking.
             browser_spellcheck : yes
             gecko_spellcheck : yes
             statusbar : no
+            paste_data_images : true
 
 Not all of the following plugins are working yet, but most are.  A plugin
 that begins with a hyphen is a local plugin written as part of this project.

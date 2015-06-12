@@ -229,8 +229,8 @@
     return !(x3 >= x2 || x4 <= x1 || y3 >= y2 || y4 <= y1);
   };
 
-  window.imageURLForHTML = function(html, style) {
-    var data, height, span, width, _ref, _ref1;
+  window.svgBlobForHTML = function(html, style) {
+    var height, span, width;
     if (style == null) {
       style = 'font-size:12px';
     }
@@ -242,8 +242,7 @@
     width = span.width() + 2;
     height = span.height() + 2;
     span.remove();
-    data = "<svg xmlns='http://www.w3.org/2000/svg' width='" + width + "' height='" + height + "'><foreignObject width='100%' height='100%'><div xmlns='http://www.w3.org/1999/xhtml' style='" + style + "'>" + html + "</div></foreignObject></svg>";
-    return ((_ref = (_ref1 = window.URL) != null ? _ref1 : window.webkitURL) != null ? _ref : window).createObjectURL(makeBlob(data, 'image/svg+xml;charset=utf-8'));
+    return makeBlob("<svg xmlns='http://www.w3.org/2000/svg' width='" + width + "' height='" + height + "'><foreignObject width='100%' height='100%'><div xmlns='http://www.w3.org/1999/xhtml' style='" + style + "'>" + html + "</div></foreignObject></svg>", 'image/svg+xml;charset=utf-8');
   };
 
   makeBlob = function(data, type) {
@@ -318,7 +317,7 @@
       markUsed(html, style);
       return true;
     }
-    url = imageURLForHTML(html, style);
+    url = objectURLForBlob(svgBlobForHTML(html, style));
     image = new Image();
     image.onload = function() {
       var _ref, _ref1;
@@ -331,6 +330,20 @@
     };
     image.src = url;
     return false;
+  };
+
+  window.objectURLForBlob = function(blob) {
+    var _ref, _ref1;
+    return ((_ref = (_ref1 = window.URL) != null ? _ref1 : window.webkitURL) != null ? _ref : window).createObjectURL(blob);
+  };
+
+  window.base64URLForBlob = function(blob, callback) {
+    var reader;
+    reader = new FileReader;
+    reader.onload = function(event) {
+      return callback(event.target.result);
+    };
+    return reader.readAsDataURL(blob);
   };
 
   CanvasRenderingContext2D.prototype.measureHTML = function(html, style) {

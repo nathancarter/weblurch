@@ -20,26 +20,12 @@ required order of completion.
 ## Typeset Mathematics
 
 Before proceeding with this section, do review what's already been done in
-this space, including
-[this](https://github.com/foraker/tinymce_equation_editor) and
-[this](https://github.com/efloti/plugin-mathjax-pour-tinymce) and
-[this](http://www.wiris.com/solutions/tinymce) and
-[this](http://www.imathas.com/editordemo/demo.html) and
-[this](https://docs.moodle.org/26/en/TinyMCE_Mathslate) and
-[this](https://www.codecogs.com/latex/integration/tinymce_v4/install.php).
-There are similar projects for CKEditor as well.
-
- * Create a button or keystroke that allows you to insert a
-   [MathQuill](http://mathquill.com/) instance in your document, and stores
-   it as a special kind of content.
- * Whenever the cursor (the browser's one, not the model's one) is inside a
-   MathQuill instance, frequently recompute the content of that instance and
-   store it in that content object in the document.
- * Make ordinary keyboard motions of the cursor able to enter and exit
-   MathQuill instances.
- * Make keyboard and mouse actions that create/extend a selection (e.g.,
-   shift-arrows, shift-click, click-and-drag) unable to select only a
-   portion of a MathQuill object, but instead select all or none of it.
+this space ([1](https://github.com/foraker/tinymce_equation_editor),
+[2](https://github.com/efloti/plugin-mathjax-pour-tinymce),
+[3](http://www.wiris.com/solutions/tinymce),
+[4](http://www.imathas.com/editordemo/demo.html),
+[5](https://docs.moodle.org/26/en/TinyMCE_Mathslate),
+[6](https://www.codecogs.com/latex/integration/tinymce_v4/install.php)).
  * Consider whether you can render the MathQuill using
    [MathJax](http://www.mathjax.org/) when the cursor exits, to get prettier
    results.
@@ -98,57 +84,73 @@ We may later want to add more load-and-save features, such as Dropbox
 integration.  See the following web links for details on how such extensions
 could be implemented.
 
-   * [You can use ready-made open and save dialogs.](
-     https://www.dropbox.com/developers/dropins)
-     This is minimally invasive, but does not allow you to upload files from
-     the browser's LocalStorage (at the time of this writing).  Rather, it
-     only permits uploading files from the user's hard drive.
-   * [You can store tables that are a JSON-SQL hybrid.](
-     https://www.dropbox.com/developers/datastore)
-     This is quite general, but also comes with increased complexity over
-     the previous option.  It is not, however, really that complex.
-   * A bonus on top of the previous bullet point is that
-     [recent, bleeding-edge changes in the API](
-     https://www.dropbox.com/developers/blog/99/using-the-new-local-datastores-feature)
-     make it possible to use one codebase for both local storage and Dropbox
-     storage, a very attractive option.
-   * If Dropbox is not used, and thus the user's files are not present on
-     their own local machine, provide a way to transfer files from their
-     local filesystem to/from the browser's LocalStorage?
-   * Add the ability to share documents with the world.  Options:
-     * Use something like [Firebase](https://www.firebase.com/).  (Too much
-       work, and requires integrating a whole new technology.)
-     * If using Dropbox, make files shared, if the API supports that.
-       (Again, too complex, and requires Dropbox.)
-     * Create a wiki on `lurchmath.org` into which entire Lurch HTML files
-       can be pasted as new pages, but only editable by the original author.
-       This way instructors can post on that wiki core dependencies that
-       anyone can use, and the integrity of a course (or the whole Lurch
-       project!) is not dependent on the state of any individual's Dropbox
-       folder.  (Note that external websites are not an option, since
-       `XMLHttpRequest` restricts cross-domain access, unless you run a
-       proxy on `lurchmath.org`.)  This could be even better as follows:
-       * Write a plugin for the wiki that can access the same LocalStorage
-         filesystem that Lurch does, and can pop up dialogs with all your
-         Lurch documents.  Just choose one and the wiki will paste its
-         content cleanly into the page you're editing, or a new page, your
-         choice.
-       * Similarly, that same wiki plugin could be useful for extracting a
-         copy of a document in a wiki page into your Lurch filesystem, for
-         opening in the Lurch app itself thereafter.
-       * Make the transfer from Lurch to the wiki even easier by providing a
-         single button in Lurch that exports to the wiki in one click, using
-         some page naming convention based on your wiki username and the
-         local path and/or name of the file.  Or perhaps, even better, you
-         have a public subfolder of your Lurch filesystem that's synced, on
-         every document save or Manage Files event, to the wiki, through
-         `XMLHttpRequest` calls.
-       * Make the transfer from the wiki to Lurch even easier by providing a
-         single "Open in Lurch" button in the wiki that stores the document
-         content in a temporary file in your Lurch filesystem, then opens
-         Lurch in a new tab.  The Lurch app will then be smart enough to
-         open any such temporary file on launch, and then delete it (but the
-         user can choose to save it thereafter, of course).
+Dropbox:
+
+ * [You can use ready-made open and save dialogs.](
+   https://www.dropbox.com/developers/dropins)
+   This is minimally invasive, but does not allow you to upload files from
+   the browser's LocalStorage (at the time of this writing).  Rather, it
+   only permits uploading files from the user's hard drive.
+ * [You can store tables that are a JSON-SQL hybrid.](
+   https://www.dropbox.com/developers/datastore)
+   This is quite general, but also comes with increased complexity over
+   the previous option.  It is not, however, really that complex.
+ * A bonus on top of the previous bullet point is that
+   [recent, bleeding-edge changes in the API](
+   https://www.dropbox.com/developers/blog/99/using-the-new-local-datastores-feature)
+   make it possible to use one codebase for both local storage and Dropbox
+   storage, a very attractive option.
+
+Local filesystem:
+
+ * If Dropbox is not used, and thus the user's files are not present on
+   their own local machine, provide a way to transfer files from their
+   local filesystem to/from the browser's LocalStorage?
+
+Sharing:
+
+Add the ability to share documents with the world.  I considered
+[Firebase](https://www.firebase.com/), but it seemed like too much work, and
+requires integrating a whole new technology.  If using Dropbox, we might be
+able to make files shared, if the API supports that.  But that, too,
+introduces new sources of complexity, and requires users to get Dropbox.  So
+I have the following recommended solution.
+ * Create a wiki on `lurchmath.org` into which entire Lurch HTML files
+   can be pasted as new pages, but only editable by the original author.
+   This way instructors can post on that wiki core dependencies that
+   anyone can use, and the integrity of a course (or the whole Lurch
+   project!) is not dependent on the state of any individual's Dropbox
+   folder.
+ * Note that external websites are not an option, since `XMLHttpRequest`
+   restricts cross-domain access, unless you run a proxy on `lurchmath.org`
+   or set up CORS rules in the web server running there.  Thus we must host
+   the webLurch application and the wiki on the same domain,
+   `lurchmath.org`.  This is even more true since many of the improvements
+   suggested below require wiki extensions to access the same `LocalStorage`
+   object that the webLurch app itself is accessing, which requires them to
+   come from the same domain.
+ * This could be even better as follows:
+   * Write a plugin for the wiki that can access the same LocalStorage
+     filesystem that Lurch does, and can pop up dialogs with all your
+     Lurch documents.  Just choose one and the wiki will paste its
+     content cleanly into the page you're editing, or a new page, your
+     choice.
+   * Similarly, that same wiki plugin could be useful for extracting a
+     copy of a document in a wiki page into your Lurch filesystem, for
+     opening in the Lurch app itself thereafter.
+   * Make the transfer from Lurch to the wiki even easier by providing a
+     single button in Lurch that exports to the wiki in one click, using
+     some page naming convention based on your wiki username and the
+     local path and/or name of the file.  Or perhaps, even better, you
+     have a public subfolder of your Lurch filesystem that's synced, on
+     every document save or Manage Files event, to the wiki, through
+     `XMLHttpRequest` calls.
+   * Make the transfer from the wiki to Lurch even easier by providing a
+     single "Open in Lurch" button in the wiki that stores the document
+     content in a temporary file in your Lurch filesystem, then opens
+     Lurch in a new tab.  The Lurch app will then be smart enough to
+     open any such temporary file on launch, and then delete it (but the
+     user can choose to save it thereafter, of course).
 
 ### Making things more elegant
 
