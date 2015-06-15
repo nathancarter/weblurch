@@ -235,7 +235,186 @@ unused metavariables to things like "unused_1", etc.
         results
 
  * Create extremely extensive unit tests for the above matching algorithm.
+   I list an extensive test suite here, using capital letters for
+   metavariables and lower case letters for regular variables, and otherwise
+   easily human-readable/suggestive notation.  The one exception is that @
+   means the universal quantifier and # means the existential quantifier.
+```
+    pattern             expression      results
+    -------             ----------      -------
 
+    ATOMICS
+
+    a                   a               [{}]
+    a                   b               []
+    a                   2               []
+    a                   f(x)            []
+    A                   anything        [{A:expression}] for various exprs
+        repeat these tests for other atomic types besides variable a
+
+    COMPOUNDS
+
+    A(x)                f(x)            [{A:f}]
+    A(B)                f(x)            [{A:f,B:x}]
+    A(B)                f(x,y)          []
+    A(B)                f()             []
+    A(B)                atomic          []
+        repeat these tests for binding and error types, in addition to appls
+
+    ATTRIBUTES
+
+    repeat a selection of the above tests with attributes added to either
+    the pattern or the expression or both, and verify that attributes make
+    no change whatsoever to the results
+
+    SIMPLE SUBSTITUTIONS
+
+    f(x)                f(x)[x=y]       []
+    f(x)                f(x)[z=y]       [{}]
+    f(x)                f(y)[z=y]       [{}]
+    @x,f(x)             @x,(f(x)[x=y])  []
+    @x,f(x)             (@x,f(x))[x=y]  [{}]
+        then repeat all with the pattern and expression swapped
+
+    COMPOUNDS WITH METAVARIABLES
+
+    f(A,B)              f(c,d)          [{A:c,B:d}]
+    f(A,A)              f(c,d)          []
+    f(A,B)              g(c,d)          []
+    f(B,A)              f(c,d)          [{A:d,B:c}]
+    f(A,A)              f(c,c)          [{A:c}]
+    f(g(A),k(A))        f(g(a),k(a))    [{A:a}]
+    f(g(A),B)           f(g(a),k(a))    [{A:a,B:k(a)}]
+    f(A(c),A(B))        f(g(c),k(c))    []
+    f(A(c),A(B))        f(g(c),c(k))    [{A:c,B:k}]
+        repeat a selection of the above tests using bindings and errors
+        instead of applications
+
+    UNIVERSAL ELIMINATION RULE
+
+    Let R = list( @X,A , A[X=T] ), a representation of the rule.  In each
+    test below, R is the pattern, and we list only the expression.
+    When a capital letter is followed by a prime, as in A', that means that
+    it is going directly against the naming convention, and intending to be
+    a capital A that is NOT a metavariable.  This will test to ensure that
+    naming conflicts between metavariables and their instantiations do not
+    mess up the results.
+
+    list( @x,f(x)=f(y) , f(6)=f(y) )    [{X:x, A:f(x)=f(y), T:6}]
+    list( @x,P(x,x) , P(7.1,7.1) )      [{X:x, A:P(x,x), T:7.1}]
+    list( @x,P(x,x) , P(3,4) )          []
+    list( @x,(x>7 & @y,P(x,y)) ,
+          9>7 & @y,P(9,y) )             [{X:x, A:x>7&@y,P(x,y), T:9}]
+    list( @x,(x>7 & @y,P(x,y)) ,
+          9>7 & @y,P(x,y) )             []
+    list( @A',f(X',A') , f(X',X') )     [{X:A', A:f(X',A'), T:X'}]
+
+    EXISTENTIAL ELIMINATION RULE
+
+    Let R = list( #X,A , const(C) , A[X=C] ).  Same story as above.
+
+    list( #t,t^2<0 , const(r), r^2<0 )  [{X:t, A:t^2<0, C:r}]
+    list( #t,t^2<0 , const(r), t^2<0 )  []
+    list( #t,t^2<0 , const(t), r^2<0 )  []
+    list( #t,t^2<0 , const(t), t^2<0 )  [{X:t, A:t^2<0, C:t}]
+    list( #t,t^2<0 , const(phi^2+9) ,
+          (phi^2+9)^2<0 )               [{X:t, A:t^2<0, C:phi^2+9}]
+    list( #t,r^2<0 , const(r), r^2<0 )  [{X:t, A:r^2<0, C:r}]
+    list( #r,r^2<0 , const(r), r^2<0 )  [{X:r, A:r^2<0, C:r}]
+    list( #C',A'<C' , const(X'), A'<X' )[{X:C', A:A'<C', C:X'}]
+
+    UNIVERSAL INTRODUCTION RULE
+
+    Let R = list( var(V) , A , @X,A[V=X] ).  Same story as above.
+
+    list( var(x), x^2>=0, @t,t^2>=0 )   [{V:x, A:x^2>=0, X:t}]
+    list( var(x), x^2>=0, @x,x^2>=0 )   [{V:x, A:x^2>=0, X:x}]
+    list( var(x), x^2>=0, @x,t^2>=0 )   []
+    list( var(x), t^2>=0, @x,x^2>=0 )   []
+    list( var(x), t^2>=0, @x,t^2>=0 )   [{V:x, A:t^2>=0, X:x}]
+    list( var(V') , hi(A',V') ,
+          @X',hi(A',X') )               [{V:V', A:hi(A',V'), X:X'}]
+
+    EXISTENTIAL INTRODUCTION RULE
+
+    Let R = list( A[X=T], #X,A ).  Same story as above.
+
+    in(5,nat)&notin(5,evens) ,
+        #t,in(t,nat)&notin(t,evens)     [{A:in(t,nat)&notin(t,evens), X:t,
+                                          T:5}]
+    uncble(minus(reals,rats)) ,
+        #S',uncble(S')                  [{A:uncble(S'), X:S',
+                                          T:minus(reals,rats)}]
+    uncble(k) , #k,uncble(k)            [{A:uncble(k), X:k, T:k}]
+    in(4,nat)&notin(5,evens) ,
+        #t,in(t,nat)&notin(t,evens)     []
+    in(4,nat)&notin(4,evens) ,
+        #t,in(t,nat)&notin(t,evens)     []
+    in(5,nat)&notin(5,evens) ,
+        #x,in(t,nat)&notin(t,evens)     []
+    in(5,nat)&notin(5,evens) ,
+        #x,in(5,nat)&notin(5,evens)     [{A:in(5,nat)&notin(5,evens), X:x,
+                                          T:unused_1}]
+    L' , #M',L'                         [{A:L', X:M', T:unused_1}]
+    L'(M') , #N',L'(N')                 [{A:L'(N'), X:N', T:M'}]
+
+    EQUALITY ELIMINATION RULE
+
+    Let R = list( A=B , S , S[A~B] ).  Same story as above.
+
+    x=7 , f(x)=y , f(7)=7               [{A:x, B:7, S:f(x)=y}]
+    x=7 , f(x)=y , f(x)=7               []
+    x=7 , f(x)=y , f(7)=7               []
+    f(x)=y , x=7 , f(7)=7               []
+    a=b , b=b , b=a                     [{A:a, B:b, S:b=b}]
+    sum(i,0,n-1,2^i)=2^n-1 ,
+        (2^n-1)+1=2^n ,
+        sum(i,0,n-1,2^i)+1=2^n          []
+    2^n-1=sum(i,0,n-1,2^i) ,
+        (2^n-1)+1=2^n ,
+        sum(i,0,n-1,2^i)+1=2^n          [{A:sum(i,0,n-1,2^i), B:2^n-1,
+                                          S:(2^n-1)+1=2^n}]
+
+    HARDER SUBSTITUTIONS
+
+    Now we list pattern, expresion, and results, as at first.
+
+    a=b[X=Y]            a=b             [{X:unused_1,Y:unused_2}]
+    a=b[X=a]            a=b             [{X:unused_1}]
+    a=b[a=Y]            a=b             [{Y:a}]
+    a=b[a=b]            a=b             []
+    a=b[a~b]            a=b             [{}]
+    a=b[a=c]            a=b             []
+    a=b[a~c]            a=b             [{}]
+    a=b[a=a]            a=b             [{}]
+    A[a=b]              a=b             []
+    A[a~b]              a=b             [{A:a=b}]
+    A[c=b]              a=b             [{A:a=b}]
+    A[c~b]              a=b             [{A:a=b}]
+    A[B=b]              a=b             [{A:a=b,B:unused_1}]
+    A[B~b]              a=b             [{A:a=b,B:unused_1}]
+    f(f[A=g])           f(g)            [{A:f}]
+    f(f)[A=g]           g(g)            [{A:f}]
+    f(f[A=g])           g(g)            []
+    f(g(a))[A=B]        f(g(b))         [{A:a,B:b}]
+    f(g(a),a)[A=B]      f(g(b),a)       []
+    f(g(a),a)[A~B]      f(g(b),a)       [{A:a,B:b}]
+    f(g(a),a)[A=B]      f(g(b),c)       []
+    f(g(a),a)[A~B]      f(g(b),c)       []
+        previous four cases repeated, but with first and second arguments
+        in both the pattern and the expression interchanged should give same
+        results
+
+    UNDERSPECIFIED
+
+    A[B=C]              any(thing)      [{A:any(thing),B:unused_1,
+                                          C:unused_2}]
+    A[B~C]              any(thing)      [{A:any(thing),B:unused_1,
+                                          C:unused_2}]
+
+    Also verify that if there are metavariables in the expression, that an
+    error is thrown.
+```
 ## Example Application
 
 Create some non-Lurch application that uses the above technology, as a way
