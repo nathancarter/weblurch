@@ -473,6 +473,8 @@ recents list after moving the cursor to the new position.
             pageExpects -> recents()[4] is tinymce.activeEditor.Groups[1]
             pageExpects -> recents()[5] is tinymce.activeEditor.Groups[0]
 
+The content of the document now looks like `test[[[xy][]]][]test`.
+
 Now delete the two inner groupers that are adjacent, `][`, belonging to two
 separate inner (sibling) groups.  Verify that change events are sent for
 only their ancestor groups.
@@ -486,19 +488,16 @@ only their ancestor groups.
             pageExpects -> recents()[0] is tinymce.activeEditor.Groups[1]
             pageExpects -> recents()[1] is tinymce.activeEditor.Groups[0]
 
+The content of the document now looks like `test[[xy]][]test`.  The group
+indices, in order, are 0, 1, 4.
+
 Add a group inside the final group in the document, and verify that both the
 new group and its parent had change events fired, but no other groups did.
+The change events will be for the child first, then its parent.
 
-In fact, the change events will be fired as follows: parent, then new child,
-then parent again.  This is because the parent experiences a change when its
-child groupers are introduced, but at that point the child group hasn't
-experienced its own change event, since it hasn't even been constructed from
-its groupers.  When the child has been so constructed and had a change
-event fired (which may result in the child being modified), the parent will
-then experience the change event again as it propagates upward.
-
-Note that the newly created group will have ID 2, because the original group
-2 was deleted in the previous steps.
+This will make the document look like `test[[xy]][[]]test`, with group
+indices, in order, 0, 1, 4, and 2, because the original group 2 was deleted
+in the previous steps, and its ID will be re-used in creating the new group.
 
             pageKey 'end'
             pageKey 'left'
@@ -509,10 +508,6 @@ Note that the newly created group will have ID 2, because the original group
             pageDo -> clearRecents()
             pageExpects ( -> recents() ), 'toEqual', [ ]
             pageCommand 'logger'
-            pageDo ->
-                for r, i in recents()
-                    console.log 'recents #', i, 'is group #', r.id()
-            pageExpects ( -> recents().length ), 'toEqual', 3
-            pageExpects -> recents()[0] is tinymce.activeEditor.Groups[4]
-            pageExpects -> recents()[1] is tinymce.activeEditor.Groups[2]
-            pageExpects -> recents()[2] is tinymce.activeEditor.Groups[4]
+            pageExpects ( -> recents().length ), 'toEqual', 2
+            pageExpects -> recents()[0] is tinymce.activeEditor.Groups[2]
+            pageExpects -> recents()[1] is tinymce.activeEditor.Groups[4]
