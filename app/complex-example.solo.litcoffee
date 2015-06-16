@@ -229,7 +229,7 @@ be run.
             else
                 '???'
         result
-    , { isJustArithmetic : isJustArithmetic }
+    , { isJustArithmetic : isJustArithmetic }, [ 'openmath.duo.min.js' ]
 
 What does it mean for something to be a name, or probably a name?  Proper
 names are three or fewer words, each of which is capitalized.

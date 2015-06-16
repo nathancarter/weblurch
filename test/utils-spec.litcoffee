@@ -1,7 +1,12 @@
 
 # Tests of the utils module
 
-Test specifications still need to be documented.
+For details on how test spec files are written, see [the Jasmine
+documentation](http://jasmine.github.io/edge/introduction.html).  Tests can
+be run in this project by calling "cake test"; see [the
+cakefile](../cakefile.litcoffee) for details.
+
+Here we import the module we're about to test.
 
     require '../src/utils'
 

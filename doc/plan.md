@@ -19,47 +19,8 @@ required order of completion.
 
 ## OpenMath
 
-Create an OpenMath module that uses the following conventions for an
-OpenMath JSON encoding.  (I made these up; the OpenMath mailing lists
-suggest that no one has yet proposed a standard JSON encoding.)  I just give
-a summary here; these are not to-dos, but there are to-dos below this list.
- * OMI - `{ t : 'i', v : 6 }` (where `t` stands for type and `v` for value),
-   and integers may also be stored as strings if desired (e.g., `-6`)
- * OMF - `{ t : 'f', v : -0.521 }`
- * OMSTR - `{ t : 'st', v : 'example' }`
- * OMB - `{ t : 'ba', v : a_Uint8Array_here }`
- * OMS - `{t : 'sy', n : 'symbolName', cd : 'cd', uri : 'http://...' }`,
-   where the URI is optional
- * OMV - `{ t : 'v', n : 'name' }`
- * OMA - `{ t : 'a', c : [ child, objects, here ] }` (children are the
-   required operator, followed by zero or more operands)
- * OMATTR - rather than wrap things in OMATTR nodes, simply add the
-   attributes object (a mapping from string keys to objects) to the existing
-   object, with 'a' as its key.  To create the string key for an OM symbol,
-   just use its JSON form (fully compact, as created by `JSON.stringify`
-   with one argument).
- * OMBIND - `{ t : bi', s : object, v : [ bound, vars ], b : object }`,
-   where `s` stands for the head symbol and `b` for the body
- * OMERR - `{ t : 'e', s : object, c : [ child, nodes, here ] }`, where `s`
-   stands for the head symbol, and `c` can be omitted if empty.
- * No encoding for foreign objects is specified here.
-
-To implement this:
- * Create `src/openmath.duo.litcoffee`.
- * Move the above informal specification into that file.
- * Create a class for OpenMath tree nodes with no constructor.
- * Extend the build process so that `.duo.litcoffee` files are compiled two
-   ways.  First, they should be included in the regular build, so that they
-   become part of the app.  Second, they should also be compiled separately
-   into a `.min.js` file in the app folder, so that they can be imported
-   into worker scripts.
- * Test to ensure that BackgroundFunctions can use `importScripts` to pull
-   in the compiled `openmath.min.js` file, and verify that the `OpenMath`
-   class is defined therein.
- * Add a class method that checks to see if an object is of any one of the
-   formats above; if so, it returns true, and if not, it returns an error
-   describing why not.  The routine should be recursive, verifying that
-   children are also of the correct form.
+This work is in progress.  Here are the remaining tasks:
+ * Finish tests for `checkJSON` routine.
  * Create a factory function that takes a JSON string as input and:
    * calls JSON.parse, returning an OMERR object if that fails
    * calls the verification routine on it, returning an OMERR if it fails

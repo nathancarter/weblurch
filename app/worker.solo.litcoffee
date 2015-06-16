@@ -28,6 +28,11 @@ result.
 
             new Function argList, body
 
+Ensure that this acts like a browser in the simple way that `window` means
+the global scope.
+
+    self.window = self
+
 Now we create the main event handler through which clients communicate with
 this worker.
 

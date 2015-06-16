@@ -100,10 +100,13 @@ source maps.  We run it in sequence on the source files, the app-specific
 files, and the "solo" files in the app folder.
 
 First, here is a little function that recursively runs the build process on
-all `.solo.litcoffee` files in the src and app folders.
+all `.solo.litcoffee` files in the src and app folders.  It also processes
+`.duo.litcoffee` files, which are compiled into the app *and* compiled into
+individual `.min.js` files (for importing into web workers).
 
-        solofiles = build.dir appdir, /\.solo.litcoffee$/
-        srcsolofiles = build.dir srcdir, /\.solo.litcoffee$/
+        soloRE = /\.(solo|duo).litcoffee$/
+        solofiles = build.dir appdir, soloRE
+        srcsolofiles = build.dir srcdir, soloRE
         buildNext = ->
             if solofiles.length > 0
                 build.compile solofiles.shift(), buildNext
@@ -112,7 +115,7 @@ all `.solo.litcoffee` files in the src and app folders.
                 build.compile file, ->
                     prefix = file.split( '/' ).pop()[..-10]
                     toMove = ( f for f in build.dir srcdir, RegExp prefix \
-                        when f[-15..] isnt '.solo.litcoffee' )
+                        when not soloRE.test f )
                     build.runShellCommands ( for result in toMove
                         description : "Moving #{result} into app/..."
                         command : "mv #{result} app/"
