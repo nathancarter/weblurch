@@ -17,35 +17,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Extending the Background Module
-
- * Enhance the worker script so that it supports messages for installing
-   functions globally in the worker.
- * Extend the `Background.registerFunction` routine to take an optional
-   third argument, an object mapping names to functions that should be
-   installed in the worker environment.  Store this object when you store
-   the function itself.
- * Extend the previous feature so that if one of the keys of that object is
-   `importScripts`, then its value is used as an array, and the worker's
-   `importScripts` function is applied to that array.
- * Ensure that the Background module passes to the `BackgroundFunction`
-   constructor the object of functions to be installed in that function's
-   scope.
- * When workers are not available, so that BackgroundFunctions run in the
-   main thread, simply wrap the call to them inside a `with` clause that
-   uses the object of functions as its scope.
- * When workers are available, after sending the `setFunction` message to a
-   newly constructed worker, send the message for installing all the other
-   functions to be installed globally in the worker.
- * Write unit tests to ensure that this works, and even allows you to import
-   large modules, if you install all their functions, and they don't
-   depend upon state variables in their environment (or can set them up
-   themselves).
- * Add support for function names containing dots, by walking down the line
-   of identifiers in the chain and doing `prev[ident] ?= { }` for each,
-   with `prev = window` to start, and eventually `prev[last] = func`.  This
-   allows you to install methods in, say, the `Array` prototype.
-
 ## OpenMath
 
 Create an OpenMath module that uses the following conventions for an
