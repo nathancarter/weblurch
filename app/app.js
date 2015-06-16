@@ -1776,7 +1776,6 @@
       }
       return _results;
     })();
-    tinymce.PluginManager.load('equationeditor', '/weblurch/app/eqed/plugins/equationeditor/plugin.min.js');
     return tinymce.init({
       selector: '#editor',
       auto_focus: 'editor',
@@ -1784,8 +1783,7 @@
       gecko_spellcheck: true,
       statusbar: false,
       paste_data_images: true,
-      plugins: 'advlist table charmap colorpicker image link importcss paste print save searchreplace textcolor fullscreen -loadsave -overlay -groups equationeditor',
-      content_css: 'eqed/mathquill.css',
+      plugins: 'advlist table charmap colorpicker image link importcss paste print save searchreplace textcolor fullscreen -loadsave -overlay -groups -equationeditor',
       object_resizing: ':not(img.grouper)',
       toolbar: ['newfile openfile savefile managefiles | print | undo redo | cut copy paste | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent blockquote | table', 'fontselect styleselect | bold italic underline textcolor subscript superscript removeformat | link unlink | charmap image | spellchecker searchreplace | equationeditor | ' + groupTypeNames.join(' ')],
       menu: {
@@ -1864,6 +1862,7 @@
             }
             return _results;
           }, 0);
+          editor.dom.loadCSS('./eqed/mathquill.css');
           if (((_ref1 = window.menuBarIcon) != null ? _ref1.src : void 0) != null) {
             filemenu = (editor.getContainer().getElementsByClassName('mce-menubtn'))[0];
             icon = document.createElement('img');

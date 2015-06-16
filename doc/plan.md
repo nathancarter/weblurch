@@ -17,21 +17,443 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Typeset Mathematics
+## Extending the Background Module
 
-Before proceeding with this section, do review what's already been done in
-this space ([1](https://github.com/foraker/tinymce_equation_editor),
-[2](https://github.com/efloti/plugin-mathjax-pour-tinymce),
-[3](http://www.wiris.com/solutions/tinymce),
-[4](http://www.imathas.com/editordemo/demo.html),
-[5](https://docs.moodle.org/26/en/TinyMCE_Mathslate),
-[6](https://www.codecogs.com/latex/integration/tinymce_v4/install.php)).
- * Consider whether you can render the MathQuill using
-   [MathJax](http://www.mathjax.org/) when the cursor exits, to get prettier
-   results.
- * Consider whether you can add the capability to do MathJax-rendered LaTeX
-   source, with a popup text box, like in the Simple Math Editor in the
-   desktop Lurch.
+ * Enhance the worker script so that it supports messages for installing
+   functions globally in the worker.
+ * Extend the `Background.registerFunction` routine to take an optional
+   third argument, an object mapping names to functions that should be
+   installed in the worker environment.  Store this object when you store
+   the function itself.
+ * Extend the previous feature so that if one of the keys of that object is
+   `importScripts`, then its value is used as an array, and the worker's
+   `importScripts` function is applied to that array.
+ * Ensure that the Background module passes to the `BackgroundFunction`
+   constructor the object of functions to be installed in that function's
+   scope.
+ * When workers are not available, so that BackgroundFunctions run in the
+   main thread, simply wrap the call to them inside a `with` clause that
+   uses the object of functions as its scope.
+ * When workers are available, after sending the `setFunction` message to a
+   newly constructed worker, send the message for installing all the other
+   functions to be installed globally in the worker.
+ * Write unit tests to ensure that this works, and even allows you to import
+   large modules, if you install all their functions, and they don't
+   depend upon state variables in their environment (or can set them up
+   themselves).
+ * Add support for function names containing dots, by walking down the line
+   of identifiers in the chain and doing `prev[ident] ?= { }` for each,
+   with `prev = window` to start, and eventually `prev[last] = func`.  This
+   allows you to install methods in, say, the `Array` prototype.
+
+## OpenMath
+
+Create an OpenMath module that uses the following conventions for an
+OpenMath JSON encoding.  (I made these up; the OpenMath mailing lists
+suggest that no one has yet proposed a standard JSON encoding.)  I just give
+a summary here; these are not to-dos, but there are to-dos below this list.
+ * OMI - `{ t : 'i', v : 6 }` (where `t` stands for type and `v` for value),
+   and integers may also be stored as strings if desired (e.g., `-6`)
+ * OMF - `{ t : 'f', v : -0.521 }`
+ * OMSTR - `{ t : 'st', v : 'example' }`
+ * OMB - `{ t : 'ba', v : a_Uint8Array_here }`
+ * OMS - `{t : 'sy', n : 'symbolName', cd : 'cd', uri : 'http://...' }`,
+   where the URI is optional
+ * OMV - `{ t : 'v', n : 'name' }`
+ * OMA - `{ t : 'a', c : [ child, objects, here ] }` (children are the
+   required operator, followed by zero or more operands)
+ * OMATTR - rather than wrap things in OMATTR nodes, simply add the
+   attributes object (a mapping from string keys to objects) to the existing
+   object, with 'a' as its key.  To create the string key for an OM symbol,
+   just use its JSON form (fully compact, as created by `JSON.stringify`
+   with one argument).
+ * OMBIND - `{ t : bi', s : object, v : [ bound, vars ], b : object }`,
+   where `s` stands for the head symbol and `b` for the body
+ * OMERR - `{ t : 'e', s : object, c : [ child, nodes, here ] }`, where `s`
+   stands for the head symbol, and `c` can be omitted if empty.
+ * No encoding for foreign objects is specified here.
+
+To implement this:
+ * Create `src/openmath.duo.litcoffee`.
+ * Move the above informal specification into that file.
+ * Create a class for OpenMath tree nodes with no constructor.
+ * Extend the build process so that `.duo.litcoffee` files are compiled two
+   ways.  First, they should be included in the regular build, so that they
+   become part of the app.  Second, they should also be compiled separately
+   into a `.min.js` file in the app folder, so that they can be imported
+   into worker scripts.
+ * Test to ensure that BackgroundFunctions can use `importScripts` to pull
+   in the compiled `openmath.min.js` file, and verify that the `OpenMath`
+   class is defined therein.
+ * Add a class method that checks to see if an object is of any one of the
+   formats above; if so, it returns true, and if not, it returns an error
+   describing why not.  The routine should be recursive, verifying that
+   children are also of the correct form.
+ * Create a factory function that takes a JSON string as input and:
+   * calls JSON.parse, returning an OMERR object if that fails
+   * calls the verification routine on it, returning an OMERR if it fails
+   * traverses the object tree, setting this new class as the prototype for
+     every node in the tree, and setting the parent node for every node also
+ * Create factory functions OpenMath.symbol, OpenMath.variable, etc., with
+   sortcuts sym, var, etc., and make the global name OM equal to OpenMath,
+   so that people can write `OM.app(OM.var('f'),OM.var('x'))`.
+ * Create another factory by importing the JavaScript code for `simpleLob`
+   from the desktop Lurch.
+ * Add the following methods to the OpenMath object class
+   * getters for type, value, name, cd, uri, children, symbol, variables,
+     and body
+   * encode(), which recreates the JSON from which the thing was encoded in
+     the first place
+   * insertChild(), removeChild(), appendChild()
+   * copy(), which should be as efficient as possible
+   * equals()
+   * isFree(), replaceFree(from,to), occursFreeIn()
+   * reparent(newPar), remove(), and replaceWith(newTree)
+   * applySubstitution() and applyAllSubstitutions() (which work with
+     expressions of the form `x[y=z]`, meaning x with all occurrences of y
+     replaced by z, and `x[y~z]`, meaning the same but "some" isntead of
+     "all")
+   * childrenSatisfying() and descendantsSatisfying()
+ * Add a constructor that takes a type as the first argument (being flexible
+   enough to handle things like 'i', 'int', 'integer', etc.) and all other
+   data as the remaining arguments, in a sensible order.
+ * Create extensive unit tests for the above class and its algorithms.
+
+## Matching Module
+
+This is a re-implementation (and improvement) of the matching module from
+the desktop version of Lurch.
+ * Create a file `src/matching.duo.litcoffee`.
+ * Create a function for marking a variable as a metavariable with an
+   attribute, and another for testing whether a variable is a metavariable.
+
+First, a supporting class, Match.
+ * Create a Match class, representing an evolving match state throughout a
+   matching process.
+ * Give it members for using it as a variable-to-expression dictionary,
+   `get`, `set`, and `has`.
+ * Give it a member for marking that a substitution of A to B is in force,
+   for any two expressions A and B.  A third parameter will specify whether
+   the subsitution is required (=) or optional (~), and should also be
+   stored.  Give it another method for removing a substitution.
+ * Give it a member for marking which subtrees it has visited, and storing
+   them in an internal list.  It only does anything if a substitution is in
+   force; otherwise it does nothing.
+ * When setting a substitution, do all possible metavariable replacements on
+   both halves of it.  Also augment `set` so that all future metavariable
+   instantiations are immediately applied to both halves of the
+   substitution.  For both of those functions, if the two halves of the
+   substitution become fully instantiated (no metavariables) then ensure
+   that the substitution is either optional or alters no previously-visited
+   subtrees; return true/false accordingly.
+ * Make getters for all of the substitution data, including one for just
+   whether a substitution has been stored.
+ * Give it a member for checking whether a required substitution would alter
+   any of the already-visited subtrees.
+ * Give it a method for cloning itself.
+ * Give it a method for applying itself to an expression, replacing all
+   metavariables with their current instantiations.
+ * Give it a method for finding in its first-visited subtree (the whole
+   pattern) all metavariables, and then creating instantiations for all
+   those that don't yet have them, to names like "unused_1", "unused_2", ...
+ * Create extensive unit tests for the above class and its algorithms.
+
+Now, the main routine.
+ * Implement the matching algorithm after the following psuedocode.
+
+    matches = ( pattern, expression, soFar ) ->
+
+Determine whether we're the outermost call in the recursion, for use below.
+
+        outermost = not soFar?
+        soFar ?= new Match
+
+Mark that we've visited this subtree of the pattern.
+
+        soFar.visited pattern
+
+Handle patterns of the form x[y=z] and x[y~z].
+
+        if pattern is of the form x[y=z] or x[y~z]
+            if soFar has a substitution already then throw an error
+                saying that there's only supposed to be one per pattern
+            check = soFar.setSubstitution y, z, ( = or ~ )
+            if not check return [ ] # doesn't fit with a visited subtree
+            results = matches x, expression, soFar
+            for result in results
+                result.removeSubstitutionRecord()
+            results
+
+Handle patterns that are single metavariables.
+
+        if the pattern is just a metavariable
+            if soFar.get variableName
+                if it's equal to expression return [ soFar ] else return [ ]
+            check = soFar.set variableName, expression
+            if not check return [ ] # doesn't fit with a visited subtree
+            return [ soFar ]
+
+Define a function for handling when the match would fail without the
+substitution expression.
+
+        pair = ( a, b ) -> OM.app OM.sym('pair','Lurch'), a.copy(), b.copy()
+        trySubs = ->
+            if soFar doesn't have a substitution in it
+            s = pair soFar.substLHS, soFar.substRHS
+            [ walk1, walk2, result ] = [ pattern, expression, [ ] ]
+            while walk1?
+                result = result.concat matches pair(walk1,walk2), s, soFar
+                [ walk1, walk2 ] = [ walk1.parent, walk2.parent ]
+            result
+
+Now we enter the meat of structural matching.  If the types don't even
+match, then the only thing that might save us is a substitution, if there
+is one.
+
+        if pattern.type isnt expression.type then return trySubs()
+
+Handle atomic patterns.
+
+        if the pattern is an atomic type
+            return if pat.equals expr then [ soFar ] else trySubs()
+
+Non-atomic patterns must have the same size as their expressions.
+
+        if pattern.children.length isnt expression.children.length
+            return trySubs()
+
+Prepare to recur.
+
+        children1 = compute ordered list of all children of pattern
+        children2 = same, but for expression
+        results = [ soFar ]
+
+Recur on children.
+
+        for child1, index in children1
+            child2 = children2[index]
+            newResults = [ ]
+            for sf in results
+                copy = sf.copy()
+                newResults = newResults.concat matches child1, child2, copy
+            results = newResults
+
+Before returning the results, if we are the outermost call, instantiate all
+unused metavariables to things like "unused_1", etc.
+
+        if outermost
+            for result in results
+                result.instantiateUnusedMetavariables()
+        results
+
+ * Create extremely extensive unit tests for the above matching algorithm.
+   I list an extensive test suite here, using capital letters for
+   metavariables and lower case letters for regular variables, and otherwise
+   easily human-readable/suggestive notation.  The one exception is that @
+   means the universal quantifier and # means the existential quantifier.
+   Note that these unit tests do not require a PhantomJS environment.
+```
+    pattern             expression      results
+    -------             ----------      -------
+
+    ATOMICS
+
+    a                   a               [{}]
+    a                   b               []
+    a                   2               []
+    a                   f(x)            []
+    A                   anything        [{A:expression}] for various exprs
+        repeat these tests for other atomic types besides variable a
+
+    COMPOUNDS
+
+    A(x)                f(x)            [{A:f}]
+    A(B)                f(x)            [{A:f,B:x}]
+    A(B)                f(x,y)          []
+    A(B)                f()             []
+    A(B)                atomic          []
+        repeat these tests for binding and error types, in addition to appls
+
+    ATTRIBUTES
+
+    repeat a selection of the above tests with attributes added to either
+    the pattern or the expression or both, and verify that attributes make
+    no change whatsoever to the results
+
+    SIMPLE SUBSTITUTIONS
+
+    f(x)                f(x)[x=y]       []
+    f(x)                f(x)[z=y]       [{}]
+    f(x)                f(y)[z=y]       [{}]
+    @x,f(x)             @x,(f(x)[x=y])  []
+    @x,f(x)             (@x,f(x))[x=y]  [{}]
+        then repeat all with the pattern and expression swapped
+
+    COMPOUNDS WITH METAVARIABLES
+
+    f(A,B)              f(c,d)          [{A:c,B:d}]
+    f(A,A)              f(c,d)          []
+    f(A,B)              g(c,d)          []
+    f(B,A)              f(c,d)          [{A:d,B:c}]
+    f(A,A)              f(c,c)          [{A:c}]
+    f(g(A),k(A))        f(g(a),k(a))    [{A:a}]
+    f(g(A),B)           f(g(a),k(a))    [{A:a,B:k(a)}]
+    f(A(c),A(B))        f(g(c),k(c))    []
+    f(A(c),A(B))        f(g(c),c(k))    [{A:c,B:k}]
+        repeat a selection of the above tests using bindings and errors
+        instead of applications
+
+    UNIVERSAL ELIMINATION RULE
+
+    Let R = list( @X,A , A[X=T] ), a representation of the rule.  In each
+    test below, R is the pattern, and we list only the expression.
+    When a capital letter is followed by a prime, as in A', that means that
+    it is going directly against the naming convention, and intending to be
+    a capital A that is NOT a metavariable.  This will test to ensure that
+    naming conflicts between metavariables and their instantiations do not
+    mess up the results.
+
+    list( @x,f(x)=f(y) , f(6)=f(y) )    [{X:x, A:f(x)=f(y), T:6}]
+    list( @x,P(x,x) , P(7.1,7.1) )      [{X:x, A:P(x,x), T:7.1}]
+    list( @x,P(x,x) , P(3,4) )          []
+    list( @x,(x>7 & @y,P(x,y)) ,
+          9>7 & @y,P(9,y) )             [{X:x, A:x>7&@y,P(x,y), T:9}]
+    list( @x,(x>7 & @y,P(x,y)) ,
+          9>7 & @y,P(x,y) )             []
+    list( @A',f(X',A') , f(X',X') )     [{X:A', A:f(X',A'), T:X'}]
+
+    EXISTENTIAL ELIMINATION RULE
+
+    Let R = list( #X,A , const(C) , A[X=C] ).  Same story as above.
+
+    list( #t,t^2<0 , const(r), r^2<0 )  [{X:t, A:t^2<0, C:r}]
+    list( #t,t^2<0 , const(r), t^2<0 )  []
+    list( #t,t^2<0 , const(t), r^2<0 )  []
+    list( #t,t^2<0 , const(t), t^2<0 )  [{X:t, A:t^2<0, C:t}]
+    list( #t,t^2<0 , const(phi^2+9) ,
+          (phi^2+9)^2<0 )               [{X:t, A:t^2<0, C:phi^2+9}]
+    list( #t,r^2<0 , const(r), r^2<0 )  [{X:t, A:r^2<0, C:r}]
+    list( #r,r^2<0 , const(r), r^2<0 )  [{X:r, A:r^2<0, C:r}]
+    list( #C',A'<C' , const(X'), A'<X' )[{X:C', A:A'<C', C:X'}]
+
+    UNIVERSAL INTRODUCTION RULE
+
+    Let R = list( var(V) , A , @X,A[V=X] ).  Same story as above.
+
+    list( var(x), x^2>=0, @t,t^2>=0 )   [{V:x, A:x^2>=0, X:t}]
+    list( var(x), x^2>=0, @x,x^2>=0 )   [{V:x, A:x^2>=0, X:x}]
+    list( var(x), x^2>=0, @x,t^2>=0 )   []
+    list( var(x), t^2>=0, @x,x^2>=0 )   []
+    list( var(x), t^2>=0, @x,t^2>=0 )   [{V:x, A:t^2>=0, X:x}]
+    list( var(V') , hi(A',V') ,
+          @X',hi(A',X') )               [{V:V', A:hi(A',V'), X:X'}]
+
+    EXISTENTIAL INTRODUCTION RULE
+
+    Let R = list( A[X=T], #X,A ).  Same story as above.
+
+    in(5,nat)&notin(5,evens) ,
+        #t,in(t,nat)&notin(t,evens)     [{A:in(t,nat)&notin(t,evens), X:t,
+                                          T:5}]
+    uncble(minus(reals,rats)) ,
+        #S',uncble(S')                  [{A:uncble(S'), X:S',
+                                          T:minus(reals,rats)}]
+    uncble(k) , #k,uncble(k)            [{A:uncble(k), X:k, T:k}]
+    in(4,nat)&notin(5,evens) ,
+        #t,in(t,nat)&notin(t,evens)     []
+    in(4,nat)&notin(4,evens) ,
+        #t,in(t,nat)&notin(t,evens)     []
+    in(5,nat)&notin(5,evens) ,
+        #x,in(t,nat)&notin(t,evens)     []
+    in(5,nat)&notin(5,evens) ,
+        #x,in(5,nat)&notin(5,evens)     [{A:in(5,nat)&notin(5,evens), X:x,
+                                          T:unused_1}]
+    L' , #M',L'                         [{A:L', X:M', T:unused_1}]
+    L'(M') , #N',L'(N')                 [{A:L'(N'), X:N', T:M'}]
+
+    EQUALITY ELIMINATION RULE
+
+    Let R = list( A=B , S , S[A~B] ).  Same story as above.
+
+    x=7 , f(x)=y , f(7)=7               [{A:x, B:7, S:f(x)=y}]
+    x=7 , f(x)=y , f(x)=7               []
+    x=7 , f(x)=y , f(7)=7               []
+    f(x)=y , x=7 , f(7)=7               []
+    a=b , b=b , b=a                     [{A:a, B:b, S:b=b}]
+    sum(i,0,n-1,2^i)=2^n-1 ,
+        (2^n-1)+1=2^n ,
+        sum(i,0,n-1,2^i)+1=2^n          []
+    2^n-1=sum(i,0,n-1,2^i) ,
+        (2^n-1)+1=2^n ,
+        sum(i,0,n-1,2^i)+1=2^n          [{A:sum(i,0,n-1,2^i), B:2^n-1,
+                                          S:(2^n-1)+1=2^n}]
+
+    HARDER SUBSTITUTIONS
+
+    Now we list pattern, expresion, and results, as at first.
+
+    a=b[X=Y]            a=b             [{X:unused_1,Y:unused_2}]
+    a=b[X=a]            a=b             [{X:unused_1}]
+    a=b[a=Y]            a=b             [{Y:a}]
+    a=b[a=b]            a=b             []
+    a=b[a~b]            a=b             [{}]
+    a=b[a=c]            a=b             []
+    a=b[a~c]            a=b             [{}]
+    a=b[a=a]            a=b             [{}]
+    A[a=b]              a=b             []
+    A[a~b]              a=b             [{A:a=b}]
+    A[c=b]              a=b             [{A:a=b}]
+    A[c~b]              a=b             [{A:a=b}]
+    A[B=b]              a=b             [{A:a=b,B:unused_1}]
+    A[B~b]              a=b             [{A:a=b,B:unused_1}]
+    f(f[A=g])           f(g)            [{A:f}]
+    f(f)[A=g]           g(g)            [{A:f}]
+    f(f[A=g])           g(g)            []
+    f(g(a))[A=B]        f(g(b))         [{A:a,B:b}]
+    f(g(a),a)[A=B]      f(g(b),a)       []
+    f(g(a),a)[A~B]      f(g(b),a)       [{A:a,B:b}]
+    f(g(a),a)[A=B]      f(g(b),c)       []
+    f(g(a),a)[A~B]      f(g(b),c)       []
+        previous four cases repeated, but with first and second arguments
+        in both the pattern and the expression interchanged should give same
+        results
+
+    UNDERSPECIFIED
+
+    A[B=C]              any(thing)      [{A:any(thing),B:unused_1,
+                                          C:unused_2}]
+    A[B~C]              any(thing)      [{A:any(thing),B:unused_1,
+                                          C:unused_2}]
+
+    Also verify that if there are metavariables in the expression, that an
+    error is thrown.
+```
+
+## Parsing
+
+ * Import the Earley parser from the desktop version of Lurch, into the file
+   `src/parsing.duo.litcoffee`.
+ * Document it, while creating unit tests for its features.
+ * Create a routine that translates MathQuill DOM trees into unambiguous
+   string representations of their content (using parentheses to group
+   things like exponents, etc.).
+ * Use the web app to create and save many example DOM trees using the
+   MathQuill TinyMCE plugin, for use in unit tests.
+ * Manually convert each of those into unambiguous strings, and use those to
+   generate unit tests for the translation routine created above.
+ * Create a parser that can convert such strings into OpenMath trees.
+ * Convert all the previous tests into unit tests for that parser.
+
+## Example Application
+
+Create a tutorial page in the repository (as a `.md` file) on how the reader
+can create their own webLurch-based applications.  Link to it from [the main
+README file](../README.md).
+
+It might be nice to have another example application, this one that lets you
+write math formulas in ordinary mathematical notation, and then does simple
+computations based on them, using MathJS.  You would need a method for
+converting OpenMath trees into MathJS calls.
 
 That is the last work that can be done without there being additional design
 work completed.  The section on [Dependencies](#dependencies), below,

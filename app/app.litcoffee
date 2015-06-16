@@ -1884,12 +1884,6 @@ toolbar and menu initializations below.
 
         groupTypeNames = ( type.name for type in groupTypes )
 
-Before loading TinyMCE, we load [a third-party plugin for editing math
-equations](eqed/).
-
-        tinymce.PluginManager.load 'equationeditor',
-            '/weblurch/app/eqed/plugins/equationeditor/plugin.min.js'
-
 Install a TinyMCE instance in that text area, with specific plugins, toolbar
 buttons, and context menu items as given below.
 
@@ -1910,11 +1904,7 @@ that begins with a hyphen is a local plugin written as part of this project.
 
             plugins : 'advlist table charmap colorpicker image link
                 importcss paste print save searchreplace textcolor
-                fullscreen -loadsave -overlay -groups equationeditor'
-
-The third-party plugin for math equations requires the following stylesheet.
-
-            content_css : 'eqed/mathquill.css'
+                fullscreen -loadsave -overlay -groups -equationeditor'
 
 The groups plugin requires that we add the following, to prevent resizing of
 group boundary images.
@@ -2018,6 +2008,10 @@ that seems like it ought to be handled for us by the fullScreen plugin).
                         for h in editor.getDoc().getElementsByTagName 'html'
                             h.style.height = 'auto'
                     , 0
+
+The third-party plugin for math equations requires the following stylesheet.
+
+                    editor.dom.loadCSS './eqed/mathquill.css'
 
 Add an icon to the left of the File menu, if one has been specified.
 
