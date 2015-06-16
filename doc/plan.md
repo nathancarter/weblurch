@@ -25,6 +25,9 @@ required order of completion.
    third argument, an object mapping names to functions that should be
    installed in the worker environment.  Store this object when you store
    the function itself.
+ * Extend the previous feature so that if one of the keys of that object is
+   `importScripts`, then its value is used as an array, and the worker's
+   `importScripts` function is applied to that array.
  * Ensure that the Background module passes to the `BackgroundFunction`
    constructor the object of functions to be installed in that function's
    scope.
@@ -71,9 +74,17 @@ a summary here; these are not to-dos, but there are to-dos below this list.
  * No encoding for foreign objects is specified here.
 
 To implement this:
- * Create `src/openmath.litcoffee`.
+ * Create `src/openmath.duo.litcoffee`.
  * Move the above informal specification into that file.
  * Create a class for OpenMath tree nodes with no constructor.
+ * Extend the build process so that `.duo.litcoffee` files are compiled two
+   ways.  First, they should be included in the regular build, so that they
+   become part of the app.  Second, they should also be compiled separately
+   into a `.min.js` file in the app folder, so that they can be imported
+   into worker scripts.
+ * Test to ensure that BackgroundFunctions can use `importScripts` to pull
+   in the compiled `openmath.min.js` file, and verify that the `OpenMath`
+   class is defined therein.
  * Add a class method that checks to see if an object is of any one of the
    formats above; if so, it returns true, and if not, it returns an error
    describing why not.  The routine should be recursive, verifying that
@@ -112,6 +123,7 @@ To implement this:
 
 This is a re-implementation (and improvement) of the matching module from
 the desktop version of Lurch.
+ * Create a file `src/matching.duo.litcoffee`.
  * Create a function for marking a variable as a metavariable with an
    attribute, and another for testing whether a variable is a metavariable.
 
@@ -239,6 +251,7 @@ unused metavariables to things like "unused_1", etc.
    metavariables and lower case letters for regular variables, and otherwise
    easily human-readable/suggestive notation.  The one exception is that @
    means the universal quantifier and # means the existential quantifier.
+   Note that these unit tests do not require a PhantomJS environment.
 ```
     pattern             expression      results
     -------             ----------      -------
@@ -415,37 +428,32 @@ unused metavariables to things like "unused_1", etc.
     Also verify that if there are metavariables in the expression, that an
     error is thrown.
 ```
+
+## Parsing
+
+ * Import the Earley parser from the desktop version of Lurch, into the file
+   `src/parsing.duo.litcoffee`.
+ * Document it, while creating unit tests for its features.
+ * Create a routine that translates MathQuill DOM trees into unambiguous
+   string representations of their content (using parentheses to group
+   things like exponents, etc.).
+ * Use the web app to create and save many example DOM trees using the
+   MathQuill TinyMCE plugin, for use in unit tests.
+ * Manually convert each of those into unambiguous strings, and use those to
+   generate unit tests for the translation routine created above.
+ * Create a parser that can convert such strings into OpenMath trees.
+ * Convert all the previous tests into unit tests for that parser.
+
 ## Example Application
 
-Create some non-Lurch application that uses the above technology, as a way
-to verify that it's behaving the way you expect.  That test application
-could become part of the test suite.  After all, the technology that exists
-to this point (groups and the background processing thereof) is complex and
-many-layered, and it would be good to have a thorough test at this level.
+Create a tutorial page in the repository (as a `.md` file) on how the reader
+can create their own webLurch-based applications.  Link to it from [the main
+README file](../README.md).
 
-For example, consider making a simple computation engine using
-[MathJS](http://mathjs.org/index.html).
-
-Here are the specific steps.
- * Create a tutorial page in the repository (as a `.md` file) on how the
-   reader can create their own webLurch-based applications.  Link to it from
-   [the main README file](../README.md).
-
-## Math
-
-Before proceeding with this section, do review what's already been done in
-this space ([1](https://github.com/foraker/tinymce_equation_editor),
-[2](https://github.com/efloti/plugin-mathjax-pour-tinymce),
-[3](http://www.wiris.com/solutions/tinymce),
-[4](http://www.imathas.com/editordemo/demo.html),
-[5](https://docs.moodle.org/26/en/TinyMCE_Mathslate),
-[6](https://www.codecogs.com/latex/integration/tinymce_v4/install.php)).
- * Consider whether you can render the MathQuill using
-   [MathJax](http://www.mathjax.org/) when the cursor exits, to get prettier
-   results.
- * Consider whether you can add the capability to do MathJax-rendered LaTeX
-   source, with a popup text box, like in the Simple Math Editor in the
-   desktop Lurch.
+It might be nice to have another example application, this one that lets you
+write math formulas in ordinary mathematical notation, and then does simple
+computations based on them, using MathJS.  You would need a method for
+converting OpenMath trees into MathJS calls.
 
 That is the last work that can be done without there being additional design
 work completed.  The section on [Dependencies](#dependencies), below,
