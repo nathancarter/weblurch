@@ -535,3 +535,238 @@ the value for c must be an array of OpenMath JSON structures.
                     { t : 'v', n : 'y' }
                 ]
             } ).toMatch /Key c not valid in object of type v/
+
+## `OMNode.decode`
+
+This section tests the `OMNode.decode` routine, ensuring that it correctly
+constructs `OMNode` instances from their serialized versions, or returns
+error messages when that is appropriate.
+
+    describe 'OMNode.decode', ->
+
+### should return errors from invalid JSON
+
+That is, if the input to `decode` is not even valid JSON, then the JSON
+parsing error should be returned as a string
+
+        it 'should return errors from invalid JSON', ->
+            expect( OMNode.decode 'something' ).toEqual 'Unexpected token s'
+            expect( OMNode.decode '{a:"b"}' ).toEqual 'Unexpected token a'
+            expect( OMNode.decode '{"a":7 7}' ).toEqual 'Unexpected number'
+
+### should return errors from invalid OpenMath JSON
+
+That is, if the input to `decode` is valid JSON, but the parsed version of
+that input does not pass `checkJSON`, then the error from `checkJSON` is
+returned.  Here we just a small selection of the tests from earlier in this
+file, now compressing the objects into JSON strings.
+
+        it 'should return errors from invalid OpenMath JSON', ->
+            expect( OMNode.decode '{"t":"sy","n":"name_valid",' + \
+                '"cd":["cd","invalid","type"],"uri":"uri valid"}'
+            ).toMatch /CD for sy type was object, not string/
+            expect( OMNode.decode '{"t":"i","v":5,"x":9}' ) \
+                .toMatch /Key x not valid in object of type i/
+            expect( OMNode.decode JSON.stringify {
+                t : 'e'
+                s : { t : 'sy', n : 'peaceOnEarthNotFound', cd : 'foo' }
+                c : [
+                    { t : 'v', n : 'x', c : [ ] }
+                    { t : 'v', n : 'y' }
+                ]
+            } ).toMatch /Key c not valid in object of type v/
+
+### should return OMNodes from valid OpenMath JSON
+
+When the input to `decode` is valid JSON that, when parsed, passes the
+`checkJSON` test, `decode` should return an OMNode instance.  Here we just
+run a few of the valid OpenMath JSON structures from earlier through
+`decode` and verify that the result is an instance of `OMNode`.
+
+        it 'should return OMNodes from valid OpenMath JSON', ->
+            expect( OMNode.decode( '{"t":"i","v":-335829}' ) \
+                instanceof OMNode ).toBeTruthy()
+            expect( OMNode.decode( '{
+                "t" : "sy",
+                "n" : "_",
+                "cd" : "dummy-not-real",
+                "uri" : "http://www.lurchmath.org"
+            }' ) instanceof OMNode ).toBeTruthy()
+            expect( OMNode.decode( JSON.stringify( {
+                t : 'st'
+                v : ' 1 2 3 4 5 '
+                a : {
+                    '{"t":"sy","n":"A","cd":"X"}' : { t : 'i', v : '5' }
+                    '{"t":"sy","n":"B","cd":"X"}' : { t : 'st', v : 'foo' }
+                    '{"t":"sy","n":"C","cd":"X"}' : { t : 'v', n : 'count' }
+                }
+            } ) ) instanceof OMNode ).toBeTruthy()
+
+### should set up parent pointers correctly
+
+Whenever `decode` produces an `OMNode` instance, all nodes in the OpenMath
+tree should have `p` (parent) pointers to their container (parent) objects.
+The topmost node will a null parent.  This test verifies that.
+
+        it 'should set up parent pointers correctly', ->
+            decoded = OMNode.decode '{"t":"i","v":-335829}'
+            expect( decoded ).toBeTruthy()
+            tree = decoded.tree
+            expect( tree ).toBeTruthy()
+            expect( tree.p ).toBeNull()
+            decoded = OMNode.decode '{
+                "t" : "sy",
+                "n" : "_",
+                "cd" : "dummy-not-real",
+                "uri" : "http://www.lurchmath.org"
+            }'
+            expect( decoded ).toBeTruthy()
+            tree = decoded.tree
+            expect( tree ).toBeTruthy()
+            expect( tree.p ).toBeNull()
+            decoded = OMNode.decode JSON.stringify {
+                t : 'st'
+                v : ' 1 2 3 4 5 '
+                a : {
+                    '{"t":"sy","n":"A","cd":"X"}' : { t : 'i', v : '5' }
+                    '{"t":"sy","n":"B","cd":"X"}' : { t : 'st', v : 'foo' }
+                    '{"t":"sy","n":"C","cd":"X"}' : { t : 'v', n : 'count' }
+                }
+            }
+            expect( decoded ).toBeTruthy()
+            tree = decoded.tree
+            expect( tree ).toBeTruthy()
+            expect( tree.p ).toBeNull()
+            expect( tree.a['{"t":"sy","n":"A","cd":"X"}'].p ).toBe tree
+            expect( tree.a['{"t":"sy","n":"B","cd":"X"}'].p ).toBe tree
+            expect( tree.a['{"t":"sy","n":"C","cd":"X"}'].p ).toBe tree
+            decoded = OMNode.decode JSON.stringify {
+                t : 'bi'
+                s : { t : 'sy', n : 'forall', cd : 'example' }
+                v : [ { t : 'v', n : 'x' } ]
+                b : {
+                    t : 'a'
+                    c : [
+                        { t : 'v', n : 'P' }
+                        {
+                            t : 'a'
+                            c : [
+                                { t : 'v', n : 'f' }
+                                { t : 'v', n : 'x' }
+                            ]
+                        }
+                        { t : 'v', n : 'y' }
+                    ]
+                }
+            }
+            expect( decoded ).toBeTruthy()
+            tree = decoded.tree
+            expect( tree ).toBeTruthy()
+            expect( tree.p ).toBeNull()
+            expect( tree.s.p ).toBe tree
+            expect( tree.v[0].p ).toBe tree
+            expect( tree.b.p ).toBe tree
+            expect( tree.b.c[0].p ).toBe tree.b
+            expect( tree.b.c[1].p ).toBe tree.b
+            expect( tree.b.c[2].p ).toBe tree.b
+            expect( tree.b.c[1].c[0].p ).toBe tree.b.c[1]
+            expect( tree.b.c[1].c[1].p ).toBe tree.b.c[1]
+
+## `OMNode.encode`
+
+    describe 'OMNode.encode', ->
+
+This function should be the inverse to `decode`, tested above.  Because
+`decode` adds parent pointers, which make it harder to check equality of two
+structures, we test as follows:
+ * Take a valid OpenMath JSON object
+ * Apply JSON.stringify to it
+ * Apply OMNode.decode to the resulting JSON string
+ * Apply OMNode.encode to the resulting OMNode
+ * Apply JSON.parse to the resulting string
+ * Compare this last JSON object to the first for structural equality
+
+### should correctly invert `OMNode.decode`
+
+This test just does the above procedure on several valid input structures,
+all taken from the first tests in this file.
+
+        it 'should correctly invert OMNode.decode', ->
+
+The integer -1:
+
+            structure1 = { t : 'i', v : '-1' }
+            string1 = JSON.stringify structure1
+            node = OMNode.decode string1
+            string2 = node.encode()
+            structure2 = JSON.parse string2
+            expect( structure1 ).toEqual structure2
+
+A long string:
+
+            structure1 = {
+                t : 'st'
+                v : "In the first survey question, respondents were asked to name the desired characteristics of a top predictive modeler. The top answer was 'good business knowledge,' followed closely by 'understanding of statistics.' Other popular responses were 'avid learner,' 'communicating results,' 'data expertise,' and 'good programmer.'"
+            }
+            string1 = JSON.stringify structure1
+            node = OMNode.decode string1
+            string2 = node.encode()
+            structure2 = JSON.parse string2
+            expect( structure1 ).toEqual structure2
+
+An application:
+
+            structure1 = {
+                t : 'a'
+                c : [
+                    { t : 'v', n : 'g' }
+                    { t : 'i', v : 3 }
+                    { t : 'f', v : -0.1 }
+                ]
+            }
+            string1 = JSON.stringify structure1
+            node = OMNode.decode string1
+            string2 = node.encode()
+            structure2 = JSON.parse string2
+            expect( structure1 ).toEqual structure2
+
+A nested binding:
+
+            structure1 = {
+                t : 'bi'
+                s : { t : 'sy', n : 'forall', cd : 'example' }
+                v : [ { t : 'v', n : 'x' } ]
+                b : {
+                    t : 'bi'
+                    s : { t : 'sy', n : 'exists', cd : 'example' }
+                    v : [ { t : 'v', n : 'z' } ]
+                    b : {
+                        t : 'a'
+                        c : [
+                            { t : 'sy', n : 'greaterThan', cd : 'example' }
+                            { t : 'v', n : 'x' }
+                            { t : 'v', n : 'z' }
+                        ]
+                    }
+                }
+            }
+            string1 = JSON.stringify structure1
+            node = OMNode.decode string1
+            string2 = node.encode()
+            structure2 = JSON.parse string2
+            expect( structure1 ).toEqual structure2
+
+A symbol with an attribute:
+
+            structure1 = {
+                t : 'sy'
+                n : 'arcsec'
+                cd : 'transc1'
+                uri : 'http://www.openmath.org/cd'
+                a : { '{"t":"sy","n":"A","cd":"B"}' : { t : 'i', v : '5' } }
+            }
+            string1 = JSON.stringify structure1
+            node = OMNode.decode string1
+            string2 = node.encode()
+            structure2 = JSON.parse string2
+            expect( structure1 ).toEqual structure2

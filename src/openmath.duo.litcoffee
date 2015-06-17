@@ -38,6 +38,8 @@ The following line ensures that this file works in Node.js, for testing.
 
     window.OMNode = class OMNode
 
+### Class ("static") methods
+
 The following class method checks to see if an object is of any one of the
 formats specified above; if so, it returns true, and if not, it returns an
 error describing why not.  It is recursive, verifying that children are also
@@ -213,6 +215,51 @@ If all of the above checks pass then we return null, meaning the object is
 valid (no errors).
 
             null
+
+The following function converts a string encoding of an OpenMath structure
+and creates an instance of `OMNode` for the corresponding structure.
+ * If the string contains invalid JSON, this routine will return an
+   error message string rather than an OMNode object.
+ * If it contains JSON for a structure that doesn't pass `checkJSON`, above,
+   again, an error message string is returned.
+ * Otherwise it adds appropriate parent pointers to the nodes in the
+   resulting tree, then wraps it in an instance of OMNode and returns it.
+
+        @decode : ( JSONstring ) ->
+            try object = JSON.parse JSONstring catch e then return e.message
+            if reason = @checkJSON object then return reason
+            setParents = ( node ) ->
+                for c in node.c ? [ ] # children, if any
+                    c.p = node
+                    setParents c
+                for v in node.v ? [ ] # bound variables, if any
+                    v.p = node
+                    setParents v
+                for own k, v of node.a ? { } # attribute values, if any
+                    v.p = node
+                    setParents v
+                # head symbol and body object, if any
+                if node.s? then node.s.p = node ; setParents node.s
+                if node.b? then node.b.p = node ; setParents node.b
+            setParents object
+            object.p = null
+            new OMNode object
+
+### Constructor
+
+The above factory function uses the following constructor.
+
+        constructor : ( @tree ) ->
+
+### Serialization
+
+Unserializing an `OMNode` object from a string is done by the `decode`
+method, above.  Serializing is done by its inverse, here, which simply uses
+`JSON.stringify`, but filters out parent pointers.
+
+        encode : =>
+            JSON.stringify @tree, ( k, v ) ->
+                if k is 'p' then undefined else v
 
 ## Export classes defined herein
 

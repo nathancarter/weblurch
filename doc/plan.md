@@ -20,11 +20,6 @@ required order of completion.
 ## OpenMath
 
 This work is in progress.  Here are the remaining tasks:
- * Create a factory function that takes a JSON string as input and:
-   * calls JSON.parse, returning an OMERR object if that fails
-   * calls the verification routine on it, returning an OMERR if it fails
-   * traverses the object tree, setting this new class as the prototype for
-     every node in the tree, and setting the parent node for every node also
  * Create factory functions OpenMath.symbol, OpenMath.variable, etc., with
    sortcuts sym, var, etc., and make the global name OM equal to OpenMath,
    so that people can write `OM.app(OM.var('f'),OM.var('x'))`.
@@ -33,8 +28,6 @@ This work is in progress.  Here are the remaining tasks:
  * Add the following methods to the OpenMath object class
    * getters for type, value, name, cd, uri, children, symbol, variables,
      and body
-   * encode(), which recreates the JSON from which the thing was encoded in
-     the first place
    * insertChild(), removeChild(), appendChild()
    * copy(), which should be as efficient as possible
    * equals()
