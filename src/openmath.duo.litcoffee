@@ -63,11 +63,9 @@ values also pass this same validity test, recursively.
                         return "Key #{key} invalid JSON"
                     if symbol.t isnt 'sy'
                         return "Key #{key} is not a symbol"
-                    if not @checkJSON symbol
-                        return "Key #{key} is not valid OpenMath JSON"
-                    if not @checkJSON value
-                        return "Value for key #{key} is not valid OpenMath
-                            JSON"
+                    if reason = @checkJSON symbol then return reason
+                    if reason = @checkJSON value then return reason
+                null
 
 This function verifies that the object doesn't have any keys beyond those on
 the list, plus 't' for type and 'a' for attributes.

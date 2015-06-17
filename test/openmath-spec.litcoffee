@@ -183,6 +183,76 @@ symbol.
                 c : [ ]
             } ).toBeNull()
 
+We can add valid attributes to any of the above forms.  Here we just sample
+a few.
+
+            expect( OMNode.checkJSON {
+                t : 'i'
+                v : 0
+                a : { }
+            } ).toBeNull()
+            expect( OMNode.checkJSON {
+                t : 'f'
+                v : -3284.352
+                a : { '{"t":"sy","n":"A","cd":"B"}' : { t : 'i', v : '5' } }
+            } ).toBeNull()
+            expect( OMNode.checkJSON {
+                t : 'st'
+                v : ' 1 2 3 4 5 '
+                a : {
+                    '{"t":"sy","n":"A","cd":"X"}' : { t : 'i', v : '5' }
+                    '{"t":"sy","n":"B","cd":"X"}' : { t : 'st', v : 'foo' }
+                    '{"t":"sy","n":"C","cd":"X"}' : { t : 'v', n : 'count' }
+                }
+            } ).toBeNull()
+            expect( OMNode.checkJSON {
+                t : 'ba'
+                v : new Uint8Array 1000
+                a : { }
+            } ).toBeNull()
+            expect( OMNode.checkJSON {
+                t : 'sy'
+                n : 'arcsec'
+                cd : 'transc1'
+                uri : 'http://www.openmath.org/cd'
+                a : { '{"t":"sy","n":"A","cd":"B"}' : { t : 'i', v : '5' } }
+            } ).toBeNull()
+            expect( OMNode.checkJSON {
+                t : 'v'
+                n : 'x'
+                a : {
+                    '{"t":"sy","n":"A","cd":"X"}' : { t : 'i', v : '5' }
+                    '{"t":"sy","n":"B","cd":"X"}' : { t : 'st', v : 'foo' }
+                    '{"t":"sy","n":"C","cd":"X"}' : { t : 'v', n : 'count' }
+                }
+            } ).toBeNull()
+            expect( OMNode.checkJSON {
+                t : 'a'
+                c : [
+                    { t : 'v', n : 'g' }
+                    { t : 'i', v : 3 }
+                    { t : 'f', v : -0.1 }
+                ]
+                a : { }
+            } ).toBeNull()
+            expect( OMNode.checkJSON {
+                t : 'e'
+                s : { t : 'sy', n : 'ErrorWithoutChildren', cd : 'XYZ' }
+                c : [ ]
+                a : { '{"t":"sy","n":"A","cd":"B"}' : { t : 'i', v : '5' } }
+            } ).toBeNull()
+            expect( OMNode.checkJSON {
+                t : 'bi'
+                s : { t : 'sy', n : 'summation', cd : 'foo' }
+                v : [ ]
+                b : { t : 'v', n : 'i' }
+                a : {
+                    '{"t":"sy","n":"A","cd":"X"}' : { t : 'i', v : '5' }
+                    '{"t":"sy","n":"B","cd":"X"}' : { t : 'st', v : 'foo' }
+                    '{"t":"sy","n":"C","cd":"X"}' : { t : 'v', n : 'count' }
+                }
+            } ).toBeNull()
+
 ### should find atomic nodes with the wrong form invalid
 
         it 'should find atomic nodes with the wrong form invalid', ->
