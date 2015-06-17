@@ -3,9 +3,9 @@ app/weblurch*.js
 app/app*.js
 app/weblurch.litcoffee
 app/app.litcoffee
-node_modules/*
-doc/test-results.md
+app/*.duo.litcoffee
 test/reports/*
+test/test-results.md
 nps-jn-test
 .atom-build.json
-test/test-results.md
+node_modules/

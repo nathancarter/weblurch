@@ -228,12 +228,12 @@ be run.
         leftHandSide = group?.text?.split( '=' )?[0]
         whenToStop = ( new Date ).getTime() + 1000
         while ( new Date ).getTime() < whenToStop
-            result = if leftHandSide? and \
-                        /^[.0-9+*/ ()-]+$/.test leftHandSide
+            result = if leftHandSide? and isJustArithmetic leftHandSide
                 try eval leftHandSide catch e then '???'
             else
                 '???'
         result
+    , { isJustArithmetic : isJustArithmetic }, [ 'openmath.duo.min.js' ]
 
 What does it mean for something to be a name, or probably a name?  Proper
 names are three or fewer words, each of which is capitalized.

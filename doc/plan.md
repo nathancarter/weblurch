@@ -17,83 +17,9 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Extending the Background Module
-
- * Enhance the worker script so that it supports messages for installing
-   functions globally in the worker.
- * Extend the `Background.registerFunction` routine to take an optional
-   third argument, an object mapping names to functions that should be
-   installed in the worker environment.  Store this object when you store
-   the function itself.
- * Extend the previous feature so that if one of the keys of that object is
-   `importScripts`, then its value is used as an array, and the worker's
-   `importScripts` function is applied to that array.
- * Ensure that the Background module passes to the `BackgroundFunction`
-   constructor the object of functions to be installed in that function's
-   scope.
- * When workers are not available, so that BackgroundFunctions run in the
-   main thread, simply wrap the call to them inside a `with` clause that
-   uses the object of functions as its scope.
- * When workers are available, after sending the `setFunction` message to a
-   newly constructed worker, send the message for installing all the other
-   functions to be installed globally in the worker.
- * Write unit tests to ensure that this works, and even allows you to import
-   large modules, if you install all their functions, and they don't
-   depend upon state variables in their environment (or can set them up
-   themselves).
- * Add support for function names containing dots, by walking down the line
-   of identifiers in the chain and doing `prev[ident] ?= { }` for each,
-   with `prev = window` to start, and eventually `prev[last] = func`.  This
-   allows you to install methods in, say, the `Array` prototype.
-
 ## OpenMath
 
-Create an OpenMath module that uses the following conventions for an
-OpenMath JSON encoding.  (I made these up; the OpenMath mailing lists
-suggest that no one has yet proposed a standard JSON encoding.)  I just give
-a summary here; these are not to-dos, but there are to-dos below this list.
- * OMI - `{ t : 'i', v : 6 }` (where `t` stands for type and `v` for value),
-   and integers may also be stored as strings if desired (e.g., `-6`)
- * OMF - `{ t : 'f', v : -0.521 }`
- * OMSTR - `{ t : 'st', v : 'example' }`
- * OMB - `{ t : 'ba', v : a_Uint8Array_here }`
- * OMS - `{t : 'sy', n : 'symbolName', cd : 'cd', uri : 'http://...' }`,
-   where the URI is optional
- * OMV - `{ t : 'v', n : 'name' }`
- * OMA - `{ t : 'a', c : [ child, objects, here ] }` (children are the
-   required operator, followed by zero or more operands)
- * OMATTR - rather than wrap things in OMATTR nodes, simply add the
-   attributes object (a mapping from string keys to objects) to the existing
-   object, with 'a' as its key.  To create the string key for an OM symbol,
-   just use its JSON form (fully compact, as created by `JSON.stringify`
-   with one argument).
- * OMBIND - `{ t : bi', s : object, v : [ bound, vars ], b : object }`,
-   where `s` stands for the head symbol and `b` for the body
- * OMERR - `{ t : 'e', s : object, c : [ child, nodes, here ] }`, where `s`
-   stands for the head symbol, and `c` can be omitted if empty.
- * No encoding for foreign objects is specified here.
-
-To implement this:
- * Create `src/openmath.duo.litcoffee`.
- * Move the above informal specification into that file.
- * Create a class for OpenMath tree nodes with no constructor.
- * Extend the build process so that `.duo.litcoffee` files are compiled two
-   ways.  First, they should be included in the regular build, so that they
-   become part of the app.  Second, they should also be compiled separately
-   into a `.min.js` file in the app folder, so that they can be imported
-   into worker scripts.
- * Test to ensure that BackgroundFunctions can use `importScripts` to pull
-   in the compiled `openmath.min.js` file, and verify that the `OpenMath`
-   class is defined therein.
- * Add a class method that checks to see if an object is of any one of the
-   formats above; if so, it returns true, and if not, it returns an error
-   describing why not.  The routine should be recursive, verifying that
-   children are also of the correct form.
- * Create a factory function that takes a JSON string as input and:
-   * calls JSON.parse, returning an OMERR object if that fails
-   * calls the verification routine on it, returning an OMERR if it fails
-   * traverses the object tree, setting this new class as the prototype for
-     every node in the tree, and setting the parent node for every node also
+This work is in progress.  Here are the remaining tasks:
  * Create factory functions OpenMath.symbol, OpenMath.variable, etc., with
    sortcuts sym, var, etc., and make the global name OM equal to OpenMath,
    so that people can write `OM.app(OM.var('f'),OM.var('x'))`.
@@ -102,8 +28,6 @@ To implement this:
  * Add the following methods to the OpenMath object class
    * getters for type, value, name, cd, uri, children, symbol, variables,
      and body
-   * encode(), which recreates the JSON from which the thing was encoded in
-     the first place
    * insertChild(), removeChild(), appendChild()
    * copy(), which should be as efficient as possible
    * equals()

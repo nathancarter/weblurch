@@ -119,7 +119,7 @@
     whenToStop = (new Date).getTime() + 1000;
     while ((new Date).getTime() < whenToStop) {
       result = (function() {
-        if ((leftHandSide != null) && /^[.0-9+*/ ()-]+$/.test(leftHandSide)) {
+        if ((leftHandSide != null) && isJustArithmetic(leftHandSide)) {
           try {
             return eval(leftHandSide);
           } catch (_error) {
@@ -132,7 +132,9 @@
       })();
     }
     return result;
-  });
+  }, {
+    isJustArithmetic: isJustArithmetic
+  }, ['openmath.duo.min.js']);
 
   mightBeAName = function(text) {
     var word, words, _i, _len;

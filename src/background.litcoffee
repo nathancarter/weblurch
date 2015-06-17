@@ -23,11 +23,29 @@ used in the background.  Code cannot be run in the backgorund unless it has
 first been added to this global library of background-runnable functions,
 using this very API.
 
-        functions : { }
-        registerFunction : ( name, func ) ->
-            window.Background.functions[name] = func
+The optional third parameter is a dictionary of name-function pairs that
+will be installed in the background function's namespace when it is used.
+If the background function uses a Web Worker, these will be sent as strings
+to the worker for recreation into functions (so their environments will not
+be preserved).  If the background function is executed in the main thread
+(in environments that don't support Web Workers), a `with` clause will be
+used to ensure that the functions are in scope.  In that case, environments
+are preserved.  So write your functions independent of environment.
 
-The first public API this global object provides is the `addTask` function,
+The optional fourth parameter is an array of scripts to import into the web
+worker.  In a Web Worker implementation, these will be run using
+`importScripts`.  In a non-Web Worker implementation, these will do nothing;
+you should ensure that these same scripts are already imported into the
+environment from which this function is being called.
+
+        functions : { }
+        registerFunction : ( name, func, globals = { }, scripts = [ ] ) ->
+            window.Background.functions[name] =
+                function : func
+                globals : globals
+                scripts : scripts
+
+The second public API this global object provides is the `addTask` function,
 which lets you add a task to the background processing queue, to be handled
 as soon as earlier-added tasks are complete and resources are available.
 
@@ -103,9 +121,10 @@ appropriate `BackgroundFunction` instance.
 
                 runner = B.available[toStart.name]?.pop()
                 if not runner?
-                    func = B.functions[toStart.name]
-                    if not func? then continue
-                    runner = new BackgroundFunction func
+                    data = B.functions[toStart.name]
+                    if not data? then continue
+                    runner = new BackgroundFunction data.function,
+                        data.globals, data.scripts
                 toStart.runner = runner
                 B.runningTasks.push toStart
 
@@ -171,7 +190,7 @@ Workers.
 The constructor stores in the `@function` member the function that this
 object is able to run in the background.
 
-        constructor : ( @function ) ->
+        constructor : ( @function, @globals, @scripts ) ->
 
 The promise object, which will be returned from the `call` member, permits
 chaining.  Thus all of its method return the promise object itself.  There
@@ -207,6 +226,10 @@ back on a much simpler technique later.
                     @promise?.errorCallback? event
                 , no
                 @worker.postMessage setFunction : "#{@function}"
+                for own name, func of @globals
+                    @globals[name] = "#{func}"
+                @worker.postMessage install : @globals
+                @worker.postMessage import : @scripts
 
 Background functions need to be callable.  Calling them returns the promise
 object defined in the constructor, into which we can install callbacks for
@@ -252,7 +275,9 @@ to know whether they're running in a worker or not.
             else
                 setTimeout =>
                     try
+                        `with ( this.globals ) {`
                         @promise.result = @function groups...
+                        `}`
                     catch e
                         @promise.error = e
                         @promise.errorCallback? @promise.error
