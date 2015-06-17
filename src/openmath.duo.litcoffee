@@ -32,11 +32,11 @@ v2.0](http://www.openmath.org/standard/om20-2004-06-30/).)
 
 The following line ensures that this file works in Node.js, for testing.
 
-    if global? and not window? then window = global
+    if not exports? then exports = module?.exports ? window
 
 ## OpenMath Node class
 
-    window.OMNode = class OMNode
+    exports.OMNode = class OMNode
 
 ### Class ("static") methods
 
@@ -67,7 +67,6 @@ values also pass this same validity test, recursively.
                         return "Key #{key} is not a symbol"
                     if reason = @checkJSON symbol then return reason
                     if reason = @checkJSON value then return reason
-                null
 
 This function verifies that the object doesn't have any keys beyond those on
 the list, plus 't' for type and 'a' for attributes.
@@ -260,8 +259,3 @@ method, above.  Serializing is done by its inverse, here, which simply uses
         encode : =>
             JSON.stringify @tree, ( k, v ) ->
                 if k is 'p' then undefined else v
-
-## Export classes defined herein
-
-    if exports?
-        exports.OMNode = OMNode

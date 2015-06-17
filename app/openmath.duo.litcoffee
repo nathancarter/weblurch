@@ -32,11 +32,13 @@ v2.0](http://www.openmath.org/standard/om20-2004-06-30/).)
 
 The following line ensures that this file works in Node.js, for testing.
 
-    if global? and not window? then window = global
+    if not exports? then exports = module?.exports ? window
 
 ## OpenMath Node class
 
-    window.OMNode = class OMNode
+    exports.OMNode = class OMNode
+
+### Class ("static") methods
 
 The following class method checks to see if an object is of any one of the
 formats specified above; if so, it returns true, and if not, it returns an
@@ -65,7 +67,6 @@ values also pass this same validity test, recursively.
                         return "Key #{key} is not a symbol"
                     if reason = @checkJSON symbol then return reason
                     if reason = @checkJSON value then return reason
-                null
 
 This function verifies that the object doesn't have any keys beyond those on
 the list, plus 't' for type and 'a' for attributes.
@@ -156,7 +157,7 @@ identifier, matching the same regular expression as above.
                         return "Name for v type was #{typeof object.n},
                             not string"
                     if not identRE.test object.n
-                        return "Invalid identifier as symbol name:
+                        return "Invalid identifier as variable name:
                             #{object.n}"
 
 Applications must have t and c keys, the latter of which must be an array of
@@ -183,7 +184,7 @@ variables, and b any OpenMath node.
                     if object.s.t isnt 'sy'
                         return "Head of a binding must be a symbol"
                     if object.v not instanceof Array
-                        return "In a binding, the v key must be an array"
+                        return "In a binding, the v value must be an array"
                     for variable in object.v
                         if reason = @checkJSON variable then return reason
                         if variable.t isnt 'v'
@@ -214,7 +215,47 @@ valid (no errors).
 
             null
 
-## Export classes defined herein
+The following function converts a string encoding of an OpenMath structure
+and creates an instance of `OMNode` for the corresponding structure.
+ * If the string contains invalid JSON, this routine will return an
+   error message string rather than an OMNode object.
+ * If it contains JSON for a structure that doesn't pass `checkJSON`, above,
+   again, an error message string is returned.
+ * Otherwise it adds appropriate parent pointers to the nodes in the
+   resulting tree, then wraps it in an instance of OMNode and returns it.
 
-    if exports?
-        exports.OMNode = OMNode
+        @decode : ( JSONstring ) ->
+            try object = JSON.parse JSONstring catch e then return e.message
+            if reason = @checkJSON object then return reason
+            setParents = ( node ) ->
+                for c in node.c ? [ ] # children, if any
+                    c.p = node
+                    setParents c
+                for v in node.v ? [ ] # bound variables, if any
+                    v.p = node
+                    setParents v
+                for own k, v of node.a ? { } # attribute values, if any
+                    v.p = node
+                    setParents v
+                # head symbol and body object, if any
+                if node.s? then node.s.p = node ; setParents node.s
+                if node.b? then node.b.p = node ; setParents node.b
+            setParents object
+            object.p = null
+            new OMNode object
+
+### Constructor
+
+The above factory function uses the following constructor.
+
+        constructor : ( @tree ) ->
+
+### Serialization
+
+Unserializing an `OMNode` object from a string is done by the `decode`
+method, above.  Serializing is done by its inverse, here, which simply uses
+`JSON.stringify`, but filters out parent pointers.
+
+        encode : =>
+            JSON.stringify @tree, ( k, v ) ->
+                if k is 'p' then undefined else v

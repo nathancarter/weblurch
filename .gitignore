@@ -8,11 +8,9 @@ app/filedialog/*.png
 app/filedialog/*.js
 app/filedialog/*.litcoffee
 app/filedialog/*.map
+app/*.duo.litcoffee
 node_modules/*
-doc/*.litcoffee.html
-doc/*.md.html
-doc/test-results.md
 test/reports/*
+test/test-results.md
 nps-jn-test
 .atom-build.json
-test/test-results.md

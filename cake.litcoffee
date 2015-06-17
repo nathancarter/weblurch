@@ -82,15 +82,18 @@ requesting that they be compiled individually.  So we filter those out.
 
 Also compile any files specific to the main app (as opposed to the test
 app), which will sit in the app folder rather than the source folder.  The
-only exception to this rule is if any of them end in `.solo.litcoffee`, then
-they're requesting that they be compiled individually.  So we filter those
-out.
+exceptions to this rule are:
+ * if any of them end in `.solo.litcoffee`, then they're requesting that
+   they be compiled individually, so we filter those out, and
+ * if any of them end in `.duo.litcoffee`, then they've been copied to the
+   app folder from the source folder, and don't need to be compiled again.
 
         all = ( fs.readFileSync name for name in \
             build.dir( appdir, /\.litcoffee$/ ) \
             when name.indexOf( srcout ) is -1 and
                  name.indexOf( appout ) is -1 and
-                 name[-15..] isnt '.solo.litcoffee' )
+                 name[-15..] isnt '.solo.litcoffee' and
+                 name[-14..] isnt '.duo.litcoffee' )
         fs.writeFileSync p.resolve( appdir, appout ), all.join( '\n\n' ),
             'utf8'
 
@@ -104,9 +107,8 @@ all `.solo.litcoffee` files in the src and app folders.  It also processes
 `.duo.litcoffee` files, which are compiled into the app *and* compiled into
 individual `.min.js` files (for importing into web workers).
 
-        soloRE = /\.(solo|duo).litcoffee$/
-        solofiles = build.dir appdir, soloRE
-        srcsolofiles = build.dir srcdir, soloRE
+        solofiles = build.dir appdir, /\.solo.litcoffee$/
+        srcsolofiles = build.dir srcdir, /\.(solo|duo).litcoffee$/
         buildNext = ->
             if solofiles.length > 0
                 build.compile solofiles.shift(), buildNext
@@ -115,13 +117,13 @@ individual `.min.js` files (for importing into web workers).
                 build.compile file, ->
                     prefix = file.split( '/' ).pop()[..-10]
                     toMove = ( f for f in build.dir srcdir, RegExp prefix \
-                        when not soloRE.test f )
+                        when not /\.(solo|duo).litcoffee$/.test f )
                     build.runShellCommands ( for result in toMove
-                        description : "Moving #{result} into app/..."
+                        description : "\tMoving #{result} into app/..."
                         command : "mv #{result} app/"
                     ), ->
                         build.runShellCommands [
-                            description : "Copying src/#{prefix}litcoffee
+                            description : "\tCopying src/#{prefix}litcoffee
                                 into app/..."
                             command : "cp src/#{prefix}litcoffee app/"
                         ], buildNext
@@ -129,14 +131,12 @@ individual `.min.js` files (for importing into web workers).
                 done()
 
 We put that function as the last step in the compilation sequence, by using
-it as the last callback, below.  (Note that, although they are not indented,
-each new command below is nested one level deeper in callback functions,
-because of the `->` symbols at the end of each line.)
+it as the last callback, below.
 
         build.compile p.resolve( appdir, srcout ), ->
             build.compile p.resolve( appdir, appout ), ->
                 build.runShellCommands [
-                    description : 'Copying lz-string into app folder...'
+                    description : '\tCopying lz-string into app folder...'
                     command : "cp
                         node_modules/lz-string/libs/lz-string-1.3.3.js
                         #{appdir}/"
