@@ -153,20 +153,24 @@ identifier, matching the same regular expression as above.
                 when 'v'
                     if reason = checkKeys 'n' then return reason
                     if typeof object.n isnt 'string'
-                        return "Name for 'v' type was #{typeof object.n},
+                        return "Name for v type was #{typeof object.n},
                             not string"
                     if not identRE.test object.n
-                        return "Invalid identifier as symbol name:
+                        return "Invalid identifier as variable name:
                             #{object.n}"
 
 Applications must have t and c keys, the latter of which must be an array of
-objects that pass this same validity test, applied recursively.
+objects that pass this same validity test, applied recursively.  It may not
+be empty.
 
                 when 'a'
                     if reason = checkKeys 'c' then return reason
                     if object.c not instanceof Array
                         return "Children of application object was not an
                             array"
+                    if object.c.length is 0
+                        return "Application object must have at least one
+                            child"
                     for child in object.c
                         if reason = @checkJSON child then return reason
 
@@ -179,12 +183,12 @@ variables, and b any OpenMath node.
                     if object.s.t isnt 'sy'
                         return "Head of a binding must be a symbol"
                     if object.v not instanceof Array
-                        return "In a binding, the v key must be an array"
+                        return "In a binding, the v value must be an array"
                     for variable in object.v
                         if reason = @checkJSON variable then return reason
                         if variable.t isnt 'v'
                             return "In a binding, all values in the v array
-                                must have type 'v'"
+                                must have type v"
                     if reason = @checkJSON object.b then return reason
 
 Errors must have t, s, and c keys, with s a symbol and c an array of child

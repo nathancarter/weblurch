@@ -20,7 +20,6 @@ required order of completion.
 ## OpenMath
 
 This work is in progress.  Here are the remaining tasks:
- * Finish tests for `checkJSON` routine.
  * Create a factory function that takes a JSON string as input and:
    * calls JSON.parse, returning an OMERR object if that fails
    * calls the verification routine on it, returning an OMERR if it fails

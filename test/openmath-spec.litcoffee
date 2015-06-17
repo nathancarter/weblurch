@@ -122,7 +122,10 @@ We can apply variables as functions to other atomics.
                 ]
             } ).toBeNull()
             # myFunc()
-            expect( OMNode.checkJSON { t : 'a', c : [ ] } ).toBeNull()
+            expect( OMNode.checkJSON {
+                t : 'a'
+                c : [ { t : 'v', n : 'myFunc' } ]
+            } ).toBeNull()
 
 We can quantify over variables, even zero variables.
 
@@ -354,17 +357,181 @@ two criteria.
                 uri : 'valid uri'
             } ).toMatch /Invalid identifier as symbol CD: cd invalid/
 
-Variables
+Variables can't have keys other than t and n, and the value for the n key
+must have an OpenMath strings as its value that is a valid OpenMath
+identifier.
 
-Applications
-
-Bindings
-
-Errors
-
-            throw 'TEST NOT YET COMPLETE'
+            expect( OMNode.checkJSON {
+                t : 'v'
+                n : 'validName'
+                v : 'this key is not acceptable'
+            } ).toMatch /Key v not valid in object of type v/
+            expect( OMNode.checkJSON {
+                t : 'v'
+                n : [ 'name', 'invalid', 'type' ]
+            } ).toMatch /Name for v type was object, not string/
+            expect( OMNode.checkJSON {
+                t : 'v'
+                n : 'name invalid'
+            } ).toMatch /Invalid identifier as variable name: name invalid/
 
 ### should find compound nodes with the wrong form invalid
 
-        it 'should find compound nodes with the wrong form invalid', ->
-            throw 'TEST NOT YET IMPLEMENTED'
+Applications can't have keys other than t and c, and the value for the c key
+must be a nonempty array of valid OpenMath JSON structures.
+
+            expect( OMNode.checkJSON {
+                t : 'a'
+                c : [ { t : 'i', v : 6 } ]
+                v : 'bad'
+            } ).toMatch /Key v not valid in object of type a/
+            expect( OMNode.checkJSON {
+                t : 'a'
+                c : 7
+            } ).toMatch /Children of application object was not an array/
+            expect( OMNode.checkJSON {
+                t : 'a'
+                c : [ ]
+            } ).toMatch /Application object must have at least one child/
+            expect( OMNode.checkJSON {
+                t : 'a'
+                c : [
+                    { # valid
+                        t : 'i'
+                        v : 0
+                        a : { }
+                    }
+                    { # valid
+                        t : 'a'
+                        c : [
+                            { t : 'v', n : 'f' }
+                            { t : 'v', n : 'x' }
+                        ]
+                    }
+                    { #invalid
+                        t : 'v'
+                        n : 'name invalid'
+                    }
+                ]
+            } ).toMatch /Invalid identifier as variable name: name invalid/
+            expect( OMNode.checkJSON {
+                t : 'a'
+                c : [
+                    { # valid
+                        t : 'i'
+                        v : 0
+                        a : { }
+                    }
+                    { # valid at this level, but...
+                        t : 'a'
+                        c : [
+                            { t : 'v', n : 'f' } # valid
+                            { t : 'v', n : 'x' } # valid
+                            { t : 'i', v : 5, x : 9 } # invalid
+                        ]
+                    }
+                ]
+            } ).toMatch /Key x not valid in object of type i/
+
+Bindings can't have keys other than t, s, v, and b.  The s value must be a
+symbol, the v value an array of variables, and the b value any OpenMath JSON
+structure.
+
+            expect( OMNode.checkJSON {
+                t : 'bi'
+                s : { t : 'sy', n : 'forall', cd : 'logic' }
+                v : [ { t : 'v', n : 'x' } ]
+                b : {
+                    t : 'a'
+                    c : [
+                        { t : 'v', n : 'P' }
+                        { t : 'v', n : 'x' }
+                    ]
+                }
+                r : 'bad'
+            } ).toMatch /Key r not valid in object of type bi/
+            expect( OMNode.checkJSON {
+                t : 'bi'
+                s : { t : 'v', n : 'forall' }
+                v : [ { t : 'v', n : 'x' } ]
+                b : {
+                    t : 'a'
+                    c : [
+                        { t : 'v', n : 'P' }
+                        { t : 'v', n : 'x' }
+                    ]
+                }
+            } ).toMatch /Head of a binding must be a symbol/
+            expect( OMNode.checkJSON {
+                t : 'bi'
+                s : { t : 'sy', n : 'forall', cd : 'logic' }
+                v : 'this is not technically an array'
+                b : {
+                    t : 'a'
+                    c : [
+                        { t : 'v', n : 'P' }
+                        { t : 'v', n : 'x' }
+                    ]
+                }
+            } ).toMatch /In a binding, the v value must be an array/
+            expect( OMNode.checkJSON {
+                t : 'bi'
+                s : { t : 'sy', n : 'forall', cd : 'logic' }
+                v : [ { t : 'v', n : 'x' } ]
+                b : 'this is not an OpenMath JSON structure'
+            } ).toMatch /Expected an object, found string/
+            expect( OMNode.checkJSON {
+                t : 'bi'
+                s : { t : 'sy', n : 'forall', cd : 'logic' }
+                v : [ { t : 'i', v : 10000 } ]
+                b : {
+                    t : 'a'
+                    c : [
+                        { t : 'v', n : 'P' }
+                        { t : 'v', n : 'x' }
+                    ]
+                }
+            } ).toMatch \
+                /In a binding, all values in the v array must have type v/
+
+Errors must have only t, s, and c keys.  The value for s must be a symbol,
+the value for c must be an array of OpenMath JSON structures.
+
+            expect( OMNode.checkJSON {
+                t : 'e'
+                s : { t : 'sy', n : 'peaceOnEarthNotFound', cd : 'foo' }
+                c : [
+                    { t : 'v', n : 'x' }
+                    { t : 'v', n : 'y' }
+                ]
+                b : 'bad'
+            } ).toMatch /Key b not valid in object of type e/
+            expect( OMNode.checkJSON {
+                t : 'e'
+                s : [ ]
+                c : [
+                    { t : 'v', n : 'x' }
+                    { t : 'v', n : 'y' }
+                ]
+            } ).toMatch /Invalid type: undefined/
+            expect( OMNode.checkJSON {
+                t : 'e'
+                s : { t : 'v', n : 'w' }
+                c : [
+                    { t : 'v', n : 'x' }
+                    { t : 'v', n : 'y' }
+                ]
+            } ).toMatch /Head of an error must be a symbol/
+            expect( OMNode.checkJSON {
+                t : 'e'
+                s : { t : 'sy', n : 'peaceOnEarthNotFound', cd : 'foo' }
+                c : { t : 'v', n : 'x' }
+            } ).toMatch /In an error, the c key must be an array/
+            expect( OMNode.checkJSON {
+                t : 'e'
+                s : { t : 'sy', n : 'peaceOnEarthNotFound', cd : 'foo' }
+                c : [
+                    { t : 'v', n : 'x', c : [ ] }
+                    { t : 'v', n : 'y' }
+                ]
+            } ).toMatch /Key c not valid in object of type v/

@@ -63,11 +63,9 @@ values also pass this same validity test, recursively.
                         return "Key #{key} invalid JSON"
                     if symbol.t isnt 'sy'
                         return "Key #{key} is not a symbol"
-                    if not @checkJSON symbol
-                        return "Key #{key} is not valid OpenMath JSON"
-                    if not @checkJSON value
-                        return "Value for key #{key} is not valid OpenMath
-                            JSON"
+                    if reason = @checkJSON symbol then return reason
+                    if reason = @checkJSON value then return reason
+                null
 
 This function verifies that the object doesn't have any keys beyond those on
 the list, plus 't' for type and 'a' for attributes.
@@ -104,18 +102,19 @@ Floats must have t and v keys, and the latter must be a number.
                 when 'f'
                     if reason = checkKeys 'v' then return reason
                     if typeof object.v isnt 'number'
-                        return "Not a number: #{object.v}"
-                    if not isFinite object.v
-                        return 'OpenMath floats must be finite'
+                        return "Not a number: #{object.v} of type
+                            #{typeof object.v}"
                     if isNaN object.v
                         return 'OpenMath floats cannot be NaN'
+                    if not isFinite object.v
+                        return 'OpenMath floats must be finite'
 
 Strings must have t and v keys, and the latter must be a string.
 
                 when 'st'
                     if reason = checkKeys 'v' then return reason
                     if typeof object.v isnt 'string'
-                        return "Value for 's' type was #{typeof object.v},
+                        return "Value for st type was #{typeof object.v},
                             not string"
 
 Byte Arrays must have t and v keys, the latter of which is a `Uint8Array`.
@@ -123,7 +122,7 @@ Byte Arrays must have t and v keys, the latter of which is a `Uint8Array`.
                 when 'ba'
                     if reason = checkKeys 'v' then return reason
                     if object.v not instanceof Uint8Array
-                        return "Value for 'ba' type was not an instance of
+                        return "Value for ba type was not an instance of
                             Uint8Array"
 
 Symbols must have t, n, and cd keys, with an optional uri key, all of which
@@ -133,13 +132,13 @@ it must match the regular expression defined above.
                 when 'sy'
                     if reason = checkKeys 'n','cd','uri' then return reason
                     if typeof object.n isnt 'string'
-                        return "Name for 'sy' type was #{typeof object.n},
+                        return "Name for sy type was #{typeof object.n},
                             not string"
                     if typeof object.cd isnt 'string'
-                        return "CD for 'sy' type was #{typeof object.cd},
+                        return "CD for sy type was #{typeof object.cd},
                             not string"
                     if object.uri? and typeof object.uri isnt 'string'
-                        return "URI for 'sy' type was #{typeof object.uri},
+                        return "URI for sy type was #{typeof object.uri},
                             not string"
                     if not identRE.test object.n
                         return "Invalid identifier as symbol name:
@@ -154,20 +153,24 @@ identifier, matching the same regular expression as above.
                 when 'v'
                     if reason = checkKeys 'n' then return reason
                     if typeof object.n isnt 'string'
-                        return "Name for 'v' type was #{typeof object.n},
+                        return "Name for v type was #{typeof object.n},
                             not string"
                     if not identRE.test object.n
                         return "Invalid identifier as symbol name:
                             #{object.n}"
 
 Applications must have t and c keys, the latter of which must be an array of
-objects that pass this same validity test, applied recursively.
+objects that pass this same validity test, applied recursively.  It may not
+be empty.
 
                 when 'a'
                     if reason = checkKeys 'c' then return reason
                     if object.c not instanceof Array
                         return "Children of application object was not an
                             array"
+                    if object.c.length is 0
+                        return "Application object must have at least one
+                            child"
                     for child in object.c
                         if reason = @checkJSON child then return reason
 
@@ -185,7 +188,7 @@ variables, and b any OpenMath node.
                         if reason = @checkJSON variable then return reason
                         if variable.t isnt 'v'
                             return "In a binding, all values in the v array
-                                must have type 'v'"
+                                must have type v"
                     if reason = @checkJSON object.b then return reason
 
 Errors must have t, s, and c keys, with s a symbol and c an array of child
