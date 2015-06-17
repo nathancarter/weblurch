@@ -102,18 +102,19 @@ Floats must have t and v keys, and the latter must be a number.
                 when 'f'
                     if reason = checkKeys 'v' then return reason
                     if typeof object.v isnt 'number'
-                        return "Not a number: #{object.v}"
-                    if not isFinite object.v
-                        return 'OpenMath floats must be finite'
+                        return "Not a number: #{object.v} of type
+                            #{typeof object.v}"
                     if isNaN object.v
                         return 'OpenMath floats cannot be NaN'
+                    if not isFinite object.v
+                        return 'OpenMath floats must be finite'
 
 Strings must have t and v keys, and the latter must be a string.
 
                 when 'st'
                     if reason = checkKeys 'v' then return reason
                     if typeof object.v isnt 'string'
-                        return "Value for 's' type was #{typeof object.v},
+                        return "Value for st type was #{typeof object.v},
                             not string"
 
 Byte Arrays must have t and v keys, the latter of which is a `Uint8Array`.
@@ -121,7 +122,7 @@ Byte Arrays must have t and v keys, the latter of which is a `Uint8Array`.
                 when 'ba'
                     if reason = checkKeys 'v' then return reason
                     if object.v not instanceof Uint8Array
-                        return "Value for 'ba' type was not an instance of
+                        return "Value for ba type was not an instance of
                             Uint8Array"
 
 Symbols must have t, n, and cd keys, with an optional uri key, all of which
@@ -131,13 +132,13 @@ it must match the regular expression defined above.
                 when 'sy'
                     if reason = checkKeys 'n','cd','uri' then return reason
                     if typeof object.n isnt 'string'
-                        return "Name for 'sy' type was #{typeof object.n},
+                        return "Name for sy type was #{typeof object.n},
                             not string"
                     if typeof object.cd isnt 'string'
-                        return "CD for 'sy' type was #{typeof object.cd},
+                        return "CD for sy type was #{typeof object.cd},
                             not string"
                     if object.uri? and typeof object.uri isnt 'string'
-                        return "URI for 'sy' type was #{typeof object.uri},
+                        return "URI for sy type was #{typeof object.uri},
                             not string"
                     if not identRE.test object.n
                         return "Invalid identifier as symbol name:
