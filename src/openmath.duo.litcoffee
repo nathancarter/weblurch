@@ -36,7 +36,7 @@ The following line ensures that this file works in Node.js, for testing.
 
 ## OpenMath Node class
 
-    exports.OMNode = class OMNode
+    exports.OMNode = exports.OM = OM = class OMNode
 
 ### Class ("static") methods
 
@@ -223,10 +223,13 @@ and creates an instance of `OMNode` for the corresponding structure.
    again, an error message string is returned.
  * Otherwise it adds appropriate parent pointers to the nodes in the
    resulting tree, then wraps it in an instance of OMNode and returns it.
+The function can also take an object that has been parsed from such JSON
+text.
 
-        @decode : ( JSONstring ) ->
-            try object = JSON.parse JSONstring catch e then return e.message
-            if reason = @checkJSON object then return reason
+        @decode : ( json ) ->
+            if typeof json is 'string'
+                try json = JSON.parse json catch e then return e.message
+            if reason = @checkJSON json then return reason
             setParents = ( node ) ->
                 for c in node.c ? [ ] # children, if any
                     c.p = node
@@ -240,9 +243,9 @@ and creates an instance of `OMNode` for the corresponding structure.
                 # head symbol and body object, if any
                 if node.s? then node.s.p = node ; setParents node.s
                 if node.b? then node.b.p = node ; setParents node.b
-            setParents object
-            object.p = null
-            new OMNode object
+            setParents json
+            json.p = null
+            new OMNode json
 
 ### Constructor
 
@@ -259,3 +262,167 @@ method, above.  Serializing is done by its inverse, here, which simply uses
         encode : =>
             JSON.stringify @tree, ( k, v ) ->
                 if k is 'p' then undefined else v
+
+### Factory functions
+
+We provide here functions for creating each type of OMNode, from integer to
+error.  Each is a "static" (class) method, documented separately.  It
+returns an error message as a string if there was an error, instead of the
+desired OMNode instance.
+
+The integer factory function creates an OpenMath integer node, and must be
+passed a single parameter containing either an integer or a string
+representation of an integer, e.g., `OM.integer 100`.
+
+        @integer : ( value ) ->
+            OMNode.decode { t : 'i', v : value }
+
+The float factory function creates an OpenMath float node, and must be
+passed a single parameter containing a number, e.g., `OM.integer 1.234`,
+and that number cannot be infinite or NaN.
+
+        @float : ( value ) ->
+            OMNode.decode { t : 'f', v : value }
+
+The string factory function creates an OpenMath string node, and must be
+passed a single parameter containing a string, e.g., `OM.integer 'hi'`.
+
+        @string : ( value ) ->
+            OMNode.decode { t : 'st', v : value }
+
+The byte array factory function creates an OpenMath byte array node, and
+must be passed a single parameter that is an instance of `Uint8Array`.
+
+        @bytearray : ( value ) ->
+            OMNode.decode { t : 'ba', v : value }
+
+The symbol factory function creates an OpenMath symbol node, and must be
+passed two or three parameters, in this order: symbol name (a string),
+content dictionary name (a string), and optionally the CD's base URI (a
+string).
+
+        @symbol : ( name, cd, uri ) ->
+            OMNode.decode if uri?
+                { t : 'sy', n : name, cd : cd, uri : uri }
+            else
+                { t : 'sy', n : name, cd : cd }
+
+The variable factory function creates an OpenMath variable node, and must be
+passed one parameter, the variable name (a string).
+
+        @variable : ( name ) ->
+            OMNode.decode { t : 'v', n : name }
+
+The application factory creates an OpenMath application node, and accepts a
+variable number of arguments, each of which must be either an `OMNode`
+instance or the JSON object that could function as the tree within such an
+instance.  `OMNode` instances are copied, objects are used as-is.
+
+        @application : ( args... ) ->
+            result = { t : 'a', c : [ ] }
+            for arg in args
+                result.c.push if arg instanceof OMNode
+                    JSON.parse arg.encode() # copy without parent pointers
+                else
+                    arg
+            OMNode.decode result
+
+The attribution factory creates an OpenMath node from its first argument,
+and attaches to it the attributes specified by the remaining arguments.
+Those remaining arguments must come in pairs k1, v1, through kn, vn, and
+each ki,vi pair must be an OpenMath symbol node followed by any OpenMath
+node.  As in the case of applications, such nodes may be JSON objects or
+`OMNode` instances; the former are used as-is and the latter copied.  The
+first parameter can also be either a JSON object or an `OMNode` instance,
+and in the latter case it, too, is copied.
+
+        @attribution : ( node, attrs... ) ->
+            if node not instanceof Object
+                return 'Invalid first parameter to attribution'
+            if attrs.length % 2 isnt 0
+                return 'Incomplete key-value pair in attribution'
+            if node instanceof OMNode then node = JSON.parse node.encode()
+            while attrs.length > 0
+                node.a ?= { }
+                key = attrs.shift()
+                key = if key instanceof OMNode
+                    key.encode()
+                else
+                    JSON.stringify key
+                value = attrs.shift()
+                node.a[key] = if value instanceof OMNode
+                    JSON.parse value.encode() # copy without parent pointers
+                else
+                    value
+            OMNode.decode node
+
+The binding factory functions exactly like the application factory, except
+that it has restrictions on the types of its arguments.  The first must be a
+symbol (used as the head of the binding), the last can be any OpenMath node,
+and all those in between must be variables.  Furthermore, there must be at
+least two arguments, so that there is a head and a body.  Just as in the
+case of applications, `OMNode` instances are copied, but straight JSON
+objects are used as-is.
+
+        @binding : ( head, vars..., body ) ->
+            if head not instanceof Object
+                return 'Invalid first parameter to binding'
+            if body not instanceof Object
+                return 'Invalid last parameter to binding'
+            result =
+                t : 'bi'
+                s : if head instanceof OMNode
+                    JSON.parse head.encode()
+                else
+                    head
+                v : [ ]
+                b : if body instanceof OMNode
+                    JSON.parse body.encode()
+                else
+                    body
+            for variable in vars
+                result.v.push if variable instanceof OMNode
+                    JSON.parse variable.encode() # copy w/o parent pointers
+                else
+                    variable
+            OMNode.decode result
+
+The error factory functions exactly like the application factory, except
+that it has one restriction on the types of its arguments:  The first must
+be a symbol.  Just as in the case of applications, `OMNode` instances are
+copied, but straight JSON objects are used as-is.
+
+        @error : ( head, others... ) ->
+            if head not instanceof Object
+                return 'Invalid first parameter to binding'
+            result =
+                t : 'e'
+                s : if head instanceof OMNode
+                    JSON.parse head.encode()
+                else
+                    head
+                c : [ ]
+            for other in others
+                result.c.push if other instanceof OMNode
+                    JSON.parse other.encode() # copy without parent pointers
+                else
+                    other
+            OMNode.decode result
+
+## Nicknames
+
+Here we copy each of the factory functions to a short version if its own
+name, so that they can be combined in more compact form when creating
+expressions.  Each short version is simply the first 3 letters of its long
+version, to make them easy to remember.
+
+    OM.int = OM.integer
+    OM.flo = OM.float
+    OM.str = OM.string
+    OM.byt = OM.bytearray
+    OM.sym = OM.symbol
+    OM.var = OM.variable
+    OM.app = OM.application
+    OM.att = OM.attribution
+    OM.bin = OM.binding
+    OM.err = OM.error

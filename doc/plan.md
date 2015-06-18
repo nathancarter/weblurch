@@ -20,19 +20,18 @@ required order of completion.
 ## OpenMath
 
 This work is in progress.  Here are the remaining tasks:
- * Create factory functions OpenMath.symbol, OpenMath.variable, etc., with
-   sortcuts sym, var, etc., and make the global name OM equal to OpenMath,
-   so that people can write `OM.app(OM.var('f'),OM.var('x'))`.
  * Create another factory by importing the JavaScript code for `simpleLob`
    from the desktop Lurch.
  * Add the following methods to the OpenMath object class
    * getters for type, value, name, cd, uri, children, symbol, variables,
      and body
+   * reparent(newPar), remove(), and replaceWith(newTree), and then begin
+     using these in the existing factory functions to ensure correct
+     parentage
    * insertChild(), removeChild(), appendChild()
    * copy(), which should be as efficient as possible
    * equals()
    * isFree(), replaceFree(from,to), occursFreeIn()
-   * reparent(newPar), remove(), and replaceWith(newTree)
    * applySubstitution() and applyAllSubstitutions() (which work with
      expressions of the form `x[y=z]`, meaning x with all occurrences of y
      replaced by z, and `x[y~z]`, meaning the same but "some" isntead of
