@@ -1892,6 +1892,42 @@ Errors:
             expect( lhs_e.equals node_sy ).toBeFalsy()
             expect( lhs_e.equals node_ba ).toBeFalsy()
 
+### should respect attributes parameter
+
+The second parameter to equals states whether to compare attributes.  It
+defaults to true, but can be false instead.  We test that briefly here.
+
+        it 'should respect attributes parameter', ->
+
+Create two nodes that are equal except for attributes.
+
+            lhs = OM.decode {
+                t : 'a'
+                c : [
+                    { t : 'v', n : 'f' }
+                    { t : 'v', n : 'x' }
+                ]
+                a : {
+                    '{"t":"sy","n":"A","cd":"B"}' : { t : 'f', v : -10.9 }
+                }
+            }
+            rhs = OM.decode {
+                t : 'a'
+                c : [
+                    { t : 'v', n : 'f' }
+                    { t : 'v', n : 'x' }
+                ]
+                a : {
+                    '{"t":"sy","n":"C","cd":"D"}' : { t : 'f', v : -10.9 }
+                }
+            }
+
+Verify that they are not the same, unless we explicitly disallow comparison
+of attributes.
+
+            expect( lhs.equals rhs ).toBeFalsy()
+            expect( lhs.equals rhs, no ).toBeTruthy()
+
 ## Copying structures
 
 We can copy an `OMNode` instance and it should yield a completely different
@@ -2346,3 +2382,76 @@ removing the first.
             expect( value2d ).toBeUndefined()
             expect( value2.parent ).toBeUndefined()
             expect( value1.parent ).toBeUndefined()
+
+### are consistent with setAttribute()
+
+Setting an OMNode's attributes with `setAttribute()` should not only yield
+correct results, but should also modify parent pointers appropriately, in
+the node being attributed, in the value of the attribute itself, and in any
+former parent of that value.
+
+        it 'are consistent with setAttribute()', ->
+
+We start with just a few small nodes, but modify and recombine them many
+times in many ways.
+
+            int = OM.simple '50'
+            app = OM.simple 'f(x,y)'
+            bin = OM.simple 'a.b[x,y,check(\'string\',y,x)]'
+            key1 = OM.simple 'key.one'
+            key2 = OM.simple 'key.two'
+            key3 = OM.simple 'key.three'
+
+Verify that all have undefined parents.
+
+            expect( int.parent ).toBeUndefined()
+            expect( app.parent ).toBeUndefined()
+            expect( bin.parent ).toBeUndefined()
+
+Make the integer an attribute of the x in f(x,y).  Verify that the parent
+pointer of the int has changed, but no others have, and that we can look up
+attributes in various nodes correctly.
+
+            x = app.children[1]
+            x.setAttribute key1, int
+            expect( int.parent.sameObjectAs x ).toBeTruthy()
+            expect( app.parent ).toBeUndefined()
+            expect( bin.parent ).toBeUndefined()
+            expect( app.getAttribute key1 ).toBeUndefined()
+            expect( x.getAttribute( key1 ).sameObjectAs int ).toBeTruthy()
+
+Move the same integer object to be an attribute of the y in f(x,y).  Verify
+that the parent pointer of the int has changed, but no others have, and that
+we can look up attributes in both x and y correctly (i.e., no longer in x,
+but now in y instead).
+
+            y = app.children[2]
+            y.setAttribute key1, int
+            expect( int.parent.sameObjectAs y ).toBeTruthy()
+            expect( app.parent ).toBeUndefined()
+            expect( bin.parent ).toBeUndefined()
+            expect( x.getAttribute key1 ).toBeUndefined()
+            expect( y.getAttribute( key1 ).sameObjectAs int ).toBeTruthy()
+
+Set the x from f(x,y) as the value of an attribute on the binding object,
+and verify that it was removed from f(x,y), leaving only f(y).  Ensure that
+you can still look up attributes correctly in both the binding and y.
+
+            bin.setAttribute key2, x
+            expect( x.parent.sameObjectAs bin ).toBeTruthy()
+            expect( app.equals OM.simple( 'f(y)' ), no ).toBeTruthy()
+            expect( y.getAttribute( key1 ).sameObjectAs int ).toBeTruthy()
+            expect( bin.getAttribute( key2 ).sameObjectAs x ).toBeTruthy()
+
+Set the string inside the binding as an attribute on the integer, and ensure
+that it was moved out from its parent, and all parent pointers and attribute
+lookups are as they should be.
+
+            str = bin.body.children[1]
+            int.setAttribute key3, str
+            expect( str.parent.sameObjectAs int ).toBeTruthy()
+            expect( bin.equals OM.simple( 'a.b[x,y,check(y,x)]' ), no ) \
+                .toBeTruthy()
+            expect( y.getAttribute( key1 ).sameObjectAs int ).toBeTruthy()
+            expect( bin.getAttribute( key2 ).sameObjectAs x ).toBeTruthy()
+            expect( int.getAttribute( key3 ).sameObjectAs str ).toBeTruthy()

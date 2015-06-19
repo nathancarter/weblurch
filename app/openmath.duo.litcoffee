@@ -294,7 +294,12 @@ This is essentially the same activity as comparing equality of two JSON
 structures, except parent pointers should be ignored so that the recursion
 remains acyclic.
 
-        equals : ( other ) =>
+You can pass a second parameter indicating whether to pay attention to
+attributes in the comparison.  By default it is true, meaning consider all
+attributes.  If it is false, no attributes will be considered.  Other values
+may be supported in the future.
+
+        equals : ( other, attributes = yes ) =>
             recur = ( a, b ) ->
 
 If they are atomically equal, we're done.
@@ -319,12 +324,14 @@ Otherwise, they must be objects, with all the same key-value pairs.
                 if a not instanceof Object then return no
                 if b not instanceof Object then return no
                 for own key, value of a
-                    if key is 'p' then continue # skip parent pointers
+                    if key is 'p' or not attributes and key is 'a'
+                        continue
                     if not b.hasOwnProperty key then return no
                     if not recur value, b[key] then return no
                 for own key, value of b
-                    if key isnt 'p' and not a.hasOwnProperty key
-                        return no
+                    if key is 'p' or not attributes and key is 'a'
+                        continue
+                    if not a.hasOwnProperty key then return no
                 yes
             recur @tree, other.tree
 
@@ -852,11 +859,12 @@ is inserted into this tree, in case it is already in another tree.
 The same efficiency comments apply to this function as to the previous.
 
         setAttribute : ( keySymbol, newValue ) =>
-            if keySymbol not instanceof OMNode then return
+            if keySymbol not instanceof OMNode or \
+               newValue not instanceof OMNode then return
             if keySymbol.type isnt 'sy' then return
             @removeAttribute keySymbol
             newValue.remove()
-            @tree.a[JSON.stringify keySymbol.tree] = newValue
+            ( @tree.a ?= { } )[keySymbol.encode()] = newValue.tree
             newValue.tree.p = @tree
 
 ## Nicknames

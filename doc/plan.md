@@ -21,7 +21,6 @@ required order of completion.
 
 This work is in progress.  Here are the remaining methods to add to the
 `OMNode` class.
- * write tests for and debug setAttribute(K,V)
  * isFree(), replaceFree(from,to), occursFreeIn()
  * applySubstitution() and applyAllSubstitutions() (which work with
    expressions of the form `x[y=z]`, meaning x with all occurrences of y
