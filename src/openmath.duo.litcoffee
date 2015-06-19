@@ -783,6 +783,24 @@ value will be one of five types:
                 if @tree is value then return key
             undefined # should not happen
 
+The following function breaks the relationship of the object with its
+parent.  In some cases, this can invalidate the parent (e.g., by giving a
+binding or error object no head symbol, or a binding no body, or no bound
+variables).  If the object has no parent or its position in that parent is
+undefined (as determined by `@findInParent()`) then this does nothing.
+
+        remove : =>
+            if not index = @findInParent() then return
+            switch index[0]
+                when 'c'
+                    @parent.tree.c.splice parseInt( index[1..] ), 1
+                when 'v'
+                    @parent.tree.v.splice parseInt( index[1..] ), 1
+                when 'b' then delete @parent.tree.b
+                when 's' then delete @parent.tree.s
+                when '{' then delete @parent.tree.a[key]
+            delete @tree.p
+
 ## Nicknames
 
 Here we copy each of the factory functions to a short version if its own

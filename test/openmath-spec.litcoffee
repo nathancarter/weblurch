@@ -2077,3 +2077,129 @@ The values of an object's attributes have their keys as the result.
             key = '{"t":"sy","n":"Z","cd":"W"}'
             value = new OMNode outer.tree.a[key]
             expect( value.findInParent() ).toBe key
+
+### can be broken with `remove()`
+
+Test all situations in which one node is nested inside another, and we call
+`remove()` on the inner node.  Parent-child relationships in both directions
+should be broken (sometimes invalidating the parent's structure).
+
+        it 'can be broken with remove()', ->
+
+On any tree without a parent, `remove()` should do nothing.  We test this
+on just a small set of example expressions.
+
+            original = OM.simple '3'
+            copy = original.copy()
+            expect( original.parent ).toBeFalsy()
+            expect( copy.parent ).toBeFalsy()
+            original.remove()
+            expect( original.parent ).toBeFalsy()
+            expect( copy.parent ).toBeFalsy()
+            expect( original.equals copy ).toBeTruthy()
+            original = OM.simple 'f(x)'
+            copy = original.copy()
+            expect( original.parent ).toBeFalsy()
+            expect( copy.parent ).toBeFalsy()
+            original.remove()
+            expect( original.parent ).toBeFalsy()
+            expect( copy.parent ).toBeFalsy()
+            expect( original.equals copy ).toBeTruthy()
+            original = OM.simple '"fjdklsfjdslkjfdsklf"'
+            copy = original.copy()
+            expect( original.parent ).toBeFalsy()
+            expect( copy.parent ).toBeFalsy()
+            original.remove()
+            expect( original.parent ).toBeFalsy()
+            expect( copy.parent ).toBeFalsy()
+            expect( original.equals copy ).toBeTruthy()
+
+Children of an application node should be removable with `remove()`.
+
+            original = OM.simple 'sum(1,4,9,16)'
+            expect( original.children.length ).toBe 5
+            child = original.children[0]
+            expect( child.parent.sameObjectAs original ).toBeTruthy()
+            child.remove()
+            expect( child.parent ).toBeUndefined()
+            expect( original.children.length ).toBe 4
+            expect( original.equals OM.simple '1(4,9,16)' ).toBeTruthy()
+            child = original.children[2]
+            expect( child.parent.sameObjectAs original ).toBeTruthy()
+            child.remove()
+            expect( child.parent ).toBeUndefined()
+            expect( original.children.length ).toBe 3
+            expect( original.equals OM.simple '1(4,16)' ).toBeTruthy()
+            child = original.children[2]
+            expect( child.parent.sameObjectAs original ).toBeTruthy()
+            child.remove()
+            expect( child.parent ).toBeUndefined()
+            expect( original.children.length ).toBe 2
+            expect( original.equals OM.simple '1(4)' ).toBeTruthy()
+            child = original.children[0]
+            expect( child.parent.sameObjectAs original ).toBeTruthy()
+            child.remove()
+            expect( child.parent ).toBeUndefined()
+            expect( original.children.length ).toBe 1
+            expect( original.equals OM.simple '4()' ).toBeTruthy()
+
+All parts of a binding node should be removable with `remove()`.
+
+            original = OM.simple 'ask.and[you,shall,receive]'
+            expect( original.variables.length ).toBe 2
+            variable = original.variables[1]
+            expect( variable.parent.sameObjectAs original ).toBeTruthy()
+            variable.remove()
+            expect( variable.parent ).toBeUndefined()
+            expect( original.variables.length ).toBe 1
+            expect( original.equals OM.simple 'ask.and[you,receive]' ) \
+                .toBeTruthy()
+            symbol = original.symbol
+            expect( symbol.parent.sameObjectAs original ).toBeTruthy()
+            symbol.remove()
+            expect( symbol.parent ).toBeUndefined()
+            expect( original.variables.length ).toBe 1
+            expect( original.symbol ).toBeUndefined()
+            body = original.body
+            expect( body.parent.sameObjectAs original ).toBeTruthy()
+            body.remove()
+            expect( body.parent ).toBeUndefined()
+            expect( original.variables.length ).toBe 1
+            expect( original.body ).toBeUndefined()
+
+All parts of an error node should be removable with `remove()`.
+
+            original = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'c3po', cd : 'r2d2' }
+                c : [
+                    { t : 'sy', n : 'luke', cd : 'skywalker' }
+                    { t : 'sy', n : 'han', cd : 'solo' }
+                ]
+            }
+            expect( original.children.length ).toBe 2
+            child = original.children[1]
+            expect( child.parent.sameObjectAs original ).toBeTruthy()
+            child.remove()
+            expect( child.parent ).toBeUndefined()
+            newVersion = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'c3po', cd : 'r2d2' }
+                c : [ { t : 'sy', n : 'luke', cd : 'skywalker' } ]
+            }
+            expect( original.equals newVersion ).toBeTruthy()
+            child = original.children[0]
+            expect( child.parent.sameObjectAs original ).toBeTruthy()
+            child.remove()
+            expect( child.parent ).toBeUndefined()
+            newVersion = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'c3po', cd : 'r2d2' }
+                c : [ ]
+            }
+            expect( original.equals newVersion ).toBeTruthy()
+            symbol = original.symbol
+            expect( symbol.parent.sameObjectAs original ).toBeTruthy()
+            symbol.remove()
+            expect( symbol.parent ).toBeUndefined()
+            expect( original.symbol ).toBeUndefined()
