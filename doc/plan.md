@@ -19,29 +19,14 @@ required order of completion.
 
 ## OpenMath
 
-This work is in progress.  Here are the remaining tasks:
- * Create factory functions OpenMath.symbol, OpenMath.variable, etc., with
-   sortcuts sym, var, etc., and make the global name OM equal to OpenMath,
-   so that people can write `OM.app(OM.var('f'),OM.var('x'))`.
- * Create another factory by importing the JavaScript code for `simpleLob`
-   from the desktop Lurch.
- * Add the following methods to the OpenMath object class
-   * getters for type, value, name, cd, uri, children, symbol, variables,
-     and body
-   * insertChild(), removeChild(), appendChild()
-   * copy(), which should be as efficient as possible
-   * equals()
-   * isFree(), replaceFree(from,to), occursFreeIn()
-   * reparent(newPar), remove(), and replaceWith(newTree)
-   * applySubstitution() and applyAllSubstitutions() (which work with
-     expressions of the form `x[y=z]`, meaning x with all occurrences of y
-     replaced by z, and `x[y~z]`, meaning the same but "some" isntead of
-     "all")
-   * childrenSatisfying() and descendantsSatisfying()
- * Add a constructor that takes a type as the first argument (being flexible
-   enough to handle things like 'i', 'int', 'integer', etc.) and all other
-   data as the remaining arguments, in a sensible order.
- * Create extensive unit tests for the above class and its algorithms.
+This work is in progress.  Here are the remaining methods to add to the
+`OMNode` class.
+ * isFree(), replaceFree(from,to), occursFreeIn()
+ * applySubstitution() and applyAllSubstitutions() (which work with
+   expressions of the form `x[y=z]`, meaning x with all occurrences of y
+   replaced by z, and `x[y~z]`, meaning the same but "some" isntead of
+   "all")
+ * childrenSatisfying() and descendantsSatisfying()
 
 ## Matching Module
 
