@@ -2016,3 +2016,64 @@ Error:
             expect( original.children[0] ).not.toBe copy.children[0]
             expect( original.children[0].equals copy.children[0] ) \
                 .toBeTruthy()
+
+## Parent-child relationships
+
+There are many functions for making, changing, and querying parent-child
+relationships in OMNode tree structures.  This section tests them all.
+
+    describe 'Parent-child relationships', ->
+
+### should be queryable with `findInParent`
+
+Test all types of situations in which `findInParent` could be called.
+
+        it 'should be queryable with findInParent', ->
+
+On any tree without a parent, it should be undefined.
+
+            expect( OM.simple( '3' ).findInParent() ).toBeUndefined()
+            expect( OM.simple( 'f(x)' ).findInParent() ).toBeUndefined()
+            expect( OM.simple( 'g.a[z,t]' ).findInParent() ).toBeUndefined()
+            expect( OM.simple( '-725.38' ).findInParent() ).toBeUndefined()
+
+On any child, it should return "ci", where i is the index of the child.
+
+            outer = OM.simple 'f(x,y,z)'
+            expect( outer.children[0].findInParent() ).toBe 'c0'
+            expect( outer.children[1].findInParent() ).toBe 'c1'
+            expect( outer.children[2].findInParent() ).toBe 'c2'
+            expect( outer.children[3].findInParent() ).toBe 'c3'
+
+On any variable, it should return "vi", where i is the index of the
+variable.
+
+            outer = OM.simple 'F.f[x,y,h(y,x,x)]'
+            expect( outer.variables[0].findInParent() ).toBe 'v0'
+            expect( outer.variables[1].findInParent() ).toBe 'v1'
+
+On any binding's symbol or body, it should return "s" or "b", respectively.
+
+            outer = OM.simple 'F.f[x,y,h(y,x,x)]'
+            expect( outer.symbol.findInParent() ).toBe 's'
+            expect( outer.body.findInParent() ).toBe 'b'
+            outer = OM.simple 'total.other[example,dude]'
+            expect( outer.symbol.findInParent() ).toBe 's'
+            expect( outer.body.findInParent() ).toBe 'b'
+
+The values of an object's attributes have their keys as the result.
+
+            outer = OM.decode {
+                t : 'i'
+                v : 1209
+                a : {
+                    '{"t":"sy","n":"X","cd":"Y"}' : { t : 'f', v : -0.5 }
+                    '{"t":"sy","n":"Z","cd":"W"}' : { t : 'v', n : 'foo' }
+                }
+            }
+            key = '{"t":"sy","n":"X","cd":"Y"}'
+            value = new OMNode outer.tree.a[key]
+            expect( value.findInParent() ).toBe key
+            key = '{"t":"sy","n":"Z","cd":"W"}'
+            value = new OMNode outer.tree.a[key]
+            expect( value.findInParent() ).toBe key

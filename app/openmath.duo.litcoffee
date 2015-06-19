@@ -257,6 +257,8 @@ current structure, except children and variables, which return empty arrays
 in that case.
 
         constructor : ( @tree ) ->
+            Object.defineProperty this, 'parent',
+                get : -> if @tree.p then new OMNode @tree.p else undefined
             Object.defineProperty this, 'type', get : -> @tree.t
             Object.defineProperty this, 'value',
                 get : -> if @tree.t isnt 'bi' then @tree.v else undefined
@@ -325,6 +327,12 @@ Otherwise, they must be objects, with all the same key-value pairs.
                         return no
                 yes
             recur @tree, other.tree
+
+There is also a much stricter notion of equality:  Do the two OMNode objects
+actually wrap the same object underneath?  That is, are they pointing to the
+same tree in memory?  This function can detect that.
+
+        sameObjectAs : ( other ) => @tree is other?.tree
 
 On a similar note, you may want to create a distinct copy of any given
 OMNode instance.  Here is a method for doing so.
@@ -741,6 +749,39 @@ are the details:
                         "#{head}[#{variables.join ','},#{body}]"
                     else "Error: Invalid OpenMath type #{tree?.t}"
             recur @tree
+
+### Parent-child relationships
+
+The functions in this category make, break, or report the relationship of an
+OMNode instance to its parents or children.
+
+This first function reports where the node is in its parent.  The return
+value will be one of five types:
+ * a string containing "c" followed by a number, as in 'c7' - this means
+   that the node is in it's parent's `children` array, and is at index 7
+ * a string containing "v" followed by a number, as in 'v0' - this is the
+   same as the previous, but for the parent's `variables` array
+ * the string "b" - this means that the node is the body and its parent is
+   a binding
+ * the string "s" - this means that the node is a symbol for its parent,
+   which is either an error or a binding
+ * a lengthier string beginning with "{" - this is the JSON encoded version
+   of the attribute key for which the node is the corresponding value
+ * undefined if none of the above apply (e.g., no parent, or invalid tree
+   structure)
+
+        findInParent : =>
+            if not @parent then return undefined
+            for child, index in @parent.children
+                if @sameObjectAs child then return "c#{index}"
+            if @type is 'v'
+                for variable, index in @parent.variables
+                    if @sameObjectAs variable then return "v#{index}"
+            if @sameObjectAs @parent.symbol then return 's'
+            if @sameObjectAs @parent.body then return 'b'
+            for own key, value of @parent.tree.a ? { }
+                if @tree is value then return key
+            undefined # should not happen
 
 ## Nicknames
 
