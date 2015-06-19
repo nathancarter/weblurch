@@ -2203,3 +2203,87 @@ All parts of an error node should be removable with `remove()`.
             symbol.remove()
             expect( symbol.parent ).toBeUndefined()
             expect( original.symbol ).toBeUndefined()
+
+### are consistent with getAttribute()
+
+Querying an OMNode's attributes with `getAttribute()` should not only yield
+correct results, but should also yield nodes whose parent is the node in
+which the query was performed.
+
+        it 'are consistent with getAttribute()', ->
+
+We choose two examples, the first a tiny one with no attributes.
+
+            node = OM.simple 'hello'
+            expect( node.getAttribute OM.simple 'sym.bol' ).toBeUndefined()
+            expect( node.getAttribute OM.simple 'o.ther' ).toBeUndefined()
+
+The second example has two attributes on each level of a two-tier structure.
+
+            node = OM.decode {
+                t : 'a'
+                c : [
+                    t : 'v'
+                    n : 'f'
+                    a : {
+                        '{"t":"sy","n":"one","cd":"two"}' :
+                            { t : 'i', v : 42 }
+                        '{"t":"sy","n":"three","cd":"four"}' :
+                            { t : 'f', v : -42.42 }
+                    }
+                ,
+                    t : 'a'
+                    c : [
+                        t : 'v'
+                        n : 'g'
+                    ,
+                        t : 'v'
+                        n : 'x'
+                        a : {
+                            '{"t":"sy","n":"five","cd":"six"}' :
+                                { t : 'st', v : 'the question' }
+                            '{"t":"sy","n":"seven","cd":"eight"}' :
+                                { t : 'st', v : 'the answer' }
+                        }
+                    ]
+                ]
+            }
+
+Looking up an attribute that isn't there doesn't work:
+
+            value = node.getAttribute OM.simple 'two.one'
+            expect( value ).toBeUndefined()
+
+But looking up those that are there give the correct results, with the
+correct parent-child relationships:
+
+            value = node.children[0].getAttribute OM.simple 'two.one'
+            expect( value.equals OM.simple '42' ).toBeTruthy()
+            expect( value.parent.sameObjectAs node.children[0] ) \
+                .toBeTruthy()
+            value = node.children[0].getAttribute OM.simple 'four.three'
+            expect( value.equals OM.simple '-42.42' ).toBeTruthy()
+            expect( value.parent.sameObjectAs node.children[0] ) \
+                .toBeTruthy()
+
+Looking up an attribute that isn't there doesn't work:
+
+            value = node.children[1].getAttribute OM.simple 'six.five'
+            expect( value ).toBeUndefined()
+
+But looking up those that are there give the correct results, with the
+correct parent-child relationships:
+
+            value = node.children[1].children[0].getAttribute \
+                OM.simple 'six.five'
+            expect( value ).toBeUndefined()
+            value = node.children[1].children[1].getAttribute \
+                OM.simple 'six.five'
+            expect( value.equals OM.simple '"the question"' ).toBeTruthy()
+            expect( value.parent.sameObjectAs \
+                node.children[1].children[1] ).toBeTruthy()
+            value = node.children[1].children[1].getAttribute \
+                OM.simple 'eight.seven'
+            expect( value.equals OM.simple '"the answer"' ).toBeTruthy()
+            expect( value.parent.sameObjectAs \
+                node.children[1].children[1] ).toBeTruthy()
