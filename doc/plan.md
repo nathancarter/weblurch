@@ -21,8 +21,6 @@ required order of completion.
 
 This work is in progress.  Here are the remaining methods to add to the
 `OMNode` class.
- * insertChild(i,N) and appendChild(N) which call remove and then set parent
-   and child pointers afresh
  * getAttribute(K), setAttribute(K,V), and removeAttribute(K) (using a
    canonical order of the attribute's keys) which call remove and then set
    parent and child pointers afresh
