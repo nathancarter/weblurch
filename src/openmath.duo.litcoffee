@@ -801,6 +801,64 @@ undefined (as determined by `@findInParent()`) then this does nothing.
                 when '{' then delete @parent.tree.a[key]
             delete @tree.p
 
+Then we have three functions that let us manipulate attributes without
+worrying about the unpredictable ordering of keys in a JSON stringification
+of an object.
+
+The first takes an OMNode instance as input and looks up the corresponding
+key-value pair in this object's attributes, if there is one.  If so, it
+returns the corresponding value as an OMNode instance.  Otherwise, it
+returns undefined.
+
+For efficiency, this considers only the names and CDs of the key when
+searching.  If that becomes a problem later, it could be changed here in
+this function, as well as in the two that follow.
+
+        getAttribute : ( keySymbol ) =>
+            if keySymbol not instanceof OMNode then return undefined
+            if keySymbol.type isnt 'sy' then return undefined
+            nameRE = RegExp "\"n\":\"#{keySymbol.name}\""
+            cdRE = RegExp "\"cd\":\"#{keySymbol.cd}\""
+            for own key, value of @tree.a ? { }
+                if nameRE.test( key ) and cdRE.test( key )
+                    return new OMNode value
+
+The second takes an OMNode instance as input and looks up the corresponding
+key-value pair in this object's attributes, if there is one.  If so, it
+deletes that key-value pair, which includes calling `remove()` on the value.
+Otherwise, it does nothing.
+
+The same efficiency comments apply to this function as to the previous.
+
+        removeAttribute : ( keySymbol ) =>
+            if keySymbol not instanceof OMNode then return
+            if keySymbol.type isnt 'sy' then return
+            nameRE = RegExp "\"n\":\"#{keySymbol.name}\""
+            cdRE = RegExp "\"cd\":\"#{keySymbol.cd}\""
+            for own key, value of @tree.a ? { }
+                if nameRE.test( key ) and cdRE.test( key )
+                    delete @tree.a[key]
+                    ( new OMNode value ).remove()
+                    return
+
+The third and final function of the set takes two OMNode instances as input,
+a key and a new value.  It looks up the corresponding key-value pair in this
+object's attributes, if there is one.  If so, it replaces the original value
+with the new value, including calling `remove()` on the old value.
+Otherwise, it inserts a new key-value pair corresponding to the two
+parameters.  In either case, `remove()` is called on the new value before it
+is inserted into this tree, in case it is already in another tree.
+
+The same efficiency comments apply to this function as to the previous.
+
+        removeAttribute : ( keySymbol, newValue ) =>
+            if keySymbol not instanceof OMNode then return
+            if keySymbol.type isnt 'sy' then return
+            @removeAttribute keySymbol
+            newValue.remove()
+            @tree.a[JSON.stringify keySymbol.tree] = newValue
+            newValue.tree.p = @tree
+
 ## Nicknames
 
 Here we copy each of the factory functions to a short version if its own
