@@ -19,24 +19,23 @@ required order of completion.
 
 ## OpenMath
 
-This work is in progress.  Here are the remaining tasks:
- * Add the following methods to the OpenMath object class
-   * reparent(newPar), remove(), and replaceWith(newTree), and then begin
-     using these in the existing factory functions to ensure correct
-     parentage
-   * insertChild(), removeChild(), appendChild()
-   * copy(), which should be as efficient as possible
-   * equals()
-   * isFree(), replaceFree(from,to), occursFreeIn()
-   * applySubstitution() and applyAllSubstitutions() (which work with
-     expressions of the form `x[y=z]`, meaning x with all occurrences of y
-     replaced by z, and `x[y~z]`, meaning the same but "some" isntead of
-     "all")
-   * childrenSatisfying() and descendantsSatisfying()
- * Add a constructor that takes a type as the first argument (being flexible
-   enough to handle things like 'i', 'int', 'integer', etc.) and all other
-   data as the remaining arguments, in a sensible order.
- * Create extensive unit tests for the above class and its algorithms.
+This work is in progress.  Here are the remaining methods to add to the
+`OMNode` class.
+ * equals()
+ * copy(), as efficient as possible
+ * indexInParent(), returning 'c#', 'v#', 's', 'b', or JSON attribute key
+ * remove(), which breaks all parent and child relationships
+ * insertChild(i,N) and appendChild(N) which call remove and then set parent
+   and child pointers afresh
+ * getAttribute(K), setAttribute(K,V), and removeAttribute(K) (using a
+   canonical order of the attribute's keys) which call remove and then set
+   parent and child pointers afresh
+ * isFree(), replaceFree(from,to), occursFreeIn()
+ * applySubstitution() and applyAllSubstitutions() (which work with
+   expressions of the form `x[y=z]`, meaning x with all occurrences of y
+   replaced by z, and `x[y~z]`, meaning the same but "some" isntead of
+   "all")
+ * childrenSatisfying() and descendantsSatisfying()
 
 ## Matching Module
 
