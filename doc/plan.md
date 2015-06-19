@@ -21,8 +21,6 @@ required order of completion.
 
 This work is in progress.  Here are the remaining tasks:
  * Add the following methods to the OpenMath object class
-   * getters for type, value, name, cd, uri, children, symbol, variables,
-     and body
    * reparent(newPar), remove(), and replaceWith(newTree), and then begin
      using these in the existing factory functions to ensure correct
      parentage

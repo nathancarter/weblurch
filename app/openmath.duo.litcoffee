@@ -249,9 +249,31 @@ text.
 
 ### Constructor
 
-The above factory function uses the following constructor.
+The above factory function uses the following constructor.  The constructor
+also defines several properties for the object, by installing getters for
+the common attributes type, value, name, cd, uri, symbol, body, children,
+and variables.  These all return undefined if they do not apply to the
+current structure, except children and variables, which return empty arrays
+in that case.
 
         constructor : ( @tree ) ->
+            Object.defineProperty this, 'type', get : -> @tree.t
+            Object.defineProperty this, 'value',
+                get : -> if @tree.t isnt 'bi' then @tree.v else undefined
+            Object.defineProperty this, 'name', get : -> @tree.n
+            Object.defineProperty this, 'cd', get : -> @tree.cd
+            Object.defineProperty this, 'uri', get : -> @tree.uri
+            Object.defineProperty this, 'symbol',
+                get : -> if @tree.s then new OMNode @tree.s else undefined
+            Object.defineProperty this, 'body',
+                get : -> if @tree.b then new OMNode @tree.b else undefined
+            Object.defineProperty this, 'children',
+                get : -> new OMNode child for child in @tree.c ? [ ]
+            Object.defineProperty this, 'variables',
+                get : -> if @tree.t is 'bi'
+                    new OMNode variable for variable in @tree.v
+                else
+                    [ ]
 
 ### Serialization
 

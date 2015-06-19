@@ -1460,3 +1460,181 @@ All attributions are dropped.
                 ]
             }
             expect( node.simpleEncode() ).toEqual "f(19.95)"
+
+## `OMNode` getters
+
+`OMNode` instances have getters for type, value, name, cd, uri, symbol,
+body, children, and variables.  This section ensures that they function as
+desired for a sample of different kinds of OMNode structures.
+
+    describe 'OMNode getters', ->
+
+### should return values for properties the structure has
+
+Here we create OMNode structures of each type test only those properties
+that the structure is supposed to have, e.g., variables are supposed to have
+a type and a name, so we don't test (until later, below) for any of its
+other properties.
+
+        it 'should return values for properties the structure has', ->
+
+Integers, floats, strings, and byte arrays have type and value.
+
+            node = OM.simple '5'
+            expect( node.type ).toBe 'i'
+            expect( node.value ).toBe 5
+            node = OM.simple '5.5'
+            expect( node.type ).toBe 'f'
+            expect( node.value ).toBe 5.5
+            node = OM.simple '"thing"'
+            expect( node.type ).toBe 'st'
+            expect( node.value ).toBe 'thing'
+            node = OM.decode { t : 'ba', v : new Uint8Array [ 1, 2, 3 ] }
+            expect( node.type ).toBe 'ba'
+            expect( node.value[0] ).toBe 1
+            expect( node.value[1] ).toBe 2
+            expect( node.value[2] ).toBe 3
+
+Symbols have type, name, cd, and sometimes uri.
+
+            node = OM.simple 'foo.bar'
+            expect( node.type ).toBe 'sy'
+            expect( node.name ).toBe 'bar'
+            expect( node.cd ).toBe 'foo'
+            expect( node.uri ).toBeUndefined()
+            node = OM.decode { t : 'sy', n : 'one', cd : 'two', uri : '3' }
+            expect( node.type ).toBe 'sy'
+            expect( node.name ).toBe 'one'
+            expect( node.cd ).toBe 'two'
+            expect( node.uri ).toBe '3'
+
+Variables have type and name.
+
+            node = OM.simple 'foo'
+            expect( node.type ).toBe 'v'
+            expect( node.name ).toBe 'foo'
+
+Applications have a type and a children array.
+
+            node = OM.simple 'f(x,y,z)'
+            expect( node.type ).toBe 'a'
+            expect( node.children.length ).toBe 4
+            expect( node.children[0].type ).toBe 'v'
+            expect( node.children[0].name ).toBe 'f'
+            expect( node.children[1].type ).toBe 'v'
+            expect( node.children[1].name ).toBe 'x'
+            expect( node.children[2].type ).toBe 'v'
+            expect( node.children[2].name ).toBe 'y'
+            expect( node.children[3].type ).toBe 'v'
+            expect( node.children[3].name ).toBe 'z'
+
+Bindings have a symbol, a variable list, and a body.
+
+            node = OM.simple 'f.g[x,y,z]'
+            expect( node.type ).toBe 'bi'
+            expect( node.symbol.type ).toBe 'sy'
+            expect( node.symbol.name ).toBe 'g'
+            expect( node.symbol.cd ).toBe 'f'
+            expect( node.symbol.uri ).toBeUndefined()
+            expect( node.variables.length ).toBe 2
+            expect( node.variables[0].type ).toBe 'v'
+            expect( node.variables[0].name ).toBe 'x'
+            expect( node.variables[1].type ).toBe 'v'
+            expect( node.variables[1].name ).toBe 'y'
+            expect( node.body.type ).toBe 'v'
+            expect( node.body.name ).toBe 'z'
+
+Errors have a symbol and children.
+
+            node = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'cos', cd : 'transc1' }
+                c : [ { t : 'st', v : 'some content here' } ]
+            }
+            expect( node.type ).toBe 'e'
+            expect( node.symbol.type ).toBe 'sy'
+            expect( node.symbol.name ).toBe 'cos'
+            expect( node.symbol.cd ).toBe 'transc1'
+            expect( node.symbol.uri ).toBeUndefined()
+            expect( node.children.length ).toBe 1
+            expect( node.children[0].type ).toBe 'st'
+            expect( node.children[0].value ).toBe 'some content here'
+
+### should return undefined for properties the structure doesn't have
+
+Here we create OMNode structures of each type test only those properties
+that the structure is *not* supposed to have, e.g., variables are supposed
+to have a type and a name, so we query properties like symbol and value and
+ensure that they are undefined, or properties like children and ensure that
+they are an empty array.
+
+        it 'should return undefined for properties the structure doesn\'t
+        have', ->
+
+Integers, floats, strings, and byte arrays do not have name, cd, uri,
+symbol, body, children, or variables.
+
+            node = OM.simple '5'
+            expect( node.name ).toBeUndefined()
+            expect( node.cd ).toBeUndefined()
+            expect( node.uri ).toBeUndefined()
+            expect( node.symbol ).toBeUndefined()
+            expect( node.body ).toBeUndefined()
+            expect( node.children ).toEqual [ ]
+            expect( node.variables ).toEqual [ ]
+            node = OM.simple '5.5'
+            expect( node.name ).toBeUndefined()
+            expect( node.cd ).toBeUndefined()
+            expect( node.uri ).toBeUndefined()
+            expect( node.symbol ).toBeUndefined()
+            expect( node.body ).toBeUndefined()
+            expect( node.children ).toEqual [ ]
+            expect( node.variables ).toEqual [ ]
+            node = OM.simple '"thing"'
+            expect( node.name ).toBeUndefined()
+            expect( node.cd ).toBeUndefined()
+            expect( node.uri ).toBeUndefined()
+            expect( node.symbol ).toBeUndefined()
+            expect( node.body ).toBeUndefined()
+            expect( node.children ).toEqual [ ]
+            expect( node.variables ).toEqual [ ]
+
+Symbols do not have value, symbol, body, children, or variables.
+
+            node = OM.simple 'cd.name'
+            expect( node.value ).toBeUndefined()
+            expect( node.symbol ).toBeUndefined()
+            expect( node.body ).toBeUndefined()
+            expect( node.children ).toEqual [ ]
+            expect( node.variables ).toEqual [ ]
+
+Variables do not have cd, uri, value, symbol, body, children, or variables.
+
+            node = OM.simple 'var'
+            expect( node.cd ).toBeUndefined()
+            expect( node.uri ).toBeUndefined()
+            expect( node.value ).toBeUndefined()
+            expect( node.symbol ).toBeUndefined()
+            expect( node.body ).toBeUndefined()
+            expect( node.children ).toEqual [ ]
+            expect( node.variables ).toEqual [ ]
+
+Applications do not have name, cd, uri, value, symbol, body, or variables.
+
+            node = OM.simple 'f(x)'
+            expect( node.name ).toBeUndefined()
+            expect( node.cd ).toBeUndefined()
+            expect( node.uri ).toBeUndefined()
+            expect( node.value ).toBeUndefined()
+            expect( node.symbol ).toBeUndefined()
+            expect( node.body ).toBeUndefined()
+            expect( node.variables ).toEqual [ ]
+
+Bindings do not have name, cd, uri, value, or children.
+
+            node = OM.simple 'f.g[x,y]'
+            expect( node.name ).toBeUndefined()
+            expect( node.cd ).toBeUndefined()
+            expect( node.uri ).toBeUndefined()
+            expect( node.value ).toBeUndefined()
+            expect( node.children ).toEqual [ ]
