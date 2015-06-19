@@ -21,9 +21,7 @@ required order of completion.
 
 This work is in progress.  Here are the remaining methods to add to the
 `OMNode` class.
- * getAttribute(K), setAttribute(K,V), and removeAttribute(K) (using a
-   canonical order of the attribute's keys) which call remove and then set
-   parent and child pointers afresh
+ * write tests for and debug setAttribute(K,V)
  * isFree(), replaceFree(from,to), occursFreeIn()
  * applySubstitution() and applyAllSubstitutions() (which work with
    expressions of the form `x[y=z]`, meaning x with all occurrences of y

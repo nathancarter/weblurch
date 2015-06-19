@@ -798,7 +798,7 @@ undefined (as determined by `@findInParent()`) then this does nothing.
                     @parent.tree.v.splice parseInt( index[1..] ), 1
                 when 'b' then delete @parent.tree.b
                 when 's' then delete @parent.tree.s
-                when '{' then delete @parent.tree.a[key]
+                when '{' then delete @parent.tree.a[index]
             delete @tree.p
 
 Then we have three functions that let us manipulate attributes without
@@ -837,8 +837,8 @@ The same efficiency comments apply to this function as to the previous.
             cdRE = RegExp "\"cd\":\"#{keySymbol.cd}\""
             for own key, value of @tree.a ? { }
                 if nameRE.test( key ) and cdRE.test( key )
-                    delete @tree.a[key]
                     ( new OMNode value ).remove()
+                    delete @tree.a[key]
                     return
 
 The third and final function of the set takes two OMNode instances as input,
@@ -851,7 +851,7 @@ is inserted into this tree, in case it is already in another tree.
 
 The same efficiency comments apply to this function as to the previous.
 
-        removeAttribute : ( keySymbol, newValue ) =>
+        setAttribute : ( keySymbol, newValue ) =>
             if keySymbol not instanceof OMNode then return
             if keySymbol.type isnt 'sy' then return
             @removeAttribute keySymbol

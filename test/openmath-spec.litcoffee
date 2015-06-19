@@ -2287,3 +2287,62 @@ correct parent-child relationships:
             expect( value.equals OM.simple '"the answer"' ).toBeTruthy()
             expect( value.parent.sameObjectAs \
                 node.children[1].children[1] ).toBeTruthy()
+
+### are consistent with removeAttribute()
+
+Removing an OMNode's attributes with `removeAttribute()` should not only
+yield correct results, but should also modify parent pointers appropriately.
+
+        it 'are consistent with removeAttribute()', ->
+
+We choose just one example, with two attributes, and we remove them one at
+a time, testing the results in each case.
+
+            node = OM.decode {
+                t : 'st'
+                v : 'this is a string'
+                a : {
+                    '{"t":"sy","n":"attr1","cd":"foo"}' : { t : 'i', v : 3 }
+                    '{"t":"sy","n":"attr2","cd":"foo"}' : { t : 'i', v : 9 }
+                }
+            }
+            value1 = node.getAttribute OM.simple 'foo.attr1'
+            value2 = node.getAttribute OM.simple 'foo.attr2'
+            expect( value1.parent.sameObjectAs node ).toBeTruthy()
+            expect( value2.parent.sameObjectAs node ).toBeTruthy()
+
+We've established a baseline by looking up two attributes with correct
+parent pointers.  Now we remove one of them, then verify that the other is
+still there, but the removed one can no longer be queried with
+`getAttribute()`, and the parent pointer of the originally-looked-up object
+has been deleted.
+
+            node.removeAttribute OM.simple 'foo.attr1'
+            value1b = node.getAttribute OM.simple 'foo.attr1'
+            value2b = node.getAttribute OM.simple 'foo.attr2'
+            expect( value1b ).toBeUndefined()
+            expect( value2b.parent.sameObjectAs node ).toBeTruthy()
+            expect( value2b.equals value2 ).toBeTruthy()
+            expect( value1.parent ).toBeUndefined()
+
+Repeat the same exact removal, and verify that it doesn't actually do
+anything the second time.
+
+            node.removeAttribute OM.simple 'foo.attr1'
+            value1c = node.getAttribute OM.simple 'foo.attr1'
+            value2c = node.getAttribute OM.simple 'foo.attr2'
+            expect( value1c ).toBeUndefined()
+            expect( value2c.parent.sameObjectAs node ).toBeTruthy()
+            expect( value2c.equals value2 ).toBeTruthy()
+            expect( value1.parent ).toBeUndefined()
+
+Remove the second attribute, and make the same checks that we did after
+removing the first.
+
+            node.removeAttribute OM.simple 'foo.attr2'
+            value1d = node.getAttribute OM.simple 'foo.attr1'
+            value2d = node.getAttribute OM.simple 'foo.attr2'
+            expect( value1d ).toBeUndefined()
+            expect( value2d ).toBeUndefined()
+            expect( value2.parent ).toBeUndefined()
+            expect( value1.parent ).toBeUndefined()
