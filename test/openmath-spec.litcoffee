@@ -1638,3 +1638,381 @@ Bindings do not have name, cd, uri, value, or children.
             expect( node.uri ).toBeUndefined()
             expect( node.value ).toBeUndefined()
             expect( node.children ).toEqual [ ]
+
+## Comparing structures
+
+We can compare two `OMNode` instances for structural equality with their
+`equals` member function.  We test it here.
+
+    describe 'Comparing structures', ->
+
+### should return true for equal atomics
+
+We restrict ourselves only two atomic-type `OMNode` instances here, and only
+verify that the function returns true when the objects have the same
+contents, whether or not they are the same object.
+
+        it 'should return true for equal atomics', ->
+
+Integers:
+
+            lhs = OM.simple '5'
+            rhs = OM.simple '5'
+            expect( lhs.equals lhs ).toBeTruthy()
+            expect( rhs.equals rhs ).toBeTruthy()
+            expect( lhs.equals rhs ).toBeTruthy()
+            expect( lhs is rhs ).toBeFalsy()
+
+Floats:
+
+            lhs = OM.simple '-0.01'
+            rhs = OM.simple '-0.01'
+            expect( lhs.equals lhs ).toBeTruthy()
+            expect( rhs.equals rhs ).toBeTruthy()
+            expect( lhs.equals rhs ).toBeTruthy()
+            expect( lhs is rhs ).toBeFalsy()
+
+Strings:
+
+            lhs = OM.simple '"jfkldsfjls"'
+            rhs = OM.simple '"jfkldsfjls"'
+            expect( lhs.equals lhs ).toBeTruthy()
+            expect( rhs.equals rhs ).toBeTruthy()
+            expect( lhs.equals rhs ).toBeTruthy()
+            expect( lhs is rhs ).toBeFalsy()
+
+Byte arrays:
+
+            lhs = OM.decode { t : 'ba', v : new Uint8Array [ 9, 8, 50 ] }
+            rhs = OM.decode { t : 'ba', v : new Uint8Array [ 9, 8, 50 ] }
+            expect( lhs.equals lhs ).toBeTruthy()
+            expect( rhs.equals rhs ).toBeTruthy()
+            expect( lhs.equals rhs ).toBeTruthy()
+            expect( lhs is rhs ).toBeFalsy()
+
+Symbols:
+
+            lhs = OM.simple 'harry.truman'
+            rhs = OM.simple 'harry.truman'
+            expect( lhs.equals lhs ).toBeTruthy()
+            expect( rhs.equals rhs ).toBeTruthy()
+            expect( lhs.equals rhs ).toBeTruthy()
+            expect( lhs is rhs ).toBeFalsy()
+
+Variables:
+
+            lhs = OM.simple 'harry'
+            rhs = OM.simple 'harry'
+            expect( lhs.equals lhs ).toBeTruthy()
+            expect( rhs.equals rhs ).toBeTruthy()
+            expect( lhs.equals rhs ).toBeTruthy()
+            expect( lhs is rhs ).toBeFalsy()
+
+### should return false for unequal atomics
+
+Here we add some complexity over the previous test by comparing not only
+unequal atomics of the same type, but a sampling of the possible cross-type
+comparisons as well.
+
+        it 'should return false for unequal atomics', ->
+
+Integers:
+
+            lhs_i = OM.simple '5'
+            rhs_i = OM.simple '7'
+            expect( lhs_i.equals lhs_i ).toBeTruthy()
+            expect( rhs_i.equals rhs_i ).toBeTruthy()
+            expect( lhs_i.equals rhs_i ).toBeFalsy()
+
+Floats:
+
+            lhs_f = OM.simple '-0.01'
+            rhs_f = OM.simple '8723.11'
+            expect( lhs_f.equals lhs_f ).toBeTruthy()
+            expect( rhs_f.equals rhs_f ).toBeTruthy()
+            expect( lhs_f.equals rhs_f ).toBeFalsy()
+            expect( lhs_f.equals rhs_i ).toBeFalsy()
+
+Strings:
+
+            lhs_st = OM.simple '"jfkldsfjls"'
+            rhs_st = OM.simple '"jfkfjls"'
+            expect( lhs_st.equals lhs_st ).toBeTruthy()
+            expect( rhs_st.equals rhs_st ).toBeTruthy()
+            expect( lhs_st.equals rhs_st ).toBeFalsy()
+            expect( lhs_st.equals rhs_f ).toBeFalsy()
+            expect( lhs_st.equals rhs_i ).toBeFalsy()
+
+Byte arrays:
+
+            lhs_ba = OM.decode { t : 'ba', v : new Uint8Array [ 9, 8, 50 ] }
+            rhs_ba = OM.decode { t : 'ba', v : new Uint8Array [ 9, 8, 51 ] }
+            expect( lhs_ba.equals lhs_ba ).toBeTruthy()
+            expect( rhs_ba.equals rhs_ba ).toBeTruthy()
+            expect( lhs_ba.equals rhs_ba ).toBeFalsy()
+            expect( lhs_ba.equals rhs_st ).toBeFalsy()
+            expect( lhs_ba.equals rhs_f ).toBeFalsy()
+            expect( lhs_ba.equals rhs_i ).toBeFalsy()
+
+Symbols:
+
+            lhs_sy = OM.simple 'harry.truman'
+            rhs_sy = OM.simple 'alben.barkley'
+            expect( lhs_sy.equals lhs_sy ).toBeTruthy()
+            expect( rhs_sy.equals rhs_sy ).toBeTruthy()
+            expect( lhs_sy.equals rhs_sy ).toBeFalsy()
+            expect( lhs_sy.equals rhs_ba ).toBeFalsy()
+            expect( lhs_sy.equals rhs_st ).toBeFalsy()
+            expect( lhs_sy.equals rhs_f ).toBeFalsy()
+            expect( lhs_sy.equals rhs_i ).toBeFalsy()
+
+Variables:
+
+            lhs_v = OM.simple 'harry'
+            rhs_v = OM.simple 'truman'
+            expect( lhs_v.equals lhs_v ).toBeTruthy()
+            expect( rhs_v.equals rhs_v ).toBeTruthy()
+            expect( lhs_v.equals rhs_v ).toBeFalsy()
+            expect( lhs_v.equals rhs_sy ).toBeFalsy()
+            expect( lhs_v.equals rhs_ba ).toBeFalsy()
+            expect( lhs_v.equals rhs_st ).toBeFalsy()
+            expect( lhs_v.equals rhs_f ).toBeFalsy()
+            expect( lhs_v.equals rhs_i ).toBeFalsy()
+
+### should return true for equal compounds
+
+Just like the test for equal atomics, but now we're building application and
+binding trees instead, as well as error objects.
+
+        it 'should return true for equal compounds', ->
+
+Applications:
+
+            lhs = OM.simple 'f(g(x,y),too.tee)'
+            rhs = OM.simple 'f(g(x,y),too.tee)'
+            expect( lhs.equals lhs ).toBeTruthy()
+            expect( rhs.equals rhs ).toBeTruthy()
+            expect( lhs.equals rhs ).toBeTruthy()
+            expect( lhs is rhs ).toBeFalsy()
+
+Bindings:
+
+            lhs = OM.simple 'logic.forall[x,logic.exists[y,Q(x,y)]]'
+            rhs = OM.simple 'logic.forall[x,logic.exists[y,Q(x,y)]]'
+            expect( lhs.equals lhs ).toBeTruthy()
+            expect( rhs.equals rhs ).toBeTruthy()
+            expect( lhs.equals rhs ).toBeTruthy()
+            expect( lhs is rhs ).toBeFalsy()
+
+Errors:
+
+            lhs = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'djskfl', cd : 'jfklds' }
+                c : [ { t : 'i', v : 8250 } ]
+            }
+            rhs = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'djskfl', cd : 'jfklds' }
+                c : [ { t : 'i', v : 8250 } ]
+            }
+            expect( lhs.equals lhs ).toBeTruthy()
+            expect( rhs.equals rhs ).toBeTruthy()
+            expect( lhs.equals rhs ).toBeTruthy()
+            expect( lhs is rhs ).toBeFalsy()
+
+### should return false for unequal compounds
+
+Just like the test for unequal atomics, but now we're building application
+and binding trees instead, as well as error objects, and comparing them to
+different objects of the same type, and comparing across types, and also
+comparing to some atomic nodes as well.
+
+        it 'should return true for unequal compounds', ->
+
+Atomics to use below for comparison:
+
+            node_i = OM.simple '7'
+            node_f = OM.simple '8.2380'
+            node_v = OM.simple 'var'
+            node_st = OM.simple '"rtuyperq"'
+            node_sy = OM.simple 'vncmx.fdhjs'
+            node_ba = { t : 'ba', v : new Uint8Array [ 25, 38, 196, 29 ] }
+
+Applications:
+
+            lhs_a = OM.simple 'f(g(x,y),too.tee)'
+            rhs_a = OM.simple 'f(G(x,y),too.tee)'
+            expect( lhs_a.equals lhs_a ).toBeTruthy()
+            expect( rhs_a.equals rhs_a ).toBeTruthy()
+            expect( lhs_a.equals rhs_a ).toBeFalsy()
+            expect( lhs_a.equals node_i ).toBeFalsy()
+            expect( lhs_a.equals node_f ).toBeFalsy()
+            expect( lhs_a.equals node_v ).toBeFalsy()
+            expect( lhs_a.equals node_st ).toBeFalsy()
+            expect( lhs_a.equals node_sy ).toBeFalsy()
+            expect( lhs_a.equals node_ba ).toBeFalsy()
+
+Bindings:
+
+            lhs_bi = OM.simple 'logic.forall[x,logic.exists[y,Q(x,y)]]'
+            rhs_bi = OM.simple 'logic.foraye[x,logic.exists[y,Q(x,y)]]'
+            expect( lhs_bi.equals lhs_bi ).toBeTruthy()
+            expect( rhs_bi.equals rhs_bi ).toBeTruthy()
+            expect( lhs_bi.equals rhs_bi ).toBeFalsy()
+            expect( lhs_bi.equals lhs_a ).toBeFalsy()
+            expect( lhs_bi.equals node_i ).toBeFalsy()
+            expect( lhs_bi.equals node_f ).toBeFalsy()
+            expect( lhs_bi.equals node_v ).toBeFalsy()
+            expect( lhs_bi.equals node_st ).toBeFalsy()
+            expect( lhs_bi.equals node_sy ).toBeFalsy()
+            expect( lhs_bi.equals node_ba ).toBeFalsy()
+
+Errors:
+
+            lhs_e = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'dijkstra', cd : 'jfklds' }
+                c : [ { t : 'i', v : 8250 } ]
+            }
+            rhs_e = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'djskfl', cd : 'jfklds' }
+                c : [ { t : 'i', v : 8250 } ]
+            }
+            expect( lhs_e.equals lhs_e ).toBeTruthy()
+            expect( rhs_e.equals rhs_e ).toBeTruthy()
+            expect( lhs_e.equals rhs_e ).toBeFalsy()
+            expect( lhs_e.equals lhs_a ).toBeFalsy()
+            expect( lhs_e.equals lhs_bi ).toBeFalsy()
+            expect( lhs_e.equals node_i ).toBeFalsy()
+            expect( lhs_e.equals node_f ).toBeFalsy()
+            expect( lhs_e.equals node_v ).toBeFalsy()
+            expect( lhs_e.equals node_st ).toBeFalsy()
+            expect( lhs_e.equals node_sy ).toBeFalsy()
+            expect( lhs_e.equals node_ba ).toBeFalsy()
+
+## Copying structures
+
+We can copy an `OMNode` instance and it should yield a completely different
+object (with all different children and valid parent pointers) but that is
+equivalent to the first (in that `original.equals( copy )` returns true).
+
+    describe 'Copying structures', ->
+
+### should make distinct but equal copies of atomics
+
+Verify that for all atomic types, a copy is a distinct object, but equal to
+the original.
+
+        it 'should make distinct but equal copies of atomics', ->
+
+Integer:
+
+            original = OM.simple '832'
+            copy = original.copy()
+            expect( original ).not.toBe copy
+            expect( original.equals copy ).toBeTruthy()
+
+Float:
+
+            original = OM.simple '8.32'
+            copy = original.copy()
+            expect( original ).not.toBe copy
+            expect( original.equals copy ).toBeTruthy()
+
+String:
+
+            original = OM.simple '"foo"'
+            copy = original.copy()
+            expect( original ).not.toBe copy
+            expect( original.equals copy ).toBeTruthy()
+
+Byte array:
+
+            original =
+                OM.decode { t : 'ba', v : new Uint8Array [ 53, 103 ] }
+            copy = original.copy()
+            expect( original ).not.toBe copy
+            expect( original.equals copy ).toBeTruthy()
+
+Symbol:
+
+            original = OM.simple 'reyui.vnm'
+            copy = original.copy()
+            expect( original ).not.toBe copy
+            expect( original.equals copy ).toBeTruthy()
+
+Variable:
+
+            original = OM.simple 'fdjls'
+            copy = original.copy()
+            expect( original ).not.toBe copy
+            expect( original.equals copy ).toBeTruthy()
+
+### should make distinct but equal copies of compounds
+
+Verify that for all compound types, a copy is a distinct object, but equal
+to the original.  Furthermore (unlike the case of atomics) we must also test
+that the corresponding sub-objects are not actually equal to those of the
+original, but are distinct objects as well.
+
+        it 'should make distinct but equal copies of compounds', ->
+
+Application:
+
+            original = OM.simple 'please(hammer,donut(hertz,umm))'
+            copy = original.copy()
+            expect( original ).not.toBe copy
+            expect( original.equals copy ).toBeTruthy()
+            expect( original.children[0] ).not.toBe copy.children[0]
+            expect( original.children[0].equals copy.children[0] ) \
+                .toBeTruthy()
+            expect( original.children[1] ).not.toBe copy.children[1]
+            expect( original.children[1].equals copy.children[1] ) \
+                .toBeTruthy()
+            expect( original.children[2] ).not.toBe copy.children[2]
+            expect( original.children[2].equals copy.children[2] ) \
+                .toBeTruthy()
+            expect( original.children[2].children[0] ).not.toBe \
+                copy.children[2].children[0]
+            expect( original.children[2].children[0].equals \
+                copy.children[2].children[0] ).toBeTruthy()
+            expect( original.children[2].children[1] ).not.toBe \
+                copy.children[2].children[1]
+            expect( original.children[2].children[1].equals \
+                copy.children[2].children[1] ).toBeTruthy()
+            expect( original.children[2].children[2] ).not.toBe \
+                copy.children[2].children[2]
+            expect( original.children[2].children[2].equals \
+                copy.children[2].children[2] ).toBeTruthy()
+
+Binding:
+
+            original = OM.simple 'al.ph[ab,et]'
+            copy = original.copy()
+            expect( original ).not.toBe copy
+            expect( original.equals copy ).toBeTruthy()
+            expect( original.symbol ).not.toBe copy.symbol
+            expect( original.symbol.equals copy.symbol ).toBeTruthy()
+            expect( original.body ).not.toBe copy.body
+            expect( original.body.equals copy.body ).toBeTruthy()
+            expect( original.variables[0] ).not.toBe copy.variables[0]
+            expect( original.variables[0].equals copy.variables[0] ) \
+                .toBeTruthy()
+
+Error:
+
+            original = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'file_not_found', cd : 'http' }
+                c : [ { t : 'i', v : 404 } ]
+            }
+            copy = original.copy()
+            expect( original ).not.toBe copy
+            expect( original.equals copy ).toBeTruthy()
+            expect( original.symbol ).not.toBe copy.symbol
+            expect( original.symbol.equals copy.symbol ).toBeTruthy()
+            expect( original.children[0] ).not.toBe copy.children[0]
+            expect( original.children[0].equals copy.children[0] ) \
+                .toBeTruthy()

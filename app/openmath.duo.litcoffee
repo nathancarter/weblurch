@@ -285,6 +285,90 @@ method, above.  Serializing is done by its inverse, here, which simply uses
             JSON.stringify @tree, ( k, v ) ->
                 if k is 'p' then undefined else v
 
+### Copies and equality
+
+Two instances will often want to be compared for equality, structurally.
+This is essentially the same activity as comparing equality of two JSON
+structures, except parent pointers should be ignored so that the recursion
+remains acyclic.
+
+        equals : ( other ) =>
+            recur = ( a, b ) ->
+
+If they are atomically equal, we're done.
+
+                if a is b then return yes
+
+If they're arrays, ensure they have the same length, type, and contents.
+
+                if a instanceof Array or a instanceof Uint8Array
+                    if ( a instanceof Array ) and ( b not instanceof Array )
+                        return no
+                    if ( a instanceof Uint8Array ) and \
+                       ( b not instanceof Uint8Array )
+                        return no
+                    if a.length isnt b.length then return no
+                    for element, index in a
+                        if not recur element, b[index] then return no
+                    return yes
+
+Otherwise, they must be objects, with all the same key-value pairs.
+
+                if a not instanceof Object then return no
+                if b not instanceof Object then return no
+                for own key, value of a
+                    if key is 'p' then continue # skip parent pointers
+                    if not b.hasOwnProperty key then return no
+                    if not recur value, b[key] then return no
+                for own key, value of b
+                    if key isnt 'p' and not a.hasOwnProperty key
+                        return no
+                yes
+            recur @tree, other.tree
+
+On a similar note, you may want to create a distinct copy of any given
+OMNode instance.  Here is a method for doing so.
+
+        copy : =>
+            recur = ( tree ) ->
+                switch tree.t
+
+Integers, floats, and strings are easy to copy; just duplicate type and
+value.  Variables and symbols are easy for the same reason, but different
+atomic members.
+
+                    when 'i', 'f', 'st' then { t : tree.t, v : tree.v }
+                    when 'v' then { t : 'v', n : tree.n }
+                    when 'sy'
+                        result = { t : 'sy', n : tree.n, cd : tree.cd }
+                        if tree.hasOwnProperty 'uri'
+                            result.uri = tree.uri
+                        result
+
+Byte arrays require making a copy of the byte array object, which can be
+accomplished with the constructor.
+
+                    when 'ba' then { t : 'ba', v : new Uint8Array tree.v }
+
+For errors and applications, we copy the children array; for errors we also
+include the symbol.
+
+                    when 'e', 'a'
+                        result =
+                            t : tree.t
+                            c : ( recur child for child in tree.c )
+                        if tree.t is 'e' then result.s = recur tree.s
+                        result
+
+Lastly, for bindings, we copy each sub-part: symbol, body, variable list.
+
+                    when 'bi'
+                        t : 'bi'
+                        s : recur tree.s
+                        v : ( recur variable for variable in tree.v )
+                        b : recur tree.b
+            OMNode.decode recur @tree
+
 ### Factory functions
 
 We provide here functions for creating each type of OMNode, from integer to
