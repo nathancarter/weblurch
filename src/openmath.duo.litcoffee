@@ -409,6 +409,196 @@ copied, but straight JSON objects are used as-is.
                     other
             OMNode.decode result
 
+### Simple encoding and decoding
+
+The above functions can be used to create OpenMath data structures of
+arbitrary complexity and type.  But most use cases can be handled with only
+a subset of that full complexity, and we provide the following toosl for
+doing so.
+
+`OMNode.simpleDecode()` takes a string as input (like `OMNode.decode()`
+does), but this string is in a much simple form.  Here are the formats it
+supports.
+ * `anyIdentifier` will be treated as a variable.  Examples:
+   * `x`
+   * `thing_7`
+ * `ident1.ident2` will be treated as a symbol (CD and name, respectively).
+   Examples:
+   * `arith1.plus`
+   * `transc1.arcsin`
+ * any integer will be treated as an integer.  Examples:
+   * 573280740
+   * -6
+ * any float will be treated as a float.  Examples:
+   * 582.53280
+   * -0.00001
+ * a string literal enclosed in quotation marks (`"`) will be treated as a
+   string, but with no support for escape codes, other than `\"`.  Examples:
+   * "this is a string"
+   * ""
+ * a string literal enclosed in single quotes (`'`) behaves the same way,
+   escaping only `\'`
+   * 'this is also a string, ain\'t it?'
+   * '""'
+ * `F(A1,...,An)`, where `F` is any valid form and each `Ai` is as well,
+   is interpreted as the application of `F` to the `Ai` in the order given.
+   Here `n` may be zero.  Examples:
+   * `f(x)`
+   * `transc1.arcsin(arith1.divide(1,2))`
+ * `F[A1,...,An]` behaves the same as the previous case, except that the
+   `Ai` entries before `An` must all be variables, and they will be bound;
+   i.e., this yields an OpenMath binding object, not an application object.
+   Examples:
+   * `logic.forall(x,P(x))`
+   * `foo.lambda(x,f(x,7,"bar"))`
+This syntax does not allow for the expression of OpenMath error objects,
+attributions, symbol URIs, byte arrays, or very large integers.
+
+We declare the following structure for use in the routine below.
+
+        tokenTypes = [
+            name : 'symbol'
+            pattern : /[:A-Za-z_][:A-Za-z_0-9-]*\.[:A-Za-z_][:A-Za-z_0-9-]*/
+        ,
+            name : 'variable'
+            pattern : /[:A-Za-z_][:A-Za-z_0-9-]*/
+        ,
+            name : 'float'
+            pattern : /[+-]?(?:[0-9]+\.[0-9]*|[0-9]*\.[0-9]+)/
+        ,
+            name : 'integer'
+            pattern : /[+-]?[0-9]+/
+        ,
+            name : 'string'
+            pattern : /"(?:[^"\\]|\\"|\\\\)*"|'(?:[^'\\]|\\'|\\\\)*'/
+        ,
+            name : 'comma'
+            pattern : /,/
+        ,
+            name : 'openParen'
+            pattern : /\(/
+        ,
+            name : 'closeParen'
+            pattern : /\)/
+        ,
+            name : 'openBracket'
+            pattern : /\[/
+        ,
+            name : 'closeBracket'
+            pattern : /\]/
+        ]
+
+Now the routine itself.
+
+        @simpleDecode = ( input ) ->
+
+Ensure the input is a string.
+
+            if typeof input isnt 'string'
+                return 'Input was not a string'
+
+Tokenize it using the above token data.
+
+            tokens = [ ]
+            while input.length > 0
+                originally = input.length
+                for tokenType in tokenTypes
+                    match = tokenType.pattern.exec input
+                    if match? and match.index is 0
+                        tokens.push
+                            type : tokenType.name
+                            text : match[0]
+                        input = input[match[0].length..]
+                if input.length is originally
+                    return "Could not understand from here: #{input[..10]}"
+
+Parse tokens using two states: one for when an expression is about to start,
+and one for when an expression just ended.  Maintain a stack of expressions
+already parsed, for forming application and binding expressions.
+
+            state = 'expression about to start'
+            stack = [ ]
+            while tokens.length > 0
+                next = tokens.shift()
+                switch state
+                    when 'expression about to start'
+                        switch next.type
+                            when 'symbol'
+                                halves = next.text.split '.'
+                                stack.unshift
+                                    node :
+                                        OMNode.symbol halves[1], halves[0]
+                            when 'variable'
+                                stack.unshift
+                                    node : OMNode.variable next.text
+                            when 'integer'
+                                stack.unshift
+                                    node : OMNode.integer parseInt next.text
+                            when 'float'
+                                stack.unshift
+                                    node : OMNode.float parseFloat next.text
+                            when 'string'
+                                type = next.text[0]
+                                next = next.text[1...-1].replace \
+                                    RegExp( "\\\\#{type}", 'g' ), type
+                                stack.unshift node : OMNode.string next
+                            else return "Unexpected #{next.text}"
+                        state = 'expression ended'
+                    when 'expression ended'
+                        switch next.type
+                            when 'comma'
+                                state = 'expression about to start'
+                            when 'openParen'
+                                stack[0].head = 'application'
+                                if tokens?[0]?.type is 'closeParen'
+                                    tokens.shift()
+                                    stack.unshift
+                                        node : OMNode.application \
+                                            stack.shift().node
+                                    state = 'expression ended'
+                                else
+                                    state = 'expression about to start'
+                            when 'openBracket'
+                                stack[0].head = 'binding'
+                                state = 'expression about to start'
+                            when 'closeParen'
+                                for expr, index in stack
+                                    if expr.head is 'application' then break
+                                    if expr.head is 'binding'
+                                        return "Mismatch: [ closed by )"
+                                if index is stack.length
+                                    return "Unexpected )"
+                                children = [ ]
+                                for i in [0..index]
+                                    children.unshift stack.shift().node
+                                stack.unshift
+                                    node : OMNode.application.apply \
+                                        null, children
+                            when 'closeBracket'
+                                for expr, index in stack
+                                    if expr.head is 'binding' then break
+                                    if expr.head is 'application'
+                                        return "Mismatch: ( closed by ]"
+                                if index is stack.length
+                                    return "Unexpected ]"
+                                children = [ ]
+                                for i in [0..index]
+                                    children.unshift stack.shift().node
+                                stack.unshift
+                                    node : OMNode.binding.apply \
+                                        null, children
+                            else return "Unexpected #{next.text}"
+                if typeof stack?[0].node is 'string'
+                    return stack[0].node # error in building OMNode
+
+Parsing complete so there should be just one node on the stack, the result.
+If there is more than one, we have an error.
+
+            if stack.length > 1
+                "Unexpected end of input"
+            else
+                stack[0].node
+
 ## Nicknames
 
 Here we copy each of the factory functions to a short version if its own
@@ -426,3 +616,4 @@ version, to make them easy to remember.
     OM.att = OM.attribution
     OM.bin = OM.binding
     OM.err = OM.error
+    OM.simple = OM.simpleDecode

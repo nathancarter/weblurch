@@ -1129,3 +1129,174 @@ counterparts.
                 }
             }
             expect( OM.err OM.str 'foo' ).toMatch /must be a symbol/
+
+## Simple encoding and decoding
+
+    describe 'Simple encoding and decoding', ->
+
+These tests test the functions `node.simpleEncode()` and
+`OMNode.simpleDecode()`.  These are analogous to `node.encode()` and
+`OMNode.decode()`, but are different in two ways.
+ * They are much easier to use.
+ * They support only a subset of the full functionality.
+See their documentation for more details.
+
+### should decode valid simple forms
+
+We provide several valid string inputs to `OMNode.simpleDecode()` and verify
+that they all generate the expected `OMNode` structures.
+
+        it 'should decode valid simple forms', ->
+
+We begin with atomic forms.
+
+            node = OM.simple '3'
+            expect( JSON.parse node.encode() ).toEqual { t : 'i', v : 3 }
+            node = OM.simple '-473825903'
+            expect( JSON.parse node.encode() ).toEqual \
+                { t : 'i', v : -473825903 }
+            node = OM.simple '5784.58309'
+            expect( JSON.parse node.encode() ).toEqual \
+                { t : 'f', v : 5784.58309 }
+            node = OM.simple '-.01'
+            expect( JSON.parse node.encode() ).toEqual { t : 'f', v : -.01 }
+            node = OM.simple 'thing1.thing2'
+            expect( JSON.parse node.encode() ).toEqual \
+                { t : 'sy', n : 'thing2', cd : 'thing1' }
+            node = OM.simple 'arith1.plus'
+            expect( JSON.parse node.encode() ).toEqual \
+                { t : 'sy', n : 'plus', cd : 'arith1' }
+            node = OM.simple 'x'
+            expect( JSON.parse node.encode() ).toEqual { t : 'v', n : 'x' }
+            node = OM.simple 'holierThanThou'
+            expect( JSON.parse node.encode() ).toEqual \
+                { t : 'v', n : 'holierThanThou' }
+            node = OM.simple '"wonderful"'
+            expect( JSON.parse node.encode() ).toEqual \
+                { t : 'st', v : 'wonderful' }
+            node = OM.simple '"It\'s a \\"Wonderful\\" Life"'
+            expect( JSON.parse node.encode() ).toEqual \
+                { t : 'st', v : 'It\'s a "Wonderful" Life' }
+            node = OM.simple '\'It\\\'s a "Wonderful" Life\''
+            expect( JSON.parse node.encode() ).toEqual \
+                { t : 'st', v : 'It\'s a "Wonderful" Life' }
+
+Now we consider applications and bindings, as well as nesting thereof, and
+even the application of applications to other arguments.
+
+            node = OM.simple 'f(x,y,300)'
+            expect( JSON.parse node.encode() ).toEqual {
+                t : 'a'
+                c : [
+                    { t : 'v', n : 'f' }
+                    { t : 'v', n : 'x' }
+                    { t : 'v', n : 'y' }
+                    { t : 'i', v : 300 }
+                ]
+            }
+            node = OM.simple 'logic.forall[x,P(x)]'
+            expect( JSON.parse node.encode() ).toEqual {
+                t : 'bi'
+                s : { t : 'sy', n : 'forall', cd : 'logic' }
+                v : [ { t : 'v', n : 'x' } ]
+                b : {
+                    t : 'a'
+                    c : [ { t : 'v', n : 'P' }, { t : 'v', n : 'x' } ]
+                }
+            }
+            node = OM.simple 'A.B(g(c),h.k[i,i(1)])'
+            expect( JSON.parse node.encode() ).toEqual {
+                t : 'a'
+                c : [
+                    { t : 'sy', n : 'B', cd : 'A' }
+                    {
+                        t : 'a'
+                        c : [
+                            { t : 'v', n : 'g' }
+                            { t : 'v', n : 'c' }
+                        ]
+                    }
+                    {
+                        t : 'bi'
+                        s : { t : 'sy', n : 'k', cd : 'h' }
+                        v : [ { t : 'v', n : 'i' } ]
+                        b : {
+                            t : 'a'
+                            c : [ { t : 'v', n : 'i' }, { t : 'i', v : 1 } ]
+                        }
+                    }
+                ]
+            }
+            node = OM.simple 'F(x)(y)'
+            expect( JSON.parse node.encode() ).toEqual {
+                t : 'a'
+                c : [
+                    {
+                        t : 'a'
+                        c : [
+                            { t : 'v', n : 'F' }
+                            { t : 'v', n : 'x' }
+                        ]
+                    }
+                    { t : 'v', n : 'y' }
+                ]
+            }
+            node = OM.simple 'zero_args_is_okay()'
+            expect( JSON.parse node.encode() ).toEqual {
+                t : 'a'
+                c : [ { t : 'v', n : 'zero_args_is_okay' } ]
+            }
+
+### should give errors when decoding invalid simple forms
+
+We provide several invalid string inputs to `OMNode.simpleDecode()` and
+verify that a suitable error message is returned in each case.
+
+        it 'should give errors when decoding invalid simple forms', ->
+
+Invalid atomics.
+
+            expect( OM.simple 'spaces disallowed' ).toMatch \
+                /Could not understand from here:  dis/
+            expect( OM.simple '1.2.3' ).toMatch /Unexpected \.3/
+            expect( OM.simple '"string"oops"' ).toMatch \
+                /Could not understand from here: "/
+            expect( OM.simple 'invalid.1' ).toMatch /Unexpected \.1/
+            expect( OM.simple 'f(--3)' ).toMatch \
+                /Could not understand from here: --3/
+            expect( OM.simple 'thing.' ).toMatch \
+                /Could not understand from here: \./
+
+Invalid compound expressions.
+
+            expect( OM.simple 'f(x' ).toMatch /Unexpected end of input/
+            expect( OM.simple 'f(x]' ).toMatch /Mismatch: \(/
+            expect( OM.simple 'f[x)' ).toMatch /Mismatch: \[/
+            expect( OM.simple 'f[x,y]' ).toMatch \
+                /Head of a binding must be a symbol/
+            expect( OM.simple 'example.symbol[3,9]' ).toMatch \
+                /all values in the v array must have type v/
+            expect( OM.simple 'hark(the,,herald)' ).toMatch /Unexpected ,/
+            expect( OM.simple 'once(upon,)' ).toMatch /Unexpected \)/
+            expect( OM.simple '(x)' ).toMatch /Unexpected \(/
+            expect( OM.simple 'f((x))' ).toMatch /Unexpected \(/
+            expect( OM.simple 'f(g(x)' ).toMatch /Unexpected end of input/
+            expect( OM.simple 'x,y,z' ).toMatch /Unexpected end of input/
+
+### should encode valid simple forms
+
+We take several `OMNode` instances that can be encoded using the simple
+encoding, and call `encode()` in each, verifying that they produce the
+expected string output in each case.
+
+        it 'should encode valid simple forms', ->
+            throw 'THIS TEST NOT YET WRITTEN'
+
+### should give errors when encoding invalid simple forms
+
+We take several `OMNode` instances that cannot be encoded using the simple
+encoding, and call `encode()` in each, verifying that a suitable error is
+thrown in each case.
+
+        it 'should give errors when encoding invalid simple forms', ->
+            throw 'THIS TEST NOT YET WRITTEN'
