@@ -20,8 +20,6 @@ required order of completion.
 ## OpenMath
 
 This work is in progress.  Here are the remaining tasks:
- * Create another factory by importing the JavaScript code for `simpleLob`
-   from the desktop Lurch.
  * Add the following methods to the OpenMath object class
    * getters for type, value, name, cd, uri, children, symbol, variables,
      and body

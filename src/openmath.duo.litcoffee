@@ -427,8 +427,8 @@ supports.
    * `arith1.plus`
    * `transc1.arcsin`
  * any integer will be treated as an integer.  Examples:
-   * 573280740
    * -6
+   * 57328074078459027340 (value will be a string, due to size)
  * any float will be treated as a float.  Examples:
    * 582.53280
    * -0.00001
@@ -532,8 +532,9 @@ already parsed, for forming application and binding expressions.
                                 stack.unshift
                                     node : OMNode.variable next.text
                             when 'integer'
-                                stack.unshift
-                                    node : OMNode.integer parseInt next.text
+                                int = parseInt next.text
+                                if /\./.test int then int = next.text
+                                stack.unshift node : OMNode.integer int
                             when 'float'
                                 stack.unshift
                                     node : OMNode.float parseFloat next.text
@@ -598,6 +599,42 @@ If there is more than one, we have an error.
                 "Unexpected end of input"
             else
                 stack[0].node
+
+The inverse to the above function is a simple encoding function.  It can
+operate on only a subset of the full complexity of OMNode trees, and thus in
+some cases it gives results that are not representative of the input.  Here
+are the details:
+ * integers, floats, and strings will all be correctly encoded
+ * variables without dots in their names will be correctly encoded; those
+   with dots in their names conflict with the naming of symbols in the
+   simple encoding, but will be encoded as their names
+ * symbols will be correctly encoded with the exception that any URI will be
+   dropped, and the same issue with dots applies to symbol and CD names
+ * byte arrays and errors have no simple encoding, and will thus all be
+   converted to a string containing the words "byte array" or "error,"
+   respectively
+ * all attributions are dropped
+
+        simpleEncode : =>
+            recur = ( tree ) ->
+                switch tree?.t
+                    when 'i', 'f' then "#{tree.v}"
+                    when 'v' then tree.n
+                    when 'st' then "'#{tree.v.replace /'/g, '\\\''}'"
+                    when 'sy' then "#{tree.cd}.#{tree.n}"
+                    when 'ba' then "'byte array'"
+                    when 'e' then "'error'"
+                    when 'a'
+                        children = ( recur c for c in tree.c )
+                        head = children.shift()
+                        "#{head}(#{children.join ','})"
+                    when 'bi'
+                        variables = ( recur v for v in tree.v )
+                        head = recur tree.s
+                        body = recur tree.b
+                        "#{head}[#{variables.join ','},#{body}]"
+                    else "Error: Invalid OpenMath type #{tree?.t}"
+            recur @tree
 
 ## Nicknames
 

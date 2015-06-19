@@ -1155,6 +1155,9 @@ We begin with atomic forms.
             node = OM.simple '-473825903'
             expect( JSON.parse node.encode() ).toEqual \
                 { t : 'i', v : -473825903 }
+            node = OM.simple '47354735436545463546825903'
+            expect( JSON.parse node.encode() ).toEqual \
+                { t : 'i', v : '47354735436545463546825903' }
             node = OM.simple '5784.58309'
             expect( JSON.parse node.encode() ).toEqual \
                 { t : 'f', v : 5784.58309 }
@@ -1290,7 +1293,67 @@ encoding, and call `encode()` in each, verifying that they produce the
 expected string output in each case.
 
         it 'should encode valid simple forms', ->
-            throw 'THIS TEST NOT YET WRITTEN'
+
+Atomic cases first.
+
+            node = OM.decode { t : 'i', v : 12345 }
+            expect( node.simpleEncode() ).toEqual '12345'
+            node = OM.decode { t : 'f', v : -123.45 }
+            expect( node.simpleEncode() ).toEqual '-123.45'
+            node = OM.decode { t : 'v', n : 'variable' }
+            expect( node.simpleEncode() ).toEqual 'variable'
+            node = OM.decode { t : 'st', v : 'thinking about you, love' }
+            expect( node.simpleEncode() ).toEqual \
+                "'thinking about you, love'"
+            node = OM.decode { t : 'st', v : 'something in "quotes"' }
+            expect( node.simpleEncode() ).toEqual \
+                "'something in \"quotes\"'"
+            node = OM.decode { t : 'st', v : 'something isn\'t right' }
+            expect( node.simpleEncode() ).toEqual \
+                "'something isn\\'t right'"
+            node = OM.decode { t : 'sy', n : 'times', cd : 'arith1' }
+            expect( node.simpleEncode() ).toEqual 'arith1.times'
+
+Compound cases second.
+
+            node = OM.decode {
+                t : 'a'
+                c : [
+                    { t : 'v', n : 'Gamma' }
+                    { t : 'i', v : 7 }
+                    {
+                        t : 'a'
+                        c : [
+                            { t : 'sy', n : 'plus', cd : 'arith1' }
+                            { t : 'v', n : 'y' }
+                            { t : 'f', v : 0.05 }
+                        ]
+                    }
+                ]
+            }
+            expect( node.simpleEncode() ).toEqual \
+                'Gamma(7,arith1.plus(y,0.05))'
+            node = OM.decode {
+                t : 'bi'
+                s : { t : 'sy', n : 'forall', cd : 'logic' }
+                v : [ { t : 'v', n : 'a' }, { t : 'v', n : 'b' } ]
+                b : {
+                    t : 'bi'
+                    s : { t : 'sy', n : 'exists', cd : 'logic' }
+                    v : [ { t : 'v', n : 'c' } ]
+                    b : {
+                        t : 'a'
+                        c : [
+                            { t : 'sy', n : 'lessthan', cd : 'whatever' }
+                            { t : 'v', n : 'a' }
+                            { t : 'v', n : 'c' }
+                            { t : 'v', n : 'b' }
+                        ]
+                    }
+                }
+            }
+            expect( node.simpleEncode() ).toEqual \
+                'logic.forall[a,b,logic.exists[c,whatever.lessthan(a,c,b)]]'
 
 ### should give errors when encoding invalid simple forms
 
@@ -1299,4 +1362,101 @@ encoding, and call `encode()` in each, verifying that a suitable error is
 thrown in each case.
 
         it 'should give errors when encoding invalid simple forms', ->
-            throw 'THIS TEST NOT YET WRITTEN'
+
+Variables with dots in their names conflict with the naming of symbols in
+the simple encoding, but will be encoded as their names.
+
+            node = OM.decode { t : 'v', n : 'looksLike.aSymbol' }
+            expect( node.simpleEncode() ).toEqual 'looksLike.aSymbol'
+            node = OM.decode { t : 'v', n : 't.o.o.m.a.n.y.d.o.t.s' }
+            expect( node.simpleEncode() ).toEqual 't.o.o.m.a.n.y.d.o.t.s'
+
+Symbols will be correctly encoded with the exception that any URI will be
+dropped, and the same issue with dots applies to symbol and CD names.
+
+            node = OM.decode {
+                t : 'sy'
+                n : 'name'
+                cd : 'cd'
+                uri : 'this will be dropped'
+            }
+            expect( node.simpleEncode() ).toEqual 'cd.name'
+            node = OM.decode {
+                t : 'sy'
+                n : 'na.me'
+                cd : 'cd.with.dots'
+                uri : 'this will be dropped'
+            }
+            expect( node.simpleEncode() ).toEqual 'cd.with.dots.na.me'
+            node = OM.decode {
+                t : 'sy'
+                n : 'name.17'
+                cd : 'cd.dvd.bluray'
+            }
+            expect( node.simpleEncode() ).toEqual 'cd.dvd.bluray.name.17'
+
+Byte arrays and errors have no simple encoding, and will thus all be
+converted to a string containing the words "byte array" or "error,"
+respectively.
+
+            node = OM.decode { t : 'ba', v : new Uint8Array }
+            expect( node.simpleEncode() ).toEqual "'byte array'"
+            node = OM.decode { t : 'ba', v : new Uint8Array 100 }
+            expect( node.simpleEncode() ).toEqual "'byte array'"
+            node = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'error-name', cd : 'error-cd' }
+                c : [ ]
+            }
+            expect( node.simpleEncode() ).toEqual "'error'"
+            node = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'does', cd : 'not' }
+                c : [
+                    { t : 'v', n : 'matter' }
+                    { t : 'st', v : 'what we put here' }
+                ]
+            }
+            expect( node.simpleEncode() ).toEqual "'error'"
+
+All attributions are dropped.
+
+            node = OM.decode {
+                t : 'i'
+                v : 10000
+                a : {
+                    '{"t":"sy","n":"foo","cd":"bar"}' : { t : 'i', v : 3 }
+                    '{"t":"sy","n":"baz","cd":"bar"}' : { t : 'i', v : 4 }
+                    '{"t":"sy","n":"bash","cd":"bar"}' : { t : 'i', v : 5 }
+                }
+            }
+            expect( node.simpleEncode() ).toEqual "10000"
+            node = OM.decode {
+                t : 'st'
+                v : 'a long long time ago'
+                a : {
+                    '{"t":"sy","n":"foo","cd":"bar"}' : { t : 'i', v : 3 }
+                    '{"t":"sy","n":"baz","cd":"bar"}' : { t : 'i', v : 4 }
+                    '{"t":"sy","n":"bash","cd":"bar"}' : { t : 'i', v : 5 }
+                }
+            }
+            expect( node.simpleEncode() ).toEqual "'a long long time ago'"
+            node = OM.decode {
+                t : 'a'
+                c : [
+                    { t : 'v', n : 'f' }
+                    {
+                        t : 'f'
+                        v : 19.95
+                        a : {
+                            '{"t":"sy","n":"foo","cd":"bar"}' :
+                                { t : 'i', v : 3 }
+                            '{"t":"sy","n":"baz","cd":"bar"}' :
+                                { t : 'i', v : 4 }
+                            '{"t":"sy","n":"bash","cd":"bar"}' :
+                                { t : 'i', v : 5 }
+                        }
+                    }
+                ]
+            }
+            expect( node.simpleEncode() ).toEqual "f(19.95)"
