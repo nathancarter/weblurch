@@ -2455,3 +2455,174 @@ lookups are as they should be.
             expect( y.getAttribute( key1 ).sameObjectAs int ).toBeTruthy()
             expect( bin.getAttribute( key2 ).sameObjectAs x ).toBeTruthy()
             expect( int.getAttribute( key3 ).sameObjectAs str ).toBeTruthy()
+
+### should be correctly handled by `replaceWith()`
+
+The `replaceWith()` method of the `OMNode` class is one that breaks apart
+and reforms structures, so it deals intimately with parent and child
+pointers.  We test here that it treats them correctly.
+
+        it 'should be correctly handled by replaceWith()', ->
+
+Replacing a parentless node with something should yield the new thing as a
+return value, but change the original to contain the replacement (the same
+object, not just a copy).
+
+            original = OM.simple 'f(x)'
+            replacement = OM.simple 'my.symbol'
+            result = original.replaceWith replacement
+            expect( original.equals OM.simple 'f(x)' ).toBeFalsy()
+            expect( original.equals OM.simple 'my.symbol' ).toBeTruthy()
+            expect( original.equals replacement ).toBeTruthy()
+            expect( original.sameObjectAs replacement ).toBeTruthy()
+
+If we repeat the same test, but with the original as a child of a larger
+expression, then not only should all the same expectations as above be
+satisfied, but the parent should now contain the new child, and the old
+child should have no parent.
+
+            outer = OM.simple 'f(x,y,z)'
+            original = outer.children[2] # the y
+            replacement = OM.simple '107'
+            result = original.replaceWith replacement
+            expect( outer.equals OM.simple 'f(x,y,z)' ).toBeFalsy()
+            expect( original.equals OM.simple '107' ).toBeTruthy()
+            expect( original.equals replacement ).toBeTruthy()
+            expect( original.sameObjectAs replacement ).toBeTruthy()
+            expect( result.parent ).toBeUndefined()
+            expect( original.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.equals OM.simple 'f(x,107,z)' ).toBeTruthy()
+            expect( replacement.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.children[2].sameObjectAs original ).toBeTruthy()
+
+The same tests should all pass if, instead of replacing a child in a parent,
+we replace a head symbol in an error or binding node.
+
+Here it is with an error:
+
+            outer = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'example', cd : 'error' }
+                c : [ { t : 'i', v : -345 } ]
+            }
+            original = outer.symbol
+            replacement = OM.simple 'a.b'
+            result = original.replaceWith replacement
+            expect( outer.equals OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'example', cd : 'error' }
+                c : [ { t : 'i', v : -345 } ]
+            } ).toBeFalsy()
+            expect( original.equals OM.simple 'a.b' ).toBeTruthy()
+            expect( original.equals replacement ).toBeTruthy()
+            expect( original.sameObjectAs replacement ).toBeTruthy()
+            expect( result.parent ).toBeUndefined()
+            expect( original.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.equals OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'b', cd : 'a' }
+                c : [ { t : 'i', v : -345 } ]
+            } ).toBeTruthy()
+            expect( replacement.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.symbol.sameObjectAs original ).toBeTruthy()
+
+Here it is with a binding:
+
+            outer = OM.simple 'logic.forall[x,P(x)]'
+            original = outer.symbol
+            replacement = OM.simple 'logic.exists'
+            result = original.replaceWith replacement
+            expect( outer.equals OM.simple 'logic.forall[x,P(x)]' ) \
+                .toBeFalsy()
+            expect( original.equals OM.simple 'logic.exists' ).toBeTruthy()
+            expect( original.equals replacement ).toBeTruthy()
+            expect( original.sameObjectAs replacement ).toBeTruthy()
+            expect( result.parent ).toBeUndefined()
+            expect( original.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.equals OM.simple 'logic.exists[x,P(x)]' ) \
+                .toBeTruthy()
+            expect( replacement.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.symbol.sameObjectAs original ).toBeTruthy()
+
+The same tests should all pass if, instead of replacing the head symbol in a
+binding node, we replace its body.
+
+            outer = OM.simple 'logic.forall[x,P(x)]'
+            original = outer.body
+            replacement = OM.simple 'Q(x)'
+            result = original.replaceWith replacement
+            expect( outer.equals OM.simple 'logic.forall[x,P(x)]' ) \
+                .toBeFalsy()
+            expect( original.equals OM.simple 'Q(x)' ).toBeTruthy()
+            expect( original.equals replacement ).toBeTruthy()
+            expect( original.sameObjectAs replacement ).toBeTruthy()
+            expect( result.parent ).toBeUndefined()
+            expect( original.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.equals OM.simple 'logic.forall[x,Q(x)]' ) \
+                .toBeTruthy()
+            expect( replacement.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.body.sameObjectAs original ).toBeTruthy()
+
+The same tests should all pass if, instead of replacing the head symbol in a
+binding node, we replace (one of) its variable(s).
+
+            outer = OM.simple 'logic.forall[x,P(x)]'
+            original = outer.variables[0]
+            replacement = OM.simple 'y'
+            result = original.replaceWith replacement
+            expect( outer.equals OM.simple 'logic.forall[x,P(x)]' ) \
+                .toBeFalsy()
+            expect( original.equals OM.simple 'y' ).toBeTruthy()
+            expect( original.equals replacement ).toBeTruthy()
+            expect( original.sameObjectAs replacement ).toBeTruthy()
+            expect( result.parent ).toBeUndefined()
+            expect( original.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.equals OM.simple 'logic.forall[y,P(x)]' ) \
+                .toBeTruthy()
+            expect( replacement.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.variables[0].sameObjectAs original ).toBeTruthy()
+
+The same tests should all pass if we replace the value of an attribute.
+
+            outer = OM.decode {
+                t : 'i'
+                v : 50
+                a : {
+                    '{"t":"sy","n":"Q","cd":"W"}' : { t : 'v', n : 'x' }
+                    '{"t":"sy","n":"E","cd":"R"}' : { t : 'v', n : 't' }
+                }
+            }
+            original = outer.getAttribute OM.simple 'W.Q'
+            replacement = OM.simple 'p(t)'
+            result = original.replaceWith replacement
+            expect( outer.equals OM.decode {
+                t : 'i'
+                v : 50
+                a : {
+                    '{"t":"sy","n":"Q","cd":"W"}' : { t : 'v', n : 'x' }
+                    '{"t":"sy","n":"E","cd":"R"}' : { t : 'v', n : 't' }
+                }
+            } ).toBeFalsy()
+            expect( original.equals OM.simple 'p(t)' ).toBeTruthy()
+            expect( original.equals replacement ).toBeTruthy()
+            expect( original.sameObjectAs replacement ).toBeTruthy()
+            expect( result.parent ).toBeUndefined()
+            expect( original.parent.sameObjectAs outer ).toBeTruthy()
+            console.log JSON.stringify JSON.parse(outer.encode()), null, 4
+            expect( outer.equals OM.decode {
+                t : 'i'
+                v : 50
+                a : {
+                    '{"t":"sy","n":"Q","cd":"W"}' : {
+                        t : 'a'
+                        c : [
+                            { t : 'v', n : 'p' }
+                            { t : 'v', n : 't' }
+                        ]
+                    }
+                    '{"t":"sy","n":"E","cd":"R"}' : { t : 'v', n : 't' }
+                }
+            } ).toBeTruthy()
+            expect( replacement.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.getAttribute( OM.simple 'W.Q' ) \
+                .sameObjectAs original ).toBeTruthy()

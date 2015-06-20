@@ -834,7 +834,7 @@ contents.  The removed node is returned.
                 when 's' then original.parent.tree.s = @tree
                 when '{' then original.parent.tree.a[index] = @tree
                 else throw 'Invalid index in parent' # should never happen
-            @tree.p = original.parent
+            @tree.p = original.tree.p
             delete original.tree.p
             original
 
