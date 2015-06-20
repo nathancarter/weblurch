@@ -808,6 +808,36 @@ undefined (as determined by `@findInParent()`) then this does nothing.
                 when '{' then delete @parent.tree.a[index]
             delete @tree.p
 
+It will also be useful in later functions in this class to be able to
+replace a subtree in-place with a new one.  The following method
+accomplishes this, replacing this object in its context with the parameter.
+This works whether this tree is a child, variable, head symbol, body, or
+attribute value of its parent.  If this object has no parent, then we make
+no modifications to that parent, since it does not exist.
+
+In all cases, the parameter is `remove()`d from its context, and this node,
+if it has a parent, is `remove()`d from it as well.  Furthermore, this
+OMNode instance becomes a wrapper to the given node instead of its current
+contents.  The removed node is returned.
+
+        replaceWith : ( other ) =>
+            other.remove()
+            original = new OMNode @tree
+            @tree = other.tree
+            if not index = original.findInParent() then return
+            switch index[0]
+                when 'c'
+                    original.parent.tree.c[parseInt index[1..]] = @tree
+                when 'v'
+                    original.parent.tree.v[parseInt index[1..]] = @tree
+                when 'b' then original.parent.tree.b = @tree
+                when 's' then original.parent.tree.s = @tree
+                when '{' then original.parent.tree.a[index] = @tree
+                else throw 'Invalid index in parent' # should never happen
+            @tree.p = original.parent
+            delete original.tree.p
+            original
+
 Then we have three functions that let us manipulate attributes without
 worrying about the unpredictable ordering of keys in a JSON stringification
 of an object.
@@ -866,6 +896,83 @@ The same efficiency comments apply to this function as to the previous.
             newValue.remove()
             ( @tree.a ?= { } )[keySymbol.encode()] = newValue.tree
             newValue.tree.p = @tree
+
+### Free and bound variables and expressions
+
+The methods in this section are about variable binding and which expressions
+are free to replace others.  There are also methods that do such
+replacements.
+
+This method lists the free variables in an expression.  It returns an array
+of strings, just containing the variables' names.  Variables appearing in
+attributes do not count; only variables appearing as children of
+applications or error nodes, or in the body of a binding expression can
+appear on this list.
+
+        freeVariables : =>
+            switch @type
+                when 'v' then return [ @name ]
+                when 'a', 'c'
+                    result = [ ]
+                    for child in @children
+                        for free in child.freeVariables()
+                            result.push free unless free in result
+                    result
+                when 'bi'
+                    boundByThis = ( v.name for v in @variables )
+                    ( varname for varname in @body.freeVariables() \
+                        when varname not in boundByThis )
+                else [ ]
+
+This method computes whether an expression is free by walking up its
+ancestor chain and determining whether any of the variables free in the
+expression are bound further up the ancestor chain.  If you pass an
+ancestor as the parameter, then the computation will not look upward beyond
+that ancestor; the default is to leave the parameter unspecified, meaning
+that the algorithm should look all the way up the parent chain.
+
+        isFree : ( inThis ) =>
+            freeVariables = @freeVariables()
+            walk = this
+            while walk and walk isnt inThis
+                if walk.type is 'bi'
+                    for variable in freeVariables
+                        if variable in ( v.name for v in walk.variables )
+                            return no
+                walk = walk.parent
+            yes
+
+This method returns true if there is a descendant of this structure that is
+structurally equivalent to the parameter and, at that point in the tree,
+passes the `isFree` test defined immediately above.  This algorithm only
+looks downward through children, head symbols, and bodies of binding nodes,
+not attribute keys or values.
+
+        occursFree : ( findThis ) =>
+            if @equals( findThis ) and @isFree() then return yes
+            if @symbol.equals findThis then return yes
+            if @body.occursFree findThis then return yes
+            for child in @children
+                if child.occursFree findThis then return yes
+            no
+
+This method replaces every free occurrence of one expression (original) with
+a copy of the another expression (replacement).  The search-and-replace
+recursion only proceeds through children, head symbols, and bodies of
+binding nodes, not attribute keys or values.
+
+        replaceFree : ( original, replacement ) =>
+            if @equals original then return @replaceWith replacement.copy()
+            if @symbol?.equals original
+                @symbol.replaceWith replacement.copy()
+            if @body?.equals original
+                @body.replaceWith replacement.copy()
+            for variable in @variables
+                if variable.equals original
+                    variable.replaceWith replacement.copy()
+            for child in @children
+                if child.equals original
+                    child.replaceWith replacement.copy()
 
 ## Nicknames
 

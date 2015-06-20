@@ -21,7 +21,8 @@ required order of completion.
 
 This work is in progress.  Here are the remaining methods to add to the
 `OMNode` class.
- * isFree(), replaceFree(from,to), occursFreeIn()
+ * write unit tests for replaceWith(), freeVariables(), isFree(),
+   occursFree(), and replaceFree()
  * applySubstitution() and applyAllSubstitutions() (which work with
    expressions of the form `x[y=z]`, meaning x with all occurrences of y
    replaced by z, and `x[y~z]`, meaning the same but "some" isntead of
