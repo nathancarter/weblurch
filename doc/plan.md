@@ -22,7 +22,6 @@ required order of completion.
 This work is in progress.  Here are the remaining methods to add to the
 `OMNode` class.
  * write unit tests for these:
-   * freeVariables()
    * isFree()
    * occursFree()
    * replaceFree()

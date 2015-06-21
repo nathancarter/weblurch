@@ -2626,3 +2626,52 @@ The same tests should all pass if we replace the value of an attribute.
             expect( replacement.parent.sameObjectAs outer ).toBeTruthy()
             expect( outer.getAttribute( OM.simple 'W.Q' ) \
                 .sameObjectAs original ).toBeTruthy()
+
+## Routines for free and bound variables
+
+There are several routines in the OMNode class dealing with free and bound
+variables (and subexpressions that are free in ancestor expressions).  This
+section tests all those routines.
+
+### should correctly list the free variables in an expression
+
+This section tests the `node.freeVariables()` routine, which returns an
+array of strings, the names of the variables that appear free in the
+expression.  The order is undefined, so the test will sort them into
+alphabetical order before comparing.  But each variable name should appear
+only once despite multiple occurrences existing.
+
+        it 'should correctly list the free variables in an expression', ->
+
+We create a few expressions and then test the list of free variables in not
+only the expressions themselves, but also many of their subexpressions.
+
+            expr = OM.simple 'f(x)'
+            expect( expr.freeVariables().sort() ).toEqual [ 'f', 'x' ]
+            expect( expr.children[0].freeVariables() ).toEqual [ 'f' ]
+            expect( expr.children[1].freeVariables() ).toEqual [ 'x' ]
+            expr = OM.simple 'f(x,g(x))'
+            expect( expr.freeVariables().sort() ).toEqual [ 'f', 'g', 'x' ]
+            expect( expr.children[0].freeVariables() ).toEqual [ 'f' ]
+            expect( expr.children[1].freeVariables() ).toEqual [ 'x' ]
+            expect( expr.children[2].freeVariables().sort() ).toEqual \
+                [ 'g', 'x' ]
+            expr = OM.simple 'f.f(x.x)'
+            expect( expr.freeVariables() ).toEqual [ ]
+            expect( expr.children[0].freeVariables() ).toEqual [ ]
+            expect( expr.children[1].freeVariables() ).toEqual [ ]
+
+We now introduce bindings, so that some variables free in subexpressions are
+not free higher up in the ancestor chain.
+
+            expr = OM.simple 'logic.forall[x,P(x)]'
+            expect( expr.freeVariables() ).toEqual [ 'P' ]
+            expect( expr.symbol.freeVariables() ).toEqual [ ]
+            expect( expr.variables[0].freeVariables() ).toEqual [ 'x' ]
+            expect( expr.body.freeVariables().sort() ).toEqual [ 'P', 'x' ]
+            expr = OM.simple 'logic.forall[x,y,logic.exists[z,g.t(x,z,y)]]'
+            expect( expr.freeVariables() ).toEqual [ ]
+            expect( expr.symbol.freeVariables() ).toEqual [ ]
+            expect( expr.variables[0].freeVariables() ).toEqual [ 'x' ]
+            expect( expr.variables[1].freeVariables() ).toEqual [ 'y' ]
+            expect( expr.body.freeVariables().sort() ).toEqual [ 'x', 'y' ]
