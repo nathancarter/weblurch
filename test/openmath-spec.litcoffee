@@ -2675,3 +2675,29 @@ not free higher up in the ancestor chain.
             expect( expr.variables[0].freeVariables() ).toEqual [ 'x' ]
             expect( expr.variables[1].freeVariables() ).toEqual [ 'y' ]
             expect( expr.body.freeVariables().sort() ).toEqual [ 'x', 'y' ]
+
+### should correctly judge expressions free/bound
+
+An expression is bound at a location if any variable free in it is bound
+farther up the ancestor chain.  We test several examples of each type here.
+
+        it 'should correctly judge expressions free/bound', ->
+
+In the following expression, f(x) is bound and g(y) is free.  We test all
+other subexpressions as well.
+
+            expr = OM.simple 'logic.forall[x,logic.and(f(x),g(y))]'
+            expect( expr.symbol.isFree() ).toBeTruthy()
+            expect( expr.variables[0].isFree() ).toBeFalsy()
+            expect( expr.body.isFree() ).toBeFalsy()
+            expect( expr.body.children[0].isFree() ).toBeTruthy()
+            expect( expr.body.children[1].isFree() ).toBeFalsy()
+            expect( expr.body.children[2].isFree() ).toBeTruthy()
+
+Now we repeat the same tests, but limit the scope of looking up the parent
+chain to inside the quantifier, so that everything should be free.
+
+            expect( expr.body.isFree expr.body ).toBeTruthy()
+            expect( expr.body.children[0].isFree expr.body ).toBeTruthy()
+            expect( expr.body.children[1].isFree expr.body ).toBeTruthy()
+            expect( expr.body.children[2].isFree expr.body ).toBeTruthy()

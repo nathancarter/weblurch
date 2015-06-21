@@ -934,11 +934,11 @@ that the algorithm should look all the way up the parent chain.
         isFree : ( inThis ) =>
             freeVariables = @freeVariables()
             walk = this
-            while walk and walk isnt inThis
+            while walk and not walk.sameObjectAs inThis
                 if walk.type is 'bi'
+                    boundHere = ( v.name for v in walk.variables )
                     for variable in freeVariables
-                        if variable in ( v.name for v in walk.variables )
-                            return no
+                        if variable in boundHere then return no
                 walk = walk.parent
             yes
 
