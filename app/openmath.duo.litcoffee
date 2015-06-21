@@ -950,8 +950,8 @@ not attribute keys or values.
 
         occursFree : ( findThis ) =>
             if @equals( findThis ) and @isFree() then return yes
-            if @symbol.equals findThis then return yes
-            if @body.occursFree findThis then return yes
+            if @symbol?.equals findThis then return yes
+            if @body?.occursFree findThis then return yes
             for child in @children
                 if child.occursFree findThis then return yes
             no

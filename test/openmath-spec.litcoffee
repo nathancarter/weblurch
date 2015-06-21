@@ -2701,3 +2701,39 @@ chain to inside the quantifier, so that everything should be free.
             expect( expr.body.children[0].isFree expr.body ).toBeTruthy()
             expect( expr.body.children[1].isFree expr.body ).toBeTruthy()
             expect( expr.body.children[2].isFree expr.body ).toBeTruthy()
+
+### should correctly find free occurrences
+
+An expression is bound at a location if any variable free in it is bound
+farther up the ancestor chain.  The `occursFree()` routine finds all free
+occurrences of the given expression inside the object in which it's called.
+
+        it 'should correctly find free occurrences', ->
+
+We re-use the same expression from the previous test, but now run different
+tests on it.
+
+            expr = OM.simple 'logic.forall[x,logic.and(f(x),g(y))]'
+
+First, test everything that occurs, but not free.
+
+            expect( expr.occursFree OM.simple 'f(x)' ).toBeFalsy()
+            expect( expr.occursFree OM.simple 'x' ).toBeFalsy()
+            expect( expr.occursFree OM.simple 'logic.and(f(x),g(y))' ) \
+                .toBeFalsy()
+
+Next, test some things that do not even occur, free or otherwise.
+
+            expect( expr.occursFree OM.simple 'f(y)' ).toBeFalsy()
+            expect( expr.occursFree OM.simple 'g(x)' ).toBeFalsy()
+            expect( expr.occursFree OM.simple 'potatoes' ).toBeFalsy()
+
+Next, test everything that occurs free.
+
+            expect( expr.occursFree OM.simple 'logic.forall' ).toBeTruthy()
+            expect( expr.occursFree OM.simple 'logic.and' ).toBeTruthy()
+            expect( expr.occursFree OM.simple 'f' ).toBeTruthy()
+            expect( expr.occursFree OM.simple 'g' ).toBeTruthy()
+            expect( expr.occursFree OM.simple 'y' ).toBeTruthy()
+            expect( expr.occursFree OM.simple 'g(y)' ).toBeTruthy()
+            expect( expr.occursFree expr.copy() ).toBeTruthy()
