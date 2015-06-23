@@ -2857,3 +2857,125 @@ original expression.
                 OM.simple( 'logic.exists[x,P(5,6,7)]' )
             expect( copy.equals OM.simple \
                 'logic.forall[x,logic.exists[x,P(5,6,7)]]' ).toBeTruthy()
+
+## Filtering
+
+The two functions for filtering operate on either immediate descendants or
+all descendants.  We test each here.
+
+    describe 'Filtering', ->
+
+### works for immediate descendants (children)
+
+Test the `childrenSatisfying()` routine.
+
+        it 'works for immediate descendants (children)', ->
+
+With no parameter, it should return all children.
+
+Atomics have none.
+
+            expect( OM.simple( '3' ).childrenSatisfying() ).toEqual [ ]
+            expect( OM.simple( '"yo"' ).childrenSatisfying() ).toEqual [ ]
+            expect( OM.simple( 'hah' ).childrenSatisfying() ).toEqual [ ]
+
+Compound expressions have children, but grandchildren are not included in
+the results.
+
+            expr = OM.simple 'f(x)'
+            test = expr.childrenSatisfying()
+            expect( test.length ).toBe 2
+            expect( test[0].sameObjectAs expr.children[0] ).toBeTruthy()
+            expect( test[1].sameObjectAs expr.children[1] ).toBeTruthy()
+            expr = OM.simple 'foo.bar[baz,bash,quux(fizz)]'
+            test = expr.childrenSatisfying()
+            expect( test.length ).toBe 4
+            expect( test[0].sameObjectAs expr.symbol ).toBeTruthy()
+            expect( test[1].sameObjectAs expr.variables[0] ).toBeTruthy()
+            expect( test[2].sameObjectAs expr.variables[1] ).toBeTruthy()
+            expect( test[3].sameObjectAs expr.body ).toBeTruthy()
+
+And filtering works.
+
+            expr = OM.simple 'f(x)'
+            test = expr.childrenSatisfying ( e ) -> e.type is 'i'
+            expect( test ).toEqual [ ]
+            test = expr.childrenSatisfying ( e ) -> /x/.test e.name
+            expect( test.length ).toBe 1
+            expect( test[0].sameObjectAs expr.children[1] ).toBeTruthy()
+            expr = OM.simple 'foo.bar[baz,bash,quux(fizz)]'
+            test = expr.childrenSatisfying ( e ) ->
+                /^b/.test e.simpleEncode()
+            expect( test.length ).toBe 2
+            expect( test[0].sameObjectAs expr.variables[0] ).toBeTruthy()
+            expect( test[1].sameObjectAs expr.variables[1] ).toBeTruthy()
+
+### works for (all) indirect descendants also
+
+Test the `descendantsSatisfying()` routine.
+
+        it 'works for (all) indirect descendants also', ->
+
+With no parameter, it should return all descendants.
+
+Atomics have just themselves.
+
+            expr = OM.simple '3'
+            test = expr.descendantsSatisfying()
+            expect( test.length ).toBe 1
+            expect( test[0].sameObjectAs expr ).toBeTruthy()
+            expr = OM.simple 'sym.bol'
+            test = expr.descendantsSatisfying()
+            expect( test.length ).toBe 1
+            expect( test[0].sameObjectAs expr ).toBeTruthy()
+            expr = OM.simple '"This is an example string."'
+            test = expr.descendantsSatisfying()
+            expect( test.length ).toBe 1
+            expect( test[0].sameObjectAs expr ).toBeTruthy()
+
+Compound expressions have children and sometimes grandchildren, all of which
+are included in the results, in the correct order.
+
+            expr = OM.simple 'f(x,"y",z.z)'
+            test = expr.descendantsSatisfying()
+            expect( test.length ).toBe 5
+            expect( test[0].sameObjectAs expr ).toBeTruthy()
+            expect( test[1].sameObjectAs expr.children[0] ).toBeTruthy()
+            expect( test[2].sameObjectAs expr.children[1] ).toBeTruthy()
+            expect( test[3].sameObjectAs expr.children[2] ).toBeTruthy()
+            expect( test[4].sameObjectAs expr.children[3] ).toBeTruthy()
+            expr = OM.simple 'for.all[x,and(f(x),f(y))]'
+            test = expr.descendantsSatisfying()
+            expect( test.length ).toBe 11
+            expect( test[0].sameObjectAs expr ).toBeTruthy()
+            expect( test[1].sameObjectAs expr.symbol ).toBeTruthy()
+            expect( test[2].sameObjectAs expr.variables[0] ).toBeTruthy()
+            expect( test[3].sameObjectAs expr.body ).toBeTruthy()
+            expect( test[4].sameObjectAs expr.body.children[0] ) \
+                .toBeTruthy()
+            expect( test[5].sameObjectAs expr.body.children[1] ) \
+                .toBeTruthy()
+            expect( test[6].sameObjectAs \
+                expr.body.children[1].children[0] ).toBeTruthy()
+            expect( test[7].sameObjectAs \
+                expr.body.children[1].children[1] ).toBeTruthy()
+            expect( test[8].sameObjectAs expr.body.children[2] ) \
+                .toBeTruthy()
+            expect( test[9].sameObjectAs \
+                expr.body.children[2].children[0] ).toBeTruthy()
+            expect( test[10].sameObjectAs \
+                expr.body.children[2].children[1] ).toBeTruthy()
+
+And filtering works.
+
+            expr = OM.simple 'f(x,"y",z.z)'
+            test = expr.descendantsSatisfying ( e ) -> e.type is 'v'
+            expect( test.length ).toBe 2
+            expect( test[0].sameObjectAs expr.children[0] ).toBeTruthy()
+            expect( test[1].sameObjectAs expr.children[1] ).toBeTruthy()
+            expr = OM.simple 'for.all[x,and(f(x),f(y))]'
+            test = expr.descendantsSatisfying ( e ) -> /a/.test e.name
+            expect( test.length ).toBe 2
+            expect( test[0].sameObjectAs expr.symbol ).toBeTruthy()
+            expect( test[1].sameObjectAs expr.body.children[0] ) \
+                .toBeTruthy()

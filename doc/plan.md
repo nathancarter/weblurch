@@ -17,12 +17,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## OpenMath
-
-This work is in progress.  Here are the remaining methods to add to the
-`OMNode` class.
- * childrenSatisfying() and descendantsSatisfying()
-
 ## Matching Module
 
 This is a re-implementation (and improvement) of the matching module from

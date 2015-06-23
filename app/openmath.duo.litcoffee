@@ -982,6 +982,39 @@ be passed directly along to `isFree()`.  This change would require testing.
             for child in @children
                 child.replaceFree original, replacement
 
+### Filtering children and descendants
+
+The following function returns an array of all children (immediate
+subexpressions, actually, including head symbols, bound variables, etc.)
+that pass the given criterion.  If no criterion is given, then all immediate
+subexpressions are returned.  Order is preserved.
+
+Note that the actual subtrees are returned, not copies thereof.  Any
+manipulation done to the elements of the result array will therefore impact
+the original expression.
+
+        childrenSatisfying : ( filter = -> yes ) =>
+            children = @children
+            if @symbol? then children.push @symbol
+            children = children.concat @variables
+            if @body? then children.push @body
+            ( child for child in children when filter child )
+
+The following function returns an array of all subexpressions (not just
+immediate ones) that pass the given criterion, in tree order.  If no
+criterion is given, then all subexpressions are returned.
+
+As with the previous function, the actual subtrees are returned, not copies
+thereof.  Any manipulation done to the elements of the result array will
+therefore impact the original expression.
+
+        descendantsSatisfying : ( filter = -> yes ) =>
+            results = [ ]
+            if filter this then results.push this
+            for child in @childrenSatisfying()
+                results = results.concat child.descendantsSatisfying filter
+            results
+
 ## Nicknames
 
 Here we copy each of the factory functions to a short version if its own
