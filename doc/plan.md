@@ -21,10 +21,6 @@ required order of completion.
 
 This work is in progress.  Here are the remaining methods to add to the
 `OMNode` class.
- * applySubstitution() and applyAllSubstitutions() (which work with
-   expressions of the form `x[y=z]`, meaning x with all occurrences of y
-   replaced by z, and `x[y~z]`, meaning the same but "some" isntead of
-   "all")
  * childrenSatisfying() and descendantsSatisfying()
 
 ## Matching Module
