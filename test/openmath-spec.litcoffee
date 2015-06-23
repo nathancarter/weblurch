@@ -2608,7 +2608,6 @@ The same tests should all pass if we replace the value of an attribute.
             expect( original.sameObjectAs replacement ).toBeTruthy()
             expect( result.parent ).toBeUndefined()
             expect( original.parent.sameObjectAs outer ).toBeTruthy()
-            console.log JSON.stringify JSON.parse(outer.encode()), null, 4
             expect( outer.equals OM.decode {
                 t : 'i'
                 v : 50
@@ -2737,3 +2736,124 @@ Next, test everything that occurs free.
             expect( expr.occursFree OM.simple 'y' ).toBeTruthy()
             expect( expr.occursFree OM.simple 'g(y)' ).toBeTruthy()
             expect( expr.occursFree expr.copy() ).toBeTruthy()
+
+### should correctly replace free occurrences
+
+An expression is bound at a location if any variable free in it is bound
+farther up the ancestor chain.  The `replaceFree()` routine replaces all
+free occurrences of the first given expression inside the object in which
+it's called with copies of the second given expression, but only if they,
+too, are free once inserted there.
+
+        it 'should correctly replace free occurrences', ->
+
+We re-use the same expression from the previous test, but now run different
+tests on it.
+
+            expr = OM.simple 'logic.forall[x,logic.and(f(x),g(y))]'
+
+The one occurrence of y is free, and can be replaced by any variable other
+than x, or any atomic.
+
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'y' ), OM.simple( 'z' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),g(z))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'y' ), OM.simple( 'YO' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),g(YO))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'y' ), OM.simple( '"hello"' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),g("hello"))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'y' ), OM.simple( '-12.05' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),g(-12.05))]' ).toBeTruthy()
+
+The functions f and g are also free variables, and can be replaced by any
+of the same things as y can.
+
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'f' ), OM.simple( 'z' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(z(x),g(y))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g' ), OM.simple( 'YO' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),YO(y))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'f' ), OM.simple( '"hello"' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and("hello"(x),g(y))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g' ), OM.simple( '-12.05' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),-12.05(y))]' ).toBeTruthy()
+
+If we try replacing any of those things by x, nothing happens, because x is
+not free to be used as a replacement there.
+
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'y' ), OM.simple( 'x' )
+            expect( copy.equals expr ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'f' ), OM.simple( 'x' )
+            expect( copy.equals expr ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g' ), OM.simple( 'x' )
+            expect( copy.equals expr ).toBeTruthy()
+
+Instead of x, if we use an expression containing x free, the results will
+be the same -- no change.
+
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'y' ), OM.simple( 't(x)' )
+            expect( copy.equals expr ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'f' ),
+                OM.simple( 'arith1.plus(x,2)' )
+            expect( copy.equals expr ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g' ), OM.simple( 'a.b[y,x]' )
+            expect( copy.equals expr ).toBeTruthy()
+
+But if instead we were to replace y, f, or g with an expression in which x
+occurs, but only bound, it would make the replacement.
+
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'y' ), OM.simple( 'a.b[x,x]' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),g(a.b[x,x]))]' ).toBeTruthy()
+
+We now repeat some of the above tests with compound subexpressions of the
+original expression.
+
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g(y)' ), OM.simple( 'x' )
+            expect( copy.equals expr ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g(y)' ), OM.simple( 'a.b[x,x]' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),a.b[x,x])]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'logic.and(f(x),g(y))' ),
+                OM.simple( 'thing(x,y)' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),g(y))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'logic.and(f(x),g(y))' ),
+                OM.simple( 'thing(x,y)' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),g(y))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'logic.and(f(x),g(y))' ),
+                OM.simple( 'thing(t,y)' )
+            expect( copy.equals OM.simple 'logic.forall[x,thing(t,y)]' ) \
+                .toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'logic.and(f(x),g(y))' ),
+                OM.simple( 'logic.exists[x,P(5,6,7)]' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.exists[x,P(5,6,7)]]' ).toBeTruthy()

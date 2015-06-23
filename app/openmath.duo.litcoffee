@@ -948,6 +948,10 @@ passes the `isFree` test defined immediately above.  This algorithm only
 looks downward through children, head symbols, and bodies of binding nodes,
 not attribute keys or values.
 
+Later it would be easy to add an optional second parameter, `inThis`, which
+would function like the parameter of the same name to `isFree()`, and would
+be passed directly along to `isFree()`.  This change would require testing.
+
         occursFree : ( findThis ) =>
             if @equals( findThis ) and @isFree() then return yes
             if @symbol?.equals findThis then return yes
@@ -961,18 +965,22 @@ a copy of the another expression (replacement).  The search-and-replace
 recursion only proceeds through children, head symbols, and bodies of
 binding nodes, not attribute keys or values.
 
+Later it would be easy to add an optional third parameter, `inThis`, which
+would function like the parameter of the same name to `isFree()`, and would
+be passed directly along to `isFree()`.  This change would require testing.
+
         replaceFree : ( original, replacement ) =>
-            if @equals original then return @replaceWith replacement.copy()
-            if @symbol?.equals original
-                @symbol.replaceWith replacement.copy()
-            if @body?.equals original
-                @body.replaceWith replacement.copy()
+            if @equals original
+                save = new OMNode @tree
+                @replaceWith replacement.copy()
+                if not @isFree() then @replaceWith save
+                return
+            @symbol?.replaceFree original, replacement
+            @body?.replaceFree original, replacement
             for variable in @variables
-                if variable.equals original
-                    variable.replaceWith replacement.copy()
+                variable.replaceFree original, replacement
             for child in @children
-                if child.equals original
-                    child.replaceWith replacement.copy()
+                child.replaceFree original, replacement
 
 ## Nicknames
 
