@@ -19,42 +19,38 @@ required order of completion.
 
 ## Matching Module
 
-This is a re-implementation (and improvement) of the matching module from
-the desktop version of Lurch.
- * Create a file `src/matching.duo.litcoffee`.
- * Create a function for marking a variable as a metavariable with an
-   attribute, and another for testing whether a variable is a metavariable.
+Write unit tests for these things:
+ * setMetavariable, isMetavaraible, clearMetavariable
+ * Match get, set, clear, has
 
-First, a supporting class, Match.
- * Create a Match class, representing an evolving match state throughout a
-   matching process.
- * Give it members for using it as a variable-to-expression dictionary,
-   `get`, `set`, and `has`.
- * Give it a member for marking that a substitution of A to B is in force,
-   for any two expressions A and B.  A third parameter will specify whether
-   the subsitution is required (=) or optional (~), and should also be
-   stored.  Give it another method for removing a substitution.
- * Give it a member for marking which subtrees it has visited, and storing
-   them in an internal list.  It only does anything if a substitution is in
-   force; otherwise it does nothing.
- * When setting a substitution, do all possible metavariable replacements on
-   both halves of it.  Also augment `set` so that all future metavariable
-   instantiations are immediately applied to both halves of the
-   substitution.  For both of those functions, if the two halves of the
-   substitution become fully instantiated (no metavariables) then ensure
-   that the substitution is either optional or alters no previously-visited
-   subtrees; return true/false accordingly.
+Implement all of the following, creating unit tests for them as you go.
+ * Give Match a member for marking that a substitution of A to B is in
+   force, for any two expressions A and B.  A third parameter will specify
+   whether the subsitution is required (=) or optional (~), and should also
+   be stored.
  * Make getters for all of the substitution data, including one for just
    whether a substitution has been stored.
- * Give it a member for checking whether a required substitution would alter
-   any of the already-visited subtrees.
- * Give it a method for cloning itself.
- * Give it a method for applying itself to an expression, replacing all
+ * Give Match a method for removing a substitution.
+ * Give Match a member for marking which subtrees it has visited, and
+   storing them in an internal list.  It only does anything if a
+   substitution is in force; otherwise it does nothing.
+ * Give Match a member that checks whether it (a) has a substitution, and
+   (b) that substitution is required, and (c) applying it would alter any of
+   the already-visited subtrees.  Return true if all are true, false
+   otherwise.  Call this `backCheckSubstitution()`.
+ * When Match stores a substitution, do all possible metavariable
+   replacements on both halves of it.  If it becomes fully instantiated then
+   return the result of `backCheckSubstitution()`.  Otherwise return true.
+ * Augment Match's `set` so that it applies the metavariable instantiation
+   being stored, immediately, to both halves of any substitution that it has
+   stored.  If it becomes fully instantiated then return the result of
+   `backCheckSubstitution()`.  Otherwise return true.
+ * Give Match a `copy()` method.
+ * Give Match a method for applying itself to an expression, replacing all
    metavariables with their current instantiations.
- * Give it a method for finding in its first-visited subtree (the whole
+ * Give Match a method for finding in its first-visited subtree (the whole
    pattern) all metavariables, and then creating instantiations for all
    those that don't yet have them, to names like "unused_1", "unused_2", ...
- * Create extensive unit tests for the above class and its algorithms.
 
 Now, the main routine.
  * Implement the matching algorithm after the following psuedocode.

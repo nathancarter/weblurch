@@ -6,7 +6,6 @@ comparing JSON structures.  (That module is tested [in a separate
 file](utils-spec.litcoffee).)
 
     { OM, OMNode } = require '../src/openmath.duo'
-    require '../src/utils'
 
 ## `OMNode` class
 
