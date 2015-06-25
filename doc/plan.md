@@ -20,7 +20,6 @@ required order of completion.
 ## Matching Module
 
 Write unit tests for these things:
- * setMetavariable, isMetavaraible, clearMetavariable
  * Match get, set, clear, has
 
 Implement all of the following, creating unit tests for them as you go.

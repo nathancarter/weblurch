@@ -48,7 +48,7 @@ following routine, which tests for the presence of the attribute in
 question.
 
     exports.isMetavariable = ( variable ) ->
-        variable.getAttribute( metavariableSymbol ).equals trueValue
+        variable.getAttribute( metavariableSymbol )?.equals trueValue
 
 ## Match class
 
