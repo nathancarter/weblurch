@@ -19,9 +19,6 @@ required order of completion.
 
 ## Matching Module
 
-Write unit tests for these things:
- * Match get, set, clear, has
-
 Implement all of the following, creating unit tests for them as you go.
  * Give Match a member for marking that a substitution of A to B is in
    force, for any two expressions A and B.  A third parameter will specify

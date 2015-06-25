@@ -95,3 +95,8 @@ The `has` function just returns a true or false value indicating whether
 the variable appears in the map as a key.
 
         has : ( variable ) => @map.hasOwnProperty variable.name ? variable
+
+The `variables` function lists the names of all variables that appear in
+the mapping, in no particular order.
+
+        variables : => Object.keys @map

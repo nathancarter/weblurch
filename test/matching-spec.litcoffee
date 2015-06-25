@@ -90,11 +90,106 @@ matching algorithm is tested in the next section.)
 
 ### should correctly get, set, clear, and test their mapping
 
-We first test the `get`, `set`, `clear`, and `has` functions that manipulate
-and query the variable-name-to-expression mapping stored in the Match
-object.
+We first test the `get`, `set`, `clear`, `has`, and `variables` functions
+that manipulate and query the variable-name-to-expression mapping stored in
+the Match object.
 
         it 'should correctly get, set, clear, and test their mapping', ->
+
+Ensure we can create a match object.
+
             m = new Match
             expect( m ).toBeTruthy()
-            # test not yet complete
+
+Create some expressions to put into it, and some variables under which to
+store them.
+
+            expr1 = OM.simple 'thing'
+            expr2 = OM.simple 't("some")'
+            expr3 = OM.simple 'y.y[q,r,s,body(of,binding)]'
+            a = OM.simple 'a'
+            b = OM.simple 'b'
+            c = OM.simple 'sea'
+
+Store a value and be sure we can look it up.  Ensure that the result is a
+copy, and that it can be looked up using either a string or a variable
+OMNode.
+
+            m.set 'a', expr1
+            expect( m.get( 'a' ).equals expr1 ).toBeTruthy()
+            expect( m.get( 'a' ).sameObjectAs expr1 ).toBeFalsy()
+            expect( m.get( a ).equals expr1 ).toBeTruthy()
+            expect( m.get( a ).sameObjectAs expr1 ).toBeFalsy()
+            expect( m.get( a ).sameObjectAs m.get 'a' ).toBeTruthy()
+
+Test the `variables` and `has` functions in this simple situation.
+
+            expect( m.has a ).toBeTruthy()
+            expect( m.has 'a' ).toBeTruthy()
+            expect( m.has b ).toBeFalsy()
+            expect( m.has 'b' ).toBeFalsy()
+            expect( m.variables() ).toEqual [ 'a' ]
+
+Try to remove that one entry in the map.
+
+            m.clear 'a'
+            expect( m.has a ).toBeFalsy()
+            expect( m.has 'a' ).toBeFalsy()
+            expect( m.variables() ).toEqual [ ]
+
+Add multiple entries to the map and ensure that queries are correct.
+
+            m.set a, expr1
+            m.set b, expr2
+            m.set c, expr3
+            expect( m.variables().sort() ).toEqual [ 'a', 'b', 'sea' ]
+            expect( m.get( a ).equals expr1 ).toBeTruthy()
+            expect( m.get( a ).sameObjectAs expr1 ).toBeFalsy()
+            expect( m.has a ).toBeTruthy()
+            expect( m.get( b ).equals expr2 ).toBeTruthy()
+            expect( m.get( b ).sameObjectAs expr2 ).toBeFalsy()
+            expect( m.has b ).toBeTruthy()
+            expect( m.get( c ).equals expr3 ).toBeTruthy()
+            expect( m.get( c ).sameObjectAs expr3 ).toBeFalsy()
+            expect( m.has c ).toBeTruthy()
+
+Change one of them to match another's value, and ensure a copy was made.
+
+            m.set a, expr3
+            expect( m.get( a ).equals m.get c ).toBeTruthy()
+            expect( m.get( a ).sameObjectAs m.get c ).toBeFalsy()
+            expect( m.has a ).toBeTruthy()
+            expect( m.has b ).toBeTruthy()
+            expect( m.has c ).toBeTruthy()
+
+Clear it out one variable at a time, and watch `variables` and `has` to
+ensure they behave as expected.
+
+            expect( m.variables().sort() ).toEqual [ 'a', 'b', 'sea' ]
+            m.clear b
+            expect( m.get( a ).equals expr3 ).toBeTruthy()
+            expect( m.get( a ).sameObjectAs expr3 ).toBeFalsy()
+            expect( m.has a ).toBeTruthy()
+            expect( m.get b ).toBeUndefined()
+            expect( m.has b ).toBeFalsy()
+            expect( m.get( c ).equals expr3 ).toBeTruthy()
+            expect( m.get( c ).sameObjectAs expr3 ).toBeFalsy()
+            expect( m.has c ).toBeTruthy()
+            expect( m.variables().sort() ).toEqual [ 'a', 'sea' ]
+            m.clear c
+            expect( m.get( a ).equals expr3 ).toBeTruthy()
+            expect( m.get( a ).sameObjectAs expr3 ).toBeFalsy()
+            expect( m.has a ).toBeTruthy()
+            expect( m.get b ).toBeUndefined()
+            expect( m.has b ).toBeFalsy()
+            expect( m.get c ).toBeUndefined()
+            expect( m.has c ).toBeFalsy()
+            expect( m.variables().sort() ).toEqual [ 'a' ]
+            m.clear a
+            expect( m.get a ).toBeUndefined()
+            expect( m.has a ).toBeFalsy()
+            expect( m.get b ).toBeUndefined()
+            expect( m.has b ).toBeFalsy()
+            expect( m.get c ).toBeUndefined()
+            expect( m.has c ).toBeFalsy()
+            expect( m.variables() ).toEqual [ ]
