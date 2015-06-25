@@ -2044,13 +2044,57 @@ Error:
                 c : [ { t : 'i', v : 404 } ]
             }
             copy = original.copy()
-            expect( original ).not.toBe copy
+            expect( original.sameObjectAs copy ).toBeFalsy()
             expect( original.equals copy ).toBeTruthy()
-            expect( original.symbol ).not.toBe copy.symbol
+            expect( original.symbol.sameObjectAs copy.symbol ).toBeFalsy()
             expect( original.symbol.equals copy.symbol ).toBeTruthy()
-            expect( original.children[0] ).not.toBe copy.children[0]
+            expect( original.children[0].sameObjectAs copy.children[0] ) \
+                .toBeFalsy()
             expect( original.children[0].equals copy.children[0] ) \
                 .toBeTruthy()
+
+Attributes:
+
+            original = OM.decode {
+                t : 'a'
+                a : {
+                    '{"t":"sy","n":"Q","cd":"W"}' : { t : 'i', v : 42 }
+                }
+                c : [
+                    {
+                        t : 'st'
+                        v : 'fungi'
+                        a : {
+                            '{"t":"sy","n":"E","cd":"R"}' :
+                                { t : 'f', v : 4.2 }
+                            '{"t":"sy","n":"T","cd":"Y"}' :
+                                { t : 'sy', n : 'U', cd : 'I' }
+                        }
+                    }
+                ]
+            }
+            copy = original.copy()
+            expect( original.sameObjectAs copy ).toBeFalsy()
+            expect( original.equals copy ).toBeTruthy()
+            expect( original.children[0].sameObjectAs copy.children[0] ) \
+                .toBeFalsy()
+            expect( original.children[0].equals copy.children[0] ) \
+                .toBeTruthy()
+            sym = OM.decode { t : 'sy', n : 'Q', cd : 'W' }
+            expect( original.getAttribute( sym ).equals \
+                copy.getAttribute( sym ) ).toBeTruthy()
+            expect( original.getAttribute( sym ).sameObjectAs \
+                copy.getAttribute( sym ) ).toBeFalsy()
+            sym = OM.decode { t : 'sy', n : 'E', cd : 'R' }
+            expect( original.children[0].getAttribute( sym ).equals \
+                    copy.children[0].getAttribute( sym ) ).toBeTruthy()
+            expect( original.children[0].getAttribute( sym ).sameObjectAs \
+                    copy.children[0].getAttribute( sym ) ).toBeFalsy()
+            sym = OM.decode { t : 'sy', n : 'T', cd : 'Y' }
+            expect( original.children[0].getAttribute( sym ).equals \
+                    copy.children[0].getAttribute( sym ) ).toBeTruthy()
+            expect( original.children[0].getAttribute( sym ).sameObjectAs \
+                    copy.children[0].getAttribute( sym ) ).toBeFalsy()
 
 ## Parent-child relationships
 

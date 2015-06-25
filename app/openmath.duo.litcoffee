@@ -346,7 +346,7 @@ OMNode instance.  Here is a method for doing so.
 
         copy : =>
             recur = ( tree ) ->
-                switch tree.t
+                result = switch tree.t
 
 Integers, floats, and strings are easy to copy; just duplicate type and
 value.  Variables and symbols are easy for the same reason, but different
@@ -382,6 +382,15 @@ Lastly, for bindings, we copy each sub-part: symbol, body, variable list.
                         s : recur tree.s
                         v : ( recur variable for variable in tree.v )
                         b : recur tree.b
+
+Then no matter what we created, we copy the attributes over as well.
+
+                for own key, value of tree.a ? { }
+                    ( result.a ?= { } )[key] = recur value
+                result
+
+Apply the recursive function.
+
             OMNode.decode recur @tree
 
 ### Factory functions
