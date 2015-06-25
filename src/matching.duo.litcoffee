@@ -32,9 +32,12 @@ We begin with a routine that marks a variable as a metavariable.  It accepts
 as parameter any `OMNode` instance (as implemented
 [here](openmath.duo.litcoffee)) and gives it an attribute that the rest of
 this package recognizes as meaning "this variable is actually a
-metavariable."
+metavariable."  This routine does nothing if the given input is not an
+OMNode of type variable.
 
     exports.setMetavariable = ( variable ) ->
+        if variable not instanceof OMNode or variable.type isnt 'v'
+            return
         variable.setAttribute metavariableSymbol, trueValue.copy()
 
 To undo the above action, call the following function, which removes the
@@ -48,7 +51,8 @@ following routine, which tests for the presence of the attribute in
 question.
 
     exports.isMetavariable = ( variable ) ->
-        variable.getAttribute( metavariableSymbol )?.equals trueValue
+        variable instanceof OMNode and variable.type is 'v' and \
+            variable.getAttribute( metavariableSymbol )?.equals trueValue
 
 ## Match class
 
