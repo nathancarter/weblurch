@@ -403,7 +403,7 @@ Handle patterns that are single metavariables.
 
         if isMetavariable pattern
             if test = soFar.get pattern
-                return if test.equals expression then [ soFar ] else [ ]
+                return if test.equals expression, no then [ soFar ] else [ ]
             if not soFar.set pattern, expression then return [ ]
             return [ soFar ]
 
@@ -432,7 +432,7 @@ one.
 Handle atomic patterns.
 
         if pattern.type in [ 'i', 'f', 'st', 'ba', 'sy', 'v' ]
-            return if pattern.equals expression then [ soFar ] \
+            return if pattern.equals expression, no then [ soFar ] \
                 else trySubs()
 
 Non-atomic patterns must have the same size as their expressions.

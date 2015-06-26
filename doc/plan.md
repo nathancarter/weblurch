@@ -29,12 +29,6 @@ required order of completion.
     pattern             expression      results
     -------             ----------      -------
 
-    ATTRIBUTES
-
-    repeat a selection of the above tests with attributes added to either
-    the pattern or the expression or both, and verify that attributes make
-    no change whatsoever to the results
-
     SIMPLE SUBSTITUTIONS
 
     f(x)                f(x)[x=y]       []

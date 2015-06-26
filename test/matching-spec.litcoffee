@@ -733,3 +733,60 @@ Matching `_A.A[_B,_C]` to `some_var` should yield `[ ]`.
 
             result = matches quick( '_A.A[_B,_C]' ), quick( 'some_var' )
             expect( result ).toEqual [ ]
+
+### should ignore attributes
+
+We repeat a selection of the above tests, now adding attributes to some of
+the nodes in either the pattern or the expression, and verifying that the
+results are exactly the same in all cases.
+
+        it 'should ignore attributes', ->
+
+Matching `a` to `a` should yield `[ { } ]`.
+
+            left = quick 'a'
+            right = quick 'a'
+            left.setAttribute OM.symbol( 'a', 'b' ), OM.integer 200
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].map ).toEqual { }
+
+Matching `_A` to `a` should yield `[ { A : a } ]`.
+
+            left = quick '_A'
+            right = quick 'a'
+            right.setAttribute OM.symbol( 'a', 'b' ), OM.integer 200
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].variables() ).toEqual [ 'A' ]
+            expect( result[0].get( 'A' ).equals right, no ).toBeTruthy()
+
+Matching `_A(x)` to `f(x)` should yield `[ { A : f } ]`.
+
+            left = quick '_A(x)'
+            right = quick 'f(x)'
+            left.children[1].setAttribute OM.symbol( 'a', 'b' ),
+                OM.integer 200
+            right.children[1].setAttribute OM.symbol( 'a', 'b' ),
+                OM.integer -1
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].variables() ).toEqual [ 'A' ]
+            expect( result[0].get( 'A' ).equals quick 'f' ).toBeTruthy()
+
+Matching `_A.A[_B,_C]` to `f.f[x,y]` should yield
+`[ { A.A : f.f, B : x, C : y } ]`.
+
+            left = quick '_A.A[_B,_C]'
+            right = quick 'f.f[x,y]'
+            left.setAttribute OM.symbol( 'thing1', 'thing2' ),
+                OM.simple 'f(x)'
+            right.setAttribute OM.symbol( 'santy', 'claus' ),
+                OM.simple 'g(y)'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].variables().sort() ).toEqual \
+                [ 'A.A', 'B', 'C' ]
+            expect( result[0].get( 'A.A' ).equals quick 'f.f' ).toBeTruthy()
+            expect( result[0].get( 'B' ).equals quick 'x' ).toBeTruthy()
+            expect( result[0].get( 'C' ).equals quick 'y' ).toBeTruthy()
