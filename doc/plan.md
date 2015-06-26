@@ -20,13 +20,6 @@ required order of completion.
 ## Matching Module
 
 Implement all of the following, creating unit tests for them as you go.
- * Give Match a member for marking that a substitution of A to B is in
-   force, for any two expressions A and B.  A third parameter will specify
-   whether the subsitution is required (=) or optional (~), and should also
-   be stored.
- * Make getters for all of the substitution data, including one for just
-   whether a substitution has been stored.
- * Give Match a method for removing the substitution.
  * Give Match a member for marking which subtrees it has visited, and
    storing them in an internal list.  If a substitution is not in force,
    this method should not do anything.  The one exception is that the first

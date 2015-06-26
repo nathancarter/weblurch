@@ -116,3 +116,53 @@ in-place in the given pattern, but rather in a copy, which is returned.
                 if @has metavariable
                     metavariable.replaceWith @get( metavariable ).copy()
             result
+
+### Substitutions
+
+This matching package supports patterns that express optional or required
+substitutions.  The informal notation `A[x=y]` means "the expression `A`
+with every free occurrence of the subexpression `x` replaced by the
+subexpression `y`, where `y` is free to replace `x`."  The informal notation
+`A[x~y]` is the same idea, but with "every occurrence" replaced by "zero or
+more occurrences."  Thus `A[x=y]` is a computation that can be done, but
+`A[x~y]` is a criterion that can be matched against.
+
+We call the first of these two a "required substitution" and the second an
+"optional substitution."  In this module, we will represent them as
+applications of the following two head symbols.
+
+        @requiredSubstitution : OM.symbol 'replaceAll', 'lurch'
+        @optionalSubstitution : OM.symbol 'replaceSome', 'lurch'
+
+So for example, `A[x=y]` could be expressed as
+`OM.simple 'lurch.replaceAll(A,x,y)'`.
+
+When these show up in matching patterns, the matching algorithm must track
+them.  Thus this class provides methods for storing and querying the
+replacement pattern that is in force, if any, what type it is, and what its
+arguments are.
+
+First, a method for storing a substitution.  In `A[x=y]`, `x` is the left
+hand side, `y` is the right hand side, and we could pass both of those
+subexpressions as the first two arguments of the following function.  You
+can safely pass the originals; they will be copied.  The third parameter, in
+that case, would be `true`, to indicate that it is a required substitution.
+If it had been `A[x~y]`, then the third parameter would be false.
+
+        setSubstitution : ( leftHandSide, rightHandSide, required ) =>
+            @substitution =
+                leftHandSide : leftHandSide.copy()
+                rightHandSide : rightHandSide.copy()
+                required : required
+
+Second, several methods for querying the data stored using the previous
+function.
+
+        hasSubstitution : => @substitution?
+        getSubstitutionLeft : => @substitution?.leftHandSide
+        getSubstitutionRight : => @substitution?.rightHandSide
+        getSubstitutionRequired : => @substitution?.required
+
+Finally, a method for removing a stored substitution.
+
+        clearSubstitution : => delete @substitution

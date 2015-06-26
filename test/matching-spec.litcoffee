@@ -210,7 +210,7 @@ ensure they behave as expected.
             expect( m.has c ).toBeFalsy()
             expect( m.variables() ).toEqual [ ]
 
-### should apply their mapping
+### should correctly apply their mapping
 
 This test applies some mappings to some patterns and verifies that the
 results are as they should be.
@@ -273,3 +273,65 @@ Same test as previous, but now with a binding instead of an application.
                 'logic.exists[t,and(thing,sum(t("some"),3,thing))]'
             expect( result.equals pattern ).toBeFalsy()
             expect( result.equals shouldBe ).toBeTruthy()
+
+### should be able to store/retrieve substitution data
+
+The implementations of the functions for getting and setting substitution
+data in a match object are quite trivial.  For that reason, they need little
+testing, and thus we keep this particular test very short.
+
+        it 'should be able to store/retrieve substitution data', ->
+
+Construct a match and verify that it has no substitution data initially.
+Also verify that all queries to the data return undefined.
+
+            m = new Match
+            expect( m.hasSubstitution() ).toBeFalsy()
+            expect( m.getSubstitutionLeft() ).toBeUndefined()
+            expect( m.getSubstitutionRight() ).toBeUndefined()
+            expect( m.getSubstitutionRequired() ).toBeUndefined()
+
+Construct some expressions and store them as a substitution, then query the
+results to ensure that copies of the expressions were correctly stored and
+returned.
+
+            left = OM.simple '"apply"(a,string)'
+            right = OM.simple '7829.189'
+            m.setSubstitution left, right, true
+            expect( m.hasSubstitution() ).toBeTruthy()
+            expect( m.getSubstitutionLeft().equals left ).toBeTruthy()
+            expect( m.getSubstitutionLeft().sameObjectAs left ).toBeFalsy()
+            expect( m.getSubstitutionRight().equals right ).toBeTruthy()
+            expect( m.getSubstitutionRight().sameObjectAs right ) \
+                .toBeFalsy()
+            expect( m.getSubstitutionRequired() ).toBeTruthy()
+
+Clear the substitution and verify that it has been removed.
+
+            m.clearSubstitution()
+            expect( m.hasSubstitution() ).toBeFalsy()
+            expect( m.getSubstitutionLeft() ).toBeUndefined()
+            expect( m.getSubstitutionRight() ).toBeUndefined()
+            expect( m.getSubstitutionRequired() ).toBeUndefined()
+
+Store a non-required substitution and verify that it is stored accurately,
+just as in the test in which we stored a required substitution.
+
+            left = quick '_A'
+            right = quick '_B(10)'
+            m.setSubstitution left, right, false
+            expect( m.hasSubstitution() ).toBeTruthy()
+            expect( m.getSubstitutionLeft().equals left ).toBeTruthy()
+            expect( m.getSubstitutionLeft().sameObjectAs left ).toBeFalsy()
+            expect( m.getSubstitutionRight().equals right ).toBeTruthy()
+            expect( m.getSubstitutionRight().sameObjectAs right ) \
+                .toBeFalsy()
+            expect( m.getSubstitutionRequired() ).toBeFalsy()
+
+Clear the substitution and verify that it has been removed.
+
+            m.clearSubstitution()
+            expect( m.hasSubstitution() ).toBeFalsy()
+            expect( m.getSubstitutionLeft() ).toBeUndefined()
+            expect( m.getSubstitutionRight() ).toBeUndefined()
+            expect( m.getSubstitutionRequired() ).toBeUndefined()
