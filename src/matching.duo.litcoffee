@@ -87,6 +87,7 @@ copy of the given expression is stored.
         set : ( variable, expr ) =>
             if variable.name? then variable = variable.name
             @map[variable] = expr.copy()
+            @backCheckSubstitution()
 
 The `get` function queries the mapping for a variable name, and returns the
 same copy made at the time `set` was called (which is also still stored
@@ -158,6 +159,7 @@ If it had been `A[x~y]`, then the third parameter would be false.
                 leftHandSide : leftHandSide.copy()
                 rightHandSide : rightHandSide.copy()
                 required : required
+            @backCheckSubstitution()
 
 Second, several methods for querying the data stored using the previous
 function.
@@ -194,6 +196,7 @@ expression data.
             if @hasSubstitution() then @visited.push patternNode
             @pattern ?= patternNode
             @expression ?= expressionNode
+            @backCheckSubstitution()
 
 And now two getters for the same stored data.  Note that the visited list is
 returned as the actual nodes visited, not copies, so be careful not to

@@ -19,15 +19,6 @@ required order of completion.
 
 ## Matching Module
 
-Implement all of the following, creating unit tests for them as you go.
- * When Match stores a substitution, do all possible metavariable
-   replacements on both halves of it.  Return the result of
-   `backCheckSubstitution()`.
- * Augment Match's `set` so that it applies the metavariable instantiation
-   being stored, immediately, to both halves of any substitution that it has
-   stored.  Return the result of `backCheckSubstitution()`.
-
-Now, the main routine.
  * Implement the matching algorithm after the following psuedocode.
 
     matches = ( pattern, expression, soFar ) ->
@@ -37,9 +28,10 @@ Determine whether we're the outermost call in the recursion, for use below.
         outermost = not soFar?
         soFar ?= new Match
 
-Mark that we've visited this subtree of the pattern and expression.
+Mark that we've visited this subtree of the pattern and expression.  If the
+substitution we're under breaks the match already, then give up.
 
-        soFar.visited pattern, expression
+        if not soFar.visited pattern, expression then return false
 
 Handle patterns of the form x[y=z] and x[y~z].
 
@@ -297,6 +289,14 @@ unused metavariables to things like "unused_1", etc.
     Also verify that if there are metavariables in the expression, that an
     error is thrown.
 ```
+ * Make `backCheckSubstitution()` more efficient by caching many of the
+   values that it recomputes every time.
+   * Many of the calls to `descendantsSatisfying()` are just to test if its
+     length is greater than zero.  Create a `hasDescendantSatisfying()` that
+     just finds the first one, and thus returns true/false more quickly.
+   * Once the left side of the substitution has been instantiated with no
+     metavariables, cache that and keep it.  Same for the right, and for all
+     visited subtrees.
 
 ## Parsing
 
