@@ -20,9 +20,6 @@ required order of completion.
 ## Matching Module
 
 Implement all of the following, creating unit tests for them as you go.
- * Give Match a method for searching the whole pattern for all
-   metavariables and then creating instantiations for all those that don't
-   yet have them, to names like "unused_1", "unused_2", ...
  * Give Match a member that checks whether it (a) has a substitution, and
    (b) that substitution is required, and (c) applying it would alter any of
    the already-visited subtrees.  Return true if all are true, false
@@ -45,9 +42,9 @@ Determine whether we're the outermost call in the recursion, for use below.
         outermost = not soFar?
         soFar ?= new Match
 
-Mark that we've visited this subtree of the pattern.
+Mark that we've visited this subtree of the pattern and expression.
 
-        soFar.visited pattern
+        soFar.visited pattern, expression
 
 Handle patterns of the form x[y=z] and x[y~z].
 

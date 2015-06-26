@@ -350,6 +350,7 @@ pattern.
             m = new Match
             expect( m.getVisitedList() ).toEqual [ ]
             expect( m.getPattern() ).toBeUndefined()
+            expect( m.getExpression() ).toBeUndefined()
 
 Construct a pattern and visit its first few nodes.  This should store the
 pattern in the match object, but not impact the visited list at all, because
@@ -357,22 +358,28 @@ visited lists are only updated when the match object has a substitution
 stored.
 
             pattern = OM.simple 'f(x,lurch.replaceAll(g(y,7),B,C),z)'
-            m.markVisited pattern
-            m.markVisited pattern.children[0]
-            m.markVisited pattern.children[1]
+            expression = OM.simple 'a(b,c(u,v),d)'
+            m.markVisited pattern, expression
+            m.markVisited pattern.children[0], expression.children[0]
+            m.markVisited pattern.children[1], expression.children[1]
             expect( m.getVisitedList() ).toEqual [ ]
             expect( m.getPattern().sameObjectAs pattern ).toBeTruthy()
+            expect( m.getExpression().sameObjectAs expression ).toBeTruthy()
 
 Now store the substitution from the pattern in the match object and visit
 the subexpressions of the first replacement child.  Verify that this does
 impact the visited nodes list.
 
             subst = pattern.children[2]
+            esub = expression.children[2]
             m.setSubstitution subst.children[1], subst.children[2], true
-            m.markVisited subst.children[1]
-            m.markVisited subst.children[1].children[0]
-            m.markVisited subst.children[1].children[1]
-            m.markVisited subst.children[1].children[2]
+            m.markVisited subst.children[1], esub.children[1]
+            m.markVisited subst.children[1].children[0],
+                esub.children[1].children[0]
+            m.markVisited subst.children[1].children[1],
+                esub.children[1].children[1]
+            m.markVisited subst.children[1].children[2],
+                esub.children[1].children[2]
             expect( m.getVisitedList().length ).toEqual 4
             expect( m.getVisitedList()[0].sameObjectAs subst.children[1] ) \
                 .toBeTruthy()
@@ -383,12 +390,13 @@ impact the visited nodes list.
             expect( m.getVisitedList()[3].sameObjectAs \
                 subst.children[1].children[2] ).toBeTruthy()
             expect( m.getPattern().sameObjectAs pattern ).toBeTruthy()
+            expect( m.getExpression().sameObjectAs expression ).toBeTruthy()
 
 Remove the substitution and ensure that a further call to `markVisited` has
 no impact on the visited list or pattern.
 
             m.clearSubstitution()
-            m.markVisited pattern.children[3]
+            m.markVisited pattern.children[3], expression.children[3]
             expect( m.getVisitedList().length ).toEqual 4
             expect( m.getVisitedList()[0].sameObjectAs subst.children[1] ) \
                 .toBeTruthy()
@@ -399,6 +407,7 @@ no impact on the visited list or pattern.
             expect( m.getVisitedList()[3].sameObjectAs \
                 subst.children[1].children[2] ).toBeTruthy()
             expect( m.getPattern().sameObjectAs pattern ).toBeTruthy()
+            expect( m.getExpression().sameObjectAs expression ).toBeTruthy()
 
 ### should be able to copy themselves
 
@@ -416,22 +425,25 @@ in common.
             expect( c.variables() ).toEqual [ ]
             expect( c.hasSubstitution() ).toBeFalsy()
             expect( c.getPattern() ).toBeUndefined()
+            expect( c.getPattern() ).toBeUndefined()
             expect( c.getVisitedList() ).toEqual [ ]
 
 Add some things to each part of `m`, then verify that `c` has not changed.
 
             pattern = quick 'f(x)'
+            expression = quick 't(u)'
             left = quick 'a'
             right = quick 'b'
-            m.markVisited pattern
+            m.markVisited pattern, expression
             m.setSubstitution left, right, false
-            m.markVisited pattern.children[0]
-            m.markVisited pattern.children[1]
+            m.markVisited pattern.children[0], expression.children[0]
+            m.markVisited pattern.children[1], expression.children[1]
             m.set 'A', left
             m.set 'B', right
             expect( m is c ).toBeFalsy()
             expect( c.variables() ).toEqual [ ]
             expect( c.hasSubstitution() ).toBeFalsy()
+            expect( c.getPattern() ).toBeUndefined()
             expect( c.getPattern() ).toBeUndefined()
             expect( c.getVisitedList() ).toEqual [ ]
 
@@ -447,8 +459,90 @@ into the copy.
             expect( c2.getSubstitutionRight().equals right ).toBeTruthy()
             expect( c2.getSubstitutionRequired() ).toBeFalsy()
             expect( c2.getPattern().sameObjectAs pattern ).toBeTruthy()
+            expect( c2.getExpression().sameObjectAs expression ) \
+                .toBeTruthy()
             expect( c2.getVisitedList().length ).toBe 2
             expect( c2.getVisitedList()[0].sameObjectAs \
                 pattern.children[0] ).toBeTruthy()
             expect( c2.getVisitedList()[1].sameObjectAs \
                 pattern.children[1] ).toBeTruthy()
+
+### should be able to complete themselves
+
+Match objects can complete themselves to ensure that all metavariables in
+the pattern have an instantiation.  We test that here.
+
+        it 'should be able to complete themselves', ->
+
+Construct an empty match object and then have it visit a pattern and
+expression.  It should then have absolutely no variables instantiated, so
+when asked to complete itself, it should assign unused variables to all the
+metavariables in the pattern.
+
+            m = new Match
+            pattern = quick '_mv1(_mv2)'
+            expression = quick 'f(x)'
+            m.markVisited pattern, expression
+            m.complete()
+            expect( m.has 'mv1' ).toBeTruthy()
+            expect( m.has 'mv2' ).toBeTruthy()
+            expect( m.get( 'mv1' ).equals quick 'unused_1' ).toBeTruthy()
+            expect( m.get( 'mv2' ).equals quick 'unused_2' ).toBeTruthy()
+
+Repeat the same test, but this time assign to some of the variables in the
+pattern first, and ensure those remain unchanged by the completion.
+
+            m = new Match
+            pattern = quick '_mv1(_mv2)'
+            expression = quick 'f(x)'
+            m.markVisited pattern, expression
+            m.set 'mv1', quick 'example'
+            m.complete()
+            expect( m.has 'mv1' ).toBeTruthy()
+            expect( m.has 'mv2' ).toBeTruthy()
+            expect( m.get( 'mv1' ).equals quick 'example' ).toBeTruthy()
+            expect( m.get( 'mv2' ).equals quick 'unused_1' ).toBeTruthy()
+
+Repeat the same test, but this time put some instances of variables with
+names of the form "unused_n" into the pattern to ensure that it avoids them.
+
+            m = new Match
+            pattern = quick '_mv1(_mv2,unused_21(unused_14))'
+            expression = quick 'f(x)'
+            m.markVisited pattern, expression
+            m.set 'mv1', quick 'example'
+            m.complete()
+            expect( m.has 'mv1' ).toBeTruthy()
+            expect( m.has 'mv2' ).toBeTruthy()
+            expect( m.get( 'mv1' ).equals quick 'example' ).toBeTruthy()
+            expect( m.get( 'mv2' ).equals quick 'unused_22' ).toBeTruthy()
+
+Repeat the same test, but this time put some instances of variables with
+names of the form "unused_n" into the expression also, to ensure that it
+avoids them as well.
+
+            m = new Match
+            pattern = quick '_mv1(_mv2,unused_21(unused_14))'
+            expression = quick 'f(x,unused_100)'
+            m.markVisited pattern, expression
+            m.set 'mv1', quick 'example'
+            m.complete()
+            expect( m.has 'mv1' ).toBeTruthy()
+            expect( m.has 'mv2' ).toBeTruthy()
+            expect( m.get( 'mv1' ).equals quick 'example' ).toBeTruthy()
+            expect( m.get( 'mv2' ).equals quick 'unused_101' ).toBeTruthy()
+
+Repeat the same test, but this time put some instances of variables with
+names of the form "unused_n" into the instantiations also, to ensure that it
+avoids them as well.
+
+            m = new Match
+            pattern = quick '_mv1(_mv2,unused_21(unused_14))'
+            expression = quick 'f(x,unused_100)'
+            m.markVisited pattern, expression
+            m.set 'mv1', quick 'unused_345'
+            m.complete()
+            expect( m.has 'mv1' ).toBeTruthy()
+            expect( m.has 'mv2' ).toBeTruthy()
+            expect( m.get( 'mv1' ).equals quick 'unused_345' ).toBeTruthy()
+            expect( m.get( 'mv2' ).equals quick 'unused_346' ).toBeTruthy()

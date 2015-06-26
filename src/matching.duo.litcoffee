@@ -183,14 +183,17 @@ to be sure that it is consistent with all subtrees of its node in the
 pattern, which is why we're tracking a visited list in the first place.
 (See [the matching algorithm](#matching-algorithm) further below.)
 
-The first time this function is called, it also saves the given `node` as
-the full pattern, because the function is called on all nodes in the pattern
-in tree order; thus the first will be the pattern.  The matching algorithm
-may need to query that member later.
+The first time this function is called, it also saves the given nodes as the
+full pattern and expression, because the function is called on all nodes in
+the pattern and expression in tree order; thus the first call will be the
+pattern and expression themselves.  The functions in the [completing a
+match](#completing-a-match) section below will use the pattern and
+expression data.
 
-        markVisited : ( node ) =>
-            if @hasSubstitution() then @visited.push node
-            @pattern ?= node
+        markVisited : ( patternNode, expressionNode ) =>
+            if @hasSubstitution() then @visited.push patternNode
+            @pattern ?= patternNode
+            @expression ?= expressionNode
 
 And now two getters for the same stored data.  Note that the visited list is
 returned as the actual nodes visited, not copies, so be careful not to
@@ -198,6 +201,7 @@ modify them unless you intend to modify the pattern itself.
 
         getVisitedList : => @visited[..]
         getPattern : => @pattern
+        getExpression : => @expression
 
 ### Copying match objects
 
@@ -221,7 +225,56 @@ are the details.
                     rightHandSide : @substitution.rightHandSide.copy()
                     required : @substitution.required
             if @pattern? then result.pattern = @pattern
+            if @expression? then result.expression = @expression
             result
+
+### Completing a match
+
+When the match recursion has been run, but not all metavariables were forced
+into a particular instantiation, [the matching
+algorithm](#matching-algorithm) will still want to return a match object
+that has values for all metavariables in it.  This function finds all
+metavariables in the pattern, and for those that do not yet have an
+assignment, it creates a new assignment to a variable unused in the pattern,
+the expression, and any of the existing instantiations.
+
+        complete : =>
+
+The function depends upon the pattern and expression being defined.
+
+            if not @pattern? or not @expression? then return
+
+We will create variables of the form "unused_n" for various positive
+integers n.  We must find a complete list of such variables already in use
+(unlikely as that may be).  We search in the pattern, the expression, and
+all existing instantiations in `@map`.
+
+            unusedRE = /^unused_([0-9]+)$/
+            unusedCheck = ( node ) ->
+                node.type is 'v' and unusedRE.test node.name
+            unused = @pattern.descendantsSatisfying( unusedCheck ) \
+                .concat @expression.descendantsSatisfying unusedCheck
+            for own key, value of @map
+                unused =
+                    unused.concat value.descendantsSatisfying unusedCheck
+
+We then begin counting after the last of them.  E.g., if it was unused_7,
+we start using unused_8, unused_9, etc.
+
+            integers = [ 0 ] # ensure there is one
+            for variable in unused
+                match = unusedRE.exec variable.name
+                integers.push parseInt match[1]
+            integers = integers.sort ( a, b ) -> a - b
+            last = integers[integers.length-1]
+
+Find all uninstantiated metavariables in the pattern, and given them values
+from the unused list as just described.
+
+            metavariables = @pattern.descendantsSatisfying isMetavariable
+            for metavariable in metavariables
+                if not @has metavariable
+                    @set metavariable, OM.variable "unused_#{++last}"
 
 ## Matching Algorithm
 
