@@ -554,3 +554,11 @@ because it would be complex to contrive all the man situations in which it
 would need to be tested.  We already have extensive tests planned for the
 actual matching algorithm, which uses `backCheckSubstitution()` constantly,
 so we will consider those indirect tests sufficient.
+
+## Matching
+
+This section is the most important in this test suite, and checks many cases
+of the main pattern-matching algorithm.
+
+    describe 'The pattern-matching algorithm', ->
+        throw 'TESTS NOT YET COMPLETE'

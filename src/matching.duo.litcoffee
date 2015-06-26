@@ -339,4 +339,97 @@ in the visited subtrees, then the check passes.
 
 ## Matching Algorithm
 
-NOTE:  This module is not yet complete!
+The main purpose of this module is to expose this function to the client. It
+matches the given pattern against the given expression and returns a match
+object, a mapping from metavariables to their instantiations.  The thid
+parameter is for internal use only during recursion, and should not be
+passed by clients.  To see many examples of how this routine functions, see
+[its unit tests](../test/matching-spec.litcoffee#matching).
+
+    exports.matches = matches = ( pattern, expression, soFar ) ->
+
+Determine whether we're the outermost call in the recursion, for use below.
+
+        outermost = not soFar?
+        soFar ?= new Match
+
+Mark that we've visited this subtree of the pattern and expression.  If the
+substitution we're under breaks the match already, then give up.
+
+        if not soFar.visited pattern, expression then return false
+
+Handle patterns of the form `x[y=z]` and `x[y~z]`.
+
+        if pattern.type is 'a' and pattern.children.length is 3
+            required = pattern.children[0].equals \
+                Match::requiredSubstitution
+            optional = pattern.children[0].equals \
+                Match::optionalSubstitution
+            if required or optional
+                if soFar.hasSubstitution()
+                    throw 'Only one substitution instance permitted in a
+                        pattern'
+                if not soFar.setSubstitution pattern.children[1], \
+                    pattern.children[2], required then return [ ]
+                results = matches pattern.children[1], expression, soFar
+                result.clearSubstitution() for result in results
+                return results
+
+Handle patterns that are single metavariables.
+
+        if isMetavariable pattern
+            if test = soFar.get pattern
+                return if test.equals expression then [ soFar ] else [ ]
+            if not soFar.set pattern, expression then return [ ]
+            return [ soFar ]
+
+Define a function for handling when the match would fail without the
+substitution expression.
+
+        pair = ( a, b ) ->
+            OM.application OM.symbol( 'pair', 'lurch' ), a.copy(), b.copy()
+        trySubs = ->
+            if not soFar.hasSubstitution() then return [ ]
+            sub = pair soFar.getSubstitutionLeft(),
+                soFar.getSubstitutionRight()
+            [ walk1, walk2, result ] = [ pattern, expression, [ ] ]
+            while walk1?
+                result =
+                    result.concat matches pair( walk1, walk2 ), sub, soFar
+                [ walk1, walk2 ] = [ walk1.parent, walk2.parent ]
+            result
+
+Now we enter the meat of structural matching.  If the types don't even
+match, then the only thing that might save us is a substitution, if there is
+one.
+
+        if pattern.type isnt expression.type then return trySubs()
+
+Handle atomic patterns.
+
+        if pattern.type in [ 'i', 'f', 'st', 'ba', 'sy', 'v', 'a' ]
+            return if pattern.equals expression then [ soFar ] \
+                else trySubs()
+
+Non-atomic patterns must have the same size as their expressions.
+
+        pchildren = pattern.childrenSatisfying()
+        echildren = expression.childrenSatisfying()
+        if pchildren.length isnt echildren.length then return trySubs()
+
+Recur on children.
+
+        results = [ soFar ]
+        for child1, index in pchildren
+            child2 = echildren[index]
+            newResults = [ ]
+            for sf in results
+                copy = sf.copy()
+                newResults = newResults.concat matches child1, child2, copy
+            results = newResults
+
+Before returning the results, if we are the outermost call, instantiate all
+unused metavariables to things like "unused_1", etc.
+
+        if outermost then result.complete() for result in results
+        results
