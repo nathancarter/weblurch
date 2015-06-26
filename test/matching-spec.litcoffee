@@ -16,12 +16,20 @@ the property of being a metavariable.  To facilitate this, we have the
 following convenience function that applies `OM.simple` to a string, then
 traverses the resulting tree to apply this convention.
 
+It also supports symbols, so that '_s.s' is interpreted as the symbol 's.s',
+but with the property of being a metavariable.
+
     quick = ( string ) ->
         tree = OM.simple string
         for variable in tree.descendantsSatisfying( ( x ) -> x.type is 'v' )
             if /^_/.test variable.name
                 variable.replaceWith OM.simple variable.name[1..]
                 setMetavariable variable
+        for symbol in tree.descendantsSatisfying( ( x ) -> x.type is 'sy' )
+            if /^_/.test symbol.cd
+                symbol.replaceWith OM.simple \
+                    "#{symbol.cd[1..]}.#{symbol.name}"
+                setMetavariable symbol
         tree
 
 ## Global functions and a class
@@ -48,11 +56,12 @@ marks reliably, and clear them.
 
         it 'should reliably mark metavariables', ->
 
-First we test that the functions work correctly on several variable nodes.
+First we test that the functions work correctly on several variable and
+symbol nodes.
 
             x = OM.simple 'x'
             y = OM.simple 'y'
-            z = OM.simple 'z'
+            z = OM.simple 'z.z'
             expect( isMetavariable x ).toBeFalsy()
             expect( isMetavariable y ).toBeFalsy()
             expect( isMetavariable z ).toBeFalsy()
@@ -81,7 +90,8 @@ First we test that the functions work correctly on several variable nodes.
             expect( isMetavariable y ).toBeFalsy()
             expect( isMetavariable z ).toBeFalsy()
 
-Then we test that we cannot actually mark non-variables as metavariables.
+Then we test that we cannot actually mark objects that are neither variables
+nor symbols as metavariables.
 
             one = OM.simple '1'
             fofx = OM.simple 'f(x)'
@@ -578,17 +588,17 @@ Matching `a` to `a` should yield `[ { } ]`.
 Matching `a` to `b` should yield `[ ]`.
 
             result = matches quick( 'a' ), quick( 'b' )
-            expect( result.length ).toBe 0
+            expect( result ).toEqual [ ]
 
 Matching `a` to `2` should yield `[ ]`.
 
             result = matches quick( 'a' ), quick( '2' )
-            expect( result.length ).toBe 0
+            expect( result ).toEqual [ ]
 
 Matching `a` to `f(x)` should yield `[ ]`.
 
             result = matches quick( 'a' ), quick( 'f(x)' )
-            expect( result.length ).toBe 0
+            expect( result ).toEqual [ ]
 
 Matching `9` to `a` should yield `[ { } ]`.
 
@@ -599,17 +609,17 @@ Matching `9` to `a` should yield `[ { } ]`.
 Matching `9` to `b` should yield `[ ]`.
 
             result = matches quick( '9' ), quick( 'b' )
-            expect( result.length ).toBe 0
+            expect( result ).toEqual [ ]
 
 Matching `9` to `2` should yield `[ ]`.
 
             result = matches quick( '9' ), quick( '2' )
-            expect( result.length ).toBe 0
+            expect( result ).toEqual [ ]
 
 Matching `9` to `f(x)` should yield `[ ]`.
 
             result = matches quick( '9' ), quick( 'f(x)' )
-            expect( result.length ).toBe 0
+            expect( result ).toEqual [ ]
 
 Matching `"slow"` to `a` should yield `[ { } ]`.
 
@@ -620,19 +630,21 @@ Matching `"slow"` to `a` should yield `[ { } ]`.
 Matching `"slow"` to `b` should yield `[ ]`.
 
             result = matches quick( '"slow"' ), quick( 'b' )
-            expect( result.length ).toBe 0
+            expect( result ).toEqual [ ]
 
 Matching `"slow"` to `2` should yield `[ ]`.
 
             result = matches quick( '"slow"' ), quick( '2' )
-            expect( result.length ).toBe 0
+            expect( result ).toEqual [ ]
 
 Matching `"slow"` to `f(x)` should yield `[ ]`.
 
             result = matches quick( '"slow"' ), quick( 'f(x)' )
-            expect( result.length ).toBe 0
+            expect( result ).toEqual [ ]
 
-Matching `A` (now a metavariable) to anything should yield `[ A : thing ]`.
+Matching `_A` (now a metavariable, following the notational convention in
+the `quick` function defined at the top of this test file) to anything
+should yield `[ A : thing ]`.
 
             result = matches quick( '_A' ), quick( 'a' )
             expect( result.length ).toBe 1
@@ -646,3 +658,78 @@ Matching `A` (now a metavariable) to anything should yield `[ A : thing ]`.
             expect( result.length ).toBe 1
             expect( result[0].variables() ).toEqual [ 'A' ]
             expect( result[0].get( 'A' ).equals quick 'f(x)' ).toBeTruthy()
+
+### should work for compound patterns
+
+The following tests are for the case where the pattern is compound,
+including application, binding, and error types.  No substitution patterns
+are tested yet; they appear in later tests.
+
+        it 'should work for compound patterns', ->
+
+First, applications:
+
+Matching `_A(x)` to `f(x)` should yield `[ { A : f } ]`.
+
+            result = matches quick( '_A(x)' ), quick( 'f(x)' )
+            expect( result.length ).toBe 1
+            expect( result[0].variables() ).toEqual [ 'A' ]
+            expect( result[0].get( 'A' ).equals quick 'f' ).toBeTruthy()
+
+Matching `_A(_B)` to `f(x)` should yield `[ { A : f, B : x } ]`.
+
+            result = matches quick( '_A(_B)' ), quick( 'f(x)' )
+            expect( result.length ).toBe 1
+            expect( result[0].variables().sort() ).toEqual [ 'A', 'B' ]
+            expect( result[0].get( 'A' ).equals quick 'f' ).toBeTruthy()
+            expect( result[0].get( 'B' ).equals quick 'x' ).toBeTruthy()
+
+Matching `_A(_B)` to `f(x,y)` should yield `[ ]`.
+
+            result = matches quick( '_A(_B)' ), quick( 'f(x,y)' )
+            expect( result ).toEqual [ ]
+
+Matching `_A(_B)` to `f()` should yield `[ ]`.
+
+            result = matches quick( '_A(_B)' ), quick( 'f()' )
+            expect( result ).toEqual [ ]
+
+Matching `_A(_B)` to `some_var` should yield `[ ]`.
+
+            result = matches quick( '_A(_B)' ), quick( 'some_var' )
+            expect( result ).toEqual [ ]
+
+Next, bindings:
+
+Matching `_A.A(x,y)` to `f.f[x,y]` should yield `[ { A : f.f } ]`.
+
+            result = matches quick( '_A.A[x,y]' ), quick( 'f.f[x,y]' )
+            expect( result.length ).toBe 1
+            expect( result[0].variables() ).toEqual [ 'A.A' ]
+            expect( result[0].get( 'A.A' ).equals quick 'f.f' ).toBeTruthy()
+
+Matching `_A.A[_B,_C]` to `f.f[x,y]` should yield
+`[ { A.A : f.f, B : x, C : y } ]`.
+
+            result = matches quick( '_A.A[_B,_C]' ), quick( 'f.f[x,y]' )
+            expect( result.length ).toBe 1
+            expect( result[0].variables().sort() ).toEqual \
+                [ 'A.A', 'B', 'C' ]
+            expect( result[0].get( 'A.A' ).equals quick 'f.f' ).toBeTruthy()
+            expect( result[0].get( 'B' ).equals quick 'x' ).toBeTruthy()
+            expect( result[0].get( 'C' ).equals quick 'y' ).toBeTruthy()
+
+Matching `_A.A[_B,_C]` to `f.f[x,y,z]` should yield `[ ]`.
+
+            result = matches quick( '_A.A(_B,_C)' ), quick( 'f.f[x,y,z]' )
+            expect( result ).toEqual [ ]
+
+Matching `_A.A[_B,_C,_D]` to `f.f[x,y]` should yield `[ ]`.
+
+            result = matches quick( '_A.A(_B,_C,_D)' ), quick( 'f.f[x,y]' )
+            expect( result ).toEqual [ ]
+
+Matching `_A.A[_B,_C]` to `some_var` should yield `[ ]`.
+
+            result = matches quick( '_A.A[_B,_C]' ), quick( 'some_var' )
+            expect( result ).toEqual [ ]

@@ -33,11 +33,17 @@ as parameter any `OMNode` instance (as implemented
 [here](openmath.duo.litcoffee)) and gives it an attribute that the rest of
 this package recognizes as meaning "this variable is actually a
 metavariable."  This routine does nothing if the given input is not an
-OMNode of type variable.
+OMNode of type variable or type symbol.
+
+(It is necessary to permit symbols to be metavariables because there are
+some positions in an OpenMath tree that can only be occupied by symbols.
+For instance, if we wished to express the pattern "forall x, P(x)" but with
+the forall symbol replaced by a metavariable, it would need to be a symbol
+in order for the expression to be a valid OpenMath object.)
 
     exports.setMetavariable = setMetavariable = ( variable ) ->
-        if variable not instanceof OMNode or variable.type isnt 'v'
-            return
+        if variable not instanceof OMNode or \
+           variable.type not in [ 'v', 'sy' ] then return
         variable.setAttribute metavariableSymbol, trueValue.copy()
 
 To undo the above action, call the following function, which removes the
@@ -51,7 +57,7 @@ following routine, which tests for the presence of the attribute in
 question.
 
     exports.isMetavariable = isMetavariable = ( variable ) ->
-        variable instanceof OMNode and variable.type is 'v' and \
+        variable instanceof OMNode and variable.type in [ 'v', 'sy' ] and \
             variable.getAttribute( metavariableSymbol )?.equals trueValue
 
 ## Match class
@@ -84,29 +90,34 @@ when queried, the copies will be returned.
 The `set` function assigns an expression to a variable in the mapping.  A
 copy of the given expression is stored.
 
-        set : ( variable, expr ) =>
-            if variable.name? then variable = variable.name
-            @map[variable] = expr.copy()
+        set : ( varOrSym, expr ) =>
+            if varOrSym.simpleEncode?
+                varOrSym = varOrSym.simpleEncode()
+            @map[varOrSym] = expr.copy()
             @backCheckSubstitution()
 
 The `get` function queries the mapping for a variable name, and returns the
 same copy made at the time `set` was called (which is also still stored
 internally in the map).
 
-        get : ( variable ) => @map[variable.name ? variable]
+        get : ( varOrSym ) => @map[varOrSym.simpleEncode?() ? varOrSym]
 
 The `clear` function removes a variable from the map (and whatever
 expression it was paired with).
 
-        clear : ( variable ) => delete @map[variable.name ? variable]
+        clear : ( varOrSym ) =>
+            delete @map[varOrSym.simpleEncode?() ? varOrSym]
 
 The `has` function just returns a true or false value indicating whether
 the variable appears in the map as a key.
 
-        has : ( variable ) => @map.hasOwnProperty variable.name ? variable
+        has : ( varOrSym ) =>
+            @map.hasOwnProperty varOrSym.simpleEncode?() ? varOrSym
 
-The `variables` function lists the names of all variables that appear in
-the mapping, in no particular order.
+The `variables` function lists the names of all metavariables that appear in
+the mapping, in no particular order.  This actually includes symbols also,
+and thus the results will be an array of strings containing things like
+"x" and "y.z".
 
         variables : => Object.keys @map
 
@@ -337,6 +348,19 @@ in the visited subtrees, then the check passes.
 
             true
 
+### For debugging
+
+It's often handy to be able to convert a Match object to a string for
+debugging purposes.  This method creates a simple representation of a match
+object.
+
+        toString : =>
+            result = '{'
+            for own key, value of @map ? { }
+                if result.length > 1 then result += ','
+                result += "#{key}:#{value.simpleEncode()}"
+            result + '}'
+
 ## Matching Algorithm
 
 The main purpose of this module is to expose this function to the client. It
@@ -356,15 +380,15 @@ Determine whether we're the outermost call in the recursion, for use below.
 Mark that we've visited this subtree of the pattern and expression.  If the
 substitution we're under breaks the match already, then give up.
 
-        if not soFar.markVisited pattern, expression then return false
+        if not soFar.markVisited pattern, expression then return [ ]
 
 Handle patterns of the form `x[y=z]` and `x[y~z]`.
 
         if pattern.type is 'a' and pattern.children.length is 3
             required = pattern.children[0].equals \
-                Match::requiredSubstitution
+                Match.requiredSubstitution
             optional = pattern.children[0].equals \
-                Match::optionalSubstitution
+                Match.optionalSubstitution
             if required or optional
                 if soFar.hasSubstitution()
                     throw 'Only one substitution instance permitted in a
@@ -407,7 +431,7 @@ one.
 
 Handle atomic patterns.
 
-        if pattern.type in [ 'i', 'f', 'st', 'ba', 'sy', 'v', 'a' ]
+        if pattern.type in [ 'i', 'f', 'st', 'ba', 'sy', 'v' ]
             return if pattern.equals expression then [ soFar ] \
                 else trySubs()
 
@@ -424,8 +448,8 @@ Recur on children.
             child2 = echildren[index]
             newResults = [ ]
             for sf in results
-                copy = sf.copy()
-                newResults = newResults.concat matches child1, child2, copy
+                newResults = newResults.concat matches child1, child2,
+                    sf.copy()
             results = newResults
 
 Before returning the results, if we are the outermost call, instantiate all

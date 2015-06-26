@@ -29,15 +29,6 @@ required order of completion.
     pattern             expression      results
     -------             ----------      -------
 
-    COMPOUNDS
-
-    A(x)                f(x)            [{A:f}]
-    A(B)                f(x)            [{A:f,B:x}]
-    A(B)                f(x,y)          []
-    A(B)                f()             []
-    A(B)                atomic          []
-        repeat these tests for binding and error types, in addition to appls
-
     ATTRIBUTES
 
     repeat a selection of the above tests with attributes added to either
