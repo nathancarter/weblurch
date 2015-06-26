@@ -943,11 +943,12 @@ that the algorithm should look all the way up the parent chain.
         isFree : ( inThis ) =>
             freeVariables = @freeVariables()
             walk = this
-            while walk and not walk.sameObjectAs inThis
+            while walk
                 if walk.type is 'bi'
                     boundHere = ( v.name for v in walk.variables )
                     for variable in freeVariables
                         if variable in boundHere then return no
+                if walk.sameObjectAs inThis then break
                 walk = walk.parent
             yes
 
@@ -974,22 +975,22 @@ a copy of the another expression (replacement).  The search-and-replace
 recursion only proceeds through children, head symbols, and bodies of
 binding nodes, not attribute keys or values.
 
-Later it would be easy to add an optional third parameter, `inThis`, which
-would function like the parameter of the same name to `isFree()`, and would
-be passed directly along to `isFree()`.  This change would require testing.
+The optional third parameter, `inThis`, functions like the parameter of the
+same name to `isFree()`, is passed directly along to `isFree()`.
 
-        replaceFree : ( original, replacement ) =>
-            if @equals original
+        replaceFree : ( original, replacement, inThis ) =>
+            inThis ?= this
+            if @isFree( inThis ) and @equals original
                 save = new OMNode @tree
                 @replaceWith replacement.copy()
-                if not @isFree() then @replaceWith save
+                if not @isFree inThis then @replaceWith save
                 return
-            @symbol?.replaceFree original, replacement
-            @body?.replaceFree original, replacement
+            @symbol?.replaceFree original, replacement, inThis
+            @body?.replaceFree original, replacement, inThis
             for variable in @variables
-                variable.replaceFree original, replacement
+                variable.replaceFree original, replacement, inThis
             for child in @children
-                child.replaceFree original, replacement
+                child.replaceFree original, replacement, inThis
 
 ### Filtering children and descendants
 

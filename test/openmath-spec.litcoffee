@@ -2893,13 +2893,20 @@ original expression.
             copy = expr.copy()
             copy.replaceFree OM.simple( 'logic.and(f(x),g(y))' ),
                 OM.simple( 'thing(t,y)' )
-            expect( copy.equals OM.simple 'logic.forall[x,thing(t,y)]' ) \
-                .toBeTruthy()
+            expect( copy.equals expr ).toBeTruthy()
             copy = expr.copy()
-            copy.replaceFree OM.simple( 'logic.and(f(x),g(y))' ),
+            copy.replaceFree OM.simple( 'g(y)' ), OM.simple( 'thing(t,y)' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),thing(t,y))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g(y)' ), OM.simple( 't(x)' )
+            expect( copy.equals expr ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g(y)' ),
                 OM.simple( 'logic.exists[x,P(5,6,7)]' )
             expect( copy.equals OM.simple \
-                'logic.forall[x,logic.exists[x,P(5,6,7)]]' ).toBeTruthy()
+                'logic.forall[x,logic.and(f(x),logic.exists[x,P(5,6,7)])]' \
+                ).toBeTruthy()
 
 ## Filtering
 
