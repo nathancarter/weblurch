@@ -8,6 +8,22 @@ we'll use when testing.
         require '../src/matching.duo'
     { OM, OMNode } = require '../src/openmath.duo'
 
+Several times in this test we will want to use the convention that a
+variable beginning with an underscore should have the underscore removed,
+but then be flagged as a metavariable.  That is, `f(x)` is different from
+`_f(x)` only in that the latter will have its head variable `f` marked with
+the property of being a metavariable.  To facilitate this, we have the
+following convenience function that applies `OM.simple` to a string, then
+traverses the resulting tree to apply this convention.
+
+    quick = ( string ) ->
+        tree = OM.simple string
+        for variable in tree.descendantsSatisfying( ( x ) -> x.type is 'v' )
+            if /^_/.test variable.name
+                variable.replaceWith OM.simple variable.name[1..]
+                setMetavariable variable
+        tree
+
 ## Global functions and a class
 
 This section tests just the existence and simplest functioning of the main
@@ -193,3 +209,67 @@ ensure they behave as expected.
             expect( m.get c ).toBeUndefined()
             expect( m.has c ).toBeFalsy()
             expect( m.variables() ).toEqual [ ]
+
+### should apply their mapping
+
+This test applies some mappings to some patterns and verifies that the
+results are as they should be.
+
+        it 'should correctly apply their mapping', ->
+
+Construct the same expressions as in the previous test and put them in a
+Match instance.
+
+            expr1 = OM.simple 'thing'
+            expr2 = OM.simple 't("some")'
+            expr3 = OM.simple 'y.y[q,r,s,body(of,binding)]'
+            a = OM.simple 'a'
+            b = OM.simple 'b'
+            c = OM.simple 'sea'
+            m = new Match
+            m.set a, expr1
+            m.set b, expr2
+            m.set c, expr3
+
+Construct a trivial pattern and test the substitution.
+
+            pattern = quick '_a'
+            expect( isMetavariable pattern ).toBeTruthy()
+            result = m.applyTo pattern
+            expect( result.equals pattern ).toBeFalsy()
+            expect( result.equals expr1 ).toBeTruthy()
+
+Repeat the test with a pattern that will not be affected by `m`.
+
+            pattern = quick '_thing'
+            expect( isMetavariable pattern ).toBeTruthy()
+            result = m.applyTo pattern
+            expect( result.equals pattern ).toBeTruthy()
+            expect( result.equals expr1 ).toBeFalsy()
+
+Now use an application expression with several different metavariables.
+
+            pattern = quick 'myFunc(_a,sum(_b,3,_sea))'
+            result = m.applyTo pattern
+            shouldBe = OM.simple \
+                'myFunc(thing,sum(t("some"),3,y.y[q,r,s,body(of,binding)]))'
+            expect( result.equals pattern ).toBeFalsy()
+            expect( result.equals shouldBe ).toBeTruthy()
+
+Same test as the previous, but now with some variables repeated.
+
+            pattern = quick 'myFunc(_a,foo(_b),sum(_b,3,_a))'
+            result = m.applyTo pattern
+            shouldBe = OM.simple \
+                'myFunc(thing,foo(t("some")),sum(t("some"),3,thing))'
+            expect( result.equals pattern ).toBeFalsy()
+            expect( result.equals shouldBe ).toBeTruthy()
+
+Same test as previous, but now with a binding instead of an application.
+
+            pattern = quick 'logic.exists[t,and(_a,sum(_b,3,_a))]'
+            result = m.applyTo pattern
+            shouldBe = OM.simple \
+                'logic.exists[t,and(thing,sum(t("some"),3,thing))]'
+            expect( result.equals pattern ).toBeFalsy()
+            expect( result.equals shouldBe ).toBeTruthy()

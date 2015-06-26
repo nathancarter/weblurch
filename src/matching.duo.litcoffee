@@ -35,7 +35,7 @@ this package recognizes as meaning "this variable is actually a
 metavariable."  This routine does nothing if the given input is not an
 OMNode of type variable.
 
-    exports.setMetavariable = ( variable ) ->
+    exports.setMetavariable = setMetavariable = ( variable ) ->
         if variable not instanceof OMNode or variable.type isnt 'v'
             return
         variable.setAttribute metavariableSymbol, trueValue.copy()
@@ -43,14 +43,14 @@ OMNode of type variable.
 To undo the above action, call the following function, which removes the
 attribute.
 
-    exports.clearMetavariable = ( metavariable ) ->
+    exports.clearMetavariable = clearMetavariable = ( metavariable ) ->
         metavariable.removeAttribute metavariableSymbol
 
 To query whether a variable has been marked as a metaviariable, use the
 following routine, which tests for the presence of the attribute in
 question.
 
-    exports.isMetavariable = ( variable ) ->
+    exports.isMetavariable = isMetavariable = ( variable ) ->
         variable instanceof OMNode and variable.type is 'v' and \
             variable.getAttribute( metavariableSymbol )?.equals trueValue
 
@@ -62,16 +62,20 @@ be used to instantiate those metavariables.
 
     exports.Match = class
 
+### Match constructor
+
 Constructing a new one simply initializes the map to an empty map.
 
         constructor : -> @map = { }
 
-We then provide functions for getting, setting, clearing, and querying the
-map.  Parameters with the name "variable" can either be strings (the name of
-the variable) or actual OpenMath variable objects, in which case their name
-will be used.  Parameters with the name "expr" can be any OpenMath
-expressions, and only copies of them will be stored in this object when
-queried, the copies will be returned.
+### Metavariable mapping
+
+We then provide functions for getting, setting, clearing, querying, and
+using the map.  Parameters with the name "variable" can either be strings
+(the name of the variable) or actual OpenMath variable objects, in which
+case their name will be used.  Parameters with the name "expr" can be any
+OpenMath expressions, and only copies of them will be stored in this object
+when queried, the copies will be returned.
 
 The `set` function assigns an expression to a variable in the mapping.  A
 copy of the given expression is stored.
@@ -100,3 +104,15 @@ The `variables` function lists the names of all variables that appear in
 the mapping, in no particular order.
 
         variables : => Object.keys @map
+
+The map can be applied to an expression, and all metavariables in it will
+be replaced with a copy of their values in the map.  Those metavariables
+that do not appear in the map will be unaffected.  This is not performed
+in-place in the given pattern, but rather in a copy, which is returned.
+
+        applyTo : ( pattern ) =>
+            result = pattern.copy()
+            for metavariable in result.descendantsSatisfying isMetavariable
+                if @has metavariable
+                    metavariable.replaceWith @get( metavariable ).copy()
+            result

@@ -26,10 +26,16 @@ Implement all of the following, creating unit tests for them as you go.
    be stored.
  * Make getters for all of the substitution data, including one for just
    whether a substitution has been stored.
- * Give Match a method for removing a substitution.
+ * Give Match a method for removing the substitution.
  * Give Match a member for marking which subtrees it has visited, and
-   storing them in an internal list.  It only does anything if a
-   substitution is in force; otherwise it does nothing.
+   storing them in an internal list.  If a substitution is not in force,
+   this method should not do anything.  The one exception is that the first
+   time this method is called, it should store the parameter as the whole
+   pattern tree, whether or not it adds it to the subtree list.
+ * Give Match a `copy()` method.
+ * Give Match a method for searching the whole pattern for all
+   metavariables and then creating instantiations for all those that don't
+   yet have them, to names like "unused_1", "unused_2", ...
  * Give Match a member that checks whether it (a) has a substitution, and
    (b) that substitution is required, and (c) applying it would alter any of
    the already-visited subtrees.  Return true if all are true, false
@@ -41,12 +47,6 @@ Implement all of the following, creating unit tests for them as you go.
    being stored, immediately, to both halves of any substitution that it has
    stored.  If it becomes fully instantiated then return the result of
    `backCheckSubstitution()`.  Otherwise return true.
- * Give Match a `copy()` method.
- * Give Match a method for applying itself to an expression, replacing all
-   metavariables with their current instantiations.
- * Give Match a method for finding in its first-visited subtree (the whole
-   pattern) all metavariables, and then creating instantiations for all
-   those that don't yet have them, to names like "unused_1", "unused_2", ...
 
 Now, the main routine.
  * Implement the matching algorithm after the following psuedocode.
