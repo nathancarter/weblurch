@@ -64,9 +64,13 @@ be used to instantiate those metavariables.
 
 ### Match constructor
 
-Constructing a new one simply initializes the map to an empty map.
+Constructing a new one simply initializes the map to an empty map and
+"visited" list.  The map is discussed in the following section, and the
+visited list is discussed [further below](#visiting).
 
-        constructor : -> @map = { }
+        constructor : ->
+            @map = { }
+            @visited = [ ]
 
 ### Metavariable mapping
 
@@ -166,3 +170,35 @@ function.
 Finally, a method for removing a stored substitution.
 
         clearSubstitution : => delete @substitution
+
+### Visiting
+
+The pattern-matching algorithm implemented later in this file will need to
+store in its match object(s) a list of subexpressions of the pattern, as it
+visits them.  We thus provide the following functions to enable that.
+
+You can only mark a node visited if a substitution is in force.  This is
+because we only track visited nodes so that a substitution can later check
+to be sure that it is consistent with all subtrees of its node in the
+pattern, which is why we're tracking a visited list in the first place.
+(See [the matching algorithm](#matching-algorithm) further below.)
+
+The first time this function is called, it also saves the given `node` as
+the full pattern, because the function is called on all nodes in the pattern
+in tree order; thus the first will be the pattern.  The matching algorithm
+may need to query that member later.
+
+        markVisited : ( node ) =>
+            if @hasSubstitution() then @visited.push node
+            @pattern ?= node
+
+And now two getters for the same stored data.  Note that the visited list is
+returned as the actual nodes visited, not copies, so be careful not to
+modify them unless you intend to modify the pattern itself.
+
+        getVisitedList : => @visited[..]
+        getPattern : => @pattern
+
+## Matching Algorithm
+
+NOTE:  This module is not yet complete!

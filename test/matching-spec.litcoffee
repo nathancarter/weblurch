@@ -335,3 +335,67 @@ Clear the substitution and verify that it has been removed.
             expect( m.getSubstitutionLeft() ).toBeUndefined()
             expect( m.getSubstitutionRight() ).toBeUndefined()
             expect( m.getSubstitutionRequired() ).toBeUndefined()
+
+### should correctly track visits
+
+Match objects provide functions for tracking pattern tree traversal, by
+marking some subexpressions of the pattern as visited.  We test those
+functions here.
+
+        it 'should correctly track visits', ->
+
+Construct a match and verify that it has an empty visited list and no known
+pattern.
+
+            m = new Match
+            expect( m.getVisitedList() ).toEqual [ ]
+            expect( m.getPattern() ).toBeUndefined()
+
+Construct a pattern and visit its first few nodes.  This should store the
+pattern in the match object, but not impact the visited list at all, because
+visited lists are only updated when the match object has a substitution
+stored.
+
+            pattern = OM.simple 'f(x,lurch.replaceAll(g(y,7),B,C),z)'
+            m.markVisited pattern
+            m.markVisited pattern.children[0]
+            m.markVisited pattern.children[1]
+            expect( m.getVisitedList() ).toEqual [ ]
+            expect( m.getPattern().sameObjectAs pattern ).toBeTruthy()
+
+Now store the substitution from the pattern in the match object and visit
+the subexpressions of the first replacement child.  Verify that this does
+impact the visited nodes list.
+
+            subst = pattern.children[2]
+            m.setSubstitution subst.children[1], subst.children[2], true
+            m.markVisited subst.children[1]
+            m.markVisited subst.children[1].children[0]
+            m.markVisited subst.children[1].children[1]
+            m.markVisited subst.children[1].children[2]
+            expect( m.getVisitedList().length ).toEqual 4
+            expect( m.getVisitedList()[0].sameObjectAs subst.children[1] ) \
+                .toBeTruthy()
+            expect( m.getVisitedList()[1].sameObjectAs \
+                subst.children[1].children[0] ).toBeTruthy()
+            expect( m.getVisitedList()[2].sameObjectAs \
+                subst.children[1].children[1] ).toBeTruthy()
+            expect( m.getVisitedList()[3].sameObjectAs \
+                subst.children[1].children[2] ).toBeTruthy()
+            expect( m.getPattern().sameObjectAs pattern ).toBeTruthy()
+
+Remove the substitution and ensure that a further call to `markVisited` has
+no impact on the visited list or pattern.
+
+            m.clearSubstitution()
+            m.markVisited pattern.children[3]
+            expect( m.getVisitedList().length ).toEqual 4
+            expect( m.getVisitedList()[0].sameObjectAs subst.children[1] ) \
+                .toBeTruthy()
+            expect( m.getVisitedList()[1].sameObjectAs \
+                subst.children[1].children[0] ).toBeTruthy()
+            expect( m.getVisitedList()[2].sameObjectAs \
+                subst.children[1].children[1] ).toBeTruthy()
+            expect( m.getVisitedList()[3].sameObjectAs \
+                subst.children[1].children[2] ).toBeTruthy()
+            expect( m.getPattern().sameObjectAs pattern ).toBeTruthy()

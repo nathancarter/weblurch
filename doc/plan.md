@@ -20,11 +20,6 @@ required order of completion.
 ## Matching Module
 
 Implement all of the following, creating unit tests for them as you go.
- * Give Match a member for marking which subtrees it has visited, and
-   storing them in an internal list.  If a substitution is not in force,
-   this method should not do anything.  The one exception is that the first
-   time this method is called, it should store the parameter as the whole
-   pattern tree, whether or not it adds it to the subtree list.
  * Give Match a `copy()` method.
  * Give Match a method for searching the whole pattern for all
    metavariables and then creating instantiations for all those that don't
