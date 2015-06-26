@@ -20,17 +20,12 @@ required order of completion.
 ## Matching Module
 
 Implement all of the following, creating unit tests for them as you go.
- * Give Match a member that checks whether it (a) has a substitution, and
-   (b) that substitution is required, and (c) applying it would alter any of
-   the already-visited subtrees.  Return true if all are true, false
-   otherwise.  Call this `backCheckSubstitution()`.
  * When Match stores a substitution, do all possible metavariable
-   replacements on both halves of it.  If it becomes fully instantiated then
-   return the result of `backCheckSubstitution()`.  Otherwise return true.
+   replacements on both halves of it.  Return the result of
+   `backCheckSubstitution()`.
  * Augment Match's `set` so that it applies the metavariable instantiation
    being stored, immediately, to both halves of any substitution that it has
-   stored.  If it becomes fully instantiated then return the result of
-   `backCheckSubstitution()`.  Otherwise return true.
+   stored.  Return the result of `backCheckSubstitution()`.
 
 Now, the main routine.
  * Implement the matching algorithm after the following psuedocode.

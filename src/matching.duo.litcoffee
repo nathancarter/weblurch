@@ -276,6 +276,64 @@ from the unused list as just described.
                 if not @has metavariable
                     @set metavariable, OM.variable "unused_#{++last}"
 
+### Back-checking
+
+When a match object has a required substitution, there is always the
+possibility that, when that substitution becomes fully instantiated (i.e.,
+all its metavariables have assigned values), the resulting substitution is
+inconsistent with some already-visited subtree.  For instance, it may be
+that everything in the pattern has been matching the expression fine for an
+initial set of tree nodes, then we find that we're under a substitution that
+requires replacing all a's with b's.  Back-checking, we find some a's in the
+pattern, and thus the match must fail, since they must change to b's.
+
+We therefore provide the following function.  It returns false if
+back-checking would cause the match to fail, or true if it would not, *or*
+if there is just not enough information yet to tell.  Thus a return value of
+true essentially means, "Keep going, everything looks okay for now."
+
+        backCheckSubstitution : =>
+
+If we're not within a required substitution, then there's nothing to worry
+about.
+
+            if not @hasSubstitution() or not @getSubstitutionRequired()
+                return true
+
+If the substitution has any uninstantiated metavariables in it, then we
+cannot yet determine anything for sure, so we return true to indicate that
+we don't yet have enough information to definitively fail the match.
+
+            left = @applyTo @getSubstitutionLeft()
+            if left.descendantsSatisfying( isMetavariable ).length > 0
+                return true
+            right = @applyTo @getSubstitutionLeft()
+            if right.descendantsSatisfying( isMetavariable ).length > 0
+                return true
+
+If the match doesn't actually change anything, then it can't be a reason for
+failure.
+
+            if left.equals right then return true
+
+Since the left and right are different, if the left occurs anywhere in a
+subtree we've visited, it must cause us to fail the match.  However, if
+there are still uninstantiated metavariables in the subtree, we ignore that
+subtree because we don't yet know whether it matters.
+
+            isACopy = ( x ) -> x.equals left
+            for visited in @getVisitedList()
+                filled = @applyTo visited
+                metavariables = filled.descendantsSatisfying isMetavariable
+                if metavariables.length > 0 then continue
+                if filled.descendantsSatisfying( isACopy ).length > 0
+                    return false
+
+If the above loop found no copies of the left hand side of the substitution
+in the visited subtrees, then the check passes.
+
+            true
+
 ## Matching Algorithm
 
 NOTE:  This module is not yet complete!

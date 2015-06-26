@@ -546,3 +546,11 @@ avoids them as well.
             expect( m.has 'mv2' ).toBeTruthy()
             expect( m.get( 'mv1' ).equals quick 'unused_345' ).toBeTruthy()
             expect( m.get( 'mv2' ).equals quick 'unused_346' ).toBeTruthy()
+
+### Back-checking
+
+We do not test the `backCheckSubstitution()` routine in the Match class,
+because it would be complex to contrive all the man situations in which it
+would need to be tested.  We already have extensive tests planned for the
+actual matching algorithm, which uses `backCheckSubstitution()` constantly,
+so we will consider those indirect tests sufficient.
