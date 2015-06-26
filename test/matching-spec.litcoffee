@@ -399,3 +399,56 @@ no impact on the visited list or pattern.
             expect( m.getVisitedList()[3].sameObjectAs \
                 subst.children[1].children[2] ).toBeTruthy()
             expect( m.getPattern().sameObjectAs pattern ).toBeTruthy()
+
+### should be able to copy themselves
+
+Match objects provide a copy function; we test it briefly here.  No
+extensive testing is done, because the copy function is not complex.
+
+        it 'should be able to copy themselves', ->
+
+Construct an empty match and make a copy.  Verify that they have everything
+in common.
+
+            m = new Match
+            c = m.copy()
+            expect( m is c ).toBeFalsy()
+            expect( c.variables() ).toEqual [ ]
+            expect( c.hasSubstitution() ).toBeFalsy()
+            expect( c.getPattern() ).toBeUndefined()
+            expect( c.getVisitedList() ).toEqual [ ]
+
+Add some things to each part of `m`, then verify that `c` has not changed.
+
+            pattern = quick 'f(x)'
+            left = quick 'a'
+            right = quick 'b'
+            m.markVisited pattern
+            m.setSubstitution left, right, false
+            m.markVisited pattern.children[0]
+            m.markVisited pattern.children[1]
+            m.set 'A', left
+            m.set 'B', right
+            expect( m is c ).toBeFalsy()
+            expect( c.variables() ).toEqual [ ]
+            expect( c.hasSubstitution() ).toBeFalsy()
+            expect( c.getPattern() ).toBeUndefined()
+            expect( c.getVisitedList() ).toEqual [ ]
+
+Make a second copy of `m` and verify that all this new data is preserved
+into the copy.
+
+            c2 = m.copy()
+            expect( c2.variables().sort() ).toEqual [ 'A', 'B' ]
+            expect( c2.get( 'A' ).equals left ).toBeTruthy()
+            expect( c2.get( 'B' ).equals right ).toBeTruthy()
+            expect( c2.hasSubstitution() ).toBeTruthy()
+            expect( c2.getSubstitutionLeft().equals left ).toBeTruthy()
+            expect( c2.getSubstitutionRight().equals right ).toBeTruthy()
+            expect( c2.getSubstitutionRequired() ).toBeFalsy()
+            expect( c2.getPattern().sameObjectAs pattern ).toBeTruthy()
+            expect( c2.getVisitedList().length ).toBe 2
+            expect( c2.getVisitedList()[0].sameObjectAs \
+                pattern.children[0] ).toBeTruthy()
+            expect( c2.getVisitedList()[1].sameObjectAs \
+                pattern.children[1] ).toBeTruthy()

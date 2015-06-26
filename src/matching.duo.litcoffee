@@ -60,7 +60,7 @@ A match object represents the results of a successful matching operation,
 and thus is a map from metavariable names to OpenMath expressions that can
 be used to instantiate those metavariables.
 
-    exports.Match = class
+    exports.Match = Match = class
 
 ### Match constructor
 
@@ -198,6 +198,30 @@ modify them unless you intend to modify the pattern itself.
 
         getVisitedList : => @visited[..]
         getPattern : => @pattern
+
+### Copying match objects
+
+It is straightforward to copy a match object; just copy all of its members.
+But it matters which ones are deeply copied and which ones are not.  Here
+are the details.
+ * The values in the map are copies of those in the original map.
+ * The values in the visited list are equal to those in the original map,
+   but the array itself is a copy.
+ * The result's substitution is a deep copy of this object's substitution.
+ * The pattern is assigned to the result as well, not deeply copied.
+
+        copy : =>
+            result = new Match
+            for own key, value of @map
+                result.map[key] = value.copy()
+            result.visited = @visited[..]
+            if @substitution?
+                result.substitution =
+                    leftHandSide : @substitution.leftHandSide.copy()
+                    rightHandSide : @substitution.rightHandSide.copy()
+                    required : @substitution.required
+            if @pattern? then result.pattern = @pattern
+            result
 
 ## Matching Algorithm
 

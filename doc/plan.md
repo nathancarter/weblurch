@@ -20,7 +20,6 @@ required order of completion.
 ## Matching Module
 
 Implement all of the following, creating unit tests for them as you go.
- * Give Match a `copy()` method.
  * Give Match a method for searching the whole pattern for all
    metavariables and then creating instantiations for all those that don't
    yet have them, to names like "unused_1", "unused_2", ...
