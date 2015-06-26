@@ -4,7 +4,7 @@
 Here we import the module we're about to test and the related OM module that
 we'll use when testing.
 
-    { Match, setMetavariable, clearMetavariable, isMetavariable } =
+    { Match, setMetavariable, clearMetavariable, isMetavariable, matches } =
         require '../src/matching.duo'
     { OM, OMNode } = require '../src/openmath.duo'
 
@@ -561,4 +561,88 @@ This section is the most important in this test suite, and checks many cases
 of the main pattern-matching algorithm.
 
     describe 'The pattern-matching algorithm', ->
-        throw 'TESTS NOT YET COMPLETE'
+
+### should work for atomic patterns
+
+The following tests are for the case where the pattern is atomic, first when
+it is not a metavariable, then when it is.
+
+        it 'should work for atomic patterns', ->
+
+Matching `a` to `a` should yield `[ { } ]`.
+
+            result = matches quick( 'a' ), quick( 'a' )
+            expect( result.length ).toBe 1
+            expect( result[0].map ).toEqual { }
+
+Matching `a` to `b` should yield `[ ]`.
+
+            result = matches quick( 'a' ), quick( 'b' )
+            expect( result.length ).toBe 0
+
+Matching `a` to `2` should yield `[ ]`.
+
+            result = matches quick( 'a' ), quick( '2' )
+            expect( result.length ).toBe 0
+
+Matching `a` to `f(x)` should yield `[ ]`.
+
+            result = matches quick( 'a' ), quick( 'f(x)' )
+            expect( result.length ).toBe 0
+
+Matching `9` to `a` should yield `[ { } ]`.
+
+            result = matches quick( '9' ), quick( '9' )
+            expect( result.length ).toBe 1
+            expect( result[0].map ).toEqual { }
+
+Matching `9` to `b` should yield `[ ]`.
+
+            result = matches quick( '9' ), quick( 'b' )
+            expect( result.length ).toBe 0
+
+Matching `9` to `2` should yield `[ ]`.
+
+            result = matches quick( '9' ), quick( '2' )
+            expect( result.length ).toBe 0
+
+Matching `9` to `f(x)` should yield `[ ]`.
+
+            result = matches quick( '9' ), quick( 'f(x)' )
+            expect( result.length ).toBe 0
+
+Matching `"slow"` to `a` should yield `[ { } ]`.
+
+            result = matches quick( '"slow"' ), quick( '"slow"' )
+            expect( result.length ).toBe 1
+            expect( result[0].map ).toEqual { }
+
+Matching `"slow"` to `b` should yield `[ ]`.
+
+            result = matches quick( '"slow"' ), quick( 'b' )
+            expect( result.length ).toBe 0
+
+Matching `"slow"` to `2` should yield `[ ]`.
+
+            result = matches quick( '"slow"' ), quick( '2' )
+            expect( result.length ).toBe 0
+
+Matching `"slow"` to `f(x)` should yield `[ ]`.
+
+            result = matches quick( '"slow"' ), quick( 'f(x)' )
+            expect( result.length ).toBe 0
+
+Matching `A` (now a metavariable) to anything should yield `[ A : thing ]`.
+
+            result = matches quick( '_A' ), quick( 'a' )
+            expect( result.length ).toBe 1
+            expect( result[0].variables() ).toEqual [ 'A' ]
+            expect( result[0].get( 'A' ).equals quick 'a' ).toBeTruthy()
+            result = matches quick( '_A' ), quick( '23645' )
+            expect( result.length ).toBe 1
+            expect( result[0].variables() ).toEqual [ 'A' ]
+            expect( result[0].get( 'A' ).equals quick '23645' ).toBeTruthy()
+            result = matches quick( '_A' ), quick( 'f(x)' )
+            expect( result.length ).toBe 1
+            expect( result[0].variables() ).toEqual [ 'A' ]
+            expect( result[0].get( 'A' ).equals quick 'f(x)' ).toBeTruthy()

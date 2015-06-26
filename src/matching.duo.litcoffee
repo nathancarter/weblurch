@@ -356,7 +356,7 @@ Determine whether we're the outermost call in the recursion, for use below.
 Mark that we've visited this subtree of the pattern and expression.  If the
 substitution we're under breaks the match already, then give up.
 
-        if not soFar.visited pattern, expression then return false
+        if not soFar.markVisited pattern, expression then return false
 
 Handle patterns of the form `x[y=z]` and `x[y~z]`.
 

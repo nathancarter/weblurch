@@ -29,15 +29,6 @@ required order of completion.
     pattern             expression      results
     -------             ----------      -------
 
-    ATOMICS
-
-    a                   a               [{}]
-    a                   b               []
-    a                   2               []
-    a                   f(x)            []
-    A                   anything        [{A:expression}] for various exprs
-        repeat these tests for other atomic types besides variable a
-
     COMPOUNDS
 
     A(x)                f(x)            [{A:f}]
