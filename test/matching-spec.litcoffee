@@ -913,7 +913,7 @@ applications.
 ### should handle instances of universal elimination
 
 The desktop version of Lurch (v0.8) came with libraries defining the
-universal elimination rule of first-order logic as follows. From forall x,
+universal elimination rule of first-order logic as follows.  From forall x,
 A, conclude A[x=t].  We test several valid and invalid uses of the rule,
 ensuring that the matching algorithm approves of the valid ones and
 disapproves of the invalid ones.
@@ -1014,3 +1014,162 @@ matching algorithm.
                 .toBeTruthy()
             expect( result[0].get( 'T' ).equals quick 'X' ).toBeTruthy()
             expect( result[0].get( 'X' ).equals quick 'A' ).toBeTruthy()
+
+### should handle instances of existential elimination
+
+The desktop version of Lurch (v0.8) came with libraries defining the
+existential elimination rule of first-order logic as follows.  From
+exists x, A and the declaration of c as a constant, conclude A[x=c].  We
+test several valid and invalid uses of the rule, ensuring that the matching
+algorithm approves of the valid ones and disapproves of the invalid ones.
+
+For the sake of brevity, we encode the existential quantifier as the symbol
+`exi.sts`, below.  We will also abbreviate constant declarations using the
+symbol `dec.con`.  We form rules using `list` as in earlier tests in this
+file.
+
+        it 'should handle instances of existential elimination', ->
+
+In each test below, the rule to match is the following.
+
+            rule = OM.app OM.var( 'list' ),
+                quick( 'exi.sts[_X,_A]' ), quick( 'dec.con(_C)' ),
+                reqSub '_A', '_X', '_C'
+
+The instance of the rule will vary from test to test (and will sometimes not
+actually *be* an instance of the rule, at which point we expect the patterns
+not to match).
+
+Matching the rule to
+`list( exi.sts[t,lt(sq(t),0)] , dec.con(r), lt(sq(r),0) )` should yield
+`[ { X : t, A : lt(sq(t),0), C : r } ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'exi.sts[t,lt(sq(t),0)]' ), quick( 'dec.con(r)' )
+                quick( 'lt(sq(r),0)' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'C', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'lt(sq(t),0)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'C' ).equals quick 'r' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 't' ).toBeTruthy()
+
+Matching the rule to
+`list( exi.sts[t,lt(sq(t),0)] , dec.con(r), lt(sq(t),0) )` should yield
+`[ ]`.
+
+This test is exactly the same as the previous, except that the variable t
+appears in the final step rather than the variable r.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'exi.sts[t,lt(sq(t),0)]' ), quick( 'dec.con(r)' )
+                quick( 'lt(sq(t),0)' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
+Matching the rule to
+`list( exi.sts[t,lt(sq(t),0)] , dec.con(t), lt(sq(r),0) )` should yield
+`[ ]`.
+
+This test is exactly the same as the previous, except that the t and r in
+the last two steps have been swapped.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'exi.sts[t,lt(sq(t),0)]' ), quick( 'dec.con(t)' )
+                quick( 'lt(sq(r),0)' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
+Matching the rule to
+`list( exi.sts[t,lt(sq(t),0)] , dec.con(t), lt(sq(t),0) )` should yield
+`[ { X : t, A : lt(sq(t),0), C : t } ]`.
+
+This is the same as the first test in this section, but with t's instead of
+r's.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'exi.sts[t,lt(sq(t),0)]' ), quick( 'dec.con(t)' )
+                quick( 'lt(sq(t),0)' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'C', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'lt(sq(t),0)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'C' ).equals quick 't' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 't' ).toBeTruthy()
+
+Matching the rule to
+`list( exi.sts[t,lt(sq(t),0)] , dec.con(plus(sq(phi),9)), lt(sq(plus(sq(phi),9)),0) )` should yield
+`[ { X : t, A : lt(sq(t),0), C : plus(sq(phi),9) } ]`.
+
+This is the same as the first test in this section, but with a larger
+expression instead of r.  That would not actually be valid in desktop Lurch,
+because you cannot declare any thing but a single identifier to be a
+constant, but it is a valid pattern match, which is what we're testing here.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'exi.sts[t,lt(sq(t),0)]' ),
+                quick( 'dec.con(plus(sq(phi),9))' )
+                quick( 'lt(sq(plus(sq(phi),9)),0)' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'C', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'lt(sq(t),0)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'C' ).equals quick 'plus(sq(phi),9)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 't' ).toBeTruthy()
+
+Matching the rule to
+`list( exi.sts[t,lt(sq(r),0)] , dec.con(r), lt(sq(r),0) )` should yield
+`[ { X : t, A : lt(sq(r),0), C : r } ]`.
+
+This is similar to several earlier tests in this section.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'exi.sts[t,lt(sq(r),0)]' ), quick( 'dec.con(r)' )
+                quick( 'lt(sq(r),0)' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'C', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'lt(sq(r),0)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'C' ).equals quick 'r' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 't' ).toBeTruthy()
+
+Matching the rule to
+`list( exi.sts[r,lt(sq(r),0)] , dec.con(r), lt(sq(r),0) )` should yield
+`[ { X : r, A : lt(sq(r),0), C : r } ]`.
+
+This is similar to several earlier tests in this section.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'exi.sts[r,lt(sq(r),0)]' ), quick( 'dec.con(r)' )
+                quick( 'lt(sq(r),0)' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'C', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'lt(sq(r),0)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'C' ).equals quick 'r' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 'r' ).toBeTruthy()
+
+Matching the rule to
+`list( exi.sts[C,lt(A,C)] , dec.con(X), lt(A,X) )` should yield
+`[ { X : C, A : lt(A,C), C : X } ]`.
+
+Note that this test intentionally uses variables that have exactly the same
+names as metavariables, to test whether this causes confusion for the
+matching algorithm.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'exi.sts[C,lt(A,C)]' ), quick( 'dec.con(X)' )
+                quick( 'lt(A,X)' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'C', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'lt(A,C)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'C' ).equals quick 'X' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 'C' ).toBeTruthy()

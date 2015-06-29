@@ -29,20 +29,6 @@ required order of completion.
     pattern             expression      results
     -------             ----------      -------
 
-    EXISTENTIAL ELIMINATION RULE
-
-    Let R = list( #X,A , const(C) , A[X=C] ).  Same story as above.
-
-    list( #t,t^2<0 , const(r), r^2<0 )  [{X:t, A:t^2<0, C:r}]
-    list( #t,t^2<0 , const(r), t^2<0 )  []
-    list( #t,t^2<0 , const(t), r^2<0 )  []
-    list( #t,t^2<0 , const(t), t^2<0 )  [{X:t, A:t^2<0, C:t}]
-    list( #t,t^2<0 , const(phi^2+9) ,
-          (phi^2+9)^2<0 )               [{X:t, A:t^2<0, C:phi^2+9}]
-    list( #t,r^2<0 , const(r), r^2<0 )  [{X:t, A:r^2<0, C:r}]
-    list( #r,r^2<0 , const(r), r^2<0 )  [{X:r, A:r^2<0, C:r}]
-    list( #C',A'<C' , const(X'), A'<X' )[{X:C', A:A'<C', C:X'}]
-
     UNIVERSAL INTRODUCTION RULE
 
     Let R = list( var(V) , A , @X,A[V=X] ).  Same story as above.
