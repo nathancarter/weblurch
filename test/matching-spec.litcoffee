@@ -1293,3 +1293,147 @@ matching algorithm.
                 .toBeTruthy()
             expect( result[0].get( 'V' ).equals quick 'V' ).toBeTruthy()
             expect( result[0].get( 'X' ).equals quick 'X' ).toBeTruthy()
+
+### should handle instances of existential introduction
+
+The desktop version of Lurch (v0.8) came with libraries defining the
+existential introduction rule of first-order logic as follows.  You may
+conclude exists x, A from any statement of the form A[x=t].  We test several
+valid and invalid uses of the rule, ensuring that the matching algorithm
+approves of the valid ones and disapproves of the invalid ones.
+
+The same uses of `exi.sts` and `list` apply as in earlier tests.
+
+        it 'should handle instances of existential introduction', ->
+
+In each test below, the rule to match is the following.
+
+            rule = OM.app OM.var( 'list' ),
+                reqSub( '_A', '_X', '_T' ), quick 'exi.sts[_X,_A]'
+
+The instance of the rule will vary from test to test (and will sometimes not
+actually *be* an instance of the rule, at which point we expect the patterns
+not to match).
+
+Matching the rule to the statements
+`and(in(5,nat),notin(5,evens))` and
+`exi.sts[t,and(in(t,nat),notin(t,evens))]` should yield
+`[ { A : and(in(t,nat),notin(t,evens)), X : t, T : 5 } ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'and(in(5,nat),notin(5,evens))' ),
+                quick( 'exi.sts[t,and(in(t,nat),notin(t,evens))]' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'T', 'X' ]
+            expect( result[0].get( 'A' ).equals \
+                quick 'and(in(t,nat),notin(t,evens))' ).toBeTruthy()
+            expect( result[0].get( 'T' ).equals quick '5' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 't' ).toBeTruthy()
+
+Matching the rule to the statements
+`uncble(minus(reals,rats))` and
+`exi.sts[S,uncble(S)]` should yield
+`[ { A : uncble(S), X : S, T : minus(reals,rats) } ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'uncble(minus(reals,rats))' ),
+                quick( 'exi.sts[S,uncble(S)]' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'T', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'uncble(S)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'T' ).equals \
+                quick 'minus(reals,rats)' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 'S' ).toBeTruthy()
+
+Matching the rule to the statements
+`uncble(k)` and `exi.sts[S,uncble(S)]` should yield
+`[ { A : uncble(S), X : S, T : minus(reals,rats) } ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'uncble(k)' ),
+                quick( 'exi.sts[S,uncble(S)]' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'T', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'uncble(S)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'T' ).equals quick 'k' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 'S' ).toBeTruthy()
+
+Matching the rule to the statements
+`and(in(4,nat),notin(5,evens))` and
+`exi.sts[t,and(in(t,nat),notin(t,evens))]` should yield
+`[ ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'and(in(4,nat),notin(5,evens))' ),
+                quick( 'exi.sts[t,and(in(t,nat),notin(t,evens))]' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
+Matching the rule to the statements
+`and(in(5,nat),notin(4,evens))` and
+`exi.sts[t,and(in(t,nat),notin(t,evens))]` should yield
+`[ ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'and(in(5,nat),notin(4,evens))' ),
+                quick( 'exi.sts[t,and(in(t,nat),notin(t,evens))]' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
+Matching the rule to the statements
+`and(in(5,nat),notin(5,evens))` and
+`exi.sts[x,and(in(t,nat),notin(t,evens))]` should yield
+`[ ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'and(in(5,nat),notin(5,evens))' ),
+                quick( 'exi.sts[x,and(in(t,nat),notin(t,evens))]' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
+Matching the rule to the statements
+`and(in(5,nat),notin(5,evens))` and
+`exi.sts[x,and(in(5,nat),notin(5,evens))]` should yield
+`[ ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'and(in(5,nat),notin(5,evens))' ),
+                quick( 'exi.sts[x,and(in(5,nat),notin(5,evens))]' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'T', 'X' ]
+            expect( result[0].get( 'A' ).equals \
+                quick 'and(in(5,nat),notin(5,evens))' ).toBeTruthy()
+            expect( result[0].get( 'T' ).equals \
+                quick 'unused_1' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 'x' ).toBeTruthy()
+
+Matching the rule to the statements `L` and `exi.sts[M,L]` should yield
+`[ ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'L' ), quick( 'exi.sts[M,L]' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'T', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'L' ).toBeTruthy()
+            expect( result[0].get( 'T' ).equals \
+                quick 'unused_1' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 'M' ).toBeTruthy()
+
+Matching the rule to the statements `L(M)` and `exi.sts[N,L(N)]` should
+yield `[ ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'L(M)' ), quick( 'exi.sts[N,L(N)]' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'T', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'L(N)' ).toBeTruthy()
+            expect( result[0].get( 'T' ).equals quick 'M' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 'N' ).toBeTruthy()

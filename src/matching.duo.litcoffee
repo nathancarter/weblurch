@@ -530,9 +530,37 @@ children or head symbols or bound variables or binding bodies.
 
 Now that we've determined that the pattern and expression have the same
 structure at this level, we must compute the match recursively on the
-children.  We thus form an array of results, containing just the one match
-object we've been building so far, and then let that array grow as we test
-it against each child.
+children.  Before we can do so, however, we must verify the assumptions of
+this routine:  There can be no more than one substitution expression in the
+pattern, and it must appear as the last child.  If there is more than one,
+we throw an error.  If there is one, we permute the children to put it as
+the last.
+
+        substIndex = -1
+        isASubstitution = ( node ) ->
+            node.type is 'a' and \
+            ( ( node.children[0].equals Match.requiredSubstitution ) or \
+              ( node.children[0].equals Match.optionalSubstitution ) )
+        for pchild, index in pchildren
+            if pchild.descendantsSatisfying( isASubstitution ).length > 0
+                if substIndex > -1
+                    throw 'Only one substitution permitted in a pattern'
+                substIndex = index
+        if substIndex > -1
+            last = pchildren.length-1
+            [ pchildren[substIndex], pchildren[last] ] =
+                [ pchildren[last], pchildren[substIndex] ]
+            [ echildren[substIndex], echildren[last] ] =
+                [ echildren[last], echildren[substIndex] ]
+            mdebug '    reordered children to put substitution at end...'
+            mdebug '    pattern children:',
+                ( p.simpleEncode() for p in pchildren )
+            mdebug '    expression children:',
+                ( e.simpleEncode() for e in echildren )
+
+We now form an array of results, containing just the one match object we've
+been building so far, and then let that array grow as we test it against
+each child.
 
         results = [ soFar ]
         for pchild, index in pchildren

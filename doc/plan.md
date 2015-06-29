@@ -29,29 +29,6 @@ required order of completion.
     pattern             expression      results
     -------             ----------      -------
 
-    EXISTENTIAL INTRODUCTION RULE
-
-    Let R = list( A[X=T], #X,A ).  Same story as above.
-
-    in(5,nat)&notin(5,evens) ,
-        #t,in(t,nat)&notin(t,evens)     [{A:in(t,nat)&notin(t,evens), X:t,
-                                          T:5}]
-    uncble(minus(reals,rats)) ,
-        #S',uncble(S')                  [{A:uncble(S'), X:S',
-                                          T:minus(reals,rats)}]
-    uncble(k) , #k,uncble(k)            [{A:uncble(k), X:k, T:k}]
-    in(4,nat)&notin(5,evens) ,
-        #t,in(t,nat)&notin(t,evens)     []
-    in(4,nat)&notin(4,evens) ,
-        #t,in(t,nat)&notin(t,evens)     []
-    in(5,nat)&notin(5,evens) ,
-        #x,in(t,nat)&notin(t,evens)     []
-    in(5,nat)&notin(5,evens) ,
-        #x,in(5,nat)&notin(5,evens)     [{A:in(5,nat)&notin(5,evens), X:x,
-                                          T:unused_1}]
-    L' , #M',L'                         [{A:L', X:M', T:unused_1}]
-    L'(M') , #N',L'(N')                 [{A:L'(N'), X:N', T:M'}]
-
     EQUALITY ELIMINATION RULE
 
     Let R = list( A=B , S , S[A~B] ).  Same story as above.
@@ -109,6 +86,8 @@ required order of completion.
     Also verify that if there are metavariables in the expression, that an
     error is thrown.
 ```
+ * Add tests to verify that if you try to put more than one substitution
+   expression into a pattern (whether nested or not) an error is thrown.
 
 ## Parsing
 
