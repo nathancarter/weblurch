@@ -81,50 +81,69 @@ visited list is discussed [further below](#visiting).
 ### Metavariable mapping
 
 We then provide functions for getting, setting, clearing, querying, and
-using the map.  Parameters with the name "variable" can either be strings
-(the name of the variable) or actual OpenMath variable objects, in which
-case their name will be used.  Parameters with the name "expr" can be any
-OpenMath expressions, and only copies of them will be stored in this object
-when queried, the copies will be returned.
+using the map.  Parameters with the name "varOrSym" can either be strings
+(the simple encoding notation of a variable or symbol, such as "f" or "a.b")
+or actual OpenMath variable or symbol objects, in which case their simple
+encodings will be computed and used instead of the objects themselves.
+Parameters with the name "expr" can be any OpenMath expressions, and only
+copies of them will be stored in this object when queried, the copies will
+be returned.
 
-The `set` function assigns an expression to a variable in the mapping.  A
-copy of the given expression is stored.
+The `set` function assigns an expression to a variable or symbol in the
+mapping.  A copy of the given expression is stored.
 
         set : ( varOrSym, expr ) =>
             if varOrSym.simpleEncode?
                 varOrSym = varOrSym.simpleEncode()
             @map[varOrSym] = expr.copy()
-            @backCheckSubstitution()
 
-The `get` function queries the mapping for a variable name, and returns the
-same copy made at the time `set` was called (which is also still stored
+It then updates the "unavailable" list for the substitution, which will make
+sense after reading [the substitutions section below](#substitutions).
+
+            if @substitution?
+                @substitution.unavailable =
+                    ( vname for vname in @substitution.unavailable \
+                      when vname isnt varOrSym )
+
+The `get` function queries the mapping for a variable or symbol, and returns
+the same copy made at the time `set` was called (which is also still stored
 internally in the map).
 
         get : ( varOrSym ) => @map[varOrSym.simpleEncode?() ? varOrSym]
 
-The `clear` function removes a variable from the map (and whatever
+The `clear` function removes a variable or symbol from the map (and whatever
 expression it was paired with).
 
         clear : ( varOrSym ) =>
-            delete @map[varOrSym.simpleEncode?() ? varOrSym]
+            varOrSym = varOrSym.simpleEncode?() ? varOrSym
+            delete @map[varOrSym]
 
-The `has` function just returns a true or false value indicating whether
-the variable appears in the map as a key.
+Like `set`, this function, too, updates the "unavaiable" list in the
+substitution.  To understand this, refer to [the substitutions section
+below](#substitutions).
+
+            if varOrSym in ( @substitution?.metavariables ? [ ] )
+                if varOrSym not in @substitution.unavailable
+                    @substitution.unavailable.push varOrSym
+
+The `has` function just returns true or false value indicating whether the
+variable or symbol appears in the map as a key.
 
         has : ( varOrSym ) =>
             @map.hasOwnProperty varOrSym.simpleEncode?() ? varOrSym
 
-The `variables` function lists the names of all metavariables that appear in
-the mapping, in no particular order.  This actually includes symbols also,
-and thus the results will be an array of strings containing things like
-"x" and "y.z".
+The `keys` function lists the names of all variables or symbols that appear
+as keys in the mapping, in no particular order.  The results will be an
+array of strings containing simple encodings of variables and symbols, such
+as "x" and "y.z".
 
-        variables : => Object.keys @map
+        keys : => Object.keys @map
 
-The map can be applied to an expression, and all metavariables in it will
-be replaced with a copy of their values in the map.  Those metavariables
-that do not appear in the map will be unaffected.  This is not performed
-in-place in the given pattern, but rather in a copy, which is returned.
+The map can be applied to an expression, and all metavariables in it
+(whether they are variables or symbols) will be replaced with a copy of
+their values in the map.  Those metavariables that do not appear in the map
+will be unaffected.  This is not performed in-place in the given pattern,
+but rather in a copy, which is returned.
 
         applyTo : ( pattern ) =>
             result = pattern.copy()
@@ -135,10 +154,10 @@ in-place in the given pattern, but rather in a copy, which is returned.
 
 ### Substitutions
 
-This matching package supports patterns that express optional or required
+This module supports patterns that express optional or required
 substitutions.  The informal notation `A[x=y]` means "the expression `A`
 with every free occurrence of the subexpression `x` replaced by the
-subexpression `y`, where `y` is free to replace `x`."  The informal notation
+subexpression `y`, when `y` is free to replace `x`."  The informal notation
 `A[x~y]` is the same idea, but with "every occurrence" replaced by "zero or
 more occurrences."  Thus `A[x=y]` is a computation that can be done, but
 `A[x~y]` is a criterion that can be matched against.
@@ -153,113 +172,103 @@ applications of the following two head symbols.
 So for example, `A[x=y]` could be expressed as
 `OM.simple 'lurch.replaceAll(A,x,y)'`.
 
-When these show up in matching patterns, the matching algorithm must track
-them.  Thus this class provides methods for storing and querying the
-replacement pattern that is in force, if any, what type it is, and what its
-arguments are.
+[The matching algorithm defined below](#matching-algorithm) must track where
+a substitution expression appears in the pattern, and what its parts are.
+Thus this class provides methods for storing and querying the substitution
+that is in effect, if any, what type it is, and what its arguments are.  The
+matching algorithm can then track substitution data using Match objects.
 
-First, a method for storing a substitution.  In `A[x=y]`, `x` is the left
-hand side, `y` is the right hand side, and we could pass both of those
-subexpressions as the first two arguments of the following function.  You
-can safely pass the originals; they will be copied.  The third parameter, in
-that case, would be `true`, to indicate that it is a required substitution.
-If it had been `A[x~y]`, then the third parameter would be false.
+First, a method for storing a substitution.  In `A[x=y]`, `x` is called the
+left hand side, `y` is called the right hand side.  When calling the
+following function to store that substitution pattern, you pass the entire
+expression and its two sides and its type (required, =, or optional, ~) are
+extracted and stored, not as copies but as the originals.
 
-        setSubstitution : ( leftHandSide, rightHandSide, required ) =>
+        setSubstitution : ( substitution ) =>
+            # console.log 'setting substitution:',
+            #     substitution.simpleEncode(), 'with children',
+            #     ( c.simpleEncode() for c in substitution.children )
             @substitution =
-                leftHandSide : leftHandSide.copy()
-                rightHandSide : rightHandSide.copy()
-                required : required
-            @backCheckSubstitution()
+                original : substitution
+                leftHandSide : substitution.children[2]
+                rightHandSide : substitution.children[3]
+                required : substitution.children[0].equals \
+                    Match.requiredSubstitution
+                metavariables : [ ]
 
-Second, several methods for querying the data stored using the previous
-function.
+This function also computes the list of metavariable names that appear in
+either side of the substitution, and then computes the subset of those names
+that do not yet appear as keys in the mapping.  This will help us know when
+the substitution has been fully determined (as this object's mapping grows).
+
+            leftMetavariables =
+                @substitution.leftHandSide.descendantsSatisfying \
+                    isMetavariable
+            for v in leftMetavariables
+                if v.name not in @substitution.metavariables
+                    @substitution.metavariables.push v.name
+            rightMetavariables =
+                @substitution.rightHandSide.descendantsSatisfying \
+                    isMetavariable
+            for v in rightMetavariables
+                if v.name not in @substitution.metavariables
+                    @substitution.metavariables.push v.name
+            @substitution.unavailable =
+                ( vname for vname in @substitution.metavariables \
+                  when not @map.hasOwnProperty vname )
+
+We also provide a reverse method, for removing a stored substitution.
+
+        clearSubstitution : => delete @substitution
+
+To go with the above function for registering a substitution pattern, we
+also provide several methods for querying the substitution data stored.
+Remember that the original values are returned, so do not modify them unless
+that is your intent.
 
         hasSubstitution : => @substitution?
         getSubstitutionLeft : => @substitution?.leftHandSide
         getSubstitutionRight : => @substitution?.rightHandSide
         getSubstitutionRequired : => @substitution?.required
-
-Finally, a method for removing a stored substitution.
-
-        clearSubstitution : => delete @substitution
-
-### Visiting
-
-The pattern-matching algorithm implemented later in this file will need to
-store in its match object(s) a list of subexpressions of the pattern, as it
-visits them.  We thus provide the following functions to enable that.
-
-You can only mark a node visited if a substitution is in force.  This is
-because we only track visited nodes so that a substitution can later check
-to be sure that it is consistent with all subtrees of its node in the
-pattern, which is why we're tracking a visited list in the first place.
-(See [the matching algorithm](#matching-algorithm) further below.)
-
-The first time this function is called, it also saves the given nodes as the
-full pattern and expression, because the function is called on all nodes in
-the pattern and expression in tree order; thus the first call will be the
-pattern and expression themselves.  The functions in the [completing a
-match](#completing-a-match) section below will use the pattern and
-expression data.
-
-        markVisited : ( patternNode, expressionNode ) =>
-            if @hasSubstitution() then @visited.push patternNode
-            @pattern ?= patternNode
-            @expression ?= expressionNode
-            @backCheckSubstitution()
-
-And now two getters for the same stored data.  Note that the visited list is
-returned as the actual nodes visited, not copies, so be careful not to
-modify them unless you intend to modify the pattern itself.
-
-        getVisitedList : => @visited[..]
-        getPattern : => @pattern
-        getExpression : => @expression
-
-### Copying match objects
-
-It is straightforward to copy a match object; just copy all of its members.
-But it matters which ones are deeply copied and which ones are not.  Here
-are the details.
- * The values in the map are copies of those in the original map.
- * The values in the visited list are equal to those in the original map,
-   but the array itself is a copy.
- * The result's substitution is a deep copy of this object's substitution.
- * The pattern is assigned to the result as well, not deeply copied.
-
-        copy : =>
-            result = new Match
-            for own key, value of @map
-                result.map[key] = value.copy()
-            result.visited = @visited[..]
-            if @substitution?
-                result.substitution =
-                    leftHandSide : @substitution.leftHandSide.copy()
-                    rightHandSide : @substitution.rightHandSide.copy()
-                    required : @substitution.required
-            if @pattern? then result.pattern = @pattern
-            if @expression? then result.expression = @expression
-            result
+        getSubstitutionNode : => @substitution?.original
 
 ### Completing a match
 
-When the match recursion has been run, but not all metavariables were forced
-into a particular instantiation, [the matching
-algorithm](#matching-algorithm) will still want to return a match object
-that has values for all metavariables in it.  This function finds all
-metavariables in the pattern, and for those that do not yet have an
-assignment, it creates a new assignment to a variable unused in the pattern,
-the expression, and any of the existing instantiations.
+When the [the matching algorithm](#matching-algorithm) has been run, but not
+all metavariables were forced into a particular instantiation, we will still
+want to return a match object that has values for *all* metavariables.  We
+therefore provide a function that finds all metavariables in the pattern,
+and for those that do not yet have an assignment, it creates a new
+assignment to a variable unused in the pattern, the expression, and any of
+the existing instantiations.
+
+In order to do so, we must know what the outermost pattern and expression
+are. We therefore begin by defining a simple function for storing the
+topmost pattern and expression, that is, those that were passed to the
+outermost call to `matches`.  That outermost execution of the `matches`
+function is responsible for calling this function to store those two values.
+They are necessary for the purpose just described.
+
+        storeTopmostPair : ( pattern, expression ) =>
+            @pattern = pattern
+            @expression = expression
+
+And now the function that completes a match object by instantiating all
+metavariables in the pattern.  We instantiate them with new variables of
+the form "unused_N" for various positive integers N, starting with the
+smallest N for which no instance of "unused_N" appears in the pattern,
+expression, or current match data.
+
+This function modifies this match object in-place.
 
         complete : =>
 
-The function depends upon the pattern and expression being defined.
+We need the pattern and expression, so give up if they're not here.
 
-            if not @pattern? or not @expression? then return
+            return unless @pattern? and @expression?
 
-We will create variables of the form "unused_n" for various positive
-integers n.  We must find a complete list of such variables already in use
+We will create variables of the form "unused_N" for various positive
+integers N.  We must find a complete list of such variables already in use
 (unlikely as that may be).  We search in the pattern, the expression, and
 all existing instantiations in `@map`.
 
@@ -272,7 +281,7 @@ all existing instantiations in `@map`.
                 unused =
                     unused.concat value.descendantsSatisfying unusedCheck
 
-We then begin counting after the last of them.  E.g., if it was unused_7,
+We then begin counting after the largest of them.  E.g., if it was unused_7,
 we start using unused_8, unused_9, etc.
 
             integers = [ 0 ] # ensure there is one
@@ -282,71 +291,43 @@ we start using unused_8, unused_9, etc.
             integers = integers.sort ( a, b ) -> a - b
             last = integers[integers.length-1]
 
-Find all uninstantiated metavariables in the pattern, and given them values
-from the unused list as just described.
+Find all uninstantiated metavariables in the pattern, and give them values
+from the unused list, as just described.
 
             metavariables = @pattern.descendantsSatisfying isMetavariable
             for metavariable in metavariables
                 if not @has metavariable
                     @set metavariable, OM.variable "unused_#{++last}"
 
-### Back-checking
+### Copying match objects
 
-When a match object has a required substitution, there is always the
-possibility that, when that substitution becomes fully instantiated (i.e.,
-all its metavariables have assigned values), the resulting substitution is
-inconsistent with some already-visited subtree.  For instance, it may be
-that everything in the pattern has been matching the expression fine for an
-initial set of tree nodes, then we find that we're under a substitution that
-requires replacing all a's with b's.  Back-checking, we find some a's in the
-pattern, and thus the match must fail, since they must change to b's.
+It is straightforward to copy a match object; just copy all of its members.
+But it matters which ones are deeply copied and which ones are not.  Here
+are the details.
+ * The values in the map are copies of those in the original map.
+ * The values in the visited list are equal to those in the original map,
+   but the array itself is a copy.
+ * The result's substitution is a shallow copy of this object's
+   substitution; only the variable arrays are copied deeply.
+ * The pattern and expression are not deeply copied; the same objects are
+   shared with the result of this function.
 
-We therefore provide the following function.  It returns false if
-back-checking would cause the match to fail, or true if it would not, *or*
-if there is just not enough information yet to tell.  Thus a return value of
-true essentially means, "Keep going, everything looks okay for now."
-
-        backCheckSubstitution : =>
-
-If we're not within a required substitution, then there's nothing to worry
-about.
-
-            if not @hasSubstitution() or not @getSubstitutionRequired()
-                return true
-
-If the substitution has any uninstantiated metavariables in it, then we
-cannot yet determine anything for sure, so we return true to indicate that
-we don't yet have enough information to definitively fail the match.
-
-            left = @applyTo @getSubstitutionLeft()
-            if left.descendantsSatisfying( isMetavariable ).length > 0
-                return true
-            right = @applyTo @getSubstitutionLeft()
-            if right.descendantsSatisfying( isMetavariable ).length > 0
-                return true
-
-If the match doesn't actually change anything, then it can't be a reason for
-failure.
-
-            if left.equals right then return true
-
-Since the left and right are different, if the left occurs anywhere in a
-subtree we've visited, it must cause us to fail the match.  However, if
-there are still uninstantiated metavariables in the subtree, we ignore that
-subtree because we don't yet know whether it matters.
-
-            isACopy = ( x ) -> x.equals left
-            for visited in @getVisitedList()
-                filled = @applyTo visited
-                metavariables = filled.descendantsSatisfying isMetavariable
-                if metavariables.length > 0 then continue
-                if filled.descendantsSatisfying( isACopy ).length > 0
-                    return false
-
-If the above loop found no copies of the left hand side of the substitution
-in the visited subtrees, then the check passes.
-
-            true
+        copy : =>
+            result = new Match
+            for own key, value of @map
+                result.map[key] = value.copy()
+            result.visited = @visited[..]
+            if @substitution?
+                result.substitution =
+                    original : @substitution.original
+                    leftHandSide : @substitution.leftHandSide
+                    rightHandSide : @substitution.rightHandSide
+                    required : @substitution.required
+                    metavariables : @substitution.metavariables[..]
+                    unavailable : @substitution.unavailable[..]
+            if @pattern? then result.pattern = @pattern
+            if @expression? then result.expression = @expression
+            result
 
 ### For debugging
 
@@ -359,14 +340,19 @@ object.
             for own key, value of @map ? { }
                 if result.length > 1 then result += ','
                 result += "#{key}:#{value.simpleEncode()}"
-            result + '}'
+            result += '}'
+            if @hasSubstitution()
+                result += '[' + @getSubstitutionLeft().simpleEncode() + \
+                    ( if @getSubstitutionRequired() then '=' else '~' ) + \
+                    @getSubstitutionRight().simpleEncode() + ']'
+            result
 
 ## Matching Algorithm
 
 The main purpose of this module is to expose this function to the client. It
 matches the given pattern against the given expression and returns a match
-object, a mapping from metavariables to their instantiations.  The thid
-parameter is for internal use only during recursion, and should not be
+object, a mapping from metavariables to their instantiations.  The third and
+fourth parameters are for internal use during recursion, and should not be
 passed by clients.  To see many examples of how this routine functions, see
 [its unit tests](../test/matching-spec.litcoffee#matching).
 
@@ -376,84 +362,182 @@ Determine whether we're the outermost call in the recursion, for use below.
 
         outermost = not soFar?
         soFar ?= new Match
+        # console.log "#{if outermost then '\n' else ''}MATCHES:",
+        #     pattern?.simpleEncode?() ? pattern,
+        #     expression?.simpleEncode?() ? expression,
+        #     "#{soFar}"
 
-Mark that we've visited this subtree of the pattern and expression.  If the
-substitution we're under breaks the match already, then give up.
+If this is the outermost call, then apply all substitutions in the
+expression.  (The expression must contain only required substitutions, not
+optional ones.)
 
-        if not soFar.markVisited pattern, expression then return [ ]
+        if outermost
+            soFar.storeTopmostPair pattern, expression
+            substitutions = expression.descendantsSatisfying ( x ) ->
+                x.type is 'a' and x.children.length is 4 and \
+                    x.children[0].equals Match.requiredSubstitution
+            for substitution in substitutions
+                left = substitution.children[2]
+                right = substitution.children[3]
+                substitution.replaceWith substitution.children[1]
+                substitution.replaceFree left, right
 
-Handle patterns of the form `x[y=z]` and `x[y~z]`.
+We build one final preparatory function before diving into the actual
+algorithm.  This function should be returned when the match would fail
+without the aid of any substitution that may be in effect.  This function
+checks to see if the current substitution in effect (if any) can make the
+match pass; if so, it returns the array of match objects corresopnding to
+the successful matches.  If not, it returns the empty array.
 
-        if pattern.type is 'a' and pattern.children.length is 3
-            required = pattern.children[0].equals \
-                Match.requiredSubstitution
-            optional = pattern.children[0].equals \
-                Match.optionalSubstitution
-            if required or optional
-                if soFar.hasSubstitution()
-                    throw 'Only one substitution instance permitted in a
-                        pattern'
-                if not soFar.setSubstitution pattern.children[1], \
-                    pattern.children[2], required then return [ ]
-                results = matches pattern.children[1], expression, soFar
-                result.clearSubstitution() for result in results
-                return results
+At many points in the algorithm below, rather than returning an empty array
+to indicate a failed match, we return `trySubs()`, because it gives any
+substitution currently in effect a chance to save the day.
 
-Handle patterns that are single metavariables.
-
-        if isMetavariable pattern
-            if test = soFar.get pattern
-                return if test.equals expression, no then [ soFar ] else [ ]
-            if not soFar.set pattern, expression then return [ ]
-            return [ soFar ]
-
-Define a function for handling when the match would fail without the
-substitution expression.
-
-        pair = ( a, b ) ->
-            OM.application OM.symbol( 'pair', 'lurch' ), a.copy(), b.copy()
         trySubs = ->
             if not soFar.hasSubstitution() then return [ ]
-            sub = pair soFar.getSubstitutionLeft(),
-                soFar.getSubstitutionRight()
+            # console.log 'match of', pattern.simpleEncode(), 'to',
+            #     expression.simpleEncode(), 'failed; trying subs...',
+            #     soFar.toString()
+            sub = OM.application soFar.getSubstitutionLeft(),
+                soFar.getSubstitutionRight() # easy pairing operation
+            soFar.clearSubstitution()
             [ walk1, walk2, result ] = [ pattern, expression, [ ] ]
-            while walk1?
-                result =
-                    result.concat matches pair( walk1, walk2 ), sub, soFar
+            while walk1? and walk2?
+                # console.log 'attempting subs at this level:',
+                #     OM.application( walk1, walk2 ).simpleEncode(),
+                #     sub.simpleEncode(), "#{soFar}..."
+                result = result.concat matches \
+                    OM.application( walk1, walk2 ), # easy pairing operation
+                    sub, soFar, no
                 [ walk1, walk2 ] = [ walk1.parent, walk2.parent ]
             result
 
-Now we enter the meat of structural matching.  If the types don't even
-match, then the only thing that might save us is a substitution, if there is
-one.
+Now the preparatory phase of the routine is complete, and we begin some of
+the cases of the actual matching algorithm.
 
-        if pattern.type isnt expression.type then return trySubs()
+If the patterns of the form `x[y=z]` or `x[y~z]`, proceed as follows, first
+detect which of the two it is.  Then ensure that this is the first
+substitution encountered in the pattern (since only one is permitted).  Then
+pop off its left and right hand sides, store them in the match object, and
+recur.  There is no need to filter the results after the recursion, because
+filtering only matters inside a substitution, and we are currently just
+outside of one.
 
-Handle atomic patterns.
+        if pattern.type is 'a' and pattern.children.length is 4 and \
+            ( pattern.children[0].equals( Match.requiredSubstitution ) or \
+              pattern.children[0].equals( Match.optionalSubstitution ) )
+            # console.log 'pattern is a substitution...'
+            if soFar.hasSubstitution()
+                throw 'Only one substitution permitted in a pattern'
+            soFar.setSubstitution pattern
+            results = matches pattern.children[1], expression, soFar
+            newResults = [ ]
+            for result in results
+                if pattern.children[0].equals Match.requiredSubstitution
+                    # console.log '\t** checking required substitution...',
+                    #     pattern.simpleEncode(), 'vs.',
+                    #     expression.simpleEncode()
+                    instantiated = result.applyTo pattern.children[1]
+                    # console.log '\t** instantiated pattern:',
+                    #     instantiated.simpleEncode()
+                    left = result.applyTo pattern.children[2]
+                    right = result.applyTo pattern.children[3]
+                    # console.log '\t** instantiated substitution:',
+                    #     left.simpleEncode(), '--->>',
+                    #     right.simpleEncode()
+                    instantiated.replaceFree left, right
+                    # console.log '\t** after replaceFree():',
+                    #     instantiated.simpleEncode()
+                    if not instantiated.equals expression
+                        # console.log '\t** NOT EQUAL -- REMOVING THIS RESULT'
+                        continue
+                    # else
+                    #     console.log '\t** EQUAL -- OK TO USE THIS RESULT'
+                result.clearSubstitution()
+                newResults.push result
+            # console.log '<--', ( "#{r}" for r in newResults )
+            return newResults
+
+If the pattern is a single metavariables, then there are two cases.  If it
+has an instantiation, then we must use that instantiation and either return
+the current match object or failure.  But if it has no instantiation, we can
+store the current expression as its instantiation, to permit the matching
+process to continue.
+
+        if isMetavariable pattern
+            # console.log 'pattern is a metavariable'
+            if test = soFar.get pattern
+                return if test.equals expression, no then [ soFar ] \
+                    else trySubs()
+            soFar.set pattern, expression
+            # console.log 'stored new assignment', pattern.simpleEncode(),
+            #     '=', expression.simpleEncode(), 'yielding', "#{soFar}"
+            result = [ soFar ]
+            # console.log '<--', ( "#{r}" for r in result )
+            return result
+
+If the types of the pattern and expression don't match, then the only thing
+that might save us is a substitution, if there is one.
+
+        # console.log 'comparing types...', pattern.type, expression.type
+        if pattern.type isnt expression.type
+            result = trySubs()
+            # console.log '<--', ( "#{r}" for r in result )
+            return result
+
+If the pattern is atomic, then it must flat-out equal the expression.  If
+this is not the case, we can only fall back on a possible substitution.
 
         if pattern.type in [ 'i', 'f', 'st', 'ba', 'sy', 'v' ]
-            return if pattern.equals expression, no then [ soFar ] \
-                else trySubs()
+            result = if pattern.equals expression, no
+                [ soFar ]
+            else
+                trySubs()
+            # console.log '<--', ( "#{r}" for r in result )
+            return result
 
-Non-atomic patterns must have the same size as their expressions.
+If the pattern is non-atomic, then it must match the expression
+structurally.  The first step in doing so is to have the same size.  We use
+`childrenSatisfying()` here because it returns all immediate subexpressions,
+children or head symbols or bound variables or binding bodies.
 
         pchildren = pattern.childrenSatisfying()
+        # console.log 'pattern children:',
+        #     ( p.simpleEncode() for p in pchildren )
         echildren = expression.childrenSatisfying()
-        if pchildren.length isnt echildren.length then return trySubs()
+        # console.log 'expression children:',
+        #     ( e.simpleEncode() for e in echildren )
+        if pchildren.length isnt echildren.length
+            result = trySubs()
+            # console.log '<--', ( "#{r}" for r in result )
+            return result
 
-Recur on children.
+Now that we've determined that the pattern and expression have the same
+structure at this level, we must compute the match recursively on the
+children.  We thus form an array of results, containing just the one match
+object we've been building so far, and then let that array grow as we test
+it against each child.
 
         results = [ soFar ]
-        for child1, index in pchildren
-            child2 = echildren[index]
+        for pchild, index in pchildren
+            echild = echildren[index]
+            # console.log 'recurring at', index, 'on', pchild.simpleEncode(),
+            #     'and', echild.simpleEncode(), 'with results',
+            #     ( "#{r}" for r in results )
             newResults = [ ]
             for sf in results
-                newResults = newResults.concat matches child1, child2,
+                newResults = newResults.concat matches pchild, echild,
                     sf.copy()
-            results = newResults
+            if ( results = newResults ).length is 0 then break
+        # console.log 'recursion complete; new result set:',
+        #     ( "#{r}" for r in results )
 
 Before returning the results, if we are the outermost call, instantiate all
-unused metavariables to things like "unused_1", etc.
+unused metavariables to things like "unused_1", etc.  And, of course, filter
+them through `markVisited` as usual.
 
         if outermost then result.complete() for result in results
+        # console.log 'results have been completed:',
+        #     ( "#{r}" for r in results )
+        # console.log '<--', ( "#{r}" for r in results )
         results

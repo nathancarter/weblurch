@@ -21,6 +21,8 @@ but with the property of being a metavariable.
 
     quick = ( string ) ->
         tree = OM.simple string
+        if typeof tree is 'string'
+            throw "Error calling quick on '#{string}': #{tree}"
         for variable in tree.descendantsSatisfying( ( x ) -> x.type is 'v' )
             if /^_/.test variable.name
                 variable.replaceWith OM.simple variable.name[1..]
@@ -31,6 +33,21 @@ but with the property of being a metavariable.
                     "#{symbol.cd[1..]}.#{symbol.name}"
                 setMetavariable symbol
         tree
+
+We also create two convenience functions for creating expressions of the
+form `x[y=z]` and `x[y~z]`, whose definitions appear in [the matching
+module itself](../src/matching.duo.litcoffee#substitutions).
+
+    reqSub = ( x, y, z ) ->
+        if x not instanceof OMNode then x = quick x
+        if y not instanceof OMNode then y = quick y
+        if z not instanceof OMNode then z = quick z
+        OM.application Match.requiredSubstitution, x, y, z
+    optSub = ( x, y, z ) ->
+        if x not instanceof OMNode then x = quick x
+        if y not instanceof OMNode then y = quick y
+        if z not instanceof OMNode then z = quick z
+        OM.application Match.optionalSubstitution, x, y, z
 
 ## Global functions and a class
 
@@ -116,9 +133,9 @@ matching algorithm is tested in the next section.)
 
 ### should correctly get, set, clear, and test their mapping
 
-We first test the `get`, `set`, `clear`, `has`, and `variables` functions
-that manipulate and query the variable-name-to-expression mapping stored in
-the Match object.
+We first test the `get`, `set`, `clear`, `has`, and `keys` functions that
+manipulate and query the variable-name-to-expression mapping stored in the
+Match object.
 
         it 'should correctly get, set, clear, and test their mapping', ->
 
@@ -148,27 +165,27 @@ OMNode.
             expect( m.get( a ).sameObjectAs expr1 ).toBeFalsy()
             expect( m.get( a ).sameObjectAs m.get 'a' ).toBeTruthy()
 
-Test the `variables` and `has` functions in this simple situation.
+Test the `keys` and `has` functions in this simple situation.
 
             expect( m.has a ).toBeTruthy()
             expect( m.has 'a' ).toBeTruthy()
             expect( m.has b ).toBeFalsy()
             expect( m.has 'b' ).toBeFalsy()
-            expect( m.variables() ).toEqual [ 'a' ]
+            expect( m.keys() ).toEqual [ 'a' ]
 
 Try to remove that one entry in the map.
 
             m.clear 'a'
             expect( m.has a ).toBeFalsy()
             expect( m.has 'a' ).toBeFalsy()
-            expect( m.variables() ).toEqual [ ]
+            expect( m.keys() ).toEqual [ ]
 
 Add multiple entries to the map and ensure that queries are correct.
 
             m.set a, expr1
             m.set b, expr2
             m.set c, expr3
-            expect( m.variables().sort() ).toEqual [ 'a', 'b', 'sea' ]
+            expect( m.keys().sort() ).toEqual [ 'a', 'b', 'sea' ]
             expect( m.get( a ).equals expr1 ).toBeTruthy()
             expect( m.get( a ).sameObjectAs expr1 ).toBeFalsy()
             expect( m.has a ).toBeTruthy()
@@ -188,10 +205,10 @@ Change one of them to match another's value, and ensure a copy was made.
             expect( m.has b ).toBeTruthy()
             expect( m.has c ).toBeTruthy()
 
-Clear it out one variable at a time, and watch `variables` and `has` to
-ensure they behave as expected.
+Clear it out one variable at a time, and watch `keys` and `has` to ensure
+they behave as expected.
 
-            expect( m.variables().sort() ).toEqual [ 'a', 'b', 'sea' ]
+            expect( m.keys().sort() ).toEqual [ 'a', 'b', 'sea' ]
             m.clear b
             expect( m.get( a ).equals expr3 ).toBeTruthy()
             expect( m.get( a ).sameObjectAs expr3 ).toBeFalsy()
@@ -201,7 +218,7 @@ ensure they behave as expected.
             expect( m.get( c ).equals expr3 ).toBeTruthy()
             expect( m.get( c ).sameObjectAs expr3 ).toBeFalsy()
             expect( m.has c ).toBeTruthy()
-            expect( m.variables().sort() ).toEqual [ 'a', 'sea' ]
+            expect( m.keys().sort() ).toEqual [ 'a', 'sea' ]
             m.clear c
             expect( m.get( a ).equals expr3 ).toBeTruthy()
             expect( m.get( a ).sameObjectAs expr3 ).toBeFalsy()
@@ -210,7 +227,7 @@ ensure they behave as expected.
             expect( m.has b ).toBeFalsy()
             expect( m.get c ).toBeUndefined()
             expect( m.has c ).toBeFalsy()
-            expect( m.variables().sort() ).toEqual [ 'a' ]
+            expect( m.keys().sort() ).toEqual [ 'a' ]
             m.clear a
             expect( m.get a ).toBeUndefined()
             expect( m.has a ).toBeFalsy()
@@ -218,7 +235,7 @@ ensure they behave as expected.
             expect( m.has b ).toBeFalsy()
             expect( m.get c ).toBeUndefined()
             expect( m.has c ).toBeFalsy()
-            expect( m.variables() ).toEqual [ ]
+            expect( m.keys() ).toEqual [ ]
 
 ### should correctly apply their mapping
 
@@ -307,7 +324,8 @@ returned.
 
             left = OM.simple '"apply"(a,string)'
             right = OM.simple '7829.189'
-            m.setSubstitution left, right, true
+            m.setSubstitution OM.app Match.requiredSubstitution,
+                OM.int( 3 ), left, right
             expect( m.hasSubstitution() ).toBeTruthy()
             expect( m.getSubstitutionLeft().equals left ).toBeTruthy()
             expect( m.getSubstitutionLeft().sameObjectAs left ).toBeFalsy()
@@ -329,7 +347,8 @@ just as in the test in which we stored a required substitution.
 
             left = quick '_A'
             right = quick '_B(10)'
-            m.setSubstitution left, right, false
+            m.setSubstitution OM.app Match.optionalSubstitution,
+                OM.int( 3 ), left, right
             expect( m.hasSubstitution() ).toBeTruthy()
             expect( m.getSubstitutionLeft().equals left ).toBeTruthy()
             expect( m.getSubstitutionLeft().sameObjectAs left ).toBeFalsy()
@@ -346,79 +365,6 @@ Clear the substitution and verify that it has been removed.
             expect( m.getSubstitutionRight() ).toBeUndefined()
             expect( m.getSubstitutionRequired() ).toBeUndefined()
 
-### should correctly track visits
-
-Match objects provide functions for tracking pattern tree traversal, by
-marking some subexpressions of the pattern as visited.  We test those
-functions here.
-
-        it 'should correctly track visits', ->
-
-Construct a match and verify that it has an empty visited list and no known
-pattern.
-
-            m = new Match
-            expect( m.getVisitedList() ).toEqual [ ]
-            expect( m.getPattern() ).toBeUndefined()
-            expect( m.getExpression() ).toBeUndefined()
-
-Construct a pattern and visit its first few nodes.  This should store the
-pattern in the match object, but not impact the visited list at all, because
-visited lists are only updated when the match object has a substitution
-stored.
-
-            pattern = OM.simple 'f(x,lurch.replaceAll(g(y,7),B,C),z)'
-            expression = OM.simple 'a(b,c(u,v),d)'
-            m.markVisited pattern, expression
-            m.markVisited pattern.children[0], expression.children[0]
-            m.markVisited pattern.children[1], expression.children[1]
-            expect( m.getVisitedList() ).toEqual [ ]
-            expect( m.getPattern().sameObjectAs pattern ).toBeTruthy()
-            expect( m.getExpression().sameObjectAs expression ).toBeTruthy()
-
-Now store the substitution from the pattern in the match object and visit
-the subexpressions of the first replacement child.  Verify that this does
-impact the visited nodes list.
-
-            subst = pattern.children[2]
-            esub = expression.children[2]
-            m.setSubstitution subst.children[1], subst.children[2], true
-            m.markVisited subst.children[1], esub.children[1]
-            m.markVisited subst.children[1].children[0],
-                esub.children[1].children[0]
-            m.markVisited subst.children[1].children[1],
-                esub.children[1].children[1]
-            m.markVisited subst.children[1].children[2],
-                esub.children[1].children[2]
-            expect( m.getVisitedList().length ).toEqual 4
-            expect( m.getVisitedList()[0].sameObjectAs subst.children[1] ) \
-                .toBeTruthy()
-            expect( m.getVisitedList()[1].sameObjectAs \
-                subst.children[1].children[0] ).toBeTruthy()
-            expect( m.getVisitedList()[2].sameObjectAs \
-                subst.children[1].children[1] ).toBeTruthy()
-            expect( m.getVisitedList()[3].sameObjectAs \
-                subst.children[1].children[2] ).toBeTruthy()
-            expect( m.getPattern().sameObjectAs pattern ).toBeTruthy()
-            expect( m.getExpression().sameObjectAs expression ).toBeTruthy()
-
-Remove the substitution and ensure that a further call to `markVisited` has
-no impact on the visited list or pattern.
-
-            m.clearSubstitution()
-            m.markVisited pattern.children[3], expression.children[3]
-            expect( m.getVisitedList().length ).toEqual 4
-            expect( m.getVisitedList()[0].sameObjectAs subst.children[1] ) \
-                .toBeTruthy()
-            expect( m.getVisitedList()[1].sameObjectAs \
-                subst.children[1].children[0] ).toBeTruthy()
-            expect( m.getVisitedList()[2].sameObjectAs \
-                subst.children[1].children[1] ).toBeTruthy()
-            expect( m.getVisitedList()[3].sameObjectAs \
-                subst.children[1].children[2] ).toBeTruthy()
-            expect( m.getPattern().sameObjectAs pattern ).toBeTruthy()
-            expect( m.getExpression().sameObjectAs expression ).toBeTruthy()
-
 ### should be able to copy themselves
 
 Match objects provide a copy function; we test it briefly here.  No
@@ -432,11 +378,10 @@ in common.
             m = new Match
             c = m.copy()
             expect( m is c ).toBeFalsy()
-            expect( c.variables() ).toEqual [ ]
+            expect( c.keys() ).toEqual [ ]
             expect( c.hasSubstitution() ).toBeFalsy()
-            expect( c.getPattern() ).toBeUndefined()
-            expect( c.getPattern() ).toBeUndefined()
-            expect( c.getVisitedList() ).toEqual [ ]
+            expect( c.pattern ).toBeUndefined()
+            expect( c.expression ).toBeUndefined()
 
 Add some things to each part of `m`, then verify that `c` has not changed.
 
@@ -444,38 +389,31 @@ Add some things to each part of `m`, then verify that `c` has not changed.
             expression = quick 't(u)'
             left = quick 'a'
             right = quick 'b'
-            m.markVisited pattern, expression
-            m.setSubstitution left, right, false
-            m.markVisited pattern.children[0], expression.children[0]
-            m.markVisited pattern.children[1], expression.children[1]
+            m.storeTopmostPair pattern, expression
+            m.setSubstitution OM.app Match.optionalSubstitution,
+                OM.int( 3 ), left, right
             m.set 'A', left
             m.set 'B', right
             expect( m is c ).toBeFalsy()
-            expect( c.variables() ).toEqual [ ]
+            expect( c.keys() ).toEqual [ ]
             expect( c.hasSubstitution() ).toBeFalsy()
-            expect( c.getPattern() ).toBeUndefined()
-            expect( c.getPattern() ).toBeUndefined()
-            expect( c.getVisitedList() ).toEqual [ ]
+            expect( c.pattern ).toBeUndefined()
+            expect( c.expression ).toBeUndefined()
 
 Make a second copy of `m` and verify that all this new data is preserved
 into the copy.
 
             c2 = m.copy()
-            expect( c2.variables().sort() ).toEqual [ 'A', 'B' ]
+            expect( c2.keys().sort() ).toEqual [ 'A', 'B' ]
             expect( c2.get( 'A' ).equals left ).toBeTruthy()
             expect( c2.get( 'B' ).equals right ).toBeTruthy()
             expect( c2.hasSubstitution() ).toBeTruthy()
             expect( c2.getSubstitutionLeft().equals left ).toBeTruthy()
             expect( c2.getSubstitutionRight().equals right ).toBeTruthy()
             expect( c2.getSubstitutionRequired() ).toBeFalsy()
-            expect( c2.getPattern().sameObjectAs pattern ).toBeTruthy()
-            expect( c2.getExpression().sameObjectAs expression ) \
+            expect( c2.pattern.sameObjectAs pattern ).toBeTruthy()
+            expect( c2.expression.sameObjectAs expression ) \
                 .toBeTruthy()
-            expect( c2.getVisitedList().length ).toBe 2
-            expect( c2.getVisitedList()[0].sameObjectAs \
-                pattern.children[0] ).toBeTruthy()
-            expect( c2.getVisitedList()[1].sameObjectAs \
-                pattern.children[1] ).toBeTruthy()
 
 ### should be able to complete themselves
 
@@ -484,15 +422,15 @@ the pattern have an instantiation.  We test that here.
 
         it 'should be able to complete themselves', ->
 
-Construct an empty match object and then have it visit a pattern and
-expression.  It should then have absolutely no variables instantiated, so
-when asked to complete itself, it should assign unused variables to all the
-metavariables in the pattern.
+Construct an empty match object and specify its pattern and expression.  It
+should have absolutely no variables instantiated, so when asked to complete
+itself, it should assign unused variables to all the metavariables in the
+pattern.
 
             m = new Match
             pattern = quick '_mv1(_mv2)'
             expression = quick 'f(x)'
-            m.markVisited pattern, expression
+            m.storeTopmostPair pattern, expression
             m.complete()
             expect( m.has 'mv1' ).toBeTruthy()
             expect( m.has 'mv2' ).toBeTruthy()
@@ -505,7 +443,7 @@ pattern first, and ensure those remain unchanged by the completion.
             m = new Match
             pattern = quick '_mv1(_mv2)'
             expression = quick 'f(x)'
-            m.markVisited pattern, expression
+            m.storeTopmostPair pattern, expression
             m.set 'mv1', quick 'example'
             m.complete()
             expect( m.has 'mv1' ).toBeTruthy()
@@ -519,7 +457,7 @@ names of the form "unused_n" into the pattern to ensure that it avoids them.
             m = new Match
             pattern = quick '_mv1(_mv2,unused_21(unused_14))'
             expression = quick 'f(x)'
-            m.markVisited pattern, expression
+            m.storeTopmostPair pattern, expression
             m.set 'mv1', quick 'example'
             m.complete()
             expect( m.has 'mv1' ).toBeTruthy()
@@ -534,7 +472,7 @@ avoids them as well.
             m = new Match
             pattern = quick '_mv1(_mv2,unused_21(unused_14))'
             expression = quick 'f(x,unused_100)'
-            m.markVisited pattern, expression
+            m.storeTopmostPair pattern, expression
             m.set 'mv1', quick 'example'
             m.complete()
             expect( m.has 'mv1' ).toBeTruthy()
@@ -549,21 +487,13 @@ avoids them as well.
             m = new Match
             pattern = quick '_mv1(_mv2,unused_21(unused_14))'
             expression = quick 'f(x,unused_100)'
-            m.markVisited pattern, expression
+            m.storeTopmostPair pattern, expression
             m.set 'mv1', quick 'unused_345'
             m.complete()
             expect( m.has 'mv1' ).toBeTruthy()
             expect( m.has 'mv2' ).toBeTruthy()
             expect( m.get( 'mv1' ).equals quick 'unused_345' ).toBeTruthy()
             expect( m.get( 'mv2' ).equals quick 'unused_346' ).toBeTruthy()
-
-### Back-checking
-
-We do not test the `backCheckSubstitution()` routine in the Match class,
-because it would be complex to contrive all the man situations in which it
-would need to be tested.  We already have extensive tests planned for the
-actual matching algorithm, which uses `backCheckSubstitution()` constantly,
-so we will consider those indirect tests sufficient.
 
 ## Matching
 
@@ -648,22 +578,24 @@ should yield `[ A : thing ]`.
 
             result = matches quick( '_A' ), quick( 'a' )
             expect( result.length ).toBe 1
-            expect( result[0].variables() ).toEqual [ 'A' ]
+            expect( result[0].keys() ).toEqual [ 'A' ]
             expect( result[0].get( 'A' ).equals quick 'a' ).toBeTruthy()
             result = matches quick( '_A' ), quick( '23645' )
             expect( result.length ).toBe 1
-            expect( result[0].variables() ).toEqual [ 'A' ]
+            expect( result[0].keys() ).toEqual [ 'A' ]
             expect( result[0].get( 'A' ).equals quick '23645' ).toBeTruthy()
             result = matches quick( '_A' ), quick( 'f(x)' )
             expect( result.length ).toBe 1
-            expect( result[0].variables() ).toEqual [ 'A' ]
+            expect( result[0].keys() ).toEqual [ 'A' ]
             expect( result[0].get( 'A' ).equals quick 'f(x)' ).toBeTruthy()
 
 ### should work for compound patterns
 
 The following tests are for the case where the pattern is compound,
 including application, binding, and error types.  No substitution patterns
-are tested yet; they appear in later tests.
+are tested yet; they appear in later tests.  (Actually, error types are of
+little importance to most of our uses, and function so much like
+application types that we have little to no tests of error types below.)
 
         it 'should work for compound patterns', ->
 
@@ -673,14 +605,14 @@ Matching `_A(x)` to `f(x)` should yield `[ { A : f } ]`.
 
             result = matches quick( '_A(x)' ), quick( 'f(x)' )
             expect( result.length ).toBe 1
-            expect( result[0].variables() ).toEqual [ 'A' ]
+            expect( result[0].keys() ).toEqual [ 'A' ]
             expect( result[0].get( 'A' ).equals quick 'f' ).toBeTruthy()
 
 Matching `_A(_B)` to `f(x)` should yield `[ { A : f, B : x } ]`.
 
             result = matches quick( '_A(_B)' ), quick( 'f(x)' )
             expect( result.length ).toBe 1
-            expect( result[0].variables().sort() ).toEqual [ 'A', 'B' ]
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'B' ]
             expect( result[0].get( 'A' ).equals quick 'f' ).toBeTruthy()
             expect( result[0].get( 'B' ).equals quick 'x' ).toBeTruthy()
 
@@ -705,7 +637,7 @@ Matching `_A.A(x,y)` to `f.f[x,y]` should yield `[ { A : f.f } ]`.
 
             result = matches quick( '_A.A[x,y]' ), quick( 'f.f[x,y]' )
             expect( result.length ).toBe 1
-            expect( result[0].variables() ).toEqual [ 'A.A' ]
+            expect( result[0].keys() ).toEqual [ 'A.A' ]
             expect( result[0].get( 'A.A' ).equals quick 'f.f' ).toBeTruthy()
 
 Matching `_A.A[_B,_C]` to `f.f[x,y]` should yield
@@ -713,7 +645,7 @@ Matching `_A.A[_B,_C]` to `f.f[x,y]` should yield
 
             result = matches quick( '_A.A[_B,_C]' ), quick( 'f.f[x,y]' )
             expect( result.length ).toBe 1
-            expect( result[0].variables().sort() ).toEqual \
+            expect( result[0].keys().sort() ).toEqual \
                 [ 'A.A', 'B', 'C' ]
             expect( result[0].get( 'A.A' ).equals quick 'f.f' ).toBeTruthy()
             expect( result[0].get( 'B' ).equals quick 'x' ).toBeTruthy()
@@ -758,7 +690,7 @@ Matching `_A` to `a` should yield `[ { A : a } ]`.
             right.setAttribute OM.symbol( 'a', 'b' ), OM.integer 200
             result = matches left, right
             expect( result.length ).toBe 1
-            expect( result[0].variables() ).toEqual [ 'A' ]
+            expect( result[0].keys() ).toEqual [ 'A' ]
             expect( result[0].get( 'A' ).equals right, no ).toBeTruthy()
 
 Matching `_A(x)` to `f(x)` should yield `[ { A : f } ]`.
@@ -771,7 +703,7 @@ Matching `_A(x)` to `f(x)` should yield `[ { A : f } ]`.
                 OM.integer -1
             result = matches left, right
             expect( result.length ).toBe 1
-            expect( result[0].variables() ).toEqual [ 'A' ]
+            expect( result[0].keys() ).toEqual [ 'A' ]
             expect( result[0].get( 'A' ).equals quick 'f' ).toBeTruthy()
 
 Matching `_A.A[_B,_C]` to `f.f[x,y]` should yield
@@ -785,8 +717,195 @@ Matching `_A.A[_B,_C]` to `f.f[x,y]` should yield
                 OM.simple 'g(y)'
             result = matches left, right
             expect( result.length ).toBe 1
-            expect( result[0].variables().sort() ).toEqual \
+            expect( result[0].keys().sort() ).toEqual \
                 [ 'A.A', 'B', 'C' ]
             expect( result[0].get( 'A.A' ).equals quick 'f.f' ).toBeTruthy()
             expect( result[0].get( 'B' ).equals quick 'x' ).toBeTruthy()
             expect( result[0].get( 'C' ).equals quick 'y' ).toBeTruthy()
+
+### should handle simple substitutions
+
+This is the first test of the matching algorithm's ability to handle
+substitution expressions (i.e., `x[y=z]` or `x[y~z]`).  These are the
+smallest tests of that type.
+
+        it 'should handle simple substitutions', ->
+
+Matching `f(x)` to `f(x)[x=y]` should yield `[ ]`.
+
+            left = quick 'f(x)'
+            right = reqSub 'f(x)', 'x', 'y'
+            result = matches left, right
+            expect( result ).toEqual [ ]
+
+Matching `f(x)` to `f(x)[z=y]` should yield `[ { } ]`.
+
+            left = quick 'f(x)'
+            right = reqSub 'f(x)', 'z', 'y'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys() ).toEqual [ ]
+
+Matching `f(x)` to `f(z)[z=x]` should yield `[ { } ]`.
+
+            left = quick 'f(x)'
+            right = reqSub 'f(z)', 'z', 'x'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys() ).toEqual [ ]
+
+Matching `for.all[x,f(x)]` to `for.all[x,f(x)[z=y]]` should yield `[ ]`.
+
+            left = quick 'for.all[x,f(x)]'
+            right = OM.binding quick( 'for.all' ), quick( 'x' ),
+                reqSub 'f(x)', 'x', 'y'
+            result = matches left, right
+            expect( result ).toEqual [ ]
+
+Matching `for.all[x,f(x)]` to `for.all[x,f(x)][z=y]` should yield `[ { } ]`.
+
+            left = quick 'for.all[x,f(x)]'
+            right = reqSub quick( 'for.all[x,f(x)]' ), 'x', 'y'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys() ).toEqual [ ]
+
+Repeats of all the above tests with the pattern and expression swapped:
+
+            left = quick 'f(x)'
+            right = reqSub 'f(x)', 'x', 'y'
+            result = matches right, left
+            expect( result ).toEqual [ ]
+            left = quick 'f(x)'
+            right = reqSub 'f(x)', 'z', 'y'
+            result = matches right, left
+            expect( result.length ).toBe 1
+            expect( result[0].keys() ).toEqual [ ]
+            left = quick 'f(x)'
+            right = reqSub 'f(z)', 'z', 'x'
+            result = matches right, left
+            expect( result.length ).toBe 1
+            expect( result[0].keys() ).toEqual [ ]
+            left = quick 'for.all[x,f(x)]'
+            right = OM.binding quick( 'for.all' ), quick( 'x' ),
+                reqSub 'f(x)', 'x', 'y'
+            result = matches right, left
+            expect( result ).toEqual [ ]
+            left = quick 'for.all[x,f(x)]'
+            right = reqSub quick( 'for.all[x,f(x)]' ), 'x', 'y'
+            result = matches right, left
+            expect( result.length ).toBe 1
+            expect( result[0].keys() ).toEqual [ ]
+
+### should handle compound expression with metavariables
+
+This series of tests involve application and binding expressions that
+contain at least one (and usually several) metavariables.
+
+        it 'should handle compound expression with metavariables', ->
+
+Matching `f(_A,_B)` to `f(c,d)` should yield `[ { A : c, B : d } ]`.
+
+            left = quick 'f(_A,_B)'
+            right = quick 'f(c,d)'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'B' ]
+            expect( result[0].get( 'A' ).equals quick 'c' ).toBeTruthy()
+            expect( result[0].get( 'B' ).equals quick 'd' ).toBeTruthy()
+
+Matching `f(_A,_A)` to `f(c,d)` should yield `[ ]`.
+
+            left = quick 'f(_A,_A)'
+            right = quick 'f(c,d)'
+            result = matches left, right
+            expect( result ).toEqual [ ]
+
+Matching `f(_A,_B)` to `g(c,d)` should yield `[ ]`.
+
+            left = quick 'f(_A,_B)'
+            right = quick 'g(c,d)'
+            result = matches left, right
+            expect( result ).toEqual [ ]
+
+Matching `f(_B,_A)` to `f(c,d)` should yield `[ { A : d, B : c } ]`.
+
+            left = quick 'f(_B,_A)'
+            right = quick 'f(c,d)'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'B' ]
+            expect( result[0].get( 'A' ).equals quick 'd' ).toBeTruthy()
+            expect( result[0].get( 'B' ).equals quick 'c' ).toBeTruthy()
+
+Matching `f(_A,_A)` to `f(c,c)` should yield `[ { A : c } ]`.
+
+            left = quick 'f(_A,_A)'
+            right = quick 'f(c,c)'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys() ).toEqual [ 'A' ]
+            expect( result[0].get( 'A' ).equals quick 'c' ).toBeTruthy()
+
+Matching `f(g(_A),k(_A))` to `f(g(a),k(a))` should yield `[ { A : a } ]`.
+
+            left = quick 'f(g(_A),k(_A))'
+            right = quick 'f(g(a),k(a))'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys() ).toEqual [ 'A' ]
+            expect( result[0].get( 'A' ).equals quick 'a' ).toBeTruthy()
+
+Matching `f(g(_A),_B)` to `f(g(a),k(a))` should yield
+`[ { A : a, B : k(a) } ]`.
+
+            left = quick 'f(g(_A),_B)'
+            right = quick 'f(g(a),k(a))'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'B' ]
+            expect( result[0].get( 'A' ).equals quick 'a' ).toBeTruthy()
+            expect( result[0].get( 'B' ).equals quick 'k(a)' ).toBeTruthy()
+
+Matching `f(_A(c),_A(_B))` to `f(g(c),k(c))` should yield `[ ]`.
+
+            left = quick 'f(_A(c),_A(_B))'
+            right = quick 'f(g(c),k(c))'
+            result = matches left, right
+            expect( result ).toEqual [ ]
+
+Matching `f(g(_A),_A(_B))` to `f(g(c),c(k))` should yield
+`[ A : c, B : k ]`.
+
+            left = quick 'f(g(_A),_A(_B))'
+            right = quick 'f(g(c),c(k))'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'B' ]
+            expect( result[0].get( 'A' ).equals quick 'c' ).toBeTruthy()
+            expect( result[0].get( 'B' ).equals quick 'k' ).toBeTruthy()
+
+We now repeat a selection of the above tests using bindings instead of
+applications.
+
+            left = quick 'f.f[_A,_A]'
+            right = quick 'f.f[c,d]'
+            result = matches left, right
+            expect( result ).toEqual [ ]
+            left = quick 'f.f[_A,_A]'
+            right = quick 'f.f[c,c]'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys() ).toEqual [ 'A' ]
+            expect( result[0].get( 'A' ).equals quick 'c' ).toBeTruthy()
+            left = quick 'f.f[c,dummy(_A(c),_A(_B))]'
+            right = quick 'f.f[c,dummy(g(c),k(c))]'
+            result = matches left, right
+            expect( result ).toEqual [ ]
+            left = quick 'f(g.g[v,_A.A],_A.A[_B,_B])'
+            right = quick 'f(g.g[v,c.c],c.c[k,k])'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A.A', 'B' ]
+            expect( result[0].get( 'A.A' ).equals quick 'c.c' ).toBeTruthy()
+            expect( result[0].get( 'B' ).equals quick 'k' ).toBeTruthy()

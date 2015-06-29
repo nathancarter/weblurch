@@ -19,38 +19,15 @@ required order of completion.
 
 ## Matching Module
 
- * Create extremely extensive unit tests for the above matching algorithm.
+ * Complete the unit tests for the matching algorithm.  Some are already
+   complete, but those listed below remain to be implemented.
    I list an extensive test suite here, using capital letters for
    metavariables and lower case letters for regular variables, and otherwise
    easily human-readable/suggestive notation.  The one exception is that @
    means the universal quantifier and # means the existential quantifier.
-   Note that these unit tests do not require a PhantomJS environment.
 ```
     pattern             expression      results
     -------             ----------      -------
-
-    SIMPLE SUBSTITUTIONS
-
-    f(x)                f(x)[x=y]       []
-    f(x)                f(x)[z=y]       [{}]
-    f(x)                f(y)[z=y]       [{}]
-    @x,f(x)             @x,(f(x)[x=y])  []
-    @x,f(x)             (@x,f(x))[x=y]  [{}]
-        then repeat all with the pattern and expression swapped
-
-    COMPOUNDS WITH METAVARIABLES
-
-    f(A,B)              f(c,d)          [{A:c,B:d}]
-    f(A,A)              f(c,d)          []
-    f(A,B)              g(c,d)          []
-    f(B,A)              f(c,d)          [{A:d,B:c}]
-    f(A,A)              f(c,c)          [{A:c}]
-    f(g(A),k(A))        f(g(a),k(a))    [{A:a}]
-    f(g(A),B)           f(g(a),k(a))    [{A:a,B:k(a)}]
-    f(A(c),A(B))        f(g(c),k(c))    []
-    f(A(c),A(B))        f(g(c),c(k))    [{A:c,B:k}]
-        repeat a selection of the above tests using bindings and errors
-        instead of applications
 
     UNIVERSAL ELIMINATION RULE
 
@@ -177,14 +154,6 @@ required order of completion.
     Also verify that if there are metavariables in the expression, that an
     error is thrown.
 ```
- * Make `backCheckSubstitution()` more efficient by caching many of the
-   values that it recomputes every time.
-   * Many of the calls to `descendantsSatisfying()` are just to test if its
-     length is greater than zero.  Create a `hasDescendantSatisfying()` that
-     just finds the first one, and thus returns true/false more quickly.
-   * Once the left side of the substitution has been instantiated with no
-     metavariables, cache that and keep it.  Same for the right, and for all
-     visited subtrees.
 
 ## Parsing
 
