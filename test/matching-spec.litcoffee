@@ -1173,3 +1173,123 @@ matching algorithm.
                 .toBeTruthy()
             expect( result[0].get( 'C' ).equals quick 'X' ).toBeTruthy()
             expect( result[0].get( 'X' ).equals quick 'C' ).toBeTruthy()
+
+### should handle instances of universal introduction
+
+The desktop version of Lurch (v0.8) came with libraries defining the
+universal introduction rule of first-order logic as follows.  From a
+variable introduction of v and any statement A, conclude forall x, A[v=x].
+We test several valid and invalid uses of the rule, ensuring that the
+matching algorithm approves of the valid ones and disapproves of the invalid
+ones.
+
+The same uses of `for.all` and `list` apply as in earlier tests.  We declare
+variables with the symbol `dec.var`.
+
+        it 'should handle instances of universal introduction', ->
+
+In each test below, the rule to match is the following.
+
+            rule = OM.app OM.var( 'list' ),
+                quick( 'dec.var(_V)' ), quick( '_A' ),
+                OM.bin quick( 'for.all' ), quick( '_X' ),
+                    reqSub '_A', '_V', '_X'
+
+The instance of the rule will vary from test to test (and will sometimes not
+actually *be* an instance of the rule, at which point we expect the patterns
+not to match).
+
+Matching the rule to
+`list( dec.var(x), gt(sq(x),0), for.all[t,gt(sq(t),0)] )` should yield
+`[ { V : x, A : gt(sq(x),0), X : t } ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'dec.var(x)' ), quick( 'gt(sq(x),0)' )
+                quick( 'for.all[t,gt(sq(t),0)]' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'V', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'gt(sq(x),0)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'V' ).equals quick 'x' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 't' ).toBeTruthy()
+
+Matching the rule to
+`list( dec.var(x), gt(sq(x),0), for.all[x,gt(sq(x),0)] )` should yield
+`[ { V : x, A : gt(sq(x),0), X : x } ]`.
+
+This is the same as the previous test, but with all t's replaced by x's.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'dec.var(x)' ), quick( 'gt(sq(x),0)' )
+                quick( 'for.all[x,gt(sq(x),0)]' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'V', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'gt(sq(x),0)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'V' ).equals quick 'x' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 'x' ).toBeTruthy()
+
+Matching the rule to
+`list( dec.var(x), gt(sq(x),0), for.all[x,gt(sq(t),0)] )` should yield
+`[ ]`.
+
+This is the same as the previous test, but with one variable renamed to be
+inconsistent with the rest, and hence the match should fail.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'dec.var(x)' ), quick( 'gt(sq(x),0)' )
+                quick( 'for.all[x,gt(sq(t),0)]' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
+Matching the rule to
+`list( dec.var(x), gt(sq(t),0), for.all[x,gt(sq(x),0)] )` should yield
+`[ ]`.
+
+This is the same as the previous test, but with a different variable renamed
+to be inconsistent with the rest, and hence the match should fail.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'dec.var(x)' ), quick( 'gt(sq(t),0)' )
+                quick( 'for.all[x,gt(sq(x),0)]' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
+Matching the rule to
+`list( dec.var(x), gt(sq(t),0), for.all[x,gt(sq(t),0)] )` should yield
+`[ { V : x, A : gt(sq(t),0), X : x } ]`.
+
+This is the same as the first test in this section, but here the quantifier
+does not bind any variables.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'dec.var(x)' ), quick( 'gt(sq(t),0)' )
+                quick( 'for.all[x,gt(sq(t),0)]' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'V', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'gt(sq(t),0)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'V' ).equals quick 'x' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 'x' ).toBeTruthy()
+
+Matching the rule to
+`list( dec.var(V), hi(A,V), for.all[X,hi(A,X)] )` should yield
+`[ { V : V, A : hi(A,V), X : X } ]`.
+
+Note that this test intentionally uses variables that have exactly the same
+names as metavariables, to test whether this causes confusion for the
+matching algorithm.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'dec.var(V)' ), quick( 'hi(A,V)' )
+                quick( 'for.all[X,hi(A,X)]' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'V', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'hi(A,V)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'V' ).equals quick 'V' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 'X' ).toBeTruthy()

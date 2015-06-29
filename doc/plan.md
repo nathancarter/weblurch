@@ -29,18 +29,6 @@ required order of completion.
     pattern             expression      results
     -------             ----------      -------
 
-    UNIVERSAL INTRODUCTION RULE
-
-    Let R = list( var(V) , A , @X,A[V=X] ).  Same story as above.
-
-    list( var(x), x^2>=0, @t,t^2>=0 )   [{V:x, A:x^2>=0, X:t}]
-    list( var(x), x^2>=0, @x,x^2>=0 )   [{V:x, A:x^2>=0, X:x}]
-    list( var(x), x^2>=0, @x,t^2>=0 )   []
-    list( var(x), t^2>=0, @x,x^2>=0 )   []
-    list( var(x), t^2>=0, @x,t^2>=0 )   [{V:x, A:t^2>=0, X:x}]
-    list( var(V') , hi(A',V') ,
-          @X',hi(A',X') )               [{V:V', A:hi(A',V'), X:X'}]
-
     EXISTENTIAL INTRODUCTION RULE
 
     Let R = list( A[X=T], #X,A ).  Same story as above.
