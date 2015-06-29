@@ -909,3 +909,108 @@ applications.
             expect( result[0].keys().sort() ).toEqual [ 'A.A', 'B' ]
             expect( result[0].get( 'A.A' ).equals quick 'c.c' ).toBeTruthy()
             expect( result[0].get( 'B' ).equals quick 'k' ).toBeTruthy()
+
+### should handle instances of universal elimination
+
+The desktop version of Lurch (v0.8) came with libraries defining the
+universal elimination rule of first-order logic as follows. From forall x,
+A, conclude A[x=t].  We test several valid and invalid uses of the rule,
+ensuring that the matching algorithm approves of the valid ones and
+disapproves of the invalid ones.
+
+For the sake of brevity, we encode the universal quantifier as the symbol
+`for.all`, below.  To form a rule from a sequence of one or more statements,
+we simply put them in a list, as in `list(expr1,...,exprN)`.
+
+        it 'should handle instances of universal elimination', ->
+
+In each test below, the rule to match is the following.
+
+            rule = OM.app OM.var( 'list' ),
+                quick( 'for.all[_X,_A]' ), reqSub '_A', '_X', '_T'
+
+The instance of the rule will vary from test to test (and will sometimes not
+actually *be* an instance of the rule, at which point we expect the patterns
+not to match).
+
+Matching the rule to `list( for.all[x,f(x)=f(y)] , f(6)=f(y) )` should yield
+`[ { X : x, A : f(x)=f(y), T : 6 } ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'for.all[x,eq(f(x),f(y))]' ),
+                quick( 'eq(f(6),f(y))' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'T', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'eq(f(x),f(y))' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'T' ).equals quick '6' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 'x' ).toBeTruthy()
+
+Matching the rule to `list( for.all[x,P(x,x)] , P(7.1,7.1) )` should yield
+`[ { X : x, A : P(x,x), T : 7.1 } ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'for.all[x,P(x,x)]' ), quick( 'P(7.1,7.1)' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'T', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'P(x,x)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'T' ).equals quick '7.1' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 'x' ).toBeTruthy()
+
+Matching the rule to `list( for.all[x,P(x,x)] , P(3,4) )` should yield
+`[ ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'for.all[x,P(x,x)]' ), quick( 'P(3,4)' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
+Matching the rule to the statements
+`for.all[x,and(gt(x,7),for.all[y,P(x,y)])]` and
+`and(gt(9,7),for.all[y,P(9,y)])` should yield
+`[ { X : x, A : and(gt(x,7),for.all[y,P(x,y)]), T : 9 } ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'for.all[x,and(gt(x,7),for.all[y,P(x,y)])]' ),
+                quick( 'and(gt(9,7),for.all[y,P(9,y)])' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'T', 'X' ]
+            expect( result[0].get( 'A' ).equals \
+                quick 'and(gt(x,7),for.all[y,P(x,y)])' ).toBeTruthy()
+            expect( result[0].get( 'T' ).equals quick '9' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 'x' ).toBeTruthy()
+
+Matching the rule to the statements
+`for.all[x,and(gt(x,7),for.all[y,P(x,y)])]` and
+`and(gt(9,7),for.all[y,P(x,y)])` should yield `[ ]`.
+
+This test is exactly the same as the previous, except that not all instances
+of x have been replaced by 9.  The universal elmination rule requires that
+all instances be replaced, not just some, so this should not match.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'for.all[x,and(gt(x,7),for.all[y,P(x,y)])]' ),
+                quick( 'and(gt(9,7),for.all[y,P(x,y)])' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
+Matching the rule to the statements `for.all[A,f(X,A)]` and `f(X,X)` should
+yield `[ { X : A, A : f(X,A), T : X } ]`.
+
+Note that this test intentionally uses variables that have exactly the same
+names as metavariables, to test whether this causes confusion for the
+matching algorithm.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'for.all[A,f(X,A)]' ), quick( 'f(X,X)' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'T', 'X' ]
+            expect( result[0].get( 'A' ).equals quick 'f(X,A)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'T' ).equals quick 'X' ).toBeTruthy()
+            expect( result[0].get( 'X' ).equals quick 'A' ).toBeTruthy()

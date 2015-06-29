@@ -29,25 +29,6 @@ required order of completion.
     pattern             expression      results
     -------             ----------      -------
 
-    UNIVERSAL ELIMINATION RULE
-
-    Let R = list( @X,A , A[X=T] ), a representation of the rule.  In each
-    test below, R is the pattern, and we list only the expression.
-    When a capital letter is followed by a prime, as in A', that means that
-    it is going directly against the naming convention, and intending to be
-    a capital A that is NOT a metavariable.  This will test to ensure that
-    naming conflicts between metavariables and their instantiations do not
-    mess up the results.
-
-    list( @x,f(x)=f(y) , f(6)=f(y) )    [{X:x, A:f(x)=f(y), T:6}]
-    list( @x,P(x,x) , P(7.1,7.1) )      [{X:x, A:P(x,x), T:7.1}]
-    list( @x,P(x,x) , P(3,4) )          []
-    list( @x,(x>7 & @y,P(x,y)) ,
-          9>7 & @y,P(9,y) )             [{X:x, A:x>7&@y,P(x,y), T:9}]
-    list( @x,(x>7 & @y,P(x,y)) ,
-          9>7 & @y,P(x,y) )             []
-    list( @A',f(X',A') , f(X',X') )     [{X:A', A:f(X',A'), T:X'}]
-
     EXISTENTIAL ELIMINATION RULE
 
     Let R = list( #X,A , const(C) , A[X=C] ).  Same story as above.

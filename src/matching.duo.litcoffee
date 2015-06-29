@@ -185,9 +185,6 @@ expression and its two sides and its type (required, =, or optional, ~) are
 extracted and stored, not as copies but as the originals.
 
         setSubstitution : ( substitution ) =>
-            # console.log 'setting substitution:',
-            #     substitution.simpleEncode(), 'with children',
-            #     ( c.simpleEncode() for c in substitution.children )
             @substitution =
                 original : substitution
                 leftHandSide : substitution.children[2]
@@ -349,6 +346,14 @@ object.
 
 ## Matching Algorithm
 
+This routine is complex and occasionally needs careful debugging.  We do not
+wish, however, to spam the console in production code.  So we define a
+debugging routine here that can be enabled or disabled.
+
+    matchDebuggingEnabled = no
+    mdebug = ( args... ) ->
+        if matchDebuggingEnabled then console.log args...
+
 The main purpose of this module is to expose this function to the client. It
 matches the given pattern against the given expression and returns a match
 object, a mapping from metavariables to their instantiations.  The third and
@@ -362,10 +367,10 @@ Determine whether we're the outermost call in the recursion, for use below.
 
         outermost = not soFar?
         soFar ?= new Match
-        # console.log "#{if outermost then '\n' else ''}MATCHES:",
-        #     pattern?.simpleEncode?() ? pattern,
-        #     expression?.simpleEncode?() ? expression,
-        #     "#{soFar}"
+        mdebug "#{if outermost then '\n' else ''}MATCHES:",
+            pattern?.simpleEncode?() ? pattern,
+            expression?.simpleEncode?() ? expression,
+            "#{soFar}"
 
 If this is the outermost call, then apply all substitutions in the
 expression.  (The expression must contain only required substitutions, not
@@ -395,22 +400,31 @@ substitution currently in effect a chance to save the day.
 
         trySubs = ->
             if not soFar.hasSubstitution() then return [ ]
-            # console.log 'match of', pattern.simpleEncode(), 'to',
-            #     expression.simpleEncode(), 'failed; trying subs...',
-            #     soFar.toString()
+            mdebug '    match of', pattern.simpleEncode(), 'to',
+                expression.simpleEncode(), 'failed; trying subs...',
+                soFar.toString()
+            head = if soFar.getSubstitutionRequired()
+                Match.requiredSubstitution
+            else
+                Match.optionalSubstitution
+            save = OM.application head, OM.variable( 'placeholder' ),
+                soFar.getSubstitutionLeft(),
+                soFar.getSubstitutionRight()
             sub = OM.application soFar.getSubstitutionLeft(),
                 soFar.getSubstitutionRight() # easy pairing operation
             soFar.clearSubstitution()
-            [ walk1, walk2, result ] = [ pattern, expression, [ ] ]
+            [ walk1, walk2, results ] = [ pattern, expression, [ ] ]
             while walk1? and walk2?
-                # console.log 'attempting subs at this level:',
-                #     OM.application( walk1, walk2 ).simpleEncode(),
-                #     sub.simpleEncode(), "#{soFar}..."
-                result = result.concat matches \
+                mdebug '    attempting subs at this level:',
+                    sub.simpleEncode(),
+                    OM.application( walk1, walk2 ).simpleEncode(),
+                    "#{soFar}..."
+                results = results.concat matches sub,
                     OM.application( walk1, walk2 ), # easy pairing operation
-                    sub, soFar, no
+                    soFar, no
                 [ walk1, walk2 ] = [ walk1.parent, walk2.parent ]
-            result
+            result.setSubstitution save for result in results
+            results
 
 Now the preparatory phase of the routine is complete, and we begin some of
 the cases of the actual matching algorithm.
@@ -426,7 +440,7 @@ outside of one.
         if pattern.type is 'a' and pattern.children.length is 4 and \
             ( pattern.children[0].equals( Match.requiredSubstitution ) or \
               pattern.children[0].equals( Match.optionalSubstitution ) )
-            # console.log 'pattern is a substitution...'
+            mdebug '    pattern is a substitution...'
             if soFar.hasSubstitution()
                 throw 'Only one substitution permitted in a pattern'
             soFar.setSubstitution pattern
@@ -434,28 +448,28 @@ outside of one.
             newResults = [ ]
             for result in results
                 if pattern.children[0].equals Match.requiredSubstitution
-                    # console.log '\t** checking required substitution...',
-                    #     pattern.simpleEncode(), 'vs.',
-                    #     expression.simpleEncode()
+                    mdebug '\t** checking required substitution...',
+                        pattern.simpleEncode(), 'vs.',
+                        expression.simpleEncode()
                     instantiated = result.applyTo pattern.children[1]
-                    # console.log '\t** instantiated pattern:',
-                    #     instantiated.simpleEncode()
+                    mdebug '\t** instantiated pattern:',
+                        instantiated.simpleEncode()
                     left = result.applyTo pattern.children[2]
                     right = result.applyTo pattern.children[3]
-                    # console.log '\t** instantiated substitution:',
-                    #     left.simpleEncode(), '--->>',
-                    #     right.simpleEncode()
+                    mdebug '\t** instantiated substitution:',
+                        left.simpleEncode(), '--->>',
+                        right.simpleEncode()
                     instantiated.replaceFree left, right
-                    # console.log '\t** after replaceFree():',
-                    #     instantiated.simpleEncode()
+                    mdebug '\t** after replaceFree():',
+                        instantiated.simpleEncode()
                     if not instantiated.equals expression
-                        # console.log '\t** NOT EQUAL -- REMOVING THIS RESULT'
+                        mdebug '\t** NOT EQUAL -- REMOVING THIS RESULT'
                         continue
-                    # else
-                    #     console.log '\t** EQUAL -- OK TO USE THIS RESULT'
+                    else
+                        mdebug '\t** EQUAL -- OK TO USE THIS RESULT'
                 result.clearSubstitution()
                 newResults.push result
-            # console.log '<--', ( "#{r}" for r in newResults )
+            mdebug '<--', ( "#{r}" for r in newResults )
             return newResults
 
 If the pattern is a single metavariables, then there are two cases.  If it
@@ -465,24 +479,26 @@ store the current expression as its instantiation, to permit the matching
 process to continue.
 
         if isMetavariable pattern
-            # console.log 'pattern is a metavariable'
+            mdebug '    pattern is a metavariable'
             if test = soFar.get pattern
-                return if test.equals expression, no then [ soFar ] \
-                    else trySubs()
+                mdebug '    we use its already-determined value:'
+                result = matches test, expression, soFar
+                mdebug '<--', ( "#{r}" for r in result )
+                return result
             soFar.set pattern, expression
-            # console.log 'stored new assignment', pattern.simpleEncode(),
-            #     '=', expression.simpleEncode(), 'yielding', "#{soFar}"
+            mdebug '    stored new assignment', pattern.simpleEncode(),
+                '=', expression.simpleEncode(), 'yielding', "#{soFar}"
             result = [ soFar ]
-            # console.log '<--', ( "#{r}" for r in result )
+            mdebug '<--', ( "#{r}" for r in result )
             return result
 
 If the types of the pattern and expression don't match, then the only thing
 that might save us is a substitution, if there is one.
 
-        # console.log 'comparing types...', pattern.type, expression.type
+        mdebug '    comparing types...', pattern.type, expression.type
         if pattern.type isnt expression.type
             result = trySubs()
-            # console.log '<--', ( "#{r}" for r in result )
+            mdebug '<--', ( "#{r}" for r in result )
             return result
 
 If the pattern is atomic, then it must flat-out equal the expression.  If
@@ -493,7 +509,7 @@ this is not the case, we can only fall back on a possible substitution.
                 [ soFar ]
             else
                 trySubs()
-            # console.log '<--', ( "#{r}" for r in result )
+            mdebug '<--', ( "#{r}" for r in result )
             return result
 
 If the pattern is non-atomic, then it must match the expression
@@ -502,14 +518,14 @@ structurally.  The first step in doing so is to have the same size.  We use
 children or head symbols or bound variables or binding bodies.
 
         pchildren = pattern.childrenSatisfying()
-        # console.log 'pattern children:',
-        #     ( p.simpleEncode() for p in pchildren )
+        mdebug '    pattern children:',
+            ( p.simpleEncode() for p in pchildren )
         echildren = expression.childrenSatisfying()
-        # console.log 'expression children:',
-        #     ( e.simpleEncode() for e in echildren )
+        mdebug '    expression children:',
+            ( e.simpleEncode() for e in echildren )
         if pchildren.length isnt echildren.length
             result = trySubs()
-            # console.log '<--', ( "#{r}" for r in result )
+            mdebug '<--', ( "#{r}" for r in result )
             return result
 
 Now that we've determined that the pattern and expression have the same
@@ -521,23 +537,23 @@ it against each child.
         results = [ soFar ]
         for pchild, index in pchildren
             echild = echildren[index]
-            # console.log 'recurring at', index, 'on', pchild.simpleEncode(),
-            #     'and', echild.simpleEncode(), 'with results',
-            #     ( "#{r}" for r in results )
+            mdebug '    recurring at', index, 'on', pchild.simpleEncode(),
+                'and', echild.simpleEncode(), 'with results',
+                ( "#{r}" for r in results )
             newResults = [ ]
             for sf in results
                 newResults = newResults.concat matches pchild, echild,
                     sf.copy()
             if ( results = newResults ).length is 0 then break
-        # console.log 'recursion complete; new result set:',
-        #     ( "#{r}" for r in results )
+        mdebug '    recursion complete; new result set:',
+            ( "#{r}" for r in results )
 
 Before returning the results, if we are the outermost call, instantiate all
 unused metavariables to things like "unused_1", etc.  And, of course, filter
 them through `markVisited` as usual.
 
         if outermost then result.complete() for result in results
-        # console.log 'results have been completed:',
-        #     ( "#{r}" for r in results )
-        # console.log '<--', ( "#{r}" for r in results )
+        mdebug '    results have been completed:',
+            ( "#{r}" for r in results )
+        mdebug '<--', ( "#{r}" for r in results )
         results
