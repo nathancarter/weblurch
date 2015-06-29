@@ -29,23 +29,6 @@ required order of completion.
     pattern             expression      results
     -------             ----------      -------
 
-    EQUALITY ELIMINATION RULE
-
-    Let R = list( A=B , S , S[A~B] ).  Same story as above.
-
-    x=7 , f(x)=y , f(7)=7               [{A:x, B:7, S:f(x)=y}]
-    x=7 , f(x)=y , f(x)=7               []
-    x=7 , f(x)=y , f(7)=7               []
-    f(x)=y , x=7 , f(7)=7               []
-    a=b , b=b , b=a                     [{A:a, B:b, S:b=b}]
-    sum(i,0,n-1,2^i)=2^n-1 ,
-        (2^n-1)+1=2^n ,
-        sum(i,0,n-1,2^i)+1=2^n          []
-    2^n-1=sum(i,0,n-1,2^i) ,
-        (2^n-1)+1=2^n ,
-        sum(i,0,n-1,2^i)+1=2^n          [{A:sum(i,0,n-1,2^i), B:2^n-1,
-                                          S:(2^n-1)+1=2^n}]
-
     HARDER SUBSTITUTIONS
 
     Now we list pattern, expresion, and results, as at first.

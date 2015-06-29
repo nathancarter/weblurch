@@ -1437,3 +1437,119 @@ yield `[ ]`.
             expect( result[0].get( 'A' ).equals quick 'L(N)' ).toBeTruthy()
             expect( result[0].get( 'T' ).equals quick 'M' ).toBeTruthy()
             expect( result[0].get( 'X' ).equals quick 'N' ).toBeTruthy()
+
+### should handle instances of equality elimination
+
+The desktop version of Lurch (v0.8) came with libraries defining the
+equality elimination rule of first-order logic as follows.  From any
+equation a=b and any statement S, you may conclude S[a~b] and/or S[b~a]. For
+a rule with multiple conclusions, we consider only one of the conclusions at
+a time; the matching algorithm would be applied separately for each
+conclusion.  Thus here we take only the conclusion S[a~b].  We test several
+valid and invalid uses of the rule, ensuring that the matching algorithm
+approves of the valid ones and disapproves of the invalid ones.
+
+The same use of `list` applies as in earlier tests.  We use here the symbol
+`e.q` to mean "equals."
+
+        it 'should handle instances of equality elimination', ->
+
+In each test below, the rule to match is the following.
+
+            rule = OM.app OM.var( 'list' ),
+                quick( 'e.q(_A,_B)' ), quick( '_S' ),
+                optSub( '_S', '_A', '_B' )
+
+The instance of the rule will vary from test to test (and will sometimes not
+actually *be* an instance of the rule, at which point we expect the patterns
+not to match).
+
+Matching the rule to the statements `x=7`, `f(x)=y`, and `f(7)=y`
+should yield `[ { A : x, B : 7, S : f(x)=y } ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'e.q(x,7)' ), quick( 'e.q(f(x),y)' ),
+                quick( 'e.q(f(7),y)' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'B', 'S' ]
+            expect( result[0].get( 'A' ).equals quick 'x' ).toBeTruthy()
+            expect( result[0].get( 'B' ).equals quick '7' ).toBeTruthy()
+            expect( result[0].get( 'S' ).equals \
+                quick 'e.q(f(x),y)' ).toBeTruthy()
+
+Matching the rule to the statements `x=7`, `f(x)=y`, and `f(7)=7`
+should yield `[ ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'e.q(x,7)' ), quick( 'e.q(f(x),y)' ),
+                quick( 'e.q(f(7),7)' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
+Matching the rule to the statements `f(x)=y`, `x=7`, and `f(7)=7`
+should yield `[ ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'e.q(f(x),y)' ), quick( 'e.q(x,7)' ),
+                quick( 'e.q(f(7),7)' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
+Matching the rule to the statements `a=b`, `a=a`, and `b=a`
+should yield `[ { A : a, B : b, S : a=a } ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'e.q(a,b)' ), quick( 'e.q(a,a)' ),
+                quick( 'e.q(b,a)' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'B', 'S' ]
+            expect( result[0].get( 'A' ).equals quick 'a' ).toBeTruthy()
+            expect( result[0].get( 'B' ).equals quick 'b' ).toBeTruthy()
+            expect( result[0].get( 'S' ).equals \
+                quick 'e.q(a,a)' ).toBeTruthy()
+
+Matching the rule to the statements `2^n-1=sum(i,0,n-1,2^i)`,
+`(2^n-1)+1=2^n`, and `sum(i,0,n-1,2^i)+1=2^n` should yield `[ ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( \
+                    'e.q(minus(pow(2,n),1),sum(i,0,minus(n,1),pow(2,i)))' ),
+                quick( 'e.q(plus(minus(pow(2,n),1),1),pow(2,n))' ),
+                quick( 'e.q(plus(sum(i,0,minus(n,1),pow(2,i))),pow(2,n))' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
+Matching the rule to the statements `sum(i,0,n-1,2^i)=2^n-1`,
+`(2^n-1)+1=2^n`, and `sum(i,0,n-1,2^i)+1=2^n` should yield `[ ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( \
+                    'e.q(sum(i,0,minus(n,1),pow(2,i)),minus(pow(2,n),1))' ),
+                quick( 'e.q(plus(minus(pow(2,n),1),1),pow(2,n))' ),
+                quick( \
+                    'e.q(plus(sum(i,0,minus(n,1),pow(2,i)),1),pow(2,n))' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
+Matching the rule to the statements `2^n-1=sum(i,0,n-1,2^i)`,
+`(2^n-1)+1=2^n`, and `sum(i,0,n-1,2^i)+1=2^n` should yield
+`[ { A : 2^n-1, B : sum(i,0,n-1,2^i), S : (2^n-1)+1=2^n } ]`.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( \
+                    'e.q(minus(pow(2,n),1),sum(i,0,minus(n,1),pow(2,i)))' ),
+                quick( 'e.q(plus(minus(pow(2,n),1),1),pow(2,n))' ),
+                quick( \
+                    'e.q(plus(sum(i,0,minus(n,1),pow(2,i)),1),pow(2,n))' )
+            result = matches rule, instance
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'B', 'S' ]
+            expect( result[0].get( 'A' ).equals \
+                quick 'minus(pow(2,n),1)' ).toBeTruthy()
+            expect( result[0].get( 'B' ).equals \
+                quick 'sum(i,0,minus(n,1),pow(2,i))' ).toBeTruthy()
+            expect( result[0].get( 'S' ).equals \
+                quick 'e.q(plus(minus(pow(2,n),1),1),pow(2,n))' ) \
+                .toBeTruthy()
