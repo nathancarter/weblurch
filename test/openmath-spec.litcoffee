@@ -2915,6 +2915,71 @@ The same tests should all pass if we replace the value of an attribute.
             expect( outer.getAttribute( OM.simple 'W.Q' ) \
                 .sameObjectAs original ).toBeTruthy()
 
+And yet, `replaceWith` won't put non-variables in the variable slots of a
+binding node, nor non-symbols as the head symbols of binding or error
+objects.  We test here to ensure this is so.
+
+            binding = OM.simple 'for.all[x,y,P(x,x,y,y)]'
+            copy = binding.copy()
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[0].replaceWith OM.simple '3'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[0].replaceWith OM.simple '-9.2'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[0].replaceWith OM.simple '"man"'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[0].replaceWith OM.simple 'wo.man'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[0].replaceWith OM.simple 'sin(pi)'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[0].replaceWith OM.simple 'exi.sts[t,A]'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[1].replaceWith OM.simple '3'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[1].replaceWith OM.simple '-9.2'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[1].replaceWith OM.simple '"man"'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[1].replaceWith OM.simple 'wo.man'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[1].replaceWith OM.simple 'sin(pi)'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[1].replaceWith OM.simple 'exi.sts[t,A]'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.symbol.replaceWith OM.simple '3'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.symbol.replaceWith OM.simple '380.320'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.symbol.replaceWith OM.simple '"qwerty"'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.symbol.replaceWith OM.simple 'varname'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.symbol.replaceWith OM.simple 'a(b,c,d)'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.symbol.replaceWith OM.simple 'a.b[c,d]'
+            expect( binding.equals copy ).toBeTruthy()
+            error = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'N', cd : 'CD' }
+                c : [
+                    { t : 'i', v : 50 }
+                    { t : 'f', v : -0.50 }
+                ]
+            }
+            copy = error.copy()
+            copy.symbol.replaceWith OM.simple '3'
+            expect( copy.equals copy ).toBeTruthy()
+            copy.symbol.replaceWith OM.simple '380.320'
+            expect( copy.equals copy ).toBeTruthy()
+            copy.symbol.replaceWith OM.simple '"qwerty"'
+            expect( copy.equals copy ).toBeTruthy()
+            copy.symbol.replaceWith OM.simple 'varname'
+            expect( copy.equals copy ).toBeTruthy()
+            copy.symbol.replaceWith OM.simple 'a(b,c,d)'
+            expect( copy.equals copy ).toBeTruthy()
+            copy.symbol.replaceWith OM.simple 'a.b[c,d]'
+            expect( copy.equals copy ).toBeTruthy()
+
 ## Routines for free and bound variables
 
 There are several routines in the OMNode class dealing with free and bound
@@ -3025,6 +3090,78 @@ Next, test everything that occurs free.
             expect( expr.occursFree OM.simple 'y' ).toBeTruthy()
             expect( expr.occursFree OM.simple 'g(y)' ).toBeTruthy()
             expect( expr.occursFree expr.copy() ).toBeTruthy()
+
+### should know when it can replace free occurrences
+
+This tests the `OMNode` routine `isFreeToReplace()`, which computes whether
+the node is free to replace the given subtree.  That is, would any of the
+node's variables become bound if the replacement were to take place?  If so,
+it is not free to replace; otherwise it is.
+
+        it 'should know when it can replace free occurrences', ->
+
+Any atomic that isn't a variable is always free to replace anything.
+
+            context = OM.simple 'for.all[x,P(x,y)]'
+            toInsert = OM.simple '3'
+            expect( toInsert.isFreeToReplace context.symbol ).toBeFalsy()
+            expect( toInsert.isFreeToReplace context.variables[0] ) \
+                .toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body ).toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[0] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+            toInsert = OM.simple 'foo.bar'
+            expect( toInsert.isFreeToReplace context.symbol ).toBeTruthy()
+            expect( toInsert.isFreeToReplace context.variables[0] ) \
+                .toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body ).toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[0] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+            toInsert = OM.simple '"Hello, darlin\'."'
+            expect( toInsert.isFreeToReplace context.symbol ).toBeFalsy()
+            expect( toInsert.isFreeToReplace context.variables[0] ) \
+                .toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body ).toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[0] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+
+A variable is free to replace if it doesn't become bound by the replacement.
+
+            context = OM.simple 'for.all[x,P(x,y)]'
+            toInsert = OM.simple 'x'
+            expect( toInsert.isFreeToReplace context.symbol ).toBeFalsy()
+            expect( toInsert.isFreeToReplace context.variables[0] ) \
+                .toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body ).toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body.children[0] ) \
+                .toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeFalsy()
+            toInsert = OM.simple 'y'
+            expect( toInsert.isFreeToReplace context.symbol ).toBeFalsy()
+            expect( toInsert.isFreeToReplace context.variables[0] ) \
+                .toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body ).toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[0] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
 
 ### should correctly replace free occurrences
 

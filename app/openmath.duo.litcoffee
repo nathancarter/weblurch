@@ -865,17 +865,26 @@ This works whether this tree is a child, variable, head symbol, body, or
 attribute value of its parent.  If this object has no parent, then we make
 no modifications to that parent, since it does not exist.
 
-In all cases, the parameter is `remove()`d from its context, and this node,
-if it has a parent, is `remove()`d from it as well.  Furthermore, this
+In all other cases, the parameter is `remove()`d from its context, and this
+node, if it has a parent, is `remove()`d from it as well.  Furthermore, this
 OMNode instance becomes a wrapper to the given node instead of its current
 contents.  The removed node is returned.
 
         replaceWith : ( other ) =>
+            if @sameObjectAs other then return
+            index = @findInParent()
+
+If you attempt to replace a binding's or error's head symbol with a
+non-symbol, this routine does nothing.  If you attempt to replace one of a
+binding's variables with a non-variable, this routine does nothing.  When
+this routine does nothing, it returns undefined.
+
+            if index is 's' and other.type isnt 'sy' then return
+            if index?[0] is 'v' and other.type isnt 'v' then return
             other.remove()
             original = new OMNode @tree
             @tree = other.tree
-            if not index = original.findInParent() then return
-            switch index[0]
+            switch index?[0]
                 when 'c'
                     original.parent.tree.c[parseInt index[1..]] = @tree
                 when 'v'
@@ -883,7 +892,7 @@ contents.  The removed node is returned.
                 when 'b' then original.parent.tree.b = @tree
                 when 's' then original.parent.tree.s = @tree
                 when '{' then original.parent.tree.a[index] = @tree
-                else throw 'Invalid index in parent' # should never happen
+                else return # didn't have a parent
             @tree.p = original.tree.p
             delete original.tree.p
             original
@@ -1013,6 +1022,28 @@ be passed directly along to `isFree()`.  This change would require testing.
                 if child.occursFree findThis then return yes
             no
 
+One subtree A is free to replace another B if no variable free in A becomes
+bound when B is replaced by A.  Because we will be asking whether variables
+are free/bound, we will need to know the ancestor context in which to make
+those queries.  The default is the highest ancestor, but that default can be
+changed with the optional final parameter.
+
+Note that this routine also returns false in those cases where it does not
+make sense to replace the given subtree with this tree based simply on their
+types, and not even taking free variables into account.  For example, a
+binding or error node must have a head symbol, which cannot be replaced with
+a non-symbol, and a binding node's variables must not be replaced with
+non-variables.
+
+        isFreeToReplace : ( subtreeToReplace, inThis ) =>
+            context = subtreeToReplace
+            while context.parent then context = context.parent
+            saved = new OMNode subtreeToReplace.tree
+            if not subtreeToReplace.replaceWith @copy() then return no
+            result = subtreeToReplace.isFree inThis
+            subtreeToReplace.replaceWith saved
+            result
+
 This method replaces every free occurrence of one expression (original) with
 a copy of the another expression (replacement).  The search-and-replace
 recursion only proceeds through children, head symbols, and bodies of
@@ -1024,6 +1055,11 @@ same name to `isFree()`, is passed directly along to `isFree()`.
         replaceFree : ( original, replacement, inThis ) =>
             inThis ?= this
             if @isFree( inThis ) and @equals original
+
+Although the implementation here is very similar to the implementation of
+`isFreeToReplace()`, we do not call that function, because it would require
+making two copies and doing two replacements; this is more efficient.
+
                 save = new OMNode @tree
                 @replaceWith replacement.copy()
                 if not @isFree inThis then @replaceWith save
@@ -1067,6 +1103,17 @@ therefore impact the original expression.
             for child in @childrenSatisfying()
                 results = results.concat child.descendantsSatisfying filter
             results
+
+A simpler function performs the same task as the previous, but does not
+return a list of all descendants; it merely returns whether there are any,
+as a boolean.  It is thus more efficient to use this than to run the
+previous and compare its length to zero.
+
+        hasDescendantSatisfying : ( filter = -> yes ) =>
+            if filter this then return yes
+            for child in @childrenSatisfying()
+                if child.hasDescendantSatisfying filter then return yes
+            no
 
 ## Nicknames
 

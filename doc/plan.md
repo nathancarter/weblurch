@@ -19,12 +19,6 @@ required order of completion.
 
 ## Matching Module
 
- * New methods needed
-   * Write a `freeToReplace()` function that essentially just does the
-     replacement, tests whether it's free or not, and then replaces back
-     before reporting the result.
-   * Use that function in the current `replaceFree()` implementation.
-   * Create unit tests for `freeToReplace()` and commit.
  * Larger bug fix
    * Ensure that `trySubs()` does not permit a substitution unless the new
      value is free to replace the old at that location.
