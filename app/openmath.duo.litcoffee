@@ -799,6 +799,19 @@ value will be one of five types:
                 if @tree is value then return key
             undefined # should not happen
 
+The inverse of the previous function takes a string output by that function
+and returns the corresponding child/variables/symbol/body immediately inside
+this node.  That is, `x.parent.findChild x.findInParent()` will give us back
+the same tree as `x` itself.
+
+        findChild : ( indexInParent ) =>
+            switch indexInParent[0]
+                when 'c' then @children[parseInt indexInParent[1..]]
+                when 'v' then @variables[parseInt indexInParent[1..]]
+                when 's' then @symbol
+                when 'b' then @body
+                when '{' then @getAttribute OMNode.decode indexInParent
+
 The following function breaks the relationship of the object with its
 parent.  In some cases, this can invalidate the parent (e.g., by giving a
 binding or error object no head symbol, or a binding no body, or no bound
@@ -847,7 +860,9 @@ contents.  The removed node is returned.
             delete original.tree.p
             original
 
-Then we have three functions that let us manipulate attributes without
+### Attributes
+
+Here we have three functions that let us manipulate attributes without
 worrying about the unpredictable ordering of keys in a JSON stringification
 of an object.
 

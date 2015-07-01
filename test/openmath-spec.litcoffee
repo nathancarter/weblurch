@@ -2157,6 +2157,93 @@ The values of an object's attributes have their keys as the result.
             value = new OMNode outer.tree.a[key]
             expect( value.findInParent() ).toBe key
 
+### should be queryable with `findChild`
+
+Test all types of situations in which `findChild` could be called.
+
+        it 'should be queryable with findChild', ->
+
+Create an application with several children.  Ensure that for each one, if
+we call `findInParent()` on the child, then `findChild()` in the parent,
+passing the index given by `findInParent()`, that we get back the child we
+started with.
+
+            app = OM.simple 'f(g(x),sym.bol,3,"string",h.h[k,ell])'
+            child = app.children[0]
+            expect( app.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = app.children[1]
+            expect( app.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = app.children[2]
+            expect( app.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = app.children[3]
+            expect( app.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = app.children[4]
+            expect( app.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = app.children[5]
+            expect( app.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+
+Create a binding with several variables.  Ensure that for each variable, as
+well as the binding's head symbol and body, if we call `findInParent()` on
+the descendant, then `findChild()` in the binding, passing the index given
+by `findInParent()`, that we get back the descendant we started with.
+
+            bin = OM.simple 'for.all[x,y,z,exi.sts[t,something(x,y,z,t)]]'
+            child = bin.variables[0]
+            expect( bin.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = bin.variables[1]
+            expect( bin.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = bin.variables[2]
+            expect( bin.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = bin.symbol
+            expect( bin.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = bin.body
+            expect( bin.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+
+Create an error with several children.  Ensure that for each child, as well
+as the error's head symbol, if we call `findInParent()` on the descendant,
+then `findChild()` in the error, passing the index given by
+`findInParent()`, that we get back the descendant we started with.
+
+            err = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'test', cd : 'more_test' }
+                c : [
+                    { t : 'i', v : '9000' }
+                    { t : 'st', v : 'fdjslksdjaf' }
+                    {
+                        t : 'a'
+                        c : [
+                            { t : 'v', n : 'f' }
+                            { t : 'v', n : 'u' }
+                            { t : 'v', n : 'v' }
+                        ]
+                    }
+                ]
+            }
+            child = err.children[0]
+            expect( err.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = err.children[1]
+            expect( err.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = err.children[2]
+            expect( err.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = err.symbol
+            expect( err.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+
 ### can be broken with `remove()`
 
 Test all situations in which one node is nested inside another, and we call
