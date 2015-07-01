@@ -802,7 +802,7 @@ value will be one of five types:
 The inverse of the previous function takes a string output by that function
 and returns the corresponding child/variables/symbol/body immediately inside
 this node.  That is, `x.parent.findChild x.findInParent()` will give us back
-the same tree as `x` itself.
+the same tree as `x` itself.  An invalid input will return undefined.
 
         findChild : ( indexInParent ) =>
             switch indexInParent[0]
@@ -811,6 +811,34 @@ the same tree as `x` itself.
                 when 's' then @symbol
                 when 'b' then @body
                 when '{' then @getAttribute OMNode.decode indexInParent
+
+The `findInParent()` function can be generalized to find a node in any of
+its ancestors, the result being an array of `findInParent()` results as you
+walk downward from the ancestor to the descendant.  For instance, the first
+bound variable within the second child of an application would have the
+address `[ 'c1', 'v0' ]` (since indices are zero-based).  The following
+function computes the array in question, the node's "address" within the
+given ancestor.
+
+If no ancestor is specified, the highest-level one is used.  If a value is
+passed that is not an ancestor of this node, then it is treated as if no
+value had been passed.  If this node has no parent, or if this node itself
+is passed as the parameter, then the empty array is returned.
+
+        address : ( inThis ) =>
+            if not @parent or @sameObjectAs inThis then return [ ]
+            @parent.address( inThis ).concat [ @findInParent() ]
+
+The `address` function has the following inverse, which looks up in an
+ancestor node a descendant that has the given address within that ancestor.
+So, in particular, `x.index y.address( x )` should equal `y`.  Furthermore,
+`x.index [ ]` will always yield `x`.  An invalid input will return
+undefined.
+
+        index : ( address ) =>
+            if address not instanceof Array then return undefined
+            if address.length is 0 then return this
+            @findChild( address[0] )?.index address[1..]
 
 The following function breaks the relationship of the object with its
 parent.  In some cases, this can invalidate the parent (e.g., by giving a

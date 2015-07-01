@@ -20,11 +20,6 @@ required order of completion.
 ## Matching Module
 
  * New methods needed
-   * Create an `address` method for OpenMath trees (with an optional
-     ancestor parameter).
-   * Create an `index` method for OpenMath trees that is the inverse of the
-     `address` method.
-   * Create unit tests for each of these and commit.
    * Write a `freeToReplace()` function that essentially just does the
      replacement, tests whether it's free or not, and then replaces back
      before reporting the result.

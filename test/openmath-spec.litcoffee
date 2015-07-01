@@ -2244,6 +2244,165 @@ then `findChild()` in the error, passing the index given by
             expect( err.findChild( child.findInParent() ) \
                 .sameObjectAs child ).toBeTruthy()
 
+### should be queryable with `address`
+
+This test is very similar to the `findInParent` test, above, but now
+generalized to the `address` function, which works like `findInParent`, but
+for arbitrary ancestors.  Note that we do not here attempt to test
+exhaustively, since `findInParent` is used inside `address`; we spot check
+to ensure that the generalization seems to have been done correctly.
+
+        it 'should be queryable with address', ->
+
+On any tree without a parent, it should be an empty array.
+
+            expect( OM.simple( '3' ).address() ).toEqual [ ]
+            expect( OM.simple( 'f(x)' ).address() ).toEqual [ ]
+            expect( OM.simple( 'g.a[z,t]' ).address() ).toEqual [ ]
+            expect( OM.simple( '-725.38' ).address() ).toEqual [ ]
+
+Now we create a deeply nested application and binding structure, for testing
+subtrees.  We check the address of every single subtree in it.
+
+            bigapp = OM.simple 'f(x,g(t),a.b[x,y,P(Q(x))])'
+            node = bigapp
+            expect( node.address() ).toEqual [ ]
+            node = bigapp.children[0]
+            expect( node.address() ).toEqual [ 'c0' ]
+            node = bigapp.children[1]
+            expect( node.address() ).toEqual [ 'c1' ]
+            node = bigapp.children[2]
+            expect( node.address() ).toEqual [ 'c2' ]
+            node = bigapp.children[3]
+            expect( node.address() ).toEqual [ 'c3' ]
+            node = bigapp.children[2].children[0]
+            expect( node.address() ).toEqual [ 'c2', 'c0' ]
+            node = bigapp.children[2].children[1]
+            expect( node.address() ).toEqual [ 'c2', 'c1' ]
+            node = bigapp.children[3].symbol
+            expect( node.address() ).toEqual [ 'c3', 's' ]
+            node = bigapp.children[3].variables[0]
+            expect( node.address() ).toEqual [ 'c3', 'v0' ]
+            node = bigapp.children[3].variables[1]
+            expect( node.address() ).toEqual [ 'c3', 'v1' ]
+            node = bigapp.children[3].body
+            expect( node.address() ).toEqual [ 'c3', 'b' ]
+            node = bigapp.children[3].body.children[0]
+            expect( node.address() ).toEqual [ 'c3', 'b', 'c0' ]
+            node = bigapp.children[3].body.children[1]
+            expect( node.address() ).toEqual [ 'c3', 'b', 'c1' ]
+            node = bigapp.children[3].body.children[1].children[0]
+            expect( node.address() ).toEqual [ 'c3', 'b', 'c1', 'c0' ]
+            node = bigapp.children[3].body.children[1].children[1]
+            expect( node.address() ).toEqual [ 'c3', 'b', 'c1', 'c1' ]
+
+We now repeat a selection of the above subtree tests, but passing an
+argument to `address` so that we get a result relative to the ancestor
+given.
+
+            ancestor = bigapp.children[2]
+            node = ancestor
+            expect( node.address ancestor ).toEqual [ ]
+            node = ancestor.children[0]
+            expect( node.address ancestor ).toEqual [ 'c0' ]
+            node = ancestor.children[1]
+            expect( node.address ancestor ).toEqual [ 'c1' ]
+            ancestor = bigapp.children[3]
+            node = ancestor
+            expect( node.address ancestor ).toEqual [ ]
+            node = ancestor.symbol
+            expect( node.address ancestor ).toEqual [ 's' ]
+            node = ancestor.variables[0]
+            expect( node.address ancestor ).toEqual [ 'v0' ]
+            node = ancestor.variables[1]
+            expect( node.address ancestor ).toEqual [ 'v1' ]
+            node = ancestor.body
+            expect( node.address ancestor ).toEqual [ 'b' ]
+            node = ancestor.body.children[1].children[1]
+            expect( node.address ancestor ).toEqual [ 'b', 'c1', 'c1' ]
+            ancestor = ancestor.body
+            expect( node.address ancestor ).toEqual [ 'c1', 'c1' ]
+
+### should be queryable with `index`
+
+This test is essentially the reverse of the previous test.  We ensure that
+the `index` function does the exact reverse of the `address` function.
+
+        it 'should be queryable with index', ->
+
+An empty address should return the node itself.
+
+            node = OM.simple '3'
+            expect( node.index( [ ] ).sameObjectAs node ).toBeTruthy()
+            node = OM.simple 'f(x)'
+            expect( node.index( [ ] ).sameObjectAs node ).toBeTruthy()
+            node = OM.simple 'g.z[z,t]'
+            expect( node.index( [ ] ).sameObjectAs node ).toBeTruthy()
+            node = OM.simple '-725.38'
+            expect( node.index( [ ] ).sameObjectAs node ).toBeTruthy()
+
+Now we create a deeply nested application and binding structure, for testing
+subtrees.  We check to be sure that `index` can be used to look up every
+single subtree in it.
+
+            bigapp = OM.simple 'f(x,g(t),a.b[x,y,P(Q(x))])'
+            expect( bigapp.index( [ ] ).sameObjectAs bigapp ).toBeTruthy()
+            expect( bigapp.index( [ 'c0' ] ).sameObjectAs \
+                bigapp.children[0] ).toBeTruthy()
+            expect( bigapp.index( [ 'c1' ] ).sameObjectAs \
+                bigapp.children[1] ).toBeTruthy()
+            expect( bigapp.index( [ 'c2' ] ).sameObjectAs \
+                bigapp.children[2] ).toBeTruthy()
+            expect( bigapp.index( [ 'c3' ] ).sameObjectAs \
+                bigapp.children[3] ).toBeTruthy()
+            expect( bigapp.index( [ 'c2', 'c0' ] ).sameObjectAs \
+                bigapp.children[2].children[0] ).toBeTruthy()
+            expect( bigapp.index( [ 'c2', 'c1' ] ).sameObjectAs \
+                bigapp.children[2].children[1] ).toBeTruthy()
+            expect( bigapp.index( [ 'c3', 's' ] ).sameObjectAs \
+                bigapp.children[3].symbol ).toBeTruthy()
+            expect( bigapp.index( [ 'c3', 'v0' ] ).sameObjectAs \
+                bigapp.children[3].variables[0] ).toBeTruthy()
+            expect( bigapp.index( [ 'c3', 'v1' ] ).sameObjectAs \
+                bigapp.children[3].variables[1] ).toBeTruthy()
+            expect( bigapp.index( [ 'c3', 'b' ] ).sameObjectAs \
+                bigapp.children[3].body ).toBeTruthy()
+            expect( bigapp.index( [ 'c3', 'b', 'c0' ] ).sameObjectAs \
+                bigapp.children[3].body.children[0] ).toBeTruthy()
+            expect( bigapp.index( [ 'c3', 'b', 'c1' ] ).sameObjectAs \
+                bigapp.children[3].body.children[1] ).toBeTruthy()
+            expect( bigapp.index( [ 'c3', 'b', 'c1', 'c0' ] ).sameObjectAs \
+                bigapp.children[3].body.children[1].children[0] ) \
+                .toBeTruthy()
+            expect( bigapp.index( [ 'c3', 'b', 'c1', 'c1' ] ).sameObjectAs \
+                bigapp.children[3].body.children[1].children[1] ) \
+                .toBeTruthy()
+
+We now repeat a selection of the above subtree tests, but starting from a
+subtree of `bigapp`.
+
+            node = bigapp.children[2]
+            expect( node.index( [ ] ).sameObjectAs node ).toBeTruthy()
+            expect( node.index( [ 'c0' ] ).sameObjectAs \
+                node.children[0] ).toBeTruthy()
+            expect( node.index( [ 'c1' ] ).sameObjectAs \
+                node.children[1] ).toBeTruthy()
+            node = bigapp.children[3]
+            expect( node.index( [ ] ).sameObjectAs node ).toBeTruthy()
+            expect( node.index( [ 's' ] ).sameObjectAs \
+                node.symbol ).toBeTruthy()
+            expect( node.index( [ 'v0' ] ).sameObjectAs \
+                node.variables[0] ).toBeTruthy()
+            expect( node.index( [ 'v1' ] ).sameObjectAs \
+                node.variables[1] ).toBeTruthy()
+            expect( node.index( [ 'b' ] ).sameObjectAs \
+                node.body ).toBeTruthy()
+            expect( node.index( [ 'b', 'c1', 'c1' ] ).sameObjectAs \
+                node.body.children[1].children[1] ).toBeTruthy()
+            node = node.body
+            expect( node.index( [ 'c1', 'c1' ] ).sameObjectAs \
+                node.children[1].children[1] ).toBeTruthy()
+
 ### can be broken with `remove()`
 
 Test all situations in which one node is nested inside another, and we call
