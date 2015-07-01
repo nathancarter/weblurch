@@ -19,36 +19,6 @@ required order of completion.
 
 ## Matching Module
 
- * Larger bug fix
-   * Ensure that `trySubs()` does not permit a substitution unless the new
-     value is free to replace the old at that location.
-   * Ensure that the checks in lines 440-480 proceed as follows:  Create a
-     list of final results and initialize it to empty.  Then loop through
-     the existing matches and do the following for each:
-     * If its LHS has any uninstantiated metavariables, the check passes for
-       that result, because unused_N variables will ensure that it is
-       irrelevant, and thus does not harm the match results.
-     * Compute the list of descendants of the instantiated pattern
-       satisfying these criteria:
-       * They contain no metavariables
-       * They are free at their position in the instantiated pattern.
-     * For each such descendant, compute its address, then compute the
-       subexpression of `expression` having the same address.  Call this
-       list E_1,...,E_n.
-     * Recur, matching the tuple `[E_1,...,E_n]` against the tuple
-       `[rhs,...,rhs]`, that is, n copies of the instantiated RHS of the
-       substitution.
-     * With each result R in the list returned by that recursion, do this:
-       * Re-instantiate the substitution RHS with this (expanded) match R.
-       * If that instantiated version is free to replace every one of the
-         E_i, then push R onto the list of final results.
-     * Return the list of final results.
-   * Check to ensure that all existing tests pass, and debug.
- * More tests
-   * Create unit tests for all the unusual invalid uses of quantifier rules
-     stored in the Overleaf document shared between Nathan and Ken.
-   * Create unit tests between things like `f(X,X)[c=d]` and `f(g(d),g(c))`,
-     and all the tons of variations you can think of on that theme.
  * Complete the unit tests for the matching algorithm.  Some are already
    complete, but those listed below remain to be implemented.
    I list an extensive test suite here, using capital letters for
@@ -63,20 +33,6 @@ required order of completion.
 
     Now we list pattern, expresion, and results, as at first.
 
-    a=b[X=Y]            a=b             [{X:unused_1,Y:unused_2}]
-    a=b[X=a]            a=b             [{X:unused_1}]
-    a=b[a=Y]            a=b             [{Y:a}]
-    a=b[a=b]            a=b             []
-    a=b[a~b]            a=b             [{}]
-    a=b[a=c]            a=b             []
-    a=b[a~c]            a=b             [{}]
-    a=b[a=a]            a=b             [{}]
-    A[a=b]              a=b             []
-    A[a~b]              a=b             [{A:a=b}]
-    A[c=b]              a=b             [{A:a=b}]
-    A[c~b]              a=b             [{A:a=b}]
-    A[B=b]              a=b             [{A:a=b,B:unused_1}]
-    A[B~b]              a=b             [{A:a=b,B:unused_1}]
     f(f[A=g])           f(g)            [{A:f}]
     f(f)[A=g]           g(g)            [{A:f}]
     f(f[A=g])           g(g)            []
@@ -99,8 +55,13 @@ required order of completion.
     Also verify that if there are metavariables in the expression, that an
     error is thrown.
 ```
- * Add tests to verify that if you try to put more than one substitution
-   expression into a pattern (whether nested or not) an error is thrown.
+ * More tests
+   * Create unit tests for all the unusual invalid uses of quantifier rules
+     stored in the Overleaf document shared between Nathan and Ken.
+   * Create unit tests between things like `f(X,X)[c=d]` and `f(g(d),g(c))`,
+     and all the tons of variations you can think of on that theme.
+   * Add tests to verify that if you try to put more than one substitution
+     expression into a pattern (whether nested or not) an error is thrown.
  * Remove `app/openmath.duo.litcoffee` from git control in master.  Ensure
    that it remains under git control in gh-pages.  Furthermore, ensure that
    `app/matching.duo.litcoffee` does not go under git control in master, but

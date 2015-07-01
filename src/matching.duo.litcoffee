@@ -187,10 +187,11 @@ extracted and stored, not as copies but as the originals.
         setSubstitution : ( substitution ) =>
             @substitution =
                 original : substitution
-                leftHandSide : substitution.children[2]
-                rightHandSide : substitution.children[3]
                 required : substitution.children[0].equals \
                     Match.requiredSubstitution
+                root : substitution.children[1]
+                leftHandSide : substitution.children[2]
+                rightHandSide : substitution.children[3]
                 metavariables : [ ]
 
 This function also computes the list of metavariable names that appear in
@@ -218,15 +219,28 @@ We also provide a reverse method, for removing a stored substitution.
 
         clearSubstitution : => delete @substitution
 
+We also provide a method for reconstructing a copy of the original
+substitution expression based on the data about it stored herein.  This is
+like an inverse to `setSubstitution()`.
+
+        saveSubstitution : =>
+            head = if @getSubstitutionRequired()
+                Match.requiredSubstitution
+            else
+                Match.optionalSubstitution
+            OM.application head, @getSubstitutionRoot(),
+                @getSubstitutionLeft(), @getSubstitutionRight()
+
 To go with the above function for registering a substitution pattern, we
 also provide several methods for querying the substitution data stored.
 Remember that the original values are returned, so do not modify them unless
 that is your intent.
 
         hasSubstitution : => @substitution?
+        getSubstitutionRequired : => @substitution?.required
+        getSubstitutionRoot : => @substitution?.root
         getSubstitutionLeft : => @substitution?.leftHandSide
         getSubstitutionRight : => @substitution?.rightHandSide
-        getSubstitutionRequired : => @substitution?.required
         getSubstitutionNode : => @substitution?.original
 
 ### Completing a match
@@ -272,7 +286,7 @@ all existing instantiations in `@map`.
             unusedRE = /^unused_([0-9]+)$/
             unusedCheck = ( node ) ->
                 node.type is 'v' and unusedRE.test node.name
-            unused = @pattern.descendantsSatisfying( unusedCheck ) \
+            unused = @pattern.descendantsSatisfying unusedCheck
                 .concat @expression.descendantsSatisfying unusedCheck
             for own key, value of @map
                 unused =
@@ -317,6 +331,7 @@ are the details.
             if @substitution?
                 result.substitution =
                     original : @substitution.original
+                    root : @substitution.root
                     leftHandSide : @substitution.leftHandSide
                     rightHandSide : @substitution.rightHandSide
                     required : @substitution.required
@@ -341,7 +356,8 @@ object.
             if @hasSubstitution()
                 result += '[' + @getSubstitutionLeft().simpleEncode() + \
                     ( if @getSubstitutionRequired() then '=' else '~' ) + \
-                    @getSubstitutionRight().simpleEncode() + ']'
+                    @getSubstitutionRight().simpleEncode() + ' in ' + \
+                    @getSubstitutionRoot().simpleEncode() + ']'
             result
 
 ## Matching Algorithm
@@ -403,15 +419,12 @@ substitution currently in effect a chance to save the day.
             mdebug '    match of', pattern.simpleEncode(), 'to',
                 expression.simpleEncode(), 'failed; trying subs...',
                 soFar.toString()
-            head = if soFar.getSubstitutionRequired()
-                Match.requiredSubstitution
-            else
-                Match.optionalSubstitution
-            save = OM.application head, OM.variable( 'placeholder' ),
-                soFar.getSubstitutionLeft(),
+            save = soFar.saveSubstitution()
+            pair = OM.application
+            sub = pair soFar.getSubstitutionLeft(),
                 soFar.getSubstitutionRight()
-            sub = OM.application soFar.getSubstitutionLeft(),
-                soFar.getSubstitutionRight() # easy pairing operation
+            root = soFar.getSubstitutionRoot()
+            rhs = soFar.getSubstitutionRight()
             soFar.clearSubstitution()
             [ walk1, walk2, results ] = [ pattern, expression, [ ] ]
             while walk1? and walk2?
@@ -419,11 +432,23 @@ substitution currently in effect a chance to save the day.
                     sub.simpleEncode(),
                     OM.application( walk1, walk2 ).simpleEncode(),
                     "#{soFar}..."
-                results = results.concat matches sub,
-                    OM.application( walk1, walk2 ), # easy pairing operation
-                    soFar, no
+                for match in matches sub, pair( walk1, walk2 ), soFar, no
+                    mdebug '        checking this:', "#{match}"
+                    lhsLocation = walk1.address root
+                    instantiated = match.applyTo root
+                    lhsInThere = instantiated.index lhsLocation
+                    fullRHS = match.applyTo rhs
+                    mdebug "        is #{fullRHS?.simpleEncode?()}
+                        free to replace #{lhsInThere?.simpleEncode?()} in
+                        #{instantiated?.simpleEncode?()}?
+                        #{fullRHS.isFreeToReplace lhsInThere, instantiated}"
+                    if fullRHS.isFreeToReplace lhsInThere, instantiated
+                        results.push match
+                if walk1.sameObjectAs root then break
                 [ walk1, walk2 ] = [ walk1.parent, walk2.parent ]
             result.setSubstitution save for result in results
+            mdebug '    done attempting all subs; results:',
+                ( "#{result}" for result in results )
             results
 
 Now the preparatory phase of the routine is complete, and we begin some of
@@ -444,31 +469,101 @@ outside of one.
             if soFar.hasSubstitution()
                 throw 'Only one substitution permitted in a pattern'
             soFar.setSubstitution pattern
+            rhs = soFar.getSubstitutionRight()
             results = matches pattern.children[1], expression, soFar
             newResults = [ ]
             for result in results
-                if pattern.children[0].equals Match.requiredSubstitution
-                    mdebug '\t** checking required substitution...',
-                        pattern.simpleEncode(), 'vs.',
-                        expression.simpleEncode()
-                    instantiated = result.applyTo pattern.children[1]
-                    mdebug '\t** instantiated pattern:',
-                        instantiated.simpleEncode()
-                    left = result.applyTo pattern.children[2]
-                    right = result.applyTo pattern.children[3]
-                    mdebug '\t** instantiated substitution:',
-                        left.simpleEncode(), '--->>',
-                        right.simpleEncode()
-                    instantiated.replaceFree left, right
-                    mdebug '\t** after replaceFree():',
-                        instantiated.simpleEncode()
-                    if not instantiated.equals expression
-                        mdebug '\t** NOT EQUAL -- REMOVING THIS RESULT'
-                        continue
-                    else
-                        mdebug '\t** EQUAL -- OK TO USE THIS RESULT'
+                mdebug '    checking substitution match', "#{result}"
+
+Optional substitutions always pass this check.
+
+                if pattern.children[0].equals Match.optionalSubstitution
+                    mdebug '        optional, so we approve it'
+                    result.clearSubstitution()
+                    newResults.push result
+                    continue
+
+Substitutions with not-yet-instantiated metavariables in their left hand
+sides pass the check, because they will have no impact on the final result;
+those metavariables will be instantiated into unused identifiers.
+
+                lhs = result.getSubstitutionLeft()
+                existUnusedMetavars = lhs.hasDescendantSatisfying ( d ) ->
+                    isMetavariable( d ) and not result.has d
+                if existUnusedMetavars
+                    mdebug '        approved because of unused metavars'
+                    result.clearSubstitution()
+                    newResults.push result
+                    continue
+
+Compute the list of descendants of the instantiated pattern that equal the
+left hand side, have no metavariables in them and are free in the
+instantiated pattern.
+
+                root = soFar.getSubstitutionRoot()
+                rinstantiated = result.applyTo root
+                lhs = result.applyTo lhs
+                descs = rinstantiated.descendantsSatisfying ( d ) ->
+                    d.equals( lhs ) and \
+                    not d.hasDescendantSatisfying( isMetavariable ) \
+                    and d.isFree rinstantiated
+                mdebug '        instantiated root:',
+                    rinstantiated.simpleEncode()
+                mdebug '        instances of lhs:',
+                    ( d.address pattern for d in descs )
+
+Compute the list of subexpressions at the corresponding locations within
+`expression`.
+
+                einstantiated = result.applyTo expression
+                mdebug '        instantiated expression:',
+                    einstantiated.simpleEncode()
+                exprs = for d in descs
+                    einstantiated.index d.address rinstantiated
+                mdebug '        corresponding expression subtrees:',
+                    ( e.simpleEncode() for e in exprs )
+
+Recur matching `exprs` as a tuple against a tuple of the same size
+containing repeated copies of the instantiated RHS of the substitution.
+
+                tuple = ( args... ) ->
+                    OM.application OM.string( "tuple" ), args...
+                fullRHS = result.applyTo rhs
+                many = ( fullRHS for e in exprs )
+                mdebug '        will now recur on these tuples:'
+                mdebug "        #{tuple( many... ).simpleEncode()}"
+                mdebug "        #{tuple( exprs... ).simpleEncode()}"
                 result.clearSubstitution()
-                newResults.push result
+                recur = matches tuple( many... ), tuple( exprs... ),
+                    result
+                mdebug '        recursion on tuples complete; testing...'
+
+With each match object in the result of that recursion, proceed as follows.
+
+                for recurResult in recur
+
+Re-instantiate `rhs` with the (now expanded) match result.  If it's free to
+replace every one of the `exprs`, then push this match object onto the list
+of new results.
+
+                    mdebug '        testing:', "#{recurResult}"
+                    newRHS = recurResult.applyTo rhs
+                    freeToReplace = yes
+                    for expr in exprs
+                        if not newRHS.isFreeToReplace expr, expression
+                            freeToReplace = no
+                            break
+                    if freeToReplace
+                        mdebug '        approved after extending:',
+                            "#{recurResult}"
+                        newResults.push recurResult
+                    else
+                        mdebug '        rejected after extending:',
+                            "#{recurResult}"
+            results = newResults
+            if outermost then result.complete() for result in results
+            mdebug '    results have been completed:',
+                ( "#{r}" for r in results )
             mdebug '<--', ( "#{r}" for r in newResults )
             return newResults
 
@@ -488,9 +583,12 @@ process to continue.
             soFar.set pattern, expression
             mdebug '    stored new assignment', pattern.simpleEncode(),
                 '=', expression.simpleEncode(), 'yielding', "#{soFar}"
-            result = [ soFar ]
-            mdebug '<--', ( "#{r}" for r in result )
-            return result
+            results = [ soFar ]
+            if outermost then result.complete() for result in results
+            mdebug '    results have been completed:',
+                ( "#{r}" for r in results )
+            mdebug '<--', ( "#{r}" for r in results )
+            return results
 
 If the types of the pattern and expression don't match, then the only thing
 that might save us is a substitution, if there is one.
@@ -505,12 +603,15 @@ If the pattern is atomic, then it must flat-out equal the expression.  If
 this is not the case, we can only fall back on a possible substitution.
 
         if pattern.type in [ 'i', 'f', 'st', 'ba', 'sy', 'v' ]
-            result = if pattern.equals expression, no
-                [ soFar ]
+            if pattern.equals expression, no
+                results = [ soFar ]
+                if outermost then result.complete() for result in results
+                mdebug '    results have been completed:',
+                    ( "#{r}" for r in results )
             else
-                trySubs()
-            mdebug '<--', ( "#{r}" for r in result )
-            return result
+                results = trySubs()
+            mdebug '<--', ( "#{r}" for r in results )
+            return results
 
 If the pattern is non-atomic, then it must match the expression
 structurally.  The first step in doing so is to have the same size.  We use
