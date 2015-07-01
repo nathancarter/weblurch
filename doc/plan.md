@@ -19,6 +19,47 @@ required order of completion.
 
 ## Matching Module
 
+ * New methods needed
+   * Create an `address` method for OpenMath trees (with an optional
+     ancestor parameter).
+   * Create an `index` method for OpenMath trees that is the inverse of the
+     `address` method.
+   * Create unit tests for each of these and commit.
+   * Write a `freeToReplace()` function that essentially just does the
+     replacement, tests whether it's free or not, and then replaces back
+     before reporting the result.
+   * Use that function in the current `replaceFree()` implementation.
+   * Create unit tests for `freeToReplace()` and commit.
+ * Larger bug fix
+   * Ensure that `trySubs()` does not permit a substitution unless the new
+     value is free to replace the old at that location.
+   * Ensure that the checks in lines 440-480 proceed as follows:  Create a
+     list of final results and initialize it to empty.  Then loop through
+     the existing matches and do the following for each:
+     * If its LHS has any uninstantiated metavariables, the check passes for
+       that result, because unused_N variables will ensure that it is
+       irrelevant, and thus does not harm the match results.
+     * Compute the list of descendants of the instantiated pattern
+       satisfying these criteria:
+       * They contain no metavariables
+       * They are free at their position in the instantiated pattern.
+     * For each such descendant, compute its address, then compute the
+       subexpression of `expression` having the same address.  Call this
+       list E_1,...,E_n.
+     * Recur, matching the tuple `[E_1,...,E_n]` against the tuple
+       `[rhs,...,rhs]`, that is, n copies of the instantiated RHS of the
+       substitution.
+     * With each result R in the list returned by that recursion, do this:
+       * Re-instantiate the substitution RHS with this (expanded) match R.
+       * If that instantiated version is free to replace every one of the
+         E_i, then push R onto the list of final results.
+     * Return the list of final results.
+   * Check to ensure that all existing tests pass, and debug.
+ * More tests
+   * Create unit tests for all the unusual invalid uses of quantifier rules
+     stored in the Overleaf document shared between Nathan and Ken.
+   * Create unit tests between things like `f(X,X)[c=d]` and `f(g(d),g(c))`,
+     and all the tons of variations you can think of on that theme.
  * Complete the unit tests for the matching algorithm.  Some are already
    complete, but those listed below remain to be implemented.
    I list an extensive test suite here, using capital letters for
@@ -71,6 +112,10 @@ required order of completion.
 ```
  * Add tests to verify that if you try to put more than one substitution
    expression into a pattern (whether nested or not) an error is thrown.
+ * Remove `app/openmath.duo.litcoffee` from git control in master.  Ensure
+   that it remains under git control in gh-pages.  Furthermore, ensure that
+   `app/matching.duo.litcoffee` does not go under git control in master, but
+   does in gh-pages.
 
 ## Parsing
 
