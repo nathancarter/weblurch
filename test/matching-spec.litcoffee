@@ -1944,6 +1944,40 @@ Matching `f(a,g(a))[_A~_B]` to `f(c,g(b))` should yield
             expect( result[0].get( 'B' ).equals quick 'f(c,g(b))' ) \
                 .toBeTruthy()
 
+Matching `f(_X,_X))[c=d]` to `f(g(c),g(d))` should yield `[ ]`.
+
+            left = reqSub 'f(_X,_X)', 'c', 'd'
+            right = quick 'f(g(c),g(d))'
+            result = matches left, right
+            expect( result ).toEqual [ ]
+
+Matching `f(_X,_X))[c=d]` to `f(g(d),g(c))` should yield `[ ]`.
+
+            left = reqSub 'f(_X,_X)', 'c', 'd'
+            right = quick 'f(g(d),g(c))'
+            result = matches left, right
+            expect( result ).toEqual [ ]
+
+Matching `f(_X,_X))[c~d]` to `f(g(c),g(d))` should yield `[ { X : g(c) } ]`.
+
+            left = optSub 'f(_X,_X)', 'c', 'd'
+            right = quick 'f(g(c),g(d))'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys() ).toEqual [ 'X' ]
+            expect( result[0].get( 'X' ).equals quick 'g(c)' ) \
+                .toBeTruthy()
+
+Matching `f(_X,_X))[c~d]` to `f(g(d),g(c))` should yield `[ { X : g(c) } ]`.
+
+            left = optSub 'f(_X,_X)', 'c', 'd'
+            right = quick 'f(g(d),g(c))'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys() ).toEqual [ 'X' ]
+            expect( result[0].get( 'X' ).equals quick 'g(c)' ) \
+                .toBeTruthy()
+
 ### should handle underspecified substitution situations
 
 An underspecified substitution situation is one in which one or more

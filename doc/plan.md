@@ -19,13 +19,75 @@ required order of completion.
 
 ## Matching Module
 
- * Add final tests
-   * Create unit tests between things like `f(X,X)[c=d]` and `f(g(d),g(c))`,
-     and all the tons of variations you can think of on that theme.
-   * Add tests to verify that if you try to put more than one substitution
-     expression into a pattern (whether nested or not) an error is thrown.
-   * Also verify that if there are metavariables in the expression, that an
-     error is thrown.
+ * Extend Match's `set(k,v)` member as follows:
+   * It should begin by making a backup copy of `@map`.
+   * Then write into `@map` the `k,v` pair.
+   * For each key in the map, classify it as one of these three things:
+     * in a cycle of metavariables that form an equivalence class under
+       instantiation -- with these, do nothing
+     * divergent, meaning that repeated applications of the map to `v` grow
+       without bound on the number of nodes -- if there are any of these,
+       destroy the new map, restore the backup copy, and return false to
+       indicate failure
+     * neither of the previous two -- with these, repeatedly apply the map
+       to `v` until you reach a fixed point, and use that as the new `v`
+   * Return true to indicate success.
+ * Use unit test to debug the above changes.
+ * Extend `matches` to expect that the expression may contain metavariables,
+   as follows.
+   * Comparing nonatomic to nonatomic proceeds recursively, as now.
+   * Comparing atomic non-metavariable to nonatomic proceeds by `trySubs()`,
+     as now.  This is true regardless of which is which, pattern vs.
+     expression.
+   * Comparing atomic non-metavariable to atomic non-metavariable proceeds
+     by direct equality or resorting to `trySubs()`, as now.
+   * Comparing metavariable to anything proceeds as follows, regardless of
+     whether the metavariable is the pattern or the expression.
+     * If the metavariable has an instantiation, recursively match it
+       against the other side and return that result, just as we do now.
+       Keep the two arguments (pattern and expression) in the same order.
+     * Try to call `set` to mark the metavariable as being instantiated with
+       the other expression.  If `set` returns false, then return
+       `trySubs()`.
+     * Since the call to `set` succeeded, return `[ soFar ]`, as now.
+ * Use unit tests to debug the above changes.
+```
+    a(X,X(Y))[M~N]     a(b,b(c,d,e))      [ { X : b,
+                                              Y : unused_1,
+                                              M : b(unused_1),
+                                              N : b(c,d,e) },
+                                            { X : b,
+                                              Y : unused_1,
+                                              M : a(b,b(unused_1)),
+                                              N : a(b,b(c,d,e)) } ]
+```
+ * Rework `trySubs()` so that it is not called only if a match fails.  It
+   should be used to add alternate matches to every single return value for
+   every match.  For this reason, it does not actually need to walk up the
+   parent chain, because the recursion will do that automatically.  The
+   recursive call to `matches` should not bias things by using the same
+   `soFar` that was manipulated in the failed attempt to complete it; keep
+   a copy of `soFar` as it was given to the current `matches` call and use
+   that.  This will also return more general results in some cases.  For
+   instance, the test given above should now give the following result
+   instead of its too-specific one.
+```
+    a(X,X(Y))[M~N]     a(b,b(c,d,e))      [ { X : b,Y:unused_1,
+                                              M : b(unused_1),
+                                              N : b(c,d,e) },
+                                            { X : unused_1,
+                                              Y : unused_2,
+                                              M : a(unused_1,
+                                                    unused_1(unused_2)),
+                                              N : a(b,b(c,d,e)) } ]
+```
+ * Ensure that the above changes cause the final tests in the "harder
+   substitution situations" section to pass.  Add some more complex tests of
+   that same ilk to be sure.
+ * Add tests to verify that if you try to put more than one substitution
+   expression into a pattern (whether nested or not) an error is thrown.
+ * Also verify that if there are metavariables in the expression, that an
+   error is thrown.
  * Remove `app/openmath.duo.litcoffee` from git control in master.  Ensure
    that it remains under git control in gh-pages.  Furthermore, ensure that
    `app/matching.duo.litcoffee` does not go under git control in master, but
