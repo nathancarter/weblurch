@@ -1015,6 +1015,20 @@ matching algorithm.
             expect( result[0].get( 'T' ).equals quick 'X' ).toBeTruthy()
             expect( result[0].get( 'X' ).equals quick 'A' ).toBeTruthy()
 
+Matching the rule to the statements
+`for.all[x,not(for.all[y,eq(x,y)])]` and
+`not(for.all[y,eq(y,y)])` should yield `[ ]`.
+
+This test only fails because substitution patterns must require the right
+hand side to be free to replace the left hand side, and in this case it is
+not.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'for.all[x,not(for.all[y,eq(x,y)])]' ),
+                quick( 'not(for.all[y,eq(y,y)])' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
 ### should handle instances of existential elimination
 
 The desktop version of Lurch (v0.8) came with libraries defining the
@@ -1174,6 +1188,21 @@ matching algorithm.
             expect( result[0].get( 'C' ).equals quick 'X' ).toBeTruthy()
             expect( result[0].get( 'X' ).equals quick 'C' ).toBeTruthy()
 
+Matching the rule to the statements
+`exi.sts[x,exi.sts[y,ne(x,y)]]`, `dec.con(y)`, and
+`exi.sts[y,ne(y,y)]` should yield `[ ]`.
+
+This test only fails because substitution patterns must require the right
+hand side to be free to replace the left hand side, and in this case it is
+not.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'exi.sts[x,exi.sts[y,ne(x,y)]]' ),
+                quick( 'dec.con(y)' ),
+                quick( 'exi.sts[y,ne(y,y)]' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
 ### should handle instances of universal introduction
 
 The desktop version of Lurch (v0.8) came with libraries defining the
@@ -1293,6 +1322,21 @@ matching algorithm.
                 .toBeTruthy()
             expect( result[0].get( 'V' ).equals quick 'V' ).toBeTruthy()
             expect( result[0].get( 'X' ).equals quick 'X' ).toBeTruthy()
+
+Matching the rule to the statements
+`dec.var(a)`, `exi.sts[b,ne(b,a)]`, and
+`for.all[b,exi.sts[b,ne(b,b)]]` should yield `[ ]`.
+
+This test only fails because substitution patterns must require the right
+hand side to be free to replace the left hand side, and in this case it is
+not.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'dec.var(a)' ),
+                quick( 'exi.sts[b,ne(b,a)]' ),
+                quick( 'for.all[b,exi.sts[b,ne(b,b)]]' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
 
 ### should handle instances of existential introduction
 
@@ -1438,6 +1482,19 @@ yield `[ ]`.
             expect( result[0].get( 'T' ).equals quick 'M' ).toBeTruthy()
             expect( result[0].get( 'X' ).equals quick 'N' ).toBeTruthy()
 
+Matching the rule to the statements
+`for.all[y,eq(y,y)]` and `exi.sts[x,for.all[y,eq(x,y)]]` should yield `[ ]`.
+
+This test only fails because substitution patterns must require the right
+hand side to be free to replace the left hand side, and in this case it is
+not.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'for.all[y,eq(y,y)]' ),
+                quick( 'exi.sts[x,for.all[y,eq(x,y)]]' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
+
 ### should handle instances of equality elimination
 
 The desktop version of Lurch (v0.8) came with libraries defining the
@@ -1553,6 +1610,19 @@ Matching the rule to the statements `2^n-1=sum(i,0,n-1,2^i)`,
             expect( result[0].get( 'S' ).equals \
                 quick 'e.q(plus(minus(pow(2,n),1),1),pow(2,n))' ) \
                 .toBeTruthy()
+
+Matching the rule to the statements `exi.sts[x,ne(x,y)]`, `eq(x,y)`, and
+`exi.sts[x,ne(x,x)]` should yield `[ ]`.
+
+This test only fails because substitution patterns must require the right
+hand side to be free to replace the left hand side, and in this case it is
+not.
+
+            instance = OM.app OM.var( 'list' ),
+                quick( 'exi.sts[x,ne(x,y)]' ), quick( 'eq(x,y)' ),
+                quick( 'exi.sts[x,ne(x,x)]' )
+            result = matches rule, instance
+            expect( result ).toEqual [ ]
 
 ### should handle harder substitution situations
 

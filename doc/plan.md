@@ -20,8 +20,6 @@ required order of completion.
 ## Matching Module
 
  * Add final tests
-   * Create unit tests for all the unusual invalid uses of quantifier rules
-     stored in the Overleaf document shared between Nathan and Ken.
    * Create unit tests between things like `f(X,X)[c=d]` and `f(g(d),g(c))`,
      and all the tons of variations you can think of on that theme.
    * Add tests to verify that if you try to put more than one substitution
