@@ -19,33 +19,15 @@ required order of completion.
 
 ## Matching Module
 
- * Complete the unit tests for the matching algorithm.  Some are already
-   complete, but those listed below remain to be implemented.
-   I list an extensive test suite here, using capital letters for
-   metavariables and lower case letters for regular variables, and otherwise
-   easily human-readable/suggestive notation.  The one exception is that @
-   means the universal quantifier and # means the existential quantifier.
-```
-    pattern             expression      results
-    -------             ----------      -------
-
-    UNDERSPECIFIED
-
-    A[B=C]              any(thing)      [{A:any(thing),B:unused_1,
-                                          C:unused_2}]
-    A[B~C]              any(thing)      [{A:any(thing),B:unused_1,
-                                          C:unused_2}]
-
-    Also verify that if there are metavariables in the expression, that an
-    error is thrown.
-```
- * More tests
+ * Add final tests
    * Create unit tests for all the unusual invalid uses of quantifier rules
      stored in the Overleaf document shared between Nathan and Ken.
    * Create unit tests between things like `f(X,X)[c=d]` and `f(g(d),g(c))`,
      and all the tons of variations you can think of on that theme.
    * Add tests to verify that if you try to put more than one substitution
      expression into a pattern (whether nested or not) an error is thrown.
+   * Also verify that if there are metavariables in the expression, that an
+     error is thrown.
  * Remove `app/openmath.duo.litcoffee` from git control in master.  Ensure
    that it remains under git control in gh-pages.  Furthermore, ensure that
    `app/matching.duo.litcoffee` does not go under git control in master, but

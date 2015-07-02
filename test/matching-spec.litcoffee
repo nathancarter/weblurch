@@ -1873,3 +1873,41 @@ Matching `f(a,g(a))[_A~_B]` to `f(c,g(b))` should yield
                 .toBeTruthy()
             expect( result[0].get( 'B' ).equals quick 'f(c,g(b))' ) \
                 .toBeTruthy()
+
+### should handle underspecified substitution situations
+
+An underspecified substitution situation is one in which one or more
+metavariables will be unused.  We've seen some such instances in the tests
+above, but we test a few more extreme cases here.
+
+        it 'should handle underspecified substitution situations', ->
+
+Matching `_A[_B=_C]` to `any(thing)` should yield
+`[ { A : any(thing), B : unused_1, C : unused_2 } ]`.
+
+            left = reqSub '_A', '_B', '_C'
+            right = quick 'any(thing)'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'B', 'C' ]
+            expect( result[0].get( 'A' ).equals quick 'any(thing)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'B' ).equals quick 'unused_1' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'C' ).equals quick 'unused_2' ) \
+                .toBeTruthy()
+
+Matching `_A[_B~_C]` to `any(thing)` should yield
+`[ { A : any(thing), B : unused_1, C : unused_2 } ]`.
+
+            left = optSub '_A', '_B', '_C'
+            right = quick 'any(thing)'
+            result = matches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].keys().sort() ).toEqual [ 'A', 'B', 'C' ]
+            expect( result[0].get( 'A' ).equals quick 'any(thing)' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'B' ).equals quick 'unused_1' ) \
+                .toBeTruthy()
+            expect( result[0].get( 'C' ).equals quick 'unused_2' ) \
+                .toBeTruthy()
