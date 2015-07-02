@@ -1036,6 +1036,8 @@ a non-symbol, and a binding node's variables must not be replaced with
 non-variables.
 
         isFreeToReplace : ( subtreeToReplace, inThis ) =>
+            if @sameObjectAs subtreeToReplace then return yes
+            if not subtreeToReplace.parent? then return yes
             context = subtreeToReplace
             while context.parent then context = context.parent
             saved = new OMNode subtreeToReplace.tree

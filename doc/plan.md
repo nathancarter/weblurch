@@ -29,22 +29,6 @@ required order of completion.
     pattern             expression      results
     -------             ----------      -------
 
-    HARDER SUBSTITUTIONS
-
-    Now we list pattern, expresion, and results, as at first.
-
-    f(f[A=g])           f(g)            [{A:f}]
-    f(f)[A=g]           g(g)            [{A:f}]
-    f(f[A=g])           g(g)            []
-    f(g(a))[A=B]        f(g(b))         [{A:a,B:b}]
-    f(g(a),a)[A=B]      f(g(b),a)       []
-    f(g(a),a)[A~B]      f(g(b),a)       [{A:a,B:b}]
-    f(g(a),a)[A=B]      f(g(b),c)       []
-    f(g(a),a)[A~B]      f(g(b),c)       []
-        previous four cases repeated, but with first and second arguments
-        in both the pattern and the expression interchanged should give same
-        results
-
     UNDERSPECIFIED
 
     A[B=C]              any(thing)      [{A:any(thing),B:unused_1,

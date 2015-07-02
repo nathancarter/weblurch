@@ -70,13 +70,9 @@ be used to instantiate those metavariables.
 
 ### Match constructor
 
-Constructing a new one simply initializes the map to an empty map and
-"visited" list.  The map is discussed in the following section, and the
-visited list is discussed [further below](#visiting).
+Constructing a new one simply initializes the map to an empty map
 
-        constructor : ->
-            @map = { }
-            @visited = [ ]
+        constructor : -> @map = { }
 
 ### Metavariable mapping
 
@@ -219,18 +215,6 @@ We also provide a reverse method, for removing a stored substitution.
 
         clearSubstitution : => delete @substitution
 
-We also provide a method for reconstructing a copy of the original
-substitution expression based on the data about it stored herein.  This is
-like an inverse to `setSubstitution()`.
-
-        saveSubstitution : =>
-            head = if @getSubstitutionRequired()
-                Match.requiredSubstitution
-            else
-                Match.optionalSubstitution
-            OM.application head, @getSubstitutionRoot(),
-                @getSubstitutionLeft(), @getSubstitutionRight()
-
 To go with the above function for registering a substitution pattern, we
 also provide several methods for querying the substitution data stored.
 Remember that the original values are returned, so do not modify them unless
@@ -316,8 +300,6 @@ It is straightforward to copy a match object; just copy all of its members.
 But it matters which ones are deeply copied and which ones are not.  Here
 are the details.
  * The values in the map are copies of those in the original map.
- * The values in the visited list are equal to those in the original map,
-   but the array itself is a copy.
  * The result's substitution is a shallow copy of this object's
    substitution; only the variable arrays are copied deeply.
  * The pattern and expression are not deeply copied; the same objects are
@@ -327,7 +309,6 @@ are the details.
             result = new Match
             for own key, value of @map
                 result.map[key] = value.copy()
-            result.visited = @visited[..]
             if @substitution?
                 result.substitution =
                     original : @substitution.original
@@ -402,6 +383,15 @@ optional ones.)
                 right = substitution.children[3]
                 substitution.replaceWith substitution.children[1]
                 substitution.replaceFree left, right
+        mdebug '  --pattern inside topmost pattern?',
+            soFar.pattern.hasDescendantSatisfying ( d ) ->
+                d.sameObjectAs pattern
+        mdebug '  --expression inside topmost expression?',
+            soFar.expression.hasDescendantSatisfying ( d ) ->
+                d.sameObjectAs expression
+        mdebug '  --pattern inside substitution root?',
+            soFar.getSubstitutionRoot()?.hasDescendantSatisfying ( d ) ->
+                d.sameObjectAs pattern
 
 We build one final preparatory function before diving into the actual
 algorithm.  This function should be returned when the match would fail
@@ -419,18 +409,16 @@ substitution currently in effect a chance to save the day.
             mdebug '    match of', pattern.simpleEncode(), 'to',
                 expression.simpleEncode(), 'failed; trying subs...',
                 soFar.toString()
-            save = soFar.saveSubstitution()
-            pair = OM.application
-            sub = pair soFar.getSubstitutionLeft(),
-                soFar.getSubstitutionRight()
+            save = soFar.getSubstitutionNode()
             root = soFar.getSubstitutionRoot()
             rhs = soFar.getSubstitutionRight()
+            pair = OM.application
+            sub = pair soFar.getSubstitutionLeft(), rhs
             soFar.clearSubstitution()
             [ walk1, walk2, results ] = [ pattern, expression, [ ] ]
             while walk1? and walk2?
                 mdebug '    attempting subs at this level:',
-                    sub.simpleEncode(),
-                    OM.application( walk1, walk2 ).simpleEncode(),
+                    sub.simpleEncode(), pair( walk1, walk2 ).simpleEncode(),
                     "#{soFar}..."
                 for match in matches sub, pair( walk1, walk2 ), soFar, no
                     mdebug '        checking this:', "#{match}"
@@ -500,7 +488,7 @@ Compute the list of descendants of the instantiated pattern that equal the
 left hand side, have no metavariables in them and are free in the
 instantiated pattern.
 
-                root = soFar.getSubstitutionRoot()
+                root = result.getSubstitutionRoot()
                 rinstantiated = result.applyTo root
                 lhs = result.applyTo lhs
                 descs = rinstantiated.descendantsSatisfying ( d ) ->
@@ -678,8 +666,7 @@ each child.
             ( "#{r}" for r in results )
 
 Before returning the results, if we are the outermost call, instantiate all
-unused metavariables to things like "unused_1", etc.  And, of course, filter
-them through `markVisited` as usual.
+unused metavariables to things like "unused_1", etc.
 
         if outermost then result.complete() for result in results
         mdebug '    results have been completed:',
