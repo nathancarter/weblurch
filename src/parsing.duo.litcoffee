@@ -7,10 +7,6 @@ This module implements the Earley Parser, an algorithm [given on Wikipedia
 here](https://en.wikipedia.org/wiki/Earley_parser).  Much of this code was
 translated from [the desktop version of Lurch](www.lurchmath.org).
 
-Although the module functions well, it would be great to enhance it to
-accept non-string input, any array, actually.  We provide a tokenizer in
-this module also, whose output would be perfectly sensible parser input.
-
 ## Utilities
 
 The following lines ensure that this file works in Node.js, for testing.

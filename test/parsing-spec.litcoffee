@@ -156,3 +156,82 @@ change the token to be added to the tokens array.
                 [ 'alert', '(', '"message"', ')' ]
             expect( T.tokenize 'my(/regexp/)+6' ).toEqual \
                 [ 'my', '(', 'RegExp(regexp)', ')', '+', '6' ]
+
+## Tokenizing and parsing
+
+Naturally tokenizing and parsing go hand-in-hand, the former usually paving
+the way for the latter.  Here we test to be sure that the parser can handle
+arbitrary array inputs, and that in particular it can handle the output of
+a tokenizer.
+
+    describe 'Tokenizing and parsing', ->
+
+### should support parsing arrays
+
+First we just test the parser alone, that it can handle arrays, which are
+what the tokenizer will produce.  We use the same simple grammar for sums
+and products of integers from earlier, but now we need not process
+digit-by-digit, because we will provide the integers as single entres in the
+input array, not each digit separately.
+
+        it 'should support parsing arrays', ->
+            G = new Grammar 'S'
+            G.addRule 'I', /[0-9]+/
+            G.addRule 'M', 'I', [ 'M', /\*/, 'I' ]
+            G.addRule 'S', 'M', [ 'S', /\+/, 'M' ]
+            expect( G.parse [ '5' ] ).toEqual \
+                [ [ 'S', [ 'M', [ 'I', '5' ] ] ] ]
+            expect( G.parse [ '19' ] ).toEqual \
+                [ [ 'S', [ 'M', [ 'I', '19' ] ] ] ]
+            G.setOption 'addCategories', no
+            G.setOption 'collapseBranches', yes
+            expect( G.parse [ '5' ] ).toEqual [ '5' ]
+            expect( G.parse [ '19' ] ).toEqual [ '19' ]
+            expect( G.parse [ '7', '*', '50', '*', '33', '*', '1' ] ) \
+                .toEqual [ [ [ [ '7', '*', '50' ], '*', '33' ], '*', '1' ] ]
+            G.setOption 'expressionBuilder', ( x ) ->
+                if x instanceof Array then "(#{x.join ''})" else "#{x}"
+            expect( G.parse [ '333', '+', '726', '*', '2349' ] ) \
+                .toEqual [ '(333+(726*2349))' ]
+
+### should be chainable
+
+Now we test that we can create a tokenizer whose output will flow naturally
+into a parser.  This is (almost) the culmination of the entire module.  The
+only remaining test is the next one below, which makes this process simpler,
+but performs essentially the same functions.
+
+        it 'should be chainable', ->
+            T = new Tokenizer
+            T.addType /\s/, -> null
+            T.addType /[a-zA-Z_][a-zA-Z_0-9]*/
+            T.addType /\.[0-9]+|[0-9]+\.?[0-9]*/
+            T.addType /"(?:[^\\"]|\\\\|\\")*"/
+            T.addType /[()+/*-]/
+            G = new Grammar 'expr'
+            G.addRule 'expr', 'sumdiff'
+            G.addRule 'atomic', /[a-zA-Z_][a-zA-Z_0-9]*/
+            G.addRule 'atomic', /\.[0-9]+|[0-9]+\.?[0-9]*/
+            G.addRule 'atomic', /"(?:[^\\"]|\\\\|\\")*"/
+            G.addRule 'atomic', [ /\(/, 'sumdiff', /\)/ ]
+            G.addRule 'prodquo', [ 'atomic' ]
+            G.addRule 'prodquo', [ 'prodquo', /[*/]/, 'atomic' ]
+            G.addRule 'sumdiff', [ 'prodquo' ]
+            G.addRule 'sumdiff', [ 'sumdiff', /[+-]/, 'prodquo' ]
+            G.setOption 'addCategories', no
+            G.setOption 'collapseBranches', yes
+            G.setOption 'expressionBuilder', ( expr ) ->
+                if expr[0] is '(' and expr[2] is ')' and expr.length is 3
+                    expr[1]
+                else
+                    expr
+            expect( G.parse T.tokenize 'ident-7.8/other' ).toEqual \
+                [ [ 'ident', '-', [ '7.8', '/', 'other' ] ] ]
+            expect( G.parse T.tokenize 'ident*7.8/other' ).toEqual \
+                [ [ [ 'ident', '*', '7.8' ], '/', 'other' ] ]
+            expect( G.parse T.tokenize 'ident*(7.8/other)' ).toEqual \
+                [ [ 'ident', '*', [ '7.8', '/', 'other' ] ] ]
+
+### should be connectable using a parser option
+
+Not yet implemented.
