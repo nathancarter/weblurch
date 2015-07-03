@@ -3,7 +3,7 @@
 
 Here we import the module we're about to test.
 
-    { Grammar } = require '../src/parsing.duo'
+    { Grammar, Tokenizer } = require '../src/parsing.duo'
     full = ( x ) -> require( 'util' ).inspect x, depth : null
 
 ## The Grammar class
@@ -81,3 +81,78 @@ The grammar should correctly parse sums of products of nonnegative integers.
             G.setOption 'expressionBuilder', ( x ) ->
                 if x instanceof Array then "(#{x.join ''})" else "#{x}"
             expect( G.parse '3+6*9' ).toEqual [ '(3+(6*9))' ]
+
+## A simple tokenizer
+
+This section defines a very simple tokenizer for numbers, identifiers,
+string literals, parentheses, and the operations of arithmetic.  It then
+verifies that it can be applied to tokenize expressions in that language.
+
+    describe 'A simple tokenizer', ->
+
+### should tokenize arithmetic expressions
+
+The tokenizer should correctly tokenize arithmetic expressions.
+
+        it 'should tokenize arithmetic expressions', ->
+            T = new Tokenizer
+            T.addType /[a-zA-Z_][a-zA-Z_0-9]*/
+            T.addType /\.[0-9]+|[0-9]+\.?[0-9]*/
+            T.addType /"(?:[^\\"]|\\\\|\\")*"/
+            T.addType /[()+/*-]/
+            expect( T.tokenize '5' ).toEqual [ '5' ]
+            expect( T.tokenize '19' ).toEqual [ '19' ]
+            expect( T.tokenize '6-9' ).toEqual [ '6', '-', '9' ]
+            expect( T.tokenize 'x*-5.0/(_tmp+k)' ).toEqual \
+                [ 'x', '*', '-', '5.0', '/', '(', '_tmp', '+', 'k', ')' ]
+            expect( T.tokenize 'alert("message")' ).toEqual \
+                [ 'alert', '(', '"message"', ')' ]
+
+### should support format functions
+
+The tokenizer should permit `addType` to provide formatting functions that
+change the token to be added to the tokens array, or even remove it
+entirely.
+
+        it 'should support format functions', ->
+            T = new Tokenizer
+            T.addType /\s/, -> null
+            T.addType /[a-zA-Z_][a-zA-Z_0-9]*/
+            T.addType /\.[0-9]+|[0-9]+\.?[0-9]*/
+            T.addType /"(?:[^\\"]|\\\\|\\")*"/
+            T.addType /\/((?:[^\\\/]|\\\\|\\\/)*)\//,
+                ( text, match ) -> "RegExp(#{match[1]})"
+            T.addType /[()+/*-]/
+            expect( T.tokenize '5' ).toEqual [ '5' ]
+            expect( T.tokenize '19' ).toEqual [ '19' ]
+            expect( T.tokenize '6-9' ).toEqual [ '6', '-', '9' ]
+            expect( T.tokenize 'x*-5.0/(_tmp+k)' ).toEqual \
+                [ 'x', '*', '-', '5.0', '/', '(', '_tmp', '+', 'k', ')' ]
+            expect( T.tokenize 'alert("message")' ).toEqual \
+                [ 'alert', '(', '"message"', ')' ]
+            expect( T.tokenize 'my(/regexp/)+6' ).toEqual \
+                [ 'my', '(', 'RegExp(regexp)', ')', '+', '6' ]
+            expect( T.tokenize '64 - 8320   + K' ).toEqual \
+                [ '64', '-', '8320', '+', 'K' ]
+
+### should support format strings
+
+The tokenizer should permit `addType` to provide formatting strings that
+change the token to be added to the tokens array.
+
+        it 'should support format strings', ->
+            T = new Tokenizer
+            T.addType /[a-zA-Z_][a-zA-Z_0-9]*/
+            T.addType /\.[0-9]+|[0-9]+\.?[0-9]*/
+            T.addType /"(?:[^\\"]|\\\\|\\")*"/
+            T.addType /\/((?:[^\\\/]|\\\\|\\\/)*)\//, 'RegExp(%1)'
+            T.addType /[()+/*-]/
+            expect( T.tokenize '5' ).toEqual [ '5' ]
+            expect( T.tokenize '19' ).toEqual [ '19' ]
+            expect( T.tokenize '6-9' ).toEqual [ '6', '-', '9' ]
+            expect( T.tokenize 'x*-5.0/(_tmp+k)' ).toEqual \
+                [ 'x', '*', '-', '5.0', '/', '(', '_tmp', '+', 'k', ')' ]
+            expect( T.tokenize 'alert("message")' ).toEqual \
+                [ 'alert', '(', '"message"', ')' ]
+            expect( T.tokenize 'my(/regexp/)+6' ).toEqual \
+                [ 'my', '(', 'RegExp(regexp)', ')', '+', '6' ]

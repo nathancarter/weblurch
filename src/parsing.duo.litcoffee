@@ -7,27 +7,9 @@ This module implements the Earley Parser, an algorithm [given on Wikipedia
 here](https://en.wikipedia.org/wiki/Earley_parser).  Much of this code was
 translated from [the desktop version of Lurch](www.lurchmath.org).
 
-Although the module functions well, several potential enhancements remain,
-listed here.
- * Accept non-string input (any array, maybe that came from a tokenizer).
- * Provide a simple tokenization routine that takes a string and an array
-   and does this:
-   * Try each regexp in the array on the start of the string; for the first
-     one that succeeds:
-     * Pop the matched text and save it as a token in the output array.
-     * If the regexp is followed in the input array by a function, run that
-       on the token.  Replace the token in the output array with the result
-       of the function, unless it's null, which means remove the token from
-       the output array.
-     * If instead it's followed by a string, do simultaneous replacement of
-       all %n patterns with the regexp captures, and use that in place of
-       the token.
-   * If no regexp matches, pop a single char as a token.
-This last feature allows us to create things like the following.
- * Example whitespace remover: `[ /\s/, null ]`
-   * `'2 + 3 * 4' -> ['2','+','3','*','4']`
- * Example quotation tokenizer: `[ /"(?:[^\\"]|\\\\|\\")*"/ ]`
-   * `f("Hello") -> ['f','(','"Hello"',')']`
+Although the module functions well, it would be great to enhance it to
+accept non-string input, any array, actually.  We provide a tokenizer in
+this module also, whose output would be perfectly sensible parser input.
 
 ## Utilities
 
@@ -325,6 +307,84 @@ parsing and should be returned.
             ( stateSet.got[0] \
               for stateSet in stateGrid[stateGrid.length-1] when \
               stateSet.lhs is '' and getNext( stateSet ) is null )
+
+## Tokenizing
+
+We also provide a class for doing simple tokenization of strings into arrays
+of tokens, which can then be passed to a parser.  To use this class, create
+an instance, add some token types using the `addType` function documented
+below, then either call its `tokenize` function yourself on a string, or
+just set this tokenizer as the default tokenizer on a parser.
+
+    exports.Tokenizer = class Tokenizer
+        constructor : -> @tokenTypes = [ ]
+
+This function adds a token type to this object.  The first parameter is the
+regular expression used to match the tokens.  The second parameter can be
+either of three things:
+ * If it is a function, that function will be run on every instance of the
+   token that's found in any input being tokenized, and the output of the
+   function used in place of the token string in the return value from this
+   tokenizer.  But if the function returns null, the tokenizer will omit
+   that token from the output array.  This is useful for, say, removing
+   whitespace:  `addType( /\s/, -> null )`.  The function will actually
+   receive two parameters, the second being the regular expresison match
+   object, which can be useful if there were captured subexpressions.
+ * If it is a string, that string will be used as the output token instead
+   of the actual matched token.  All `%n` patterns in the output will be
+   simultaneously replaced with the captured expressions of the type's
+   regular expression (with zero being the entire match).  This is useful
+   for reformatting tokens by adding detail.  Example:
+   `addType( /-?[0-9]+/, 'Integer(%0)' )`
+ * The second parameter may be omitted, and it will be treated as the
+   identity function, as in the first bullet point above.
+
+        addType : ( regexp, formatter = ( x ) -> x ) =>
+            if regexp.source[0] isnt '^'
+                regexp = new RegExp "^(?:#{regexp.source})"
+            @tokenTypes.push
+                regexp : regexp
+                formatter : formatter
+
+Tokenizing is useful for grouping large, complex chunks of text into one
+piece before parsing, so that the parsing rules can be simpler and clearer.
+For example, a regular expression that groups double-quoted string literals
+into single tokens is `/"(?:[^\\"]|\\\\|\\")*"/`.  That's a much shorter bit
+of code to write than a complex set of parsing rules that accomplish the
+same purpose; it will also run more efficiently than those rules would.
+
+The following routine tokenizes the input, returning one of two things:
+ * an array of tokens, each of which was the output of the formatter
+   function/string provided to `addType()`, above, or
+ * null, because some portion of the input string did not match any of the
+   token types added with `addType()`.
+
+The routine simply tries every regular expression of every token type added
+with `addType()`, above, and when one succeeds, it pops that text off the
+input string, saving it to a results list after passing it throught he
+corresponding formatter.  If at any point none of the regular expressions
+matches the beginning of the remaining input, null is returned.
+
+        tokenize : ( input ) =>
+            result = [ ]
+            while input.length > 0
+                original = input.length
+                for type in @tokenTypes
+                    if not match = type.regexp.exec input then continue
+                    input = input[match[0].length..]
+                    if type.formatter instanceof Function
+                        next = type.formatter match[0], match
+                        if next? then result.push next
+                    else
+                        format = "#{type.formatter}"
+                        token = ''
+                        while next = /\%([0-9]+)/.exec format
+                            token += format[...next.index] + match[next[1]]
+                            format = format[next.index+next[0].length..]
+                        result.push token + format
+                    break
+                if input.length is original then return null
+            result
 
 ## Debugging
 
