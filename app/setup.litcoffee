@@ -213,6 +213,35 @@ Workaround for [this bug](http://www.tinymce.com/develop/bugtracker_view.php?id=
                         if editor.windowManager.getWindows().length isnt 0
                             editor.windowManager.close()
 
-After the initialization function above has been run, each plugin will be
-initialized.  The Groups plugin uses the following entry to know which group
-types to create.
+The third-party plugin for math equations can have its rough meaning
+extracted by the following function, which can be applied to any DOM element
+that has the style "mathquill-rendered-math."  For instance, the expression
+$x^2+5$ in MathQuill would become `["x","sup","2","+","5"]` as returned by
+this function, similar to the result of a tokenizer, ready for a parser.
+
+    window.mathQuillToMeaning = ( node ) ->
+        # console.log 'visiting', node
+        if node instanceof Text then return node.textContent
+        result = [ ]
+        for child in node.childNodes
+            if ( $ child ).hasClass 'selectable' then continue
+            if /width:0/.test child.getAttribute? 'style'
+                continue
+            result = result.concat mathQuillToMeaning child
+        if node.tagName in [ 'SUP', 'SUB' ]
+            if result.length > 1
+                result.unshift '('
+                result.push ')'
+            result.unshift node.tagName.toLowerCase()
+        for marker in [ 'fraction', 'overline', 'overarc' ]
+            if ( $ node ).hasClass marker
+                if result.length > 1
+                    result.unshift '('
+                    result.push ')'
+                result.unshift marker
+        for marker in [ 'numerator', 'denominator' ]
+            if ( $ node ).hasClass marker
+                if result.length > 1
+                    result.unshift '('
+                    result.push ')'
+        if result.length is 1 then result[0] else result
