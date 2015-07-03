@@ -9,9 +9,6 @@ translated from [the desktop version of Lurch](www.lurchmath.org).
 
 Although the module functions well, several potential enhancements remain,
 listed here.
- * Eliminate the need for the two current options by letting clients provide
-   an arbitrary function that will be run on each matched rule to construct
-   the resulting expression.
  * Accept non-string input (any array, maybe that came from a tokenizer).
  * Provide a simple tokenization routine that takes a string and an array
    and does this:
@@ -126,6 +123,7 @@ name to a grammar when you construct one.
                 addCategories : yes
                 collapseBranches : no
                 showDebuggingOutput : no
+                expressionBuilder : null
 
 The default options for the parsing algorithm are initialized in the
 constructor above, but you can change them using the following routine.  The
@@ -171,6 +169,14 @@ defined [above](#constructor).
    collapsed, as in `[[[[a]]]] -> a`
  * `showDebuggingOutput : true` iff lots of debugging spam should be dumped
    to the console as the algorithm executes
+ * `expressionBuilder` can be set to a function that will be called each
+   time a production is completed.  It will receive as input the results of
+   that production (wrapped in an array if `collapseBranches` is true, with
+   the category name prepended if `addCategories` is true) and it can return
+   any object to replace that array in the final result.  Since this will be
+   called at every level of the hierarchy, you can use this to recursively
+   build expressions from the leaves upwards.  Because it will need to be
+   copyable, outputs are restricted to JSON data.
 
 This algorithm is documented to some degree, but it will make much more
 sense if you have read the Wikipedia page cited at the top of this file.
@@ -179,6 +185,7 @@ sense if you have read the Wikipedia page cited at the top of this file.
             options.addCategories ?= @defaults.addCategories
             options.collapseBranches ?= @defaults.collapseBranches
             options.showDebuggingOutput ?= @defaults.showDebuggingOutput
+            options.expressionBuilder ?= @defaults.expressionBuilder
             debug = if options.showDebuggingOutput then console.log else ->
             debug '\n\n'
 
@@ -246,6 +253,8 @@ whichever rules spawned it by copying them into the next column in
                                     got.unshift state.lhs
                                 if options.collapseBranches and \
                                     got.length is 1 then got = got[0]
+                                if options.expressionBuilder?
+                                    got = options.expressionBuilder got
                                 s.got.push got
                                 stateGrid[i].push s
                                 debug "completer added this to #{i}:",

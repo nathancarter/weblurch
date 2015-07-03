@@ -35,14 +35,12 @@ multiplication expression, and S for summation expression.
             G.addRule 'I', 'D', 'I D'
             G.addRule 'M', 'I', [ 'M', /\*/, 'I' ]
             G.addRule 'S', 'M', [ 'S', /\+/, 'M' ]
-            console.log full G.rules
 
 ### should parse nonnegative integers
 
 The grammar should correctly parse nonnegative integers.
 
         it 'should parse nonnegative integers', ->
-            G.setOption 'showDebuggingOutput', yes
             expect( G.parse '5' ).toEqual \
                 [ [ 'S', [ 'M', [ 'I', [ 'D', '5' ] ] ] ] ]
             expect( G.parse '19' ).toEqual \
@@ -80,3 +78,6 @@ The grammar should correctly parse sums of products of nonnegative integers.
                 [ [ [ '3', '*', '6' ], '+', '9' ] ]
             expect( G.parse '3+6*9' ).toEqual \
                 [ [ '3', '+', [ '6', '*', '9' ] ] ]
+            G.setOption 'expressionBuilder', ( x ) ->
+                if x instanceof Array then "(#{x.join ''})" else "#{x}"
+            expect( G.parse '3+6*9' ).toEqual [ '(3+(6*9))' ]
