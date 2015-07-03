@@ -102,6 +102,7 @@ name to a grammar when you construct one.
                 collapseBranches : no
                 showDebuggingOutput : no
                 expressionBuilder : null
+                tokenizer : null
 
 The default options for the parsing algorithm are initialized in the
 constructor above, but you can change them using the following routine.  The
@@ -155,6 +156,11 @@ defined [above](#constructor).
    called at every level of the hierarchy, you can use this to recursively
    build expressions from the leaves upwards.  Because it will need to be
    copyable, outputs are restricted to JSON data.
+ * `tokenizer` can be an instance of the `Tokenizer` class
+   [defined later in this module](#tokenizing), and if it is, it will be
+   applied to any string input received by the parser before the parser does
+   anything with it.  This way you can simply place the tokenizer inside the
+   parser and forget about it; it will be run automatically.
 
 This algorithm is documented to some degree, but it will make much more
 sense if you have read the Wikipedia page cited at the top of this file.
@@ -164,8 +170,14 @@ sense if you have read the Wikipedia page cited at the top of this file.
             options.collapseBranches ?= @defaults.collapseBranches
             options.showDebuggingOutput ?= @defaults.showDebuggingOutput
             options.expressionBuilder ?= @defaults.expressionBuilder
+            options.tokenizer ?= @defaults.tokenizer
             debug = if options.showDebuggingOutput then console.log else ->
             debug '\n\n'
+
+Run the tokenizer if there is one, and the input needs it.
+
+            if options.tokenizer? and typeof input is 'string'
+                input = options.tokenizer.tokenize input
 
 Initialize the set of states to teh array `[ [], [], ..., [] ]`, one entry
 for each interstice between characters in `input`, including one for before

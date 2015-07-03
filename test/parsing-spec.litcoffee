@@ -10,12 +10,13 @@ Here we import the module we're about to test.
 
 This section tests just the existence of the main class (Grammar).
 
-    describe 'Grammar class', ->
+    describe 'Grammar and Tokenizer classes', ->
 
 ### should be defined
 
         it 'should be defined', ->
             expect( Grammar ).toBeTruthy()
+            expect( Tokenizer ).toBeTruthy()
 
 ## A simple grammar
 
@@ -234,4 +235,40 @@ but performs essentially the same functions.
 
 ### should be connectable using a parser option
 
-Not yet implemented.
+We can set the tokenizer as an option on the parser and thus not have to
+manually call the `tokenize` function.  It should be called automatically
+for us.  Thus this test is exactly like the previous, except we just call
+`G.parse` in each test, and verify that tokenization must therefore be
+happening automatically.
+
+        it 'should be connectable using a parser option', ->
+            T = new Tokenizer
+            T.addType /\s/, -> null
+            T.addType /[a-zA-Z_][a-zA-Z_0-9]*/
+            T.addType /\.[0-9]+|[0-9]+\.?[0-9]*/
+            T.addType /"(?:[^\\"]|\\\\|\\")*"/
+            T.addType /[()+/*-]/
+            G = new Grammar 'expr'
+            G.addRule 'expr', 'sumdiff'
+            G.addRule 'atomic', /[a-zA-Z_][a-zA-Z_0-9]*/
+            G.addRule 'atomic', /\.[0-9]+|[0-9]+\.?[0-9]*/
+            G.addRule 'atomic', /"(?:[^\\"]|\\\\|\\")*"/
+            G.addRule 'atomic', [ /\(/, 'sumdiff', /\)/ ]
+            G.addRule 'prodquo', [ 'atomic' ]
+            G.addRule 'prodquo', [ 'prodquo', /[*/]/, 'atomic' ]
+            G.addRule 'sumdiff', [ 'prodquo' ]
+            G.addRule 'sumdiff', [ 'sumdiff', /[+-]/, 'prodquo' ]
+            G.setOption 'addCategories', no
+            G.setOption 'collapseBranches', yes
+            G.setOption 'expressionBuilder', ( expr ) ->
+                if expr[0] is '(' and expr[2] is ')' and expr.length is 3
+                    expr[1]
+                else
+                    expr
+            G.setOption 'tokenizer', T
+            expect( G.parse 'ident-7.8/other' ).toEqual \
+                [ [ 'ident', '-', [ '7.8', '/', 'other' ] ] ]
+            expect( G.parse 'ident*7.8/other' ).toEqual \
+                [ [ [ 'ident', '*', '7.8' ], '/', 'other' ] ]
+            expect( G.parse 'ident*(7.8/other)' ).toEqual \
+                [ [ 'ident', '*', [ '7.8', '/', 'other' ] ] ]

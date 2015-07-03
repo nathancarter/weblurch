@@ -95,9 +95,6 @@ required order of completion.
 
 ## Parsing
 
- * Import the Earley parser from the desktop version of Lurch, into the file
-   `src/parsing.duo.litcoffee`.
- * Document it, while creating unit tests for its features.
  * Create a routine that translates MathQuill DOM trees into unambiguous
    string representations of their content (using parentheses to group
    things like exponents, etc.).
