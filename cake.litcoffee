@@ -44,6 +44,11 @@ These constants define how the functions below perform.
     p = require 'path'
     title = 'webLurch'
     srcdir = p.resolve __dirname, 'src'
+    srcorder = [
+        'utils.litcoffee'
+        'openmath.duo.litcoffee'
+        'matching.duo.litcoffee'
+    ]
     appdir = p.resolve __dirname, 'app'
     fddir = p.resolve appdir, 'filedialog'
     srcout = 'weblurch.litcoffee'
@@ -72,10 +77,18 @@ Before building the app, ensure that the output folder exists.
 
 Next concatenate all `.litcoffee` source files into one.  The only exception
 to this rule is if any of them end in `.solo.litcoffee`, then they're
-requesting that they be compiled individually.  So we filter those out.
+requesting that they be compiled individually.  So we filter those out.  We
+also respect the ordering in `srcorder` to put some of the files first on
+the list.
 
-        all = ( fs.readFileSync name for name in \
-            build.dir( srcdir, /\.litcoffee$/ ) \
+        all = build.dir srcdir, /.litcoffee$/
+        moveup = [ ]
+        for file in srcorder
+            moveup = moveup.concat ( fullpath for fullpath in all \
+                when RegExp( "/#{file}$" ).test fullpath )
+        all = ( file for file in all when file not in moveup )
+        all = moveup.concat all
+        all = ( fs.readFileSync name for name in all \
             when name[-15..] isnt '.solo.litcoffee' )
         fs.writeFileSync p.resolve( appdir, srcout ), all.join( '\n\n' ),
             'utf8'
