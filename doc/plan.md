@@ -95,15 +95,75 @@ required order of completion.
 
 ## Parsing
 
- * Create a routine that translates MathQuill DOM trees into unambiguous
-   string representations of their content (using parentheses to group
-   things like exponents, etc.).
- * Use the web app to create and save many example DOM trees using the
-   MathQuill TinyMCE plugin, for use in unit tests.
- * Manually convert each of those into unambiguous strings, and use those to
-   generate unit tests for the translation routine created above.
- * Create a parser that can convert such strings into OpenMath trees.
- * Convert all the previous tests into unit tests for that parser.
+ * Create a parser that can handle the following types of input, all of
+   which were created from MathQuill instances using the function
+   `mathQuillToMeaning` in [setup.litcoffee](../app/setup.litcoffee).
+   Tasks remaining:
+   * Support parentheses and brackets as groupers
+   * Support fractions
+   * Support square roots
+   * Support equality-like relations of all kinds
+   * Support the infinity symbol
+   * Support exponentiation and radicals (both of which use sup, which may
+     require adjusting `mathQuillToMeaning`)
+   * Support for ln, log, and log-base-b
+   * Support the `\pm` operation
+   * Support the units dollars, degrees, percent
+   * Support the overline and overarc modifiers
+   * Support the therefore symbol
+   * Support the "not" symbol
+   * Support geometry relations for parallel, perpendicular, and arrows
+   * Support geometry operations of angle, measure, triangle, quadrilateral,
+     and circle-with-dot
+   * Support pairing and interval-forming operations
+   * Support absolute values
+   * Support trig functions
+   * Support subscripted variables
+   * Support factorials
+   * Support limits with subscripts
+   * Support summations with optional subscripts and superscripts
+   * Support differentials (d-then-variable)
+   * Support indefinite integrals (not requiring differentials, since it may
+     be in a numerator and thus hard to structure correctly)
+   * Support definite integrals (same as previous re: differentials
+     optional)
+```
+["3", ".", "1", "4", "1", "5", "9"]
+3 . 1 4 1 5 9
+
+["α", "·", "β", "·", "γ", "·", "δ", "·", "θ", "=", "π"]
+α · β · γ · δ · θ = π
+
+["a", "+", "b", "−", "c", "×", "d", "÷", "√", "fraction", "(", "e", "(", "ƒ", "sup", "g", ")", ")", "=", "h", "≈", "i"]
+a + b − c × d ÷ √ fraction ( e ( ƒ sup g ) ) = h ≈ i
+
+["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "π", "−", "i", "+", "fraction", "(", "e", "∞", ")"]
+0 1 2 3 4 5 6 7 8 9 + π − i + fraction ( e ∞ )
+
+["overline", "x", "±", "y", "·", "fraction", "(", "z", "w", ")", "+", "$", "3", "0", "+", "3", "0", "sup", "∘", "+", "3", "0", "%"]
+overline x ± y · fraction ( z w ) + $ 3 0 + 3 0 sup ∘ + 3 0 %
+
+["a", "sup", "b", "√", "c", "sup", "3", "√", "d", "sup", "e", "√", "ƒ", "e", "sup", "g", "ln", "h", "log", "i", "log", "sub", "j", "k"]
+a sup b √ c sup 3 √ d sup e √ ƒ e sup g ln h log i log sub j k
+
+["a", "=", "b", "≠", "c", "∼", "d", "¬", "∼", "e", "g", "≈", "h", "¬", "≈", "i", "≤", "j", "≥", "k", "≃", "l", "¬", "≃", "m", "∴", "o"]
+a = b ≠ c ∼ d ¬ ∼ e g ≈ h ¬ ≈ i ≤ j ≥ k ≃ l ¬ ≃ m ∴ o
+
+["A", "→", "overline", "B", "↔", "overarc", "C", "∥", "D", "⊥", "∠", "E", ">", "m", "∠", "A", "+", "△", "A", "B", "C", "+", "▱", "A", "B", "C", "D", "⊙", "2"]
+A → overline B ↔ overarc C ∥ D ⊥ ∠ E > m ∠ A + △ A B C + ▱ A B C D ⊙ 2
+
+["(", "1", "+", "2", ")", "−", "[", "3", "+", "4", "]", "·", "|", "fraction", "(", "5", "6", ")", "|", "+", "(", "x", ",", "y", ")", "+", "[", "x", ",", "y", "]", "+", "(", "x", ",", "y", "]", "+", "[", "x", ",", "y", ")"]
+( 1 + 2 ) − [ 3 + 4 ] · | fraction ( 5 6 ) | + ( x , y ) + [ x , y ] + ( x , y ] + [ x , y )
+
+["sin", "cos", "tan", "x", "+", "sec", "csc", "cot", "y", "=", "sin", "sup", "(", "−", "1", ")", "cos", "sup", "(", "−", "1", ")", "tan", "sup", "(", "−", "1", ")", "z", "+", "sec", "sup", "(", "−", "1", ")", "csc", "sup", "(", "−", "1", ")", "cot", "sup", "(", "−", "1", ")", "w"]
+sin cos tan x + sec csc cot y = sin sup ( − 1 ) cos sup ( − 1 ) tan sup ( − 1 ) z + sec sup ( − 1 ) csc sup ( − 1 ) cot sup ( − 1 ) w
+
+["fraction", "(", "μ", "σ", ")", "+", "overline", "x", "·", "overline", "y", "+", "x", "sup", "i", "−", "x", "sub", "i", "+", "x", "!", "=", "Σ"]
+fraction ( μ σ ) + overline x · overline y + x sup i − x sub i + x ! = Σ
+
+["∫", "x", "d", "x", "=", "∫", "sub", "a", "sup", "b", "fraction", "(", "d", "(", "d", "x", ")", ")", "u", "=", "lim", "sub", "(", "x", "→", "∞", ")", "∑", "sub", "(", "i", "=", "1", ")", "sup", "n", "t", "sup", "∞"]
+∫ x d x = ∫ sub a sup b fraction ( d ( d x ) ) u = lim sub ( x → ∞ ) ∑ sub ( i = 1 ) sup n t sup ∞
+```
 
 ## Example Application
 

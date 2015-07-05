@@ -4,6 +4,7 @@
 Here we import the module we're about to test.
 
     { Grammar, Tokenizer } = require '../src/parsing.duo'
+    { OM, OMNode } = require '../src/openmath.duo'
     full = ( x ) -> require( 'util' ).inspect x, depth : null
 
 ## The Grammar class
@@ -255,7 +256,7 @@ happening automatically.
             G.addRule 'atomic', /"(?:[^\\"]|\\\\|\\")*"/
             G.addRule 'atomic', [ /\(/, 'sumdiff', /\)/ ]
             G.addRule 'prodquo', [ 'atomic' ]
-            G.addRule 'prodquo', [ 'prodquo', /[*/]/, 'atomic' ]
+            G.addRule 'prodquo', [ 'prodquo', /[*\/]/, 'atomic' ]
             G.addRule 'sumdiff', [ 'prodquo' ]
             G.addRule 'sumdiff', [ 'sumdiff', /[+-]/, 'prodquo' ]
             G.setOption 'addCategories', no
@@ -272,3 +273,201 @@ happening automatically.
                 [ [ [ 'ident', '*', '7.8' ], '/', 'other' ] ]
             expect( G.parse 'ident*(7.8/other)' ).toEqual \
                 [ [ 'ident', '*', [ '7.8', '/', 'other' ] ] ]
+
+## A larger, useful grammar
+
+This section creates and tests a grammar for parsing the output of the
+`mathQuillToMeaning` function defined in
+[setup.litcoffee](../app/setup.litcoffee).  It can be any of a wide variety
+of common mathematical expressions supported by MathQuill, and converted to
+string representation by `mathQuillToMeaning`.
+
+The sample inputs used in the tests below were either manually captured from
+a test run of `mathQuillToMeaning` from the JavaScript console in the main
+app itself, or a natural modification of such data.  They are therefore
+realistic.
+
+    describe 'A larger, useful grammar', ->
+
+Here we define the grammar.
+
+        G = null
+        beforeEach ->
+            G = new Grammar 'expression'
+
+Rules for numbers:
+
+            G.addRule 'digit', /[0-9]/
+            G.addRule 'nonnegint', 'digit'
+            G.addRule 'nonnegint', [ 'digit', 'nonnegint' ]
+            G.addRule 'integer', 'nonnegint'
+            G.addRule 'integer', [ /-/, 'nonnegint' ]
+            G.addRule 'float', [ 'integer', /\./, 'nonnegint' ]
+            G.addRule 'float', [ 'integer', /\./ ]
+            G.addRule 'float', 'integer'
+
+Rule for variables:
+
+            G.addRule 'variable', /[a-zA-Z\u0374-\u03FF]/
+
+The above togeteher are called "atomics":
+
+            G.addRule 'atomic', 'integer'
+            G.addRule 'atomic', 'float'
+            G.addRule 'atomic', 'variable'
+
+Rules for +, -, *, /:
+
+            G.addRule 'prodquo', 'atomic'
+            G.addRule 'prodquo', [ 'atomic', /[÷×·]/, 'prodquo' ]
+            G.addRule 'sumdiff', 'prodquo'
+            G.addRule 'sumdiff', [ 'prodquo', /[+-]/, 'sumdiff' ]
+            G.addRule 'expression', 'sumdiff'
+
+A function that recursively assembles OpenMath nodes from the hierarchy of
+arrays created by the parser:
+
+            G.setOption 'expressionBuilder', ( expr ) ->
+                symbols =
+                    '+' : OM.symbol 'plus', 'arith1'
+                    '-' : OM.symbol 'minus', 'arith1'
+                    '×' : OM.symbol 'times', 'arith1'
+                    '·' : OM.symbol 'times', 'arith1'
+                    '÷' : OM.symbol 'divide', 'arith1'
+                result = switch expr[0]
+                    when 'digit', 'nonnegint' then expr[1..].join ''
+                    when 'integer'
+                        OM.integer( parseInt expr[1..].join '' ).encode()
+                    when 'float'
+                        intvalue = OM.decode( expr[1] ).value
+                        fullvalue = parseFloat \
+                            "#{intvalue}#{expr[2..].join ''}"
+                        OM.float( fullvalue ).encode()
+                    when 'variable'
+                        OM.variable( expr[1] ).encode()
+                    when 'sumdiff', 'prodquo'
+                        if expr.length is 4
+                            OM.application( symbols[expr[2]],
+                                OM.decode( expr[1] ),
+                                OM.decode( expr[3] ) ).encode()
+                        else
+                            expr[1]
+                    else expr[1]
+                # console.log JSON.stringify( expr ), '--->', result
+                result
+
+### should parse numbers
+
+        it 'should parse numbers', ->
+
+An integer first (which also counts as a float):
+
+            input = '1 0 0'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 2
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.integer 100 ).toBeTruthy()
+            node = OM.decode output[1]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.float 100 ).toBeTruthy()
+
+A floating point value second:
+
+            input = '3 . 1 4 1 5 9'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple '3.14159' ).toBeTruthy()
+
+### should parse variables
+
+        it 'should parse variables', ->
+
+Roman letters, upper and lower case:
+
+            input = [ "x" ]
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.variable 'x' ).toBeTruthy()
+            input = [ "R" ]
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.variable 'R' ).toBeTruthy()
+
+Greek letters:
+
+            input = [ "α" ]
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.variable 'α' ).toBeTruthy()
+            input = [ "π" ]
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.variable 'π' ).toBeTruthy()
+
+### should parse simple arithmetic expressions
+
+By this, we mean sums, differences, products, and quotients.
+
+        it 'should parse simple arithmetic expressions', ->
+
+Try one of each operation in isolation:
+
+            input = '6 + k'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 2
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'arith1.plus(6,k)' ).toBeTruthy()
+            node = OM.decode output[1]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'arith1.plus(6.0,k)' ) \
+                .toBeTruthy()
+            input = '1 . 9 - T'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'arith1.minus(1.9,T)' ) \
+                .toBeTruthy()
+            input = '0 . 2 · 0 . 3'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'arith1.times(0.2,0.3)' ) \
+                .toBeTruthy()
+            input = 'v ÷ w'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'arith1.divide(v,w)' ) \
+                .toBeTruthy()
+
+Now try them in combination, and ensure that precedence is respected:
+
+            input = '5 . 0 - K · e'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.minus(5.0,arith1.times(K,e))' ).toBeTruthy()
+            input = '5 . 0 × K + e'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(arith1.times(5.0,K),e)' ).toBeTruthy()
