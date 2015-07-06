@@ -12,6 +12,7 @@ translated from [the desktop version of Lurch](www.lurchmath.org).
 The following lines ensure that this file works in Node.js, for testing.
 
     if not exports? then exports = module?.exports ? window
+    if require? then require './utils'
 
 An Earley state is an object of the following form.  The `lhs` and `rhs`
 together are the rule currently being matched, `pos` is the current
@@ -312,9 +313,17 @@ The main loop is complete.  Any completed production in the final state set
 that's marked as a result (and thus coming from state 0 to boot) is a valid
 parsing and should be returned.
 
-            ( stateSet.got[0] \
-              for stateSet in stateGrid[stateGrid.length-1] when \
-              stateSet.lhs is '' and getNext( stateSet ) is null )
+            results = [ ]
+            for stateSet in stateGrid[stateGrid.length-1]
+                if stateSet.lhs is '' and getNext( stateSet ) is null
+                    result = stateSet.got[0]
+                    found = no
+                    for previous in results
+                        if JSON.equals previous, result
+                            found = yes
+                            break
+                    if not found then results.push result
+            results
 
 ## Tokenizing
 

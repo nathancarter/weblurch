@@ -327,23 +327,43 @@ Rules for the operations of arithmetic:
             G.addRule 'sumdiff', 'prodquo'
             G.addRule 'sumdiff', [ 'sumdiff', /[+±-]/, 'prodquo' ]
 
+Rules for the operations of set theory (still incomplete):
+
+            G.addRule 'setdiff', 'variable'
+            G.addRule 'setdiff', [ 'setdiff', /[∼]/, 'variable' ]
+
 Rules for various structures, like fractions, which are treated indivisibly,
 and thus as if they were atomics:
 
             G.addRule 'fraction',
-                [ /fraction/, /\(/, 'expression', 'expression', /\)/ ]
+                [ /fraction/, /\(/, 'atomic', 'atomic', /\)/ ]
             G.addRule 'atomic', 'fraction'
             G.addRule 'root', [ /√/, 'atomic' ]
-            G.addRule 'root', [ /nthroot/, 'expression', /√/, 'atomic' ]
+            G.addRule 'root', [ /nthroot/, 'atomic', /√/, 'atomic' ]
             G.addRule 'atomic', 'root'
+
+So far we've only defined rules for forming mathematical nouns, so we wrap
+the highest-level non-terminal defined so far, sumdiff, in the label "noun."
+
+            G.addRule 'noun', 'sumdiff'
+            G.addRule 'noun', 'setdiff'
+
+Rule for forming sentences from nouns, by placing relations between them:
+
+            G.addRule 'atomicsentence', [ 'noun', /[=≠≈≃≤≥<>]/, 'noun' ]
+            G.addRule 'atomicsentence', [ /¬/, 'atomicsentence' ]
+            G.addRule 'sentence', 'atomicsentence'
 
 Rule for groupers:
 
-            G.addRule 'atomic', [ /\(/, 'expression', /\)/ ]
+            G.addRule 'atomic', [ /\(/, 'noun', /\)/ ]
+            G.addRule 'atomicsentence', [ /\(/, 'sentence', /\)/ ]
 
-And finally, place "expression" at the top of the grammar:
+And finally, place "expression" at the top of the grammar; one is permitted
+to use this grammar to express mathematical nouns or complete sentences:
 
-            G.addRule 'expression', 'sumdiff'
+            G.addRule 'expression', 'noun'
+            G.addRule 'expression', 'sentence'
 
 A function that recursively assembles OpenMath nodes from the hierarchy of
 arrays created by the parser:
@@ -359,6 +379,16 @@ arrays created by the parser:
                     '^' : OM.symbol 'power', 'arith1'
                     '∞' : OM.symbol 'infinity', 'nums1'
                     '√' : OM.symbol 'root', 'arith1'
+                    '∼' : OM.symbol 'set1', 'setdiff'
+                    '=' : OM.symbol 'eq', 'relation1'
+                    '<' : OM.symbol 'lt', 'relation1'
+                    '>' : OM.symbol 'gt', 'relation1'
+                    '≠' : OM.symbol 'neq', 'relation1'
+                    '≈' : OM.symbol 'approx', 'relation1'
+                    '≤' : OM.symbol 'le', 'relation1'
+                    '≥' : OM.symbol 'ge', 'relation1'
+                    '≃' : OM.symbol 'modulo_relation', 'integer2'
+                    '¬' : OM.symbol 'not', 'logic1'
                     'unary-' : OM.symbol 'unary_minus', 'arith1'
                 result = switch expr[0]
                     when 'digit', 'nonnegint' then expr[1..].join ''
@@ -396,6 +426,13 @@ arrays created by the parser:
                     when 'atomic'
                         if expr.length is 4 and expr[1] is '(' and \
                            expr[3] is ')' then expr[2] else expr[1]
+                    when 'atomicsentence'
+                        switch expr.length
+                            when 4 then OM.application symbols[expr[2]],
+                                OM.decode( expr[1] ), OM.decode( expr[3] )
+                            when 3 then OM.application symbols[expr[1]],
+                                OM.decode expr[2]
+                            else expr[1]
                     else expr[1]
                 if result instanceof OMNode then result = result.encode()
                 # console.log JSON.stringify( expr ), '--->', result
@@ -536,6 +573,7 @@ left-associate.
                 'arith1.divide(arith1.times(5.0,K),e)' ).toBeTruthy()
             input = 'a sup b sup c'.split ' '
             output = G.parse input
+
             expect( output.length ).toBe 1
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
@@ -725,7 +763,7 @@ is being expressed.  For example, the third root of x is "nthroot 3 √ x".
 
         it 'should support square roots and nth roots', ->
 
-First, square roots of simple expression.
+First, square roots of simple expressions.
 
             input = '√ 2'.split ' '
             output = G.parse input
@@ -791,3 +829,87 @@ Finally, nth roots containing more complex expressions.
             expect( node.equals OM.simple \
                 'arith1.root(arith1.divide(1,nums1.infinity),' + \
                 'arith1.plus(2,t))' ).toBeTruthy()
+
+### should support sentences
+
+Sentences are formed by using relations (such as equality or less than) to
+connect two nouns, or by negating existing sentences.
+
+        it 'should support sentences', ->
+
+First, relations among nouns.
+
+            input = '2 < 3'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'relation1.lt(2,3)' ).toBeTruthy()
+            input = '- 6 > k'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 2
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'relation1.gt(-6,k)' ).toBeTruthy()
+            node = OM.decode output[1]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'relation1.gt(arith1.unary_minus(6),k)' ).toBeTruthy()
+            input = 't + u = t + v'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'relation1.eq(arith1.plus(t,u),arith1.plus(t,v))' ) \
+                .toBeTruthy()
+            input = 't + u = t + v'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'relation1.eq(arith1.plus(t,u),arith1.plus(t,v))' ) \
+                .toBeTruthy()
+
+            input = 't + u ≠ t + v'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'relation1.neq(arith1.plus(t,u),arith1.plus(t,v))' ) \
+                .toBeTruthy()
+            input = 'fraction ( a ( 7 + b ) ) ≈ 0 . 7 5'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'relation1.approx(arith1.divide(' + \
+                'a,arith1.plus(7,b)),0.75)' ).toBeTruthy()
+            input = 't sup 2 ≤ 1 0'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'relation1.le(arith1.power(t,2),10)' ).toBeTruthy()
+            input = '1 + 2 + 3 ≥ 6'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'relation1.ge(arith1.plus(arith1.plus(1,2),3),6)' ) \
+                .toBeTruthy()
+            input = 'k ≃ l'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'integer2.modulo_relation(k,l)' ) \
+                .toBeTruthy()
