@@ -331,6 +331,9 @@ and thus as if they were atomics:
             G.addRule 'fraction',
                 [ /fraction/, /\(/, 'expression', 'expression', /\)/ ]
             G.addRule 'atomic', 'fraction'
+            G.addRule 'root', [ /√/, 'atomic' ]
+            G.addRule 'root', [ /nthroot/, 'expression', /√/, 'atomic' ]
+            G.addRule 'atomic', 'root'
 
 Rule for groupers:
 
@@ -351,6 +354,8 @@ arrays created by the parser:
                     '·' : OM.symbol 'times', 'arith1'
                     '÷' : OM.symbol 'divide', 'arith1'
                     '∞' : OM.symbol 'infinity', 'nums1'
+                    '√' : OM.symbol 'root', 'arith1'
+                    'unary-' : OM.symbol 'unary_minus', 'arith1'
                 result = switch expr[0]
                     when 'digit', 'nonnegint' then expr[1..].join ''
                     when 'integer'
@@ -366,12 +371,19 @@ arrays created by the parser:
                         switch expr.length
                             when 4 then OM.application symbols[expr[2]],
                                 OM.decode( expr[1] ), OM.decode( expr[3] )
-                            when 3 then OM.application symbols[expr[1]],
+                            when 3 then OM.application symbols['unary-'],
                                 OM.decode expr[2]
                             else expr[1]
                     when 'fraction'
                         OM.application symbols['÷'],
                             OM.decode( expr[3] ), OM.decode( expr[4] )
+                    when 'root'
+                        switch expr.length
+                            when 3 then OM.application symbols['√'],
+                                OM.decode( expr[2] ), OM.integer 2
+                            when 5 then OM.application symbols['√'],
+                                OM.decode( expr[4] ), OM.decode( expr[2] )
+                            else expr[1]
                     when 'atomic'
                         if expr.length is 4 and expr[1] is '(' and \
                            expr[3] is ')' then expr[2] else expr[1]
@@ -522,28 +534,28 @@ Verify that unary negation works.
 
             input = '- 7'.split ' '
             output = G.parse input
-            console.log output
             expect( output.length ).toBe 2
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple '-7' ).toBeTruthy()
             node = OM.decode output[1]
             expect( node instanceof OMNode ).toBeTruthy()
-            expect( node.equals OM.simple 'arith1.minus(7)' ).toBeTruthy()
+            expect( node.equals OM.simple 'arith1.unary_minus(7)' ) \
+                .toBeTruthy()
             input = 'A + - B'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
-                'arith1.plus(A,arith1.minus(B))' ).toBeTruthy()
+                'arith1.plus(A,arith1.unary_minus(B))' ).toBeTruthy()
             input = '- A + B'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
-                'arith1.plus(arith1.minus(A),B)' ).toBeTruthy()
+                'arith1.plus(arith1.unary_minus(A),B)' ).toBeTruthy()
 
 ### should respect parentheses
 
@@ -596,7 +608,7 @@ the default precendence of these operators.
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
-                'arith1.minus(arith1.plus(K,e))' ).toBeTruthy()
+                'arith1.unary_minus(arith1.plus(K,e))' ).toBeTruthy()
 
 ### should support fractions
 
@@ -650,4 +662,80 @@ numerator and denominator of fractions.
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.divide(arith1.plus(1,arith1.times(2,v)),' + \
-                'arith1.minus(w))' ).toBeTruthy()
+                'arith1.unary_minus(w))' ).toBeTruthy()
+
+### should support square roots and nth roots
+
+Square roots come as text of the form "√ E" where E is an expression.
+Nth roots come as text of the form "nthroot N √ E" where N is an expression
+outside the radical (the N in Nth root) and E is the expression whose root
+is being expressed.  For example, the third root of x is "nthroot 3 √ x".
+
+        it 'should support square roots and nth roots', ->
+
+First, square roots of simple expression.
+
+            input = '√ 2'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.root(2,2)' ).toBeTruthy()
+            input = '√ ( 1 0 - k + 9 . 6 )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.root(arith1.plus(arith1.minus(10,k),9.6),2)' ) \
+                .toBeTruthy()
+
+Second, nth roots of simple expressions.
+
+            input = 'nthroot p √ 2'.split ' '
+            output = G.parse input
+
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.root(2,p)' ).toBeTruthy()
+            input = 'nthroot 5 0 √ ( 1 0 - k + 9 . 6 )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.root(arith1.plus(arith1.minus(10,k),9.6),50)' ) \
+                .toBeTruthy()
+
+Next, square roots of fractions and of other roots, and placed in context.
+
+            input = 'fraction ( 6 √ fraction ( 1 2 ) )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.divide(6,arith1.root(arith1.divide(1,2),2))' ) \
+                .toBeTruthy()
+            input = '√ ( 1 + √ 5 ) + 1'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(arith1.root(arith1.plus(' + \
+                '1,arith1.root(5,2)),2),1)' ).toBeTruthy()
+
+Finally, nth roots containing more complex expressions.
+
+            input = 'nthroot ( 2 + t ) √ ( 1 ÷ ∞ )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.root(arith1.divide(1,nums1.infinity),' + \
+                'arith1.plus(2,t))' ).toBeTruthy()

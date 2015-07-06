@@ -99,10 +99,8 @@ required order of completion.
    which were created from MathQuill instances using the function
    `mathQuillToMeaning` in [setup.litcoffee](../app/setup.litcoffee).
    Tasks remaining:
-   * Support square roots
    * Support equality-like relations of all kinds
-   * Support exponentiation and radicals (both of which use sup, which may
-     require adjusting `mathQuillToMeaning`)
+   * Support exponentiation
    * Support for ln, log, and log-base-b
    * Support the `\pm` operation
    * Support the units dollars, degrees, percent
@@ -140,8 +138,8 @@ a + b − c × d ÷ √ fraction ( e ( ƒ sup g ) ) = h ≈ i
 ["overline", "x", "±", "y", "·", "fraction", "(", "z", "w", ")", "+", "$", "3", "0", "+", "3", "0", "sup", "∘", "+", "3", "0", "%"]
 overline x ± y · fraction ( z w ) + $ 3 0 + 3 0 sup ∘ + 3 0 %
 
-["a", "sup", "b", "√", "c", "sup", "3", "√", "d", "sup", "e", "√", "ƒ", "e", "sup", "g", "ln", "h", "log", "i", "log", "sub", "j", "k"]
-a sup b √ c sup 3 √ d sup e √ ƒ e sup g ln h log i log sub j k
+["a", "nthroot", "b", "√", "c", "nthroot", "3", "√", "d", "nthroot", "e", "√", "ƒ", "e", "sup", "g", "ln", "h", "log", "i", "log", "sub", "j", "k"]
+a nthroot b √ c nthroot 3 √ d nthroot e √ ƒ e sup g ln h log i log sub j k
 
 ["a", "=", "b", "≠", "c", "∼", "d", "¬", "∼", "e", "g", "≈", "h", "¬", "≈", "i", "≤", "j", "≥", "k", "≃", "l", "¬", "≃", "m", "∴", "o"]
 a = b ≠ c ∼ d ¬ ∼ e g ≈ h ¬ ≈ i ≤ j ≥ k ≃ l ¬ ≃ m ∴ o

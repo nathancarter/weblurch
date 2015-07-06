@@ -229,10 +229,12 @@ this function, similar to the result of a tokenizer, ready for a parser.
                 continue
             result = result.concat mathQuillToMeaning child
         if node.tagName in [ 'SUP', 'SUB' ]
+            name = node.tagName.toLowerCase()
+            if ( $ node ).hasClass 'nthroot' then name = 'nthroot'
             if result.length > 1
                 result.unshift '('
                 result.push ')'
-            result.unshift node.tagName.toLowerCase()
+            result.unshift name
         for marker in [ 'fraction', 'overline', 'overarc' ]
             if ( $ node ).hasClass marker
                 if result.length > 1

@@ -84,7 +84,8 @@ first implementation.  See page 14 of [the
 standard](http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf) for
 the exact regular expression.
 
-            identRE = /^[:A-Za-z_][:A-Za-z_.0-9-]*$/
+            identRE =
+                /^[:A-Za-z_\u0374-\u03FF][:A-Za-z_\u0374-\u03FF.0-9-]*$/
 
 Now we consider each type of object separately.
 
