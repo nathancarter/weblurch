@@ -304,6 +304,7 @@ Rules for numbers:
             G.addRule 'integer', [ /-/, 'nonnegint' ]
             G.addRule 'float', [ 'integer', /\./, 'nonnegint' ]
             G.addRule 'float', [ 'integer', /\./ ]
+            G.addRule 'infinity', [ /∞/ ]
 
 Rule for variables:
 
@@ -314,11 +315,13 @@ The above togeteher are called "atomics":
             G.addRule 'atomic', 'integer'
             G.addRule 'atomic', 'float'
             G.addRule 'atomic', 'variable'
+            G.addRule 'atomic', 'infinity'
 
 Rules for +, -, *, /:
 
             G.addRule 'prodquo', 'atomic'
             G.addRule 'prodquo', [ 'prodquo', /[÷×·]/, 'atomic' ]
+            G.addRule 'prodquo', [ /-/, 'prodquo' ]
             G.addRule 'sumdiff', 'prodquo'
             G.addRule 'sumdiff', [ 'sumdiff', /[+-]/, 'prodquo' ]
 
@@ -340,28 +343,31 @@ arrays created by the parser:
                     '×' : OM.symbol 'times', 'arith1'
                     '·' : OM.symbol 'times', 'arith1'
                     '÷' : OM.symbol 'divide', 'arith1'
+                    '∞' : OM.symbol 'infinity', 'nums1'
                 result = switch expr[0]
                     when 'digit', 'nonnegint' then expr[1..].join ''
                     when 'integer'
-                        OM.integer( parseInt expr[1..].join '' ).encode()
+                        OM.integer parseInt expr[1..].join ''
                     when 'float'
                         intvalue = OM.decode( expr[1] ).value
                         fullvalue = parseFloat \
                             "#{intvalue}#{expr[2..].join ''}"
-                        OM.float( fullvalue ).encode()
-                    when 'variable'
-                        OM.variable( expr[1] ).encode()
+                        OM.float fullvalue
+                    when 'variable' then OM.variable expr[1]
+                    when 'infinity' then symbols[expr[1]]
                     when 'sumdiff', 'prodquo'
-                        if expr.length is 4
-                            OM.application( symbols[expr[2]],
+                        switch expr.length
+                            when 4 then OM.application symbols[expr[2]],
                                 OM.decode( expr[1] ),
-                                OM.decode( expr[3] ) ).encode()
-                        else
-                            expr[1]
+                                OM.decode( expr[3] )
+                            when 3 then OM.application symbols[expr[1]],
+                                OM.decode expr[2]
+                            else expr[1]
                     when 'atomic'
                         if expr.length is 4 and expr[1] is '(' and \
                            expr[3] is ')' then expr[2] else expr[1]
                     else expr[1]
+                if result instanceof OMNode then result = result.encode()
                 # console.log JSON.stringify( expr ), '--->', result
                 result
 
@@ -386,6 +392,15 @@ A floating point value second:
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple '3.14159' ).toBeTruthy()
+
+Let's pretend infinity is a number, and include it in this test.
+
+            input = [ '∞' ]
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'nums1.infinity' ).toBeTruthy()
 
 ### should parse variables
 
@@ -494,6 +509,33 @@ precedence is respected.
             expect( node.equals OM.simple \
                 'arith1.plus(arith1.times(5.0,K),e)' ).toBeTruthy()
 
+Verify that unary negation works.
+
+            input = '- 7'.split ' '
+            output = G.parse input
+            console.log output
+            expect( output.length ).toBe 2
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple '-7' ).toBeTruthy()
+            node = OM.decode output[1]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'arith1.minus(7)' ).toBeTruthy()
+            input = 'A + - B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(A,arith1.minus(B))' ).toBeTruthy()
+            input = '- A + B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(arith1.minus(A),B)' ).toBeTruthy()
+
 ### should respect parentheses
 
 That is, we can override precedence using parentheses, and the correct
@@ -505,7 +547,6 @@ First, verify that a chain of sums left-associates.
 
             input = '6 + k + 5'.split ' '
             output = G.parse input
-            console.log output
             expect( output.length ).toBe 1
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
@@ -540,3 +581,10 @@ the default precendence of these operators.
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.times(5.0,arith1.plus(K,e))' ).toBeTruthy()
+            input = '- ( K + e )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.minus(arith1.plus(K,e))' ).toBeTruthy()

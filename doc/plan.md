@@ -102,7 +102,6 @@ required order of completion.
    * Support fractions
    * Support square roots
    * Support equality-like relations of all kinds
-   * Support the infinity symbol
    * Support exponentiation and radicals (both of which use sup, which may
      require adjusting `mathQuillToMeaning`)
    * Support for ln, log, and log-base-b
