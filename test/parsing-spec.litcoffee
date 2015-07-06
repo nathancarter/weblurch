@@ -304,7 +304,6 @@ Rules for numbers:
             G.addRule 'integer', [ /-/, 'nonnegint' ]
             G.addRule 'float', [ 'integer', /\./, 'nonnegint' ]
             G.addRule 'float', [ 'integer', /\./ ]
-            G.addRule 'float', 'integer'
 
 Rule for variables:
 
@@ -319,9 +318,16 @@ The above togeteher are called "atomics":
 Rules for +, -, *, /:
 
             G.addRule 'prodquo', 'atomic'
-            G.addRule 'prodquo', [ 'atomic', /[÷×·]/, 'prodquo' ]
+            G.addRule 'prodquo', [ 'prodquo', /[÷×·]/, 'atomic' ]
             G.addRule 'sumdiff', 'prodquo'
-            G.addRule 'sumdiff', [ 'prodquo', /[+-]/, 'sumdiff' ]
+            G.addRule 'sumdiff', [ 'sumdiff', /[+-]/, 'prodquo' ]
+
+Rule for groupers:
+
+            G.addRule 'atomic', [ /\(/, 'expression', /\)/ ]
+
+And finally, place "expression" at the top of the grammar:
+
             G.addRule 'expression', 'sumdiff'
 
 A function that recursively assembles OpenMath nodes from the hierarchy of
@@ -352,6 +358,9 @@ arrays created by the parser:
                                 OM.decode( expr[3] ) ).encode()
                         else
                             expr[1]
+                    when 'atomic'
+                        if expr.length is 4 and expr[1] is '(' and \
+                           expr[3] is ')' then expr[2] else expr[1]
                     else expr[1]
                 # console.log JSON.stringify( expr ), '--->', result
                 result
@@ -364,13 +373,10 @@ An integer first (which also counts as a float):
 
             input = '1 0 0'.split ' '
             output = G.parse input
-            expect( output.length ).toBe 2
+            expect( output.length ).toBe 1
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.integer 100 ).toBeTruthy()
-            node = OM.decode output[1]
-            expect( node instanceof OMNode ).toBeTruthy()
-            expect( node.equals OM.float 100 ).toBeTruthy()
 
 A floating point value second:
 
@@ -425,14 +431,11 @@ Try one of each operation in isolation:
 
             input = '6 + k'.split ' '
             output = G.parse input
-            expect( output.length ).toBe 2
+            expect( output.length ).toBe 1
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'arith1.plus(6,k)' ).toBeTruthy()
             node = OM.decode output[1]
-            expect( node instanceof OMNode ).toBeTruthy()
-            expect( node.equals OM.simple 'arith1.plus(6.0,k)' ) \
-                .toBeTruthy()
             input = '1 . 9 - T'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
@@ -455,7 +458,26 @@ Try one of each operation in isolation:
             expect( node.equals OM.simple 'arith1.divide(v,w)' ) \
                 .toBeTruthy()
 
-Now try them in combination, and ensure that precedence is respected:
+Now try same-precedence operators in sequence, and ensure that they
+left-associate.
+
+            input = '5 . 0 - K + e'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(arith1.minus(5.0,K),e)' ).toBeTruthy()
+            input = '5 . 0 × K ÷ e'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.divide(arith1.times(5.0,K),e)' ).toBeTruthy()
+
+Now try different-precendence operators in combination, and ensure that
+precedence is respected.
 
             input = '5 . 0 - K · e'.split ' '
             output = G.parse input
@@ -471,3 +493,50 @@ Now try them in combination, and ensure that precedence is respected:
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.plus(arith1.times(5.0,K),e)' ).toBeTruthy()
+
+### should respect parentheses
+
+That is, we can override precedence using parentheses, and the correct
+expression trees are created.
+
+        it 'should respect parentheses', ->
+
+First, verify that a chain of sums left-associates.
+
+            input = '6 + k + 5'.split ' '
+            output = G.parse input
+            console.log output
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(arith1.plus(6,k),5)' ).toBeTruthy()
+
+Now verify that we can override that with parentheses.
+
+            input = '6 + ( k + 5 )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(6,arith1.plus(k,5))' ).toBeTruthy()
+
+And verify that parentheses override precedence as well.  Contrast the
+following tests to those at the end of the previous section, which tested
+the default precendence of these operators.
+
+            input = '( 5 . 0 - K ) · e'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.times(arith1.minus(5.0,K),e)' ).toBeTruthy()
+            input = '5 . 0 × ( K + e )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.times(5.0,arith1.plus(K,e))' ).toBeTruthy()

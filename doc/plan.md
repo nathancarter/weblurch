@@ -99,7 +99,6 @@ required order of completion.
    which were created from MathQuill instances using the function
    `mathQuillToMeaning` in [setup.litcoffee](../app/setup.litcoffee).
    Tasks remaining:
-   * Support parentheses and brackets as groupers
    * Support fractions
    * Support square roots
    * Support equality-like relations of all kinds
