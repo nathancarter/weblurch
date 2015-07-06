@@ -317,13 +317,20 @@ The above togeteher are called "atomics":
             G.addRule 'atomic', 'variable'
             G.addRule 'atomic', 'infinity'
 
-Rules for +, -, *, /:
+Rules for plus, minus, times, and divide:
 
             G.addRule 'prodquo', 'atomic'
             G.addRule 'prodquo', [ 'prodquo', /[÷×·]/, 'atomic' ]
             G.addRule 'prodquo', [ /-/, 'prodquo' ]
             G.addRule 'sumdiff', 'prodquo'
             G.addRule 'sumdiff', [ 'sumdiff', /[+-]/, 'prodquo' ]
+
+Rules for various structures, like fractions, which are treated indivisibly,
+and thus as if they were atomics:
+
+            G.addRule 'fraction',
+                [ /fraction/, /\(/, 'expression', 'expression', /\)/ ]
+            G.addRule 'atomic', 'fraction'
 
 Rule for groupers:
 
@@ -358,11 +365,13 @@ arrays created by the parser:
                     when 'sumdiff', 'prodquo'
                         switch expr.length
                             when 4 then OM.application symbols[expr[2]],
-                                OM.decode( expr[1] ),
-                                OM.decode( expr[3] )
+                                OM.decode( expr[1] ), OM.decode( expr[3] )
                             when 3 then OM.application symbols[expr[1]],
                                 OM.decode expr[2]
                             else expr[1]
+                    when 'fraction'
+                        OM.application symbols['÷'],
+                            OM.decode( expr[3] ), OM.decode( expr[4] )
                     when 'atomic'
                         if expr.length is 4 and expr[1] is '(' and \
                            expr[3] is ')' then expr[2] else expr[1]
@@ -588,3 +597,57 @@ the default precendence of these operators.
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.minus(arith1.plus(K,e))' ).toBeTruthy()
+
+### should support fractions
+
+Fractions come as text of the form "fraction ( N D )" where N and D are the
+numerator and denominator expressions respectively.
+
+        it 'should support fractions', ->
+
+Let's begin with fractions of atomics.
+
+            input = 'fraction ( 1 2 )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.divide(1,2)' ).toBeTruthy()
+            input = 'fraction ( p q )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.divide(p,q)' ).toBeTruthy()
+
+Now we'll try fractions of larger things
+
+            input = 'fraction ( ( 1 + t ) 3 )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.divide(arith1.plus(1,t),3)' ).toBeTruthy()
+            input = 'fraction ( ( a + b ) ( a - b ) )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.divide(arith1.plus(a,b),arith1.minus(a,b))' ) \
+                .toBeTruthy()
+
+And lastly we verify that parsing takes place correctly inside the
+numerator and denominator of fractions.
+
+            input = 'fraction ( ( 1 + 2 × v ) ( - w ) )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.divide(arith1.plus(1,arith1.times(2,v)),' + \
+                'arith1.minus(w))' ).toBeTruthy()
