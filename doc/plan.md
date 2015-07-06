@@ -99,7 +99,6 @@ required order of completion.
    which were created from MathQuill instances using the function
    `mathQuillToMeaning` in [setup.litcoffee](../app/setup.litcoffee).
    Tasks remaining:
-   * Support the overline and overarc modifiers
    * Support the therefore symbol
    * Support the "not" symbol
    * Support geometry relations for parallel, perpendicular, and arrows
@@ -117,6 +116,7 @@ required order of completion.
      be in a numerator and thus hard to structure correctly)
    * Support definite integrals (same as previous re: differentials
      optional)
+   * Support adjacent atomics as factors in a product
 ```
 ["A", "→", "overline", "B", "↔", "overarc", "C", "∥", "D", "⊥", "∠", "E", ">", "m", "∠", "A", "+", "△", "A", "B", "C", "+", "▱", "A", "B", "C", "D", "⊙", "2"]
 A → overline B ↔ overarc C ∥ D ⊥ ∠ E > m ∠ A + △ A B C + ▱ A B C D ⊙ 2

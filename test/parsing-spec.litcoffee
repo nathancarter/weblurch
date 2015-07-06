@@ -352,6 +352,9 @@ and thus as if they were atomics:
             G.addRule 'root', [ /√/, 'atomic' ]
             G.addRule 'root', [ /nthroot/, 'atomic', /√/, 'atomic' ]
             G.addRule 'atomic', 'root'
+            G.addRule 'decoration', [ /overline/, 'atomic' ]
+            G.addRule 'decoration', [ /overarc/, 'atomic' ]
+            G.addRule 'atomic', 'decoration'
 
 So far we've only defined rules for forming mathematical nouns, so we wrap
 the highest-level non-terminal defined so far, sumdiff, in the label "noun."
@@ -362,7 +365,7 @@ the highest-level non-terminal defined so far, sumdiff, in the label "noun."
 Rule for forming sentences from nouns, by placing relations between them:
 
             G.addRule 'atomicsentence', [ 'noun', /[=≠≈≃≤≥<>]/, 'noun' ]
-            G.addRule 'atomicsentence', [ /¬/, 'atomicsentence' ]
+            G.addRule 'atomicsentence', [ /[¬]/, 'atomicsentence' ]
             G.addRule 'sentence', 'atomicsentence'
 
 Rule for groupers:
@@ -406,6 +409,8 @@ arrays created by the parser:
                     'ln' : OM.symbol 'ln', 'transc1'
                     'log' : OM.symbol 'log', 'transc1'
                     'unary-' : OM.symbol 'unary_minus', 'arith1'
+                    'overarc' : OM.symbol 'overarc', 'decoration'
+                    'overline' : OM.symbol 'overline', 'decoration'
                 build = ( head, args... ) ->
                     if typeof head is 'number' then head = expr[head]
                     for arg, index in args
@@ -459,6 +464,7 @@ arrays created by the parser:
                         switch expr.length
                             when 4 then build 2, 1, 3
                             when 3 then build 1, 2
+                    when 'decoration' then build 1, 2
                 if not result? then result = expr[1]
                 if result instanceof OMNode then result = result.encode()
                 if G.expressionBuilderDebug
@@ -1034,3 +1040,26 @@ for them here.
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.times(45,units.degrees)' ).toBeTruthy()
+
+### should support decorations (overline, overarc)
+
+These use nonstandard symbols and apply them like functions to the
+expression with the arc or line over it.
+
+        it 'should support decorations (overline, overarc)', ->
+
+            input = 'overline ( x )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'decoration.overline(x)' ).toBeTruthy()
+            input = 'overarc ( 6 - fraction ( e 3 ) )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'decoration.overarc(arith1.minus(6,arith1.divide(e,3)))' ) \
+                .toBeTruthy()
