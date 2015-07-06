@@ -99,7 +99,6 @@ required order of completion.
    which were created from MathQuill instances using the function
    `mathQuillToMeaning` in [setup.litcoffee](../app/setup.litcoffee).
    Tasks remaining:
-   * Support the units dollars, degrees, percent
    * Support the overline and overarc modifiers
    * Support the therefore symbol
    * Support the "not" symbol
@@ -119,16 +118,10 @@ required order of completion.
    * Support definite integrals (same as previous re: differentials
      optional)
 ```
-["ln", "h", "log", "i", "log", "sub", "j", "k"]
-ln h log i log sub j k
-
-∴ o
-
-["overline", "x", "±", "y", "·", "fraction", "(", "z", "w", ")", "+", "$", "3", "0", "+", "3", "0", "sup", "∘", "+", "3", "0", "%"]
-overline x ± y · fraction ( z w ) + $ 3 0 + 3 0 sup ∘ + 3 0 %
-
 ["A", "→", "overline", "B", "↔", "overarc", "C", "∥", "D", "⊥", "∠", "E", ">", "m", "∠", "A", "+", "△", "A", "B", "C", "+", "▱", "A", "B", "C", "D", "⊙", "2"]
 A → overline B ↔ overarc C ∥ D ⊥ ∠ E > m ∠ A + △ A B C + ▱ A B C D ⊙ 2
+
+∴ o
 
 ["(", "1", "+", "2", ")", "−", "[", "3", "+", "4", "]", "·", "|", "fraction", "(", "5", "6", ")", "|", "+", "(", "x", ",", "y", ")", "+", "[", "x", ",", "y", "]", "+", "(", "x", ",", "y", "]", "+", "[", "x", ",", "y", ")"]
 ( 1 + 2 ) − [ 3 + 4 ] · | fraction ( 5 6 ) | + ( x , y ) + [ x , y ] + ( x , y ] + [ x , y )

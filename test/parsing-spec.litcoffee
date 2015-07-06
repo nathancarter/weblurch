@@ -321,6 +321,9 @@ Rules for the operations of arithmetic:
 
             G.addRule 'factor', 'atomic'
             G.addRule 'factor', [ 'factor', /sup/, 'atomic' ]
+            G.addRule 'factor', [ 'factor', /[%]/ ]
+            G.addRule 'factor', [ /\$/, 'factor' ]
+            G.addRule 'factor', [ 'factor', /sup/, /[∘]/ ]
             G.addRule 'prodquo', 'factor'
             G.addRule 'prodquo', [ 'prodquo', /[÷×·]/, 'factor' ]
             G.addRule 'prodquo', [ /-/, 'prodquo' ]
@@ -397,9 +400,21 @@ arrays created by the parser:
                     '≥' : OM.symbol 'ge', 'relation1'
                     '≃' : OM.symbol 'modulo_relation', 'integer2'
                     '¬' : OM.symbol 'not', 'logic1'
+                    '∘' : OM.symbol 'degrees', 'units'
+                    '$' : OM.symbol 'dollars', 'units'
+                    '%' : OM.symbol 'percent', 'units'
                     'ln' : OM.symbol 'ln', 'transc1'
                     'log' : OM.symbol 'log', 'transc1'
                     'unary-' : OM.symbol 'unary_minus', 'arith1'
+                build = ( head, args... ) ->
+                    if typeof head is 'number' then head = expr[head]
+                    for arg, index in args
+                        if typeof arg is 'number'
+                            args[index] = OM.decode expr[arg]
+                    tmp = OM.application symbols[head], args...
+                    if G.expressionBuilderDebug
+                        console.log 'build', head, args..., '-->', tmp
+                    tmp
                 result = switch expr[0]
                     when 'digit', 'nonnegint' then expr[1..].join ''
                     when 'integer'
@@ -413,46 +428,38 @@ arrays created by the parser:
                     when 'infinity' then symbols[expr[1]]
                     when 'sumdiff', 'prodquo'
                         switch expr.length
-                            when 4 then OM.application symbols[expr[2]],
-                                OM.decode( expr[1] ), OM.decode( expr[3] )
-                            when 3 then OM.application symbols['unary-'],
-                                OM.decode expr[2]
-                            else expr[1]
+                            when 4 then build 2, 1, 3
+                            when 3 then build 'unary-', 2
                     when 'factor'
                         switch expr.length
-                            when 4 then OM.application symbols['^'],
-                                OM.decode( expr[1] ), OM.decode( expr[3] )
-                            else expr[1]
-                    when 'fraction'
-                        OM.application symbols['÷'],
-                            OM.decode( expr[3] ), OM.decode( expr[4] )
+                            when 4
+                                if expr[3] is '∘'
+                                    build '×', 1, symbols['∘']
+                                else
+                                    build '^', 1, 3
+                            when 3
+                                if expr[2] is '%'
+                                    build '×', 1, symbols['%']
+                                else
+                                    build '×', 2, symbols['$']
+                    when 'fraction' then build '÷', 3, 4
                     when 'root'
                         switch expr.length
-                            when 3 then OM.application symbols['√'],
-                                OM.decode( expr[2] ), OM.integer 2
-                            when 5 then OM.application symbols['√'],
-                                OM.decode( expr[4] ), OM.decode( expr[2] )
-                            else expr[1]
-                    when 'ln'
-                        OM.application symbols.ln, OM.decode expr[2]
+                            when 3 then build '√', 2, OM.integer 2
+                            when 5 then build '√', 4, 2
+                    when 'ln' then build 'ln', 2
                     when 'log'
                         switch expr.length
-                            when 3 then OM.application symbols.log,
-                                OM.integer( 10 ), OM.decode expr[2]
-                            when 5 then OM.application symbols.log,
-                                OM.decode( expr[3] ), OM.decode( expr[4] )
-                            else expr[1]
+                            when 3 then build 'log', OM.integer( 10 ), 2
+                            when 5 then build 'log', 3, 4
                     when 'atomic'
                         if expr.length is 4 and expr[1] is '(' and \
-                           expr[3] is ')' then expr[2] else expr[1]
+                           expr[3] is ')' then expr[2]
                     when 'atomicsentence'
                         switch expr.length
-                            when 4 then OM.application symbols[expr[2]],
-                                OM.decode( expr[1] ), OM.decode( expr[3] )
-                            when 3 then OM.application symbols[expr[1]],
-                                OM.decode expr[2]
-                            else expr[1]
-                    else expr[1]
+                            when 4 then build 2, 1, 3
+                            when 3 then build 1, 2
+                if not result? then result = expr[1]
                 if result instanceof OMNode then result = result.encode()
                 if G.expressionBuilderDebug
                     console.log JSON.stringify( expr ), '--->', result
@@ -567,7 +574,9 @@ Try one of each operation in isolation:
             expect( node.equals OM.simple 'multiops.plusminus(v,w)' ) \
                 .toBeTruthy()
             input = '2 sup k'.split ' '
+            G.expressionBuilderDebug = yes
             output = G.parse input
+            G.expressionBuilderDebug = no
             expect( output.length ).toBe 1
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
@@ -993,3 +1002,35 @@ First, relations among nouns.
             expect( node.equals OM.simple \
                 'integer2.modulo_relation(k,l)' ) \
                 .toBeTruthy()
+
+### should support units
+
+Units are formed by multiplying a value by the symbol for "degrees,"
+"dollars," or "percent."  These are not symbols in any official OpenMath
+content dictionary, but are supported by MathQuill, so I include symbols
+for them here.
+
+        it 'should support units', ->
+
+            input = '1 0 0 %'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.times(100,units.percent)' ).toBeTruthy()
+            input = '$ ( d + 5 0 )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.times(arith1.plus(d,50),units.dollars)' ) \
+                .toBeTruthy()
+            input = '4 5 sup ∘'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.times(45,units.degrees)' ).toBeTruthy()
