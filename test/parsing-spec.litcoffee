@@ -327,6 +327,14 @@ Rules for the operations of arithmetic:
             G.addRule 'sumdiff', 'prodquo'
             G.addRule 'sumdiff', [ 'sumdiff', /[+±-]/, 'prodquo' ]
 
+Rules for logarithms:
+
+            G.addRule 'ln', [ /ln/, 'atomic' ]
+            G.addRule 'log', [ /log/, 'atomic' ]
+            G.addRule 'log', [ /log/, /sub/, 'atomic', 'atomic' ]
+            G.addRule 'prodquo', 'ln'
+            G.addRule 'prodquo', 'log'
+
 Rules for the operations of set theory (still incomplete):
 
             G.addRule 'setdiff', 'variable'
@@ -389,6 +397,8 @@ arrays created by the parser:
                     '≥' : OM.symbol 'ge', 'relation1'
                     '≃' : OM.symbol 'modulo_relation', 'integer2'
                     '¬' : OM.symbol 'not', 'logic1'
+                    'ln' : OM.symbol 'ln', 'transc1'
+                    'log' : OM.symbol 'log', 'transc1'
                     'unary-' : OM.symbol 'unary_minus', 'arith1'
                 result = switch expr[0]
                     when 'digit', 'nonnegint' then expr[1..].join ''
@@ -423,6 +433,15 @@ arrays created by the parser:
                             when 5 then OM.application symbols['√'],
                                 OM.decode( expr[4] ), OM.decode( expr[2] )
                             else expr[1]
+                    when 'ln'
+                        OM.application symbols.ln, OM.decode expr[2]
+                    when 'log'
+                        switch expr.length
+                            when 3 then OM.application symbols.log,
+                                OM.integer( 10 ), OM.decode expr[2]
+                            when 5 then OM.application symbols.log,
+                                OM.decode( expr[3] ), OM.decode( expr[4] )
+                            else expr[1]
                     when 'atomic'
                         if expr.length is 4 and expr[1] is '(' and \
                            expr[3] is ')' then expr[2] else expr[1]
@@ -435,7 +454,8 @@ arrays created by the parser:
                             else expr[1]
                     else expr[1]
                 if result instanceof OMNode then result = result.encode()
-                # console.log JSON.stringify( expr ), '--->', result
+                if G.expressionBuilderDebug
+                    console.log JSON.stringify( expr ), '--->', result
                 result
 
 ### should parse numbers
@@ -829,6 +849,66 @@ Finally, nth roots containing more complex expressions.
             expect( node.equals OM.simple \
                 'arith1.root(arith1.divide(1,nums1.infinity),' + \
                 'arith1.plus(2,t))' ).toBeTruthy()
+
+### should support logarithms of all types
+
+This includes natural logarithms, "ln x", logarithms with an assumed base
+10, "log x", and logarithms with an explicit base, "log sub 2 8".
+
+        it 'should support logarithms of all types', ->
+
+Natural logarithms of a simple thing and a larger thing.
+
+            input = 'ln x'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'transc1.ln(x)' ).toBeTruthy()
+            input = 'ln fraction ( 2 ( x + 1 ) )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'transc1.ln(arith1.divide(2,arith1.plus(x,1)))' ) \
+                .toBeTruthy()
+
+Logarithms with an implied base 10, of a simple thing and a larger thing.
+
+            input = 'log 1 0 0 0'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'transc1.log(10,1000)' ) \
+                .toBeTruthy()
+            input = 'log ( e sup x × y )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'transc1.log(10,arith1.times(arith1.power(e,x),y))' ) \
+                .toBeTruthy()
+
+Logarithms with an explicit base, of a simple thing and a larger thing.
+
+            input = 'log sub ( 3 1 ) 6 5'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'transc1.log(31,65)' ) \
+                .toBeTruthy()
+            input = 'log sub ( - t ) ( k + 5 )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'transc1.log(arith1.unary_minus(t),arith1.plus(k,5))' ) \
+                .toBeTruthy()
 
 ### should support sentences
 

@@ -99,7 +99,6 @@ required order of completion.
    which were created from MathQuill instances using the function
    `mathQuillToMeaning` in [setup.litcoffee](../app/setup.litcoffee).
    Tasks remaining:
-   * Support for ln, log, and log-base-b
    * Support the units dollars, degrees, percent
    * Support the overline and overarc modifiers
    * Support the therefore symbol
@@ -120,14 +119,13 @@ required order of completion.
    * Support definite integrals (same as previous re: differentials
      optional)
 ```
-["a", "=", "b", "≠", "c", "∼", "d", "¬", "∼", "e", "g", "≈", "h", "¬", "≈", "i", "≤", "j", "≥", "k", "≃", "l", "¬", "≃", "m", "∴", "o"]
-a = b ≠ c ∼ d ¬ ∼ e g ≈ h ¬ ≈ i ≤ j ≥ k ≃ l ¬ ≃ m ∴ o
+["ln", "h", "log", "i", "log", "sub", "j", "k"]
+ln h log i log sub j k
+
+∴ o
 
 ["overline", "x", "±", "y", "·", "fraction", "(", "z", "w", ")", "+", "$", "3", "0", "+", "3", "0", "sup", "∘", "+", "3", "0", "%"]
 overline x ± y · fraction ( z w ) + $ 3 0 + 3 0 sup ∘ + 3 0 %
-
-["e", "sup", "g", "ln", "h", "log", "i", "log", "sub", "j", "k"]
-e sup g ln h log i log sub j k
 
 ["A", "→", "overline", "B", "↔", "overarc", "C", "∥", "D", "⊥", "∠", "E", ">", "m", "∠", "A", "+", "△", "A", "B", "C", "+", "▱", "A", "B", "C", "D", "⊙", "2"]
 A → overline B ↔ overarc C ∥ D ⊥ ∠ E > m ∠ A + △ A B C + ▱ A B C D ⊙ 2
