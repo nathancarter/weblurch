@@ -323,7 +323,7 @@ Rules for plus, minus, times, and divide:
             G.addRule 'prodquo', [ 'prodquo', /[÷×·]/, 'atomic' ]
             G.addRule 'prodquo', [ /-/, 'prodquo' ]
             G.addRule 'sumdiff', 'prodquo'
-            G.addRule 'sumdiff', [ 'sumdiff', /[+-]/, 'prodquo' ]
+            G.addRule 'sumdiff', [ 'sumdiff', /[+±-]/, 'prodquo' ]
 
 Rules for various structures, like fractions, which are treated indivisibly,
 and thus as if they were atomics:
@@ -350,6 +350,7 @@ arrays created by the parser:
                 symbols =
                     '+' : OM.symbol 'plus', 'arith1'
                     '-' : OM.symbol 'minus', 'arith1'
+                    '±' : OM.symbol 'plusminus', 'multiops'
                     '×' : OM.symbol 'times', 'arith1'
                     '·' : OM.symbol 'times', 'arith1'
                     '÷' : OM.symbol 'divide', 'arith1'
@@ -492,6 +493,13 @@ Try one of each operation in isolation:
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'arith1.divide(v,w)' ) \
+                .toBeTruthy()
+            input = 'v ± w'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'multiops.plusminus(v,w)' ) \
                 .toBeTruthy()
 
 Now try same-precedence operators in sequence, and ensure that they

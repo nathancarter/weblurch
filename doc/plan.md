@@ -102,7 +102,6 @@ required order of completion.
    * Support equality-like relations of all kinds
    * Support exponentiation
    * Support for ln, log, and log-base-b
-   * Support the `\pm` operation
    * Support the units dollars, degrees, percent
    * Support the overline and overarc modifiers
    * Support the therefore symbol
@@ -123,23 +122,11 @@ required order of completion.
    * Support definite integrals (same as previous re: differentials
      optional)
 ```
-["3", ".", "1", "4", "1", "5", "9"]
-3 . 1 4 1 5 9
-
-["α", "·", "β", "·", "γ", "·", "δ", "·", "θ", "=", "π"]
-α · β · γ · δ · θ = π
-
-["a", "+", "b", "−", "c", "×", "d", "÷", "√", "fraction", "(", "e", "(", "ƒ", "sup", "g", ")", ")", "=", "h", "≈", "i"]
-a + b − c × d ÷ √ fraction ( e ( ƒ sup g ) ) = h ≈ i
-
-["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "π", "−", "i", "+", "fraction", "(", "e", "∞", ")"]
-0 1 2 3 4 5 6 7 8 9 + π − i + fraction ( e ∞ )
-
 ["overline", "x", "±", "y", "·", "fraction", "(", "z", "w", ")", "+", "$", "3", "0", "+", "3", "0", "sup", "∘", "+", "3", "0", "%"]
 overline x ± y · fraction ( z w ) + $ 3 0 + 3 0 sup ∘ + 3 0 %
 
-["a", "nthroot", "b", "√", "c", "nthroot", "3", "√", "d", "nthroot", "e", "√", "ƒ", "e", "sup", "g", "ln", "h", "log", "i", "log", "sub", "j", "k"]
-a nthroot b √ c nthroot 3 √ d nthroot e √ ƒ e sup g ln h log i log sub j k
+["e", "sup", "g", "ln", "h", "log", "i", "log", "sub", "j", "k"]
+e sup g ln h log i log sub j k
 
 ["a", "=", "b", "≠", "c", "∼", "d", "¬", "∼", "e", "g", "≈", "h", "¬", "≈", "i", "≤", "j", "≥", "k", "≃", "l", "¬", "≃", "m", "∴", "o"]
 a = b ≠ c ∼ d ¬ ∼ e g ≈ h ¬ ≈ i ≤ j ≥ k ≃ l ¬ ≃ m ∴ o
