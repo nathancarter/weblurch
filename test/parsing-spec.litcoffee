@@ -317,10 +317,12 @@ The above togeteher are called "atomics":
             G.addRule 'atomic', 'variable'
             G.addRule 'atomic', 'infinity'
 
-Rules for plus, minus, times, and divide:
+Rules for the operations of arithmetic:
 
-            G.addRule 'prodquo', 'atomic'
-            G.addRule 'prodquo', [ 'prodquo', /[÷×·]/, 'atomic' ]
+            G.addRule 'factor', 'atomic'
+            G.addRule 'factor', [ 'factor', /sup/, 'atomic' ]
+            G.addRule 'prodquo', 'factor'
+            G.addRule 'prodquo', [ 'prodquo', /[÷×·]/, 'factor' ]
             G.addRule 'prodquo', [ /-/, 'prodquo' ]
             G.addRule 'sumdiff', 'prodquo'
             G.addRule 'sumdiff', [ 'sumdiff', /[+±-]/, 'prodquo' ]
@@ -354,6 +356,7 @@ arrays created by the parser:
                     '×' : OM.symbol 'times', 'arith1'
                     '·' : OM.symbol 'times', 'arith1'
                     '÷' : OM.symbol 'divide', 'arith1'
+                    '^' : OM.symbol 'power', 'arith1'
                     '∞' : OM.symbol 'infinity', 'nums1'
                     '√' : OM.symbol 'root', 'arith1'
                     'unary-' : OM.symbol 'unary_minus', 'arith1'
@@ -374,6 +377,11 @@ arrays created by the parser:
                                 OM.decode( expr[1] ), OM.decode( expr[3] )
                             when 3 then OM.application symbols['unary-'],
                                 OM.decode expr[2]
+                            else expr[1]
+                    when 'factor'
+                        switch expr.length
+                            when 4 then OM.application symbols['^'],
+                                OM.decode( expr[1] ), OM.decode( expr[3] )
                             else expr[1]
                     when 'fraction'
                         OM.application symbols['÷'],
@@ -501,6 +509,13 @@ Try one of each operation in isolation:
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'multiops.plusminus(v,w)' ) \
                 .toBeTruthy()
+            input = '2 sup k'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'arith1.power(2,k)' ) \
+                .toBeTruthy()
 
 Now try same-precedence operators in sequence, and ensure that they
 left-associate.
@@ -519,6 +534,13 @@ left-associate.
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.divide(arith1.times(5.0,K),e)' ).toBeTruthy()
+            input = 'a sup b sup c'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.power(arith1.power(a,b),c)' ).toBeTruthy()
 
 Now try different-precendence operators in combination, and ensure that
 precedence is respected.
@@ -537,6 +559,14 @@ precedence is respected.
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.plus(arith1.times(5.0,K),e)' ).toBeTruthy()
+            input = 'u sup v × w sup x'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.times(arith1.power(u,v),arith1.power(w,x))' ) \
+                .toBeTruthy()
 
 Verify that unary negation works.
 
@@ -564,6 +594,13 @@ Verify that unary negation works.
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.plus(arith1.unary_minus(A),B)' ).toBeTruthy()
+            input = '- A sup B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.unary_minus(arith1.power(A,B))' ).toBeTruthy()
 
 ### should respect parentheses
 
@@ -617,6 +654,13 @@ the default precendence of these operators.
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.unary_minus(arith1.plus(K,e))' ).toBeTruthy()
+            input = '- ( A sup B )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.unary_minus(arith1.power(A,B))' ).toBeTruthy()
 
 ### should support fractions
 

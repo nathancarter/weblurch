@@ -100,7 +100,6 @@ required order of completion.
    `mathQuillToMeaning` in [setup.litcoffee](../app/setup.litcoffee).
    Tasks remaining:
    * Support equality-like relations of all kinds
-   * Support exponentiation
    * Support for ln, log, and log-base-b
    * Support the units dollars, degrees, percent
    * Support the overline and overarc modifiers
@@ -122,14 +121,14 @@ required order of completion.
    * Support definite integrals (same as previous re: differentials
      optional)
 ```
+["a", "=", "b", "≠", "c", "∼", "d", "¬", "∼", "e", "g", "≈", "h", "¬", "≈", "i", "≤", "j", "≥", "k", "≃", "l", "¬", "≃", "m", "∴", "o"]
+a = b ≠ c ∼ d ¬ ∼ e g ≈ h ¬ ≈ i ≤ j ≥ k ≃ l ¬ ≃ m ∴ o
+
 ["overline", "x", "±", "y", "·", "fraction", "(", "z", "w", ")", "+", "$", "3", "0", "+", "3", "0", "sup", "∘", "+", "3", "0", "%"]
 overline x ± y · fraction ( z w ) + $ 3 0 + 3 0 sup ∘ + 3 0 %
 
 ["e", "sup", "g", "ln", "h", "log", "i", "log", "sub", "j", "k"]
 e sup g ln h log i log sub j k
-
-["a", "=", "b", "≠", "c", "∼", "d", "¬", "∼", "e", "g", "≈", "h", "¬", "≈", "i", "≤", "j", "≥", "k", "≃", "l", "¬", "≃", "m", "∴", "o"]
-a = b ≠ c ∼ d ¬ ∼ e g ≈ h ¬ ≈ i ≤ j ≥ k ≃ l ¬ ≃ m ∴ o
 
 ["A", "→", "overline", "B", "↔", "overarc", "C", "∥", "D", "⊥", "∠", "E", ">", "m", "∠", "A", "+", "△", "A", "B", "C", "+", "▱", "A", "B", "C", "D", "⊙", "2"]
 A → overline B ↔ overarc C ∥ D ⊥ ∠ E > m ∠ A + △ A B C + ▱ A B C D ⊙ 2
@@ -166,6 +165,14 @@ thereafter is about building the symbolic manipulation core of Lurch itself,
 which is currently being redesigned by
 [Ken](http://mathweb.scranton.edu/ken/), and that design is not yet
 complete.
+
+## Miscellany
+
+Extend the equation editor plugin so that it can be customized to include an
+arbitrary set of symbols and categories thereof.  In particular, it does not
+have (at present) a category of symbols for logic and/or set theory.  Also,
+individual applications will wish to hide some categories (such as group
+theoretic operations for a computational application).
 
 ## Logical Foundation
 
