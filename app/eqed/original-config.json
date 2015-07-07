@@ -269,6 +269,57 @@
         ]
       },
       {
+        "groupName": "Geometry",
+        "buttonViews": [
+          {
+            "klass": "EquationEditor.Buttons.WriteButtonView",
+            "latex": "\\rightarrow"
+          },
+          {
+            "klass": "EquationEditor.Buttons.WriteButtonView",
+            "latex": "\\leftrightarrow"
+          },
+          {
+            "klass": "EquationEditor.Buttons.CommandButtonView",
+            "latex": "\\overline",
+            "buttonText": "\\overline{AB}"
+          },
+          {
+            "klass": "EquationEditor.Buttons.CommandButtonView",
+            "latex": "\\overarc",
+            "buttonText": "\\overarc{AB}"
+          },
+          {
+            "klass": "EquationEditor.Buttons.WriteButtonView",
+            "latex": "\\parallel"
+          },
+          {
+            "klass": "EquationEditor.Buttons.WriteButtonView",
+            "latex": "\\perp"
+          },
+          {
+            "klass": "EquationEditor.Buttons.WriteButtonView",
+            "latex": "\\angle"
+          },
+          {
+            "klass": "EquationEditor.Buttons.WriteButtonView",
+            "latex": "m\\angle"
+          },
+          {
+            "klass": "EquationEditor.Buttons.WriteButtonView",
+            "latex": "\\bigtriangleup"
+          },
+          {
+            "klass": "EquationEditor.Buttons.WriteButtonView",
+            "latex": "▱"
+          },
+          {
+            "klass": "EquationEditor.Buttons.WriteButtonView",
+            "latex": "\\bigodot"
+          }
+        ]
+      },
+      {
         "groupName": "Groups",
         "buttonViews": [
           {

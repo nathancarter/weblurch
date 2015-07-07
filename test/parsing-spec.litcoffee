@@ -367,6 +367,7 @@ Rule for forming sentences from nouns, by placing relations between them:
             G.addRule 'atomicsentence', [ 'noun', /[=≠≈≃≤≥<>]/, 'noun' ]
             G.addRule 'atomicsentence', [ /[¬]/, 'atomicsentence' ]
             G.addRule 'sentence', 'atomicsentence'
+            G.addRule 'sentence', [ /[∴]/, 'sentence' ]
 
 Rule for groupers:
 
@@ -465,6 +466,7 @@ arrays created by the parser:
                             when 4 then build 2, 1, 3
                             when 3 then build 1, 2
                     when 'decoration' then build 1, 2
+                    when 'sentence' then if expr[1] is '∴' then expr[2]
                 if not result? then result = expr[1]
                 if result instanceof OMNode then result = result.encode()
                 if G.expressionBuilderDebug
@@ -1008,6 +1010,33 @@ First, relations among nouns.
             expect( node.equals OM.simple \
                 'integer2.modulo_relation(k,l)' ) \
                 .toBeTruthy()
+
+Second, sentences with a "therefore" at the front.
+
+            input = '∴ 1 < 2'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'relation1.lt(1,2)' ).toBeTruthy()
+
+Finally, sentences that are negated.
+
+            input = '¬ A + B = C sup D'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'logic1.not(relation1.eq(arith1.plus(A,B),' + \
+                'arith1.power(C,D)))' ).toBeTruthy()
+            input = '¬ ¬ x = x'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'logic1.not(logic1.not(relation1.eq(x,x)))' ).toBeTruthy()
 
 ### should support units
 
