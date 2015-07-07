@@ -343,6 +343,12 @@ Rules for the operations of set theory (still incomplete):
             G.addRule 'setdiff', 'variable'
             G.addRule 'setdiff', [ 'setdiff', /[∼]/, 'variable' ]
 
+Rules for subscripts, which count as function application (so that "x sub i"
+still contains i as a free variable):
+
+            G.addRule 'subscripted', [ 'atomic', /sub/, 'atomic' ]
+            G.addRule 'noun', 'subscripted'
+
 Rules for various structures, like fractions, which are treated indivisibly,
 and thus as if they were atomics:
 
@@ -355,6 +361,11 @@ and thus as if they were atomics:
             G.addRule 'decoration', [ /overline/, 'atomic' ]
             G.addRule 'decoration', [ /overarc/, 'atomic' ]
             G.addRule 'atomic', 'decoration'
+            G.addRule 'trigfunc', [ /sin|cos|tan|cot|sec|csc/ ]
+            G.addRule 'trigapp', [ 'trigfunc', 'prodquo' ]
+            G.addRule 'trigapp',
+                [ 'trigfunc', /sup/, /\(/, /-/, /1/, /\)/, 'prodquo' ]
+            G.addRule 'atomic', 'trigapp'
 
 So far we've only defined rules for forming mathematical nouns, so we wrap
 the highest-level non-terminal defined so far, sumdiff, in the label "noun."
@@ -419,7 +430,8 @@ arrays created by the parser:
                     'overline' : OM.symbol 'overline', 'decoration'
                 build = ( head, args... ) ->
                     if typeof head is 'number' then head = expr[head]
-                    if typeof head is 'string' then head = symbols[head]
+                    if symbols.hasOwnProperty head then head = symbols[head]
+                    if typeof head is 'string' then head = OM.decode head
                     for arg, index in args
                         if typeof arg is 'number'
                             args[index] = OM.decode expr[arg]
@@ -478,8 +490,14 @@ arrays created by the parser:
                         right = if expr[5] is ')' then 'o' else 'c'
                         build OM.symbol( "interval_#{left}#{right}",
                             'interval1' ), 2, 4
-                    when 'absval'
-                        build OM.symbol( 'abs', 'arith1' ), 2
+                    when 'absval' then build OM.symbol( 'abs', 'arith1' ), 2
+                    when 'trigapp'
+                        switch expr.length
+                            when 3 then build OM.symbol( expr[1],
+                                'transc1' ), 2
+                            when 8 then build OM.symbol( "arc#{expr[1]}",
+                                'transc1' ), 7
+                    when 'subscripted' then build 1, 3
                 if not result? then result = expr[1]
                 if result instanceof OMNode then result = result.encode()
                 if G.expressionBuilderDebug
@@ -550,6 +568,22 @@ Greek letters:
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.variable 'π' ).toBeTruthy()
+
+Subscripted variables:
+
+            input = 'x sub i'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'x(i)' ).toBeTruthy()
+            input = 'T sub ( j + k )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'T(arith1.plus(j,k))' ) \
+                .toBeTruthy()
 
 ### should parse simple arithmetic expressions
 
@@ -1136,7 +1170,6 @@ First, just some simple tests with easy contents.
                 'interval1.interval_cc(I,J)' ).toBeTruthy()
             input = '[ 3 0 , 5 2 . 9 )'.split ' '
             output = G.parse input
-            console.log output
             expect( output.length ).toBe 1
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
@@ -1242,3 +1275,55 @@ Finally, multiple absolute values in the same expression.
             expect( node.equals OM.simple \
                 'arith1.abs(arith1.plus(arith1.abs(1),arith1.abs(1)))' ) \
                 .toBeTruthy()
+
+### should support trigonometric functions and inverses
+
+        it 'should support trigonometric functions and inverses', ->
+
+Simple application of a few of the trig functions and/or inverse trig
+functions.
+
+            input = 'sin x'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'transc1.sin(x)' ).toBeTruthy()
+            input = 'tan π'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.app OM.sym( 'tan', 'transc1' ),
+                OM.var 'π' ).toBeTruthy()
+            input = 'sec sup ( - 1 ) 0'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'transc1.arcsec(0)' ).toBeTruthy()
+
+Now place them inside expressions, or expressions inside them, or both.
+
+            input = 'cos x + 1'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(transc1.cos(x),1)' ).toBeTruthy()
+            input = 'cot ( a - 9 . 9 )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'transc1.cot(arith1.minus(a,9.9))' ).toBeTruthy()
+            input = '| csc sup ( - 1 ) ( 1 + g ) | sup 2'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.power(arith1.abs(transc1.arccsc(' + \
+                'arith1.plus(1,g))),2)' ).toBeTruthy()

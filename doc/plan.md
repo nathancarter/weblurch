@@ -99,8 +99,6 @@ required order of completion.
    which were created from MathQuill instances using the function
    `mathQuillToMeaning` in [setup.litcoffee](../app/setup.litcoffee).
    Tasks remaining:
-   * Support trig functions
-   * Support subscripted variables
    * Support factorials
    * Support limits with subscripts
    * Support summations with optional subscripts and superscripts
@@ -116,9 +114,6 @@ required order of completion.
    * Improve efficiency of `expressionBuilder` to use the JSON trees from
      within the OMNode instances, rather than constantly encode and decode.
 ```
-["(", "1", "+", "2", ")", "−", "[", "3", "+", "4", "]", "·", "|", "fraction", "(", "5", "6", ")", "|", "+", "(", "x", ",", "y", ")", "+", "[", "x", ",", "y", "]", "+", "(", "x", ",", "y", "]", "+", "[", "x", ",", "y", ")"]
-( 1 + 2 ) − [ 3 + 4 ] · | fraction ( 5 6 ) | + ( x , y ) + [ x , y ] + ( x , y ] + [ x , y )
-
 ["sin", "cos", "tan", "x", "+", "sec", "csc", "cot", "y", "=", "sin", "sup", "(", "−", "1", ")", "cos", "sup", "(", "−", "1", ")", "tan", "sup", "(", "−", "1", ")", "z", "+", "sec", "sup", "(", "−", "1", ")", "csc", "sup", "(", "−", "1", ")", "cot", "sup", "(", "−", "1", ")", "w"]
 sin cos tan x + sec csc cot y = sin sup ( − 1 ) cos sup ( − 1 ) tan sup ( − 1 ) z + sec sup ( − 1 ) csc sup ( − 1 ) cot sup ( − 1 ) w
 
