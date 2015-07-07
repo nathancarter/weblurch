@@ -93,24 +93,6 @@ required order of completion.
    `app/matching.duo.litcoffee` does not go under git control in master, but
    does in gh-pages.
 
-## Parsing
-
-Create a parser that can handle the following types of input, all of which
-were created from MathQuill instances using the function
-`mathQuillToMeaning` in [setup.litcoffee](../app/setup.litcoffee).
-
- * Fix the fact that you can do lim sub ( x → 0 ) x · 3 and it will treat
-   that (I think!) as 3 · lim sub ( x → 0 ) x.  This is related to the fact
-   that you cannot do 2 · ∫ x · d x, because the integral is currently
-   classified as a sumdiff.  All these things that can accept factors as
-   coefficients on the left need to be doubly classified in a category with
-   that exact purpose, and a rule added for factor * such things.
- * Add tests for things that should *not* parse, and verify that they do not
-
-Future math parsing enhancements:
- * Support adjacent atomics as factors in a product
- * Support chained equations
-
 ## Example Application
 
 Create a tutorial page in the repository (as a `.md` file) on how the reader
@@ -133,11 +115,10 @@ complete.
 
 ## Miscellany
 
-Extend the equation editor plugin so that it can be customized to include an
-arbitrary set of symbols and categories thereof.  In particular, it does not
-have (at present) a category of symbols for logic and/or set theory.  Also,
-individual applications will wish to hide some categories (such as group
-theoretic operations for a computational application).
+Future math parsing enhancements:
+ * Support adjacent atomics as factors in a product
+ * Support chained equations
+ * Add tests for things that should *not* parse, and verify that they do not
 
 ## Logical Foundation
 

@@ -376,14 +376,14 @@ Rules for limits and summations:
 
             G.addRule 'limit', [ /lim/, /sub/,
                 /\(/, 'variable', /[→]/, 'expression', /\)/, 'prodquo' ]
-            G.addRule 'factor', 'limit'
+            G.addRule 'takesleftcoeff', 'limit'
             G.addRule 'sum', [ /[Σ]/,
                 /sub/, /\(/, 'variable', /[=]/, 'expression', /\)/,
                 /sup/, 'atomic', 'prodquo' ]
             G.addRule 'sum', [ /[Σ]/, /sup/, 'atomic',
                 /sub/, /\(/, 'variable', /[=]/, 'expression', /\)/,
                 'prodquo' ]
-            G.addRule 'factor', 'sum'
+            G.addRule 'takesleftcoeff', 'sum'
 
 Rules for differential and integral calculus:
 
@@ -397,8 +397,19 @@ Rules for differential and integral calculus:
                 [ /[∫]/, /sup/, 'atomic', /sub/, 'atomic', 'prodquo' ]
             G.addRule 'factor', 'differential'
             G.addRule 'factor', 'difffrac'
-            G.addRule 'sumdiff', 'indefint'
-            G.addRule 'sumdiff', 'defint'
+            G.addRule 'takesleftcoeff', 'indefint'
+            G.addRule 'takesleftcoeff', 'defint'
+
+The category `takesleftcoeff` contains those things that can be multiplied
+on the left, unambiguously, by a coefficient.  For instance, a limit, when
+multiplied on the left by a coefficient, is clearly the coefficient times
+the entire limit, as a consequence of the opening marker "lim" which removes
+the possibility for ambiguity.  The same is true of summations and
+integrals.
+
+            G.addRule 'sumdiff', 'takesleftcoeff'
+            G.addRule 'sumdiff', [ 'factor', /[÷×·]/, 'takesleftcoeff' ]
+            G.addRule 'sumdiff', [ 'prodquo', /[+±-]/, 'takesleftcoeff' ]
 
 So far we've only defined rules for forming mathematical nouns, so we wrap
 the highest-level non-terminal defined so far, sumdiff, in the label "noun."
@@ -1535,3 +1546,240 @@ Definite integrals:
             expect( node.equals OM.simple \
                 'calculus1.defint(a,b,arith1.times(arith1.abs(' + \
                 'arith1.minus(x,1)),diff.d(x)))' ).toBeTruthy()
+
+### should read arithmetic around limit-like things correctly
+
+For instance, if we see ∫ A · B, we know that the B is inside the integral,
+but if we see ∫ A + B, we know that the B is outside the integral.  And yet
+on the left side, as in B · ∫ A or B + ∫ A, both are outside the integral.
+We test here to be sure that this distincion is parsed correctly.  These
+same tests must also pass for limits and summations, and for quotients and
+differences.
+
+        it 'should read arithmetic around limit-like things correctly', ->
+
+We test all the possible combinations regarding integrals first.
+
+Multiplication:
+
+            input = '∫ A · B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'calculus1.int(arith1.times(A,B))' ).toBeTruthy()
+            input = 'B · ∫ A'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.times(B,calculus1.int(A))' ).toBeTruthy()
+
+Division:
+
+            input = '∫ A ÷ B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'calculus1.int(arith1.divide(A,B))' ).toBeTruthy()
+            input = 'B ÷ ∫ A'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.divide(B,calculus1.int(A))' ).toBeTruthy()
+
+Addition:
+
+            input = '∫ A + B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(calculus1.int(A),B)' ).toBeTruthy()
+            input = 'B + ∫ A'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(B,calculus1.int(A))' ).toBeTruthy()
+
+Subtraction:
+
+            input = '∫ A - B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.minus(calculus1.int(A),B)' ).toBeTruthy()
+            input = 'B - ∫ A'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.minus(B,calculus1.int(A))' ).toBeTruthy()
+
+Repeat all the previous tests, but now for limits.
+
+Multiplication:
+
+            input = 'lim sub ( x → t ) A · B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'limit1.limit(t,limit1.both_sides,' + \
+                'fns1.lambda[x,arith1.times(A,B)])' ).toBeTruthy()
+            input = 'B · lim sub ( x → t ) A'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.times(B,limit1.limit(t,limit1.both_sides,' + \
+                'fns1.lambda[x,A]))' ).toBeTruthy()
+
+Division:
+
+            input = 'lim sub ( x → t ) A ÷ B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'limit1.limit(t,limit1.both_sides,' + \
+                'fns1.lambda[x,arith1.divide(A,B)])' ).toBeTruthy()
+            input = 'B ÷ lim sub ( x → t ) A'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.divide(B,limit1.limit(t,limit1.both_sides,' + \
+                'fns1.lambda[x,A]))' ).toBeTruthy()
+
+Addition:
+
+            input = 'lim sub ( x → t ) A + B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(limit1.limit(t,limit1.both_sides,' + \
+                'fns1.lambda[x,A]),B)' ).toBeTruthy()
+            input = 'B + lim sub ( x → t ) A'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(B,limit1.limit(t,limit1.both_sides,' + \
+                'fns1.lambda[x,A]))' ).toBeTruthy()
+
+Subtraction:
+
+            input = 'lim sub ( x → t ) A - B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.minus(limit1.limit(t,limit1.both_sides,' + \
+                'fns1.lambda[x,A]),B)' ).toBeTruthy()
+            input = 'B - lim sub ( x → t ) A'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.minus(B,limit1.limit(t,limit1.both_sides,' + \
+                'fns1.lambda[x,A]))' ).toBeTruthy()
+
+Repeat all the previous tests, but now for summations.
+
+Multiplication:
+
+            input = 'Σ sub ( x = 1 ) sup 3 A · B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.sum(interval1.interval(1,3),' + \
+                'fns1.lambda[x,arith1.times(A,B)])' ).toBeTruthy()
+            input = 'B · Σ sub ( x = 1 ) sup 3 A'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.times(B,arith1.sum(interval1.interval(1,3),' + \
+                'fns1.lambda[x,A]))' ).toBeTruthy()
+
+Division:
+
+            input = 'Σ sub ( x = 1 ) sup 3 A ÷ B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.sum(interval1.interval(1,3),' + \
+                'fns1.lambda[x,arith1.divide(A,B)])' ).toBeTruthy()
+            input = 'B ÷ Σ sub ( x = 1 ) sup 3 A'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.divide(B,arith1.sum(interval1.interval(1,3),' + \
+                'fns1.lambda[x,A]))' ).toBeTruthy()
+
+Addition:
+
+            input = 'Σ sub ( x = 1 ) sup 3 A + B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(arith1.sum(interval1.interval(1,3),' + \
+                'fns1.lambda[x,A]),B)' ).toBeTruthy()
+            input = 'B + Σ sub ( x = 1 ) sup 3 A'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(B,arith1.sum(interval1.interval(1,3),' + \
+                'fns1.lambda[x,A]))' ).toBeTruthy()
+
+Subtraction:
+
+            input = 'Σ sub ( x = 1 ) sup 3 A - B'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.minus(arith1.sum(interval1.interval(1,3),' + \
+                'fns1.lambda[x,A]),B)' ).toBeTruthy()
+            input = 'B - Σ sub ( x = 1 ) sup 3 A'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.minus(B,arith1.sum(interval1.interval(1,3),' + \
+                'fns1.lambda[x,A]))' ).toBeTruthy()
