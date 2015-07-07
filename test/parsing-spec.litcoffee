@@ -372,6 +372,12 @@ and thus as if they were atomics:
                 [ 'trigfunc', /sup/, /\(/, /-/, /1/, /\)/, 'prodquo' ]
             G.addRule 'atomic', 'trigapp'
 
+Rules for limits:
+
+            G.addRule 'limit', [ /lim/, /sub/,
+                /\(/, 'variable', /[→]/, 'expression', /\)/, 'prodquo' ]
+            G.addRule 'factor', 'limit'
+
 So far we've only defined rules for forming mathematical nouns, so we wrap
 the highest-level non-terminal defined so far, sumdiff, in the label "noun."
 
@@ -505,6 +511,11 @@ arrays created by the parser:
                     when 'subscripted' then build 1, 3
                     when 'factorial' then build OM.symbol( 'factorial',
                         'integer1' ), 1
+                    when 'limit'
+                        build OM.symbol( 'limit', 'limit1' ), 6,
+                            OM.symbol( 'both_sides', 'limit1' ),
+                            OM.binding OM.symbol( 'lambda', 'fns1' ),
+                                OM.decode( expr[4] ), OM.decode( expr[8] )
                 if not result? then result = expr[1]
                 if result instanceof OMNode then result = result.encode()
                 if G.expressionBuilderDebug
@@ -1360,3 +1371,28 @@ Now place them inside expressions, or expressions inside them, or both.
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'integer1.factorial(arith1.plus(W,R))' ).toBeTruthy()
+
+### should support limits
+
+We only support limits of one variable as it goes to a specific value.  We
+follow the convention given
+[for this OpenMath symbol](http://www.openmath.org/cd/limit1.xhtml#limit).
+
+        it 'should support factorials', ->
+            input = 'lim sub ( x → t sub 0 ) sin x'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'limit1.limit(t(0),limit1.both_sides,' + \
+                'fns1.lambda[x,transc1.sin(x)])' ).toBeTruthy()
+            input = '3 × lim sub ( a → 1 ) fraction ( a 1 ) + 9'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.plus(arith1.times(3,limit1.limit(1,' + \
+                'limit1.both_sides,fns1.lambda[a,arith1.divide(a,1)])),9)' \
+                ).toBeTruthy()

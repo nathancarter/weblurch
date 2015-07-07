@@ -99,7 +99,6 @@ required order of completion.
    which were created from MathQuill instances using the function
    `mathQuillToMeaning` in [setup.litcoffee](../app/setup.litcoffee).
    Tasks remaining:
-   * Support limits with subscripts
    * Support summations with optional subscripts and superscripts
    * Support differentials (d-then-variable)
    * Support indefinite integrals (not requiring differentials, since it may
@@ -113,9 +112,6 @@ required order of completion.
    * Improve efficiency of `expressionBuilder` to use the JSON trees from
      within the OMNode instances, rather than constantly encode and decode.
 ```
-["sin", "cos", "tan", "x", "+", "sec", "csc", "cot", "y", "=", "sin", "sup", "(", "−", "1", ")", "cos", "sup", "(", "−", "1", ")", "tan", "sup", "(", "−", "1", ")", "z", "+", "sec", "sup", "(", "−", "1", ")", "csc", "sup", "(", "−", "1", ")", "cot", "sup", "(", "−", "1", ")", "w"]
-sin cos tan x + sec csc cot y = sin sup ( − 1 ) cos sup ( − 1 ) tan sup ( − 1 ) z + sec sup ( − 1 ) csc sup ( − 1 ) cot sup ( − 1 ) w
-
 ["fraction", "(", "μ", "σ", ")", "+", "overline", "x", "·", "overline", "y", "+", "x", "sup", "i", "−", "x", "sub", "i", "+", "x", "!", "=", "Σ"]
 fraction ( μ σ ) + overline x · overline y + x sup i − x sub i + x ! = Σ
 
