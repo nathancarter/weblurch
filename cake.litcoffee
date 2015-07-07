@@ -75,6 +75,11 @@ Before building the app, ensure that the output folder exists.
 
         fs.mkdirSync appdir unless fs.existsSync appdir
 
+Compute size of folder prefix, for showing relative paths later, for
+brevity.
+
+        L = __dirname.length + 1
+
 Next concatenate all `.litcoffee` source files into one.  The only exception
 to this rule is if any of them end in `.solo.litcoffee`, then they're
 requesting that they be compiled individually.  So we filter those out.  We
@@ -131,12 +136,12 @@ individual `.min.js` files (for importing into web workers).
                     toMove = ( f for f in build.dir srcdir, RegExp prefix \
                         when not /\.(solo|duo).litcoffee$/.test f )
                     build.runShellCommands ( for result in toMove
-                        description : "\tMoving #{result} into app/..."
+                        description : "\tMoving #{result[L..]} into app/..."
                         command : "mv #{result} app/"
                     ), ->
                         build.runShellCommands [
-                            description : "\tCopying src/#{prefix}litcoffee
-                                into app/..."
+                            description : "\tCopying
+                                src/#{prefix[L..]}litcoffee into app/..."
                             command : "cp src/#{prefix}litcoffee app/"
                         ], buildNext
             else
