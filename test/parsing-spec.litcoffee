@@ -338,6 +338,11 @@ Rules for logarithms:
             G.addRule 'prodquo', 'ln'
             G.addRule 'prodquo', 'log'
 
+Rules for factorial:
+
+            G.addRule 'factorial', [ 'atomic', /!/ ]
+            G.addRule 'factor', 'factorial'
+
 Rules for the operations of set theory (still incomplete):
 
             G.addRule 'setdiff', 'variable'
@@ -498,6 +503,8 @@ arrays created by the parser:
                             when 8 then build OM.symbol( "arc#{expr[1]}",
                                 'transc1' ), 7
                     when 'subscripted' then build 1, 3
+                    when 'factorial' then build OM.symbol( 'factorial',
+                        'integer1' ), 1
                 if not result? then result = expr[1]
                 if result instanceof OMNode then result = result.encode()
                 if G.expressionBuilderDebug
@@ -1327,3 +1334,29 @@ Now place them inside expressions, or expressions inside them, or both.
             expect( node.equals OM.simple \
                 'arith1.power(arith1.abs(transc1.arccsc(' + \
                 'arith1.plus(1,g))),2)' ).toBeTruthy()
+
+### should support factorials
+
+        it 'should support factorials', ->
+
+            input = '1 0 !'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'integer1.factorial(10)' ) \
+                .toBeTruthy()
+            input = 'W × R !'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.times(W,integer1.factorial(R))' ).toBeTruthy()
+            input = '( W + R ) !'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'integer1.factorial(arith1.plus(W,R))' ).toBeTruthy()
