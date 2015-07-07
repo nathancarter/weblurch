@@ -113,10 +113,8 @@ required order of completion.
    * Support chained equations
    * Add tests for things that should *not* parse, and verify that they do
      not
-   * Improve Earley algorithm to not call `expressionBuilder` until final
-     parsing is done, and then only do it recursively on the successfully
-     parsed things.  Right now it's called constantly on incomplete things
-     that will never actually be needed, very inefficient.
+   * Improve efficiency of `expressionBuilder` to use the JSON trees from
+     within the OMNode instances, rather than constantly encode and decode.
 ```
 ["(", "1", "+", "2", ")", "−", "[", "3", "+", "4", "]", "·", "|", "fraction", "(", "5", "6", ")", "|", "+", "(", "x", ",", "y", ")", "+", "[", "x", ",", "y", "]", "+", "(", "x", ",", "y", "]", "+", "[", "x", ",", "y", ")"]
 ( 1 + 2 ) − [ 3 + 4 ] · | fraction ( 5 6 ) | + ( x , y ) + [ x , y ] + ( x , y ] + [ x , y )

@@ -44,7 +44,7 @@ copy in all except the `got` array.
         rhs : state.rhs
         pos : state.pos
         ori : state.ori
-        got : JSON.parse JSON.stringify state.got
+        got : state.got[..]
 
 We will later need to compare two arrays of strings and/or regular
 expressions for equality.  This function does so.
@@ -180,7 +180,7 @@ Run the tokenizer if there is one, and the input needs it.
             if options.tokenizer? and typeof input is 'string'
                 input = options.tokenizer.tokenize input
 
-Initialize the set of states to teh array `[ [], [], ..., [] ]`, one entry
+Initialize the set of states to the array `[ [], [], ..., [] ]`, one entry
 for each interstice between characters in `input`, including one for before
 the first character and one for after the last.
 
@@ -239,13 +239,13 @@ whichever rules spawned it by copying them into the next column in
                             if getNext( s ) is state.lhs
                                 s = copyState s
                                 s.pos++
-                                got = JSON.parse JSON.stringify state.got
+                                got = state.got[..]
                                 if options.addCategories
                                     got.unshift state.lhs
+                                if options.expressionBuilder?
+                                    got.unshift options.expressionBuilder
                                 if options.collapseBranches and \
                                     got.length is 1 then got = got[0]
-                                if options.expressionBuilder?
-                                    got = options.expressionBuilder got
                                 s.got.push got
                                 stateGrid[i].push s
                                 debug "completer added this to #{i}:",
@@ -311,18 +311,39 @@ the inner of the two main loops.
 
 The main loop is complete.  Any completed production in the final state set
 that's marked as a result (and thus coming from state 0 to boot) is a valid
-parsing and should be returned.
+parsing and should be returned.  We find such productions with this loop:
 
             results = [ ]
             for stateSet in stateGrid[stateGrid.length-1]
                 if stateSet.lhs is '' and getNext( stateSet ) is null
                     result = stateSet.got[0]
+
+When we find one, we have some checks to do before returning it.  First,
+recursively apply `expressionBuilder`, if the client asked us to.
+
+                    if options.expressionBuilder?
+                        recur = ( obj ) ->
+                            if obj not instanceof Array or \
+                               obj[0] isnt options.expressionBuilder
+                                return obj
+                            args = ( recur o for o in obj[1..] )
+                            if args.length is 1 and options.collapseBranches
+                                args = args[0]
+                            obj[0] args
+                        result = recur result
+
+Second, don't return any duplicates.  So check to see if we've already seen
+this result before we add it to the final list of results to return.
+
                     found = no
                     for previous in results
                         if JSON.equals previous, result
                             found = yes
                             break
                     if not found then results.push result
+
+Now return the final result list.
+
             results
 
 ## Tokenizing
