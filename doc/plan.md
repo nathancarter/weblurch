@@ -99,8 +99,6 @@ required order of completion.
    which were created from MathQuill instances using the function
    `mathQuillToMeaning` in [setup.litcoffee](../app/setup.litcoffee).
    Tasks remaining:
-   * Support pairing and interval-forming operations
-   * Support absolute values
    * Support trig functions
    * Support subscripted variables
    * Support factorials
@@ -115,6 +113,10 @@ required order of completion.
    * Support chained equations
    * Add tests for things that should *not* parse, and verify that they do
      not
+   * Improve Earley algorithm to not call `expressionBuilder` until final
+     parsing is done, and then only do it recursively on the successfully
+     parsed things.  Right now it's called constantly on incomplete things
+     that will never actually be needed, very inefficient.
 ```
 ["(", "1", "+", "2", ")", "−", "[", "3", "+", "4", "]", "·", "|", "fraction", "(", "5", "6", ")", "|", "+", "(", "x", ",", "y", ")", "+", "[", "x", ",", "y", "]", "+", "(", "x", ",", "y", "]", "+", "[", "x", ",", "y", ")"]
 ( 1 + 2 ) − [ 3 + 4 ] · | fraction ( 5 6 ) | + ( x , y ) + [ x , y ] + ( x , y ] + [ x , y )

@@ -362,17 +362,22 @@ the highest-level non-terminal defined so far, sumdiff, in the label "noun."
             G.addRule 'noun', 'sumdiff'
             G.addRule 'noun', 'setdiff'
 
-Rule for forming sentences from nouns, by placing relations between them:
+Rules for forming sentences from nouns, by placing relations between them:
 
             G.addRule 'atomicsentence', [ 'noun', /[=≠≈≃≤≥<>]/, 'noun' ]
             G.addRule 'atomicsentence', [ /[¬]/, 'atomicsentence' ]
             G.addRule 'sentence', 'atomicsentence'
             G.addRule 'sentence', [ /[∴]/, 'sentence' ]
 
-Rule for groupers:
+Rules for groupers:
 
             G.addRule 'atomic', [ /\(/, 'noun', /\)/ ]
             G.addRule 'atomicsentence', [ /\(/, 'sentence', /\)/ ]
+            G.addRule 'interval',
+                [ /[\(\[]/, 'noun', /,/, 'noun', /[\)\]]/ ]
+            G.addRule 'atomic', 'interval'
+            G.addRule 'absval', [ /\|/, 'noun', /\|/ ]
+            G.addRule 'atomic', 'absval'
 
 And finally, place "expression" at the top of the grammar; one is permitted
 to use this grammar to express mathematical nouns or complete sentences:
@@ -414,10 +419,11 @@ arrays created by the parser:
                     'overline' : OM.symbol 'overline', 'decoration'
                 build = ( head, args... ) ->
                     if typeof head is 'number' then head = expr[head]
+                    if typeof head is 'string' then head = symbols[head]
                     for arg, index in args
                         if typeof arg is 'number'
                             args[index] = OM.decode expr[arg]
-                    tmp = OM.application symbols[head], args...
+                    tmp = OM.application head, args...
                     if G.expressionBuilderDebug
                         console.log 'build', head, args..., '-->', tmp
                     tmp
@@ -467,6 +473,13 @@ arrays created by the parser:
                             when 3 then build 1, 2
                     when 'decoration' then build 1, 2
                     when 'sentence' then if expr[1] is '∴' then expr[2]
+                    when 'interval'
+                        left = if expr[1] is '(' then 'o' else 'c'
+                        right = if expr[5] is ')' then 'o' else 'c'
+                        build OM.symbol( "interval_#{left}#{right}",
+                            'interval1' ), 2, 4
+                    when 'absval'
+                        build OM.symbol( 'abs', 'arith1' ), 2
                 if not result? then result = expr[1]
                 if result instanceof OMNode then result = result.encode()
                 if G.expressionBuilderDebug
@@ -582,9 +595,7 @@ Try one of each operation in isolation:
             expect( node.equals OM.simple 'multiops.plusminus(v,w)' ) \
                 .toBeTruthy()
             input = '2 sup k'.split ' '
-            G.expressionBuilderDebug = yes
             output = G.parse input
-            G.expressionBuilderDebug = no
             expect( output.length ).toBe 1
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
@@ -1091,4 +1102,143 @@ expression with the arc or line over it.
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'decoration.overarc(arith1.minus(6,arith1.divide(e,3)))' ) \
+                .toBeTruthy()
+
+### should support intervals of all four types
+
+There are intervals of the form (a,b), (a,b], [a,b), and [a,b].  All four
+should be supported, and none should get confused with parentheses nearby.
+
+        it 'should support intervals of all four types', ->
+
+First, just some simple tests with easy contents.
+
+            input = '( 1 , 2 ]'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'interval1.interval_oc(1,2)' ).toBeTruthy()
+            input = '( t , k )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'interval1.interval_oo(t,k)' ).toBeTruthy()
+            input = '[ I , J ]'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'interval1.interval_cc(I,J)' ).toBeTruthy()
+            input = '[ 3 0 , 5 2 . 9 )'.split ' '
+            output = G.parse input
+            console.log output
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'interval1.interval_co(30,52.9)' ).toBeTruthy()
+
+Now tests that are trickier because of intervals near other intervals, or
+intervals within intervals, or parentheses in or around intervals.
+
+            input = '( 4 × ( t + u ) , 2 sup 9 ]'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'interval1.interval_oc(' + \
+                'arith1.times(4,arith1.plus(t,u)),' + \
+                'arith1.power(2,9))' ).toBeTruthy()
+            input = '( 3 - [ 1 , 2 ] ) × 4'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.times(arith1.minus(3,' + \
+                'interval1.interval_cc(1,2)),4)' ).toBeTruthy()
+            input = '[ ( 2 , 3 ] , ( j , j + 1 ] )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'interval1.interval_co(' + \
+                'interval1.interval_oc(2,3),' + \
+                'interval1.interval_oc(j,arith1.plus(j,1)))' ).toBeTruthy()
+
+### should support absolute values
+
+These can be tricky because the left and right edges are indistinguishable.
+
+        it 'should support absolute values', ->
+
+First, absolute values of atomics.
+
+            input = '| a |'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'arith1.abs(a)' ).toBeTruthy()
+            input = '| - 9 6 2 |'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 2
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'arith1.abs(-962)' ).toBeTruthy()
+            node = OM.decode output[1]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.abs(arith1.unary_minus(962))' ).toBeTruthy()
+
+Second, absolute values of some expressions.
+
+            input = '| fraction ( ( a sup b ) 1 0 ) |'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.abs(arith1.divide(arith1.power(a,b),10))' ) \
+                .toBeTruthy()
+            input = '| 9 - 8 + 7 - 6 |'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.abs(arith1.minus(arith1.plus(arith1.minus(' + \
+                '9,8),7),6))' ).toBeTruthy()
+
+Finally, multiple absolute values in the same expression.
+
+            input = '| 6 + r | - | 6 - r |'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.minus(arith1.abs(arith1.plus(6,r)),' + \
+                'arith1.abs(arith1.minus(6,r)))' ).toBeTruthy()
+            input = '| fraction ( ( | x | ) x ) |'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.abs(arith1.divide(arith1.abs(x),x))' ).toBeTruthy()
+            input = '| | 1 | + | 1 | |'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.abs(arith1.plus(arith1.abs(1),arith1.abs(1)))' ) \
                 .toBeTruthy()
