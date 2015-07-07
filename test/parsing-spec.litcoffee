@@ -385,6 +385,21 @@ Rules for limits and summations:
                 'prodquo' ]
             G.addRule 'factor', 'sum'
 
+Rules for differential and integral calculus:
+
+            G.addRule 'differential', [ /d/, 'atomic' ]
+            G.addRule 'difffrac',
+                [ /fraction/, /\(/, /d/, /\(/, /d/, 'variable', /\)/, /\)/ ]
+            G.addRule 'indefint', [ /[∫]/, 'prodquo' ]
+            G.addRule 'defint',
+                [ /[∫]/, /sub/, 'atomic', /sup/, 'atomic', 'prodquo' ]
+            G.addRule 'defint',
+                [ /[∫]/, /sup/, 'atomic', /sub/, 'atomic', 'prodquo' ]
+            G.addRule 'factor', 'differential'
+            G.addRule 'factor', 'difffrac'
+            G.addRule 'sumdiff', 'indefint'
+            G.addRule 'sumdiff', 'defint'
+
 So far we've only defined rules for forming mathematical nouns, so we wrap
 the highest-level non-terminal defined so far, sumdiff, in the label "noun."
 
@@ -441,21 +456,23 @@ arrays created by the parser:
                     '∘' : OM.symbol 'degrees', 'units'
                     '$' : OM.symbol 'dollars', 'units'
                     '%' : OM.symbol 'percent', 'units'
+                    '∫' : OM.symbol 'int', 'calculus1'
+                    'def∫' : OM.symbol 'defint', 'calculus1'
                     'ln' : OM.symbol 'ln', 'transc1'
                     'log' : OM.symbol 'log', 'transc1'
                     'unary-' : OM.symbol 'unary_minus', 'arith1'
                     'overarc' : OM.symbol 'overarc', 'decoration'
                     'overline' : OM.symbol 'overline', 'decoration'
-                build = ( head, args... ) ->
-                    if typeof head is 'number' then head = expr[head]
-                    if symbols.hasOwnProperty head then head = symbols[head]
-                    if typeof head is 'string' then head = OM.decode head
-                    for arg, index in args
-                        if typeof arg is 'number'
-                            args[index] = OM.decode expr[arg]
-                    tmp = OM.application head, args...
+                    'd' : OM.symbol 'd', 'diff'
+                build = ( args... ) ->
+                    args = for a in args
+                        if typeof a is 'number' then a = expr[a]
+                        if symbols.hasOwnProperty a then a = symbols[a]
+                        if typeof a is 'string' then a = OM.decode a
+                        a
+                    tmp = OM.application args...
                     if G.expressionBuilderDebug
-                        console.log 'build', head, args..., '-->', tmp
+                        console.log 'build', args..., '-->', tmp
                     tmp
                 result = switch expr[0]
                     when 'digit', 'nonnegint' then expr[1..].join ''
@@ -534,6 +551,13 @@ arrays created by the parser:
                             OM.binding( OM.symbol( 'lambda', 'fns1' ),
                                 OM.decode( expr[varname] ),
                                 OM.decode( expr[10] ) )
+                    when 'differential' then build 'd', 2
+                    when 'difffrac' then build '÷', 'd', build 'd', 6
+                    when 'indefint' then build '∫', 2
+                    when 'defint'
+                        [ a, b ] = if expr[2] is 'sup' then [ 5, 3 ] \
+                            else [ 3, 5 ]
+                        build 'def∫', a, b, 6
                 if not result? then result = expr[1]
                 if result instanceof OMNode then result = result.encode()
                 if G.expressionBuilderDebug
@@ -1437,3 +1461,75 @@ follow the convention given
             expect( node.equals OM.simple 'arith1.minus(arith1.sum(' + \
                 'interval1.interval(0,arith1.plus(n,1)),' + \
                 'fns1.lambda[m,m]),1)' ).toBeTruthy()
+
+### should support differential and integral calculus
+
+        it 'should support differential and integral calculus', ->
+
+Differentials are d followed by a variable:
+
+            input = 'd x'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'diff.d(x)' ).toBeTruthy()
+            input = 'd Q'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'diff.d(Q)' ).toBeTruthy()
+
+Differential fractions are like d/dx (i.e., d over d times a variable):
+
+            input = 'fraction ( d ( d x ) )'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 2
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.divide(diff.d,diff.d(x))' ).toBeTruthy()
+            node = OM.decode output[1]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.divide(d,diff.d(x))' ).toBeTruthy()
+
+Indefinite integrals:
+
+            input = '∫ x sup 2 · d x'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'calculus1.int(arith1.times(arith1.power(x,2),' + \
+                'diff.d(x)))' ).toBeTruthy()
+            input = '∫ ( fraction ( x k ) - 1 0 ) · d k'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'calculus1.int(arith1.times(arith1.minus(' + \
+                'arith1.divide(x,k),10),diff.d(k)))' ).toBeTruthy()
+
+Definite integrals:
+
+            input = '∫ sub 0 sup 2 ( s + t ) · d t'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'calculus1.defint(0,2,arith1.times(arith1.plus(s,t),' + \
+                'diff.d(t)))' ).toBeTruthy()
+            input = '∫ sup b sub a | x - 1 | · d x' \
+                .split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'calculus1.defint(a,b,arith1.times(arith1.abs(' + \
+                'arith1.minus(x,1)),diff.d(x)))' ).toBeTruthy()

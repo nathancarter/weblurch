@@ -171,6 +171,7 @@ sense if you have read the Wikipedia page cited at the top of this file.
             options.collapseBranches ?= @defaults.collapseBranches
             options.showDebuggingOutput ?= @defaults.showDebuggingOutput
             options.expressionBuilder ?= @defaults.expressionBuilder
+            expressionBuilderFlag = { }
             options.tokenizer ?= @defaults.tokenizer
             debug = if options.showDebuggingOutput then console.log else ->
             debug '\n\n'
@@ -243,7 +244,7 @@ whichever rules spawned it by copying them into the next column in
                                 if options.addCategories
                                     got.unshift state.lhs
                                 if options.expressionBuilder?
-                                    got.unshift options.expressionBuilder
+                                    got.unshift expressionBuilderFlag
                                 if options.collapseBranches and \
                                     got.length is 1 then got = got[0]
                                 s.got.push got
@@ -324,13 +325,22 @@ recursively apply `expressionBuilder`, if the client asked us to.
                     if options.expressionBuilder?
                         recur = ( obj ) ->
                             if obj not instanceof Array or \
-                               obj[0] isnt options.expressionBuilder
+                               obj[0] isnt expressionBuilderFlag
                                 return obj
                             args = ( recur o for o in obj[1..] )
                             if args.length is 1 and options.collapseBranches
                                 args = args[0]
-                            obj[0] args
+
+If the expression builder function returns undefined for any subexpression
+of the whole, we treat that as an error (saying the expression cannot be
+built for whatever application-specific reason the builder function has) and
+we thus do not include that result in the list.
+
+                            if args.indexOf( undefined ) > -1
+                                return undefined
+                            options.expressionBuilder args
                         result = recur result
+                        if not result? then continue
 
 Second, don't return any duplicates.  So check to see if we've already seen
 this result before we add it to the final list of results to return.
