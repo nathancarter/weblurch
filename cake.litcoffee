@@ -93,9 +93,8 @@ the list.
         fs.writeFileSync p.resolve( appdir, srcout ), all.join( '\n\n' ),
             'utf8'
 
-Also compile any files specific to the main app (as opposed to the test
-app), which will sit in the app folder rather than the source folder.  The
-exceptions to this rule are:
+Also compile any files specific to the main app, which will sit in the app
+folder rather than the source folder.  The exceptions to this rule are:
  * if any of them end in `.solo.litcoffee`, then they're requesting that
    they be compiled individually, so we filter those out, and
  * if any of them end in `.duo.litcoffee`, then they've been copied to the
