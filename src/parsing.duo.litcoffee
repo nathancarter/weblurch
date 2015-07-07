@@ -104,6 +104,7 @@ name to a grammar when you construct one.
                 showDebuggingOutput : no
                 expressionBuilder : null
                 tokenizer : null
+                comparator : JSON.equals
 
 The default options for the parsing algorithm are initialized in the
 constructor above, but you can change them using the following routine.  The
@@ -162,6 +163,11 @@ defined [above](#constructor).
    applied to any string input received by the parser before the parser does
    anything with it.  This way you can simply place the tokenizer inside the
    parser and forget about it; it will be run automatically.
+ * `comparator` is used to compare two results before returning the full
+   list, so that duplicates can be removed.  This defaults to a JSON-based
+   comparison, but will therefore go into an infinite loop for circular
+   structures.  Feel free to provide a different one if the default does not
+   meet your needs.  To return duplicates, simply set this to `-> no`.
 
 This algorithm is documented to some degree, but it will make much more
 sense if you have read the Wikipedia page cited at the top of this file.
@@ -173,6 +179,7 @@ sense if you have read the Wikipedia page cited at the top of this file.
             options.expressionBuilder ?= @defaults.expressionBuilder
             expressionBuilderFlag = { }
             options.tokenizer ?= @defaults.tokenizer
+            options.comparator ?= @defaults.comparator
             debug = if options.showDebuggingOutput then console.log else ->
             debug '\n\n'
 
@@ -347,7 +354,7 @@ this result before we add it to the final list of results to return.
 
                     found = no
                     for previous in results
-                        if JSON.equals previous, result
+                        if options.comparator previous, result
                             found = yes
                             break
                     if not found then results.push result

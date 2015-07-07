@@ -99,18 +99,17 @@ Create a parser that can handle the following types of input, all of which
 were created from MathQuill instances using the function
 `mathQuillToMeaning` in [setup.litcoffee](../app/setup.litcoffee).
 
-Tasks remaining:
- * Support adjacent atomics as factors in a product
  * Fix the fact that you can do lim sub ( x → 0 ) x · 3 and it will treat
    that (I think!) as 3 · lim sub ( x → 0 ) x.  This is related to the fact
    that you cannot do 2 · ∫ x · d x, because the integral is currently
    classified as a sumdiff.  All these things that can accept factors as
    coefficients on the left need to be doubly classified in a category with
    that exact purpose, and a rule added for factor * such things.
- * Support chained equations
  * Add tests for things that should *not* parse, and verify that they do not
- * Improve efficiency of `expressionBuilder` to use the JSON trees from
-   within the OMNode instances, rather than constantly encode and decode.
+
+Future math parsing enhancements:
+ * Support adjacent atomics as factors in a product
+ * Support chained equations
 
 ## Example Application
 

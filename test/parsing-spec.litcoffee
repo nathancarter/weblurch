@@ -472,17 +472,17 @@ arrays created by the parser:
                         a
                     tmp = OM.application args...
                     if G.expressionBuilderDebug
-                        console.log 'build', args..., '-->', tmp
+                        argstrs = for arg in args
+                            if arg instanceof OMNode then arg.encode() \
+                                else "#{arg}"
+                        console.log 'build', argstrs..., '-->', tmp
                     tmp
                 result = switch expr[0]
                     when 'digit', 'nonnegint' then expr[1..].join ''
                     when 'integer'
                         OM.integer parseInt expr[1..].join ''
-                    when 'float'
-                        intvalue = OM.decode( expr[1] ).value
-                        fullvalue = parseFloat \
-                            "#{intvalue}#{expr[2..].join ''}"
-                        OM.float fullvalue
+                    when 'float' then OM.float parseFloat \
+                        "#{expr[1].value}#{expr[2..].join ''}"
                     when 'variable' then OM.variable expr[1]
                     when 'infinity' then symbols[expr[1]]
                     when 'sumdiff', 'prodquo'
@@ -539,18 +539,16 @@ arrays created by the parser:
                         build OM.symbol( 'limit', 'limit1' ), 6,
                             OM.symbol( 'both_sides', 'limit1' ),
                             OM.binding OM.symbol( 'lambda', 'fns1' ),
-                                OM.decode( expr[4] ), OM.decode( expr[8] )
+                                expr[4], expr[8]
                     when 'sum'
                         [ varname, from, to ] = if expr[2] is 'sup' then \
                             [ 6, 8, 3 ] else [ 4, 6, 9 ]
                         build OM.symbol( 'sum', 'arith1' ),
                             OM.application(
                                 OM.symbol( 'interval', 'interval1' ),
-                                OM.decode( expr[from] ),
-                                OM.decode( expr[to] ) ),
+                                expr[from], expr[to] ),
                             OM.binding( OM.symbol( 'lambda', 'fns1' ),
-                                OM.decode( expr[varname] ),
-                                OM.decode( expr[10] ) )
+                                expr[varname], expr[10] )
                     when 'differential' then build 'd', 2
                     when 'difffrac' then build '÷', 'd', build 'd', 6
                     when 'indefint' then build '∫', 2
@@ -559,10 +557,14 @@ arrays created by the parser:
                             else [ 3, 5 ]
                         build 'def∫', a, b, 6
                 if not result? then result = expr[1]
-                if result instanceof OMNode then result = result.encode()
+                # if result instanceof OMNode then result = result.tree
                 if G.expressionBuilderDebug
-                    console.log JSON.stringify( expr ), '--->', result
+                    console.log ( if expr instanceof OMNode then \
+                        expr.encode() else "#{expr}" ), '--->',
+                        if result instanceof OMNode then \
+                            result.encode() else result
                 result
+            G.setOption 'comparator', ( a, b ) -> a?.equals? b
 
 ### should parse numbers
 
@@ -573,7 +575,7 @@ An integer first (which also counts as a float):
             input = '1 0 0'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.integer 100 ).toBeTruthy()
 
@@ -582,7 +584,7 @@ A floating point value second:
             input = '3 . 1 4 1 5 9'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple '3.14159' ).toBeTruthy()
 
@@ -591,7 +593,7 @@ Let's pretend infinity is a number, and include it in this test.
             input = [ '∞' ]
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'nums1.infinity' ).toBeTruthy()
 
@@ -604,13 +606,13 @@ Roman letters, upper and lower case:
             input = [ "x" ]
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.variable 'x' ).toBeTruthy()
             input = [ "R" ]
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.variable 'R' ).toBeTruthy()
 
@@ -619,13 +621,13 @@ Greek letters:
             input = [ "α" ]
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.variable 'α' ).toBeTruthy()
             input = [ "π" ]
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.variable 'π' ).toBeTruthy()
 
@@ -634,13 +636,13 @@ Subscripted variables:
             input = 'x sub i'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'x(i)' ).toBeTruthy()
             input = 'T sub ( j + k )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'T(arith1.plus(j,k))' ) \
                 .toBeTruthy()
@@ -656,42 +658,42 @@ Try one of each operation in isolation:
             input = '6 + k'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'arith1.plus(6,k)' ).toBeTruthy()
-            node = OM.decode output[1]
+            node = output[1]
             input = '1 . 9 - T'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'arith1.minus(1.9,T)' ) \
                 .toBeTruthy()
             input = '0 . 2 · 0 . 3'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'arith1.times(0.2,0.3)' ) \
                 .toBeTruthy()
             input = 'v ÷ w'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'arith1.divide(v,w)' ) \
                 .toBeTruthy()
             input = 'v ± w'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'multiops.plusminus(v,w)' ) \
                 .toBeTruthy()
             input = '2 sup k'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'arith1.power(2,k)' ) \
                 .toBeTruthy()
@@ -702,21 +704,21 @@ left-associate.
             input = '5 . 0 - K + e'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.plus(arith1.minus(5.0,K),e)' ).toBeTruthy()
             input = '5 . 0 × K ÷ e'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.divide(arith1.times(5.0,K),e)' ).toBeTruthy()
             input = '( a sup b ) sup c'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.power(arith1.power(a,b),c)' ).toBeTruthy()
@@ -727,21 +729,21 @@ precedence is respected.
             input = '5 . 0 - K · e'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.minus(5.0,arith1.times(K,e))' ).toBeTruthy()
             input = '5 . 0 × K + e'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.plus(arith1.times(5.0,K),e)' ).toBeTruthy()
             input = 'u sup v × w sup x'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.times(arith1.power(u,v),arith1.power(w,x))' ) \
@@ -752,31 +754,31 @@ Verify that unary negation works.
             input = '- 7'.split ' '
             output = G.parse input
             expect( output.length ).toBe 2
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple '-7' ).toBeTruthy()
-            node = OM.decode output[1]
+            node = output[1]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'arith1.unary_minus(7)' ) \
                 .toBeTruthy()
             input = 'A + - B'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.plus(A,arith1.unary_minus(B))' ).toBeTruthy()
             input = '- A + B'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.plus(arith1.unary_minus(A),B)' ).toBeTruthy()
             input = '- A sup B'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.unary_minus(arith1.power(A,B))' ).toBeTruthy()
@@ -793,7 +795,7 @@ First, verify that a chain of sums left-associates.
             input = '6 + k + 5'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.plus(arith1.plus(6,k),5)' ).toBeTruthy()
@@ -803,7 +805,7 @@ Now verify that we can override that with parentheses.
             input = '6 + ( k + 5 )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.plus(6,arith1.plus(k,5))' ).toBeTruthy()
@@ -815,28 +817,28 @@ the default precendence of these operators.
             input = '( 5 . 0 - K ) · e'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.times(arith1.minus(5.0,K),e)' ).toBeTruthy()
             input = '5 . 0 × ( K + e )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.times(5.0,arith1.plus(K,e))' ).toBeTruthy()
             input = '- ( K + e )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.unary_minus(arith1.plus(K,e))' ).toBeTruthy()
             input = '- ( A sup B )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.unary_minus(arith1.power(A,B))' ).toBeTruthy()
@@ -853,14 +855,14 @@ Let's begin with fractions of atomics.
             input = 'fraction ( 1 2 )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.divide(1,2)' ).toBeTruthy()
             input = 'fraction ( p q )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.divide(p,q)' ).toBeTruthy()
@@ -870,14 +872,14 @@ Now we'll try fractions of larger things
             input = 'fraction ( ( 1 + t ) 3 )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.divide(arith1.plus(1,t),3)' ).toBeTruthy()
             input = 'fraction ( ( a + b ) ( a - b ) )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.divide(arith1.plus(a,b),arith1.minus(a,b))' ) \
@@ -889,7 +891,7 @@ numerator and denominator of fractions.
             input = 'fraction ( ( 1 + 2 × v ) ( - w ) )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.divide(arith1.plus(1,arith1.times(2,v)),' + \
@@ -909,14 +911,14 @@ First, square roots of simple expressions.
             input = '√ 2'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.root(2,2)' ).toBeTruthy()
             input = '√ ( 1 0 - k + 9 . 6 )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.root(arith1.plus(arith1.minus(10,k),9.6),2)' ) \
@@ -928,14 +930,14 @@ Second, nth roots of simple expressions.
             output = G.parse input
 
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.root(2,p)' ).toBeTruthy()
             input = 'nthroot 5 0 √ ( 1 0 - k + 9 . 6 )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.root(arith1.plus(arith1.minus(10,k),9.6),50)' ) \
@@ -946,7 +948,7 @@ Next, square roots of fractions and of other roots, and placed in context.
             input = 'fraction ( 6 √ fraction ( 1 2 ) )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.divide(6,arith1.root(arith1.divide(1,2),2))' ) \
@@ -954,7 +956,7 @@ Next, square roots of fractions and of other roots, and placed in context.
             input = '√ ( 1 + √ 5 ) + 1'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.plus(arith1.root(arith1.plus(' + \
@@ -965,7 +967,7 @@ Finally, nth roots containing more complex expressions.
             input = 'nthroot ( 2 + t ) √ ( 1 ÷ ∞ )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.root(arith1.divide(1,nums1.infinity),' + \
@@ -983,13 +985,13 @@ Natural logarithms of a simple thing and a larger thing.
             input = 'ln x'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'transc1.ln(x)' ).toBeTruthy()
             input = 'ln fraction ( 2 ( x + 1 ) )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'transc1.ln(arith1.divide(2,arith1.plus(x,1)))' ) \
@@ -1000,14 +1002,14 @@ Logarithms with an implied base 10, of a simple thing and a larger thing.
             input = 'log 1 0 0 0'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'transc1.log(10,1000)' ) \
                 .toBeTruthy()
             input = 'log ( e sup x × y )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'transc1.log(10,arith1.times(arith1.power(e,x),y))' ) \
@@ -1018,14 +1020,14 @@ Logarithms with an explicit base, of a simple thing and a larger thing.
             input = 'log sub ( 3 1 ) 6 5'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'transc1.log(31,65)' ) \
                 .toBeTruthy()
             input = 'log sub ( - t ) ( k + 5 )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'transc1.log(arith1.unary_minus(t),arith1.plus(k,5))' ) \
@@ -1043,25 +1045,25 @@ First, relations among nouns.
             input = '2 < 3'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'relation1.lt(2,3)' ).toBeTruthy()
             input = '- 6 > k'.split ' '
             output = G.parse input
             expect( output.length ).toBe 2
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'relation1.gt(-6,k)' ).toBeTruthy()
-            node = OM.decode output[1]
+            node = output[1]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'relation1.gt(arith1.unary_minus(6),k)' ).toBeTruthy()
             input = 't + u = t + v'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'relation1.eq(arith1.plus(t,u),arith1.plus(t,v))' ) \
@@ -1069,7 +1071,7 @@ First, relations among nouns.
             input = 't + u = t + v'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'relation1.eq(arith1.plus(t,u),arith1.plus(t,v))' ) \
@@ -1078,7 +1080,7 @@ First, relations among nouns.
             input = 't + u ≠ t + v'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'relation1.neq(arith1.plus(t,u),arith1.plus(t,v))' ) \
@@ -1086,7 +1088,7 @@ First, relations among nouns.
             input = 'fraction ( a ( 7 + b ) ) ≈ 0 . 7 5'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'relation1.approx(arith1.divide(' + \
@@ -1094,14 +1096,14 @@ First, relations among nouns.
             input = 't sup 2 ≤ 1 0'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'relation1.le(arith1.power(t,2),10)' ).toBeTruthy()
             input = '1 + 2 + 3 ≥ 6'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'relation1.ge(arith1.plus(arith1.plus(1,2),3),6)' ) \
@@ -1109,7 +1111,7 @@ First, relations among nouns.
             input = 'k ≃ l'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'integer2.modulo_relation(k,l)' ) \
@@ -1120,7 +1122,7 @@ Second, sentences with a "therefore" at the front.
             input = '∴ 1 < 2'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'relation1.lt(1,2)' ).toBeTruthy()
 
@@ -1129,7 +1131,7 @@ Finally, sentences that are negated.
             input = '¬ A + B = C sup D'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'logic1.not(relation1.eq(arith1.plus(A,B),' + \
@@ -1137,7 +1139,7 @@ Finally, sentences that are negated.
             input = '¬ ¬ x = x'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'logic1.not(logic1.not(relation1.eq(x,x)))' ).toBeTruthy()
@@ -1154,14 +1156,14 @@ for them here.
             input = '1 0 0 %'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.times(100,units.percent)' ).toBeTruthy()
             input = '$ ( d + 5 0 )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.times(arith1.plus(d,50),units.dollars)' ) \
@@ -1169,7 +1171,7 @@ for them here.
             input = '4 5 sup ∘'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.times(45,units.degrees)' ).toBeTruthy()
@@ -1184,14 +1186,14 @@ expression with the arc or line over it.
             input = 'overline ( x )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'decoration.overline(x)' ).toBeTruthy()
             input = 'overarc ( 6 - fraction ( e 3 ) )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'decoration.overarc(arith1.minus(6,arith1.divide(e,3)))' ) \
@@ -1209,28 +1211,28 @@ First, just some simple tests with easy contents.
             input = '( 1 , 2 ]'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'interval1.interval_oc(1,2)' ).toBeTruthy()
             input = '( t , k )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'interval1.interval_oo(t,k)' ).toBeTruthy()
             input = '[ I , J ]'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'interval1.interval_cc(I,J)' ).toBeTruthy()
             input = '[ 3 0 , 5 2 . 9 )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'interval1.interval_co(30,52.9)' ).toBeTruthy()
@@ -1241,7 +1243,7 @@ intervals within intervals, or parentheses in or around intervals.
             input = '( 4 × ( t + u ) , 2 sup 9 ]'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'interval1.interval_oc(' + \
@@ -1250,7 +1252,7 @@ intervals within intervals, or parentheses in or around intervals.
             input = '( 3 - [ 1 , 2 ] ) × 4'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.times(arith1.minus(3,' + \
@@ -1258,7 +1260,7 @@ intervals within intervals, or parentheses in or around intervals.
             input = '[ ( 2 , 3 ] , ( j , j + 1 ] )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'interval1.interval_co(' + \
@@ -1276,16 +1278,16 @@ First, absolute values of atomics.
             input = '| a |'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'arith1.abs(a)' ).toBeTruthy()
             input = '| - 9 6 2 |'.split ' '
             output = G.parse input
             expect( output.length ).toBe 2
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'arith1.abs(-962)' ).toBeTruthy()
-            node = OM.decode output[1]
+            node = output[1]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.abs(arith1.unary_minus(962))' ).toBeTruthy()
@@ -1295,7 +1297,7 @@ Second, absolute values of some expressions.
             input = '| fraction ( ( a sup b ) 1 0 ) |'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.abs(arith1.divide(arith1.power(a,b),10))' ) \
@@ -1303,7 +1305,7 @@ Second, absolute values of some expressions.
             input = '| 9 - 8 + 7 - 6 |'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.abs(arith1.minus(arith1.plus(arith1.minus(' + \
@@ -1314,7 +1316,7 @@ Finally, multiple absolute values in the same expression.
             input = '| 6 + r | - | 6 - r |'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.minus(arith1.abs(arith1.plus(6,r)),' + \
@@ -1322,14 +1324,14 @@ Finally, multiple absolute values in the same expression.
             input = '| fraction ( ( | x | ) x ) |'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.abs(arith1.divide(arith1.abs(x),x))' ).toBeTruthy()
             input = '| | 1 | + | 1 | |'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.abs(arith1.plus(arith1.abs(1),arith1.abs(1)))' ) \
@@ -1345,20 +1347,20 @@ functions.
             input = 'sin x'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'transc1.sin(x)' ).toBeTruthy()
             input = 'tan π'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.app OM.sym( 'tan', 'transc1' ),
                 OM.var 'π' ).toBeTruthy()
             input = 'sec sup ( - 1 ) 0'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'transc1.arcsec(0)' ).toBeTruthy()
 
@@ -1367,21 +1369,21 @@ Now place them inside expressions, or expressions inside them, or both.
             input = 'cos x + 1'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.plus(transc1.cos(x),1)' ).toBeTruthy()
             input = 'cot ( a - 9 . 9 )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'transc1.cot(arith1.minus(a,9.9))' ).toBeTruthy()
             input = '| csc sup ( - 1 ) ( 1 + g ) | sup 2'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.power(arith1.abs(transc1.arccsc(' + \
@@ -1394,21 +1396,21 @@ Now place them inside expressions, or expressions inside them, or both.
             input = '1 0 !'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'integer1.factorial(10)' ) \
                 .toBeTruthy()
             input = 'W × R !'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.times(W,integer1.factorial(R))' ).toBeTruthy()
             input = '( W + R ) !'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'integer1.factorial(arith1.plus(W,R))' ).toBeTruthy()
@@ -1423,7 +1425,7 @@ follow the convention given
             input = 'lim sub ( x → t sub 0 ) sin x'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'limit1.limit(t(0),limit1.both_sides,' + \
@@ -1431,7 +1433,7 @@ follow the convention given
             input = '3 × lim sub ( a → 1 ) fraction ( a 1 ) + 9'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.plus(arith1.times(3,limit1.limit(1,' + \
@@ -1448,7 +1450,7 @@ follow the convention given
             input = 'Σ sub ( x = 1 ) sup 5 x sup 2'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.sum(interval1.interval(1,5),' + \
@@ -1456,7 +1458,7 @@ follow the convention given
             input = 'Σ sup ( n + 1 ) sub ( m = 0 ) m - 1'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'arith1.minus(arith1.sum(' + \
                 'interval1.interval(0,arith1.plus(n,1)),' + \
@@ -1471,13 +1473,13 @@ Differentials are d followed by a variable:
             input = 'd x'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'diff.d(x)' ).toBeTruthy()
             input = 'd Q'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple 'diff.d(Q)' ).toBeTruthy()
 
@@ -1486,11 +1488,11 @@ Differential fractions are like d/dx (i.e., d over d times a variable):
             input = 'fraction ( d ( d x ) )'.split ' '
             output = G.parse input
             expect( output.length ).toBe 2
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.divide(diff.d,diff.d(x))' ).toBeTruthy()
-            node = OM.decode output[1]
+            node = output[1]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.divide(d,diff.d(x))' ).toBeTruthy()
@@ -1500,7 +1502,7 @@ Indefinite integrals:
             input = '∫ x sup 2 · d x'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'calculus1.int(arith1.times(arith1.power(x,2),' + \
@@ -1508,7 +1510,7 @@ Indefinite integrals:
             input = '∫ ( fraction ( x k ) - 1 0 ) · d k'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'calculus1.int(arith1.times(arith1.minus(' + \
@@ -1519,7 +1521,7 @@ Definite integrals:
             input = '∫ sub 0 sup 2 ( s + t ) · d t'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'calculus1.defint(0,2,arith1.times(arith1.plus(s,t),' + \
@@ -1528,7 +1530,7 @@ Definite integrals:
                 .split ' '
             output = G.parse input
             expect( output.length ).toBe 1
-            node = OM.decode output[0]
+            node = output[0]
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'calculus1.defint(a,b,arith1.times(arith1.abs(' + \
