@@ -95,26 +95,21 @@ required order of completion.
 
 ## Parsing
 
- * Create a parser that can handle the following types of input, all of
-   which were created from MathQuill instances using the function
-   `mathQuillToMeaning` in [setup.litcoffee](../app/setup.litcoffee).
-   Tasks remaining:
-   * Support summations with optional subscripts and superscripts
-   * Support differentials (d-then-variable)
-   * Support indefinite integrals (not requiring differentials, since it may
-     be in a numerator and thus hard to structure correctly)
-   * Support definite integrals (same as previous re: differentials
-     optional)
-   * Support adjacent atomics as factors in a product
-   * Support chained equations
-   * Add tests for things that should *not* parse, and verify that they do
-     not
-   * Improve efficiency of `expressionBuilder` to use the JSON trees from
-     within the OMNode instances, rather than constantly encode and decode.
-```
-["fraction", "(", "μ", "σ", ")", "+", "overline", "x", "·", "overline", "y", "+", "x", "sup", "i", "−", "x", "sub", "i", "+", "x", "!", "=", "Σ"]
-fraction ( μ σ ) + overline x · overline y + x sup i − x sub i + x ! = Σ
+Create a parser that can handle the following types of input, all of which
+were created from MathQuill instances using the function
+`mathQuillToMeaning` in [setup.litcoffee](../app/setup.litcoffee).
 
+Tasks remaining:
+ * Support differentials (d-then-variable)
+ * Support indefinite integrals (not requiring differentials, since it may
+   be in a numerator and thus hard to structure correctly)
+ * Support definite integrals (same as previous re: differentials optional)
+ * Support adjacent atomics as factors in a product
+ * Support chained equations
+ * Add tests for things that should *not* parse, and verify that they do not
+ * Improve efficiency of `expressionBuilder` to use the JSON trees from
+   within the OMNode instances, rather than constantly encode and decode.
+```
 ["∫", "x", "d", "x", "=", "∫", "sub", "a", "sup", "b", "fraction", "(", "d", "(", "d", "x", ")", ")", "u", "=", "lim", "sub", "(", "x", "→", "∞", ")", "∑", "sub", "(", "i", "=", "1", ")", "sup", "n", "t", "sup", "∞"]
 ∫ x d x = ∫ sub a sup b fraction ( d ( d x ) ) u = lim sub ( x → ∞ ) ∑ sub ( i = 1 ) sup n t sup ∞
 ```

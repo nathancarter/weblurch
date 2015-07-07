@@ -320,7 +320,7 @@ The above togeteher are called "atomics":
 Rules for the operations of arithmetic:
 
             G.addRule 'factor', 'atomic'
-            G.addRule 'factor', [ 'factor', /sup/, 'atomic' ]
+            G.addRule 'factor', [ 'atomic', /sup/, 'atomic' ]
             G.addRule 'factor', [ 'factor', /[%]/ ]
             G.addRule 'factor', [ /\$/, 'factor' ]
             G.addRule 'factor', [ 'factor', /sup/, /[∘]/ ]
@@ -372,11 +372,18 @@ and thus as if they were atomics:
                 [ 'trigfunc', /sup/, /\(/, /-/, /1/, /\)/, 'prodquo' ]
             G.addRule 'atomic', 'trigapp'
 
-Rules for limits:
+Rules for limits and summations:
 
             G.addRule 'limit', [ /lim/, /sub/,
                 /\(/, 'variable', /[→]/, 'expression', /\)/, 'prodquo' ]
             G.addRule 'factor', 'limit'
+            G.addRule 'sum', [ /[Σ]/,
+                /sub/, /\(/, 'variable', /[=]/, 'expression', /\)/,
+                /sup/, 'atomic', 'prodquo' ]
+            G.addRule 'sum', [ /[Σ]/, /sup/, 'atomic',
+                /sub/, /\(/, 'variable', /[=]/, 'expression', /\)/,
+                'prodquo' ]
+            G.addRule 'factor', 'sum'
 
 So far we've only defined rules for forming mathematical nouns, so we wrap
 the highest-level non-terminal defined so far, sumdiff, in the label "noun."
@@ -516,6 +523,17 @@ arrays created by the parser:
                             OM.symbol( 'both_sides', 'limit1' ),
                             OM.binding OM.symbol( 'lambda', 'fns1' ),
                                 OM.decode( expr[4] ), OM.decode( expr[8] )
+                    when 'sum'
+                        [ varname, from, to ] = if expr[2] is 'sup' then \
+                            [ 6, 8, 3 ] else [ 4, 6, 9 ]
+                        build OM.symbol( 'sum', 'arith1' ),
+                            OM.application(
+                                OM.symbol( 'interval', 'interval1' ),
+                                OM.decode( expr[from] ),
+                                OM.decode( expr[to] ) ),
+                            OM.binding( OM.symbol( 'lambda', 'fns1' ),
+                                OM.decode( expr[varname] ),
+                                OM.decode( expr[10] ) )
                 if not result? then result = expr[1]
                 if result instanceof OMNode then result = result.encode()
                 if G.expressionBuilderDebug
@@ -671,9 +689,8 @@ left-associate.
             expect( node instanceof OMNode ).toBeTruthy()
             expect( node.equals OM.simple \
                 'arith1.divide(arith1.times(5.0,K),e)' ).toBeTruthy()
-            input = 'a sup b sup c'.split ' '
+            input = '( a sup b ) sup c'.split ' '
             output = G.parse input
-
             expect( output.length ).toBe 1
             node = OM.decode output[0]
             expect( node instanceof OMNode ).toBeTruthy()
@@ -1378,7 +1395,7 @@ We only support limits of one variable as it goes to a specific value.  We
 follow the convention given
 [for this OpenMath symbol](http://www.openmath.org/cd/limit1.xhtml#limit).
 
-        it 'should support factorials', ->
+        it 'should support limits', ->
             input = 'lim sub ( x → t sub 0 ) sin x'.split ' '
             output = G.parse input
             expect( output.length ).toBe 1
@@ -1396,3 +1413,27 @@ follow the convention given
                 'arith1.plus(arith1.times(3,limit1.limit(1,' + \
                 'limit1.both_sides,fns1.lambda[a,arith1.divide(a,1)])),9)' \
                 ).toBeTruthy()
+
+### should support limits
+
+We only support sums of one variable between two specific values.  We
+follow the convention given
+[for this OpenMath symbol](http://www.openmath.org/cd/arith1.xhtml#sum).
+
+        it 'should support sums', ->
+            input = 'Σ sub ( x = 1 ) sup 5 x sup 2'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'arith1.sum(interval1.interval(1,5),' + \
+                'fns1.lambda[x,arith1.power(x,2)])' ).toBeTruthy()
+            input = 'Σ sup ( n + 1 ) sub ( m = 0 ) m - 1'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = OM.decode output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple 'arith1.minus(arith1.sum(' + \
+                'interval1.interval(0,arith1.plus(n,1)),' + \
+                'fns1.lambda[m,m]),1)' ).toBeTruthy()
