@@ -220,7 +220,6 @@ $x^2+5$ in MathQuill would become `["x","sup","2","+","5"]` as returned by
 this function, similar to the result of a tokenizer, ready for a parser.
 
     window.mathQuillToMeaning = ( node ) ->
-        # console.log 'visiting', node
         if node instanceof Text then return node.textContent
         result = [ ]
         for child in node.childNodes
