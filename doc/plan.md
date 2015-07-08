@@ -97,8 +97,6 @@ required order of completion.
 
 ### OpenMath Content Dictionary Authoring Application
 
- * Create a new demo app for authoring OM CDs, but leave it plain vanilla
-   for now and we'll add features later.
  * Create `src/xml-groups.solo.litcoffee` and put documentation on top that
    explains how it will contain routines for encoding the groups in a
    document as XML, with various features for checking their structural
