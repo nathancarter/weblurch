@@ -97,11 +97,6 @@ required order of completion.
 
 ### OpenMath Content Dictionary Authoring Application
 
- * Create `src/xml-groups.solo.litcoffee` and put documentation on top that
-   explains how it will contain routines for encoding the groups in a
-   document as XML, with various features for checking their structural
-   validity.  (No implementation yet.)
- * Import the `xml-groups` script into the OM CD demo application.
  * In the `xml-groups` script, add support for the following features.
    * Declaring a mapping from tag names to their features.
    * The one group type in the whole document will be of type "tag."
