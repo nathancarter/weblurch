@@ -12,6 +12,10 @@ The following lines ensure that this file works in Node.js, for testing.
     if require?
         { OM, OMNode } = require './openmath.duo'
         { Grammar } = require './parsing.duo'
+    else
+        Grammar = window.Grammar
+        OM = window.OM
+        OMNode = window.OMNode
 
 ## Grammar definition
 
@@ -59,7 +63,7 @@ Rules for the operations of arithmetic:
     G.addRule 'prodquo', [ 'prodquo', /[÷×·]/, 'factor' ]
     G.addRule 'prodquo', [ /-/, 'prodquo' ]
     G.addRule 'sumdiff', 'prodquo'
-    G.addRule 'sumdiff', [ 'sumdiff', /[+±-]/, 'prodquo' ]
+    G.addRule 'sumdiff', [ 'sumdiff', /[+±−-]/, 'prodquo' ]
 
 Rules for logarithms:
 
@@ -100,7 +104,7 @@ and thus as if they were atomics:
     G.addRule 'trigfunc', [ /sin|cos|tan|cot|sec|csc/ ]
     G.addRule 'trigapp', [ 'trigfunc', 'prodquo' ]
     G.addRule 'trigapp',
-        [ 'trigfunc', /sup/, /\(/, /-/, /1/, /\)/, 'prodquo' ]
+        [ 'trigfunc', /sup/, /\(/, /-|−/, /1/, /\)/, 'prodquo' ]
     G.addRule 'atomic', 'trigapp'
 
 Rules for limits and summations:
@@ -140,7 +144,7 @@ integrals.
 
     G.addRule 'sumdiff', 'takesleftcoeff'
     G.addRule 'sumdiff', [ 'factor', /[÷×·]/, 'takesleftcoeff' ]
-    G.addRule 'sumdiff', [ 'prodquo', /[+±-]/, 'takesleftcoeff' ]
+    G.addRule 'sumdiff', [ 'prodquo', /[+±−-]/, 'takesleftcoeff' ]
 
 So far we've only defined rules for forming mathematical nouns, so we wrap
 the highest-level non-terminal defined so far, sumdiff, in the label "noun."
@@ -177,7 +181,8 @@ arrays created by the parser:
     G.setOption 'expressionBuilder', ( expr ) ->
         symbols =
             '+' : OM.symbol 'plus', 'arith1'
-            '-' : OM.symbol 'minus', 'arith1'
+            '-' : OM.symbol 'minus', 'arith1' # yes these are two
+            '−' : OM.symbol 'minus', 'arith1' # different characters!
             '±' : OM.symbol 'plusminus', 'multiops'
             '×' : OM.symbol 'times', 'arith1'
             '·' : OM.symbol 'times', 'arith1'

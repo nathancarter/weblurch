@@ -1501,3 +1501,23 @@ Subtraction:
             expect( node.equals OM.simple \
                 'arith1.minus(B,arith1.sum(interval1.interval(1,3),' + \
                 'fns1.lambda[x,A]))' ).toBeTruthy()
+
+### should avoid difficult pitfalls
+
+As I encounter bugs in the parser, I will create new tests here that
+showcase those bugs, then leverage these tests to fix the bugs and act as
+regression preventers in the future.
+
+        it 'should avoid difficult pitfalls', ->
+
+This pitfall is basically just that the minus character is the nonstandard
+one, not the regular hyphen typed with a keyboard.
+
+            input = 'lim sub ( x → ∞ ) tan sup ( − 1 ) x'.split ' '
+            output = G.parse input
+            expect( output.length ).toBe 1
+            node = output[0]
+            expect( node instanceof OMNode ).toBeTruthy()
+            expect( node.equals OM.simple \
+                'limit1.limit(nums1.infinity,limit1.both_sides,' + \
+                'fns1.lambda[x,transc1.arctan(x)])' ).toBeTruthy()

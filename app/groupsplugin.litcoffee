@@ -164,6 +164,30 @@ an HTML `DocumentFragment` object, or as an HTML string.
             tmp.appendChild fragment
             tmp.innerHTML
 
+You can also fetch the exact sequence of Nodes between the two groupers
+(including only the highest-level ones, not their children when that would
+be redundant) using the following routine.
+
+        contentNodes: =>
+            result = [ ]
+            strictOrder = ( a, b ) ->
+                cmp = a.compareDocumentPosition b
+                ( Node.DOCUMENT_POSITION_FOLLOWING & cmp ) and \
+                    not ( Node.DOCUMENT_POSITION_CONTAINED_BY & cmp )
+            walk = @open
+            while walk?
+                if strictOrder walk, @close
+                    if strictOrder @open, walk then result.push walk
+                    if walk.nextSibling? then walk = walk.nextSibling \
+                        else walk = walk.parentNode
+                    continue
+                if strictOrder @close, walk
+                    console.log 'Warning!! walked past @close...something
+                        is wrong with this loop'
+                    break
+                if walk is @close then break else walk = walk.childNodes[0]
+            result
+
 We can also set the contents of a group with the following function.  This
 function can only work if `@plugin` is a `Groups` class instance.
 

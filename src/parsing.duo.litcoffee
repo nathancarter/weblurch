@@ -212,9 +212,16 @@ Do the main nested loop which solves the whole problem.
                 debug '----------------------'
                 for tmpi in [0...stateGrid.length]
                     debug "|    state set #{tmpi}:"
+                    skipped = 0
                     for tmpj in [0...stateGrid[tmpi].length]
-                        debug "|        entry #{tmpj}:
-                            #{debugState stateGrid[tmpi][tmpj]}"
+                        if stateGrid[tmpi].length < 15 or \
+                           stateGrid[tmpi][tmpj].pos > 0
+                            debug "|        entry #{tmpj}:
+                                #{debugState stateGrid[tmpi][tmpj]}"
+                        else
+                            skipped++
+                    if skipped > 0
+                        debug "|    (plus #{skipped} at pos 0 not shown)"
                 debug '----------------------'
 
 The following loop is written in this indirect way (not using `for`) because
@@ -312,9 +319,16 @@ the inner of the two main loops.
             debug '----------------------'
             for tmpi in [0...stateGrid.length]
                 debug "|    state set #{tmpi}:"
+                skipped = 0
                 for tmpj in [0...stateGrid[tmpi].length]
-                    debug "|        entry #{tmpj}:
-                        #{debugState stateGrid[tmpi][tmpj]}"
+                    if stateGrid[tmpi].length < 15 or \
+                       stateGrid[tmpi][tmpj].pos > 0
+                        debug "|        entry #{tmpj}:
+                            #{debugState stateGrid[tmpi][tmpj]}"
+                    else
+                        skipped++
+                if skipped > 0
+                    debug "|    (plus #{skipped} at pos 0 not shown)"
             debug '----------------------'
 
 The main loop is complete.  Any completed production in the final state set
