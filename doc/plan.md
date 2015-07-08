@@ -98,17 +98,6 @@ required order of completion.
 ### OpenMath Content Dictionary Authoring Application
 
  * In the `xml-groups` script, add support for the following features.
-   * Declaring a mapping from tag names to their features.
-   * The one group type in the whole document will be of type "tag."
-   * One attribute of a tag will be "topLevel," and only one tag can have
-     this attribute set to true.  Write a function for querying which tag
-     is the top-level tag, which means the tag implicitly surrounding the
-     whole document.
-   * One attribute of any tag X is the default tag for groups inserted
-     inside groups of type X.  Respect this by setting the tag attribute of
-     any newly inserted group to be this default.  For groups inserted
-     outside of any other groups, use the top-level tag.
-   * Show a tag's name on its bubble tag.
    * Let tags have the attribute "externalName" and use that on bubble tags
      instead of the internal name.
    * Let tags have the attribute "documentation" and give them a context/tag
@@ -195,6 +184,12 @@ editor.on 'init', ->
    [here](http://stackoverflow.com/a/17213889/670492) shows that any item
    on the list can have a "menu" key which points to another array of items,
    thus creating a submenu.
+ * OPTIONAL:
+   Each tag's data can specify a set of Group attributes that should be
+   copied into the XML output as element attributes.  Then clients can
+   create their own UI for editing such attributes, and just store them in
+   the Groups themselves, content with the fact that the `xml-groups` module
+   will carry that data over into the XML output.
 
 ### General documentation
 
@@ -217,6 +212,10 @@ Future math parsing enhancements:
  * Support adjacent atomics as factors in a product
  * Support chained equations
  * Add tests for things that should *not* parse, and verify that they do not
+
+Improve build process to not compile files whose dates indicate that they
+do not need it, nor to minify files whose dates indicate that they do not
+need it.
 
 ## Logical Foundation
 
