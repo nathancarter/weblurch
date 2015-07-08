@@ -546,10 +546,30 @@ following two convenience functions.
             @scanLocks = Math.max ( @scanLocks ? 0 ) - 1, 0
             if @scanLocks is 0 then @scanDocument()
 
+We also want to track when scanning is happening, so that `scanDocument`
+cannot get into infinitely deep recursion by triggering a change in the
+document, which in turn calls `scanDocument` again.  We track whether a scan
+is running using this flag.  (Note that the scanning routine constructs new
+`Group` objects, which call `contentsChanged` handlers, which let clients
+execute arbitrary code, so the infinite loop is quite possible, and thus
+must be prevented.)
+
+        isScanning = no
+
 Now the routine itself.
 
         scanDocument: =>
+
+If scanning is disabled, do nothing.  If it's already happening, then
+whatever change is attempting to get us to scan again should just have the
+new scan start *after* this one completes, not during.
+
             if @scanLocks > 0 then return
+            if isScanning then return setTimeout ( => @scanDocument ), 0
+            isScanning = yes
+
+Initialize local variables:
+
             groupers = Array::slice.apply @allGroupers()
             gpStack = [ ]
             usedIds = [ ]
@@ -672,6 +692,7 @@ the enabled/disabled state of group-insertion buttons and menu items.
                 @editor.Overlay?.redrawContents()
                 @updateButtonsAndMenuItems()
             , 0
+            isScanning = no
 
 The above function needs to create instances of the `Group` class, and
 associate them with their IDs.  The following function does so, re-using
