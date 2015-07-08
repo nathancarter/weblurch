@@ -85,12 +85,13 @@ The routine returns true iff the interior of the rectangles intersect.
 
 ## Rendering HTML to Images and/or Canvases
 
-This section provides two routines, one for converting arbitrary HTML to an
-SVG Blob object, and another for rendering such SVGs onto a canvas.  Here is
-the first of those two routines.
+This section provides several routines related to converting arbitrary HTML
+into image data in various forms (SVG, Blob, object URLs, base64 encoding)
+and for drawing such forms onto an HTML canvas.
 
-Because this function makes use of the document's body, it can only be
-called once page loading has completed.
+This first function converts arbitrary (strictly well-formed!) HTML into a
+Blob containing SVG XML for the given HTML.  This makes use of the
+document's body, it can only be called once page loading has completed.
 
     window.svgBlobForHTML = ( html, style = 'font-size:12px' ) ->
 
@@ -102,7 +103,7 @@ First, compute its dimensions using a temporary span in the document.
         document.body.appendChild span
         span = $ span
         width = span.width() + 2 # cushion for error
-        height = span.height() + 2
+        height = span.height() + 2 # cushion for error
         span.remove()
 
 Then build an SVG and store it as blob data.  (See the next function in this
@@ -135,7 +136,7 @@ post](http://stackoverflow.com/questions/15293694/blob-constructor-browser-compa
                 # InvalidStateError (tested on FF13 WinXP)
                 new Blob [ data.buffer ], type : type
 
-Now we move on to the routine for rendering arbitrary HTML to a canvas, but
+Now we move on to a routine for rendering arbitrary HTML to a canvas, but
 there are some preliminaries we need to build first.
 
 Canvas rendering happens asynchronously.  If the routine returns false, then
@@ -196,22 +197,6 @@ store the results in the cache.
         image.src = url
         no
 
-The above function makes use of the following routine, which converts a Blob
-into an image URL using `createObjectURL`.
-
-    window.objectURLForBlob = ( blob ) ->
-        ( window.URL ? window.webkitURL ? window ).createObjectURL blob
-
-The following does the same thing, but creates a URL with the base-64
-encoding of the blob in it.  This must be done asynchronously, but then the
-URL can be used anywhere, not just in this script environment.  The result
-is sent to the given callback.
-
-    window.base64URLForBlob = ( blob, callback ) ->
-        reader = new FileReader
-        reader.onload = ( event ) -> callback event.target.result
-        reader.readAsDataURL blob
-
 The following routine queries the same cache to determine the width and
 height of a given piece of HTML that could be rendered to the canvas.  If
 the HTML is not in the cache, this returns null.  Otherwise, it returns an
@@ -226,3 +211,19 @@ object with width and height attributes.
         else
             @drawHTML html, 0, 0, style # forces caching
             null
+
+The `drawHTML` function makes use of the following routine, which converts a
+Blob into an image URL using `createObjectURL`.
+
+    window.objectURLForBlob = ( blob ) ->
+        ( window.URL ? window.webkitURL ? window ).createObjectURL blob
+
+The following does the same thing, but creates a URL with the base-64
+encoding of the Blob in it.  This must be done asynchronously, but then the
+URL can be used anywhere, not just in this script environment.  The result
+is sent to the given callback.
+
+    window.base64URLForBlob = ( blob, callback ) ->
+        reader = new FileReader
+        reader.onload = ( event ) -> callback event.target.result
+        reader.readAsDataURL blob
