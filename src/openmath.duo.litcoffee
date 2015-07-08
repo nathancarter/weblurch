@@ -84,7 +84,8 @@ first implementation.  See page 14 of [the
 standard](http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf) for
 the exact regular expression.
 
-            identRE = /^[:A-Za-z_][:A-Za-z_.0-9-]*$/
+            identRE =
+                /^[:A-Za-z_\u0374-\u03FF][:A-Za-z_\u0374-\u03FF.0-9-]*$/
 
 Now we consider each type of object separately.
 
@@ -346,7 +347,7 @@ OMNode instance.  Here is a method for doing so.
 
         copy : =>
             recur = ( tree ) ->
-                switch tree.t
+                result = switch tree.t
 
 Integers, floats, and strings are easy to copy; just duplicate type and
 value.  Variables and symbols are easy for the same reason, but different
@@ -382,6 +383,15 @@ Lastly, for bindings, we copy each sub-part: symbol, body, variable list.
                         s : recur tree.s
                         v : ( recur variable for variable in tree.v )
                         b : recur tree.b
+
+Then no matter what we created, we copy the attributes over as well.
+
+                for own key, value of tree.a ? { }
+                    ( result.a ?= { } )[key] = recur value
+                result
+
+Apply the recursive function.
+
             OMNode.decode recur @tree
 
 ### Factory functions
@@ -790,6 +800,47 @@ value will be one of five types:
                 if @tree is value then return key
             undefined # should not happen
 
+The inverse of the previous function takes a string output by that function
+and returns the corresponding child/variables/symbol/body immediately inside
+this node.  That is, `x.parent.findChild x.findInParent()` will give us back
+the same tree as `x` itself.  An invalid input will return undefined.
+
+        findChild : ( indexInParent ) =>
+            switch indexInParent[0]
+                when 'c' then @children[parseInt indexInParent[1..]]
+                when 'v' then @variables[parseInt indexInParent[1..]]
+                when 's' then @symbol
+                when 'b' then @body
+                when '{' then @getAttribute OMNode.decode indexInParent
+
+The `findInParent()` function can be generalized to find a node in any of
+its ancestors, the result being an array of `findInParent()` results as you
+walk downward from the ancestor to the descendant.  For instance, the first
+bound variable within the second child of an application would have the
+address `[ 'c1', 'v0' ]` (since indices are zero-based).  The following
+function computes the array in question, the node's "address" within the
+given ancestor.
+
+If no ancestor is specified, the highest-level one is used.  If a value is
+passed that is not an ancestor of this node, then it is treated as if no
+value had been passed.  If this node has no parent, or if this node itself
+is passed as the parameter, then the empty array is returned.
+
+        address : ( inThis ) =>
+            if not @parent or @sameObjectAs inThis then return [ ]
+            @parent.address( inThis ).concat [ @findInParent() ]
+
+The `address` function has the following inverse, which looks up in an
+ancestor node a descendant that has the given address within that ancestor.
+So, in particular, `x.index y.address( x )` should equal `y`.  Furthermore,
+`x.index [ ]` will always yield `x`.  An invalid input will return
+undefined.
+
+        index : ( address ) =>
+            if address not instanceof Array then return undefined
+            if address.length is 0 then return this
+            @findChild( address[0] )?.index address[1..]
+
 The following function breaks the relationship of the object with its
 parent.  In some cases, this can invalidate the parent (e.g., by giving a
 binding or error object no head symbol, or a binding no body, or no bound
@@ -808,7 +859,48 @@ undefined (as determined by `@findInParent()`) then this does nothing.
                 when '{' then delete @parent.tree.a[index]
             delete @tree.p
 
-Then we have three functions that let us manipulate attributes without
+It will also be useful in later functions in this class to be able to
+replace a subtree in-place with a new one.  The following method
+accomplishes this, replacing this object in its context with the parameter.
+This works whether this tree is a child, variable, head symbol, body, or
+attribute value of its parent.  If this object has no parent, then we make
+no modifications to that parent, since it does not exist.
+
+In all other cases, the parameter is `remove()`d from its context, and this
+node, if it has a parent, is `remove()`d from it as well.  Furthermore, this
+OMNode instance becomes a wrapper to the given node instead of its current
+contents.  The removed node is returned.
+
+        replaceWith : ( other ) =>
+            if @sameObjectAs other then return
+            index = @findInParent()
+
+If you attempt to replace a binding's or error's head symbol with a
+non-symbol, this routine does nothing.  If you attempt to replace one of a
+binding's variables with a non-variable, this routine does nothing.  When
+this routine does nothing, it returns undefined.
+
+            if index is 's' and other.type isnt 'sy' then return
+            if index?[0] is 'v' and other.type isnt 'v' then return
+            other.remove()
+            original = new OMNode @tree
+            @tree = other.tree
+            switch index?[0]
+                when 'c'
+                    original.parent.tree.c[parseInt index[1..]] = @tree
+                when 'v'
+                    original.parent.tree.v[parseInt index[1..]] = @tree
+                when 'b' then original.parent.tree.b = @tree
+                when 's' then original.parent.tree.s = @tree
+                when '{' then original.parent.tree.a[index] = @tree
+                else return # didn't have a parent
+            @tree.p = original.tree.p
+            delete original.tree.p
+            original
+
+### Attributes
+
+Here we have three functions that let us manipulate attributes without
 worrying about the unpredictable ordering of keys in a JSON stringification
 of an object.
 
@@ -866,6 +958,165 @@ The same efficiency comments apply to this function as to the previous.
             newValue.remove()
             ( @tree.a ?= { } )[keySymbol.encode()] = newValue.tree
             newValue.tree.p = @tree
+
+### Free and bound variables and expressions
+
+The methods in this section are about variable binding and which expressions
+are free to replace others.  There are also methods that do such
+replacements.
+
+This method lists the free variables in an expression.  It returns an array
+of strings, just containing the variables' names.  Variables appearing in
+attributes do not count; only variables appearing as children of
+applications or error nodes, or in the body of a binding expression can
+appear on this list.
+
+        freeVariables : =>
+            switch @type
+                when 'v' then return [ @name ]
+                when 'a', 'c'
+                    result = [ ]
+                    for child in @children
+                        for free in child.freeVariables()
+                            result.push free unless free in result
+                    result
+                when 'bi'
+                    boundByThis = ( v.name for v in @variables )
+                    ( varname for varname in @body.freeVariables() \
+                        when varname not in boundByThis )
+                else [ ]
+
+This method computes whether an expression is free by walking up its
+ancestor chain and determining whether any of the variables free in the
+expression are bound further up the ancestor chain.  If you pass an
+ancestor as the parameter, then the computation will not look upward beyond
+that ancestor; the default is to leave the parameter unspecified, meaning
+that the algorithm should look all the way up the parent chain.
+
+        isFree : ( inThis ) =>
+            freeVariables = @freeVariables()
+            walk = this
+            while walk
+                if walk.type is 'bi'
+                    boundHere = ( v.name for v in walk.variables )
+                    for variable in freeVariables
+                        if variable in boundHere then return no
+                if walk.sameObjectAs inThis then break
+                walk = walk.parent
+            yes
+
+This method returns true if there is a descendant of this structure that is
+structurally equivalent to the parameter and, at that point in the tree,
+passes the `isFree` test defined immediately above.  This algorithm only
+looks downward through children, head symbols, and bodies of binding nodes,
+not attribute keys or values.
+
+Later it would be easy to add an optional second parameter, `inThis`, which
+would function like the parameter of the same name to `isFree()`, and would
+be passed directly along to `isFree()`.  This change would require testing.
+
+        occursFree : ( findThis ) =>
+            if @equals( findThis ) and @isFree() then return yes
+            if @symbol?.equals findThis then return yes
+            if @body?.occursFree findThis then return yes
+            for child in @children
+                if child.occursFree findThis then return yes
+            no
+
+One subtree A is free to replace another B if no variable free in A becomes
+bound when B is replaced by A.  Because we will be asking whether variables
+are free/bound, we will need to know the ancestor context in which to make
+those queries.  The default is the highest ancestor, but that default can be
+changed with the optional final parameter.
+
+Note that this routine also returns false in those cases where it does not
+make sense to replace the given subtree with this tree based simply on their
+types, and not even taking free variables into account.  For example, a
+binding or error node must have a head symbol, which cannot be replaced with
+a non-symbol, and a binding node's variables must not be replaced with
+non-variables.
+
+        isFreeToReplace : ( subtreeToReplace, inThis ) =>
+            if @sameObjectAs subtreeToReplace then return yes
+            if not subtreeToReplace.parent? then return yes
+            context = subtreeToReplace
+            while context.parent then context = context.parent
+            saved = new OMNode subtreeToReplace.tree
+            if not subtreeToReplace.replaceWith @copy() then return no
+            result = subtreeToReplace.isFree inThis
+            subtreeToReplace.replaceWith saved
+            result
+
+This method replaces every free occurrence of one expression (original) with
+a copy of the another expression (replacement).  The search-and-replace
+recursion only proceeds through children, head symbols, and bodies of
+binding nodes, not attribute keys or values.
+
+The optional third parameter, `inThis`, functions like the parameter of the
+same name to `isFree()`, is passed directly along to `isFree()`.
+
+        replaceFree : ( original, replacement, inThis ) =>
+            inThis ?= this
+            if @isFree( inThis ) and @equals original
+
+Although the implementation here is very similar to the implementation of
+`isFreeToReplace()`, we do not call that function, because it would require
+making two copies and doing two replacements; this is more efficient.
+
+                save = new OMNode @tree
+                @replaceWith replacement.copy()
+                if not @isFree inThis then @replaceWith save
+                return
+            @symbol?.replaceFree original, replacement, inThis
+            @body?.replaceFree original, replacement, inThis
+            for variable in @variables
+                variable.replaceFree original, replacement, inThis
+            for child in @children
+                child.replaceFree original, replacement, inThis
+
+### Filtering children and descendants
+
+The following function returns an array of all children (immediate
+subexpressions, actually, including head symbols, bound variables, etc.)
+that pass the given criterion.  If no criterion is given, then all immediate
+subexpressions are returned.  Order is preserved.
+
+Note that the actual subtrees are returned, not copies thereof.  Any
+manipulation done to the elements of the result array will therefore impact
+the original expression.
+
+        childrenSatisfying : ( filter = -> yes ) =>
+            children = @children
+            if @symbol? then children.push @symbol
+            children = children.concat @variables
+            if @body? then children.push @body
+            ( child for child in children when filter child )
+
+The following function returns an array of all subexpressions (not just
+immediate ones) that pass the given criterion, in tree order.  If no
+criterion is given, then all subexpressions are returned.
+
+As with the previous function, the actual subtrees are returned, not copies
+thereof.  Any manipulation done to the elements of the result array will
+therefore impact the original expression.
+
+        descendantsSatisfying : ( filter = -> yes ) =>
+            results = [ ]
+            if filter this then results.push this
+            for child in @childrenSatisfying()
+                results = results.concat child.descendantsSatisfying filter
+            results
+
+A simpler function performs the same task as the previous, but does not
+return a list of all descendants; it merely returns whether there are any,
+as a boolean.  It is thus more efficient to use this than to run the
+previous and compare its length to zero.
+
+        hasDescendantSatisfying : ( filter = -> yes ) =>
+            if filter this then return yes
+            for child in @childrenSatisfying()
+                if child.hasDescendantSatisfying filter then return yes
+            no
 
 ## Nicknames
 

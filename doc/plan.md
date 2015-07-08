@@ -17,352 +17,197 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## OpenMath
-
-This work is in progress.  Here are the remaining methods to add to the
-`OMNode` class.
- * isFree(), replaceFree(from,to), occursFreeIn()
- * applySubstitution() and applyAllSubstitutions() (which work with
-   expressions of the form `x[y=z]`, meaning x with all occurrences of y
-   replaced by z, and `x[y~z]`, meaning the same but "some" isntead of
-   "all")
- * childrenSatisfying() and descendantsSatisfying()
-
 ## Matching Module
 
-This is a re-implementation (and improvement) of the matching module from
-the desktop version of Lurch.
- * Create a file `src/matching.duo.litcoffee`.
- * Create a function for marking a variable as a metavariable with an
-   attribute, and another for testing whether a variable is a metavariable.
-
-First, a supporting class, Match.
- * Create a Match class, representing an evolving match state throughout a
-   matching process.
- * Give it members for using it as a variable-to-expression dictionary,
-   `get`, `set`, and `has`.
- * Give it a member for marking that a substitution of A to B is in force,
-   for any two expressions A and B.  A third parameter will specify whether
-   the subsitution is required (=) or optional (~), and should also be
-   stored.  Give it another method for removing a substitution.
- * Give it a member for marking which subtrees it has visited, and storing
-   them in an internal list.  It only does anything if a substitution is in
-   force; otherwise it does nothing.
- * When setting a substitution, do all possible metavariable replacements on
-   both halves of it.  Also augment `set` so that all future metavariable
-   instantiations are immediately applied to both halves of the
-   substitution.  For both of those functions, if the two halves of the
-   substitution become fully instantiated (no metavariables) then ensure
-   that the substitution is either optional or alters no previously-visited
-   subtrees; return true/false accordingly.
- * Make getters for all of the substitution data, including one for just
-   whether a substitution has been stored.
- * Give it a member for checking whether a required substitution would alter
-   any of the already-visited subtrees.
- * Give it a method for cloning itself.
- * Give it a method for applying itself to an expression, replacing all
-   metavariables with their current instantiations.
- * Give it a method for finding in its first-visited subtree (the whole
-   pattern) all metavariables, and then creating instantiations for all
-   those that don't yet have them, to names like "unused_1", "unused_2", ...
- * Create extensive unit tests for the above class and its algorithms.
-
-Now, the main routine.
- * Implement the matching algorithm after the following psuedocode.
-
-    matches = ( pattern, expression, soFar ) ->
-
-Determine whether we're the outermost call in the recursion, for use below.
-
-        outermost = not soFar?
-        soFar ?= new Match
-
-Mark that we've visited this subtree of the pattern.
-
-        soFar.visited pattern
-
-Handle patterns of the form x[y=z] and x[y~z].
-
-        if pattern is of the form x[y=z] or x[y~z]
-            if soFar has a substitution already then throw an error
-                saying that there's only supposed to be one per pattern
-            check = soFar.setSubstitution y, z, ( = or ~ )
-            if not check return [ ] # doesn't fit with a visited subtree
-            results = matches x, expression, soFar
-            for result in results
-                result.removeSubstitutionRecord()
-            results
-
-Handle patterns that are single metavariables.
-
-        if the pattern is just a metavariable
-            if soFar.get variableName
-                if it's equal to expression return [ soFar ] else return [ ]
-            check = soFar.set variableName, expression
-            if not check return [ ] # doesn't fit with a visited subtree
-            return [ soFar ]
-
-Define a function for handling when the match would fail without the
-substitution expression.
-
-        pair = ( a, b ) -> OM.app OM.sym('pair','Lurch'), a.copy(), b.copy()
-        trySubs = ->
-            if soFar doesn't have a substitution in it
-            s = pair soFar.substLHS, soFar.substRHS
-            [ walk1, walk2, result ] = [ pattern, expression, [ ] ]
-            while walk1?
-                result = result.concat matches pair(walk1,walk2), s, soFar
-                [ walk1, walk2 ] = [ walk1.parent, walk2.parent ]
-            result
-
-Now we enter the meat of structural matching.  If the types don't even
-match, then the only thing that might save us is a substitution, if there
-is one.
-
-        if pattern.type isnt expression.type then return trySubs()
-
-Handle atomic patterns.
-
-        if the pattern is an atomic type
-            return if pat.equals expr then [ soFar ] else trySubs()
-
-Non-atomic patterns must have the same size as their expressions.
-
-        if pattern.children.length isnt expression.children.length
-            return trySubs()
-
-Prepare to recur.
-
-        children1 = compute ordered list of all children of pattern
-        children2 = same, but for expression
-        results = [ soFar ]
-
-Recur on children.
-
-        for child1, index in children1
-            child2 = children2[index]
-            newResults = [ ]
-            for sf in results
-                copy = sf.copy()
-                newResults = newResults.concat matches child1, child2, copy
-            results = newResults
-
-Before returning the results, if we are the outermost call, instantiate all
-unused metavariables to things like "unused_1", etc.
-
-        if outermost
-            for result in results
-                result.instantiateUnusedMetavariables()
-        results
-
- * Create extremely extensive unit tests for the above matching algorithm.
-   I list an extensive test suite here, using capital letters for
-   metavariables and lower case letters for regular variables, and otherwise
-   easily human-readable/suggestive notation.  The one exception is that @
-   means the universal quantifier and # means the existential quantifier.
-   Note that these unit tests do not require a PhantomJS environment.
+ * Extend Match's `set(k,v)` member as follows:
+   * It should begin by making a backup copy of `@map`.
+   * Then write into `@map` the `k,v` pair.
+   * For each key in the map, classify it as one of these three things:
+     * in a cycle of metavariables that form an equivalence class under
+       instantiation -- with these, do nothing
+     * divergent, meaning that repeated applications of the map to `v` grow
+       without bound on the number of nodes -- if there are any of these,
+       destroy the new map, restore the backup copy, and return false to
+       indicate failure
+     * neither of the previous two -- with these, repeatedly apply the map
+       to `v` until you reach a fixed point, and use that as the new `v`
+   * Return true to indicate success.
+ * Use unit test to debug the above changes.
+ * Extend `matches` to expect that the expression may contain metavariables,
+   as follows.
+   * Comparing nonatomic to nonatomic proceeds recursively, as now.
+   * Comparing atomic non-metavariable to nonatomic proceeds by `trySubs()`,
+     as now.  This is true regardless of which is which, pattern vs.
+     expression.
+   * Comparing atomic non-metavariable to atomic non-metavariable proceeds
+     by direct equality or resorting to `trySubs()`, as now.
+   * Comparing metavariable to anything proceeds as follows, regardless of
+     whether the metavariable is the pattern or the expression.
+     * If the metavariable has an instantiation, recursively match it
+       against the other side and return that result, just as we do now.
+       Keep the two arguments (pattern and expression) in the same order.
+     * Try to call `set` to mark the metavariable as being instantiated with
+       the other expression.  If `set` returns false, then return
+       `trySubs()`.
+     * Since the call to `set` succeeded, return `[ soFar ]`, as now.
+ * Use unit tests to debug the above changes.
 ```
-    pattern             expression      results
-    -------             ----------      -------
-
-    ATOMICS
-
-    a                   a               [{}]
-    a                   b               []
-    a                   2               []
-    a                   f(x)            []
-    A                   anything        [{A:expression}] for various exprs
-        repeat these tests for other atomic types besides variable a
-
-    COMPOUNDS
-
-    A(x)                f(x)            [{A:f}]
-    A(B)                f(x)            [{A:f,B:x}]
-    A(B)                f(x,y)          []
-    A(B)                f()             []
-    A(B)                atomic          []
-        repeat these tests for binding and error types, in addition to appls
-
-    ATTRIBUTES
-
-    repeat a selection of the above tests with attributes added to either
-    the pattern or the expression or both, and verify that attributes make
-    no change whatsoever to the results
-
-    SIMPLE SUBSTITUTIONS
-
-    f(x)                f(x)[x=y]       []
-    f(x)                f(x)[z=y]       [{}]
-    f(x)                f(y)[z=y]       [{}]
-    @x,f(x)             @x,(f(x)[x=y])  []
-    @x,f(x)             (@x,f(x))[x=y]  [{}]
-        then repeat all with the pattern and expression swapped
-
-    COMPOUNDS WITH METAVARIABLES
-
-    f(A,B)              f(c,d)          [{A:c,B:d}]
-    f(A,A)              f(c,d)          []
-    f(A,B)              g(c,d)          []
-    f(B,A)              f(c,d)          [{A:d,B:c}]
-    f(A,A)              f(c,c)          [{A:c}]
-    f(g(A),k(A))        f(g(a),k(a))    [{A:a}]
-    f(g(A),B)           f(g(a),k(a))    [{A:a,B:k(a)}]
-    f(A(c),A(B))        f(g(c),k(c))    []
-    f(A(c),A(B))        f(g(c),c(k))    [{A:c,B:k}]
-        repeat a selection of the above tests using bindings and errors
-        instead of applications
-
-    UNIVERSAL ELIMINATION RULE
-
-    Let R = list( @X,A , A[X=T] ), a representation of the rule.  In each
-    test below, R is the pattern, and we list only the expression.
-    When a capital letter is followed by a prime, as in A', that means that
-    it is going directly against the naming convention, and intending to be
-    a capital A that is NOT a metavariable.  This will test to ensure that
-    naming conflicts between metavariables and their instantiations do not
-    mess up the results.
-
-    list( @x,f(x)=f(y) , f(6)=f(y) )    [{X:x, A:f(x)=f(y), T:6}]
-    list( @x,P(x,x) , P(7.1,7.1) )      [{X:x, A:P(x,x), T:7.1}]
-    list( @x,P(x,x) , P(3,4) )          []
-    list( @x,(x>7 & @y,P(x,y)) ,
-          9>7 & @y,P(9,y) )             [{X:x, A:x>7&@y,P(x,y), T:9}]
-    list( @x,(x>7 & @y,P(x,y)) ,
-          9>7 & @y,P(x,y) )             []
-    list( @A',f(X',A') , f(X',X') )     [{X:A', A:f(X',A'), T:X'}]
-
-    EXISTENTIAL ELIMINATION RULE
-
-    Let R = list( #X,A , const(C) , A[X=C] ).  Same story as above.
-
-    list( #t,t^2<0 , const(r), r^2<0 )  [{X:t, A:t^2<0, C:r}]
-    list( #t,t^2<0 , const(r), t^2<0 )  []
-    list( #t,t^2<0 , const(t), r^2<0 )  []
-    list( #t,t^2<0 , const(t), t^2<0 )  [{X:t, A:t^2<0, C:t}]
-    list( #t,t^2<0 , const(phi^2+9) ,
-          (phi^2+9)^2<0 )               [{X:t, A:t^2<0, C:phi^2+9}]
-    list( #t,r^2<0 , const(r), r^2<0 )  [{X:t, A:r^2<0, C:r}]
-    list( #r,r^2<0 , const(r), r^2<0 )  [{X:r, A:r^2<0, C:r}]
-    list( #C',A'<C' , const(X'), A'<X' )[{X:C', A:A'<C', C:X'}]
-
-    UNIVERSAL INTRODUCTION RULE
-
-    Let R = list( var(V) , A , @X,A[V=X] ).  Same story as above.
-
-    list( var(x), x^2>=0, @t,t^2>=0 )   [{V:x, A:x^2>=0, X:t}]
-    list( var(x), x^2>=0, @x,x^2>=0 )   [{V:x, A:x^2>=0, X:x}]
-    list( var(x), x^2>=0, @x,t^2>=0 )   []
-    list( var(x), t^2>=0, @x,x^2>=0 )   []
-    list( var(x), t^2>=0, @x,t^2>=0 )   [{V:x, A:t^2>=0, X:x}]
-    list( var(V') , hi(A',V') ,
-          @X',hi(A',X') )               [{V:V', A:hi(A',V'), X:X'}]
-
-    EXISTENTIAL INTRODUCTION RULE
-
-    Let R = list( A[X=T], #X,A ).  Same story as above.
-
-    in(5,nat)&notin(5,evens) ,
-        #t,in(t,nat)&notin(t,evens)     [{A:in(t,nat)&notin(t,evens), X:t,
-                                          T:5}]
-    uncble(minus(reals,rats)) ,
-        #S',uncble(S')                  [{A:uncble(S'), X:S',
-                                          T:minus(reals,rats)}]
-    uncble(k) , #k,uncble(k)            [{A:uncble(k), X:k, T:k}]
-    in(4,nat)&notin(5,evens) ,
-        #t,in(t,nat)&notin(t,evens)     []
-    in(4,nat)&notin(4,evens) ,
-        #t,in(t,nat)&notin(t,evens)     []
-    in(5,nat)&notin(5,evens) ,
-        #x,in(t,nat)&notin(t,evens)     []
-    in(5,nat)&notin(5,evens) ,
-        #x,in(5,nat)&notin(5,evens)     [{A:in(5,nat)&notin(5,evens), X:x,
-                                          T:unused_1}]
-    L' , #M',L'                         [{A:L', X:M', T:unused_1}]
-    L'(M') , #N',L'(N')                 [{A:L'(N'), X:N', T:M'}]
-
-    EQUALITY ELIMINATION RULE
-
-    Let R = list( A=B , S , S[A~B] ).  Same story as above.
-
-    x=7 , f(x)=y , f(7)=7               [{A:x, B:7, S:f(x)=y}]
-    x=7 , f(x)=y , f(x)=7               []
-    x=7 , f(x)=y , f(7)=7               []
-    f(x)=y , x=7 , f(7)=7               []
-    a=b , b=b , b=a                     [{A:a, B:b, S:b=b}]
-    sum(i,0,n-1,2^i)=2^n-1 ,
-        (2^n-1)+1=2^n ,
-        sum(i,0,n-1,2^i)+1=2^n          []
-    2^n-1=sum(i,0,n-1,2^i) ,
-        (2^n-1)+1=2^n ,
-        sum(i,0,n-1,2^i)+1=2^n          [{A:sum(i,0,n-1,2^i), B:2^n-1,
-                                          S:(2^n-1)+1=2^n}]
-
-    HARDER SUBSTITUTIONS
-
-    Now we list pattern, expresion, and results, as at first.
-
-    a=b[X=Y]            a=b             [{X:unused_1,Y:unused_2}]
-    a=b[X=a]            a=b             [{X:unused_1}]
-    a=b[a=Y]            a=b             [{Y:a}]
-    a=b[a=b]            a=b             []
-    a=b[a~b]            a=b             [{}]
-    a=b[a=c]            a=b             []
-    a=b[a~c]            a=b             [{}]
-    a=b[a=a]            a=b             [{}]
-    A[a=b]              a=b             []
-    A[a~b]              a=b             [{A:a=b}]
-    A[c=b]              a=b             [{A:a=b}]
-    A[c~b]              a=b             [{A:a=b}]
-    A[B=b]              a=b             [{A:a=b,B:unused_1}]
-    A[B~b]              a=b             [{A:a=b,B:unused_1}]
-    f(f[A=g])           f(g)            [{A:f}]
-    f(f)[A=g]           g(g)            [{A:f}]
-    f(f[A=g])           g(g)            []
-    f(g(a))[A=B]        f(g(b))         [{A:a,B:b}]
-    f(g(a),a)[A=B]      f(g(b),a)       []
-    f(g(a),a)[A~B]      f(g(b),a)       [{A:a,B:b}]
-    f(g(a),a)[A=B]      f(g(b),c)       []
-    f(g(a),a)[A~B]      f(g(b),c)       []
-        previous four cases repeated, but with first and second arguments
-        in both the pattern and the expression interchanged should give same
-        results
-
-    UNDERSPECIFIED
-
-    A[B=C]              any(thing)      [{A:any(thing),B:unused_1,
-                                          C:unused_2}]
-    A[B~C]              any(thing)      [{A:any(thing),B:unused_1,
-                                          C:unused_2}]
-
-    Also verify that if there are metavariables in the expression, that an
-    error is thrown.
+    a(X,X(Y))[M~N]     a(b,b(c,d,e))      [ { X : b,
+                                              Y : unused_1,
+                                              M : b(unused_1),
+                                              N : b(c,d,e) },
+                                            { X : b,
+                                              Y : unused_1,
+                                              M : a(b,b(unused_1)),
+                                              N : a(b,b(c,d,e)) } ]
 ```
+ * Rework `trySubs()` so that it is not called only if a match fails.  It
+   should be used to add alternate matches to every single return value for
+   every match.  For this reason, it does not actually need to walk up the
+   parent chain, because the recursion will do that automatically.  The
+   recursive call to `matches` should not bias things by using the same
+   `soFar` that was manipulated in the failed attempt to complete it; keep
+   a copy of `soFar` as it was given to the current `matches` call and use
+   that.  This will also return more general results in some cases.  For
+   instance, the test given above should now give the following result
+   instead of its too-specific one.
+```
+    a(X,X(Y))[M~N]     a(b,b(c,d,e))      [ { X : b,Y:unused_1,
+                                              M : b(unused_1),
+                                              N : b(c,d,e) },
+                                            { X : unused_1,
+                                              Y : unused_2,
+                                              M : a(unused_1,
+                                                    unused_1(unused_2)),
+                                              N : a(b,b(c,d,e)) } ]
+```
+ * Ensure that the above changes cause the final tests in the "harder
+   substitution situations" section to pass.  Add some more complex tests of
+   that same ilk to be sure.
+ * Add tests to verify that if you try to put more than one substitution
+   expression into a pattern (whether nested or not) an error is thrown.
+ * Also verify that if there are metavariables in the expression, that an
+   error is thrown.
+ * Remove `app/openmath.duo.litcoffee` from git control in master.  Ensure
+   that it remains under git control in gh-pages.  Furthermore, ensure that
+   `app/matching.duo.litcoffee` does not go under git control in master, but
+   does in gh-pages.
 
-## Parsing
+## Example Applications
 
- * Import the Earley parser from the desktop version of Lurch, into the file
-   `src/parsing.duo.litcoffee`.
- * Document it, while creating unit tests for its features.
- * Create a routine that translates MathQuill DOM trees into unambiguous
-   string representations of their content (using parentheses to group
-   things like exponents, etc.).
- * Use the web app to create and save many example DOM trees using the
-   MathQuill TinyMCE plugin, for use in unit tests.
- * Manually convert each of those into unambiguous strings, and use those to
-   generate unit tests for the translation routine created above.
- * Create a parser that can convert such strings into OpenMath trees.
- * Convert all the previous tests into unit tests for that parser.
+### OpenMath Content Dictionary Authoring Application
 
-## Example Application
+ * Create a new demo app for authoring OM CDs, but leave it plain vanilla
+   for now and we'll add features later.
+ * Create `src/xml-groups.solo.litcoffee` and put documentation on top that
+   explains how it will contain routines for encoding the groups in a
+   document as XML, with various features for checking their structural
+   validity.  (No implementation yet.)
+ * Import the `xml-groups` script into the OM CD demo application.
+ * In the `xml-groups` script, add support for the following features.
+   * Declaring a mapping from tag names to their features.
+   * The one group type in the whole document will be of type "tag."
+   * One attribute of a tag will be "topLevel," and only one tag can have
+     this attribute set to true.  Write a function for querying which tag
+     is the top-level tag, which means the tag implicitly surrounding the
+     whole document.
+   * One attribute of any tag X is the default tag for groups inserted
+     inside groups of type X.  Respect this by setting the tag attribute of
+     any newly inserted group to be this default.  For groups inserted
+     outside of any other groups, use the top-level tag.
+   * Show a tag's name on its bubble tag.
+   * Let tags have the attribute "externalName" and use that on bubble tags
+     instead of the internal name.
+   * Let tags have the attribute "documentation" and give them a context/tag
+     menu item for showing the documentation text in a popup dialog.  The
+     simplest popup dialog is just
+     `tinymce.activeEditor.windowManager.alert 'text'`.
+   * Write a function that encodes an individual `Group` or whole document
+     as XML, ignoring all text immediately inside non-leaf groups, returning
+     the result as a string.
+   * Add to the context/tag menu an option for seeing that bubble's XML in a
+     popup dialog.
+   * Create a toolbar button/menu item for opening in a new tab the full XML
+     of the whole document.  From there the user can download, print, etc.
+     `( newWin = window.open() ).document.write 'any text here'`
+ * Add a member to the `Group` class for querying the text or HTML before
+   or after the given group, leading up to the next grouper (whether that
+   be a parent boundary or a sibling boundary).
+ * Use the previous function to support the following tag attribute:
+   * If "includeText" is true for tag X, then text immediately inside a
+     non-leaf Group with tag X is included, interspersed among the inner
+     Groups' XML encodings.
+   * If "includeText" is a tag name, then such text is not only included,
+     but wrapped in tags of the given name.
+ * Add a tag attribute "belongsIn" that lists the names of the tags that a
+   parent Group can have.  Support for this tag is implemented below.
+ * Add support for each bubble to show its groupers differently at each
+   moment.  This should be do-able with a simple `Group` class member that
+   sets the open or close grouper appearance to the given HTML.  It can be
+   implemented using code as simple as the following.
+```
+base64URLForBlob svgBlobForHTML( html ), ( base64 ) ->
+   img.setAttribute 'src', base64
+```
+ * Write a function that can check a given Group to see if it "follows all
+   the rules."  It should, at first, just check to be sure that the Group's
+   parent tag is on its list of "belongsIn" (if such a list exists;
+   otherwise the group can be anywhere).  If the check passes, set the
+   Group's close grouper to be the ordinary close grouper for the type.  If
+   it fails, set it to be the same thing, plus a red X, with alt text that
+   explains the reason for the failure.  Test this by manually calling it
+   from the console.
+ * Update the `contentsChanged` event for the one Group type to call the
+   rule-checking function on the Group.
+ * OPTIONAL:
+   Add support to the Groups package for accepting click and/or double-click
+   events on open/close groupers, and passing them to the Group type for
+   handling.  Here is the code the MathQuill plugin uses for this purpose.
+   Note the selector in the second line.
+```
+editor.on 'init', ->
+    ( $ editor.getDoc() ).on 'click', '.rendered-latex', ( event ) ->
+        event.stopPropagation()
+        # here, "this" is the element that received the click event
+```
+ * OPTIONAL:
+   Use the feature from the previous bullet point to give more detailed
+   feedback about failed structural rules.
+ * Add a tag attribute "unique" that means that only one Group with that tag
+   can exist inside its parent Group.  Support this by making the
+   rule-checking function verify that no earlier sibling has the same tag.
+   Ensure this is called when necessary by having the `contentsChanged`
+   handler not only recheck the changed group, but all later siblings as
+   well.
+ * Add a tag attribute "belongsAfter" that functions exactly like
+   "belongsIn" but examines the previous sibling rather than the parent.
+   A Group can also pass this check if this attribute is not set, or if the
+   list contains `null` and the Group has no previous sibling.
+ * Add a tag attribute "contentCheck" that is a function that will be called
+   on a group during the rule-checking function, as the last step in
+   validating the Group.  It can do anything, and must either return true
+   (meaning the check passes) or an error message (meaning that it does
+   not).  The error message, if any, will be used as the alt text for the
+   red X in the close grouper.  This feature can be used to check text
+   format of leaf groups, or complex structure of non-leaf groups.
+ * Write a function that lists the tags that can appear in a parent of a
+   given tag type.  It will need to invert the "belongsIn" relation to give
+   its results.
+ * Use the function created in the previous bullet point to create a submenu
+   of the context/tag menu that lets you change a tag of one type to an
+   entirely different type.  Types that aren't permitted at that point are
+   grayed out (disabled).  See roughly lines 1127-1164 of
+   [groupsplugin.litcoffee](../app/groupsplugin.litcoffee) for code on how
+   to create arbitrary context menus.  The code
+   [here](http://stackoverflow.com/a/17213889/670492) shows that any item
+   on the list can have a "menu" key which points to another array of items,
+   thus creating a submenu.
+
+### General documentation
 
 Create a tutorial page in the repository (as a `.md` file) on how the reader
 can create their own webLurch-based applications.  Link to it from [the main
 README file](../README.md).
-
-It might be nice to have another example application, this one that lets you
-write math formulas in ordinary mathematical notation, and then does simple
-computations based on them, using MathJS.  You would need a method for
-converting OpenMath trees into MathJS calls.
 
 That is the last work that can be done without there being additional design
 work completed.  The section on [Dependencies](#dependencies), below,
@@ -372,6 +217,13 @@ thereafter is about building the symbolic manipulation core of Lurch itself,
 which is currently being redesigned by
 [Ken](http://mathweb.scranton.edu/ken/), and that design is not yet
 complete.
+
+## Miscellany
+
+Future math parsing enhancements:
+ * Support adjacent atomics as factors in a product
+ * Support chained equations
+ * Add tests for things that should *not* parse, and verify that they do not
 
 ## Logical Foundation
 

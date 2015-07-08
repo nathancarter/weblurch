@@ -49,6 +49,7 @@
       this.outerRange = __bind(this.outerRange, this);
       this.innerRange = __bind(this.innerRange, this);
       this.setContentAsText = __bind(this.setContentAsText, this);
+      this.contentNodes = __bind(this.contentNodes, this);
       this.contentAsHTML = __bind(this.contentAsHTML, this);
       this.contentAsFragment = __bind(this.contentAsFragment, this);
       this.contentAsText = __bind(this.contentAsText, this);
@@ -125,6 +126,40 @@
       tmp = this.open.ownerDocument.createElement('div');
       tmp.appendChild(fragment);
       return tmp.innerHTML;
+    };
+
+    Group.prototype.contentNodes = function() {
+      var result, strictOrder, walk;
+      result = [];
+      strictOrder = function(a, b) {
+        var cmp;
+        cmp = a.compareDocumentPosition(b);
+        return (Node.DOCUMENT_POSITION_FOLLOWING & cmp) && !(Node.DOCUMENT_POSITION_CONTAINED_BY & cmp);
+      };
+      walk = this.open;
+      while (walk != null) {
+        if (strictOrder(walk, this.close)) {
+          if (strictOrder(this.open, walk)) {
+            result.push(walk);
+          }
+          if (walk.nextSibling != null) {
+            walk = walk.nextSibling;
+          } else {
+            walk = walk.parentNode;
+          }
+          continue;
+        }
+        if (strictOrder(this.close, walk)) {
+          console.log('Warning!! walked past @close...something is wrong with this loop');
+          break;
+        }
+        if (walk === this.close) {
+          break;
+        } else {
+          walk = walk.childNodes[0];
+        }
+      }
+      return result;
     };
 
     Group.prototype.setContentAsText = function(text) {
@@ -837,7 +872,7 @@
     };
 
     Groups.prototype.drawGroups = function(canvas, context) {
-      var bodyStyle, close, color, group, leftMar, moveBy, old, open, p, p4, pad, padStep, radius, rightMar, size, style, tag, tagString, tags, tagsToDraw, type, x1, x2, y1, y2, _i, _j, _len, _len1, _ref, _ref1, _results;
+      var bodyStyle, close, color, group, i, index, leftMar, moveBy, old, open, p4, pad, padStep, radius, rect, rects, rightMar, sameBottoms, sameTops, size, style, tag, tagString, tags, tagsToDraw, type, x1, x2, y1, y2, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _results;
       this.bubbleTags = [];
       if (this.scanLocks > 0) {
         return;
@@ -852,22 +887,42 @@
       while (group) {
         type = group.type();
         color = (_ref = type != null ? type.color : void 0) != null ? _ref : '#444444';
-        open = $(group.open);
-        close = $(group.close);
-        p = open.position();
+        rects = group.outerRange().getClientRects();
+        rects = (function() {
+          var _i, _ref1, _results;
+          _results = [];
+          for (i = _i = 0, _ref1 = rects.length; 0 <= _ref1 ? _i < _ref1 : _i > _ref1; i = 0 <= _ref1 ? ++_i : --_i) {
+            _results.push(rects[i]);
+          }
+          return _results;
+        })();
+        open = rects.shift();
         open = {
-          top: p.top,
-          left: p.left,
-          bottom: p.top + open.height(),
-          right: p.left + open.width()
+          top: open.top,
+          left: open.left,
+          right: open.right,
+          bottom: open.bottom
         };
-        p = close.position();
+        close = rects.pop();
         close = {
-          top: p.top,
-          left: p.left,
-          bottom: p.top + close.height(),
-          right: p.left + close.width()
+          top: close.top,
+          left: close.left,
+          right: close.right,
+          bottom: close.bottom
         };
+        sameTops = open.top === close.top;
+        sameBottoms = open.bottom === close.bottom;
+        for (index = _i = 0, _len = rects.length; _i < _len; index = ++_i) {
+          rect = rects[index];
+          open.top = Math.min(open.top, rect.top);
+          close.bottom = Math.max(close.bottom, rect.bottom);
+        }
+        if (sameTops) {
+          close.top = open.top;
+        }
+        if (sameBottoms) {
+          open.bottom = close.bottom;
+        }
         if ((open.top === open.bottom || close.top === close.bottom || open.left === open.right || close.left === close.right) && !($(group.open)).hasClass('hide')) {
           setTimeout(((function(_this) {
             return function() {
@@ -930,8 +985,8 @@
         y1 = tag.corner.y - size.height - 2 * padStep;
         x2 = x1 + 2 * padStep + size.width;
         y2 = tag.corner.y;
-        for (_i = 0, _len = tagsToDraw.length; _i < _len; _i++) {
-          old = tagsToDraw[_i];
+        for (_j = 0, _len1 = tagsToDraw.length; _j < _len1; _j++) {
+          old = tagsToDraw[_j];
           if (rectanglesCollide(x1, y1, x2, y2, old.x1, old.y1, old.x2, old.y2)) {
             moveBy = old.y1 - y2;
             y1 += moveBy;
@@ -943,8 +998,8 @@
         tagsToDraw.unshift(tag);
       }
       _results = [];
-      for (_j = 0, _len1 = tagsToDraw.length; _j < _len1; _j++) {
-        tag = tagsToDraw[_j];
+      for (_k = 0, _len2 = tagsToDraw.length; _k < _len2; _k++) {
+        tag = tagsToDraw[_k];
         context.roundedRect(tag.x1, tag.y1, tag.x2, tag.y2, radius);
         context.globalAlpha = 1.0;
         context.fillStyle = '#ffffff';
@@ -1881,6 +1936,62 @@
       }
     });
   });
+
+  window.mathQuillToMeaning = function(node) {
+    var child, marker, name, result, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
+    if (node instanceof Text) {
+      return node.textContent;
+    }
+    result = [];
+    _ref = node.childNodes;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      child = _ref[_i];
+      if (($(child)).hasClass('selectable')) {
+        continue;
+      }
+      if (/width:0/.test(typeof child.getAttribute === "function" ? child.getAttribute('style') : void 0)) {
+        continue;
+      }
+      result = result.concat(mathQuillToMeaning(child));
+    }
+    if ((_ref1 = node.tagName) === 'SUP' || _ref1 === 'SUB') {
+      name = node.tagName.toLowerCase();
+      if (($(node)).hasClass('nthroot')) {
+        name = 'nthroot';
+      }
+      if (result.length > 1) {
+        result.unshift('(');
+        result.push(')');
+      }
+      result.unshift(name);
+    }
+    _ref2 = ['fraction', 'overline', 'overarc'];
+    for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+      marker = _ref2[_j];
+      if (($(node)).hasClass(marker)) {
+        if (result.length > 1) {
+          result.unshift('(');
+          result.push(')');
+        }
+        result.unshift(marker);
+      }
+    }
+    _ref3 = ['numerator', 'denominator'];
+    for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
+      marker = _ref3[_k];
+      if (($(node)).hasClass(marker)) {
+        if (result.length > 1) {
+          result.unshift('(');
+          result.push(')');
+        }
+      }
+    }
+    if (result.length === 1) {
+      return result[0];
+    } else {
+      return result;
+    }
+  };
 
   maybeSetupTestRecorder = function() {
     var installListeners, installed, testwin;

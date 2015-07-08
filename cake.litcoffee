@@ -44,6 +44,11 @@ These constants define how the functions below perform.
     p = require 'path'
     title = 'webLurch'
     srcdir = p.resolve __dirname, 'src'
+    srcorder = [
+        'utils.litcoffee'
+        'openmath.duo.litcoffee'
+        'matching.duo.litcoffee'
+    ]
     appdir = p.resolve __dirname, 'app'
     fddir = p.resolve appdir, 'filedialog'
     srcout = 'weblurch.litcoffee'
@@ -70,19 +75,31 @@ Before building the app, ensure that the output folder exists.
 
         fs.mkdirSync appdir unless fs.existsSync appdir
 
+Compute size of folder prefix, for showing relative paths later, for
+brevity.
+
+        L = __dirname.length + 1
+
 Next concatenate all `.litcoffee` source files into one.  The only exception
 to this rule is if any of them end in `.solo.litcoffee`, then they're
-requesting that they be compiled individually.  So we filter those out.
+requesting that they be compiled individually.  So we filter those out.  We
+also respect the ordering in `srcorder` to put some of the files first on
+the list.
 
-        all = ( fs.readFileSync name for name in \
-            build.dir( srcdir, /\.litcoffee$/ ) \
+        all = build.dir srcdir, /.litcoffee$/
+        moveup = [ ]
+        for file in srcorder
+            moveup = moveup.concat ( fullpath for fullpath in all \
+                when RegExp( "/#{file}$" ).test fullpath )
+        all = ( file for file in all when file not in moveup )
+        all = moveup.concat all
+        all = ( fs.readFileSync name for name in all \
             when name[-15..] isnt '.solo.litcoffee' )
         fs.writeFileSync p.resolve( appdir, srcout ), all.join( '\n\n' ),
             'utf8'
 
-Also compile any files specific to the main app (as opposed to the test
-app), which will sit in the app folder rather than the source folder.  The
-exceptions to this rule are:
+Also compile any files specific to the main app, which will sit in the app
+folder rather than the source folder.  The exceptions to this rule are:
  * if any of them end in `.solo.litcoffee`, then they're requesting that
    they be compiled individually, so we filter those out, and
  * if any of them end in `.duo.litcoffee`, then they've been copied to the
@@ -119,12 +136,12 @@ individual `.min.js` files (for importing into web workers).
                     toMove = ( f for f in build.dir srcdir, RegExp prefix \
                         when not /\.(solo|duo).litcoffee$/.test f )
                     build.runShellCommands ( for result in toMove
-                        description : "\tMoving #{result} into app/..."
+                        description : "\tMoving #{result[L..]} into app/..."
                         command : "mv #{result} app/"
                     ), ->
                         build.runShellCommands [
-                            description : "\tCopying src/#{prefix}litcoffee
-                                into app/..."
+                            description : "\tCopying
+                                src/#{prefix[L..]}litcoffee into app/..."
                             command : "cp src/#{prefix}litcoffee app/"
                         ], buildNext
             else

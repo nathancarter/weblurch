@@ -164,6 +164,30 @@ an HTML `DocumentFragment` object, or as an HTML string.
             tmp.appendChild fragment
             tmp.innerHTML
 
+You can also fetch the exact sequence of Nodes between the two groupers
+(including only the highest-level ones, not their children when that would
+be redundant) using the following routine.
+
+        contentNodes: =>
+            result = [ ]
+            strictOrder = ( a, b ) ->
+                cmp = a.compareDocumentPosition b
+                ( Node.DOCUMENT_POSITION_FOLLOWING & cmp ) and \
+                    not ( Node.DOCUMENT_POSITION_CONTAINED_BY & cmp )
+            walk = @open
+            while walk?
+                if strictOrder walk, @close
+                    if strictOrder @open, walk then result.push walk
+                    if walk.nextSibling? then walk = walk.nextSibling \
+                        else walk = walk.parentNode
+                    continue
+                if strictOrder @close, walk
+                    console.log 'Warning!! walked past @close...something
+                        is wrong with this loop'
+                    break
+                if walk is @close then break else walk = walk.childNodes[0]
+            result
+
 We can also set the contents of a group with the following function.  This
 function can only work if `@plugin` is a `Groups` class instance.
 
@@ -912,22 +936,33 @@ unstable/incorrect results.
                 type = group.type()
                 color = type?.color ? '#444444'
 
-Compute the sizes and positions of the open and close groupers.
+Compute the sizes and positions of the open and close groupers.  Because the
+elements between them may be taller (or sink lower) than the groupers
+themselves, we also inspect the client rectangles of all elements in the
+group, and adjust the relevant corners of the open and close groupers
+outward to make sure the bubble encloses the entire contents of the group.
 
-                open = $ group.open
-                close = $ group.close
-                p = open.position()
+                rects = group.outerRange().getClientRects()
+                rects = ( rects[i] for i in [0...rects.length] )
+                open = rects.shift()
                 open =
-                    top : p.top
-                    left : p.left
-                    bottom : p.top + open.height()
-                    right : p.left + open.width()
-                p = close.position()
+                    top : open.top
+                    left : open.left
+                    right : open.right
+                    bottom : open.bottom
+                close = rects.pop()
                 close =
-                    top : p.top
-                    left : p.left
-                    bottom : p.top + close.height()
-                    right : p.left + close.width()
+                    top : close.top
+                    left : close.left
+                    right : close.right
+                    bottom : close.bottom
+                sameTops = open.top is close.top
+                sameBottoms = open.bottom is close.bottom
+                for rect, index in rects
+                    open.top = Math.min open.top, rect.top
+                    close.bottom = Math.max close.bottom, rect.bottom
+                if sameTops then close.top = open.top
+                if sameBottoms then open.bottom = close.bottom
 
 If any of them has zero size, then that means that an image file (for an
 open/close grouper) isn't yet loaded.  Thus we need to stop here and queue

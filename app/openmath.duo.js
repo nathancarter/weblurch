@@ -52,7 +52,7 @@
         }
         return null;
       };
-      identRE = /^[:A-Za-z_][:A-Za-z_.0-9-]*$/;
+      identRE = /^[:A-Za-z_\u0374-\u03FF][:A-Za-z_\u0374-\u03FF.0-9-]*$/;
       switch (object.t) {
         case 'i':
           if (reason = checkKeys('v')) {
@@ -245,10 +245,22 @@
 
     function OMNode(tree) {
       this.tree = tree;
+      this.hasDescendantSatisfying = __bind(this.hasDescendantSatisfying, this);
+      this.descendantsSatisfying = __bind(this.descendantsSatisfying, this);
+      this.childrenSatisfying = __bind(this.childrenSatisfying, this);
+      this.replaceFree = __bind(this.replaceFree, this);
+      this.isFreeToReplace = __bind(this.isFreeToReplace, this);
+      this.occursFree = __bind(this.occursFree, this);
+      this.isFree = __bind(this.isFree, this);
+      this.freeVariables = __bind(this.freeVariables, this);
       this.setAttribute = __bind(this.setAttribute, this);
       this.removeAttribute = __bind(this.removeAttribute, this);
       this.getAttribute = __bind(this.getAttribute, this);
+      this.replaceWith = __bind(this.replaceWith, this);
       this.remove = __bind(this.remove, this);
+      this.index = __bind(this.index, this);
+      this.address = __bind(this.address, this);
+      this.findChild = __bind(this.findChild, this);
       this.findInParent = __bind(this.findInParent, this);
       this.simpleEncode = __bind(this.simpleEncode, this);
       this.copy = __bind(this.copy, this);
@@ -420,71 +432,80 @@
     OMNode.prototype.copy = function() {
       var recur;
       recur = function(tree) {
-        var child, result, variable;
-        switch (tree.t) {
-          case 'i':
-          case 'f':
-          case 'st':
-            return {
-              t: tree.t,
-              v: tree.v
-            };
-          case 'v':
-            return {
-              t: 'v',
-              n: tree.n
-            };
-          case 'sy':
-            result = {
-              t: 'sy',
-              n: tree.n,
-              cd: tree.cd
-            };
-            if (tree.hasOwnProperty('uri')) {
-              result.uri = tree.uri;
-            }
-            return result;
-          case 'ba':
-            return {
-              t: 'ba',
-              v: new Uint8Array(tree.v)
-            };
-          case 'e':
-          case 'a':
-            result = {
-              t: tree.t,
-              c: (function() {
-                var _i, _len, _ref1, _results;
-                _ref1 = tree.c;
-                _results = [];
-                for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-                  child = _ref1[_i];
-                  _results.push(recur(child));
-                }
-                return _results;
-              })()
-            };
-            if (tree.t === 'e') {
-              result.s = recur(tree.s);
-            }
-            return result;
-          case 'bi':
-            return {
-              t: 'bi',
-              s: recur(tree.s),
-              v: (function() {
-                var _i, _len, _ref1, _results;
-                _ref1 = tree.v;
-                _results = [];
-                for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-                  variable = _ref1[_i];
-                  _results.push(recur(variable));
-                }
-                return _results;
-              })(),
-              b: recur(tree.b)
-            };
+        var child, key, result, value, variable, _ref1, _ref2;
+        result = (function() {
+          switch (tree.t) {
+            case 'i':
+            case 'f':
+            case 'st':
+              return {
+                t: tree.t,
+                v: tree.v
+              };
+            case 'v':
+              return {
+                t: 'v',
+                n: tree.n
+              };
+            case 'sy':
+              result = {
+                t: 'sy',
+                n: tree.n,
+                cd: tree.cd
+              };
+              if (tree.hasOwnProperty('uri')) {
+                result.uri = tree.uri;
+              }
+              return result;
+            case 'ba':
+              return {
+                t: 'ba',
+                v: new Uint8Array(tree.v)
+              };
+            case 'e':
+            case 'a':
+              result = {
+                t: tree.t,
+                c: (function() {
+                  var _i, _len, _ref1, _results;
+                  _ref1 = tree.c;
+                  _results = [];
+                  for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+                    child = _ref1[_i];
+                    _results.push(recur(child));
+                  }
+                  return _results;
+                })()
+              };
+              if (tree.t === 'e') {
+                result.s = recur(tree.s);
+              }
+              return result;
+            case 'bi':
+              return {
+                t: 'bi',
+                s: recur(tree.s),
+                v: (function() {
+                  var _i, _len, _ref1, _results;
+                  _ref1 = tree.v;
+                  _results = [];
+                  for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+                    variable = _ref1[_i];
+                    _results.push(recur(variable));
+                  }
+                  return _results;
+                })(),
+                b: recur(tree.b)
+              };
+          }
+        })();
+        _ref2 = (_ref1 = tree.a) != null ? _ref1 : {};
+        for (key in _ref2) {
+          if (!__hasProp.call(_ref2, key)) continue;
+          value = _ref2[key];
+          (result.a != null ? result.a : result.a = {})[key] = recur(value);
         }
+        return result;
       };
       return OMNode.decode(recur(this.tree));
     };
@@ -884,6 +905,39 @@
       return void 0;
     };
 
+    OMNode.prototype.findChild = function(indexInParent) {
+      switch (indexInParent[0]) {
+        case 'c':
+          return this.children[parseInt(indexInParent.slice(1))];
+        case 'v':
+          return this.variables[parseInt(indexInParent.slice(1))];
+        case 's':
+          return this.symbol;
+        case 'b':
+          return this.body;
+        case '{':
+          return this.getAttribute(OMNode.decode(indexInParent));
+      }
+    };
+
+    OMNode.prototype.address = function(inThis) {
+      if (!this.parent || this.sameObjectAs(inThis)) {
+        return [];
+      }
+      return this.parent.address(inThis).concat([this.findInParent()]);
+    };
+
+    OMNode.prototype.index = function(address) {
+      var _ref1;
+      if (!(address instanceof Array)) {
+        return void 0;
+      }
+      if (address.length === 0) {
+        return this;
+      }
+      return (_ref1 = this.findChild(address[0])) != null ? _ref1.index(address.slice(1)) : void 0;
+    };
+
     OMNode.prototype.remove = function() {
       var index;
       if (!(index = this.findInParent())) {
@@ -906,6 +960,45 @@
           delete this.parent.tree.a[index];
       }
       return delete this.tree.p;
+    };
+
+    OMNode.prototype.replaceWith = function(other) {
+      var index, original;
+      if (this.sameObjectAs(other)) {
+        return;
+      }
+      index = this.findInParent();
+      if (index === 's' && other.type !== 'sy') {
+        return;
+      }
+      if ((index != null ? index[0] : void 0) === 'v' && other.type !== 'v') {
+        return;
+      }
+      other.remove();
+      original = new OMNode(this.tree);
+      this.tree = other.tree;
+      switch (index != null ? index[0] : void 0) {
+        case 'c':
+          original.parent.tree.c[parseInt(index.slice(1))] = this.tree;
+          break;
+        case 'v':
+          original.parent.tree.v[parseInt(index.slice(1))] = this.tree;
+          break;
+        case 'b':
+          original.parent.tree.b = this.tree;
+          break;
+        case 's':
+          original.parent.tree.s = this.tree;
+          break;
+        case '{':
+          original.parent.tree.a[index] = this.tree;
+          break;
+        default:
+          return;
+      }
+      this.tree.p = original.tree.p;
+      delete original.tree.p;
+      return original;
     };
 
     OMNode.prototype.getAttribute = function(keySymbol) {
@@ -962,6 +1055,221 @@
       newValue.remove();
       ((_base = this.tree).a != null ? _base.a : _base.a = {})[keySymbol.encode()] = newValue.tree;
       return newValue.tree.p = this.tree;
+    };
+
+    OMNode.prototype.freeVariables = function() {
+      var boundByThis, child, free, result, v, varname, _i, _j, _k, _len, _len1, _len2, _ref1, _ref2, _ref3, _results;
+      switch (this.type) {
+        case 'v':
+          return [this.name];
+        case 'a':
+        case 'c':
+          result = [];
+          _ref1 = this.children;
+          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+            child = _ref1[_i];
+            _ref2 = child.freeVariables();
+            for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+              free = _ref2[_j];
+              if (__indexOf.call(result, free) < 0) {
+                result.push(free);
+              }
+            }
+          }
+          return result;
+        case 'bi':
+          boundByThis = (function() {
+            var _k, _len2, _ref3, _results;
+            _ref3 = this.variables;
+            _results = [];
+            for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
+              v = _ref3[_k];
+              _results.push(v.name);
+            }
+            return _results;
+          }).call(this);
+          _ref3 = this.body.freeVariables();
+          _results = [];
+          for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
+            varname = _ref3[_k];
+            if (__indexOf.call(boundByThis, varname) < 0) {
+              _results.push(varname);
+            }
+          }
+          return _results;
+        default:
+          return [];
+      }
+    };
+
+    OMNode.prototype.isFree = function(inThis) {
+      var boundHere, freeVariables, v, variable, walk, _i, _len;
+      freeVariables = this.freeVariables();
+      walk = this;
+      while (walk) {
+        if (walk.type === 'bi') {
+          boundHere = (function() {
+            var _i, _len, _ref1, _results;
+            _ref1 = walk.variables;
+            _results = [];
+            for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+              v = _ref1[_i];
+              _results.push(v.name);
+            }
+            return _results;
+          })();
+          for (_i = 0, _len = freeVariables.length; _i < _len; _i++) {
+            variable = freeVariables[_i];
+            if (__indexOf.call(boundHere, variable) >= 0) {
+              return false;
+            }
+          }
+        }
+        if (walk.sameObjectAs(inThis)) {
+          break;
+        }
+        walk = walk.parent;
+      }
+      return true;
+    };
+
+    OMNode.prototype.occursFree = function(findThis) {
+      var child, _i, _len, _ref1, _ref2, _ref3;
+      if (this.equals(findThis) && this.isFree()) {
+        return true;
+      }
+      if ((_ref1 = this.symbol) != null ? _ref1.equals(findThis) : void 0) {
+        return true;
+      }
+      if ((_ref2 = this.body) != null ? _ref2.occursFree(findThis) : void 0) {
+        return true;
+      }
+      _ref3 = this.children;
+      for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+        child = _ref3[_i];
+        if (child.occursFree(findThis)) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    OMNode.prototype.isFreeToReplace = function(subtreeToReplace, inThis) {
+      var context, result, saved;
+      if (this.sameObjectAs(subtreeToReplace)) {
+        return true;
+      }
+      if (subtreeToReplace.parent == null) {
+        return true;
+      }
+      context = subtreeToReplace;
+      while (context.parent) {
+        context = context.parent;
+      }
+      saved = new OMNode(subtreeToReplace.tree);
+      if (!subtreeToReplace.replaceWith(this.copy())) {
+        return false;
+      }
+      result = subtreeToReplace.isFree(inThis);
+      subtreeToReplace.replaceWith(saved);
+      return result;
+    };
+
+    OMNode.prototype.replaceFree = function(original, replacement, inThis) {
+      var child, save, variable, _i, _j, _len, _len1, _ref1, _ref2, _ref3, _ref4, _results;
+      if (inThis == null) {
+        inThis = this;
+      }
+      if (this.isFree(inThis) && this.equals(original)) {
+        save = new OMNode(this.tree);
+        this.replaceWith(replacement.copy());
+        if (!this.isFree(inThis)) {
+          this.replaceWith(save);
+        }
+        return;
+      }
+      if ((_ref1 = this.symbol) != null) {
+        _ref1.replaceFree(original, replacement, inThis);
+      }
+      if ((_ref2 = this.body) != null) {
+        _ref2.replaceFree(original, replacement, inThis);
+      }
+      _ref3 = this.variables;
+      for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+        variable = _ref3[_i];
+        variable.replaceFree(original, replacement, inThis);
+      }
+      _ref4 = this.children;
+      _results = [];
+      for (_j = 0, _len1 = _ref4.length; _j < _len1; _j++) {
+        child = _ref4[_j];
+        _results.push(child.replaceFree(original, replacement, inThis));
+      }
+      return _results;
+    };
+
+    OMNode.prototype.childrenSatisfying = function(filter) {
+      var child, children, _i, _len, _results;
+      if (filter == null) {
+        filter = function() {
+          return true;
+        };
+      }
+      children = this.children;
+      if (this.symbol != null) {
+        children.push(this.symbol);
+      }
+      children = children.concat(this.variables);
+      if (this.body != null) {
+        children.push(this.body);
+      }
+      _results = [];
+      for (_i = 0, _len = children.length; _i < _len; _i++) {
+        child = children[_i];
+        if (filter(child)) {
+          _results.push(child);
+        }
+      }
+      return _results;
+    };
+
+    OMNode.prototype.descendantsSatisfying = function(filter) {
+      var child, results, _i, _len, _ref1;
+      if (filter == null) {
+        filter = function() {
+          return true;
+        };
+      }
+      results = [];
+      if (filter(this)) {
+        results.push(this);
+      }
+      _ref1 = this.childrenSatisfying();
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        child = _ref1[_i];
+        results = results.concat(child.descendantsSatisfying(filter));
+      }
+      return results;
+    };
+
+    OMNode.prototype.hasDescendantSatisfying = function(filter) {
+      var child, _i, _len, _ref1;
+      if (filter == null) {
+        filter = function() {
+          return true;
+        };
+      }
+      if (filter(this)) {
+        return true;
+      }
+      _ref1 = this.childrenSatisfying();
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        child = _ref1[_i];
+        if (child.hasDescendantSatisfying(filter)) {
+          return true;
+        }
+      }
+      return false;
     };
 
     return OMNode;

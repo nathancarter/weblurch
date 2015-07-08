@@ -6,7 +6,6 @@ comparing JSON structures.  (That module is tested [in a separate
 file](utils-spec.litcoffee).)
 
     { OM, OMNode } = require '../src/openmath.duo'
-    require '../src/utils'
 
 ## `OMNode` class
 
@@ -2045,13 +2044,57 @@ Error:
                 c : [ { t : 'i', v : 404 } ]
             }
             copy = original.copy()
-            expect( original ).not.toBe copy
+            expect( original.sameObjectAs copy ).toBeFalsy()
             expect( original.equals copy ).toBeTruthy()
-            expect( original.symbol ).not.toBe copy.symbol
+            expect( original.symbol.sameObjectAs copy.symbol ).toBeFalsy()
             expect( original.symbol.equals copy.symbol ).toBeTruthy()
-            expect( original.children[0] ).not.toBe copy.children[0]
+            expect( original.children[0].sameObjectAs copy.children[0] ) \
+                .toBeFalsy()
             expect( original.children[0].equals copy.children[0] ) \
                 .toBeTruthy()
+
+Attributes:
+
+            original = OM.decode {
+                t : 'a'
+                a : {
+                    '{"t":"sy","n":"Q","cd":"W"}' : { t : 'i', v : 42 }
+                }
+                c : [
+                    {
+                        t : 'st'
+                        v : 'fungi'
+                        a : {
+                            '{"t":"sy","n":"E","cd":"R"}' :
+                                { t : 'f', v : 4.2 }
+                            '{"t":"sy","n":"T","cd":"Y"}' :
+                                { t : 'sy', n : 'U', cd : 'I' }
+                        }
+                    }
+                ]
+            }
+            copy = original.copy()
+            expect( original.sameObjectAs copy ).toBeFalsy()
+            expect( original.equals copy ).toBeTruthy()
+            expect( original.children[0].sameObjectAs copy.children[0] ) \
+                .toBeFalsy()
+            expect( original.children[0].equals copy.children[0] ) \
+                .toBeTruthy()
+            sym = OM.decode { t : 'sy', n : 'Q', cd : 'W' }
+            expect( original.getAttribute( sym ).equals \
+                copy.getAttribute( sym ) ).toBeTruthy()
+            expect( original.getAttribute( sym ).sameObjectAs \
+                copy.getAttribute( sym ) ).toBeFalsy()
+            sym = OM.decode { t : 'sy', n : 'E', cd : 'R' }
+            expect( original.children[0].getAttribute( sym ).equals \
+                    copy.children[0].getAttribute( sym ) ).toBeTruthy()
+            expect( original.children[0].getAttribute( sym ).sameObjectAs \
+                    copy.children[0].getAttribute( sym ) ).toBeFalsy()
+            sym = OM.decode { t : 'sy', n : 'T', cd : 'Y' }
+            expect( original.children[0].getAttribute( sym ).equals \
+                    copy.children[0].getAttribute( sym ) ).toBeTruthy()
+            expect( original.children[0].getAttribute( sym ).sameObjectAs \
+                    copy.children[0].getAttribute( sym ) ).toBeFalsy()
 
 ## Parent-child relationships
 
@@ -2113,6 +2156,252 @@ The values of an object's attributes have their keys as the result.
             key = '{"t":"sy","n":"Z","cd":"W"}'
             value = new OMNode outer.tree.a[key]
             expect( value.findInParent() ).toBe key
+
+### should be queryable with `findChild`
+
+Test all types of situations in which `findChild` could be called.
+
+        it 'should be queryable with findChild', ->
+
+Create an application with several children.  Ensure that for each one, if
+we call `findInParent()` on the child, then `findChild()` in the parent,
+passing the index given by `findInParent()`, that we get back the child we
+started with.
+
+            app = OM.simple 'f(g(x),sym.bol,3,"string",h.h[k,ell])'
+            child = app.children[0]
+            expect( app.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = app.children[1]
+            expect( app.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = app.children[2]
+            expect( app.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = app.children[3]
+            expect( app.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = app.children[4]
+            expect( app.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = app.children[5]
+            expect( app.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+
+Create a binding with several variables.  Ensure that for each variable, as
+well as the binding's head symbol and body, if we call `findInParent()` on
+the descendant, then `findChild()` in the binding, passing the index given
+by `findInParent()`, that we get back the descendant we started with.
+
+            bin = OM.simple 'for.all[x,y,z,exi.sts[t,something(x,y,z,t)]]'
+            child = bin.variables[0]
+            expect( bin.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = bin.variables[1]
+            expect( bin.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = bin.variables[2]
+            expect( bin.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = bin.symbol
+            expect( bin.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = bin.body
+            expect( bin.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+
+Create an error with several children.  Ensure that for each child, as well
+as the error's head symbol, if we call `findInParent()` on the descendant,
+then `findChild()` in the error, passing the index given by
+`findInParent()`, that we get back the descendant we started with.
+
+            err = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'test', cd : 'more_test' }
+                c : [
+                    { t : 'i', v : '9000' }
+                    { t : 'st', v : 'fdjslksdjaf' }
+                    {
+                        t : 'a'
+                        c : [
+                            { t : 'v', n : 'f' }
+                            { t : 'v', n : 'u' }
+                            { t : 'v', n : 'v' }
+                        ]
+                    }
+                ]
+            }
+            child = err.children[0]
+            expect( err.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = err.children[1]
+            expect( err.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = err.children[2]
+            expect( err.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+            child = err.symbol
+            expect( err.findChild( child.findInParent() ) \
+                .sameObjectAs child ).toBeTruthy()
+
+### should be queryable with `address`
+
+This test is very similar to the `findInParent` test, above, but now
+generalized to the `address` function, which works like `findInParent`, but
+for arbitrary ancestors.  Note that we do not here attempt to test
+exhaustively, since `findInParent` is used inside `address`; we spot check
+to ensure that the generalization seems to have been done correctly.
+
+        it 'should be queryable with address', ->
+
+On any tree without a parent, it should be an empty array.
+
+            expect( OM.simple( '3' ).address() ).toEqual [ ]
+            expect( OM.simple( 'f(x)' ).address() ).toEqual [ ]
+            expect( OM.simple( 'g.a[z,t]' ).address() ).toEqual [ ]
+            expect( OM.simple( '-725.38' ).address() ).toEqual [ ]
+
+Now we create a deeply nested application and binding structure, for testing
+subtrees.  We check the address of every single subtree in it.
+
+            bigapp = OM.simple 'f(x,g(t),a.b[x,y,P(Q(x))])'
+            node = bigapp
+            expect( node.address() ).toEqual [ ]
+            node = bigapp.children[0]
+            expect( node.address() ).toEqual [ 'c0' ]
+            node = bigapp.children[1]
+            expect( node.address() ).toEqual [ 'c1' ]
+            node = bigapp.children[2]
+            expect( node.address() ).toEqual [ 'c2' ]
+            node = bigapp.children[3]
+            expect( node.address() ).toEqual [ 'c3' ]
+            node = bigapp.children[2].children[0]
+            expect( node.address() ).toEqual [ 'c2', 'c0' ]
+            node = bigapp.children[2].children[1]
+            expect( node.address() ).toEqual [ 'c2', 'c1' ]
+            node = bigapp.children[3].symbol
+            expect( node.address() ).toEqual [ 'c3', 's' ]
+            node = bigapp.children[3].variables[0]
+            expect( node.address() ).toEqual [ 'c3', 'v0' ]
+            node = bigapp.children[3].variables[1]
+            expect( node.address() ).toEqual [ 'c3', 'v1' ]
+            node = bigapp.children[3].body
+            expect( node.address() ).toEqual [ 'c3', 'b' ]
+            node = bigapp.children[3].body.children[0]
+            expect( node.address() ).toEqual [ 'c3', 'b', 'c0' ]
+            node = bigapp.children[3].body.children[1]
+            expect( node.address() ).toEqual [ 'c3', 'b', 'c1' ]
+            node = bigapp.children[3].body.children[1].children[0]
+            expect( node.address() ).toEqual [ 'c3', 'b', 'c1', 'c0' ]
+            node = bigapp.children[3].body.children[1].children[1]
+            expect( node.address() ).toEqual [ 'c3', 'b', 'c1', 'c1' ]
+
+We now repeat a selection of the above subtree tests, but passing an
+argument to `address` so that we get a result relative to the ancestor
+given.
+
+            ancestor = bigapp.children[2]
+            node = ancestor
+            expect( node.address ancestor ).toEqual [ ]
+            node = ancestor.children[0]
+            expect( node.address ancestor ).toEqual [ 'c0' ]
+            node = ancestor.children[1]
+            expect( node.address ancestor ).toEqual [ 'c1' ]
+            ancestor = bigapp.children[3]
+            node = ancestor
+            expect( node.address ancestor ).toEqual [ ]
+            node = ancestor.symbol
+            expect( node.address ancestor ).toEqual [ 's' ]
+            node = ancestor.variables[0]
+            expect( node.address ancestor ).toEqual [ 'v0' ]
+            node = ancestor.variables[1]
+            expect( node.address ancestor ).toEqual [ 'v1' ]
+            node = ancestor.body
+            expect( node.address ancestor ).toEqual [ 'b' ]
+            node = ancestor.body.children[1].children[1]
+            expect( node.address ancestor ).toEqual [ 'b', 'c1', 'c1' ]
+            ancestor = ancestor.body
+            expect( node.address ancestor ).toEqual [ 'c1', 'c1' ]
+
+### should be queryable with `index`
+
+This test is essentially the reverse of the previous test.  We ensure that
+the `index` function does the exact reverse of the `address` function.
+
+        it 'should be queryable with index', ->
+
+An empty address should return the node itself.
+
+            node = OM.simple '3'
+            expect( node.index( [ ] ).sameObjectAs node ).toBeTruthy()
+            node = OM.simple 'f(x)'
+            expect( node.index( [ ] ).sameObjectAs node ).toBeTruthy()
+            node = OM.simple 'g.z[z,t]'
+            expect( node.index( [ ] ).sameObjectAs node ).toBeTruthy()
+            node = OM.simple '-725.38'
+            expect( node.index( [ ] ).sameObjectAs node ).toBeTruthy()
+
+Now we create a deeply nested application and binding structure, for testing
+subtrees.  We check to be sure that `index` can be used to look up every
+single subtree in it.
+
+            bigapp = OM.simple 'f(x,g(t),a.b[x,y,P(Q(x))])'
+            expect( bigapp.index( [ ] ).sameObjectAs bigapp ).toBeTruthy()
+            expect( bigapp.index( [ 'c0' ] ).sameObjectAs \
+                bigapp.children[0] ).toBeTruthy()
+            expect( bigapp.index( [ 'c1' ] ).sameObjectAs \
+                bigapp.children[1] ).toBeTruthy()
+            expect( bigapp.index( [ 'c2' ] ).sameObjectAs \
+                bigapp.children[2] ).toBeTruthy()
+            expect( bigapp.index( [ 'c3' ] ).sameObjectAs \
+                bigapp.children[3] ).toBeTruthy()
+            expect( bigapp.index( [ 'c2', 'c0' ] ).sameObjectAs \
+                bigapp.children[2].children[0] ).toBeTruthy()
+            expect( bigapp.index( [ 'c2', 'c1' ] ).sameObjectAs \
+                bigapp.children[2].children[1] ).toBeTruthy()
+            expect( bigapp.index( [ 'c3', 's' ] ).sameObjectAs \
+                bigapp.children[3].symbol ).toBeTruthy()
+            expect( bigapp.index( [ 'c3', 'v0' ] ).sameObjectAs \
+                bigapp.children[3].variables[0] ).toBeTruthy()
+            expect( bigapp.index( [ 'c3', 'v1' ] ).sameObjectAs \
+                bigapp.children[3].variables[1] ).toBeTruthy()
+            expect( bigapp.index( [ 'c3', 'b' ] ).sameObjectAs \
+                bigapp.children[3].body ).toBeTruthy()
+            expect( bigapp.index( [ 'c3', 'b', 'c0' ] ).sameObjectAs \
+                bigapp.children[3].body.children[0] ).toBeTruthy()
+            expect( bigapp.index( [ 'c3', 'b', 'c1' ] ).sameObjectAs \
+                bigapp.children[3].body.children[1] ).toBeTruthy()
+            expect( bigapp.index( [ 'c3', 'b', 'c1', 'c0' ] ).sameObjectAs \
+                bigapp.children[3].body.children[1].children[0] ) \
+                .toBeTruthy()
+            expect( bigapp.index( [ 'c3', 'b', 'c1', 'c1' ] ).sameObjectAs \
+                bigapp.children[3].body.children[1].children[1] ) \
+                .toBeTruthy()
+
+We now repeat a selection of the above subtree tests, but starting from a
+subtree of `bigapp`.
+
+            node = bigapp.children[2]
+            expect( node.index( [ ] ).sameObjectAs node ).toBeTruthy()
+            expect( node.index( [ 'c0' ] ).sameObjectAs \
+                node.children[0] ).toBeTruthy()
+            expect( node.index( [ 'c1' ] ).sameObjectAs \
+                node.children[1] ).toBeTruthy()
+            node = bigapp.children[3]
+            expect( node.index( [ ] ).sameObjectAs node ).toBeTruthy()
+            expect( node.index( [ 's' ] ).sameObjectAs \
+                node.symbol ).toBeTruthy()
+            expect( node.index( [ 'v0' ] ).sameObjectAs \
+                node.variables[0] ).toBeTruthy()
+            expect( node.index( [ 'v1' ] ).sameObjectAs \
+                node.variables[1] ).toBeTruthy()
+            expect( node.index( [ 'b' ] ).sameObjectAs \
+                node.body ).toBeTruthy()
+            expect( node.index( [ 'b', 'c1', 'c1' ] ).sameObjectAs \
+                node.body.children[1].children[1] ).toBeTruthy()
+            node = node.body
+            expect( node.index( [ 'c1', 'c1' ] ).sameObjectAs \
+                node.children[1].children[1] ).toBeTruthy()
 
 ### can be broken with `remove()`
 
@@ -2455,3 +2744,671 @@ lookups are as they should be.
             expect( y.getAttribute( key1 ).sameObjectAs int ).toBeTruthy()
             expect( bin.getAttribute( key2 ).sameObjectAs x ).toBeTruthy()
             expect( int.getAttribute( key3 ).sameObjectAs str ).toBeTruthy()
+
+### should be correctly handled by `replaceWith()`
+
+The `replaceWith()` method of the `OMNode` class is one that breaks apart
+and reforms structures, so it deals intimately with parent and child
+pointers.  We test here that it treats them correctly.
+
+        it 'should be correctly handled by replaceWith()', ->
+
+Replacing a parentless node with something should yield the new thing as a
+return value, but change the original to contain the replacement (the same
+object, not just a copy).
+
+            original = OM.simple 'f(x)'
+            replacement = OM.simple 'my.symbol'
+            result = original.replaceWith replacement
+            expect( original.equals OM.simple 'f(x)' ).toBeFalsy()
+            expect( original.equals OM.simple 'my.symbol' ).toBeTruthy()
+            expect( original.equals replacement ).toBeTruthy()
+            expect( original.sameObjectAs replacement ).toBeTruthy()
+
+If we repeat the same test, but with the original as a child of a larger
+expression, then not only should all the same expectations as above be
+satisfied, but the parent should now contain the new child, and the old
+child should have no parent.
+
+            outer = OM.simple 'f(x,y,z)'
+            original = outer.children[2] # the y
+            replacement = OM.simple '107'
+            result = original.replaceWith replacement
+            expect( outer.equals OM.simple 'f(x,y,z)' ).toBeFalsy()
+            expect( original.equals OM.simple '107' ).toBeTruthy()
+            expect( original.equals replacement ).toBeTruthy()
+            expect( original.sameObjectAs replacement ).toBeTruthy()
+            expect( result.parent ).toBeUndefined()
+            expect( original.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.equals OM.simple 'f(x,107,z)' ).toBeTruthy()
+            expect( replacement.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.children[2].sameObjectAs original ).toBeTruthy()
+
+The same tests should all pass if, instead of replacing a child in a parent,
+we replace a head symbol in an error or binding node.
+
+Here it is with an error:
+
+            outer = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'example', cd : 'error' }
+                c : [ { t : 'i', v : -345 } ]
+            }
+            original = outer.symbol
+            replacement = OM.simple 'a.b'
+            result = original.replaceWith replacement
+            expect( outer.equals OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'example', cd : 'error' }
+                c : [ { t : 'i', v : -345 } ]
+            } ).toBeFalsy()
+            expect( original.equals OM.simple 'a.b' ).toBeTruthy()
+            expect( original.equals replacement ).toBeTruthy()
+            expect( original.sameObjectAs replacement ).toBeTruthy()
+            expect( result.parent ).toBeUndefined()
+            expect( original.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.equals OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'b', cd : 'a' }
+                c : [ { t : 'i', v : -345 } ]
+            } ).toBeTruthy()
+            expect( replacement.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.symbol.sameObjectAs original ).toBeTruthy()
+
+Here it is with a binding:
+
+            outer = OM.simple 'logic.forall[x,P(x)]'
+            original = outer.symbol
+            replacement = OM.simple 'logic.exists'
+            result = original.replaceWith replacement
+            expect( outer.equals OM.simple 'logic.forall[x,P(x)]' ) \
+                .toBeFalsy()
+            expect( original.equals OM.simple 'logic.exists' ).toBeTruthy()
+            expect( original.equals replacement ).toBeTruthy()
+            expect( original.sameObjectAs replacement ).toBeTruthy()
+            expect( result.parent ).toBeUndefined()
+            expect( original.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.equals OM.simple 'logic.exists[x,P(x)]' ) \
+                .toBeTruthy()
+            expect( replacement.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.symbol.sameObjectAs original ).toBeTruthy()
+
+The same tests should all pass if, instead of replacing the head symbol in a
+binding node, we replace its body.
+
+            outer = OM.simple 'logic.forall[x,P(x)]'
+            original = outer.body
+            replacement = OM.simple 'Q(x)'
+            result = original.replaceWith replacement
+            expect( outer.equals OM.simple 'logic.forall[x,P(x)]' ) \
+                .toBeFalsy()
+            expect( original.equals OM.simple 'Q(x)' ).toBeTruthy()
+            expect( original.equals replacement ).toBeTruthy()
+            expect( original.sameObjectAs replacement ).toBeTruthy()
+            expect( result.parent ).toBeUndefined()
+            expect( original.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.equals OM.simple 'logic.forall[x,Q(x)]' ) \
+                .toBeTruthy()
+            expect( replacement.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.body.sameObjectAs original ).toBeTruthy()
+
+The same tests should all pass if, instead of replacing the head symbol in a
+binding node, we replace (one of) its variable(s).
+
+            outer = OM.simple 'logic.forall[x,P(x)]'
+            original = outer.variables[0]
+            replacement = OM.simple 'y'
+            result = original.replaceWith replacement
+            expect( outer.equals OM.simple 'logic.forall[x,P(x)]' ) \
+                .toBeFalsy()
+            expect( original.equals OM.simple 'y' ).toBeTruthy()
+            expect( original.equals replacement ).toBeTruthy()
+            expect( original.sameObjectAs replacement ).toBeTruthy()
+            expect( result.parent ).toBeUndefined()
+            expect( original.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.equals OM.simple 'logic.forall[y,P(x)]' ) \
+                .toBeTruthy()
+            expect( replacement.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.variables[0].sameObjectAs original ).toBeTruthy()
+
+The same tests should all pass if we replace the value of an attribute.
+
+            outer = OM.decode {
+                t : 'i'
+                v : 50
+                a : {
+                    '{"t":"sy","n":"Q","cd":"W"}' : { t : 'v', n : 'x' }
+                    '{"t":"sy","n":"E","cd":"R"}' : { t : 'v', n : 't' }
+                }
+            }
+            original = outer.getAttribute OM.simple 'W.Q'
+            replacement = OM.simple 'p(t)'
+            result = original.replaceWith replacement
+            expect( outer.equals OM.decode {
+                t : 'i'
+                v : 50
+                a : {
+                    '{"t":"sy","n":"Q","cd":"W"}' : { t : 'v', n : 'x' }
+                    '{"t":"sy","n":"E","cd":"R"}' : { t : 'v', n : 't' }
+                }
+            } ).toBeFalsy()
+            expect( original.equals OM.simple 'p(t)' ).toBeTruthy()
+            expect( original.equals replacement ).toBeTruthy()
+            expect( original.sameObjectAs replacement ).toBeTruthy()
+            expect( result.parent ).toBeUndefined()
+            expect( original.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.equals OM.decode {
+                t : 'i'
+                v : 50
+                a : {
+                    '{"t":"sy","n":"Q","cd":"W"}' : {
+                        t : 'a'
+                        c : [
+                            { t : 'v', n : 'p' }
+                            { t : 'v', n : 't' }
+                        ]
+                    }
+                    '{"t":"sy","n":"E","cd":"R"}' : { t : 'v', n : 't' }
+                }
+            } ).toBeTruthy()
+            expect( replacement.parent.sameObjectAs outer ).toBeTruthy()
+            expect( outer.getAttribute( OM.simple 'W.Q' ) \
+                .sameObjectAs original ).toBeTruthy()
+
+And yet, `replaceWith` won't put non-variables in the variable slots of a
+binding node, nor non-symbols as the head symbols of binding or error
+objects.  We test here to ensure this is so.
+
+            binding = OM.simple 'for.all[x,y,P(x,x,y,y)]'
+            copy = binding.copy()
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[0].replaceWith OM.simple '3'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[0].replaceWith OM.simple '-9.2'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[0].replaceWith OM.simple '"man"'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[0].replaceWith OM.simple 'wo.man'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[0].replaceWith OM.simple 'sin(pi)'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[0].replaceWith OM.simple 'exi.sts[t,A]'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[1].replaceWith OM.simple '3'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[1].replaceWith OM.simple '-9.2'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[1].replaceWith OM.simple '"man"'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[1].replaceWith OM.simple 'wo.man'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[1].replaceWith OM.simple 'sin(pi)'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.variables[1].replaceWith OM.simple 'exi.sts[t,A]'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.symbol.replaceWith OM.simple '3'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.symbol.replaceWith OM.simple '380.320'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.symbol.replaceWith OM.simple '"qwerty"'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.symbol.replaceWith OM.simple 'varname'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.symbol.replaceWith OM.simple 'a(b,c,d)'
+            expect( binding.equals copy ).toBeTruthy()
+            binding.symbol.replaceWith OM.simple 'a.b[c,d]'
+            expect( binding.equals copy ).toBeTruthy()
+            error = OM.decode {
+                t : 'e'
+                s : { t : 'sy', n : 'N', cd : 'CD' }
+                c : [
+                    { t : 'i', v : 50 }
+                    { t : 'f', v : -0.50 }
+                ]
+            }
+            copy = error.copy()
+            copy.symbol.replaceWith OM.simple '3'
+            expect( copy.equals copy ).toBeTruthy()
+            copy.symbol.replaceWith OM.simple '380.320'
+            expect( copy.equals copy ).toBeTruthy()
+            copy.symbol.replaceWith OM.simple '"qwerty"'
+            expect( copy.equals copy ).toBeTruthy()
+            copy.symbol.replaceWith OM.simple 'varname'
+            expect( copy.equals copy ).toBeTruthy()
+            copy.symbol.replaceWith OM.simple 'a(b,c,d)'
+            expect( copy.equals copy ).toBeTruthy()
+            copy.symbol.replaceWith OM.simple 'a.b[c,d]'
+            expect( copy.equals copy ).toBeTruthy()
+
+## Routines for free and bound variables
+
+There are several routines in the OMNode class dealing with free and bound
+variables (and subexpressions that are free in ancestor expressions).  This
+section tests all those routines.
+
+### should correctly list the free variables in an expression
+
+This section tests the `node.freeVariables()` routine, which returns an
+array of strings, the names of the variables that appear free in the
+expression.  The order is undefined, so the test will sort them into
+alphabetical order before comparing.  But each variable name should appear
+only once despite multiple occurrences existing.
+
+        it 'should correctly list the free variables in an expression', ->
+
+We create a few expressions and then test the list of free variables in not
+only the expressions themselves, but also many of their subexpressions.
+
+            expr = OM.simple 'f(x)'
+            expect( expr.freeVariables().sort() ).toEqual [ 'f', 'x' ]
+            expect( expr.children[0].freeVariables() ).toEqual [ 'f' ]
+            expect( expr.children[1].freeVariables() ).toEqual [ 'x' ]
+            expr = OM.simple 'f(x,g(x))'
+            expect( expr.freeVariables().sort() ).toEqual [ 'f', 'g', 'x' ]
+            expect( expr.children[0].freeVariables() ).toEqual [ 'f' ]
+            expect( expr.children[1].freeVariables() ).toEqual [ 'x' ]
+            expect( expr.children[2].freeVariables().sort() ).toEqual \
+                [ 'g', 'x' ]
+            expr = OM.simple 'f.f(x.x)'
+            expect( expr.freeVariables() ).toEqual [ ]
+            expect( expr.children[0].freeVariables() ).toEqual [ ]
+            expect( expr.children[1].freeVariables() ).toEqual [ ]
+
+We now introduce bindings, so that some variables free in subexpressions are
+not free higher up in the ancestor chain.
+
+            expr = OM.simple 'logic.forall[x,P(x)]'
+            expect( expr.freeVariables() ).toEqual [ 'P' ]
+            expect( expr.symbol.freeVariables() ).toEqual [ ]
+            expect( expr.variables[0].freeVariables() ).toEqual [ 'x' ]
+            expect( expr.body.freeVariables().sort() ).toEqual [ 'P', 'x' ]
+            expr = OM.simple 'logic.forall[x,y,logic.exists[z,g.t(x,z,y)]]'
+            expect( expr.freeVariables() ).toEqual [ ]
+            expect( expr.symbol.freeVariables() ).toEqual [ ]
+            expect( expr.variables[0].freeVariables() ).toEqual [ 'x' ]
+            expect( expr.variables[1].freeVariables() ).toEqual [ 'y' ]
+            expect( expr.body.freeVariables().sort() ).toEqual [ 'x', 'y' ]
+
+### should correctly judge expressions free/bound
+
+An expression is bound at a location if any variable free in it is bound
+farther up the ancestor chain.  We test several examples of each type here.
+
+        it 'should correctly judge expressions free/bound', ->
+
+In the following expression, f(x) is bound and g(y) is free.  We test all
+other subexpressions as well.
+
+            expr = OM.simple 'logic.forall[x,logic.and(f(x),g(y))]'
+            expect( expr.symbol.isFree() ).toBeTruthy()
+            expect( expr.variables[0].isFree() ).toBeFalsy()
+            expect( expr.body.isFree() ).toBeFalsy()
+            expect( expr.body.children[0].isFree() ).toBeTruthy()
+            expect( expr.body.children[1].isFree() ).toBeFalsy()
+            expect( expr.body.children[2].isFree() ).toBeTruthy()
+
+Now we repeat the same tests, but limit the scope of looking up the parent
+chain to inside the quantifier, so that everything should be free.
+
+            expect( expr.body.isFree expr.body ).toBeTruthy()
+            expect( expr.body.children[0].isFree expr.body ).toBeTruthy()
+            expect( expr.body.children[1].isFree expr.body ).toBeTruthy()
+            expect( expr.body.children[2].isFree expr.body ).toBeTruthy()
+
+### should correctly find free occurrences
+
+An expression is bound at a location if any variable free in it is bound
+farther up the ancestor chain.  The `occursFree()` routine finds all free
+occurrences of the given expression inside the object in which it's called.
+
+        it 'should correctly find free occurrences', ->
+
+We re-use the same expression from the previous test, but now run different
+tests on it.
+
+            expr = OM.simple 'logic.forall[x,logic.and(f(x),g(y))]'
+
+First, test everything that occurs, but not free.
+
+            expect( expr.occursFree OM.simple 'f(x)' ).toBeFalsy()
+            expect( expr.occursFree OM.simple 'x' ).toBeFalsy()
+            expect( expr.occursFree OM.simple 'logic.and(f(x),g(y))' ) \
+                .toBeFalsy()
+
+Next, test some things that do not even occur, free or otherwise.
+
+            expect( expr.occursFree OM.simple 'f(y)' ).toBeFalsy()
+            expect( expr.occursFree OM.simple 'g(x)' ).toBeFalsy()
+            expect( expr.occursFree OM.simple 'potatoes' ).toBeFalsy()
+
+Next, test everything that occurs free.
+
+            expect( expr.occursFree OM.simple 'logic.forall' ).toBeTruthy()
+            expect( expr.occursFree OM.simple 'logic.and' ).toBeTruthy()
+            expect( expr.occursFree OM.simple 'f' ).toBeTruthy()
+            expect( expr.occursFree OM.simple 'g' ).toBeTruthy()
+            expect( expr.occursFree OM.simple 'y' ).toBeTruthy()
+            expect( expr.occursFree OM.simple 'g(y)' ).toBeTruthy()
+            expect( expr.occursFree expr.copy() ).toBeTruthy()
+
+### should know when it can replace free occurrences
+
+This tests the `OMNode` routine `isFreeToReplace()`, which computes whether
+the node is free to replace the given subtree.  That is, would any of the
+node's variables become bound if the replacement were to take place?  If so,
+it is not free to replace; otherwise it is.
+
+        it 'should know when it can replace free occurrences', ->
+
+Any atomic that isn't a variable is always free to replace anything.
+
+            context = OM.simple 'for.all[x,P(x,y)]'
+            toInsert = OM.simple '3'
+            expect( toInsert.isFreeToReplace context.symbol ).toBeFalsy()
+            expect( toInsert.isFreeToReplace context.variables[0] ) \
+                .toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body ).toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[0] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+            toInsert = OM.simple 'foo.bar'
+            expect( toInsert.isFreeToReplace context.symbol ).toBeTruthy()
+            expect( toInsert.isFreeToReplace context.variables[0] ) \
+                .toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body ).toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[0] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+            toInsert = OM.simple '"Hello, darlin\'."'
+            expect( toInsert.isFreeToReplace context.symbol ).toBeFalsy()
+            expect( toInsert.isFreeToReplace context.variables[0] ) \
+                .toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body ).toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[0] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+
+A variable is free to replace if it doesn't become bound by the replacement.
+
+            context = OM.simple 'for.all[x,P(x,y)]'
+            toInsert = OM.simple 'x'
+            expect( toInsert.isFreeToReplace context.symbol ).toBeFalsy()
+            expect( toInsert.isFreeToReplace context.variables[0] ) \
+                .toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body ).toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body.children[0] ) \
+                .toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeFalsy()
+            toInsert = OM.simple 'y'
+            expect( toInsert.isFreeToReplace context.symbol ).toBeFalsy()
+            expect( toInsert.isFreeToReplace context.variables[0] ) \
+                .toBeFalsy()
+            expect( toInsert.isFreeToReplace context.body ).toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[0] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+            expect( toInsert.isFreeToReplace context.body.children[1] ) \
+                .toBeTruthy()
+
+### should correctly replace free occurrences
+
+An expression is bound at a location if any variable free in it is bound
+farther up the ancestor chain.  The `replaceFree()` routine replaces all
+free occurrences of the first given expression inside the object in which
+it's called with copies of the second given expression, but only if they,
+too, are free once inserted there.
+
+        it 'should correctly replace free occurrences', ->
+
+We re-use the same expression from the previous test, but now run different
+tests on it.
+
+            expr = OM.simple 'logic.forall[x,logic.and(f(x),g(y))]'
+
+The one occurrence of y is free, and can be replaced by any variable other
+than x, or any atomic.
+
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'y' ), OM.simple( 'z' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),g(z))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'y' ), OM.simple( 'YO' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),g(YO))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'y' ), OM.simple( '"hello"' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),g("hello"))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'y' ), OM.simple( '-12.05' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),g(-12.05))]' ).toBeTruthy()
+
+The functions f and g are also free variables, and can be replaced by any
+of the same things as y can.
+
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'f' ), OM.simple( 'z' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(z(x),g(y))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g' ), OM.simple( 'YO' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),YO(y))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'f' ), OM.simple( '"hello"' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and("hello"(x),g(y))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g' ), OM.simple( '-12.05' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),-12.05(y))]' ).toBeTruthy()
+
+If we try replacing any of those things by x, nothing happens, because x is
+not free to be used as a replacement there.
+
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'y' ), OM.simple( 'x' )
+            expect( copy.equals expr ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'f' ), OM.simple( 'x' )
+            expect( copy.equals expr ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g' ), OM.simple( 'x' )
+            expect( copy.equals expr ).toBeTruthy()
+
+Instead of x, if we use an expression containing x free, the results will
+be the same -- no change.
+
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'y' ), OM.simple( 't(x)' )
+            expect( copy.equals expr ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'f' ),
+                OM.simple( 'arith1.plus(x,2)' )
+            expect( copy.equals expr ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g' ), OM.simple( 'a.b[y,x]' )
+            expect( copy.equals expr ).toBeTruthy()
+
+But if instead we were to replace y, f, or g with an expression in which x
+occurs, but only bound, it would make the replacement.
+
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'y' ), OM.simple( 'a.b[x,x]' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),g(a.b[x,x]))]' ).toBeTruthy()
+
+We now repeat some of the above tests with compound subexpressions of the
+original expression.
+
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g(y)' ), OM.simple( 'x' )
+            expect( copy.equals expr ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g(y)' ), OM.simple( 'a.b[x,x]' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),a.b[x,x])]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'logic.and(f(x),g(y))' ),
+                OM.simple( 'thing(x,y)' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),g(y))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'logic.and(f(x),g(y))' ),
+                OM.simple( 'thing(x,y)' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),g(y))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'logic.and(f(x),g(y))' ),
+                OM.simple( 'thing(t,y)' )
+            expect( copy.equals expr ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g(y)' ), OM.simple( 'thing(t,y)' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),thing(t,y))]' ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g(y)' ), OM.simple( 't(x)' )
+            expect( copy.equals expr ).toBeTruthy()
+            copy = expr.copy()
+            copy.replaceFree OM.simple( 'g(y)' ),
+                OM.simple( 'logic.exists[x,P(5,6,7)]' )
+            expect( copy.equals OM.simple \
+                'logic.forall[x,logic.and(f(x),logic.exists[x,P(5,6,7)])]' \
+                ).toBeTruthy()
+
+## Filtering
+
+The two functions for filtering operate on either immediate descendants or
+all descendants.  We test each here.
+
+    describe 'Filtering', ->
+
+### works for immediate descendants (children)
+
+Test the `childrenSatisfying()` routine.
+
+        it 'works for immediate descendants (children)', ->
+
+With no parameter, it should return all children.
+
+Atomics have none.
+
+            expect( OM.simple( '3' ).childrenSatisfying() ).toEqual [ ]
+            expect( OM.simple( '"yo"' ).childrenSatisfying() ).toEqual [ ]
+            expect( OM.simple( 'hah' ).childrenSatisfying() ).toEqual [ ]
+
+Compound expressions have children, but grandchildren are not included in
+the results.
+
+            expr = OM.simple 'f(x)'
+            test = expr.childrenSatisfying()
+            expect( test.length ).toBe 2
+            expect( test[0].sameObjectAs expr.children[0] ).toBeTruthy()
+            expect( test[1].sameObjectAs expr.children[1] ).toBeTruthy()
+            expr = OM.simple 'foo.bar[baz,bash,quux(fizz)]'
+            test = expr.childrenSatisfying()
+            expect( test.length ).toBe 4
+            expect( test[0].sameObjectAs expr.symbol ).toBeTruthy()
+            expect( test[1].sameObjectAs expr.variables[0] ).toBeTruthy()
+            expect( test[2].sameObjectAs expr.variables[1] ).toBeTruthy()
+            expect( test[3].sameObjectAs expr.body ).toBeTruthy()
+
+And filtering works.
+
+            expr = OM.simple 'f(x)'
+            test = expr.childrenSatisfying ( e ) -> e.type is 'i'
+            expect( test ).toEqual [ ]
+            test = expr.childrenSatisfying ( e ) -> /x/.test e.name
+            expect( test.length ).toBe 1
+            expect( test[0].sameObjectAs expr.children[1] ).toBeTruthy()
+            expr = OM.simple 'foo.bar[baz,bash,quux(fizz)]'
+            test = expr.childrenSatisfying ( e ) ->
+                /^b/.test e.simpleEncode()
+            expect( test.length ).toBe 2
+            expect( test[0].sameObjectAs expr.variables[0] ).toBeTruthy()
+            expect( test[1].sameObjectAs expr.variables[1] ).toBeTruthy()
+
+### works for (all) indirect descendants also
+
+Test the `descendantsSatisfying()` routine.
+
+        it 'works for (all) indirect descendants also', ->
+
+With no parameter, it should return all descendants.
+
+Atomics have just themselves.
+
+            expr = OM.simple '3'
+            test = expr.descendantsSatisfying()
+            expect( test.length ).toBe 1
+            expect( test[0].sameObjectAs expr ).toBeTruthy()
+            expr = OM.simple 'sym.bol'
+            test = expr.descendantsSatisfying()
+            expect( test.length ).toBe 1
+            expect( test[0].sameObjectAs expr ).toBeTruthy()
+            expr = OM.simple '"This is an example string."'
+            test = expr.descendantsSatisfying()
+            expect( test.length ).toBe 1
+            expect( test[0].sameObjectAs expr ).toBeTruthy()
+
+Compound expressions have children and sometimes grandchildren, all of which
+are included in the results, in the correct order.
+
+            expr = OM.simple 'f(x,"y",z.z)'
+            test = expr.descendantsSatisfying()
+            expect( test.length ).toBe 5
+            expect( test[0].sameObjectAs expr ).toBeTruthy()
+            expect( test[1].sameObjectAs expr.children[0] ).toBeTruthy()
+            expect( test[2].sameObjectAs expr.children[1] ).toBeTruthy()
+            expect( test[3].sameObjectAs expr.children[2] ).toBeTruthy()
+            expect( test[4].sameObjectAs expr.children[3] ).toBeTruthy()
+            expr = OM.simple 'for.all[x,and(f(x),f(y))]'
+            test = expr.descendantsSatisfying()
+            expect( test.length ).toBe 11
+            expect( test[0].sameObjectAs expr ).toBeTruthy()
+            expect( test[1].sameObjectAs expr.symbol ).toBeTruthy()
+            expect( test[2].sameObjectAs expr.variables[0] ).toBeTruthy()
+            expect( test[3].sameObjectAs expr.body ).toBeTruthy()
+            expect( test[4].sameObjectAs expr.body.children[0] ) \
+                .toBeTruthy()
+            expect( test[5].sameObjectAs expr.body.children[1] ) \
+                .toBeTruthy()
+            expect( test[6].sameObjectAs \
+                expr.body.children[1].children[0] ).toBeTruthy()
+            expect( test[7].sameObjectAs \
+                expr.body.children[1].children[1] ).toBeTruthy()
+            expect( test[8].sameObjectAs expr.body.children[2] ) \
+                .toBeTruthy()
+            expect( test[9].sameObjectAs \
+                expr.body.children[2].children[0] ).toBeTruthy()
+            expect( test[10].sameObjectAs \
+                expr.body.children[2].children[1] ).toBeTruthy()
+
+And filtering works.
+
+            expr = OM.simple 'f(x,"y",z.z)'
+            test = expr.descendantsSatisfying ( e ) -> e.type is 'v'
+            expect( test.length ).toBe 2
+            expect( test[0].sameObjectAs expr.children[0] ).toBeTruthy()
+            expect( test[1].sameObjectAs expr.children[1] ).toBeTruthy()
+            expr = OM.simple 'for.all[x,and(f(x),f(y))]'
+            test = expr.descendantsSatisfying ( e ) -> /a/.test e.name
+            expect( test.length ).toBe 2
+            expect( test[0].sameObjectAs expr.symbol ).toBeTruthy()
+            expect( test[1].sameObjectAs expr.body.children[0] ) \
+                .toBeTruthy()

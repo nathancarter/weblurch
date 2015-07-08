@@ -191,12 +191,13 @@ the filename.
         p = require 'path'
         coffee = p.resolve __dirname, 'node_modules', '.bin', 'coffee'
         uglify = p.resolve __dirname, 'node_modules', '.bin', 'uglifyjs'
+        prefixlen = __dirname.length + 1
 
 Run the `coffee` compiler on the file, also creating a source map. This
 generates both `.js` and `.js.map` files.
 
         exports.runShellCommands [
-            description : "\tCompiling #{srcfile}..."
+            description : "\tCompiling #{srcfile[prefixlen..]}...".green
             command : "#{coffee} --map --compile #{file}"
             cwd : path
 
