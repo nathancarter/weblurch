@@ -42,6 +42,7 @@ Clients can also override this object if they wish different styles.
 
     window.defaultEditorStyles ?=
         fontSize : '16px'
+        fontFamily : 'Verdana, Arial, Helvetica, sans-serif'
 
 ## Add an editor to the app
 

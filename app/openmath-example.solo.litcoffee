@@ -26,9 +26,9 @@ Basic appearance attributes for the group:
         name : 'tag'
         text : 'Content Dictionary Tag'
         tooltip : 'Tag the selection'
-        imageHTML : '<font color="#999999"><b>{ }</b></font>'
-        openImageHTML : '<font color="#999999"><b>{</b></font>'
-        closeImageHTML : '<font color="#999999"><b>}</b></font>'
+        imageHTML : '<font color="#999999">{}</font>'
+        openImageHTML : '<font color="#999999">{</font>'
+        closeImageHTML : '<font color="#999999">}</font>'
 
 The very important content changed event handler:
 

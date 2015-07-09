@@ -59,6 +59,28 @@ data is not available in the expected format, it returns `null`.
         result
     window.grouperInfo = grouperInfo
 
+A few functions in this module make use of a tool for computing the default
+editor style as a CSS style string (e.g., "font-size:16px;").  That function
+is defined here.
+
+    createStyleString = ( styleObject = window.defaultEditorStyles ) ->
+        result = [ ]
+        for own key, value of styleObject
+            newkey = ''
+            for letter in key
+                if letter.toUpperCase() is letter then newkey += '-'
+                newkey += letter.toLowerCase()
+            result.push "#{newkey}:#{value};"
+        result.join ' '
+
+A few functions in this module make use of a tool for computing a CSS style
+string describing the default font size and family of an element.  That
+function is defined here.
+
+    createFontStyleString = ( element ) ->
+        style = element.ownerDocument.defaultView.getComputedStyle element
+        "font-size:#{style.fontSize}; font-family:#{style.fontFamily};"
+
 # `Group` class
 
 This file defines two classes, this one called `Group` and another
@@ -186,10 +208,11 @@ either the open or close grouper for this group.
                 grouperHTML = decoration + grouperHTML
             else
                 grouperHTML += decoration
-            window.base64URLForBlob window.svgBlobForHTML( grouperHTML ),
-                ( base64 ) ->
+            window.base64URLForBlob window.svgBlobForHTML( grouperHTML,
+                createFontStyleString grouper ), ( base64 ) ->
                     if grouper.getAttribute( 'src' ) isnt base64
                         grouper.setAttribute 'src', base64
+            @plugin?.editor.Overlay?.redrawContents()
 
 We will need to be able to query the contents of a group, so that later
 computations on that group can use its contents to determine how to act.  We
@@ -288,7 +311,7 @@ Specifically,
                 else
                     range.setStartBefore doc.body.childNodes[0]
                 range
-            catch e then console.log e ; null
+            catch e then null
         rangeAfter: =>
             range = ( doc = @open.ownerDocument ).createRange()
             try
@@ -301,7 +324,7 @@ Specifically,
                     range.setEndAfter \
                         doc.body.childNodes[doc.body.childNodes.length-1]
                 range
-            catch e then console.log e ; null
+            catch e then null
 
 The previous two functions require being able to query this group's index in
 its parent group, and to use that index to look up next and previous sibling
@@ -470,27 +493,18 @@ routine needs, and they will be passed along directly.
             @groupTypes[name] = data
             if data.hasOwnProperty 'text'
                 plugin = this
-                style = ->
-                    result = [ ]
-                    for own key, value of window.defaultEditorStyles
-                        newkey = ''
-                        for letter in key
-                            if letter.toUpperCase() is letter
-                                newkey += '-' + letter.toLowerCase()
-                            else
-                                newkey += letter
-                        result.push "#{newkey}:#{value};"
-                    result.join ' '
                 if data.imageHTML?
                     data.image = objectURLForBlob svgBlobForHTML \
-                        data.imageHTML, style()
+                        data.imageHTML, createStyleString()
                 if data.openImageHTML?
-                    blob = svgBlobForHTML data.openImageHTML, style()
+                    blob = svgBlobForHTML data.openImageHTML,
+                        createStyleString()
                     data.openImage = objectURLForBlob blob
                     base64URLForBlob blob, ( result ) ->
                         data.openImage = result
                 if data.closeImageHTML?
-                    blob = svgBlobForHTML data.closeImageHTML, style()
+                    blob = svgBlobForHTML data.closeImageHTML,
+                        createStyleString()
                     data.closeImage = objectURLForBlob blob
                     base64URLForBlob blob, ( result ) ->
                         data.closeImage = result
@@ -1105,13 +1119,11 @@ them.
                 x2 = close.right + pad/3
                 y2 = close.bottom + pad
                 if tagString = type?.tagContents? group
-                    style = @editor.getWin().getComputedStyle group.open
                     tags.push
                         content : tagString
                         corner : { x : x1, y : y1 }
                         color : color
-                        style : "font-size:#{style.fontSize};
-                                 font-family:#{style.fontFamily};"
+                        style : createFontStyleString group.open
                         group : group
 
 Draw this group and then move one step up the group hierarchy, ready to draw
