@@ -145,11 +145,51 @@ stack.
                 @plugin.editor.fire 'change'
                 @plugin.editor.isNotDirty = no
                 @contentsChanged()
+            if key is 'openDecoration' or key is 'closeDecoration'
+                @updateGrouper key[...-10]
         get: ( key ) =>
             try
                 JSON.parse( @open.getAttribute "data-#{key}" )[0]
             catch e
                 undefined
+        clear: ( key ) =>
+            if not /^[a-zA-Z0-9-]+$/.test key then return
+            @open.removeAttribute "data-#{key}"
+            if key is 'openDecoration' or key is 'closeDecoration'
+                @updateGrouper key[...-10]
+
+The `set` and `clear` functions above call an update routine if the
+attribute changed was the decoration data for a grouper.  This update
+routine recomputes the appearance of that grouper as an image, and stores it
+in the `src` attribute grouper itself (which is an `img` element).  We
+implement that routine here.
+
+This routine is also called from `hideOrShowGroupers`, defined later in this
+file.  It can accept any of three parameter types, the string "open", the
+string "close", or an actual grouper element from the document that is
+either the open or close grouper for this group.
+
+        updateGrouper: ( openOrClose ) =>
+            if openOrClose is @open then openOrClose = 'open'
+            if openOrClose is @close then openOrClose = 'close'
+            if openOrClose isnt 'open' and openOrClose isnt 'close'
+                return
+            jquery = $ grouper = @[openOrClose]
+            if ( decoration = @get "#{openOrClose}Decoration" )?
+                jquery.addClass 'decorate'
+            else
+                jquery.removeClass 'decorate'
+                decoration = ''
+            grouperHTML = if jquery.hasClass 'hide' then '' else \
+                @type()?["#{openOrClose}ImageHTML"]
+            if openOrClose is 'open'
+                grouperHTML = decoration + grouperHTML
+            else
+                grouperHTML += decoration
+            window.base64URLForBlob window.svgBlobForHTML( grouperHTML ),
+                ( base64 ) ->
+                    if grouper.getAttribute( 'src' ) isnt base64
+                        grouper.setAttribute 'src', base64
 
 We will need to be able to query the contents of a group, so that later
 computations on that group can use its contents to determine how to act.  We
@@ -580,6 +620,8 @@ The word "grouper" refers to the objects that form the boundaries of a group, an
                 groupers.removeClass 'hide'
             else
                 groupers.addClass 'hide'
+            groupers.filter( '.decorate' ).each ( index, grouper ) =>
+                @grouperToGroup( grouper ).updateGrouper grouper
             @editor.Overlay?.redrawContents()
             @editor.focus()
 

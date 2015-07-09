@@ -23,32 +23,6 @@ required order of completion.
 
 Necessary next steps:
 
- * Add support for each bubble to show its groupers differently at each
-   moment.  This is a multi-step process, as follows.
-   * Enhance the CSS for hiding groupers so that it does not hide those with
-     the class "decorated".
-   * Extend `Group.set` so that if the attribute being set is
-     `openDecoration` or `closeDecoration` that an update routine is then
-     called on the open or close grouper, as needed.  The update routine is
-     defined next.
-   * Implement the grouper updating routine to do all of the following.
-     * Determine whether the grouper has any decoration (based on whether
-       the decoration attribute was filled or emptied on the last change).
-       Set or clear the "decorated" class in the grouper based on that info.
-     * Compute the HTML for the grouper itself, which will be an empty
-       string if the group is hidden, or the string given in its type data
-       if not.
-     * Glue together that computed HTML with the HTML for the decoration, if
-       there is any (empty string if not).  The order of the gluing will
-       depend on whether it is an open grouper or a close grouper.
-     * Set the `src` attribute of the grouper in question to be the base64
-       encoding of the SVG for that HTML, as follows.
-```
-base64URLForBlob svgBlobForHTML( html ), ( base64 ) ->
-    img.setAttribute 'src', base64
-```
-   * Extend `hideOrShowGroupers` so that it calls the update routine on all
-     groupers that have the "decorated" property.
  * Write a function that can check a given Group to see if it "follows all
    the rules."  It should, at first, just check to be sure that the Group's
    parent tag is on its list of "belongsIn" (if such a list exists;
