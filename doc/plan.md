@@ -98,12 +98,6 @@ required order of completion.
 ### OpenMath Content Dictionary Authoring Application
 
  * In the `xml-groups` script, add support for the following features.
-   * Let tags have the attribute "externalName" and use that on bubble tags
-     instead of the internal name.
-   * Let tags have the attribute "documentation" and give them a context/tag
-     menu item for showing the documentation text in a popup dialog.  The
-     simplest popup dialog is just
-     `tinymce.activeEditor.windowManager.alert 'text'`.
    * Write a function that encodes an individual `Group` or whole document
      as XML, ignoring all text immediately inside non-leaf groups, returning
      the result as a string.
@@ -190,6 +184,9 @@ editor.on 'init', ->
    create their own UI for editing such attributes, and just store them in
    the Groups themselves, content with the fact that the `xml-groups` module
    will carry that data over into the XML output.
+ * OPTIONAL:
+   Create an importer that reads in OM CDs and creates documents from them
+   that use Groups.  This would then truly be an OM CD Editor!
 
 ### General documentation
 

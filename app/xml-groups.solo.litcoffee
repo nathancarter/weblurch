@@ -56,6 +56,13 @@ Clients can query the data in that object at a primitive level with
 
     window.getTagData = ( tagName, key ) -> tagData[tagName]?[key]
 
+This function queries the official name associated with the given tag name.
+If it has an "externalName," then that is returned.  Otherwise the given tag
+name is returned unchanged.
+
+    window.getTagExternalName = ( tagName ) ->
+        window.getTagData( tagName, 'externalName' ) ? tagName
+
 This function locates the one tag name that has the attribute `topLevel` set
 to true.  (Technically it locates the first, in the arbitrary order of keys
 given by the `tagData` object internally, but since there should be only one
@@ -64,3 +71,31 @@ such tag name, that means the same thing.)
     window.topLevelTagName = ->
         for own key, value of tagData
             if value.topLevel then return key
+
+This function checks to see if the given group has any documentation, and if
+it does, adds to the given array of TinyMCE menu items an item for querying
+the group's documentation.  If it has none, this function does nothing.  The
+array of menu items is modified (or not) in place; there is no return value.
+
+    window.addDocumentationMenuItem = ( group, items ) ->
+        if not ( tag = window.getGroupTag group )? then return
+        external = window.getTagExternalName tag
+        if ( documentation = window.getTagData tag, 'documentation' )?
+            documentation = documentation.replace /a href=/g,
+                'a target="_blank" href='
+            items.push
+                text : "Read \"#{external}\" documentation"
+                onclick : ->
+                    tinymce.activeEditor.windowManager.open
+                        title : "Documentation for \"#{external}\""
+                        url: window.objectURLForBlob window.makeBlob \
+                            documentation, 'text/html;charset=utf-8'
+                        width: 500
+                        height: 400
+                        buttons : [
+                            type : 'button'
+                            text : 'Done'
+                            subtype : 'primary'
+                            onclick : ( event ) ->
+                                tinymce.activeEditor.windowManager.close()
+						]
