@@ -23,16 +23,6 @@ required order of completion.
 
 Necessary next steps:
 
- * Write a function that can check a given Group to see if it "follows all
-   the rules."  It should, at first, just check to be sure that the Group's
-   parent tag is on its list of "belongsIn" (if such a list exists;
-   otherwise the group can be anywhere).  If the check passes, set the
-   Group's close grouper to be the ordinary close grouper for the type.  If
-   it fails, set it to be the same thing, plus a red X, with alt text that
-   explains the reason for the failure.  Test this by manually calling it
-   from the console.
- * Update the `contentsChanged` event for the one Group type to call the
-   rule-checking function on the Group.
  * Add a tag attribute "unique" that means that only one Group with that tag
    can exist inside its parent Group.  Support this by making the
    rule-checking function verify that no earlier sibling has the same tag.
@@ -187,14 +177,29 @@ Improve build process to not compile files whose dates indicate that they
 do not need it, nor to minify files whose dates indicate that they do not
 need it.
 
+Make a menu item for hiding/showing group decorations.
+
 Several new methods have been added to the Groups Plugin without unit tests
 being written for them.  Be sure to look back through the full list of
 functions in that file and find those which have no unit tests, and create
 unit tests for them, debugging the functions as you do so.
 
-Consider making the `Group.set` function not do anything if the new value is
-the same as the old value.  This prevents clients from needing to implement
-their own checks, to prevent infinite loops of change event handlers.
+The `Group.set` function no longer takes any action if the new value is the
+same as the old value.  (Similarly, `clear` doesn't do anything if the
+attribute is already gone.)  This prevents clients from needing to implement
+their own checks to prevent infinite loops of change event handlers.  The
+remaining task is to go through the demo apps and find their workarounds for
+this annoyance and remove them to clean up those apps (and not confuse
+readers).  Then verify that the apps still work, i.e., that there truly are
+no infinite loops remaining.
+
+Notes for when you create validation:  Some nice Unicode characters to use
+for validation indicators:
+ * Nice, natural-looking exes: &#10006;, &#10007;, &#10008;
+ * Nice, natural-looking check marks: &#10003;, &#10004;
+ * Filled stars: &#10029; (5 points), &#10038; (6, rounded), &#10039; (8),
+   &#10040; (10), &#10041; (12)
+ * White-on-dark numbers, 1 through 10: &#10122;, ..., &#10131;
 
 ## Logical Foundation
 

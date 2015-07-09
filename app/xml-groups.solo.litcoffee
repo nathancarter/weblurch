@@ -84,13 +84,22 @@ tag name, call the following function.
 Clients can query the data in that object at a primitive level with
 `getTagData`.  More specialized query functions follow.
 
-    window.getTagData = ( tagName, key ) -> tagData[tagName]?[key]
+If a group is given as the first parameter, its tag name is extracted.
+
+    window.getTagData = ( tagName, key ) ->
+        if tagName instanceof window.Group
+            tagName = window.getGroupTag tagName
+        tagData[tagName]?[key]
 
 This function queries the official name associated with the given tag name.
 If it has an "externalName," then that is returned.  Otherwise the given tag
 name is returned unchanged.
 
+If a group is given as the first parameter, its tag name is extracted.
+
     window.getTagExternalName = ( tagName ) ->
+        if tagName instanceof window.Group
+            tagName = window.getGroupTag tagName
         window.getTagData( tagName, 'externalName' ) ? tagName
 
 This function locates the one tag name that has the attribute `topLevel` set
@@ -169,6 +178,49 @@ document in a new tab.
             onclick : ->
                 xml = encodeURIComponent window.convertToXML()
                 window.open "data:application/xml,#{xml}", '_blank'
+
+## Validating the hierarchy
+
+The following function tests to see if all of the rules specified in the
+`tagData` object are followed by the given group.  Each rule that we must
+validate is described individually, interleaved with its corresponding code
+within the function.
+
+    window.validateHierarchy = ( group ) ->
+        problems = [ ]
+
+If this group does not have a tag name, we cannot even tell if it belongs
+here or not, and it will create "undefined" tags in any XML export.  That is
+a problem.
+
+        if not ( groupTag = window.getGroupTag group )?
+            problems.push "Each element must have a tag, but this one does
+                not.  Add a tag using the context menu."
+
+Consider the parent of this group (or the whole document functioning as a
+virtual parent group for top-level groups).  Is the parent's tag name on the
+list of valid container tags for this group?
+
+        parentTag = if group.parent then window.getGroupTag group.parent \
+            else window.topLevelTagName()
+        belongsIn = window.getTagData group, 'belongsIn'
+        if typeof belongsIn is 'string' then belongsIn = [ belongsIn ]
+        if belongsIn instanceof Array and parentTag not in belongsIn
+            gname = window.getTagExternalName group
+            pname = window.getTagExternalName parentTag
+            bnames = ( window.getTagExternalName b for b in belongsIn )
+            problems.push "#{gname} elements are only permitted in these
+                contexts: #{bnames.join ', '} (not in #{pname} elements)."
+
+If there were any problems, mark the group as invalid.  Otherwise, clear any
+indication of invalidity.
+
+        if problems.length > 0
+            group.set 'closeDecoration', '<font color="red">&#10006;</font>'
+            group.set 'closeHoverText', problems.join '\n'
+        else
+            group.clear 'closeDecoration'
+            group.clear 'closeHoverText'
 
 ## Forming XML
 

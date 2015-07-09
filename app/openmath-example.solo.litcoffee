@@ -42,6 +42,10 @@ yet have its parent pointer set.
             if firstTime
                 setTimeout ( -> window.initializeGroupTag group ), 0
 
+And every time, revalidate the XML hierarchy at this point.
+
+            window.validateHierarchy group
+
 The tag name for a group is what shows up in its bubble tag.
 
         tagContents : ( group ) ->

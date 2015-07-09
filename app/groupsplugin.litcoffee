@@ -162,13 +162,19 @@ stack.
 
         set: ( key, value ) =>
             if not /^[a-zA-Z0-9-]+$/.test key then return
-            @open.setAttribute "data-#{key}", JSON.stringify [ value ]
-            if @plugin?
-                @plugin.editor.fire 'change'
-                @plugin.editor.isNotDirty = no
-                @contentsChanged()
-            if key is 'openDecoration' or key is 'closeDecoration'
-                @updateGrouper key[...-10]
+            toStore = JSON.stringify [ value ]
+            if @open.getAttribute( "data-#{key}" ) isnt toStore
+                @open.setAttribute "data-#{key}", toStore
+                if @plugin?
+                    @plugin.editor.fire 'change'
+                    @plugin.editor.isNotDirty = no
+                    @contentsChanged()
+                if key is 'openDecoration' or key is 'closeDecoration'
+                    @updateGrouper key[...-10]
+                if key is 'openHoverText' or key is 'closeHoverText'
+                    grouper = @[key[...-9]]
+                    for attr in [ 'title', 'alt' ] # browser differences
+                        grouper.setAttribute attr, "#{value}"
         get: ( key ) =>
             try
                 JSON.parse( @open.getAttribute "data-#{key}" )[0]
@@ -176,9 +182,18 @@ stack.
                 undefined
         clear: ( key ) =>
             if not /^[a-zA-Z0-9-]+$/.test key then return
-            @open.removeAttribute "data-#{key}"
-            if key is 'openDecoration' or key is 'closeDecoration'
-                @updateGrouper key[...-10]
+            if @open.getAttribute( "data-#{key}" )?
+                @open.removeAttribute "data-#{key}"
+                if @plugin?
+                    @plugin.editor.fire 'change'
+                    @plugin.editor.isNotDirty = no
+                    @contentsChanged()
+                if key is 'openDecoration' or key is 'closeDecoration'
+                    @updateGrouper key[...-10]
+                if key is 'openHoverText' or key is 'closeHoverText'
+                    grouper = @[key[...-9]]
+                    for attr in [ 'title', 'alt' ] # browser differences
+                        grouper.removeAttribute attr
 
 The `set` and `clear` functions above call an update routine if the
 attribute changed was the decoration data for a grouper.  This update
@@ -202,17 +217,17 @@ either the open or close grouper for this group.
             else
                 jquery.removeClass 'decorate'
                 decoration = ''
-            grouperHTML = if jquery.hasClass 'hide' then '' else \
+            html = if jquery.hasClass 'hide' then '' else \
                 @type()?["#{openOrClose}ImageHTML"]
             if openOrClose is 'open'
-                grouperHTML = decoration + grouperHTML
+                html = decoration + html
             else
-                grouperHTML += decoration
-            window.base64URLForBlob window.svgBlobForHTML( grouperHTML,
-                createFontStyleString grouper ), ( base64 ) ->
+                html += decoration
+            window.base64URLForBlob window.svgBlobForHTML( html,
+                createFontStyleString grouper ), ( base64 ) =>
                     if grouper.getAttribute( 'src' ) isnt base64
                         grouper.setAttribute 'src', base64
-            @plugin?.editor.Overlay?.redrawContents()
+                        @plugin?.editor.Overlay?.redrawContents()
 
 We will need to be able to query the contents of a group, so that later
 computations on that group can use its contents to determine how to act.  We
@@ -913,7 +928,7 @@ Compute the complete ancestor chain of the left end of the range.
             left.collapse yes
             left = @groupAboveCursor left
             leftChain = [ ]
-            while left isnt null
+            while left?
                 leftChain.unshift left
                 left = left.parent
 
@@ -923,7 +938,7 @@ Compute the complete ancestor chain of the right end of the range.
             right.collapse no
             right = @groupAboveCursor right
             rightChain = [ ]
-            while right isnt null
+            while right?
                 rightChain.unshift right
                 right = right.parent
 
