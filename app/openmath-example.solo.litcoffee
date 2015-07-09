@@ -30,21 +30,11 @@ Basic appearance attributes for the group:
         openImageHTML : '<font color="#999999">{</font>'
         closeImageHTML : '<font color="#999999">}</font>'
 
-The very important content changed event handler:
+Install the event handlers [provided by the XML Groups
+module](../src/xml-groups.solo.litcoffee#provide-generic-event-handlers).
 
-        contentsChanged : ( group, firstTime ) ->
-
-If the group has just come into existence, we must check to see what its
-default tag type should be, and initialize it to that default.  We must do
-this on a delay, because when `firstTime` is true, the group does not even
-yet have its parent pointer set.
-
-            if firstTime
-                setTimeout ( -> window.initializeGroupTag group ), 0
-
-And every time, revalidate the XML hierarchy at this point.
-
-            window.validateHierarchy group
+        contentsChanged : window.XMLGroupChanged
+        deleted : window.XMLGroupDeleted
 
 The tag name for a group is what shows up in its bubble tag.
 
@@ -86,7 +76,8 @@ slight rewordings to suit this particular application.
                 must be exactly one description for a Content
                 Dictionary Definition.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
-            belongsIn : [ 'CD', 'CDDefinition' ]
+            belongsIn : [ 'CD', 'CDDefinition', 'Name', 'Role' ]
+            belongsAfter : [ null ]
             unique : yes
         CDComment :
             externalName : 'Content Dictionary Comment'
@@ -105,6 +96,7 @@ slight rewordings to suit this particular application.
                 optional description.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            belongsAfter : [ 'Description', null ]
             unique : yes
         CDURL :
             externalName : 'Content Dictionary URL'
@@ -117,6 +109,7 @@ slight rewordings to suit this particular application.
                 Dictionary Name element.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            belongsAfter : [ 'CDName' ]
             unique : yes
         CDBase :
             externalName : 'Content Dictionary Base'
@@ -124,7 +117,7 @@ slight rewordings to suit this particular application.
                 with the Content Dictionary Name, forms a unique identifier
                 for the Content Dictionary.  It may or may not refer to an
                 actual location from which it can be retrieved.</p>
-                <p>This element is optiona, but if present, there must be
+                <p>This element is optional, but if present, there must be
                 only one and it must immediately follow the Content
                 Dictionary Name and optional URL.</p>
                 <p>For example, standard addition comes from the
@@ -135,6 +128,7 @@ slight rewordings to suit this particular application.
                 but it is not required that the base be a URL.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            belongsAfter : [ 'Name', 'CDURL' ]
             unique : yes
         CDUses :
             externalName : 'Content Dictionaries Used herein'
@@ -149,6 +143,7 @@ slight rewordings to suit this particular application.
                 Status.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            belongsAfter : [ 'CDStatus' ]
             unique : yes
         CDReviewDate :
             externalName : 'Content Dictionary Review Date'
@@ -161,6 +156,7 @@ slight rewordings to suit this particular application.
                 optional URL and Base URL.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            belongsAfter : [ 'Name', 'CDURL', 'CDBase' ]
             unique : yes
         CDStatus :
             externalName : 'Content Dictionary Status'
@@ -182,6 +178,7 @@ slight rewordings to suit this particular application.
                 Dictionary Date.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            belongsAfter : [ 'CDDate' ]
             unique : yes
         CDDate :
             externalName : 'Content Dictionary Date'
@@ -194,6 +191,7 @@ slight rewordings to suit this particular application.
                 Review Date.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            belongsAfter : [ 'Name', 'CDURL', 'CDBase', 'CDReviewDate' ]
             unique : yes
         CDVersion :
             externalName : 'Content Dictionary Version'
@@ -210,6 +208,7 @@ slight rewordings to suit this particular application.
                 the Content Dictionary Status and optional Uses element.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            belongsAfter : [ 'CDStatus', 'CDUses' ]
             unique : yes
         CDRevision :
             externalName : 'Content Dictionary Revision'
@@ -226,6 +225,7 @@ slight rewordings to suit this particular application.
                 the Content Dictionary Version.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            belongsAfter : [ 'CDVersion' ]
             unique : yes
         CDDefinition :
             defaultChild : 'Description'
@@ -248,8 +248,11 @@ slight rewordings to suit this particular application.
                 addition comes from the Content Dictionary "arith1" and has
                 the symbol name "plus".  Names must comply to the rules
                 in Section 2.3 of <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a>.</p>
+                <p>A Content Dictionary Definition requires a Name element,
+                and it must be the first element.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CDDefinition' ]
+            belongsAfter : [ null ]
             unique : yes
         Role :
             externalName : 'Symbol Role'
@@ -264,8 +267,12 @@ slight rewordings to suit this particular application.
                 <li>application</li>
                 <li>constant</li>
                 </ul>
+                <p>A Content Dictionary Definition does not require a Role
+                element, but if one appears, it must immediately follow the
+                Name element.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CDDefinition' ]
+            belongsAfter : [ 'Name' ]
             unique : yes
         Example :
             documentation : '<p>An example should show how the symbol is

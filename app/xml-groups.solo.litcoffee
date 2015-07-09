@@ -53,6 +53,14 @@ The following properties are supported for each tag name.
    tag in which groups of this tag type can sit, as children.  Any gruop of
    this tag type will be marked invalid if it sits inside a group whose tag
    type is not on this list.  (See [validation](#validating-the-hierarchy).)
+   A group automatically satisfies this requirement if it has no
+   "belongsIn" data set for it.
+ * `belongsAfter` - Functions exactly like "belongsIn" except examines the
+   previous sibling rather than the parent.  The only difference is that not
+   every group has a previous sibling, whereas all have a parent given that
+   the document counts as a parent.  Thus if a group has "belongsAfter"
+   defined but no previous sibling, it satisfies this requirement if and
+   only if `null` appears on the "belongsAfter" list.
  * `unique` - if true, this indicates that only one group with this tag can
    exist in any given parent group.  Any others will be flagged as invalid
    by the validation routine.  (See
@@ -183,6 +191,42 @@ document in a new tab.
                 xml = encodeURIComponent window.convertToXML()
                 window.open "data:application/xml,#{xml}", '_blank'
 
+## Provide generic event handlers
+
+Clients will want to install these event handlers in the group types they
+define to act as XML elements in their document.  We provide these so that
+they can easily install them.
+
+They should set their group's `contentsChanged` handler to this.
+
+    window.XMLGroupChanged = ( group, firstTime ) ->
+
+If the group has just come into existence, we must check to see what its
+default tag type should be, and initialize it to that default.  We must do
+this on a delay, because when `firstTime` is true, the group does not even
+yet have its parent pointer set.
+
+        if firstTime
+            setTimeout ( -> window.initializeGroupTag group ), 0
+
+And every time, revalidate the XML hierarchy at this point.
+
+        window.validateHierarchy group
+
+They should set their group's `deleted` handler to this.
+
+    window.XMLGroupDeleted = ( group ) ->
+
+We need to revalidate every other child in the same parent.  This will start
+the chain reaction that does so.
+
+        if group.parent?
+            if group.parent.children[0]
+                window.validateHierarchy group.parent.children[0]
+        else
+            if group.plugin?.topLevel[0]
+                window.validateHierarchy group.plugin.topLevel[0]
+
 ## Validating the hierarchy
 
 The following function tests to see if all of the rules specified in the
@@ -213,8 +257,39 @@ list of valid container tags for this group?
             gname = window.getTagExternalName group
             pname = window.getTagExternalName parentTag
             bnames = ( window.getTagExternalName b for b in belongsIn )
-            problems.push "#{gname} elements are only permitted in these
-                contexts: #{bnames.join ', '} (not in #{pname} elements)."
+            pname = if pname then "#{pname} elements" \
+                else "in an element without a tag"
+            bnames = ( window.getTagExternalName b for b in belongsIn )
+            phrase = switch bnames.length
+                when 1 then "this kind of element: #{bnames[0]}"
+                when 2 then "these kinds of elements:
+                    #{bnames.join ' and '}"
+                else "these kinds of elements: #{bnames.join ', '}"
+            problems.push "#{gname} elements are only permitted in
+                #{phrase} (not #{pname})."
+
+Very similar check, except for the previous sibling rather than the parent.
+
+        prevTag = if group.previousSibling() then \
+            window.getGroupTag group.previousSibling() else null
+        belongsAfter = window.getTagData group, 'belongsAfter'
+        if typeof belongsIn is 'string' then belongsAfter = [ belongsAfter ]
+        if belongsAfter is null then belongsAfter = [ null ]
+        if belongsAfter instanceof Array and prevTag not in belongsAfter
+            gname = window.getTagExternalName group
+            pname = window.getTagExternalName prevTag
+            pname = if pname then "#{pname} elements" \
+                else "being first in their context"
+            bnames = ( window.getTagExternalName( b ) ? \
+                "none (i.e., being the first in their context)" \
+                for b in belongsAfter )
+            phrase = switch bnames.length
+                when 1 then "this kind of element: #{bnames[0]}"
+                when 2 then "these kinds of elements:
+                    #{bnames.join ' and '}"
+                else "these kinds of elements: #{bnames.join ', '}"
+            problems.push "#{gname} elements are only permitted to follow
+                #{phrase} (not #{pname})."
 
 If the group's tag is marked "unique" then we must check to see if there are
 any previous siblings with the same tag.  If so, this one is invalid for

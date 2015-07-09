@@ -1091,7 +1091,10 @@ themselves, we also inspect the client rectangles of all elements in the
 group, and adjust the relevant corners of the open and close groupers
 outward to make sure the bubble encloses the entire contents of the group.
 
-                rects = group.outerRange().getClientRects()
+                rects = group.outerRange()?.getClientRects()
+                if not rects?
+                    setTimeout ( => @editor.Overlay?.redrawContents() ), 100
+                    return
                 rects = ( rects[i] for i in [0...rects.length] )
                 open = rects.shift()
                 open =

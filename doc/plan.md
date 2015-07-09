@@ -23,10 +23,6 @@ required order of completion.
 
 Necessary next steps:
 
- * Add a tag attribute "belongsAfter" that functions exactly like
-   "belongsIn" but examines the previous sibling rather than the parent.
-   A Group can also pass this check if this attribute is not set, or if the
-   list contains `null` and the Group has no previous sibling.
  * Add a tag attribute "contentCheck" that is a function that will be called
    on a group during the rule-checking function, as the last step in
    validating the Group.  It can do anything, and must either return true
