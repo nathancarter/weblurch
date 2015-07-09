@@ -97,6 +97,8 @@ required order of completion.
 
 ### OpenMath Content Dictionary Authoring Application
 
+Necessary next steps:
+
  * Add a member to the `Group` class for querying the text or HTML before
    or after the given group, leading up to the next grouper (whether that
    be a parent boundary or a sibling boundary).
@@ -126,20 +128,6 @@ base64URLForBlob svgBlobForHTML( html ), ( base64 ) ->
    from the console.
  * Update the `contentsChanged` event for the one Group type to call the
    rule-checking function on the Group.
- * OPTIONAL:
-   Add support to the Groups package for accepting click and/or double-click
-   events on open/close groupers, and passing them to the Group type for
-   handling.  Here is the code the MathQuill plugin uses for this purpose.
-   Note the selector in the second line.
-```
-editor.on 'init', ->
-    ( $ editor.getDoc() ).on 'click', '.rendered-latex', ( event ) ->
-        event.stopPropagation()
-        # here, "this" is the element that received the click event
-```
- * OPTIONAL:
-   Use the feature from the previous bullet point to give more detailed
-   feedback about failed structural rules.
  * Add a tag attribute "unique" that means that only one Group with that tag
    can exist inside its parent Group.  Support this by making the
    rule-checking function verify that no earlier sibling has the same tag.
@@ -169,14 +157,27 @@ editor.on 'init', ->
    [here](http://stackoverflow.com/a/17213889/670492) shows that any item
    on the list can have a "menu" key which points to another array of items,
    thus creating a submenu.
- * OPTIONAL:
-   Each tag's data can specify a set of Group attributes that should be
+
+Optional next steps, that can be saved for later:
+
+ * Each tag's data can specify a set of Group attributes that should be
    copied into the XML output as element attributes.  Then clients can
    create their own UI for editing such attributes, and just store them in
    the Groups themselves, content with the fact that the `xml-groups` module
    will carry that data over into the XML output.
- * OPTIONAL:
-   Create an importer that reads in OM CDs and creates documents from them
+ * Add support to the Groups package for accepting click and/or double-click
+   events on open/close groupers, and passing them to the Group type for
+   handling.  Here is the code the MathQuill plugin uses for this purpose.
+   Note the selector in the second line.
+```
+editor.on 'init', ->
+    ( $ editor.getDoc() ).on 'click', '.rendered-latex', ( event ) ->
+        event.stopPropagation()
+        # here, "this" is the element that received the click event
+```
+ * Use the feature from the previous bullet point to give more detailed
+   feedback about failed structural rules.
+ * Create an importer that reads in OM CDs and creates documents from them
    that use Groups.  This would then truly be an OM CD Editor!
 
 ### General documentation
