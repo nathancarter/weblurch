@@ -44,6 +44,10 @@ The following properties are supported for each tag name.
      previous two cases), then any text between inner groups is ignored.
    * The default is true for leaves in the group hierarchy, and false for
      non-leaf groups.
+ * `belongsIn` - the value should be an array of strings, each the name of a
+   tag in which groups of this tag type can sit, as children.  Any gruop of
+   this tag type will be marked invalid if it sits inside a group whose tag
+   type is not on this list.
 
     tagData = { }
     window.setTagData = ( newData ) -> tagData = newData
