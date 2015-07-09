@@ -99,12 +99,6 @@ required order of completion.
 
 Necessary next steps:
 
- * Add a handler to each XML tag that takes the XML after it's been
-   generated from a group and manipulates it as it sees fit.  (The group is
-   also passed.)  Use this for:
-   * Wrapping OMOBJs that sit in a CDDefinition in an FMP.
-   * Replacing MathematicalProperty tags with either FMP or CMP, depending
-     on whether they contain OMOBJs or not.
  * Add support for each bubble to show its groupers differently at each
    moment.  This should be do-able with a simple `Group` class member that
    sets the open or close grouper appearance to the given HTML.  It can be

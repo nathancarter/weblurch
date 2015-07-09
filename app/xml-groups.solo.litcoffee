@@ -44,6 +44,15 @@ The following properties are supported for each tag name.
      previous two cases), then any text between inner groups is ignored.
    * The default is true for leaves in the group hierarchy, and false for
      non-leaf groups.
+ * `alterXML` - If this key is provided, its value should be a function
+   taking two parameters, a string and a Group.  The string will contain the
+   XML generated from the Group, and this function is free to alter that XML
+   as it sees fit, returning the (optionally changed) result, before it gets
+   returned from the recursive XML-generating procedure.
+ * `belongsIn` - the value should be an array of strings, each the name of a
+   tag in which groups of this tag type can sit, as children.  Any gruop of
+   this tag type will be marked invalid if it sits inside a group whose tag
+   type is not on this list.
 
     tagData = { }
     window.setTagData = ( newData ) -> tagData = newData
@@ -178,7 +187,7 @@ none is given into an XML representation using the data in `tagData`).
             if not wrapper then return ''
             if not tagData.hasOwnProperty wrapper then return text
             "<#{wrapper}>#{text}</#{wrapper}>"
-        if children.length
+        result = if children.length
             indent = ( text ) ->
                 "  #{text.replace RegExp( '\n', 'g' ), '\n  '}"
             inner = wrap tinymce.DOM.encode rangeToHTML \
@@ -193,6 +202,9 @@ none is given into an XML representation using the data in `tagData`).
                 tinymce.activeEditor.getContent()
             wrapper ?= true
             "<#{tag}>#{wrap tinymce.DOM.encode text}</#{tag}>"
+        if alterXML = window.getTagData tag, 'alterXML'
+            result = alterXML result, group
+        result
 
 The previous function makes use of the following utility function.  It
 converts a range to HTML by first passing it through a document fragment.
