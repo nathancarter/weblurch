@@ -17,82 +17,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Matching Module
-
- * Extend Match's `set(k,v)` member as follows:
-   * It should begin by making a backup copy of `@map`.
-   * Then write into `@map` the `k,v` pair.
-   * For each key in the map, classify it as one of these three things:
-     * in a cycle of metavariables that form an equivalence class under
-       instantiation -- with these, do nothing
-     * divergent, meaning that repeated applications of the map to `v` grow
-       without bound on the number of nodes -- if there are any of these,
-       destroy the new map, restore the backup copy, and return false to
-       indicate failure
-     * neither of the previous two -- with these, repeatedly apply the map
-       to `v` until you reach a fixed point, and use that as the new `v`
-   * Return true to indicate success.
- * Use unit test to debug the above changes.
- * Extend `matches` to expect that the expression may contain metavariables,
-   as follows.
-   * Comparing nonatomic to nonatomic proceeds recursively, as now.
-   * Comparing atomic non-metavariable to nonatomic proceeds by `trySubs()`,
-     as now.  This is true regardless of which is which, pattern vs.
-     expression.
-   * Comparing atomic non-metavariable to atomic non-metavariable proceeds
-     by direct equality or resorting to `trySubs()`, as now.
-   * Comparing metavariable to anything proceeds as follows, regardless of
-     whether the metavariable is the pattern or the expression.
-     * If the metavariable has an instantiation, recursively match it
-       against the other side and return that result, just as we do now.
-       Keep the two arguments (pattern and expression) in the same order.
-     * Try to call `set` to mark the metavariable as being instantiated with
-       the other expression.  If `set` returns false, then return
-       `trySubs()`.
-     * Since the call to `set` succeeded, return `[ soFar ]`, as now.
- * Use unit tests to debug the above changes.
-```
-    a(X,X(Y))[M~N]     a(b,b(c,d,e))      [ { X : b,
-                                              Y : unused_1,
-                                              M : b(unused_1),
-                                              N : b(c,d,e) },
-                                            { X : b,
-                                              Y : unused_1,
-                                              M : a(b,b(unused_1)),
-                                              N : a(b,b(c,d,e)) } ]
-```
- * Rework `trySubs()` so that it is not called only if a match fails.  It
-   should be used to add alternate matches to every single return value for
-   every match.  For this reason, it does not actually need to walk up the
-   parent chain, because the recursion will do that automatically.  The
-   recursive call to `matches` should not bias things by using the same
-   `soFar` that was manipulated in the failed attempt to complete it; keep
-   a copy of `soFar` as it was given to the current `matches` call and use
-   that.  This will also return more general results in some cases.  For
-   instance, the test given above should now give the following result
-   instead of its too-specific one.
-```
-    a(X,X(Y))[M~N]     a(b,b(c,d,e))      [ { X : b,Y:unused_1,
-                                              M : b(unused_1),
-                                              N : b(c,d,e) },
-                                            { X : unused_1,
-                                              Y : unused_2,
-                                              M : a(unused_1,
-                                                    unused_1(unused_2)),
-                                              N : a(b,b(c,d,e)) } ]
-```
- * Ensure that the above changes cause the final tests in the "harder
-   substitution situations" section to pass.  Add some more complex tests of
-   that same ilk to be sure.
- * Add tests to verify that if you try to put more than one substitution
-   expression into a pattern (whether nested or not) an error is thrown.
- * Also verify that if there are metavariables in the expression, that an
-   error is thrown.
- * Remove `app/openmath.duo.litcoffee` from git control in master.  Ensure
-   that it remains under git control in gh-pages.  Furthermore, ensure that
-   `app/matching.duo.litcoffee` does not go under git control in master, but
-   does in gh-pages.
-
 ## Example Applications
 
 ### OpenMath Content Dictionary Authoring Application
@@ -100,13 +24,31 @@ required order of completion.
 Necessary next steps:
 
  * Add support for each bubble to show its groupers differently at each
-   moment.  This should be do-able with a simple `Group` class member that
-   sets the open or close grouper appearance to the given HTML.  It can be
-   implemented using code as simple as the following.
+   moment.  This is a multi-step process, as follows.
+   * Enhance the CSS for hiding groupers so that it does not hide those with
+     the class "decorated".
+   * Extend `Group.set` so that if the attribute being set is
+     `openDecoration` or `closeDecoration` that an update routine is then
+     called on the open or close grouper, as needed.  The update routine is
+     defined next.
+   * Implement the grouper updating routine to do all of the following.
+     * Determine whether the grouper has any decoration (based on whether
+       the decoration attribute was filled or emptied on the last change).
+       Set or clear the "decorated" class in the grouper based on that info.
+     * Compute the HTML for the grouper itself, which will be an empty
+       string if the group is hidden, or the string given in its type data
+       if not.
+     * Glue together that computed HTML with the HTML for the decoration, if
+       there is any (empty string if not).  The order of the gluing will
+       depend on whether it is an open grouper or a close grouper.
+     * Set the `src` attribute of the grouper in question to be the base64
+       encoding of the SVG for that HTML, as follows.
 ```
 base64URLForBlob svgBlobForHTML( html ), ( base64 ) ->
-   img.setAttribute 'src', base64
+    img.setAttribute 'src', base64
 ```
+   * Extend `hideOrShowGroupers` so that it calls the update routine on all
+     groupers that have the "decorated" property.
  * Write a function that can check a given Group to see if it "follows all
    the rules."  It should, at first, just check to be sure that the Group's
    parent tag is on its list of "belongsIn" (if such a list exists;
@@ -184,6 +126,82 @@ which is currently being redesigned by
 [Ken](http://mathweb.scranton.edu/ken/), and that design is not yet
 complete.
 
+## Matching Module
+
+ * Extend Match's `set(k,v)` member as follows:
+   * It should begin by making a backup copy of `@map`.
+   * Then write into `@map` the `k,v` pair.
+   * For each key in the map, classify it as one of these three things:
+     * in a cycle of metavariables that form an equivalence class under
+       instantiation -- with these, do nothing
+     * divergent, meaning that repeated applications of the map to `v` grow
+       without bound on the number of nodes -- if there are any of these,
+       destroy the new map, restore the backup copy, and return false to
+       indicate failure
+     * neither of the previous two -- with these, repeatedly apply the map
+       to `v` until you reach a fixed point, and use that as the new `v`
+   * Return true to indicate success.
+ * Use unit test to debug the above changes.
+ * Extend `matches` to expect that the expression may contain metavariables,
+   as follows.
+   * Comparing nonatomic to nonatomic proceeds recursively, as now.
+   * Comparing atomic non-metavariable to nonatomic proceeds by `trySubs()`,
+     as now.  This is true regardless of which is which, pattern vs.
+     expression.
+   * Comparing atomic non-metavariable to atomic non-metavariable proceeds
+     by direct equality or resorting to `trySubs()`, as now.
+   * Comparing metavariable to anything proceeds as follows, regardless of
+     whether the metavariable is the pattern or the expression.
+     * If the metavariable has an instantiation, recursively match it
+       against the other side and return that result, just as we do now.
+       Keep the two arguments (pattern and expression) in the same order.
+     * Try to call `set` to mark the metavariable as being instantiated with
+       the other expression.  If `set` returns false, then return
+       `trySubs()`.
+     * Since the call to `set` succeeded, return `[ soFar ]`, as now.
+ * Use unit tests to debug the above changes.
+```
+    a(X,X(Y))[M~N]     a(b,b(c,d,e))      [ { X : b,
+                                              Y : unused_1,
+                                              M : b(unused_1),
+                                              N : b(c,d,e) },
+                                            { X : b,
+                                              Y : unused_1,
+                                              M : a(b,b(unused_1)),
+                                              N : a(b,b(c,d,e)) } ]
+```
+ * Rework `trySubs()` so that it is not called only if a match fails.  It
+   should be used to add alternate matches to every single return value for
+   every match.  For this reason, it does not actually need to walk up the
+   parent chain, because the recursion will do that automatically.  The
+   recursive call to `matches` should not bias things by using the same
+   `soFar` that was manipulated in the failed attempt to complete it; keep
+   a copy of `soFar` as it was given to the current `matches` call and use
+   that.  This will also return more general results in some cases.  For
+   instance, the test given above should now give the following result
+   instead of its too-specific one.
+```
+    a(X,X(Y))[M~N]     a(b,b(c,d,e))      [ { X : b,Y:unused_1,
+                                              M : b(unused_1),
+                                              N : b(c,d,e) },
+                                            { X : unused_1,
+                                              Y : unused_2,
+                                              M : a(unused_1,
+                                                    unused_1(unused_2)),
+                                              N : a(b,b(c,d,e)) } ]
+```
+ * Ensure that the above changes cause the final tests in the "harder
+   substitution situations" section to pass.  Add some more complex tests of
+   that same ilk to be sure.
+ * Add tests to verify that if you try to put more than one substitution
+   expression into a pattern (whether nested or not) an error is thrown.
+ * Also verify that if there are metavariables in the expression, that an
+   error is thrown.
+ * Remove `app/openmath.duo.litcoffee` from git control in master.  Ensure
+   that it remains under git control in gh-pages.  Furthermore, ensure that
+   `app/matching.duo.litcoffee` does not go under git control in master, but
+   does in gh-pages.
+
 ## Miscellany
 
 Future math parsing enhancements:
@@ -199,6 +217,10 @@ Several new methods have been added to the Groups Plugin without unit tests
 being written for them.  Be sure to look back through the full list of
 functions in that file and find those which have no unit tests, and create
 unit tests for them, debugging the functions as you do so.
+
+Consider making the `Group.set` function not do anything if the new value is
+the same as the old value.  This prevents clients from needing to implement
+their own checks, to prevent infinite loops of change event handlers.
 
 ## Logical Foundation
 
