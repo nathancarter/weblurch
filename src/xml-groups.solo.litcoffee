@@ -23,6 +23,27 @@ The following properties are supported for each tag name.
    queried for its `defaultChild` property, and that value used to set the
    tag of the new group.  If the new group has no parent, then the
    `defaultChild` property of the `topLevel` tag is used.
+ * `externalName` - a human-readable name to be used in the user interface
+   when mentioning this tag, for example "widgetNum" might have the external
+   name "Widget Number."  This is useful for populating bubble tags, for
+   instance.  See the `getExternalTagName` function
+   [below](#querying-tag-data).
+ * `documentation` - an HTML string (possibly lengthy) describing the tag's
+   purpose from the end user's point of view.  This module places on the
+   groups' tag and context menus an option for reading this documentation in
+   a popup window.
+ * `includeText` - This impacts how the XML representation of a group with
+   the tag in question is computed.
+   * If this attribute is true, then the XML will include, between inner
+     elements, any text that appears between those elements' groups in the
+     document.
+   * If this attribute is a string containing the name of another tag, then
+     the text will be included and will be wrapped in an element with that
+     tag name.
+   * If this attribute is false (or any value that doesn't fit either of the
+     previous two cases), then any text between inner groups is ignored.
+   * The default is true for leaves in the group hierarchy, and false for
+     non-leaf groups.
 
     tagData = { }
     window.setTagData = ( newData ) -> tagData = newData
@@ -152,12 +173,37 @@ none is given into an XML representation using the data in `tagData`).
         else
             children = tinymce.activeEditor.Groups.topLevel
             tag = window.topLevelTagName()
+        wrapper = window.getTagData( tag, 'includeText' )
+        wrap = ( text ) ->
+            if not wrapper then return ''
+            if not tagData.hasOwnProperty wrapper then return text
+            "<#{wrapper}>#{text}</#{wrapper}>"
         if children.length
             indent = ( text ) ->
                 "  #{text.replace RegExp( '\n', 'g' ), '\n  '}"
-            inner = ( window.convertToXML child for child in children )
-            "<#{tag}>\n#{indent inner.join '\n'}\n</#{tag}>"
+            inner = wrap tinymce.DOM.encode rangeToHTML \
+                children[0].rangeBefore()
+            for child in children
+                if inner[inner.length-1] isnt '\n' then inner += '\n'
+                inner += "#{window.convertToXML child}\n" + \
+                    wrap tinymce.DOM.encode rangeToHTML child.rangeAfter()
+            "<#{tag}>\n#{indent inner}\n</#{tag}>"
         else
             text = if group? then group.contentAsText() else \
                 tinymce.activeEditor.getContent()
-            "<#{tag}>#{text}</#{tag}>"
+            wrapper ?= true
+            "<#{tag}>#{wrap tinymce.DOM.encode text}</#{tag}>"
+
+The previous function makes use of the following utility function.  It
+converts a range to HTML by first passing it through a document fragment.
+
+    rangeToHTML = ( range ) ->
+        if not fragment = range?.cloneContents() then return null
+        tmp = range.startContainer.ownerDocument.createElement 'div'
+        tmp.appendChild fragment
+        html = tmp.innerHTML
+        whiteSpaceBefore = if /^\s/.test html then ' ' else ''
+        whiteSpaceAfter = if /\s+$/.test html then ' ' else ''
+        result = tinymce.activeEditor.serializer.serialize tmp,
+            { get : yes, format : 'html', selection : yes, getInner : yes }
+        whiteSpaceBefore + result + whiteSpaceAfter

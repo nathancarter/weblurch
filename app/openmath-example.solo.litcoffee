@@ -66,6 +66,7 @@ slight rewordings to suit this particular application.
             externalName : 'Content Dictionary'
             topLevel : yes
             defaultChild : 'Description'
+            includeText : 'CDComment'
         Description :
             documentation : '<p>The text occurring in the Description
                 element is used to give a description of the enclosing
@@ -81,6 +82,11 @@ slight rewordings to suit this particular application.
                 must be exactly one description for a Content
                 Dictionary Definition.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
+        CDComment :
+            externalName : 'Content Dictionary Comment'
+            documentation : '<p>This tag will not actually be used in
+                authoring, but will be automatically wrapped around any
+                top-level text in the document when XML is generated.</p>'
         CDName :
             externalName : 'Content Dictionary Name'
             documentation : '<p>The name of the Content Dictionary.  This

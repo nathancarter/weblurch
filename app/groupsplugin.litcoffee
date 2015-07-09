@@ -217,6 +217,63 @@ relative to the group's open and close groupers.
                 range
             catch e then null
 
+We then create analogous functions for creating ranges that include the text
+before or after the group.  These ranges extend to the next grouper in the
+given direction, whether it be an open or close grouper of any type.
+Specifically,
+ * The `rangeBefore` range always ends immediately before this group's open
+   grouper, and
+   * if this group is the first in its parent, the range begins immediately
+     after the parent's open grouper;
+   * otherwise it begins immediately after its previous sibling's close
+     grouper.
+   * But if this is the first top-level group in the document, then the
+     range begins at the start of the document.
+ * The `rangeAfter` range always begins immediately after this group's close
+   grouper, and
+   * if this group is the last in its parent, the range ends immediately
+     before the parent's close grouper;
+   * otherwise it ends immediately before its next sibling's open grouper.
+   * But if this is the last top-level group in the document, then the
+     range ends at the end of the document.
+
+        rangeBefore: =>
+            range = ( doc = @open.ownerDocument ).createRange()
+            try
+                range.setEndBefore @open
+                if prev = @previousSibling()
+                    range.setStartAfter prev.close
+                else if @parent
+                    range.setStartAfter @parent.open
+                else
+                    range.setStartBefore doc.body.childNodes[0]
+                range
+            catch e then console.log e ; null
+        rangeAfter: =>
+            range = ( doc = @open.ownerDocument ).createRange()
+            try
+                range.setStartAfter @close
+                if next = @nextSibling()
+                    range.setEndBefore next.open
+                else if @parent
+                    range.setEndBefore @parent.close
+                else
+                    range.setEndAfter \
+                        doc.body.childNodes[doc.body.childNodes.length-1]
+                range
+            catch e then console.log e ; null
+
+The previous two functions require being able to query this group's index in
+its parent group, and to use that index to look up next and previous sibling
+groups.  We provide those functions here.
+
+        indexInParent: =>
+            ( @parent?.children ? @plugin?.topLevel )?.indexOf this
+        previousSibling: =>
+            ( @parent?.children ? @plugin?.topLevel )?[@indexInParent()-1]
+        nextSibling: =>
+            ( @parent?.children ? @plugin?.topLevel )?[@indexInParent()+1]
+
 The following function should be called whenever the contents of the group
 have changed.  It notifies the group's type, so that the requisite
 processing, if any, of the new contents can take place.  It is called

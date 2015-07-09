@@ -99,15 +99,6 @@ required order of completion.
 
 Necessary next steps:
 
- * Add a member to the `Group` class for querying the text or HTML before
-   or after the given group, leading up to the next grouper (whether that
-   be a parent boundary or a sibling boundary).
- * Use the previous function to support the following tag attribute:
-   * If "includeText" is true for tag X, then text immediately inside a
-     non-leaf Group with tag X is included, interspersed among the inner
-     Groups' XML encodings.
-   * If "includeText" is a tag name, then such text is not only included,
-     but wrapped in tags of the given name.
  * Add a tag attribute "belongsIn" that lists the names of the tags that a
    parent Group can have.  Support for this tag is implemented below.
  * Add support for each bubble to show its groupers differently at each
@@ -205,6 +196,11 @@ Future math parsing enhancements:
 Improve build process to not compile files whose dates indicate that they
 do not need it, nor to minify files whose dates indicate that they do not
 need it.
+
+Several new methods have been added to the Groups Plugin without unit tests
+being written for them.  Be sure to look back through the full list of
+functions in that file and find those which have no unit tests, and create
+unit tests for them, debugging the functions as you do so.
 
 ## Logical Foundation
 
