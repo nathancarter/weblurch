@@ -23,12 +23,6 @@ required order of completion.
 
 Necessary next steps:
 
- * Add a tag attribute "unique" that means that only one Group with that tag
-   can exist inside its parent Group.  Support this by making the
-   rule-checking function verify that no earlier sibling has the same tag.
-   Ensure this is called when necessary by having the `contentsChanged`
-   handler not only recheck the changed group, but all later siblings as
-   well.
  * Add a tag attribute "belongsAfter" that functions exactly like
    "belongsIn" but examines the previous sibling rather than the parent.
    A Group can also pass this check if this attribute is not set, or if the

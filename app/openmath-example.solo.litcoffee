@@ -87,6 +87,7 @@ slight rewordings to suit this particular application.
                 Dictionary Definition.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD', 'CDDefinition' ]
+            unique : yes
         CDComment :
             externalName : 'Content Dictionary Comment'
             documentation : '<p>This tag will not actually be used in
@@ -104,6 +105,7 @@ slight rewordings to suit this particular application.
                 optional description.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            unique : yes
         CDURL :
             externalName : 'Content Dictionary URL'
             documentation : '<p>The text occurring in the CDURL element
@@ -115,6 +117,7 @@ slight rewordings to suit this particular application.
                 Dictionary Name element.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            unique : yes
         CDBase :
             externalName : 'Content Dictionary Base'
             documentation : '<p>A Content Dictionary Base, when combined
@@ -132,6 +135,7 @@ slight rewordings to suit this particular application.
                 but it is not required that the base be a URL.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            unique : yes
         CDUses :
             externalName : 'Content Dictionaries Used herein'
             documentation : '<p>The content of this element should be a
@@ -145,6 +149,7 @@ slight rewordings to suit this particular application.
                 Status.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            unique : yes
         CDReviewDate :
             externalName : 'Content Dictionary Review Date'
             documentation : '<p>A review date is a date until which the
@@ -156,6 +161,7 @@ slight rewordings to suit this particular application.
                 optional URL and Base URL.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            unique : yes
         CDStatus :
             externalName : 'Content Dictionary Status'
             documentation : '<p>The status of the Content Dictionary, which
@@ -176,6 +182,7 @@ slight rewordings to suit this particular application.
                 Dictionary Date.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            unique : yes
         CDDate :
             externalName : 'Content Dictionary Date'
             documentation : '<p>A revision date, the date of the last change
@@ -187,6 +194,7 @@ slight rewordings to suit this particular application.
                 Review Date.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            unique : yes
         CDVersion :
             externalName : 'Content Dictionary Version'
             documentation : '<p>A version number must consist of two parts,
@@ -202,6 +210,7 @@ slight rewordings to suit this particular application.
                 the Content Dictionary Status and optional Uses element.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            unique : yes
         CDRevision :
             externalName : 'Content Dictionary Revision'
             documentation : '<p>A version number must consist of two parts,
@@ -217,6 +226,7 @@ slight rewordings to suit this particular application.
                 the Content Dictionary Version.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
+            unique : yes
         CDDefinition :
             defaultChild : 'Description'
             documentation : '<p>This element contains the definition of an
@@ -240,6 +250,7 @@ slight rewordings to suit this particular application.
                 in Section 2.3 of <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a>.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CDDefinition' ]
+            unique : yes
         Role :
             externalName : 'Symbol Role'
             documentation : '<p>The role of a symbol, which indicates how
@@ -255,6 +266,7 @@ slight rewordings to suit this particular application.
                 </ul>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CDDefinition' ]
+            unique : yes
         Example :
             documentation : '<p>An example should show how the symbol is
                 used, to illustrate the symbol to the reader of the Content

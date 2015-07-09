@@ -52,7 +52,11 @@ The following properties are supported for each tag name.
  * `belongsIn` - the value should be an array of strings, each the name of a
    tag in which groups of this tag type can sit, as children.  Any gruop of
    this tag type will be marked invalid if it sits inside a group whose tag
-   type is not on this list.
+   type is not on this list.  (See [validation](#validating-the-hierarchy).)
+ * `unique` - if true, this indicates that only one group with this tag can
+   exist in any given parent group.  Any others will be flagged as invalid
+   by the validation routine.  (See
+   [validation](#validating-the-hierarchy).)
 
     tagData = { }
     window.setTagData = ( newData ) -> tagData = newData
@@ -212,6 +216,20 @@ list of valid container tags for this group?
             problems.push "#{gname} elements are only permitted in these
                 contexts: #{bnames.join ', '} (not in #{pname} elements)."
 
+If the group's tag is marked "unique" then we must check to see if there are
+any previous siblings with the same tag.  If so, this one is invalid for
+that reason.
+
+        if window.getTagData group, 'unique'
+            walk = group
+            while walk = walk.previousSibling()
+                if window.getGroupTag( walk ) is groupTag
+                    problems.push "Each context may contain only one
+                        \"#{window.getTagExternalName group}\" element.  But
+                        there is already an earlier one in this context,
+                        making this one invalid."
+                    break
+
 If there were any problems, mark the group as invalid.  Otherwise, clear any
 indication of invalidity.
 
@@ -221,6 +239,15 @@ indication of invalidity.
         else
             group.clear 'closeDecoration'
             group.clear 'closeHoverText'
+
+Validating a group happens when some change has taken place that requires
+revalidation.  Perhaps the tag on this group changed, for instance.  Thus we
+must also check any later siblings of this group, in case they have the
+"unique" attribute, which would could change their validation status based
+on attributes of this group.
+
+        if group.nextSibling()
+            window.validateHierarchy group.nextSibling()
 
 ## Forming XML
 
