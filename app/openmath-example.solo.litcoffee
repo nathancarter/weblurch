@@ -269,7 +269,7 @@ slight rewordings to suit this particular application.
                 them formal.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CDDefinition', 'MathematicalProperty' ]
-            alterXML = ( XML, group ) ->
+            alterXML : ( XML, group ) ->
                 if window.getGroupTag( group.parent ) is 'CDDefinition'
                     XML = "<FMP>#{XML}</FMP>"
                 XML
@@ -289,7 +289,7 @@ slight rewordings to suit this particular application.
                 </ul>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CDDefinition' ]
-            alterXML = ( XML, group ) ->
+            alterXML : ( XML, group ) ->
                 if XML.indexOf( '<OMOBJ>' ) > -1
                     XML.replace /MathematicalProperty>/g, 'FMP>'
                 else
