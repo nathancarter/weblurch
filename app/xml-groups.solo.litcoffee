@@ -72,30 +72,92 @@ such tag name, that means the same thing.)
         for own key, value of tagData
             if value.topLevel then return key
 
-This function checks to see if the given group has any documentation, and if
-it does, adds to the given array of TinyMCE menu items an item for querying
-the group's documentation.  If it has none, this function does nothing.  The
-array of menu items is modified (or not) in place; there is no return value.
+This function creates a set of menu items for the given group.  Specifics
+are documented within the code below.
 
-    window.addDocumentationMenuItem = ( group, items ) ->
-        if not ( tag = window.getGroupTag group )? then return
-        external = window.getTagExternalName tag
-        if ( documentation = window.getTagData tag, 'documentation' )?
-            documentation = documentation.replace /a href=/g,
-                'a target="_blank" href='
-            items.push
-                text : "Read \"#{external}\" documentation"
-                onclick : ->
-                    tinymce.activeEditor.windowManager.open
-                        title : "Documentation for \"#{external}\""
-                        url: window.objectURLForBlob window.makeBlob \
-                            documentation, 'text/html;charset=utf-8'
-                        width: 500
-                        height: 400
-                        buttons : [
-                            type : 'button'
-                            text : 'Done'
-                            subtype : 'primary'
-                            onclick : ( event ) ->
-                                tinymce.activeEditor.windowManager.close()
-						]
+    window.XMLMenuItems = ( group ) ->
+        result = [ ]
+
+First, check to see if the given group has any documentation, and if it
+does, add to the given array of TinyMCE menu items an item for querying the
+group's documentation.  If it has none, do nothing.
+
+        if ( tag = window.getGroupTag group )?
+            external = window.getTagExternalName tag
+            if ( documentation = window.getTagData tag, 'documentation' )?
+                documentation = documentation.replace /a href=/g,
+                    'a target="_blank" href='
+                result.push
+                    text : "Read \"#{external}\" documentation"
+                    onclick : -> showHTMLPopup documentation,
+                        "Documentation for \"#{external}\""
+
+Create a menu item for seeing the XML code representing the given group.
+
+        result.push
+            text : "View XML representation"
+            onclick : ->
+                xml = window.convertToXML group
+                .replace /&/g, '&amp;'
+                .replace /</g, '&lt;'
+                showHTMLPopup "<pre>#{xml}</pre>", 'XML Representation'
+
+Return the full list of menu items we generated.
+
+        result
+
+The above function uses the following utility a few times.  This function
+displays arbitrary HTML in a TinyMCE dialog (something you would think would
+be a simple built-in TinyMCE function, but it most definitely is not).  You
+may pass an options object containing keys for title, width, height, and
+button (replacement text for the "Done" button).
+
+    showHTMLPopup = ( html, options = { } ) ->
+        tinymce.activeEditor.windowManager.open
+            title : options.title ? ' '
+            url : window.objectURLForBlob window.makeBlob html,
+                'text/html;charset=utf-8'
+            width : options.width ? 500
+            height : options.height ? 400
+            buttons : [
+                type : 'button'
+                text : options.button ? 'Done'
+                subtype : 'primary'
+                onclick : ( event ) ->
+                    tinymce.activeEditor.windowManager.close()
+            ]
+
+## Define one toolbar button
+
+This toolbar button is for viewing the XML representation of the entire
+document in a new tab.
+
+    window.groupToolbarButtons =
+        viewxml :
+            text : 'XML'
+            tooltip : 'View XML representation of this document'
+            onclick : ->
+                xml = encodeURIComponent window.convertToXML()
+                window.open "data:application/xml,#{xml}", '_blank'
+
+## Forming XML
+
+The following function converts the given group (or the whole document if
+none is given into an XML representation using the data in `tagData`).
+
+    window.convertToXML = ( group ) ->
+        if group?
+            children = group.children
+            tag = window.getGroupTag group
+        else
+            children = tinymce.activeEditor.Groups.topLevel
+            tag = window.topLevelTagName()
+        if children.length
+            indent = ( text ) ->
+                "  #{text.replace RegExp( '\n', 'g' ), '\n  '}"
+            inner = ( window.convertToXML child for child in children )
+            "<#{tag}>\n#{indent inner.join '\n'}\n</#{tag}>"
+        else
+            text = if group? then group.contentAsText() else \
+                tinymce.activeEditor.getContent()
+            "<#{tag}>#{text}</#{tag}>"

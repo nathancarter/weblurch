@@ -97,15 +97,6 @@ required order of completion.
 
 ### OpenMath Content Dictionary Authoring Application
 
- * In the `xml-groups` script, add support for the following features.
-   * Write a function that encodes an individual `Group` or whole document
-     as XML, ignoring all text immediately inside non-leaf groups, returning
-     the result as a string.
-   * Add to the context/tag menu an option for seeing that bubble's XML in a
-     popup dialog.
-   * Create a toolbar button/menu item for opening in a new tab the full XML
-     of the whole document.  From there the user can download, print, etc.
-     `( newWin = window.open() ).document.write 'any text here'`
  * Add a member to the `Group` class for querying the text or HTML before
    or after the given group, leading up to the next grouper (whether that
    be a parent boundary or a sibling boundary).
