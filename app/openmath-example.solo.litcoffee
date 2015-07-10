@@ -156,7 +156,7 @@ slight rewordings to suit this particular application.
             belongsAfter : [ 'Name', 'CDURL' ]
             unique : yes
         CDUses :
-            externalName : 'Content Dictionaries Used herein'
+            externalName : 'Content Dictionaries Used'
             documentation : '<p>The content of this element should be a
                 series of Content Dictionary Name elements, each naming a
                 Content Dictionary used in the Example and Mathematical
@@ -304,6 +304,7 @@ slight rewordings to suit this particular application.
                     [ "A Content Dictionary Revision must be a nonnegative
                         integer." ]
         CDDefinition :
+            externalName : 'Symbol Definition'
             defaultChild : 'Description'
             documentation : '<p>This element contains the definition of an
                 individual symbol in the Content Dictionary.  It should

@@ -171,6 +171,19 @@ Create a menu item for seeing the XML code representing the given group.
                 .replace /</g, '&lt;'
                 showHTMLPopup "<pre>#{xml}</pre>", 'XML Representation'
 
+Create a submenu for changing the tag of this group.
+
+        parentTag = if group.parent then window.getGroupTag group.parent \
+            else window.topLevelTagName()
+        allowed = window.getTagData parentTag, 'allowedChildren'
+        result.push
+            text : 'Change tag to...'
+            menu : for tagName in Object.keys( tagData ).sort()
+                do ( tagName ) ->
+                    text : window.getTagExternalName tagName
+                    disabled : allowed? and tagName not of allowed
+                    onclick : -> group.set 'tagName', tagName
+
 Return the full list of menu items we generated.
 
         result
@@ -324,33 +337,14 @@ that reason.
                     break
 
 Check to see if the group's set of children elements are within the allowed
-numbers.  To do so, we first form a mapping from tag names to the number of
-children we have of each of those tags.  Then we compare that mapping to the
-mapping of allowed values.
+numbers.  To do so, we utilize the auxiliary function
+`allowedChildrenProblems`, which is also used before exporting as XML, to
+ensure that the top-level groups satisfy the children requirements of the
+whole document.
 
         if allowed = window.getTagData group, 'allowedChildren'
-            counts = { }
-            for child in group.children
-                childTag = window.getGroupTag child
-                counts[childTag] ?= 0
-                counts[childTag]++
-            for own tagName of allowed
-                counts[tagName] ?= 0
-            for own tagName, count of counts
-                if not allowed.hasOwnProperty tagName then continue
-                [ min, max ] = allowed[tagName]
-                if not min? or not max? then continue
-                if typeof min isnt 'number' or typeof max isnt 'number'
-                    continue
-                verb = if count is 1 then 'is' else 'are'
-                word = if min is 1 then 'child' else 'children'
-                if count < min then problems.push "This element requires at
-                    least #{min} #{word} with tag #{tagName}, but there
-                    #{verb} #{count} in this element."
-                word = if max is 1 then 'child' else 'children'
-                if count > max then problems.push "This element permits at
-                    most #{max} #{word} with tag #{tagName}, but there
-                    #{verb} #{count} in this element."
+            problems = problems.concat \
+                allowedChildrenProblems group.children, allowed
 
 If the group's tag is marked with a "contentCheck" function, we run it now
 on the group, to see if it gives us any additional problems.  It returns an
@@ -380,6 +374,47 @@ on attributes of this group.
 
         if group.nextSibling()
             window.validateHierarchy group.nextSibling()
+
+Here is the auxiliary function used earlier in validating counts of allowed
+children.
+
+    allowedChildrenProblems = ( children, allowed ) ->
+        problems = [ ]
+
+Get a count of how many children exist with each tag.
+
+        counts = { }
+        for child in children
+            childTag = window.getGroupTag child
+            counts[childTag] ?= 0
+            counts[childTag]++
+        for own tagName of allowed
+            counts[tagName] ?= 0
+
+Now loop through all the counts and see if any violate the restrictions in
+`allowed`.  (Allowed is a mapping of the type described at the top of this
+file, under the `childrenAllowed` bullet point.)  Any violations generate a
+new message onto the `problems` array.
+
+        for own tagName, count of counts
+            if not allowed.hasOwnProperty tagName then continue
+            [ min, max ] = allowed[tagName]
+            if not min? or not max? then continue
+            if typeof min isnt 'number' or typeof max isnt 'number'
+                continue
+            verb = if count is 1 then 'is' else 'are'
+            word = if min is 1 then 'child' else 'children'
+            if count < min then problems.push "This element requires at
+                least #{min} #{word} with tag #{tagName}, but there
+                #{verb} #{count} in this element."
+            word = if max is 1 then 'child' else 'children'
+            if count > max then problems.push "This element permits at
+                most #{max} #{word} with tag #{tagName}, but there
+                #{verb} #{count} in this element."
+
+Return the list of problems found.
+
+        problems
 
 ## Forming XML
 

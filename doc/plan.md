@@ -21,18 +21,6 @@ required order of completion.
 
 ### OpenMath Content Dictionary Authoring Application
 
-Necessary next steps:
-
- * Use the "allowedChildren" data to create a submenu of the context/tag
-   menu that lets you change a tag of one type to an entirely different
-   type.  Types that aren't permitted at that point are grayed out
-   (disabled).  See roughly lines 1127-1164 of
-   [groupsplugin.litcoffee](../app/groupsplugin.litcoffee) for code on how
-   to create arbitrary context menus.  The code
-   [here](http://stackoverflow.com/a/17213889/670492) shows that any item
-   on the list can have a "menu" key which points to another array of items,
-   thus creating a submenu.
-
 Optional next steps, that can be saved for later:
 
  * Each tag's data can specify a set of Group attributes that should be

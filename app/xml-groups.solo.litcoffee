@@ -171,6 +171,19 @@ Create a menu item for seeing the XML code representing the given group.
                 .replace /</g, '&lt;'
                 showHTMLPopup "<pre>#{xml}</pre>", 'XML Representation'
 
+Create a submenu for changing the tag of this group.
+
+        parentTag = if group.parent then window.getGroupTag group.parent \
+            else window.topLevelTagName()
+        allowed = window.getTagData parentTag, 'allowedChildren'
+        result.push
+            text : 'Change tag to...'
+            menu : for tagName in Object.keys( tagData ).sort()
+                do ( tagName ) ->
+                    text : window.getTagExternalName tagName
+                    disabled : allowed? and tagName not of allowed
+                    onclick : -> group.set 'tagName', tagName
+
 Return the full list of menu items we generated.
 
         result
