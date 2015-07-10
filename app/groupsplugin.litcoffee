@@ -459,7 +459,7 @@ into the list of free ids.
         addFreeId: ( id ) =>
             if id < @freeIds[@freeIds.length-1]
                 @freeIds.push id
-                @freeIds.sort()
+                @freeIds.sort ( a, b ) -> a - b
 
 When a free id becomes used in some way other than through a call to
 `nextFreeId`, we will want to be able to record that fact.  The following
@@ -771,7 +771,7 @@ groupers, and must therefore be deleted.
 
 Now update the `@freeIds` list to be the complement of the `usedIds` array.
 
-            usedIds.sort()
+            usedIds.sort ( a, b ) -> a - b
             count = 0
             @freeIds = [ ]
             while usedIds.length > 0
