@@ -24,8 +24,6 @@ required order of completion.
 Bug fixes
  * When you open a file that's longer than the screen, you must open and
    close the JS console to force resizing, or it won't scroll vertically.
- * If CDComments include only whitespace as text, don't include them in the
-   XML output.
 
 Optional next steps, that can be saved for later:
 

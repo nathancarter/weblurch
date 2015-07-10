@@ -88,7 +88,7 @@ slight rewordings to suit this particular application.
                 Dictionary Definition.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD', 'CDDefinition', 'Name', 'Role' ]
-            belongsAfter : [ null ]
+            belongsAfter : [ null, 'Name', 'Role' ]
             unique : yes
         CDComment :
             externalName : 'Content Dictionary Comment'
@@ -393,12 +393,14 @@ slight rewordings to suit this particular application.
                 them formal.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CDDefinition', 'MathematicalProperty' ]
+            rawXML : yes
             alterXML : ( XML, group ) ->
                 if window.getGroupTag( group.parent ) is 'CDDefinition'
                     XML = "<FMP>#{XML}</FMP>"
                 XML
         MathematicalProperty :
             externalName : 'Mathematical Property'
+            defaultChild : 'OMOBJ'
             documentation : '<p>A Mathematical Property can come in one of
                 two forms.</p>
                 <ul>

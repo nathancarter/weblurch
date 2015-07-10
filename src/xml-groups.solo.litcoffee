@@ -83,6 +83,10 @@ The following properties are supported for each tag name.
    applied.  If present, this function can do whatever additional custom
    validation of the document hierarchy you need.  (See
    [validation](#validating-the-hierarchy).)
+ * `rawXML` - If true, this attribute means that the content of the element
+   should be passed into the XML encoding raw, without being escaped.  Use
+   this when you anticipate actually typing XML code into a group in the
+   document, and you want that XML transferred directly to the XML encoding.
 
     tagData = { }
     window.setTagData = ( newData ) -> tagData = newData
@@ -485,22 +489,35 @@ none is given into an XML representation using the data in `tagData`).
         wrap = ( text ) ->
             if not wrapper then return ''
             if not tagData.hasOwnProperty wrapper then return text
-            "<#{wrapper}>#{text}</#{wrapper}>"
+            result = "<#{wrapper}>#{text}</#{wrapper}>"
+            if alterXML = window.getTagData wrapper, 'alterXML'
+                result = alterXML result
+            result
         result = if children.length
             indent = ( text ) ->
                 "  #{text.replace RegExp( '\n', 'g' ), '\n  '}"
-            inner = wrap tinymce.DOM.encode rangeToHTML \
-                children[0].rangeBefore()
+            range = children[0].rangeBefore()
+            inner = ''
+            if not /^\s*$/.test range.toString()
+                inner += wrap tinymce.DOM.encode rangeToHTML range
             for child in children
                 if inner[inner.length-1] isnt '\n' then inner += '\n'
-                inner += "#{window.convertToXML child}\n" + \
-                    wrap tinymce.DOM.encode rangeToHTML child.rangeAfter()
+                inner += "#{window.convertToXML child}\n"
+                range = child.rangeAfter()
+                if not /^\s*$/.test range.toString()
+                    inner += wrap tinymce.DOM.encode rangeToHTML range
             "<#{tag}>\n#{indent inner}\n</#{tag}>"
         else
-            text = if group? then group.contentAsText() else \
-                tinymce.activeEditor.getContent()
+            text = if window.getTagData tag, 'rawXML'
+                ( if group? then group.contentAsText() else \
+                    tinymce.activeEditor.getContent format : 'text' )
+                .replace /\xA0/g, '\n'
+            else
+                tinymce.DOM.encode \
+                    if group? then group.contentAsHTML() else \
+                        tinymce.activeEditor.getContent()
             wrapper ?= true
-            "<#{tag}>#{wrap tinymce.DOM.encode text}</#{tag}>"
+            "<#{tag}>#{wrap text}</#{tag}>"
         if alterXML = window.getTagData tag, 'alterXML'
             result = alterXML result, group
         result
