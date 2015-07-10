@@ -18,7 +18,7 @@ mathematical proofs.</p>
 <p><i>This project is rewriting Lurch for the web.</i></p>
 </td><td>
 <right><img src='doc/desktop-lurch-icon.png'
-    width='50%' height='50%'></right></td>
+    width='256' height='128'></right></td>
 </tr></table>
 
 ## A Development Platform
