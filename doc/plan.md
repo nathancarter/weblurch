@@ -169,6 +169,9 @@ for validation indicators:
    &#10040; (10), &#10041; (12)
  * White-on-dark numbers, 1 through 10: &#10122;, ..., &#10131;
 
+It's too easy to navigate away from the editor and lose your work.  Make a
+popup that asks if you really want to leave the page or not.
+
 ## Logical Foundation
 
 ### Dependencies

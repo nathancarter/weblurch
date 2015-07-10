@@ -195,19 +195,27 @@ may pass an options object containing keys for title, width, height, and
 button (replacement text for the "Done" button).
 
     showHTMLPopup = ( html, options = { } ) ->
+        buttons = [
+            type : 'button'
+            text : 'OK'
+            subtype : 'primary'
+            onclick : ( event ) ->
+                tinymce.activeEditor.windowManager.close()
+                options.callback? yes
+        ]
+        if options.confirm then buttons.push
+            type : 'button'
+            text : 'Cancel'
+            onclick : ( event ) ->
+                tinymce.activeEditor.windowManager.close()
+                options.callback? no
         tinymce.activeEditor.windowManager.open
             title : options.title ? ' '
             url : window.objectURLForBlob window.makeBlob html,
                 'text/html;charset=utf-8'
             width : options.width ? 500
             height : options.height ? 400
-            buttons : [
-                type : 'button'
-                text : options.button ? 'Done'
-                subtype : 'primary'
-                onclick : ( event ) ->
-                    tinymce.activeEditor.windowManager.close()
-            ]
+            buttons : buttons
 
 ## Define one toolbar button
 
@@ -219,8 +227,33 @@ document in a new tab.
             text : 'XML'
             tooltip : 'View XML representation of this document'
             onclick : ->
-                xml = encodeURIComponent window.convertToXML()
-                window.open "data:application/xml,#{xml}", '_blank'
+                problems = [ ]
+                editor = tinymce.activeEditor
+                for id in editor.Groups.ids()
+                    if not isGroupRight editor.Groups[id]
+                        problems.push 'At least one element in your document
+                            has errors (indicated by a red X following the
+                            element).'
+                        break
+                allowed = window.getTagData window.topLevelTagName(),
+                    'allowedChildren'
+                if allowed
+                    problems = problems.concat \
+                        allowedChildrenProblems editor.Groups.topLevel,
+                            allowed, 'document'
+                doExport = ->
+                    xml = encodeURIComponent window.convertToXML()
+                    window.open "data:application/xml,#{xml}", '_blank'
+                if problems.length is 0 then return doExport()
+                showHTMLPopup "<p><b>The problems listed below exist in your
+                    document.</b></p>
+                    <ul><li>#{problems.join '</li><li>'}</li></ul>
+                    <p>You can click OK to generate XML anyway, but
+                    it may be invalid.  Click Cancel to go back and fix
+                    these problems first.</b></p>",
+                    title : 'Problems with your document'
+                    confirm : yes
+                    callback : ( clickedOK ) -> if clickedOK then doExport()
 
 ## Provide generic event handlers
 
@@ -259,6 +292,20 @@ the chain reaction that does so.
                 window.validateHierarchy group.plugin.topLevel[0]
 
 ## Validating the hierarchy
+
+We will need three functions, one for marking a group as without problems,
+one for marking a group as having problems (with explanations of them), and
+one for detecting whether a group has problems.
+
+    markGroupRight = ( group ) ->
+        group.set 'valid', yes
+        group.clear 'closeDecoration'
+        group.clear 'closeHoverText'
+    markGroupWrong = ( group, reason ) ->
+        group.set 'valid', no
+        group.set 'closeDecoration', '<font color="red">&#10006;</font>'
+        group.set 'closeHoverText', reason
+    isGroupRight = ( group ) -> group.get 'valid'
 
 The following function tests to see if all of the rules specified in the
 `tagData` object are followed by the given group.  Each rule that we must
@@ -337,33 +384,14 @@ that reason.
                     break
 
 Check to see if the group's set of children elements are within the allowed
-numbers.  To do so, we first form a mapping from tag names to the number of
-children we have of each of those tags.  Then we compare that mapping to the
-mapping of allowed values.
+numbers.  To do so, we utilize the auxiliary function
+`allowedChildrenProblems`, which is also used before exporting as XML, to
+ensure that the top-level groups satisfy the children requirements of the
+whole document.
 
         if allowed = window.getTagData group, 'allowedChildren'
-            counts = { }
-            for child in group.children
-                childTag = window.getGroupTag child
-                counts[childTag] ?= 0
-                counts[childTag]++
-            for own tagName of allowed
-                counts[tagName] ?= 0
-            for own tagName, count of counts
-                if not allowed.hasOwnProperty tagName then continue
-                [ min, max ] = allowed[tagName]
-                if not min? or not max? then continue
-                if typeof min isnt 'number' or typeof max isnt 'number'
-                    continue
-                verb = if count is 1 then 'is' else 'are'
-                word = if min is 1 then 'child' else 'children'
-                if count < min then problems.push "This element requires at
-                    least #{min} #{word} with tag #{tagName}, but there
-                    #{verb} #{count} in this element."
-                word = if max is 1 then 'child' else 'children'
-                if count > max then problems.push "This element permits at
-                    most #{max} #{word} with tag #{tagName}, but there
-                    #{verb} #{count} in this element."
+            problems = problems.concat \
+                allowedChildrenProblems group.children, allowed
 
 If the group's tag is marked with a "contentCheck" function, we run it now
 on the group, to see if it gives us any additional problems.  It returns an
@@ -379,11 +407,9 @@ If there were any problems, mark the group as invalid.  Otherwise, clear any
 indication of invalidity.
 
         if problems.length > 0
-            group.set 'closeDecoration', '<font color="red">&#10006;</font>'
-            group.set 'closeHoverText', problems.join '\n'
+            markGroupWrong group, problems.join '\n'
         else
-            group.clear 'closeDecoration'
-            group.clear 'closeHoverText'
+            markGroupRight group
 
 Validating a group happens when some change has taken place that requires
 revalidation.  Perhaps the tag on this group changed, for instance.  Thus we
@@ -393,6 +419,48 @@ on attributes of this group.
 
         if group.nextSibling()
             window.validateHierarchy group.nextSibling()
+
+Here is the auxiliary function used earlier in validating counts of allowed
+children.
+
+    allowedChildrenProblems = ( children, allowed, subject = 'element' ) ->
+        problems = [ ]
+
+Get a count of how many children exist with each tag.
+
+        counts = { }
+        for child in children
+            childTag = window.getGroupTag child
+            counts[childTag] ?= 0
+            counts[childTag]++
+        for own tagName of allowed
+            counts[tagName] ?= 0
+
+Now loop through all the counts and see if any violate the restrictions in
+`allowed`.  (Allowed is a mapping of the type described at the top of this
+file, under the `childrenAllowed` bullet point.)  Any violations generate a
+new message onto the `problems` array.
+
+        for own tagName, count of counts
+            if not allowed.hasOwnProperty tagName then continue
+            [ min, max ] = allowed[tagName]
+            if not min? or not max? then continue
+            if typeof min isnt 'number' or typeof max isnt 'number'
+                continue
+            verb = if count is 1 then 'is' else 'are'
+            word = if min is 1 then 'child' else 'children'
+            external = window.getTagExternalName tagName
+            if count < min then problems.push "The #{subject} requires at
+                least #{min} #{word} with tag #{external}, but there
+                #{verb} #{count} in this #{subject}."
+            word = if max is 1 then 'child' else 'children'
+            if count > max then problems.push "The #{subject} permits at
+                most #{max} #{word} with tag #{external}, but there
+                #{verb} #{count} in this #{subject}."
+
+Return the list of problems found.
+
+        problems
 
 ## Forming XML
 
