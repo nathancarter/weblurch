@@ -1108,13 +1108,14 @@ outward to make sure the bubble encloses the entire contents of the group.
                     left : close.left
                     right : close.right
                     bottom : close.bottom
-                sameTops = open.top is close.top
-                sameBottoms = open.bottom is close.bottom
+                onSameLine = open.top < close.top < open.bottom or \
+                             close.top < open.top < close.bottom
                 for rect, index in rects
                     open.top = Math.min open.top, rect.top
                     close.bottom = Math.max close.bottom, rect.bottom
-                if sameTops then close.top = open.top
-                if sameBottoms then open.bottom = close.bottom
+                if onSameLine
+                    close.top = open.top
+                    open.bottom = close.bottom
 
 If any of them has zero size, then that means that an image file (for an
 open/close grouper) isn't yet loaded.  Thus we need to stop here and queue
