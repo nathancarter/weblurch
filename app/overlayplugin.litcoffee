@@ -112,3 +112,9 @@ The plugin, when initialized on an editor, places an instance of the
 
     tinymce.PluginManager.add 'overlay', ( editor, url ) ->
         editor.Overlay = new Overlay editor
+
+Whenever the user scrolls, redraw the contents of the overlay, since things
+probably need to be repositioned.
+
+        editor.on 'init', ( event ) ->
+            ( $ editor.getWin() ).scroll -> editor.Overlay.redrawContents()

@@ -1,9 +1,9 @@
 
 img.grouper {
-    margin-bottom : -4px;
+    margin-bottom : -0.35em;
 }
 
-img.grouper.hide {
+img.grouper.hide:not(.decorate) {
     width : 0px;
     height : 22px;
 }

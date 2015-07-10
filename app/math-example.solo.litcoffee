@@ -33,21 +33,8 @@ above.
         closeImageHTML : '<font color="#666699"><b>]</b></font>'
 
 The `contentsChanged` function is called on a group whenever that group just
-had its contents changed.  In this case, we run [MathJS](http://mathjs.org/)
-on the contents of the group, and store the result in the group itself.
-
-[It is possible to run MathJS in a Web Worker thread](
-http://mathjs.org/examples/browser/webworkers/index.html), and
-[webLurch supports background threads](complex-example.solo.litcoffee),
-but most computations here are brief enough that we can run them
-immediately, in the foreground, and the user will notice absolutely no
-hangups in the UI.  It also keeps the example simpler.
-
-If we make a change to the group *in the change handler,* that will trigger
-another change handler, which will create an infinite loop (and eventually a
-"maximum call stack size exceeded" error in the browser).  Thus we first
-inspect to see if the result we're about to store in the group is already
-there; if so, we do nothing, and the loop ceases.
+had its contents changed.  In this case, we simply compute the contents of
+the bubble tag and store them in the group.
 
         contentsChanged : ( group, firstTime ) ->
             info = inspect group
@@ -95,6 +82,13 @@ there; if so, we do nothing, and the loop ceases.
                         when 'integer1.factorial' then 'factorial'
                         when 'limit1.limit' then 'limit'
                     when 'b' then 'lambda closure'
+
+If we make a change to the group *in the change handler,* that will trigger
+another change handler, which will create an infinite loop (and eventually a
+"maximum call stack size exceeded" error in the browser).  Thus we first
+inspect to see if the result we're about to store in the group is already
+there; if so, we do nothing, and the loop ceases.
+
             if info isnt group.get 'tag' then group.set 'tag', info
 
 When the group's tag needs to be computed, we simply lift the data out of

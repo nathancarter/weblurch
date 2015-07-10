@@ -25,6 +25,12 @@ place.  For examples of how to do this, see
         color : '#996666'
     ]
 
+Clients who define their own group types may also define their own toolbar
+buttons and menu items to go with them.  But these lists default to empty.
+
+    window.groupToolbarButtons ?= { }
+    window.groupMenuItems ?= { }
+
 We also specify an icon to appear on the menu bar, at the very left.  This
 can be overridden, in the same way as `window.groupTypes`, above.  (See the
 same examples apps for specific code.)
@@ -41,6 +47,7 @@ the same examples apps for specific code.)
 
     window.defaultEditorStyles ?=
         fontSize : '16px'
+        fontFamily : 'Verdana, Arial, Helvetica, sans-serif'
 
 We can also provide the text for the Help/About menu item by overriding the
 following in a separate configuration file.  (See the same examples apps for
@@ -115,7 +122,8 @@ We then install two toolbars, with separators indicated by pipes (`|`).
                     textcolor subscript superscript removeformat
                     | link unlink | charmap image
                     | spellchecker searchreplace | equationeditor | ' + \
-                    groupTypeNames.join ' '
+                    groupTypeNames.join( ' ' ) + ' | ' + \
+                    Object.keys( window.groupToolbarButtons ).join ' '
             ]
 
 We then customize the menus' contents as follows.
@@ -124,37 +132,39 @@ We then customize the menus' contents as follows.
                 file :
                     title : 'File'
                     items : 'newfile openfile | savefile saveas
-                           | managefiles | print'
+                           | managefiles | print' + moreMenuItems 'file'
                 edit :
                     title : 'Edit'
                     items : 'undo redo
                            | cut copy paste pastetext
-                           | selectall'
+                           | selectall' + moreMenuItems 'edit'
                 insert :
                     title : 'Insert'
                     items : 'link media
                            | template hr
-                           | me'
+                           | me' + moreMenuItems 'insert'
                 view :
                     title : 'View'
-                    items : 'visualaid hideshowgroups'
+                    items : 'visualaid hideshowgroups' \
+                          + moreMenuItems 'view'
                 format :
                     title : 'Format'
                     items : 'bold italic underline
                              strikethrough superscript subscript
-                           | formats | removeformat'
+                           | formats | removeformat' \
+                           + moreMenuItems 'format'
                 table :
                     title : 'Table'
                     items : 'inserttable tableprops deletetable
-                           | cell row column'
+                           | cell row column' + moreMenuItems 'table'
                 help :
                     title : 'Help'
-                    items : 'about website'
+                    items : 'about website' + moreMenuItems 'help'
 
 Then we customize the context menu.
 
             contextmenu : 'link image inserttable
-                | cell row column deletetable'
+                | cell row column deletetable' + moreMenuItems 'contextmenu'
 
 And finally, we include in the editor's initialization the data needed by
 the Groups plugin, so that it can find it when that plugin is initialized.
@@ -178,6 +188,14 @@ Add a Help menu.
                     context : 'help'
                     onclick : -> window.open 'http://www.lurchmath.org',
                         '_blank'
+
+Add actions and toolbar buttons for all other menu items the client may have
+defined.
+
+                for own name, data of window.groupMenuItems
+                    editor.addMenuItem name, data
+                for own name, data of window.groupToolbarButtons
+                    editor.addButton name, data
 
 Install our DOM utilities in the TinyMCE's iframe's window instance.
 Increase the default font size and maximize the editor to fill the page.
@@ -223,6 +241,14 @@ Workaround for [this bug](http://www.tinymce.com/develop/bugtracker_view.php?id=
                     editor.getBody().addEventListener 'focus', ->
                         if editor.windowManager.getWindows().length isnt 0
                             editor.windowManager.close()
+
+The following utility function was used to help build lists of menu items
+in the setup data above.
+
+    moreMenuItems = ( menuName ) ->
+        names = ( k for k in Object.keys window.groupMenuItems \
+            when window.groupMenuItems[k].context is menuName ).join ' '
+        if names.length then "| #{names}" else ''
 
 The third-party plugin for math equations can have its rough meaning
 extracted by the following function, which can be applied to any DOM element

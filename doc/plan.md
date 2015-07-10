@@ -17,6 +17,51 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
+## Example Applications
+
+### OpenMath Content Dictionary Authoring Application
+
+Bug fixes
+ * When you open a file that's longer than the screen, you must open and
+   close the JS console to force resizing, or it won't scroll vertically.
+
+Optional next steps, that can be saved for later:
+
+ * Each tag's data can specify a set of Group attributes that should be
+   copied into the XML output as element attributes.  Then clients can
+   create their own UI for editing such attributes, and just store them in
+   the Groups themselves, content with the fact that the `xml-groups` module
+   will carry that data over into the XML output.
+ * Add support to the Groups package for accepting click and/or double-click
+   events on open/close groupers, and passing them to the Group type for
+   handling.  Here is the code the MathQuill plugin uses for this purpose.
+   Note the selector in the second line.
+```
+editor.on 'init', ->
+    ( $ editor.getDoc() ).on 'click', '.rendered-latex', ( event ) ->
+        event.stopPropagation()
+        # here, "this" is the element that received the click event
+```
+ * Use the feature from the previous bullet point to give more detailed
+   feedback about failed structural rules.
+ * Create an importer that reads in OM CDs and creates documents from them
+   that use Groups.  This would then truly be an OM CD Editor!
+
+### General documentation
+
+Create a tutorial page in the repository (as a `.md` file) on how the reader
+can create their own webLurch-based applications.  Link to it from [the main
+README file](../README.md).
+
+That is the last work that can be done without there being additional design
+work completed.  The section on [Dependencies](#dependencies), below,
+requires us to design how background computation is paused/restarted when
+things are saved/loaded, including when they are dependencies.  The section
+thereafter is about building the symbolic manipulation core of Lurch itself,
+which is currently being redesigned by
+[Ken](http://mathweb.scranton.edu/ken/), and that design is not yet
+complete.
+
 ## Matching Module
 
  * Extend Match's `set(k,v)` member as follows:
@@ -93,137 +138,43 @@ required order of completion.
    `app/matching.duo.litcoffee` does not go under git control in master, but
    does in gh-pages.
 
-## Example Applications
-
-### OpenMath Content Dictionary Authoring Application
-
- * Create a new demo app for authoring OM CDs, but leave it plain vanilla
-   for now and we'll add features later.
- * Create `src/xml-groups.solo.litcoffee` and put documentation on top that
-   explains how it will contain routines for encoding the groups in a
-   document as XML, with various features for checking their structural
-   validity.  (No implementation yet.)
- * Import the `xml-groups` script into the OM CD demo application.
- * In the `xml-groups` script, add support for the following features.
-   * Declaring a mapping from tag names to their features.
-   * The one group type in the whole document will be of type "tag."
-   * One attribute of a tag will be "topLevel," and only one tag can have
-     this attribute set to true.  Write a function for querying which tag
-     is the top-level tag, which means the tag implicitly surrounding the
-     whole document.
-   * One attribute of any tag X is the default tag for groups inserted
-     inside groups of type X.  Respect this by setting the tag attribute of
-     any newly inserted group to be this default.  For groups inserted
-     outside of any other groups, use the top-level tag.
-   * Show a tag's name on its bubble tag.
-   * Let tags have the attribute "externalName" and use that on bubble tags
-     instead of the internal name.
-   * Let tags have the attribute "documentation" and give them a context/tag
-     menu item for showing the documentation text in a popup dialog.  The
-     simplest popup dialog is just
-     `tinymce.activeEditor.windowManager.alert 'text'`.
-   * Write a function that encodes an individual `Group` or whole document
-     as XML, ignoring all text immediately inside non-leaf groups, returning
-     the result as a string.
-   * Add to the context/tag menu an option for seeing that bubble's XML in a
-     popup dialog.
-   * Create a toolbar button/menu item for opening in a new tab the full XML
-     of the whole document.  From there the user can download, print, etc.
-     `( newWin = window.open() ).document.write 'any text here'`
- * Add a member to the `Group` class for querying the text or HTML before
-   or after the given group, leading up to the next grouper (whether that
-   be a parent boundary or a sibling boundary).
- * Use the previous function to support the following tag attribute:
-   * If "includeText" is true for tag X, then text immediately inside a
-     non-leaf Group with tag X is included, interspersed among the inner
-     Groups' XML encodings.
-   * If "includeText" is a tag name, then such text is not only included,
-     but wrapped in tags of the given name.
- * Add a tag attribute "belongsIn" that lists the names of the tags that a
-   parent Group can have.  Support for this tag is implemented below.
- * Add support for each bubble to show its groupers differently at each
-   moment.  This should be do-able with a simple `Group` class member that
-   sets the open or close grouper appearance to the given HTML.  It can be
-   implemented using code as simple as the following.
-```
-base64URLForBlob svgBlobForHTML( html ), ( base64 ) ->
-   img.setAttribute 'src', base64
-```
- * Write a function that can check a given Group to see if it "follows all
-   the rules."  It should, at first, just check to be sure that the Group's
-   parent tag is on its list of "belongsIn" (if such a list exists;
-   otherwise the group can be anywhere).  If the check passes, set the
-   Group's close grouper to be the ordinary close grouper for the type.  If
-   it fails, set it to be the same thing, plus a red X, with alt text that
-   explains the reason for the failure.  Test this by manually calling it
-   from the console.
- * Update the `contentsChanged` event for the one Group type to call the
-   rule-checking function on the Group.
- * OPTIONAL:
-   Add support to the Groups package for accepting click and/or double-click
-   events on open/close groupers, and passing them to the Group type for
-   handling.  Here is the code the MathQuill plugin uses for this purpose.
-   Note the selector in the second line.
-```
-editor.on 'init', ->
-    ( $ editor.getDoc() ).on 'click', '.rendered-latex', ( event ) ->
-        event.stopPropagation()
-        # here, "this" is the element that received the click event
-```
- * OPTIONAL:
-   Use the feature from the previous bullet point to give more detailed
-   feedback about failed structural rules.
- * Add a tag attribute "unique" that means that only one Group with that tag
-   can exist inside its parent Group.  Support this by making the
-   rule-checking function verify that no earlier sibling has the same tag.
-   Ensure this is called when necessary by having the `contentsChanged`
-   handler not only recheck the changed group, but all later siblings as
-   well.
- * Add a tag attribute "belongsAfter" that functions exactly like
-   "belongsIn" but examines the previous sibling rather than the parent.
-   A Group can also pass this check if this attribute is not set, or if the
-   list contains `null` and the Group has no previous sibling.
- * Add a tag attribute "contentCheck" that is a function that will be called
-   on a group during the rule-checking function, as the last step in
-   validating the Group.  It can do anything, and must either return true
-   (meaning the check passes) or an error message (meaning that it does
-   not).  The error message, if any, will be used as the alt text for the
-   red X in the close grouper.  This feature can be used to check text
-   format of leaf groups, or complex structure of non-leaf groups.
- * Write a function that lists the tags that can appear in a parent of a
-   given tag type.  It will need to invert the "belongsIn" relation to give
-   its results.
- * Use the function created in the previous bullet point to create a submenu
-   of the context/tag menu that lets you change a tag of one type to an
-   entirely different type.  Types that aren't permitted at that point are
-   grayed out (disabled).  See roughly lines 1127-1164 of
-   [groupsplugin.litcoffee](../app/groupsplugin.litcoffee) for code on how
-   to create arbitrary context menus.  The code
-   [here](http://stackoverflow.com/a/17213889/670492) shows that any item
-   on the list can have a "menu" key which points to another array of items,
-   thus creating a submenu.
-
-### General documentation
-
-Create a tutorial page in the repository (as a `.md` file) on how the reader
-can create their own webLurch-based applications.  Link to it from [the main
-README file](../README.md).
-
-That is the last work that can be done without there being additional design
-work completed.  The section on [Dependencies](#dependencies), below,
-requires us to design how background computation is paused/restarted when
-things are saved/loaded, including when they are dependencies.  The section
-thereafter is about building the symbolic manipulation core of Lurch itself,
-which is currently being redesigned by
-[Ken](http://mathweb.scranton.edu/ken/), and that design is not yet
-complete.
-
 ## Miscellany
 
 Future math parsing enhancements:
  * Support adjacent atomics as factors in a product
  * Support chained equations
  * Add tests for things that should *not* parse, and verify that they do not
+
+Improve build process to not compile files whose dates indicate that they
+do not need it, nor to minify files whose dates indicate that they do not
+need it.
+
+Make a menu item for hiding/showing group decorations.
+
+Several new methods have been added to the Groups Plugin without unit tests
+being written for them.  Be sure to look back through the full list of
+functions in that file and find those which have no unit tests, and create
+unit tests for them, debugging the functions as you do so.
+
+The `Group.set` function no longer takes any action if the new value is the
+same as the old value.  (Similarly, `clear` doesn't do anything if the
+attribute is already gone.)  This prevents clients from needing to implement
+their own checks to prevent infinite loops of change event handlers.  The
+remaining task is to go through the demo apps and find their workarounds for
+this annoyance and remove them to clean up those apps (and not confuse
+readers).  Then verify that the apps still work, i.e., that there truly are
+no infinite loops remaining.
+
+Notes for when you create validation:  Some nice Unicode characters to use
+for validation indicators:
+ * Nice, natural-looking exes: &#10006;, &#10007;, &#10008;
+ * Nice, natural-looking check marks: &#10003;, &#10004;
+ * Filled stars: &#10029; (5 points), &#10038; (6, rounded), &#10039; (8),
+   &#10040; (10), &#10041; (12)
+ * White-on-dark numbers, 1 through 10: &#10122;, ..., &#10131;
+
+It's too easy to navigate away from the editor and lose your work.  Make a
+popup that asks if you really want to leave the page or not.
 
 ## Logical Foundation
 

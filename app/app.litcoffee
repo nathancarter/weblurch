@@ -59,6 +59,28 @@ data is not available in the expected format, it returns `null`.
         result
     window.grouperInfo = grouperInfo
 
+A few functions in this module make use of a tool for computing the default
+editor style as a CSS style string (e.g., "font-size:16px;").  That function
+is defined here.
+
+    createStyleString = ( styleObject = window.defaultEditorStyles ) ->
+        result = [ ]
+        for own key, value of styleObject
+            newkey = ''
+            for letter in key
+                if letter.toUpperCase() is letter then newkey += '-'
+                newkey += letter.toLowerCase()
+            result.push "#{newkey}:#{value};"
+        result.join ' '
+
+A few functions in this module make use of a tool for computing a CSS style
+string describing the default font size and family of an element.  That
+function is defined here.
+
+    createFontStyleString = ( element ) ->
+        style = element.ownerDocument.defaultView.getComputedStyle element
+        "font-size:#{style.fontSize}; font-family:#{style.fontFamily};"
+
 # `Group` class
 
 This file defines two classes, this one called `Group` and another
@@ -140,16 +162,72 @@ stack.
 
         set: ( key, value ) =>
             if not /^[a-zA-Z0-9-]+$/.test key then return
-            @open.setAttribute "data-#{key}", JSON.stringify [ value ]
-            if @plugin?
-                @plugin.editor.fire 'change'
-                @plugin.editor.isNotDirty = no
-                @contentsChanged()
+            toStore = JSON.stringify [ value ]
+            if @open.getAttribute( "data-#{key}" ) isnt toStore
+                @open.setAttribute "data-#{key}", toStore
+                if @plugin?
+                    @plugin.editor.fire 'change'
+                    @plugin.editor.isNotDirty = no
+                    @contentsChanged()
+                if key is 'openDecoration' or key is 'closeDecoration'
+                    @updateGrouper key[...-10]
+                if key is 'openHoverText' or key is 'closeHoverText'
+                    grouper = @[key[...-9]]
+                    for attr in [ 'title', 'alt' ] # browser differences
+                        grouper.setAttribute attr, "#{value}"
         get: ( key ) =>
             try
                 JSON.parse( @open.getAttribute "data-#{key}" )[0]
             catch e
                 undefined
+        clear: ( key ) =>
+            if not /^[a-zA-Z0-9-]+$/.test key then return
+            if @open.getAttribute( "data-#{key}" )?
+                @open.removeAttribute "data-#{key}"
+                if @plugin?
+                    @plugin.editor.fire 'change'
+                    @plugin.editor.isNotDirty = no
+                    @contentsChanged()
+                if key is 'openDecoration' or key is 'closeDecoration'
+                    @updateGrouper key[...-10]
+                if key is 'openHoverText' or key is 'closeHoverText'
+                    grouper = @[key[...-9]]
+                    for attr in [ 'title', 'alt' ] # browser differences
+                        grouper.removeAttribute attr
+
+The `set` and `clear` functions above call an update routine if the
+attribute changed was the decoration data for a grouper.  This update
+routine recomputes the appearance of that grouper as an image, and stores it
+in the `src` attribute grouper itself (which is an `img` element).  We
+implement that routine here.
+
+This routine is also called from `hideOrShowGroupers`, defined later in this
+file.  It can accept any of three parameter types, the string "open", the
+string "close", or an actual grouper element from the document that is
+either the open or close grouper for this group.
+
+        updateGrouper: ( openOrClose ) =>
+            if openOrClose is @open then openOrClose = 'open'
+            if openOrClose is @close then openOrClose = 'close'
+            if openOrClose isnt 'open' and openOrClose isnt 'close'
+                return
+            jquery = $ grouper = @[openOrClose]
+            if ( decoration = @get "#{openOrClose}Decoration" )?
+                jquery.addClass 'decorate'
+            else
+                jquery.removeClass 'decorate'
+                decoration = ''
+            html = if jquery.hasClass 'hide' then '' else \
+                @type()?["#{openOrClose}ImageHTML"]
+            if openOrClose is 'open'
+                html = decoration + html
+            else
+                html += decoration
+            window.base64URLForBlob window.svgBlobForHTML( html,
+                createFontStyleString grouper ), ( base64 ) =>
+                    if grouper.getAttribute( 'src' ) isnt base64
+                        grouper.setAttribute 'src', base64
+                        @plugin?.editor.Overlay?.redrawContents()
 
 We will need to be able to query the contents of a group, so that later
 computations on that group can use its contents to determine how to act.  We
@@ -216,6 +294,63 @@ relative to the group's open and close groupers.
                 range.setEndAfter @close
                 range
             catch e then null
+
+We then create analogous functions for creating ranges that include the text
+before or after the group.  These ranges extend to the next grouper in the
+given direction, whether it be an open or close grouper of any type.
+Specifically,
+ * The `rangeBefore` range always ends immediately before this group's open
+   grouper, and
+   * if this group is the first in its parent, the range begins immediately
+     after the parent's open grouper;
+   * otherwise it begins immediately after its previous sibling's close
+     grouper.
+   * But if this is the first top-level group in the document, then the
+     range begins at the start of the document.
+ * The `rangeAfter` range always begins immediately after this group's close
+   grouper, and
+   * if this group is the last in its parent, the range ends immediately
+     before the parent's close grouper;
+   * otherwise it ends immediately before its next sibling's open grouper.
+   * But if this is the last top-level group in the document, then the
+     range ends at the end of the document.
+
+        rangeBefore: =>
+            range = ( doc = @open.ownerDocument ).createRange()
+            try
+                range.setEndBefore @open
+                if prev = @previousSibling()
+                    range.setStartAfter prev.close
+                else if @parent
+                    range.setStartAfter @parent.open
+                else
+                    range.setStartBefore doc.body.childNodes[0]
+                range
+            catch e then null
+        rangeAfter: =>
+            range = ( doc = @open.ownerDocument ).createRange()
+            try
+                range.setStartAfter @close
+                if next = @nextSibling()
+                    range.setEndBefore next.open
+                else if @parent
+                    range.setEndBefore @parent.close
+                else
+                    range.setEndAfter \
+                        doc.body.childNodes[doc.body.childNodes.length-1]
+                range
+            catch e then null
+
+The previous two functions require being able to query this group's index in
+its parent group, and to use that index to look up next and previous sibling
+groups.  We provide those functions here.
+
+        indexInParent: =>
+            ( @parent?.children ? @plugin?.topLevel )?.indexOf this
+        previousSibling: =>
+            ( @parent?.children ? @plugin?.topLevel )?[@indexInParent()-1]
+        nextSibling: =>
+            ( @parent?.children ? @plugin?.topLevel )?[@indexInParent()+1]
 
 The following function should be called whenever the contents of the group
 have changed.  It notifies the group's type, so that the requisite
@@ -324,7 +459,7 @@ into the list of free ids.
         addFreeId: ( id ) =>
             if id < @freeIds[@freeIds.length-1]
                 @freeIds.push id
-                @freeIds.sort()
+                @freeIds.sort ( a, b ) -> a - b
 
 When a free id becomes used in some way other than through a call to
 `nextFreeId`, we will want to be able to record that fact.  The following
@@ -373,27 +508,18 @@ routine needs, and they will be passed along directly.
             @groupTypes[name] = data
             if data.hasOwnProperty 'text'
                 plugin = this
-                style = ->
-                    result = [ ]
-                    for own key, value of window.defaultEditorStyles
-                        newkey = ''
-                        for letter in key
-                            if letter.toUpperCase() is letter
-                                newkey += '-' + letter.toLowerCase()
-                            else
-                                newkey += letter
-                        result.push "#{newkey}:#{value};"
-                    result.join ' '
                 if data.imageHTML?
                     data.image = objectURLForBlob svgBlobForHTML \
-                        data.imageHTML, style()
+                        data.imageHTML, createStyleString()
                 if data.openImageHTML?
-                    blob = svgBlobForHTML data.openImageHTML, style()
+                    blob = svgBlobForHTML data.openImageHTML,
+                        createStyleString()
                     data.openImage = objectURLForBlob blob
                     base64URLForBlob blob, ( result ) ->
                         data.openImage = result
                 if data.closeImageHTML?
-                    blob = svgBlobForHTML data.closeImageHTML, style()
+                    blob = svgBlobForHTML data.closeImageHTML,
+                        createStyleString()
                     data.closeImage = objectURLForBlob blob
                     base64URLForBlob blob, ( result ) ->
                         data.closeImage = result
@@ -523,6 +649,8 @@ The word "grouper" refers to the objects that form the boundaries of a group, an
                 groupers.removeClass 'hide'
             else
                 groupers.addClass 'hide'
+            groupers.filter( '.decorate' ).each ( index, grouper ) =>
+                @grouperToGroup( grouper ).updateGrouper grouper
             @editor.Overlay?.redrawContents()
             @editor.focus()
 
@@ -546,10 +674,30 @@ following two convenience functions.
             @scanLocks = Math.max ( @scanLocks ? 0 ) - 1, 0
             if @scanLocks is 0 then @scanDocument()
 
+We also want to track when scanning is happening, so that `scanDocument`
+cannot get into infinitely deep recursion by triggering a change in the
+document, which in turn calls `scanDocument` again.  We track whether a scan
+is running using this flag.  (Note that the scanning routine constructs new
+`Group` objects, which call `contentsChanged` handlers, which let clients
+execute arbitrary code, so the infinite loop is quite possible, and thus
+must be prevented.)
+
+        isScanning = no
+
 Now the routine itself.
 
         scanDocument: =>
+
+If scanning is disabled, do nothing.  If it's already happening, then
+whatever change is attempting to get us to scan again should just have the
+new scan start *after* this one completes, not during.
+
             if @scanLocks > 0 then return
+            if isScanning then return setTimeout ( => @scanDocument ), 0
+            isScanning = yes
+
+Initialize local variables:
+
             groupers = Array::slice.apply @allGroupers()
             gpStack = [ ]
             usedIds = [ ]
@@ -623,7 +771,7 @@ groupers, and must therefore be deleted.
 
 Now update the `@freeIds` list to be the complement of the `usedIds` array.
 
-            usedIds.sort()
+            usedIds.sort ( a, b ) -> a - b
             count = 0
             @freeIds = [ ]
             while usedIds.length > 0
@@ -672,6 +820,7 @@ the enabled/disabled state of group-insertion buttons and menu items.
                 @editor.Overlay?.redrawContents()
                 @updateButtonsAndMenuItems()
             , 0
+            isScanning = no
 
 The above function needs to create instances of the `Group` class, and
 associate them with their IDs.  The following function does so, re-using
@@ -779,7 +928,7 @@ Compute the complete ancestor chain of the left end of the range.
             left.collapse yes
             left = @groupAboveCursor left
             leftChain = [ ]
-            while left isnt null
+            while left?
                 leftChain.unshift left
                 left = left.parent
 
@@ -789,7 +938,7 @@ Compute the complete ancestor chain of the right end of the range.
             right.collapse no
             right = @groupAboveCursor right
             rightChain = [ ]
-            while right isnt null
+            while right?
                 rightChain.unshift right
                 right = right.parent
 
@@ -942,7 +1091,10 @@ themselves, we also inspect the client rectangles of all elements in the
 group, and adjust the relevant corners of the open and close groupers
 outward to make sure the bubble encloses the entire contents of the group.
 
-                rects = group.outerRange().getClientRects()
+                rects = group.outerRange()?.getClientRects()
+                if not rects?
+                    setTimeout ( => @editor.Overlay?.redrawContents() ), 100
+                    return
                 rects = ( rects[i] for i in [0...rects.length] )
                 open = rects.shift()
                 open =
@@ -956,13 +1108,14 @@ outward to make sure the bubble encloses the entire contents of the group.
                     left : close.left
                     right : close.right
                     bottom : close.bottom
-                sameTops = open.top is close.top
-                sameBottoms = open.bottom is close.bottom
+                onSameLine = open.top < close.top < open.bottom or \
+                             close.top < open.top < close.bottom
                 for rect, index in rects
                     open.top = Math.min open.top, rect.top
                     close.bottom = Math.max close.bottom, rect.bottom
-                if sameTops then close.top = open.top
-                if sameBottoms then open.bottom = close.bottom
+                if onSameLine
+                    close.top = open.top
+                    open.bottom = close.bottom
 
 If any of them has zero size, then that means that an image file (for an
 open/close grouper) isn't yet loaded.  Thus we need to stop here and queue
@@ -985,13 +1138,11 @@ them.
                 x2 = close.right + pad/3
                 y2 = close.bottom + pad
                 if tagString = type?.tagContents? group
-                    style = @editor.getWin().getComputedStyle group.open
                     tags.push
                         content : tagString
                         corner : { x : x1, y : y1 }
                         color : color
-                        style : "font-size:#{style.fontSize};
-                                 font-family:#{style.fontFamily};"
+                        style : createFontStyleString group.open
                         group : group
 
 Draw this group and then move one step up the group hierarchy, ready to draw
@@ -1839,6 +1990,12 @@ The plugin, when initialized on an editor, places an instance of the
     tinymce.PluginManager.add 'overlay', ( editor, url ) ->
         editor.Overlay = new Overlay editor
 
+Whenever the user scrolls, redraw the contents of the overlay, since things
+probably need to be repositioned.
+
+        editor.on 'init', ( event ) ->
+            ( $ editor.getWin() ).scroll -> editor.Overlay.redrawContents()
+
 
 
 # App Setup Script
@@ -1867,6 +2024,12 @@ place.  For examples of how to do this, see
         color : '#996666'
     ]
 
+Clients who define their own group types may also define their own toolbar
+buttons and menu items to go with them.  But these lists default to empty.
+
+    window.groupToolbarButtons ?= { }
+    window.groupMenuItems ?= { }
+
 We also specify an icon to appear on the menu bar, at the very left.  This
 can be overridden, in the same way as `window.groupTypes`, above.  (See the
 same examples apps for specific code.)
@@ -1883,6 +2046,7 @@ the same examples apps for specific code.)
 
     window.defaultEditorStyles ?=
         fontSize : '16px'
+        fontFamily : 'Verdana, Arial, Helvetica, sans-serif'
 
 We can also provide the text for the Help/About menu item by overriding the
 following in a separate configuration file.  (See the same examples apps for
@@ -1957,7 +2121,8 @@ We then install two toolbars, with separators indicated by pipes (`|`).
                     textcolor subscript superscript removeformat
                     | link unlink | charmap image
                     | spellchecker searchreplace | equationeditor | ' + \
-                    groupTypeNames.join ' '
+                    groupTypeNames.join( ' ' ) + ' | ' + \
+                    Object.keys( window.groupToolbarButtons ).join ' '
             ]
 
 We then customize the menus' contents as follows.
@@ -1966,37 +2131,39 @@ We then customize the menus' contents as follows.
                 file :
                     title : 'File'
                     items : 'newfile openfile | savefile saveas
-                           | managefiles | print'
+                           | managefiles | print' + moreMenuItems 'file'
                 edit :
                     title : 'Edit'
                     items : 'undo redo
                            | cut copy paste pastetext
-                           | selectall'
+                           | selectall' + moreMenuItems 'edit'
                 insert :
                     title : 'Insert'
                     items : 'link media
                            | template hr
-                           | me'
+                           | me' + moreMenuItems 'insert'
                 view :
                     title : 'View'
-                    items : 'visualaid hideshowgroups'
+                    items : 'visualaid hideshowgroups' \
+                          + moreMenuItems 'view'
                 format :
                     title : 'Format'
                     items : 'bold italic underline
                              strikethrough superscript subscript
-                           | formats | removeformat'
+                           | formats | removeformat' \
+                           + moreMenuItems 'format'
                 table :
                     title : 'Table'
                     items : 'inserttable tableprops deletetable
-                           | cell row column'
+                           | cell row column' + moreMenuItems 'table'
                 help :
                     title : 'Help'
-                    items : 'about website'
+                    items : 'about website' + moreMenuItems 'help'
 
 Then we customize the context menu.
 
             contextmenu : 'link image inserttable
-                | cell row column deletetable'
+                | cell row column deletetable' + moreMenuItems 'contextmenu'
 
 And finally, we include in the editor's initialization the data needed by
 the Groups plugin, so that it can find it when that plugin is initialized.
@@ -2020,6 +2187,14 @@ Add a Help menu.
                     context : 'help'
                     onclick : -> window.open 'http://www.lurchmath.org',
                         '_blank'
+
+Add actions and toolbar buttons for all other menu items the client may have
+defined.
+
+                for own name, data of window.groupMenuItems
+                    editor.addMenuItem name, data
+                for own name, data of window.groupToolbarButtons
+                    editor.addButton name, data
 
 Install our DOM utilities in the TinyMCE's iframe's window instance.
 Increase the default font size and maximize the editor to fill the page.
@@ -2065,6 +2240,14 @@ Workaround for [this bug](http://www.tinymce.com/develop/bugtracker_view.php?id=
                     editor.getBody().addEventListener 'focus', ->
                         if editor.windowManager.getWindows().length isnt 0
                             editor.windowManager.close()
+
+The following utility function was used to help build lists of menu items
+in the setup data above.
+
+    moreMenuItems = ( menuName ) ->
+        names = ( k for k in Object.keys window.groupMenuItems \
+            when window.groupMenuItems[k].context is menuName ).join ' '
+        if names.length then "| #{names}" else ''
 
 The third-party plugin for math equations can have its rough meaning
 extracted by the following function, which can be applied to any DOM element

@@ -2273,17 +2273,17 @@ First, compute its dimensions using a temporary span in the document.
 Then build an SVG and store it as blob data.  (See the next function in this
 file for how the blob is built.)
 
-        makeBlob "<svg xmlns='http://www.w3.org/2000/svg' width='#{width}'
-                  height='#{height}'><foreignObject width='100%'
-                  height='100%'><div xmlns='http://www.w3.org/1999/xhtml'
-                  style='#{style}'>#{html}</div></foreignObject></svg>",
-                 'image/svg+xml;charset=utf-8'
+        window.makeBlob "<svg xmlns='http://www.w3.org/2000/svg'
+            width='#{width}' height='#{height}'><foreignObject width='100%'
+            height='100%'><div xmlns='http://www.w3.org/1999/xhtml'
+            style='#{style}'>#{html}</div></foreignObject></svg>",
+            'image/svg+xml;charset=utf-8'
 
 The previous function makes use of the following cross-browser Blob-building
 utility gleaned from [this StackOverflow
 post](http://stackoverflow.com/questions/15293694/blob-constructor-browser-compatibility).
 
-    makeBlob = ( data, type ) ->
+    window.makeBlob = ( data, type ) ->
         try
             new Blob [ data ], type : type
         catch e
