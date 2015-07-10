@@ -11,15 +11,20 @@ when we don't, really.
 
 ## Goal
 
-<table border=0 cellpadding=0 cellspacing=0><tr><td>
-<p><a href='http://lurchmath.org'>Lurch is a mathematical word
-processor</a> that checks the reasoning in users' documents, even
-mathematical proofs.</p>
-<p><i>This project is rewriting Lurch for the web.</i></p>
-</td><td>
-<right><img src='doc/desktop-lurch-icon.png'
-    width='256' height='128'></right></td>
-</tr></table>
+<table border=0 cellpadding=0 cellspacing=0>
+  <tr>
+    <td>
+      <p><a href='http://lurchmath.org'>Lurch is a mathematical word
+        processor</a> that checks the reasoning in users' documents, even
+        mathematical proofs.</p>
+      <p><i>This project is rewriting Lurch for the web.</i></p>
+    </td>
+    <td>
+      <img src='doc/desktop-lurch-icon.png' width='256' height='128'>
+    </td>
+  </tr>
+</table>
+
 
 ## A Development Platform
 
@@ -35,6 +40,7 @@ demo applications and tutorial to start developing.](doc/tutorial.md)
 ## Architecture
 
 Read the following illustration from the bottom up.
+
 
 <table>
   <tr>
