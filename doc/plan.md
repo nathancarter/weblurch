@@ -1,10 +1,6 @@
 
 # Project Plan
 
-Readers unfamiliar with this project may wish to first read what's already
-been accomplished, on the [Project Progress](progress.md) page.  This page
-is a complement to that one, stating what remains to be done.
-
 This document aims to be a complete plan for what needs to be done on this
 project, readable by developers.  It can therefore be viewed as a to-do list
 in chronological order, the first items being those that should be done
@@ -17,10 +13,10 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Documenting Example Applications
+## Bug fixes
 
-Several documentation improvements and new tutorials are planned for the
-weekend of July 10, 2015.
+ * Not all files were added to gh-pages, so some demo apps don't run on the
+   server.
 
 ## Matching Module
 
