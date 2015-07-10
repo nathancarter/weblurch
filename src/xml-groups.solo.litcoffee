@@ -315,6 +315,14 @@ within the function.
     window.validateHierarchy = ( group ) ->
         problems = [ ]
 
+If the group does not even have a children array, then it probably just
+appeared, and is still being initialized.  In that case, just do validation
+in 100ms isntead of now.
+
+        if not group.children
+            setTimeout ( -> window.validateHierarchy group ), 100
+            return
+
 If this group does not have a tag name, we cannot even tell if it belongs
 here or not, and it will create "undefined" tags in any XML export.  That is
 a problem.
@@ -417,8 +425,7 @@ must also check any later siblings of this group, in case they have the
 "unique" attribute, which would could change their validation status based
 on attributes of this group.
 
-        if group.nextSibling()
-            window.validateHierarchy group.nextSibling()
+        if next = group.nextSibling() then window.validateHierarchy next
 
 Here is the auxiliary function used earlier in validating counts of allowed
 children.
