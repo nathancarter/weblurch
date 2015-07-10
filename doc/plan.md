@@ -23,10 +23,6 @@ required order of completion.
 
 Necessary next steps:
 
- * Add the tag property "allowedChildren" listing those tags that may show
-   up inside this one.  It should map tag names to intervals [min,max]
-   indicating the permitted number of occurrences.  To indicate exactly n,
-   use [n,n].  To indicate n or more use [n,9999999999].
  * Use the "allowedChildren" data to create a submenu of the context/tag
    menu that lets you change a tag of one type to an entirely different
    type.  Types that aren't permitted at that point are grayed out

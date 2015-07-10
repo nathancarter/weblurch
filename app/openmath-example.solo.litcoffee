@@ -61,6 +61,17 @@ slight rewordings to suit this particular application.
             topLevel : yes
             defaultChild : 'Description'
             includeText : 'CDComment'
+            allowedChildren :
+                CDName : [ 1, 1 ]
+                CDURL : [ 0, 1 ]
+                CDBase : [ 0, 1 ]
+                CDReviewDate : [ 0, 1 ]
+                CDDate : [ 1, 1 ]
+                CDStatus : [ 1, 1 ]
+                CDUses : [ 0, 1 ]
+                CDVersion : [ 1, 1 ]
+                CDRevision : [ 1, 1 ]
+                CDDefinition : [ 0, 9999999999 ]
         Description :
             documentation : '<p>The text occurring in the Description
                 element is used to give a description of the enclosing
@@ -307,6 +318,12 @@ slight rewordings to suit this particular application.
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CD' ]
             includeText : 'MathematicalProperty'
+            allowedChildren :
+                Name : [ 1, 1 ]
+                Role : [ 0, 1 ]
+                Description : [ 1, 1 ]
+                Example : [ 0, 9999999999 ]
+                MathematicalProperty : [ 0, 9999999999 ]
         Name :
             externalName : 'Symbol Name'
             documentation : '<p>The name of a symbol.  For example, standard
@@ -363,6 +380,8 @@ slight rewordings to suit this particular application.
                 must not use any other content inside an Example.</p>
                 <p>Source: <a href="http://www.openmath.org/standard/om20-2004-06-30/omstd20.pdf">the OpenMath Standard version 2.0</a></p>'
             belongsIn : [ 'CDDefinition' ]
+            allowedChildren :
+                OMOBJ : [ 0, 9999999999 ]
         OMOBJ :
             externalName : 'OpenMath Object'
             documentation : '<p>An OpenMath Object, expressed in the XML
@@ -398,3 +417,5 @@ slight rewordings to suit this particular application.
                     XML.replace /MathematicalProperty>/g, 'FMP>'
                 else
                     XML.replace /MathematicalProperty>/g, 'CMP>'
+            allowedChildren :
+                OMOBJ : [ 0, 1 ]

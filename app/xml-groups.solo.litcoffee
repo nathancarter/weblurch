@@ -65,6 +65,16 @@ The following properties are supported for each tag name.
    exist in any given parent group.  Any others will be flagged as invalid
    by the validation routine.  (See
    [validation](#validating-the-hierarchy).)
+ * `allowedChildren` - if present, this should be a mapping from names of
+   other tags to intervals [min,max] of permitted number of occurrences of
+   them as children of elements with this tag.  For instance, the Employee
+   tag might have an "allowedChildren" map of
+   `Client : [0,999999999], Gender : [1,1]`, which indicates that there can
+   be any number of Client elements for an Employee, but only one Gender.
+   This will be checked at validation time.  (See
+   [validation](#validating-the-hierarchy).)  Also, the set of permitted
+   child elements will be used to restrict the menu when the user attempts
+   to change the type of a child; only permitted types will be active.
  * `contentCheck` - If present, this should be a function that will be run
    last in any validation of the group.  It should return an array of error
    strings describing zero or more ways the group failed to validate.  If
@@ -312,6 +322,35 @@ that reason.
                         there is already an earlier one in this context,
                         making this one invalid."
                     break
+
+Check to see if the group's set of children elements are within the allowed
+numbers.  To do so, we first form a mapping from tag names to the number of
+children we have of each of those tags.  Then we compare that mapping to the
+mapping of allowed values.
+
+        if allowed = window.getTagData group, 'allowedChildren'
+            counts = { }
+            for child in group.children
+                childTag = window.getGroupTag child
+                counts[childTag] ?= 0
+                counts[childTag]++
+            for own tagName of allowed
+                counts[tagName] ?= 0
+            for own tagName, count of counts
+                if not allowed.hasOwnProperty tagName then continue
+                [ min, max ] = allowed[tagName]
+                if not min? or not max? then continue
+                if typeof min isnt 'number' or typeof max isnt 'number'
+                    continue
+                verb = if count is 1 then 'is' else 'are'
+                word = if min is 1 then 'child' else 'children'
+                if count < min then problems.push "This element requires at
+                    least #{min} #{word} with tag #{tagName}, but there
+                    #{verb} #{count} in this element."
+                word = if max is 1 then 'child' else 'children'
+                if count > max then problems.push "This element permits at
+                    most #{max} #{word} with tag #{tagName}, but there
+                    #{verb} #{count} in this element."
 
 If the group's tag is marked with a "contentCheck" function, we run it now
 on the group, to see if it gives us any additional problems.  It returns an
