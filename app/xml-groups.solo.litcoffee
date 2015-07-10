@@ -270,7 +270,7 @@ default tag type should be, and initialize it to that default.  We must do
 this on a delay, because when `firstTime` is true, the group does not even
 yet have its parent pointer set.
 
-        if firstTime
+        if firstTime and not group.get 'tagName'
             setTimeout ( -> window.initializeGroupTag group ), 0
 
 And every time, revalidate the XML hierarchy at this point.
