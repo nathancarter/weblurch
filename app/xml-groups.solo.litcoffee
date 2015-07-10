@@ -65,6 +65,14 @@ The following properties are supported for each tag name.
    exist in any given parent group.  Any others will be flagged as invalid
    by the validation routine.  (See
    [validation](#validating-the-hierarchy).)
+ * `contentCheck` - If present, this should be a function that will be run
+   last in any validation of the group.  It should return an array of error
+   strings describing zero or more ways the group failed to validate.  If
+   the group passes validation, return an empty array.  If absent, no custom
+   validation will be done; only the criteria described above will be
+   applied.  If present, this function can do whatever additional custom
+   validation of the document hierarchy you need.  (See
+   [validation](#validating-the-hierarchy).)
 
     tagData = { }
     window.setTagData = ( newData ) -> tagData = newData
@@ -304,6 +312,16 @@ that reason.
                         there is already an earlier one in this context,
                         making this one invalid."
                     break
+
+If the group's tag is marked with a "contentCheck" function, we run it now
+on the group, to see if it gives us any additional problems.  It returns an
+array of error messages for us to append to the problems array (an empty
+array if it finds no problems).
+
+        if check = window.getTagData group, 'contentCheck'
+            moreProblems = check group
+            if moreProblems instanceof Array
+                problems = problems.concat moreProblems
 
 If there were any problems, mark the group as invalid.  Otherwise, clear any
 indication of invalidity.

@@ -98,6 +98,13 @@ slight rewordings to suit this particular application.
             belongsIn : [ 'CD' ]
             belongsAfter : [ 'Description', null ]
             unique : yes
+            contentCheck : ( group ) ->
+                tryToMakeVariable = OM.variable group.contentAsText().trim()
+                if tryToMakeVariable not instanceof OMNode
+                    [ 'Content Dictionary Names must be valid identifiers.
+                        The content of this element is not.' ]
+                else
+                    [ ]
         CDURL :
             externalName : 'Content Dictionary URL'
             documentation : '<p>The text occurring in the CDURL element
@@ -111,6 +118,13 @@ slight rewordings to suit this particular application.
             belongsIn : [ 'CD' ]
             belongsAfter : [ 'CDName' ]
             unique : yes
+            contentCheck : ( group ) ->
+                re = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i
+                if not re.test group.contentAsText().trim()
+                    [ 'Content Dictionary URL elements must contain valid
+                        URLs.  This one does not.' ]
+                else
+                    [ ]
         CDBase :
             externalName : 'Content Dictionary Base'
             documentation : '<p>A Content Dictionary Base, when combined
@@ -145,6 +159,16 @@ slight rewordings to suit this particular application.
             belongsIn : [ 'CD' ]
             belongsAfter : [ 'CDStatus' ]
             unique : yes
+            contentCheck : ( group ) ->
+                okay = ( text ) -> OM.variable( text ) instanceof OMNode
+                words = group.contentAsText().trim().split /\s+/
+                notOkay = ( word for word in words when okay word )
+                if notOkay.length > 0
+                    [ "Content Dictionary Uses must be lists of valid
+                        identifiers.  The following words are not valid
+                        identifiers:  #{notOkay.join ', '}" ]
+                else
+                    [ ]
         CDReviewDate :
             externalName : 'Content Dictionary Review Date'
             documentation : '<p>A review date is a date until which the
@@ -158,6 +182,25 @@ slight rewordings to suit this particular application.
             belongsIn : [ 'CD' ]
             belongsAfter : [ 'Name', 'CDURL', 'CDBase' ]
             unique : yes
+            contentCheck : ( group ) ->
+                match = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.exec \
+                    group.contentAsText().trim()
+                if not match
+                    [ 'This element must contain a valid date of the form
+                        YYYY-MM-DD.' ]
+                else
+                    month = parseInt match[2]
+                    date = parseInt match[3]
+                    if month < 1 or month > 12
+                        [ "This element must contain a valid date in the
+                            form YYYY-MM-DD.  The month #{month} is
+                            invalid." ]
+                    else if date < 1 or date > 31
+                        [ "This element must contain a valid date in the
+                            form YYYY-MM-DD.  The date #{date} is
+                            invalid." ]
+                    else
+                        [ ]
         CDStatus :
             externalName : 'Content Dictionary Status'
             documentation : '<p>The status of the Content Dictionary, which
@@ -180,6 +223,14 @@ slight rewordings to suit this particular application.
             belongsIn : [ 'CD' ]
             belongsAfter : [ 'CDDate' ]
             unique : yes
+            contentCheck : ( group ) ->
+                valids =
+                    [ 'official', 'experimental', 'private', 'obsolete' ]
+                if group.contentAsText().trim() in valids
+                    [ ]
+                else
+                    [ "A Content Dictionary Status must be one of the
+                        following choices: #{valids.join ', '}" ]
         CDDate :
             externalName : 'Content Dictionary Date'
             documentation : '<p>A revision date, the date of the last change
@@ -193,6 +244,8 @@ slight rewordings to suit this particular application.
             belongsIn : [ 'CD' ]
             belongsAfter : [ 'Name', 'CDURL', 'CDBase', 'CDReviewDate' ]
             unique : yes
+            contentCheck : ( group ) ->
+                window.getTagData( 'CDReviewDate', 'contentCheck' ) group
         CDVersion :
             externalName : 'Content Dictionary Version'
             documentation : '<p>A version number must consist of two parts,
@@ -210,6 +263,12 @@ slight rewordings to suit this particular application.
             belongsIn : [ 'CD' ]
             belongsAfter : [ 'CDStatus', 'CDUses' ]
             unique : yes
+            contentCheck : ( group ) ->
+                if /[0-9]+/.test group.contentAsText().trim()
+                    [ ]
+                else
+                    [ "A Content Dictionary Version must be a nonnegative
+                        integer." ]
         CDRevision :
             externalName : 'Content Dictionary Revision'
             documentation : '<p>A version number must consist of two parts,
@@ -227,6 +286,12 @@ slight rewordings to suit this particular application.
             belongsIn : [ 'CD' ]
             belongsAfter : [ 'CDVersion' ]
             unique : yes
+            contentCheck : ( group ) ->
+                if /[0-9]+/.test group.contentAsText().trim()
+                    [ ]
+                else
+                    [ "A Content Dictionary Revision must be a nonnegative
+                        integer." ]
         CDDefinition :
             defaultChild : 'Description'
             documentation : '<p>This element contains the definition of an
@@ -254,6 +319,13 @@ slight rewordings to suit this particular application.
             belongsIn : [ 'CDDefinition' ]
             belongsAfter : [ null ]
             unique : yes
+            contentCheck : ( group ) ->
+                tryToMakeVariable = OM.variable group.contentAsText().trim()
+                if tryToMakeVariable not instanceof OMNode
+                    [ 'Symbol Names must be valid identifiers.
+                        The content of this element is not.' ]
+                else
+                    [ ]
         Role :
             externalName : 'Symbol Role'
             documentation : '<p>The role of a symbol, which indicates how
@@ -274,6 +346,15 @@ slight rewordings to suit this particular application.
             belongsIn : [ 'CDDefinition' ]
             belongsAfter : [ 'Name' ]
             unique : yes
+            contentCheck : ( group ) ->
+                valids =
+                    [ 'binder', 'attribution', 'semantic-attribution',
+                      'error', 'application', 'constant' ]
+                if group.contentAsText().trim() in valids
+                    [ ]
+                else
+                    [ "A Symbol Role must be one of the following choices:
+                        #{valids.join ', '}" ]
         Example :
             documentation : '<p>An example should show how the symbol is
                 used, to illustrate the symbol to the reader of the Content

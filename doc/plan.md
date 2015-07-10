@@ -23,20 +23,14 @@ required order of completion.
 
 Necessary next steps:
 
- * Add a tag attribute "contentCheck" that is a function that will be called
-   on a group during the rule-checking function, as the last step in
-   validating the Group.  It can do anything, and must either return true
-   (meaning the check passes) or an error message (meaning that it does
-   not).  The error message, if any, will be used as the alt text for the
-   red X in the close grouper.  This feature can be used to check text
-   format of leaf groups, or complex structure of non-leaf groups.
- * Write a function that lists the tags that can appear in a parent of a
-   given tag type.  It will need to invert the "belongsIn" relation to give
-   its results.
- * Use the function created in the previous bullet point to create a submenu
-   of the context/tag menu that lets you change a tag of one type to an
-   entirely different type.  Types that aren't permitted at that point are
-   grayed out (disabled).  See roughly lines 1127-1164 of
+ * Add the tag property "allowedChildren" listing those tags that may show
+   up inside this one.  It should map tag names to intervals [min,max]
+   indicating the permitted number of occurrences.  To indicate exactly n,
+   use [n,n].  To indicate n or more use [n,9999999999].
+ * Use the "allowedChildren" data to create a submenu of the context/tag
+   menu that lets you change a tag of one type to an entirely different
+   type.  Types that aren't permitted at that point are grayed out
+   (disabled).  See roughly lines 1127-1164 of
    [groupsplugin.litcoffee](../app/groupsplugin.litcoffee) for code on how
    to create arbitrary context menus.  The code
    [here](http://stackoverflow.com/a/17213889/670492) shows that any item
