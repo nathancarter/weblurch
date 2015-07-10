@@ -17,7 +17,8 @@ processor</a> that checks the reasoning in users' documents, even
 mathematical proofs.</p>
 <p><i>This project is rewriting Lurch for the web.</i></p>
 </td><td>
-<right><img src='doc/desktop-lurch-icon.png'></right></td>
+<right><img src='doc/desktop-lurch-icon.png'
+    width='50%' height='50%'></right></td>
 </tr></table>
 
 ## A Development Platform
@@ -38,18 +39,18 @@ Read the following illustration from the bottom up.
 <table>
   <tr>
     <td>Applications:</td>
-    <td><center>*Lurch Proof Checker*</center></td>
-    <td><center>[Demo apps](doc/tutorial.md)</center></td>
-    <td><center>Your app</center></td>
+    <td align=center><i>Lurch Proof Checker</i></td>
+    <td align=center><a href='./doc/tutorial.md'>Demo apps</a></td>
+    <td align=center>Your app</td>
   </tr>
   <tr>
     <td>Platform:</td>
-    <td colspan=3><center>*Lurch Web Platform*</center></td>
+    <td align=center colspan=3><i>Lurch Web Platform</i></td>
   </tr>
   <tr>
     <td>Foundation:</td>
-    <td colspan=3><center>[TinyMCE
-        editor](http://www.tinymce.com)</center></td>
+    <td align=center colspan=3><a href='http://www.tinymce.com'>TinyMCE
+        editor</a></td>
   </tr>
 </table>
 
@@ -65,7 +66,7 @@ on the *Lurch Web Platform*.
 ## Development
 
 If you're interested in helping out with development of this project (e.g.,
-upstream commits if you use the platform,) contact
+upstream commits if you use the platform), contact
 [Nathan Carter](mailto:ncarter@bentley.edu).
 
 ### Repository details

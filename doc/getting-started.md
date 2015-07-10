@@ -3,7 +3,7 @@
 
 ## Try the demos online
 
-You can [try out demo apps right now online](doc/tutorial.md), but doing
+You can [try out demo apps right now online](tutorial.md), but doing
 development requires cloning and setting up this repository on your machine.
 Here's how.
 
@@ -27,19 +27,24 @@ $ npm test             # builds app and runs unit test suite
 To use any of the demo apps on your own local machine, you need a web server
 (to avoid browser security concerns with `file:///` URLs).  You almost
 certainly have Python installed, so in the root of the project repository,
-just run
+do this.
 ```
-python -m SimpleHTTPServer 8000
+$ python -m SimpleHTTPServer 8000
 ```
 Point your browser to `localhost:8000/app/index.html`, or any other page in
 the repository's `app/` folder.
 
 ## [CoffeeScript](http://www.coffeescript.org)
 
-To build the app without running the tests, run `./node_modules/.bin/cake`.
-Since that's inconvenient, you can install
-[CoffeeScript](http://www.coffeescript.org) globally as follows, and `cake`
-will then be in your path.
+To build the app without running the tests, you'll want to run the build
+command `cake`, which is part of [CoffeeScript](http://www.coffeescript.org).
+Install CoffeeScript globally (just once) with this command.
 ```
 $ npm install -g coffee-script
 ```
+Now you have the `cake` command.  Use it to build the app without running
+tests as follows.
+```
+$ cake app
+```
+See more options by running `cake` with no parameters.
