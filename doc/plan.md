@@ -1,10 +1,6 @@
 
 # Project Plan
 
-Readers unfamiliar with this project may wish to first read what's already
-been accomplished, on the [Project Progress](progress.md) page.  This page
-is a complement to that one, stating what remains to be done.
-
 This document aims to be a complete plan for what needs to be done on this
 project, readable by developers.  It can therefore be viewed as a to-do list
 in chronological order, the first items being those that should be done
@@ -17,50 +13,10 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Example Applications
+## Bug fixes
 
-### OpenMath Content Dictionary Authoring Application
-
-Bug fixes
- * When you open a file that's longer than the screen, you must open and
-   close the JS console to force resizing, or it won't scroll vertically.
-
-Optional next steps, that can be saved for later:
-
- * Each tag's data can specify a set of Group attributes that should be
-   copied into the XML output as element attributes.  Then clients can
-   create their own UI for editing such attributes, and just store them in
-   the Groups themselves, content with the fact that the `xml-groups` module
-   will carry that data over into the XML output.
- * Add support to the Groups package for accepting click and/or double-click
-   events on open/close groupers, and passing them to the Group type for
-   handling.  Here is the code the MathQuill plugin uses for this purpose.
-   Note the selector in the second line.
-```
-editor.on 'init', ->
-    ( $ editor.getDoc() ).on 'click', '.rendered-latex', ( event ) ->
-        event.stopPropagation()
-        # here, "this" is the element that received the click event
-```
- * Use the feature from the previous bullet point to give more detailed
-   feedback about failed structural rules.
- * Create an importer that reads in OM CDs and creates documents from them
-   that use Groups.  This would then truly be an OM CD Editor!
-
-### General documentation
-
-Create a tutorial page in the repository (as a `.md` file) on how the reader
-can create their own webLurch-based applications.  Link to it from [the main
-README file](../README.md).
-
-That is the last work that can be done without there being additional design
-work completed.  The section on [Dependencies](#dependencies), below,
-requires us to design how background computation is paused/restarted when
-things are saved/loaded, including when they are dependencies.  The section
-thereafter is about building the symbolic manipulation core of Lurch itself,
-which is currently being redesigned by
-[Ken](http://mathweb.scranton.edu/ken/), and that design is not yet
-complete.
+ * Not all files were added to gh-pages, so some demo apps don't run on the
+   server.
 
 ## Matching Module
 
@@ -133,48 +89,15 @@ complete.
    expression into a pattern (whether nested or not) an error is thrown.
  * Also verify that if there are metavariables in the expression, that an
    error is thrown.
- * Remove `app/openmath.duo.litcoffee` from git control in master.  Ensure
-   that it remains under git control in gh-pages.  Furthermore, ensure that
-   `app/matching.duo.litcoffee` does not go under git control in master, but
-   does in gh-pages.
 
-## Miscellany
-
-Future math parsing enhancements:
- * Support adjacent atomics as factors in a product
- * Support chained equations
- * Add tests for things that should *not* parse, and verify that they do not
-
-Improve build process to not compile files whose dates indicate that they
-do not need it, nor to minify files whose dates indicate that they do not
-need it.
-
-Make a menu item for hiding/showing group decorations.
-
-Several new methods have been added to the Groups Plugin without unit tests
-being written for them.  Be sure to look back through the full list of
-functions in that file and find those which have no unit tests, and create
-unit tests for them, debugging the functions as you do so.
-
-The `Group.set` function no longer takes any action if the new value is the
-same as the old value.  (Similarly, `clear` doesn't do anything if the
-attribute is already gone.)  This prevents clients from needing to implement
-their own checks to prevent infinite loops of change event handlers.  The
-remaining task is to go through the demo apps and find their workarounds for
-this annoyance and remove them to clean up those apps (and not confuse
-readers).  Then verify that the apps still work, i.e., that there truly are
-no infinite loops remaining.
-
-Notes for when you create validation:  Some nice Unicode characters to use
-for validation indicators:
- * Nice, natural-looking exes: &#10006;, &#10007;, &#10008;
- * Nice, natural-looking check marks: &#10003;, &#10004;
- * Filled stars: &#10029; (5 points), &#10038; (6, rounded), &#10039; (8),
-   &#10040; (10), &#10041; (12)
- * White-on-dark numbers, 1 through 10: &#10122;, ..., &#10131;
-
-It's too easy to navigate away from the editor and lose your work.  Make a
-popup that asks if you really want to leave the page or not.
+That is the last work that can be done without there being additional design
+work completed.  The section on [Dependencies](#dependencies), below,
+requires us to design how background computation is paused/restarted when
+things are saved/loaded, including when they are dependencies.  The section
+thereafter is about building the symbolic manipulation core of Lurch itself,
+which is currently being redesigned by
+[Ken](http://mathweb.scranton.edu/ken/), and that design is not yet
+complete.
 
 ## Logical Foundation
 

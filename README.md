@@ -9,107 +9,86 @@ when we don't, really.
 [![Build status](https://travis-ci.org/nathancarter/weblurch.svg?branch=master)](https://travis-ci.org/nathancarter/weblurch)
 -->
 
-This project is an attempt to rewrite [Lurch](http://lurchmath.org) in a web
-browser, together with many major design improvements at the same time.  But
-this project is only just beginning; the main Lurch product is still the
-desktop app, which works well.
+## Goal
 
-Information on this project:
- * [Overview](doc/overview.md) - start here
- * [Project Progress](doc/progress.md) - what's been built
- * [Project Plan](doc/plan.md) - what's left to build
- * [Repository contents](#repository-contents) - full details on all files
+<img src='doc/destop-lurch-icon.png'
+    style='float:right;width:128px;height:128px;'>
+[Lurch is a mathematical word processor](http://lurchmath.org) that checks
+the reasoning in users' documents, even mathematical proofs.
 
-Or just start here:
+*This project is rewriting Lurch for the web.*
 
-## Getting Started
+## A Development Platform
 
-Although you can [try the current version out
-online](http://nathancarter.github.io/weblurch/app/index.html), right now
-it's just a [TinyMCE](http://www.tinymce.com) instance that can load and
-save files and has support for "meaningful expression" groups that don't
-(yet!) do anything useful.  The interesting features are still to come.
+The rewrite involves building many supporting tools that we call the *Lurch
+Web Platform.*
 
-If you want to build any of the source code in this repository on your local
-machine, be sure that you have [node.js](http://nodejs.org) installed, and
-then execute the commands below. (The software does not run under `node`,
-but the build process does.)
-```
-$ git clone https://github.com/nathancarter/weblurch
-$ cd weblurch
-$ git submodule init   # prepares git submodule folders
-$ git submodule update # downloads all files in all git submodules
-$ npm install          # installs required packages in ./node_modules
-$ npm test             # builds app and runs unit test suite
-```
+Other developers can build math-enabled web apps on the same platform, which
+improves the platform and grows the community.
 
-To then run the app on your own local machine, you will need a web server
-(to avoid heightened browser security with `file:///` URLs).  If you have
-Python installed, this is trivial.  In the root of the project repository,
-run
-```
-python -m SimpleHTTPServer 8000
-```
-Then point your browser to `localhost:8000/app/index.html`.
+We've made the architecture simple and the learning curve small.  [See the
+demo applications and tutorial to start developing.](doc/tutorial.md)
 
-To build the app without running the tests, run `./node_modules/.bin/cake`.
-Since that's inconvenient, you can install
-[CoffeeScript](http://www.coffeescript.org) globally as follows, and `cake`
-will then be in your path.
-```
-$ npm install -g coffee-script
-```
-Browse this repository for more information.  The source code is
-literate, so there's lots of documentation embedded in it, by nature.
+## Architecture
 
-## Building your own app
+Read the following illustration from the bottom up.
 
-You can learn how to create your own apps based on webLurch's foundation by
-checking out the file for
-[a simple example](app/simple-example.solo.litcoffee) and then for
-[a complex example](app/complex-example.solo.litcoffee).
+<table>
+  <tr>
+    <td>Applications:</td>
+    <td><center>*Lurch Proof Checker*</center></td>
+    <td><center>[Demo apps](doc/tutorial.md)</center></td>
+    <td><center>Your app</center></td>
+  </tr>
+  <tr>
+    <td>Platform:</td>
+    <td colspan=3><center>*Lurch Web Platform*</center></td>
+  </tr>
+  <tr>
+    <td>Foundation:</td>
+    <td colspan=3><center>[TinyMCE
+        editor](http://www.tinymce.com)</center></td>
+  </tr>
+</table>
 
-## Repository contents
+## Status
 
-All source code in this repository is written in [literate
-CoffeeScript](http://coffeescript.org/#literate), which GitHub automatically
-renders beautifully in the browser; see [this
-example](buildutils.litcoffee).
+[The *Lurch Web Platform* is ready to use.](doc/tutorial.md)  Enhancements
+are ongoing.
 
-### Root folder
+The *Lurch Proof Checker* exists only as [a desktop
+app](http://www.lurchmath.org).  It is being redesigned for implementation
+on the *Lurch Web Platform*.
 
-In the root folder of this repository you will find only a very few files.
- * `package.json` - used by [node.js](http://nodejs.org) to install
-   dependencies for this project.  (This project does not run under `node`;
-   it runs in a browser, but the build system runs under `node`.)
- * `cake.litcoffee` - definition of the build process.  To run the build
-   process, see [Getting Started](#getting-started), above.
- * `Cakefile` - technically, this is the file that `cake` reads, but in
-   order to keep all files in the repository in the same language, this file
-   is just a one-liner that redirects all processing to `cake.litcoffee`.
+## Development
 
-### `app` folder
+If you're interested in helping out with development of this project (e.g.,
+upstream commits if you use the platform,) contact
+[Nathan Carter](mailto:ncarter@bentley.edu).
 
-The actual web app that this project defines gets built into this folder.
-Its main page is [index.html](app/index.html).
+### Repository details
 
-That file also appears in the the `gh-pages` branch, and is therefore
-available for use online, served from GitHub.  The link in
-[the Getting Started section](#getting-started) leads to the live version.
+All source code is in [literate
+CoffeeScript](http://coffeescript.org/#literate).  This makes it highly
+readable, especially on GitHub, which renders it as MarkDown.  I have tried
+to be verbose in my comments, to help new readers.
 
-### `src` folder
-
-Where the source files are stored that are used when building the app in the
-`app` folder.
-
-### `test` folder
-
-Where test specs (and utilities used by the unit test suite) are stored. See
-[the source file defining the build process](cake.litcoffee) for more
-information.
-
-### `node_modules` folder
-
-This folder appears when you configure a local copy of this repository.  See
-[Getting Started](#getting-started), above.  It is where `node` installs all
-necessary dependencies, locally.
+A brief tour of the repository:
+ * `/` (root)
+   * `package.json` - used by [node.js](http://nodejs.org) to install
+     dependencies  (The app runs in a browser, not node.js.  This is just
+     for dev tools.)
+   * `cake.litcoffee` and `buildutils.litcoffee` define the build process.
+ * `app/`
+   * Demo apps and the plugins that create them reside here.  You can try
+     them out live on the web; see
+     [the demo apps and tutorials page](doc/tutorial.md).
+   * Eventually, the *Lurch Proof Checker* will be rewritten for the web and
+     live in this folder.
+ * `src/`
+   * Source code files used for building the platform.
+   * The build process compiles these into files in the `app` folder.
+ * `test/`
+   * Unit tests.
+   * To run them, execute `cake test` in the main folder, after you've set
+     it up as per [the Getting Started page](doc/getting-started.md).

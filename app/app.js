@@ -1089,7 +1089,7 @@
           right: close.right,
           bottom: close.bottom
         };
-        onSameLine = (open.top < (_ref2 = close.top) && _ref2 < open.bottom) || (close.top < (_ref3 = open.top) && _ref3 < close.bottom);
+        onSameLine = (open.top <= (_ref2 = close.top) && _ref2 <= open.bottom) || (close.top <= (_ref3 = open.top) && _ref3 <= close.bottom);
         for (index = _i = 0, _len = rects.length; _i < _len; index = ++_i) {
           rect = rects[index];
           open.top = Math.min(open.top, rect.top);
