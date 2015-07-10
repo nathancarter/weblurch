@@ -11,12 +11,14 @@ when we don't, really.
 
 ## Goal
 
-<img src='doc/destop-lurch-icon.png'
-    style='float:right;width:128px;height:128px;'>
-[Lurch is a mathematical word processor](http://lurchmath.org) that checks
-the reasoning in users' documents, even mathematical proofs.
-
-*This project is rewriting Lurch for the web.*
+<table border=0 cellpadding=0 cellspacing=0><tr><td>
+<p><a href='http://lurchmath.org'>Lurch is a mathematical word
+processor</a> that checks the reasoning in users' documents, even
+mathematical proofs.</p>
+<p><i>This project is rewriting Lurch for the web.</i></p>
+</td><td>
+<right><img src='doc/desktop-lurch-icon.png'></right></td>
+</tr></table>
 
 ## A Development Platform
 
