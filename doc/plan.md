@@ -13,11 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Bug fixes
-
- * Not all files were added to gh-pages, so some demo apps don't run on the
-   server.
-
 ## Matching Module
 
  * Extend Match's `set(k,v)` member as follows:
