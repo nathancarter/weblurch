@@ -1108,11 +1108,12 @@ outward to make sure the bubble encloses the entire contents of the group.
                     left : close.left
                     right : close.right
                     bottom : close.bottom
-                onSameLine = open.top <= close.top <= open.bottom or \
-                             close.top <= open.top <= close.bottom
+                onSameLine = yes
                 for rect, index in rects
                     open.top = Math.min open.top, rect.top
                     close.bottom = Math.max close.bottom, rect.bottom
+                    if rect.right > close.right or \
+                       rect.left < open.left then onSameLine = no
                 if onSameLine
                     close.top = open.top
                     open.bottom = close.bottom
