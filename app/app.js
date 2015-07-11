@@ -1042,7 +1042,7 @@
     };
 
     Groups.prototype.drawGroups = function(canvas, context) {
-      var bodyStyle, close, color, group, i, index, leftMar, moveBy, old, onSameLine, open, p4, pad, padStep, radius, rect, rects, rightMar, size, tag, tagString, tags, tagsToDraw, type, x1, x2, y1, y2, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3, _ref4, _results;
+      var bodyStyle, close, color, group, i, index, leftMar, moveBy, old, onSameLine, open, p4, pad, padStep, radius, rect, rects, rightMar, size, tag, tagString, tags, tagsToDraw, type, x1, x2, y1, y2, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _results;
       this.bubbleTags = [];
       if (this.scanLocks > 0) {
         return;
@@ -1089,11 +1089,14 @@
           right: close.right,
           bottom: close.bottom
         };
-        onSameLine = (open.top <= (_ref2 = close.top) && _ref2 <= open.bottom) || (close.top <= (_ref3 = open.top) && _ref3 <= close.bottom);
+        onSameLine = true;
         for (index = _i = 0, _len = rects.length; _i < _len; index = ++_i) {
           rect = rects[index];
           open.top = Math.min(open.top, rect.top);
           close.bottom = Math.max(close.bottom, rect.bottom);
+          if (rect.right > close.right || rect.left < open.left) {
+            onSameLine = false;
+          }
         }
         if (onSameLine) {
           close.top = open.top;
@@ -1102,8 +1105,8 @@
         if ((open.top === open.bottom || close.top === close.bottom || open.left === open.right || close.left === close.right) && !($(group.open)).hasClass('hide')) {
           setTimeout(((function(_this) {
             return function() {
-              var _ref4;
-              return (_ref4 = _this.editor.Overlay) != null ? _ref4.redrawContents() : void 0;
+              var _ref2;
+              return (_ref2 = _this.editor.Overlay) != null ? _ref2.redrawContents() : void 0;
             };
           })(this)), 100);
           return;
@@ -1150,8 +1153,8 @@
         if (!(size = context.measureHTML(tag.content, tag.style))) {
           setTimeout(((function(_this) {
             return function() {
-              var _ref4;
-              return (_ref4 = _this.editor.Overlay) != null ? _ref4.redrawContents() : void 0;
+              var _ref2;
+              return (_ref2 = _this.editor.Overlay) != null ? _ref2.redrawContents() : void 0;
             };
           })(this)), 10);
           return;
@@ -1169,7 +1172,7 @@
           }
         }
         y2 = tag.corner.y;
-        _ref4 = [x1, y1, x2, y2], tag.x1 = _ref4[0], tag.y1 = _ref4[1], tag.x2 = _ref4[2], tag.y2 = _ref4[3];
+        _ref2 = [x1, y1, x2, y2], tag.x1 = _ref2[0], tag.y1 = _ref2[1], tag.x2 = _ref2[2], tag.y2 = _ref2[3];
         tagsToDraw.unshift(tag);
       }
       _results = [];
