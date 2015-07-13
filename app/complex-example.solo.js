@@ -28,35 +28,20 @@
         }
       },
       contentsChanged: function(group, firstTime) {
+        if (group.doNotReEvaluate) {
+          return;
+        }
+        group.set('closeDecoration', '<font color="#999999">...</font>');
         return Background.addTask('do arithmetic', [group], function(result) {
-          var before, leftHandSide, origPos, range, text, textNode, _ref, _ref1;
+          var safeResult;
           if (group.deleted || (result == null)) {
             return;
           }
-          text = group.contentAsText();
-          if (result === text) {
-            return;
-          }
-          leftHandSide = text.split('=')[0];
-          before = (_ref = group.plugin) != null ? _ref.editor.selection.getRng() : void 0;
-          textNode = group.open.nextSibling;
-          if (before.startContainer === textNode) {
-            origPos = before.startOffset;
-          }
-          group.setContentAsText("" + leftHandSide + "=" + result);
-          if (!(textNode = group.open.nextSibling)) {
-            return;
-          }
-          range = textNode.ownerDocument.createRange();
-          if (origPos == null) {
-            origPos = leftHandSide.length;
-          }
-          if (origPos > textNode.textContent.length) {
-            origPos = textNode.textContent.length;
-          }
-          range.setStart(textNode, origPos);
-          range.setEnd(textNode, origPos);
-          return (_ref1 = group.plugin) != null ? _ref1.editor.selection.setRng(range) : void 0;
+          safeResult = ("" + result).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+          safeResult = "<font color=\"#009900\">=" + safeResult + "</font>";
+          group.doNotReEvaluate = true;
+          group.set('closeDecoration', safeResult);
+          return group.doNotReEvaluate = false;
         });
       }
     }, {

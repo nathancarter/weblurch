@@ -75,6 +75,23 @@ second one will be called (assuming that it completes without error or
 early termination).
 
         contentsChanged : ( group, firstTime ) ->
+
+If the change we're hearing about is one we just made ourselves (see below)
+then we do not bother responding, to prevent an infinite loop.
+
+            if group.doNotReEvaluate then return
+
+We begin by placing an hourglass character as the decoration at the end of
+the group, to show that a computation is pending.  Again, these computations
+do not actually take very long, but we have artificially extended them to
+take one second, just as a demonstration of what might happen in more
+computationally intensive contexts.
+
+            group.set 'closeDecoration',
+                '<font color="#999999">...</font>'
+
+Now we enqueue the background task.
+
             Background.addTask 'do arithmetic', [ group ], ( result ) ->
 
 We must always check in any callback whether the group we wish to modify
@@ -83,46 +100,20 @@ attempting to modify its contents would then cause errors.)
 
                 if group.deleted or not result? then return
 
-We now rewrite the contents of the group as an equation, showing the
-original content followed by an equals sign and then the result computed by
-the background process.  If the contents of the group haven't changed, we
-do nothing.
+We can now change the decoration at the end of the group to indicate that we
+have computed a value for the group, using an equals sign, and green text to
+indicate success.
 
-                text = group.contentAsText()
-                if result is text then return
-                leftHandSide = text.split( '=' )[0]
+                safeResult = "#{result}".replace /&/g, '&amp;'
+                .replace /</g, '&lt;'
+                .replace />/g, '&gt;'
+                .replace /"/g, '&quot;'
+                .replace /'/g, '&apos;'
+                safeResult = "<font color=\"#009900\">=#{safeResult}</font>"
+                group.doNotReEvaluate = yes
+                group.set 'closeDecoration', safeResult
+                group.doNotReEvaluate = no
 
-Store the current cursor position so that we can put it back there later.
-Each group has a pointer to [the Groups plugin](groupsplugin.litcoffee),
-which has a pointer to the [TinyMCE](http://www.tinymce.com/) editor
-instance in which we're working.  We use some of the TinyMCE API here.
-Groups also contain their open and close boundaries (each an IMG element)
-as `group.open` and `group.close`.
-
-                before = group.plugin?.editor.selection.getRng()
-                textNode = group.open.nextSibling
-                if before.startContainer is textNode
-                    origPos = before.startOffset
-
-Set the contents of the group to be the equation we desire.
-
-                group.setContentAsText "#{leftHandSide}=#{result}"
-
-Try to put the cursor back at approximately the same place that it was
-before.  (This is actually often annoying to the user, because they may have
-moved the cursor outside this group in the 1 second since the change that
-triggered the computation, and this simple attempt to preserve cursor
-location forces it back inside the group.  But in a real application, you
-could use more care to prevent that annoyance.  This is just an example.)
-
-                if not textNode = group.open.nextSibling then return
-                range = textNode.ownerDocument.createRange()
-                origPos ?= leftHandSide.length
-                if origPos > textNode.textContent.length
-                    origPos = textNode.textContent.length
-                range.setStart textNode, origPos
-                range.setEnd textNode, origPos
-                group.plugin?.editor.selection.setRng range
 
 ### Groups with menus
 
