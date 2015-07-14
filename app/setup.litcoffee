@@ -249,8 +249,9 @@ this function, similar to the result of a tokenizer, ready for a parser.
         if node instanceof Text then return node.textContent
         result = [ ]
         for child in node.childNodes
-            if ( $ child ).hasClass 'selectable' then continue
-            if /width:0/.test child.getAttribute? 'style'
+            if ( $ child ).hasClass( 'selectable' ) or \
+               ( $ child ).hasClass( 'cursor' ) or \
+               /width:0/.test child.getAttribute? 'style'
                 continue
             result = result.concat mathQuillToMeaning child
         if node.tagName in [ 'SUP', 'SUB' ]

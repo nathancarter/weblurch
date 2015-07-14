@@ -119,12 +119,18 @@ returned containing the error.
         if nodes.length is 0 then return 'add math using the f(x) button'
         if nodes.length > 1 then return 'more than one math expression'
         node = nodes.get 0
-        try toParse = mathQuillToMeaning node catch e
-            console.log 'to parse:', toParse
+        try
+            toParse = mathQuillToMeaning node
+        catch e
+            console.log 'node:', node
             return "Error converting math expression to text: #{e.message}"
-        try parsed = mathQuillParser.parse( toParse )?[0] catch e
+        try
+            parsed = mathQuillParser.parse( toParse )?[0]
+        catch e
+            console.log 'cannot parse:', toParse
             return "Error parsing math expression as text: #{e.message}"
         if parsed instanceof window.OMNode then return parsed
+        console.log node, toParse
         "Could not parse this mathematical text: #{toParse.join ' '} --
             Error: #{parsed}"
 
@@ -135,10 +141,9 @@ context menu for a group; both are the same.
         text : 'See full OpenMath structure'
         onclick : ->
             if ( info = inspect group ) not instanceof OMNode
-                info = "Could not evaluate the bubble contents:\n #{info}"
+                alert "Could not evaluate the bubble contents:\n #{info}"
             else
                 try
-                    result =
                     alert ( toXML info ) ? "Some part of that expression is
                         not supported in this demo for conversion to XML."
                 catch e then alert e.message ? e
