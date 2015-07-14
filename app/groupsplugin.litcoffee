@@ -1096,13 +1096,13 @@ outward to make sure the bubble encloses the entire contents of the group.
                     setTimeout ( => @editor.Overlay?.redrawContents() ), 100
                     return
                 rects = ( rects[i] for i in [0...rects.length] )
-                open = rects.shift()
+                open = rects[0]
                 open =
                     top : open.top
                     left : open.left
                     right : open.right
                     bottom : open.bottom
-                close = rects.pop()
+                close = rects[rects.length-1]
                 close =
                     top : close.top
                     left : close.left
@@ -1112,8 +1112,7 @@ outward to make sure the bubble encloses the entire contents of the group.
                 for rect, index in rects
                     open.top = Math.min open.top, rect.top
                     close.bottom = Math.max close.bottom, rect.bottom
-                    if rect.right > close.right or \
-                       rect.left < open.left then onSameLine = no
+                    if rect.left < open.left then onSameLine = no
                 if onSameLine
                     close.top = open.top
                     open.bottom = close.bottom
@@ -1150,7 +1149,7 @@ Draw this group and then move one step up the group hierarchy, ready to draw
 the next one on the next pass through the loop.
 
                 context.fillStyle = context.strokeStyle = color
-                if open.top is close.top
+                if open.top is close.top and open.bottom is close.bottom
 
 A rounded rectangle from open's top left to close's bottom right, padded by
 `pad/3` in the x direction, `pad` in the y direction, and with corner radius

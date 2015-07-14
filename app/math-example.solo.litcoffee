@@ -123,15 +123,15 @@ returned containing the error.
             toParse = mathQuillToMeaning node
         catch e
             console.log 'node:', node
-            return "Error converting math expression to text: #{e.message}"
+            return "Error converting math expression to text: #{e?.message}"
         try
             parsed = mathQuillParser.parse( toParse )?[0]
         catch e
             console.log 'cannot parse:', toParse
-            return "Error parsing math expression as text: #{e.message}"
+            return "Error parsing math expression as text: #{e?.message}"
         if parsed instanceof window.OMNode then return parsed
         console.log node, toParse
-        "Could not parse this mathematical text: #{toParse.join ' '} --
+        "Could not parse this mathematical text: #{toParse?.join? ' '} --
             Error: #{parsed}"
 
 The following function provides the contents of either the tag menu or the
