@@ -1075,14 +1075,14 @@
           }
           return _results;
         })();
-        open = rects.shift();
+        open = rects[0];
         open = {
           top: open.top,
           left: open.left,
           right: open.right,
           bottom: open.bottom
         };
-        close = rects.pop();
+        close = rects[rects.length - 1];
         close = {
           top: close.top,
           left: close.left,
@@ -1094,7 +1094,7 @@
           rect = rects[index];
           open.top = Math.min(open.top, rect.top);
           close.bottom = Math.max(close.bottom, rect.bottom);
-          if (rect.right > close.right || rect.left < open.left) {
+          if (rect.left < open.left) {
             onSameLine = false;
           }
         }
@@ -1128,7 +1128,7 @@
           });
         }
         context.fillStyle = context.strokeStyle = color;
-        if (open.top === close.top) {
+        if (open.top === close.top && open.bottom === close.bottom) {
           context.roundedRect(x1, y1, x2, y2, radius);
         } else {
           if (bodyStyle == null) {
@@ -2172,10 +2172,7 @@
     _ref = node.childNodes;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       child = _ref[_i];
-      if (($(child)).hasClass('selectable')) {
-        continue;
-      }
-      if (/width:0/.test(typeof child.getAttribute === "function" ? child.getAttribute('style') : void 0)) {
+      if (($(child)).hasClass('selectable') || ($(child)).hasClass('cursor') || /width:0/.test(typeof child.getAttribute === "function" ? child.getAttribute('style') : void 0)) {
         continue;
       }
       result = result.concat(mathQuillToMeaning(child));

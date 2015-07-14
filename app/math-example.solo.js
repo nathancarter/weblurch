@@ -143,19 +143,21 @@
       toParse = mathQuillToMeaning(node);
     } catch (_error) {
       e = _error;
-      console.log('to parse:', toParse);
-      return "Error converting math expression to text: " + e.message;
+      console.log('node:', node);
+      return "Error converting math expression to text: " + (e != null ? e.message : void 0);
     }
     try {
       parsed = (_ref = mathQuillParser.parse(toParse)) != null ? _ref[0] : void 0;
     } catch (_error) {
       e = _error;
-      return "Error parsing math expression as text: " + e.message;
+      console.log('cannot parse:', toParse);
+      return "Error parsing math expression as text: " + (e != null ? e.message : void 0);
     }
     if (parsed instanceof window.OMNode) {
       return parsed;
     }
-    return "Could not parse this mathematical text: " + (toParse.join(' ')) + " -- Error: " + parsed;
+    console.log(node, toParse);
+    return "Could not parse this mathematical text: " + (toParse != null ? typeof toParse.join === "function" ? toParse.join(' ') : void 0 : void 0) + " -- Error: " + parsed;
   };
 
   menu = function(group) {
@@ -163,12 +165,12 @@
       {
         text: 'See full OpenMath structure',
         onclick: function() {
-          var e, info, result, _ref, _ref1;
+          var e, info, _ref, _ref1;
           if (!((info = inspect(group)) instanceof OMNode)) {
-            return info = "Could not evaluate the bubble contents:\n " + info;
+            return alert("Could not evaluate the bubble contents:\n " + info);
           } else {
             try {
-              return result = alert((_ref = toXML(info)) != null ? _ref : "Some part of that expression is not supported in this demo for conversion to XML.");
+              return alert((_ref = toXML(info)) != null ? _ref : "Some part of that expression is not supported in this demo for conversion to XML.");
             } catch (_error) {
               e = _error;
               return alert((_ref1 = e.message) != null ? _ref1 : e);
