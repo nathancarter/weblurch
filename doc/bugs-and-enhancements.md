@@ -92,6 +92,9 @@ Groups Plugin
 
 Miscellaneous
 
+ * See [this answer](http://stackoverflow.com/a/32120344/670492) to your
+   StackOverflow question about higher resolution HTML canvas rendering on
+   retina deisplays.  See if its suggestions can work in your case.
  * Move all plugin files into the `src/` folder, if possible.
  * Bubble tags are not drawn at retina resolution on Macs with retina
    displays.  [See my question about how to fix this problem here.](http://stackoverflow.com/questions/30537138/rendering-html-to-canvas-on-retina-displays)

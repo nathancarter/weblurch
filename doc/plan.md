@@ -22,40 +22,146 @@ required order of completion.
  * Make the help menu flash when the page is first loaded, until someone
    clicks it, or until a certain amount of time has passed.
 
+## Arrows among groups
+
+Add to the Group class the following two functions for use by LAs.  When
+bubbles are edited, if the contents must be kept in sync with the arrows,
+the LA can manipulate the arrows to fit the contents using these functions.
+Or the LA can use these functions to create arrows based on other UI events
+in the first place.
+ * `group.connect( otherGroup, optionalTag )`
+   * `optionalTag` is treated as a string, and defaults to the empty string
+   * Constructs the array `[group.id(),otherGroup.id(),tag]` and adds it
+     to the set of links in each group.  If such a link already exists, do
+     not add it again; the set of links is indeed a set.
+   * Link sets should be stored as group properties, modified via
+     `group.set()`, so that changing them triggers group updates.
+ * `group.disconnect( otherGroup, optionalTag )`
+   * `optionalTag` is treated as a string, and defaults to the empty string,
+     unless it is a regular expression
+   * Finds all arrays of the form `[group.id(),otherGroup.id(),T]` stored in
+     the link sets of `group` or `otherGroup`, and removes them, where T is
+     either equal to `optionalTag` if `optionalTag` is a string, or matches
+     `optionalTag` if `optionalTag` is a regular expression.
+ * `group.connectedTo()` returns the set of triples in this group's link set
+   that begin with its own ID, that is, those links that lead outward.
+ * `group.connectedFrom()` is the dual of the previous.
+
+Update the way groups are drawn as follows.
+ * Draw a background for only the innermost nested group, not its ancestors.
+ * Draw a light background for the group over which the mouse pointer is
+   hovering, at all times.
+ * Just as `drawGroups` respects `group.type.color` and
+   `group.type.tagContents`, it should also respect
+   `group.type.connections`, which will return an array of links (triples)
+   and other groups (Group instances) to be drawn whenever this group is the
+   innermost one containing the cursor.  For now, just call this function
+   and dump its results to the console.  Provide a default implementation
+   that returns `group.connectedTo()` plus all the targets of those links.
+   (The real Lurch LA may provide a way to toggle between this and its dual,
+   to see how the current statement sits in the logical flow before and
+   after it in a proof.)
+ * Implement half of the support for `group.type.connections` by drawing the
+   outlines of all groups on the resulting list.
+ * Implement the next quarter of the support for `group.type.connections` by
+   drawing arrows from the source group to the target groups.
+ * Complete the implementation of `group.type.connections` by adding labels
+   to the arrows by using the tags.  Note that `group.type.connections` is
+   free to translate the tags as part of its computation, so that their
+   internal and external representations need not be the same.
+
+Create a nice UI for introducing arrows.  It will not be enabled by default,
+but can be added by any LA.
+ * Provide a function that installs the arrow-creating UI.  This can begin
+   as a stub, and be extended with each of the following UI items.
+ * Create a toolbar button for entering arrow-creation mode.  At first, just
+   make it stay down when pressed, and pop up when pressed again.  It should
+   pop up automatically if you exit all bubbles, and should be disabled when
+   the cursor is not in any bubbles.
+ * In arrow-creation mode, if the user's cursor is in group G and the user
+   clicks on bubble H, call `G.type.connectionRequest( H )`, if such a
+   function exists.  The LA can handle this as they see fit, such as
+   toggling a link, or prompting for a link tag, or anything.
+ * Optional feature for later:  Add an option that when entering
+   arrow-creation mode, ALL bubble outlines in the document are faintly
+   drawn (not their tags), so that it's completely clear where a user wants
+   to aim the mouse to hit a certain bubble.
+ * Optional feature for later:  Add an optional that show-groupers (Ctrl+1)
+   mode is automatically enabled when the user enters arrow-connection mode,
+   and re-disabled (if it was disabled in the first place) when exiting
+   arrow-connection mode.  This is like the previous feature, but more
+   aggressive and techy.  (Do we still need it now that we have the previous
+   feature?)
+ * Optional feature for later:  On mobile, a tap highlights the innermost
+   bubble under it, without creating the arrow yet, and shows OK/cancel
+   buttons hovering nearby.  If the user tapped what he/she expected to tap,
+   then he/she hits OK and it creates the arrow.  Cancel (or just tapping
+   elsewhere) closes the OK/cancel buttons and does nothing else.
+ * Optional feature for later:  When in arrow-making mode, keystrokes are
+   interpreted as typing bubble labels, which will scroll the view to the
+   bubbles with those labels, and highlight them as if the user had
+   mouse-hovered them.  If the user presses enter, the arrow will be
+   created.  Hence there are keyboard-shortcut ways to specify arrows among
+   bubbles.  This would work best with a keyboard shortcut for entering
+   bubble-making mode also.  (If there are ambiguous labels--i.e., ones that
+   apply to more than one bubble--just choose any one; that's the user's
+   fault.)  Note that this requires two additional features to help it out:
+   * A function in the group type for computing the default label for any
+     bubble in the document.  The default can be the address of the bubble
+     in the hierarchy, as a list of positive integers; e.g., the second
+     bubble immediate inside the tenth topmost bubble has number 10.2.
+   * Drawing bubbles in arrow-creation mode should include these labels
+     somewhere nearby.
+
 ## Matching Module
 
- * Extend Match's `set(k,v)` member as follows:
-   * It should begin by making a backup copy of `@map`.
-   * Then write into `@map` the `k,v` pair.
-   * For each key in the map, classify it as one of these three things:
-     * in a cycle of metavariables that form an equivalence class under
-       instantiation -- with these, do nothing
-     * divergent, meaning that repeated applications of the map to `v` grow
-       without bound on the number of nodes -- if there are any of these,
-       destroy the new map, restore the backup copy, and return false to
-       indicate failure
-     * neither of the previous two -- with these, repeatedly apply the map
-       to `v` until you reach a fixed point, and use that as the new `v`
-   * Return true to indicate success.
- * Use unit test to debug the above changes.
- * Extend `matches` to expect that the expression may contain metavariables,
-   as follows.
-   * Comparing nonatomic to nonatomic proceeds recursively, as now.
-   * Comparing atomic non-metavariable to nonatomic proceeds by `trySubs()`,
-     as now.  This is true regardless of which is which, pattern vs.
-     expression.
-   * Comparing atomic non-metavariable to atomic non-metavariable proceeds
-     by direct equality or resorting to `trySubs()`, as now.
-   * Comparing metavariable to anything proceeds as follows, regardless of
-     whether the metavariable is the pattern or the expression.
-     * If the metavariable has an instantiation, recursively match it
-       against the other side and return that result, just as we do now.
-       Keep the two arguments (pattern and expression) in the same order.
-     * Try to call `set` to mark the metavariable as being instantiated with
-       the other expression.  If `set` returns false, then return
-       `trySubs()`.
-     * Since the call to `set` succeeded, return `[ soFar ]`, as now.
- * Use unit tests to debug the above changes.
+The Matching Module may no longer be necessary, if we build Lurch on top of
+[Lean](http://leanprover.github.io/).  Therefore these tasks are on hold.
+
+If you end up needing to complete your own Matching Module, rework what you
+have now **significantly**, as follows.
+
+ * The matching algorithm should first verify that metavariables appear only
+   in the pattern, not the expression.  If they appear in the expression,
+   throw an exception.
+ * The matching algorithm should proceed as if there are no replacement
+   expressions within the pattern, using the ordinary matching algorithm.
+   When it encounters a replacement pattern, it should add it to a list of
+   "deferred for later" computations, stored in the match object itself.
+ * Before returning any match objects, their deferred computations must be
+   processed.  Here is the algorithm for doing so on a match object M.
+   * Record a copy of the set of deferred computations, for later
+     comparison.
+   * For each deferred computation C in M:
+     * If enough of C's metavariables have been instantiated in M to compute
+       the rest, do so.  Here are the possible outcomes:
+       * This may reject M:  Return a failure value.  M should then be
+         removed from the list of match results from the outer algorithm.
+       * There may be multiple matches:  Remove C from M's deferred list,
+         and create copies of M, one for each of the matches, extended with
+         those matches.  Return that list of copies.  The outer algorithm
+         should replace M on its list of results with this new list.  But
+         it should not return them yet; each may have deferred computations
+         still waiting to be done.
+       * There may be one match:  Extend M with that match and proceed with
+         the loop, to handle the next deferred computation on the list.
+     * Otherwise (not enough of C's metavariables are known) then just move
+       on to the next deferred computation on the list.
+   * If the set of deferred computations is equal to the recorded copy, then
+     no progress has been made.  Throw an error saying that this matching
+     problem is outside the capabilities of this algorithm.
+   * Otherwise, progress has been made.  So repeat from 3 steps above this
+     one, "Record a copy..."
+ * Run that algorithm on all existing unit tests, with one of three results:
+   * The test passes, and you can move on to the next test.
+   * The test fails, but merely due to an output formatting issue, and thus
+     the test itself can be tweaked so that it passes.
+   * The test fails, but because it throws an error about the test being
+     outside the algorithm's capabilities.  Verify yourself that this is so,
+     and if it is, change the test to expect such an error to be thrown, and
+     thereafter function as a test that the algorithm knows its limits.
+   * Any other possibility is a bug that needs to be fixed.
+ * Add the following unit tests as well.
 ```
     a(X,X(Y))[M~N]     a(b,b(c,d,e))      [ { X : b,
                                               Y : unused_1,
@@ -65,19 +171,8 @@ required order of completion.
                                               Y : unused_1,
                                               M : a(b,b(unused_1)),
                                               N : a(b,b(c,d,e)) } ]
-```
- * Rework `trySubs()` so that it is not called only if a match fails.  It
-   should be used to add alternate matches to every single return value for
-   every match.  For this reason, it does not actually need to walk up the
-   parent chain, because the recursion will do that automatically.  The
-   recursive call to `matches` should not bias things by using the same
-   `soFar` that was manipulated in the failed attempt to complete it; keep
-   a copy of `soFar` as it was given to the current `matches` call and use
-   that.  This will also return more general results in some cases.  For
-   instance, the test given above should now give the following result
-   instead of its too-specific one.
-```
-    a(X,X(Y))[M~N]     a(b,b(c,d,e))      [ { X : b,Y:unused_1,
+    a(X,X(Y))[M~N]     a(b,b(c,d,e))      [ { X : b,
+                                              Y : unused_1,
                                               M : b(unused_1),
                                               N : b(c,d,e) },
                                             { X : unused_1,
@@ -86,37 +181,27 @@ required order of completion.
                                                     unused_1(unused_2)),
                                               N : a(b,b(c,d,e)) } ]
 ```
- * Ensure that the above changes cause the final tests in the "harder
-   substitution situations" section to pass.  Add some more complex tests of
-   that same ilk to be sure.
- * Add tests to verify that if you try to put more than one substitution
-   expression into a pattern (whether nested or not) an error is thrown.
- * Also verify that if there are metavariables in the expression, that an
-   error is thrown.
 
-That is the last work that can be done without there being additional design
-work completed.  The section on [Dependencies](#dependencies), below,
-requires us to design how background computation is paused/restarted when
-things are saved/loaded, including when they are dependencies.  The section
-thereafter is about building the symbolic manipulation core of Lurch itself,
-which is currently being redesigned by
-[Ken](http://mathweb.scranton.edu/ken/), and that design is not yet
-complete.
+## Real Lurch
 
-## Logical Foundation
+We are currently considering building webLurch on top of
+[Lean](http://leanprover.github.io/), and are designing how we might do so.
+
+## For thereafter
 
 ### Dependencies
 
-This section connects tightly with [Extending load and
-save](#extending-load-and-save), below.  Be sure to read both together.
-Also, this will need to be extended later when enhancing Lurch to be usable
-offline; see [Offline support](#offline-support), below.
+This subsection connects tightly with the other subsections of this same
+section.  Be sure to read them all together.  This one connects most tightly
+with the subsection about a wiki.  Also, this will need to be extended later
+when enhancing Lurch to be usable offline; see [Offline
+support](#offline-support), below.
 
  * Reference dependencies by URLs; these can be file:/// URLs, which is a
    reference to LocalStorage, or http:// URLs, which is a reference to
    `lurchmath.org`.
  * Provide a UI for editing the dependency list for a document.  Store this
-   data outside the document.
+   data in JavaScript variables in the Lurch app.
  * Load/save that metadata using the `loadMetaData` and `saveMetaData`
    members of the LoadSave plugin.
  * Design what you will do when files are opened/closed, re: computation of
@@ -132,12 +217,6 @@ offline; see [Offline support](#offline-support), below.
      inspecting an MD5 hash of the document to see if it has changed since
      the last computation.  This is what [SCons
      does](http://www.scons.org/doc/0.98.4/HTML/scons-user/c779.html).
-
-## Real Lurch!
-
-Build the 3 foundational Group types, according to Ken's new spec!
-
-## For later
 
 ### Extending load and save
 
@@ -181,7 +260,8 @@ I have the following recommended solution.
    This way instructors can post on that wiki core dependencies that
    anyone can use, and the integrity of a course (or the whole Lurch
    project!) is not dependent on the state of any individual's Dropbox
-   folder.
+   folder.  [MediaWiki](https://www.mediawiki.org/) is obviously robust and
+   popular.
  * Note that external websites are not an option, since `XMLHttpRequest`
    restricts cross-domain access, unless you run a proxy on `lurchmath.org`
    or set up CORS rules in the web server running there.  Thus we must host
@@ -190,28 +270,62 @@ I have the following recommended solution.
    suggested below require wiki extensions to access the same `LocalStorage`
    object that the webLurch app itself is accessing, which requires them to
    come from the same domain.
- * This could be even better as follows:
-   * Write a plugin for the wiki that can access the same LocalStorage
-     filesystem that Lurch does, and can pop up dialogs with all your
-     Lurch documents.  Just choose one and the wiki will paste its
-     content cleanly into the page you're editing, or a new page, your
-     choice.
-   * Similarly, that same wiki plugin could be useful for extracting a
-     copy of a document in a wiki page into your Lurch filesystem, for
-     opening in the Lurch app itself thereafter.
-   * Make the transfer from Lurch to the wiki even easier by providing a
-     single button in Lurch that exports to the wiki in one click, using
-     some page naming convention based on your wiki username and the
-     local path and/or name of the file.  Or perhaps, even better, you
-     have a public subfolder of your Lurch filesystem that's synced, on
-     every document save or Manage Files event, to the wiki, through
-     `XMLHttpRequest` calls.
-   * Make the transfer from the wiki to Lurch even easier by providing a
-     single "Open in Lurch" button in the wiki that stores the document
-     content in a temporary file in your Lurch filesystem, then opens
-     Lurch in a new tab.  The Lurch app will then be smart enough to
-     open any such temporary file on launch, and then delete it (but the
-     user can choose to save it thereafter, of course).
+ * Write a plugin for the wiki that can access the same LocalStorage
+   filesystem that Lurch does, and can pop up dialogs with all your Lurch
+   documents.  Just choose one and the wiki will paste its content cleanly
+   into the page you're editing, or a new page, your choice.  It's possible
+   that this may not need to be a wiki plugin, but could be accomplished
+   with only a link in the wiki navigational pane.
+ * Similarly, that same wiki plugin could be useful for extracting a copy of
+   a document in a wiki page into your Lurch filesystem, for opening in the
+   Lurch app itself thereafter.
+ * Make the transfer from the wiki to Lurch even easier by providing a
+   single "Open in Lurch" button in the wiki that opens Lurch in a new tab,
+   then sends it the document using [`window.postMessage()`](
+   http://davidwalsh.name/window-postmessage).  The Lurch app should listen
+   for such messages and load their contents into the editor.
+ * Make the transfer from Lurch to the wiki even easier as follows:
+   * Set up permissions on the wiki so that users who create accounts cannot
+     edit much of anything, except pages in a folder whose name equals their
+     username.  Permissions to edit the main wiki pages will be restricted
+     to project leaders.
+   * Add a Lurch setting for specifying the user's wiki username, so that
+     Lurch knows where to post their files when they ask it to do so.
+   * Provide a single button in Lurch that will export to the wiki in one
+     click, as follows.
+     * If the user has not yet set a wiki username in their Lurch settings,
+       pop up an alert to that effect and do not proceed.
+     * Pop up an alert that the user must be already logged into the wiki
+       for this to succeed, with a "Don't show this message again" checkbox.
+     * Create a wiki page name for posting as follows.  Call the user's wiki
+       username W, and the name of the file F, then the page name is W_F,
+       where any underscores in F are escaped.
+     * At first, dump that path to the console and stop.  Then replace that
+       with a full implementation that uses the MediaWiki API as follows.
+   * How to post a new version of a page to MediaWiki with a JavaScript API:
+     * Use the lightweight JS API for MediaWiki [from this GitHub
+       repository](https://github.com/brettz9/mediawiki-js).
+     * Run a query to get an edit token, as in the example shown in [this
+       documentation](https://www.mediawiki.org/wiki/API:Tokens#Example).
+       Pop up an error dialog if the response isn't of the correct format.
+     * Post the new page content using that edit token.  This is a little
+       complicated.  See the [documentation
+       here](https://www.mediawiki.org/wiki/API:Edit#Editing_pages) and
+       [examples
+       here](https://www.mediawiki.org/wiki/API:Edit#Editing_via_Ajax).
+       It seems you will need to pass these parameters:
+       * `title` - title of page to edit, W_F from above
+       * `section` - do NOT provide this, because you're editing the whole
+         page
+       * `text` - new content, as HTML (I think??)
+       * `token` - edit token from previous step
+       * `md5` - optional, for additional data integrity check, the MD5 hash
+         of the `text` parameter
+       * `contentformat` - should be "text/x-wiki"
+       * `contentmodel` - should be "wikitext"
+     * Pop up a dialog telling the user whether the edit was successful or
+       not (based on the response from the API call above) and providing a
+       link for them to view the published version in a new window.
 
 ### Making things more elegant
 
