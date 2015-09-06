@@ -3,10 +3,12 @@
 
 ## Specify app settings
 
-First, specify that the app's name is "Lurch," so that will be used when
-creating the title for this page (e.g., to show up in the tab in Chrome).
+First, applications should specify their app's name using a call like the
+following.  In this generic setup script, we fill in a placeholder value.
+This will be used when creating the title for this page (e.g., to show up in
+the tab in Chrome).
 
-    setAppName 'Lurch'
+    setAppName 'Untitled'
 
 Second, we initialize a very simple default configuration for the Groups
 plugin.  It can be overridden by having any script assign to the global
@@ -15,11 +17,13 @@ before the page is fully loaded, when the `tinymce.init` call, below, takes
 place.
 
     window.groupTypes ?= [
-        name : 'me'
-        text : 'Meaningful expression'
-        image : './images/red-bracket-icon.png'
-        tooltip : 'Make text a meaningful expression'
-        color : '#996666'
+        name : 'example'
+        text : 'Example group'
+        imageHTML : '['
+        openImageHTML : ']'
+        closeImageHTML : '[]'
+        tooltip : 'Wrap text in a group'
+        color : '#666666'
     ]
 
 Clients who define their own group types may also define their own toolbar
@@ -28,17 +32,21 @@ buttons and menu items to go with them.  But these lists default to empty.
     window.groupToolbarButtons ?= { }
     window.groupMenuItems ?= { }
 
-We also specify an icon to appear on the menu bar, at the very left.  This
-can be overridden, in the same way as `window.groupTypes`, above.
+Similarly, a client can provide a list of plugins to load when initializing
+TinyMCE, and they will be added to the list loaded by default.
 
-    window.menuBarIcon ?=
-        src : 'icons/apple-touch-icon-76x76.png'
-        width : '26px'
-        height : '26px'
-        padding : '2px'
+    window.pluginsToLoad ?= [ ]
+
+We also provide a variable in which apps can specify an icon to appear on
+the menu bar, at the very left.  It defaults to an empty object, but can be
+overridden, in the same way as `window.groupTypes`, above.  If you override
+it, specify its file as the `src` attribute, and its `width`, `height`, and
+`padding` attributes as CSS strings (e.g., `'2px'`).
+
+    window.menuBarIcon ?= { }
 
 We also provide a set of styles to be added to the editor by default.
-Clients can also override this object if they wish different styles.
+Clients can also override this object if they prefer different styles.
 
     window.defaultEditorStyles ?=
         fontSize : '16px'
@@ -92,7 +100,8 @@ that begins with a hyphen is a local plugin written as part of this project.
 
             plugins : 'advlist table charmap colorpicker image link
                 importcss paste print save searchreplace textcolor
-                fullscreen -loadsave -overlay -groups -equationeditor'
+                fullscreen -loadsave -overlay -groups -equationeditor ' + \
+                ( "-#{p}" for p in window.pluginsToLoad ).join ' '
 
 The groups plugin requires that we add the following, to prevent resizing of
 group boundary images.
@@ -230,6 +239,11 @@ Workaround for [this bug](http://www.tinymce.com/develop/bugtracker_view.php?id=
                     editor.getBody().addEventListener 'focus', ->
                         if editor.windowManager.getWindows().length isnt 0
                             editor.windowManager.close()
+
+And if the app installed a global handler for editor post-setup, run that
+function now.
+
+                    window.afterEditorReady? editor
 
 The following utility function was used to help build lists of menu items
 in the setup data above.

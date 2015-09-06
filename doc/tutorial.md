@@ -354,6 +354,19 @@ __Adding decorations to group boundaries__
      * ... in order through ...
      * &amp;#10131; is &#10131;
 
+### Other functionality
+
+In this section I document other configuration possibilities beyond those
+mentioned above, things that didn't fit neatly into the above categories.
+
+To run any code after the editor has been set up, assign a function to the
+global variable `window.afterEditorReady`.  Your function should accept a
+single parameter, `editor`, which will be the editor object that was just
+initialized.  Your function will be called at the end of the TinyMCE editor
+"init" event.
+
+-----
+
 This tutorial was written by [Nathan Carter](mailto:ncarter@bentley.edu).
 Feel free to contact me with questions.  I would love to know how we can
 help get you started coding on the *Lurch Web Platform*.
