@@ -104,9 +104,22 @@ Miscellaneous
  * Improve build process to not compile files whose dates indicate that they
    do not need it, nor to minify files whose dates indicate that they do not
    need it.
+ * If you ever need to export PDFs of Lurch documents, consider
+   [jsPDF](https://github.com/MrRio/jsPDF).
 
-Background processing efficiency
+Background processing
 
+ * Create a way to write a foreground function tht is a series of background
+   steps as inner functions, and only the one for teh current state of the
+   group is run, automatically placing it in the next state.  The following
+   example client code would create internal state names in a linear order.
+   This could be a subclass of a more general one that's an arbitrary state
+   graph.
+```
+P = new Processor 'group type name here'
+P.addStep ( group ) -> ...
+P.addStep ( group ) -> ...
+```
  * Design and implement how this could be extended to support passing arrays
    of argument lists and receiving arrays of results, to minimize the
    overhead of message-passing.
