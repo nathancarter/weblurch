@@ -15,12 +15,17 @@ required order of completion.
 
 ## Documenting each demo app better
 
+ * Make the main gh-pages index page not simply forward to app/index.html,
+   but be an actual index page listing all pages you might want to visit,
+   with descriptions of each.
  * Write a thorough introduction at the top of its source code file.
  * Add a help menu item that opens the demo app's source code file so the
    reader can see the thorough introduction just discussed.
  * Add a help menu item that will open The Tutorial in a new tab.
  * Make the help menu flash when the page is first loaded, until someone
    clicks it, or until a certain amount of time has passed.
+ * Can this be improved by running the giant URLs through a URL-shortener
+   automatically?
 
 ## Arrows among groups
 
@@ -249,7 +254,17 @@ Local filesystem:
 
 Sharing:
 
-Add the ability to share documents with the world.  I considered
+First, implement a trivial kind of sharing that just sends a copy of the
+file to someone, as follows.
+ * Create a menu item for sharing a copy of the file with someone.
+ * Embed the entire Lurch document, gzipped and base64 encoded, into a query
+   string of a URL that points to the online Lurch app.
+ * Display this giant URL in a popup dialog, highlighted and ready for the
+   user to press Ctrl+C, just like StackOverflow does.
+ * When the main app loads, if there is a document in the query string,
+   place it into the editor immediately.
+
+Add a better ability to share documents with the world.  I considered
 [Firebase](https://www.firebase.com/), but it seemed like too much work, and
 requires integrating a whole new technology.  If using Dropbox, we might be
 able to make files shared, if the API supports that.  But that, too,
@@ -299,7 +314,16 @@ I have the following recommended solution.
        for this to succeed, with a "Don't show this message again" checkbox.
      * Create a wiki page name for posting as follows.  Call the user's wiki
        username W, and the name of the file F, then the page name is W_F,
-       where any underscores in F are escaped.
+       where any underscores in F are escaped.  But first check to see if
+       this is even necessary.  If MediaWiki's permissions are sufficiently
+       sophisticated, authors may be able to restrict permissions on the
+       pages they create, so that we can let them make whatever names they
+       like, and not worry about whether there are conflicts, because
+       permissions will prevent person A from overwriting the work of person
+       B.  This would be the best case scenario.  If that works, set the
+       permissions of any newly created page to be "only editable by me" as
+       the default.  This would be great so that people can share authorship
+       permissions for projects they're working on together.
      * At first, dump that path to the console and stop.  Then replace that
        with a full implementation that uses the MediaWiki API as follows.
    * How to post a new version of a page to MediaWiki with a JavaScript API:
@@ -326,6 +350,32 @@ I have the following recommended solution.
      * Pop up a dialog telling the user whether the edit was successful or
        not (based on the response from the API call above) and providing a
        link for them to view the published version in a new window.
+
+### Tutorials
+
+Once the "Sharing" features above have been built (with wiki integration),
+we can make Lurch tutorials as follows.
+ * Create a way for users to navigate the pages of a tutorial.  Probably the
+   easiest and most flexible way to do this is to make it so that one of a
+   document's settings is whether clicking links in it navigates to them.
+   (Right now it just puts the cursor in them.)  Enabling such a setting
+   then allows the document author full freedom to format the tutorial
+   pages however they like, with next/previous/other links wherever they
+   want them, looking however they want them to look.
+ * Make it so that following such links first prompts you with an "Are you
+   sure?" dialog, so that you can save first or optionally open the link in
+   a new tab.
+ * Make links with protocol "load://" fetch their results from the wiki
+   using AJAX and load them in the current editor, again after prompting
+   with an "Are you sure?" dialog.
+ * Now you can create an number of tutorials by simply publishing all the
+   pages to the wiki, and having them link to one another in whatever
+   configuration you want (linear or otherwise).
+ * Create an initial Lurch tutorial and post it to the wiki.
+ * Create a Help menu item that loads that tutorial.
+ * When Lurch launches, pop up a dialog saying that there is a tutorial on
+   the Help menu, and they can check the "Don't show again" box if they so
+   desire.
 
 ### Making things more elegant
 
