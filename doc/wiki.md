@@ -7,23 +7,6 @@ stages of experimenting with MediaWiki to learn its capabilities.
 
 ## To-dos
 
- * IMG tags come through with their HTML tags escaped, so that they are
-   visible as raw source in the page.  To solve this, do the following.
-   * Install the [HTML Tags](
-     https://www.mediawiki.org/wiki/Extension:HTML_Tags) extension.
-   * Configure it to permit img tags with a src attribute.
-   * Create a pair of functions, one for encoding Lurch HTML for the wiki,
-     and one for decoding wiki HTML for Lurch.  Use these functions to turn
-     IMG tags from Lurch into `<htmltag tagname='img' .../>` tags for the
-     wiki.
-   * Verify that this works for posting images, but it will not preserve all
-     grouper properties.
-   * Extend the conditional expression at `HTMLTags_body.php` line 49 so
-     that a user could specify '*' as an acceptable attribute, which means
-     that all attributes are permitted.  Then attributes like "grouper" and
-     "data-(anything)" will be permitted.
-   * Verify that one can then post documets with groups to the wiki, then
-     click Open in Lurch, and the grouping information is preserved.
  * MathQuill blocks are not typeset because the stylesheet is not present.
    * Discover if there are any tags that MathQuill uses that MediaWiki
      rejects, and if so, extend your configuration of the HTML Tags

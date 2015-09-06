@@ -53,9 +53,23 @@ Use the MediaWiki plugin:
 
     window.pluginsToLoad = [ 'mediawiki' ]
 
-Add initial functionality for importing from a wiki on the same server.
-This is still in development.
+Add initial functionality for importing from a wiki on the same server, and
+exporting to it as well.  This is still in development.
 
+    formatContentForWiki = ( editorHTML ) ->
+        imgRE = /<img(\s+[^>]*)>/i;
+        while match = imgRE.exec editorHTML
+            editorHTML = editorHTML[...match.index] + \
+                "<htmltag tagname='img' #{match[1]}>" + \
+                editorHTML[match.index+match[0].length..]
+        editorHTML
+    formatContentFromWiki = ( wikiHTML ) ->
+        tagRE = /<htmltag\s+tagname='([^']+)'\s+([^>]*)>/i;
+        while match = tagRE.exec wikiHTML
+            wikiHTML = wikiHTML[...match.index] + \
+                "<#{match[1]} #{match[2]}>" + \
+                wikiHTML[match.index+match[0].length..]
+        wikiHTML
     window.groupMenuItems =
         wikiimport :
             text : 'Import from wiki...'
@@ -64,12 +78,21 @@ This is still in development.
                 pageName = prompt 'Give the name of the page to import (case
                     sensitive)', 'Main Page'
                 if pageName is null then return
-                tinymce.activeEditor.MediaWiki.importPage pageName
+                tinymce.activeEditor.MediaWiki.getPageContent pageName,
+                    ( content, error ) ->
+                        if content
+                            tinymce.activeEditor.setContent \
+                                formatContentFromWiki content
+                        if error
+                            alert 'Error loading content from wiki:' + \
+                                error.split( '\n' )[0]
+                            console.log error
         wikiexport :
             text : 'Export to wiki...'
             context : 'file'
             onclick : ->
-                content = tinymce.activeEditor.getContent()
+                content = formatContentForWiki \
+                    tinymce.activeEditor.getContent()
                 pageName = prompt 'Give the name of the wiki page into which
                     you want this document exported (case sensitive)',
                     'My New Page'
@@ -88,7 +111,7 @@ This is still in development.
                 loginCallback = ( result, error ) ->
                     if error then return alert 'Login error:\n' + error
                     tinymce.activeEditor.MediaWiki.exportPage pageName,
-                        tinymce.activeEditor.getContent(), postCallback
+                        content, postCallback
                 tinymce.activeEditor.MediaWiki.login username, password,
                     loginCallback
 
