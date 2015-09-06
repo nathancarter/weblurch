@@ -57,19 +57,63 @@ Add initial functionality for importing from a wiki on the same server, and
 exporting to it as well.  This is still in development.
 
     formatContentForWiki = ( editorHTML ) ->
-        imgRE = /<img(\s+[^>]*)>/i;
-        while match = imgRE.exec editorHTML
-            editorHTML = editorHTML[...match.index] + \
-                "<htmltag tagname='img' #{match[1]}>" + \
-                editorHTML[match.index+match[0].length..]
-        editorHTML
+        console.log 'formatting for wiki:', editorHTML
+        result = ''
+        depth = 0
+        openRE = /^<([^ >]+)\s*([^>]+)?>/i
+        closeRE = /^<\/([^ >]+)\s*>/i
+        charRE = /^&([a-z0-9]+|#[0-9]+);/i
+        toReplace = [ 'img', 'span', 'var', 'sup' ]
+        decoder = document.createElement 'div'
+        while editorHTML.length > 0
+            if match = closeRE.exec editorHTML
+                tagName = match[1].toLowerCase()
+                console.log 'found close', tagName
+                if tagName in toReplace
+                    depth--
+                    result += "</htmltag#{depth}>"
+                else
+                    result += match[0]
+                editorHTML = editorHTML[match[0].length..]
+            else if match = openRE.exec editorHTML
+                tagName = match[1].toLowerCase()
+                console.log 'found open', tagName
+                if tagName in toReplace
+                    result += "<htmltag#{depth}
+                        tagname='#{tagName}' #{match[2]}>"
+                    if not /\/\s*$/.test match[2] then depth++
+                else
+                    result += match[0]
+                editorHTML = editorHTML[match[0].length..]
+            else if match = charRE.exec editorHTML
+                decoder.innerHTML = match[0]
+                result += decoder.textContent
+                editorHTML = editorHTML[match[0].length..]
+            else
+                console.log 'found char', editorHTML[0]
+                result += editorHTML[0]
+                editorHTML = editorHTML[1..]
+        console.log 'got this:', result
+        result
     formatContentFromWiki = ( wikiHTML ) ->
-        tagRE = /<htmltag\s+tagname='([^']+)'\s+([^>]*)>/i;
-        while match = tagRE.exec wikiHTML
-            wikiHTML = wikiHTML[...match.index] + \
-                "<#{match[1]} #{match[2]}>" + \
-                wikiHTML[match.index+match[0].length..]
-        wikiHTML
+        result = ''
+        stack = [ ]
+        openRE = /^<htmltag\s+tagname='([^']+)'\s+([^>]*)>/i
+        closeRE = /^<\/htmltag\s*>/i
+        while wikiHTML.length > 0
+            if match = openRE.exec wikiHTML
+                result += "<#{match[1]} #{match[2]}>"
+                wikiHTML = wikiHTML[match[0].length..]
+                stack.push match[1]
+            else if match = closeRE.exec wikiHTML
+                result += "</#{stack.pop()}>"
+                wikiHTML = wikiHTML[match[0].length..]
+            else
+                result += wikiHTML[0]
+                wikiHTML = wikiHTML[1..]
+        console.log 'extracting from wiki:', wikiHTML
+        console.log 'got this:', result
+        result
     window.groupMenuItems =
         wikiimport :
             text : 'Import from wiki...'

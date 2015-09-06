@@ -7,12 +7,6 @@ stages of experimenting with MediaWiki to learn its capabilities.
 
 ## To-dos
 
- * MathQuill blocks are not typeset because the stylesheet is not present.
-   * Discover if there are any tags that MathQuill uses that MediaWiki
-     rejects, and if so, extend your configuration of the HTML Tags
-     extension to permit them.
-   * Include in MediaWiki:Common.css the MathQuill stylesheet content.
-   * Test to see if this makes MathQuill content visible in MediaWiki.
  * Create another plugin for user preferences in an arbitrary number of
    categories.  (One example category will be global settings, and another
    will be the metadata of the currently-loaded document.)  It requires
@@ -94,4 +88,12 @@ that's obviously an alpha version.  (But it does load correctly from the
 wiki.)
 
 You can add JavaScript to all MediaWiki pages by editing the special page
-entitled MediaWiki:Common.js.
+entitled MediaWiki:Common.js.  Same for CSS, in MediaWiki:Common.css.
+
+I had to make two changes to the HTMLTags extension of MediaWiki.  One is
+documented [in this pull
+request](https://github.com/wikimedia/mediawiki-extensions-HTMLTags/pull/1).
+The other is the loop in lines 17-19 of the code on my computer at present,
+which installs htmltag0...htmltag50 rather than just htmltag as the tags
+handled by that extensions.  This is to get around a bug in MediaWiki, which
+parses nested tags of the same type incorrectly.
