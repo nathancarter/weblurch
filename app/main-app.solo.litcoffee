@@ -57,7 +57,6 @@ Add initial functionality for importing from a wiki on the same server, and
 exporting to it as well.  This is still in development.
 
     formatContentForWiki = ( editorHTML ) ->
-        console.log 'formatting for wiki:', editorHTML
         result = ''
         depth = 0
         openRE = /^<([^ >]+)\s*([^>]+)?>/i
@@ -93,7 +92,6 @@ exporting to it as well.  This is still in development.
                 console.log 'found char', editorHTML[0]
                 result += editorHTML[0]
                 editorHTML = editorHTML[1..]
-        console.log 'got this:', result
         result
     formatContentFromWiki = ( wikiHTML ) ->
         result = ''
@@ -111,8 +109,6 @@ exporting to it as well.  This is still in development.
             else
                 result += wikiHTML[0]
                 wikiHTML = wikiHTML[1..]
-        console.log 'extracting from wiki:', wikiHTML
-        console.log 'got this:', result
         result
     window.groupMenuItems =
         wikiimport :
