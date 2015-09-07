@@ -24,11 +24,11 @@ http://nathancarter.github.io/weblurch/app/index.html).
 For details of what each line of code below does, see the documentation for
 [demo apps and a developer tutorial](../doc/tutorial.md).
 
-Application name, to appear in page title:
+Set the application name, to appear in page title.
 
     setAppName 'Lurch'
 
-Icon that appears to the left of the File menu:
+Install the icon that appears to the left of the File menu.
 
     window.menuBarIcon =
         src : 'icons/apple-touch-icon-76x76.png'
@@ -36,8 +36,8 @@ Icon that appears to the left of the File menu:
         height : '26px'
         padding : '2px'
 
-Group types needed by this application (just one for now, more later as this
-application becomes mature):
+This application needs just one group type for now, but it will need more
+later as this application becomes mature.
 
     window.groupTypes = [
         name : 'me'
@@ -49,9 +49,9 @@ application becomes mature):
         color : '#996666'
     ]
 
-Use the MediaWiki plugin:
+Use the MediaWiki and Settings plugins.
 
-    window.pluginsToLoad = [ 'mediawiki' ]
+    window.pluginsToLoad = [ 'mediawiki', 'settings' ]
 
 Add initial functionality for importing from a wiki on the same server, and
 exporting to it as well.  This is still in development.
@@ -154,10 +154,39 @@ exporting to it as well.  This is still in development.
                         content, postCallback
                 tinymce.activeEditor.MediaWiki.login username, password,
                     loginCallback
+        settings :
+            text : 'Settings...'
+            context : 'file'
+            onclick : -> tinymce.activeEditor.Settings.application.showUI()
 
-If the query string told us to load a page from the wiki, do so now.
+Lastly, a few actions to take after the editor has been initialized.
 
     window.afterEditorReady = ( editor ) ->
+
+Initialize the settings plugin for global app settings.
+
+        A = editor.Settings.addCategory 'application'
+        A.setup = ( div ) ->
+            div.innerHTML = """
+                <p>Wiki username:
+                    <input type='text' id='wiki_username'
+                           value='#{A.get 'wiki_username'}'/></p>
+                <p>Wiki password:
+                    <input type='password' id='wiki_password'
+                           value='#{A.get 'wiki_password'}'/></p>
+                """
+        A.teardown = ( div ) ->
+            console.log 'tearing down this div:', div
+            A.set 'wiki_username',
+                div.ownerDocument.getElementById( 'wiki_username' ).value
+            A.set 'wiki_password',
+                div.ownerDocument.getElementById( 'wiki_password' ).value
+            console.log 'found these things:',
+                div.ownerDocument.getElementById( 'wiki_username' ),
+                div.ownerDocument.getElementById( 'wiki_password' )
+
+If the query string told us to load a page from the wiki, do so.
+
         editor.MediaWiki.setIndexPage '/wiki/index.php'
         editor.MediaWiki.setAPIPage '/wiki/api.php'
         if match = /\?wikipage=(.*)/.exec window.location.search

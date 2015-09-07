@@ -7,42 +7,24 @@ stages of experimenting with MediaWiki to learn its capabilities.
 
 ## To-dos
 
- * Create another plugin for user preferences in an arbitrary number of
-   categories.  (One example category will be global settings, and another
-   will be the metadata of the currently-loaded document.)  It requires
-   clients to supply four functions:
-   * `get(category,key)` - returns the value of the setting that uses that
-     key in that category.  It may be best to provide a default
-     implementation of this function, that uses the app's LocalStorage for
-     all categories.
-   * `set(category,key,value)` - stores the key-value pair in the settings
-     for that category.  It may be best to provide a default implementation
-     of this function, that uses the app's LocalStorage.
-   * `setup(category,div)` - run by the `editPreferences(category)` function
-     provided by this plugin, passing a DIV that sits inside the dialog box
-     that's being shown to the user, for that user to specify their
-     preferences.  The `setup` function should place into that DIV all the
-     controls necessary for editing settings, and should configure them to
-     reflect the current preferences returned by the `get` function (e.g.,
-     fill in text boxes, check radio buttons, etc.).
-   * `teardown(category,div)` - run by the `editPreferneces(category)`
-     function when the user clicks OK, receiving the same DIV, which will
-     contain the same UI elements placed there by the first function, but
-     possibly differently configured (e.g., new text in the text boxes, new
-     check boxes checked, etc.).  That data should be read and used to
-     update the preferences, using the `set` function.
-   * Import that plugin into the main Lurch LA, and create a category for
-     global app settings, the first two of which are the user's wiki
-     username and password.  Then stop prompting them for those values, and
-     simply fetch them with `get()`.  If they do not exist in the settings,
-     tell the user that they need to specify those values in the app
-     settings, and offer to take them there.
+ * Create another plugin for user preferences.
+   * Create convenience functions in the settings plugin for appending to a
+     DIV small 1-row-2-column tables whose columns divide the width 50-50
+     and whose contents are of various common types (text input, password
+     input, checkbox, dropdown, or HTML of your choosing) and which are
+     styled reasonably.  The left column contains the right-aligned label.
+   * Stop prompting them for wiki username/pwd, and simply fetch them with
+     `get()`.  If they do not exist in the settings, tell the user that they
+     need to specify those values in the app settings, and offer to take
+     them there.
    * Create a new category for per-document metadata, and store there the
-     title under which you want to publish the document on the wiki.  Then
-     stop prompting the user for that value, and simply fetch it with
+     title under which you want to publish the document on the wiki.
+   * Stop prompting the user for wiki page title, and simply fetch it with
      `get()`.  If the title does not exist in the document's metadata, tell
      the user that they need to specify it in the document's metadata, and
      offer to take them there.
+ * Move the `formatContentForWiki` and `formatContentFromWiki` functions
+   out of the main app code and into the MediaWiki plugin.
  * Make it so that when a user attempts to edit a page, if it is a Lurch
    document, they are alerted that they should probably not tamper with
    its source directly in the wiki, but edit it in Lurch instead.  (See
