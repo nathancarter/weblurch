@@ -137,12 +137,14 @@ exporting to it as well.  This is still in development.
                     you want this document exported (case sensitive)',
                     'My New Page'
                 if pageName is null then return
-                username = prompt 'Enter your wiki username', 'username'
-                if username is null then return
-                password = prompt 'Enter your wiki password.\n(Note that
-                    this *test* implementation will show your password on
-                    screen.  Sorry!)', 'password'
-                if password is null then return
+                username = tinymce.activeEditor.Settings.application.get \
+                    'wiki_username'
+                password = tinymce.activeEditor.Settings.application.get \
+                    'wiki_password'
+                if not username? or not password?
+                    return alert 'You have not yet set up a wiki username
+                        and password.  Visit the application settings on the
+                        File menu to do so first.'
                 postCallback = ( result, error ) ->
                     if error then return alert 'Posting error:\n' + error
                     if confirm 'Posting succeeded.  Visit new page?'
@@ -167,23 +169,17 @@ Initialize the settings plugin for global app settings.
 
         A = editor.Settings.addCategory 'application'
         A.setup = ( div ) ->
-            div.innerHTML = """
-                <p>Wiki username:
-                    <input type='text' id='wiki_username'
-                           value='#{A.get 'wiki_username'}'/></p>
-                <p>Wiki password:
-                    <input type='password' id='wiki_password'
-                           value='#{A.get 'wiki_password'}'/></p>
-                """
+            div.innerHTML = [
+                editor.Settings.UI.heading 'Wiki Login'
+                editor.Settings.UI.text 'Username',
+                    'wiki_username', A.get 'wiki_username'
+                editor.Settings.UI.password 'Password',
+                    'wiki_password', A.get 'wiki_password'
+            ].join '\n'
         A.teardown = ( div ) ->
-            console.log 'tearing down this div:', div
-            A.set 'wiki_username',
-                div.ownerDocument.getElementById( 'wiki_username' ).value
-            A.set 'wiki_password',
-                div.ownerDocument.getElementById( 'wiki_password' ).value
-            console.log 'found these things:',
-                div.ownerDocument.getElementById( 'wiki_username' ),
-                div.ownerDocument.getElementById( 'wiki_password' )
+            elt = ( id ) -> div.ownerDocument.getELementById id
+            A.set 'wiki_username', elt( 'wiki_username' ).value
+            A.set 'wiki_password', elt( 'wiki_password' ).value
 
 If the query string told us to load a page from the wiki, do so.
 

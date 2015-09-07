@@ -8,15 +8,6 @@ stages of experimenting with MediaWiki to learn its capabilities.
 ## To-dos
 
  * Create another plugin for user preferences.
-   * Create convenience functions in the settings plugin for appending to a
-     DIV small 1-row-2-column tables whose columns divide the width 50-50
-     and whose contents are of various common types (text input, password
-     input, checkbox, dropdown, or HTML of your choosing) and which are
-     styled reasonably.  The left column contains the right-aligned label.
-   * Stop prompting them for wiki username/pwd, and simply fetch them with
-     `get()`.  If they do not exist in the settings, tell the user that they
-     need to specify those values in the app settings, and offer to take
-     them there.
    * Create a new category for per-document metadata, and store there the
      title under which you want to publish the document on the wiki.
    * Stop prompting the user for wiki page title, and simply fetch it with

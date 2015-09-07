@@ -114,6 +114,53 @@ order (of setting up a UI and then showing it).
         div.innerHTML = ''
         plugin[category].setup div
 
+## Convenience functions for a UI
+
+A common UI for settings dialogs is a two-column view, in which the left
+column contains labels for corresponding controls in the right column.  The
+functions in this section provide a convenient way to create such a UI.
+Each function herein creates a single row of two columns, with the label on
+the left, and the control on the right (with a few exceptions).
+
+    plugin.UI = { }
+
+For creating category headings:
+
+    plugin.UI.heading = ( name ) ->
+        plugin.UI.tr "<td style='width: 100%; text-align: center;'>
+            <span style='font-size: 20px;'>
+            #{name}</span></td>"
+
+For creating read-only rows:
+
+    plugin.UI.readOnly = ( label, data ) -> plugin.UI.tpair label, data
+
+For creating a text input:
+
+    plugin.UI.text = ( label, id, initial ) ->
+        plugin.UI.tpair label, "<input type='text' id='#{id}'
+            value='#{initial}'
+            style='border-width: 2px; border-style: inset;'/>"
+
+For creating a password input:
+
+    plugin.UI.password = ( label, id, initial ) ->
+        plugin.UI.tpair label, "<input type='password' id='#{id}'
+            value='#{initial}'
+            style='border-width: 2px; border-style: inset;'/>"
+
+And two utility functions used by all the functions above.
+
+    plugin.UI.tr = ( content ) ->
+        '<table border=0 cellpadding=0 cellspacing=10
+                style="width: 100%;"><tr style="width: 100%;">' + \
+        content + '</tr></table>'
+    plugin.UI.tpair = ( left, right ) ->
+        plugin.UI.tr "<td style='width: 50%; text-align: right;'>
+                        <b>#{left}:</b></td>
+                      <td style='width: 50%; text-align: left;'>
+                        #{right}</td>"
+
 # Installing the plugin
 
 The plugin, when initialized on an editor, installs all the functions above
