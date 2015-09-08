@@ -7,13 +7,6 @@ stages of experimenting with MediaWiki to learn its capabilities.
 
 ## To-dos
 
- * Add a check to all wiki-related actions in the app, checking to see if
-   the app is running on github before proceeding.  If it is, then do not
-   run the action itself, but instead pop up an alert dialog saying that the
-   wiki-related actions are not yet enabled in the web version of the app,
-   because we have not yet set up a hosting provider, and that those actions
-   are present in the app only for development and testing in preparation
-   for a hosting solution that includes a wiki.
  * Make it so that when a user attempts to edit a page, if it is a Lurch
    document, they are alerted that they should probably not tamper with
    its source directly in the wiki, but edit it in Lurch instead.  (See

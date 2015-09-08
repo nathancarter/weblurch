@@ -74,6 +74,7 @@ exporting to it as well.  This is still in development.
             text : 'Import from wiki...'
             context : 'file'
             onclick : ->
+                if appIsRunningOnGitHub() then return
                 pageName = prompt 'Give the name of the page to import (case
                     sensitive)', 'Main Page'
                 if pageName is null then return
@@ -92,6 +93,7 @@ exporting to it as well.  This is still in development.
             text : 'Export to wiki'
             context : 'file'
             onclick : ->
+                if appIsRunningOnGitHub() then return
                 pageName = tinymce.activeEditor.Settings.document.get \
                     'wiki_title'
                 if not pageName? then return alert 'You have not yet set the
@@ -182,3 +184,22 @@ If the query string told us to load a page from the wiki, do so.
         editor.MediaWiki.setAPIPage '/wiki/api.php'
         if match = /\?wikipage=(.*)/.exec window.location.search
             editor.MediaWiki.importPage decodeURIComponent match[1]
+
+The following function is just to ensure that functionality that depends on
+a wiki installation doesn't break when the app is served from GitHub.
+Instead of breaking, the app will clearly state that...well, you can read
+the message below for yourself.
+
+    appIsRunningOnGitHub = ->
+        result = /nathancarter\.github\.io/.test window.location.href
+        if result
+            alert 'That functionality requires MediaWiki to be running on
+                the server from which you\'re accessing this web app.
+                \n\nOn GitHub, we cannot run a MediaWiki server, so the
+                functionality is disabled.
+                \n\nThe menu items remain for use in developer testing, as
+                we prepare for a dedicated server that will have MediaWiki
+                and the ability to publish documents to that wiki with a
+                single click, or edit them in Lurch with a single click.
+                \n\nTry back soon!'
+        result
