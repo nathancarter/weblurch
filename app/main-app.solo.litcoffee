@@ -67,7 +67,6 @@ exporting to it as well.  This is still in development.
         while editorHTML.length > 0
             if match = closeRE.exec editorHTML
                 tagName = match[1].toLowerCase()
-                console.log 'found close', tagName
                 if tagName in toReplace
                     depth--
                     result += "</htmltag#{depth}>"
@@ -76,7 +75,6 @@ exporting to it as well.  This is still in development.
                 editorHTML = editorHTML[match[0].length..]
             else if match = openRE.exec editorHTML
                 tagName = match[1].toLowerCase()
-                console.log 'found open', tagName
                 if tagName in toReplace
                     result += "<htmltag#{depth}
                         tagname='#{tagName}' #{match[2]}>"
@@ -89,27 +87,21 @@ exporting to it as well.  This is still in development.
                 result += decoder.textContent
                 editorHTML = editorHTML[match[0].length..]
             else
-                console.log 'found char', editorHTML[0]
                 result += editorHTML[0]
                 editorHTML = editorHTML[1..]
         result
-    formatContentFromWiki = ( wikiHTML ) ->
-        result = ''
-        stack = [ ]
-        openRE = /^<htmltag\s+tagname='([^']+)'\s+([^>]*)>/i
-        closeRE = /^<\/htmltag\s*>/i
-        while wikiHTML.length > 0
-            if match = openRE.exec wikiHTML
-                result += "<#{match[1]} #{match[2]}>"
-                wikiHTML = wikiHTML[match[0].length..]
-                stack.push match[1]
-            else if match = closeRE.exec wikiHTML
-                result += "</#{stack.pop()}>"
-                wikiHTML = wikiHTML[match[0].length..]
-            else
-                result += wikiHTML[0]
-                wikiHTML = wikiHTML[1..]
-        result
+    embedMetadata = ( documentHTML, metadataObject = { } ) ->
+        encoding = encodeURIComponent JSON.stringify metadataObject
+        "<span id='metadata' style='display: none;'
+         >#{encoding}</span>#{documentHTML}"
+    extractMetadata = ( html ) ->
+        re = /^<span[^>]+id=.metadata.[^>]*>([^<]*)<\/span>/
+        if match = re.exec html
+            metadata : JSON.parse decodeURIComponent match[1]
+            document : html[match[0].length..]
+        else
+            metadata : { }
+            document : html
     window.groupMenuItems =
         wikiimport :
             text : 'Import from wiki...'
@@ -120,31 +112,31 @@ exporting to it as well.  This is still in development.
                 if pageName is null then return
                 tinymce.activeEditor.MediaWiki.getPageContent pageName,
                     ( content, error ) ->
-                        if content
-                            tinymce.activeEditor.setContent \
-                                formatContentFromWiki content
                         if error
                             alert 'Error loading content from wiki:' + \
                                 error.split( '\n' )[0]
                             console.log error
+                        else
+                            { metadata, document } = extractMetadata content
+                            tinymce.activeEditor.setContent document
+                            tinymce.activeEditor.Settings.document \
+                                .metadata = metadata
         wikiexport :
-            text : 'Export to wiki...'
+            text : 'Export to wiki'
             context : 'file'
             onclick : ->
-                content = formatContentForWiki \
-                    tinymce.activeEditor.getContent()
-                pageName = prompt 'Give the name of the wiki page into which
-                    you want this document exported (case sensitive)',
-                    'My New Page'
-                if pageName is null then return
+                pageName = tinymce.activeEditor.Settings.document.get \
+                    'wiki_title'
+                if not pageName? then return alert 'You have not yet set the
+                    title under which this document should be published on
+                    the wiki.  See the document settings on the File menu.'
                 username = tinymce.activeEditor.Settings.application.get \
                     'wiki_username'
                 password = tinymce.activeEditor.Settings.application.get \
                     'wiki_password'
-                if not username? or not password?
-                    return alert 'You have not yet set up a wiki username
-                        and password.  Visit the application settings on the
-                        File menu to do so first.'
+                if not username? or not password? then return alert 'You
+                    have not yet set up a wiki username and password.  See
+                    the application settings on the File menu.'
                 postCallback = ( result, error ) ->
                     if error then return alert 'Posting error:\n' + error
                     if confirm 'Posting succeeded.  Visit new page?'
@@ -152,14 +144,22 @@ exporting to it as well.  This is still in development.
                             encodeURIComponent( pageName ), '_blank'
                 loginCallback = ( result, error ) ->
                     if error then return alert 'Login error:\n' + error
+                    content = tinymce.activeEditor.getContent()
+                    content = embedMetadata content,
+                        tinymce.activeEditor.Settings.document.metadata
+                    content = formatContentForWiki content
                     tinymce.activeEditor.MediaWiki.exportPage pageName,
                         content, postCallback
                 tinymce.activeEditor.MediaWiki.login username, password,
                     loginCallback
-        settings :
-            text : 'Settings...'
+        appsettings :
+            text : 'Application settings...'
             context : 'file'
             onclick : -> tinymce.activeEditor.Settings.application.showUI()
+        docsettings :
+            text : 'Document properties...'
+            context : 'file'
+            onclick : -> tinymce.activeEditor.Settings.document.showUI()
 
 Lastly, a few actions to take after the editor has been initialized.
 
@@ -171,15 +171,44 @@ Initialize the settings plugin for global app settings.
         A.setup = ( div ) ->
             div.innerHTML = [
                 editor.Settings.UI.heading 'Wiki Login'
+                editor.Settings.UI.info 'Entering a username and password
+                    here does NOT create an account on the wiki.  You must
+                    already have one.  If you do not, first visit
+                    <a href="/wiki/index.php" target="_blank"
+                       style="color: blue;">the wiki</a>,
+                    create an account, then return here.'
                 editor.Settings.UI.text 'Username',
                     'wiki_username', A.get 'wiki_username'
                 editor.Settings.UI.password 'Password',
                     'wiki_password', A.get 'wiki_password'
             ].join '\n'
         A.teardown = ( div ) ->
-            elt = ( id ) -> div.ownerDocument.getELementById id
+            elt = ( id ) -> div.ownerDocument.getElementById id
             A.set 'wiki_username', elt( 'wiki_username' ).value
             A.set 'wiki_password', elt( 'wiki_password' ).value
+
+Initialize the settings plugin for per-document settings, stored in that
+same metadata object.
+
+        D = editor.Settings.addCategory 'document'
+        D.metadata = { }
+        D.get = ( key ) -> D.metadata[key]
+        D.set = ( key, value ) -> D.metadata[key] = value
+        D.setup = ( div ) ->
+            div.innerHTML = [
+                editor.Settings.UI.heading 'Wiki Publishing'
+                editor.Settings.UI.text 'Publish to wiki under this title',
+                    'wiki_title', D.get 'wiki_title'
+            ].join '\n'
+        D.teardown = ( div ) ->
+            elt = ( id ) -> div.ownerDocument.getElementById id
+            D.set 'wiki_title', elt( 'wiki_title' ).value
+
+Set up the load/save plugin with the functions needed for loading and saving
+document metadata.
+
+        editor.LoadSave.saveMetaData = -> D.metadata
+        editor.LoadSave.loadMetaData = ( object ) -> D.metadata = object
 
 If the query string told us to load a page from the wiki, do so.
 

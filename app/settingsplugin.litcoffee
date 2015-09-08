@@ -124,12 +124,13 @@ the left, and the control on the right (with a few exceptions).
 
     plugin.UI = { }
 
-For creating category headings:
+For creating informational lines and category headings:
 
+    plugin.UI.info = ( name ) -> plugin.UI.tr \
+        "<td style='width: 100%; text-align: center; white-space: normal;'
+         >#{name}</td>"
     plugin.UI.heading = ( name ) ->
-        plugin.UI.tr "<td style='width: 100%; text-align: center;'>
-            <span style='font-size: 20px;'>
-            #{name}</span></td>"
+        plugin.UI.info "<span style='font-size: 20px;'>#{name}</span>"
 
 For creating read-only rows:
 

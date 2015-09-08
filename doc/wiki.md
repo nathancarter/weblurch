@@ -7,19 +7,31 @@ stages of experimenting with MediaWiki to learn its capabilities.
 
 ## To-dos
 
- * Create another plugin for user preferences.
-   * Create a new category for per-document metadata, and store there the
-     title under which you want to publish the document on the wiki.
-   * Stop prompting the user for wiki page title, and simply fetch it with
-     `get()`.  If the title does not exist in the document's metadata, tell
-     the user that they need to specify it in the document's metadata, and
-     offer to take them there.
  * Move the `formatContentForWiki` and `formatContentFromWiki` functions
    out of the main app code and into the MediaWiki plugin.
+ * Add a check to all wiki-related actions in the app, checking to see if
+   the app is running on github before proceeding.  If it is, then do not
+   run the action itself, but instead pop up an alert dialog saying that the
+   wiki-related actions are not yet enabled in the web version of the app,
+   because we have not yet set up a hosting provider, and that those actions
+   are present in the app only for development and testing in preparation
+   for a hosting solution that includes a wiki.
  * Make it so that when a user attempts to edit a page, if it is a Lurch
    document, they are alerted that they should probably not tamper with
    its source directly in the wiki, but edit it in Lurch instead.  (See
    Common.js information in notes at end of this file.)
+
+## Updating the UI
+
+ * Create a TinyMCE plugin for showing arbitrary dialogs, including things
+   like a message box, an alert box, a prompt, a confirm, etc., all with
+   callbacks, all that use the same TinyMCE dialog style.
+ * Remove from the [XML Groups module](../app/xml-groups.solo.litcoffee) the
+   `showHTMLPopup()` function, calling the plugin's version instead.
+ * Make all the alert boxes in the main app use this new feature.  In
+   particular, the alert that you can now visit your newly published wiki
+   page should just have a link in it, so that the browser does not perceive
+   the navigation as a popup, and therefore permits it.
 
 ## Additional notes
 
