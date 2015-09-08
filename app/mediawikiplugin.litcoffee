@@ -150,6 +150,7 @@ from its callback (or any time thereafter).
                     callback null, 'Edit failed: ' + json
                     return
                 callback 'Success', null
+            content = formatContentForWiki content
             xhr2.open 'POST',
                 editor.MediaWiki.getAPIPage() + '?action=edit' + \
                 '&title=' + encodeURIComponent( pageName ) + \
@@ -169,6 +170,47 @@ from its callback (or any time thereafter).
             '&format=json&formatversion=2'
         xhr.setRequestHeader 'Api-User-Agent', 'webLurch application'
         xhr.send()
+
+The previous function makes use of the following one.  This depends upon the
+[HTMLTags](https://www.mediawiki.org/wiki/Extension:HTML_Tags) extension to
+MediaWiki, which permits arbitrar HTML, as long as it is encoded using tags
+of a certain form, and the MediaWiki configuration permits the tags.  See
+the documentation for the extension for details.
+
+    formatContentForWiki = ( editorHTML ) ->
+        result = ''
+        depth = 0
+        openRE = /^<([^ >]+)\s*([^>]+)?>/i
+        closeRE = /^<\/([^ >]+)\s*>/i
+        charRE = /^&([a-z0-9]+|#[0-9]+);/i
+        toReplace = [ 'img', 'span', 'var', 'sup' ]
+        decoder = document.createElement 'div'
+        while editorHTML.length > 0
+            if match = closeRE.exec editorHTML
+                tagName = match[1].toLowerCase()
+                if tagName in toReplace
+                    depth--
+                    result += "</htmltag#{depth}>"
+                else
+                    result += match[0]
+                editorHTML = editorHTML[match[0].length..]
+            else if match = openRE.exec editorHTML
+                tagName = match[1].toLowerCase()
+                if tagName in toReplace
+                    result += "<htmltag#{depth}
+                        tagname='#{tagName}' #{match[2]}>"
+                    if not /\/\s*$/.test match[2] then depth++
+                else
+                    result += match[0]
+                editorHTML = editorHTML[match[0].length..]
+            else if match = charRE.exec editorHTML
+                decoder.innerHTML = match[0]
+                result += decoder.textContent
+                editorHTML = editorHTML[match[0].length..]
+            else
+                result += editorHTML[0]
+                editorHTML = editorHTML[1..]
+        result
 
 # Installing the plugin
 

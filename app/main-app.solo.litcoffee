@@ -56,40 +56,6 @@ Use the MediaWiki and Settings plugins.
 Add initial functionality for importing from a wiki on the same server, and
 exporting to it as well.  This is still in development.
 
-    formatContentForWiki = ( editorHTML ) ->
-        result = ''
-        depth = 0
-        openRE = /^<([^ >]+)\s*([^>]+)?>/i
-        closeRE = /^<\/([^ >]+)\s*>/i
-        charRE = /^&([a-z0-9]+|#[0-9]+);/i
-        toReplace = [ 'img', 'span', 'var', 'sup' ]
-        decoder = document.createElement 'div'
-        while editorHTML.length > 0
-            if match = closeRE.exec editorHTML
-                tagName = match[1].toLowerCase()
-                if tagName in toReplace
-                    depth--
-                    result += "</htmltag#{depth}>"
-                else
-                    result += match[0]
-                editorHTML = editorHTML[match[0].length..]
-            else if match = openRE.exec editorHTML
-                tagName = match[1].toLowerCase()
-                if tagName in toReplace
-                    result += "<htmltag#{depth}
-                        tagname='#{tagName}' #{match[2]}>"
-                    if not /\/\s*$/.test match[2] then depth++
-                else
-                    result += match[0]
-                editorHTML = editorHTML[match[0].length..]
-            else if match = charRE.exec editorHTML
-                decoder.innerHTML = match[0]
-                result += decoder.textContent
-                editorHTML = editorHTML[match[0].length..]
-            else
-                result += editorHTML[0]
-                editorHTML = editorHTML[1..]
-        result
     embedMetadata = ( documentHTML, metadataObject = { } ) ->
         encoding = encodeURIComponent JSON.stringify metadataObject
         "<span id='metadata' style='display: none;'
@@ -147,7 +113,6 @@ exporting to it as well.  This is still in development.
                     content = tinymce.activeEditor.getContent()
                     content = embedMetadata content,
                         tinymce.activeEditor.Settings.document.metadata
-                    content = formatContentForWiki content
                     tinymce.activeEditor.MediaWiki.exportPage pageName,
                         content, postCallback
                 tinymce.activeEditor.MediaWiki.login username, password,

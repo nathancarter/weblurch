@@ -7,8 +7,6 @@ stages of experimenting with MediaWiki to learn its capabilities.
 
 ## To-dos
 
- * Move the `formatContentForWiki` and `formatContentFromWiki` functions
-   out of the main app code and into the MediaWiki plugin.
  * Add a check to all wiki-related actions in the app, checking to see if
    the app is running on github before proceeding.  If it is, then do not
    run the action itself, but instead pop up an alert dialog saying that the
