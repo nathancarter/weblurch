@@ -249,9 +249,12 @@ The following utility function was used to help build lists of menu items
 in the setup data above.
 
     moreMenuItems = ( menuName ) ->
-        names = ( k for k in Object.keys window.groupMenuItems \
-            when window.groupMenuItems[k].context is menuName ).join ' '
-        if names.length then "| #{names}" else ''
+        names = if window.groupMenuItems.hasOwnProperty "#{menuName}_order"
+            window.groupMenuItems["#{menuName}_order"]
+        else
+            ( k for k in Object.keys window.groupMenuItems \
+                when window.groupMenuItems[k].context is menuName ).join ' '
+        if names.length and names[...2] isnt '| ' then "| #{names}" else ''
 
 The third-party plugin for math equations can have its rough meaning
 extracted by the following function, which can be applied to any DOM element

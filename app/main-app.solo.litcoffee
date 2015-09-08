@@ -69,6 +69,7 @@ exporting to it as well.  This is still in development.
             metadata : { }
             document : html
     window.groupMenuItems =
+        file_order : 'wikiimport wikiexport | appsettings docsettings'
         wikiimport :
             text : 'Import from wiki...'
             context : 'file'
