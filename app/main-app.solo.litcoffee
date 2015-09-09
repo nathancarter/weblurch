@@ -66,7 +66,7 @@ exporting to it as well.  This is still in development.
             metadata : JSON.parse decodeURIComponent match[1]
             document : html[match[0].length..]
         else
-            metadata : { }
+            metadata : null
             document : html
     window.groupMenuItems =
         file_order : 'wikiimport wikiexport | appsettings docsettings'
@@ -84,11 +84,18 @@ exporting to it as well.  This is still in development.
                             alert 'Error loading content from wiki:' + \
                                 error.split( '\n' )[0]
                             console.log error
-                        else
-                            { metadata, document } = extractMetadata content
-                            tinymce.activeEditor.setContent document
-                            tinymce.activeEditor.Settings.document \
-                                .metadata = metadata
+                            return
+                        { metadata, document } = extractMetadata content
+                        if not metadata? then return alert 'The wiki page
+                            that you attempted to import is not a Lurch
+                            document.\n\nAlthough it is possible to import
+                            any wiki page into Lurch, it does not work well
+                            to edit and re-post such pages to the wiki.
+                            \n\nTo edit a non-Lurch wiki page, just use the
+                            regular wiki editing interface for that page.'
+                        tinymce.activeEditor.setContent document
+                        tinymce.activeEditor.Settings.document \
+                            .metadata = metadata
         wikiexport :
             text : 'Export to wiki'
             context : 'file'
