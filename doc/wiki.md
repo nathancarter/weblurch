@@ -5,13 +5,6 @@ Note that [plan.md](plan.md) has details on the goals, but this document is
 a scratch pad in which I will dump immediate next steps, during the early
 stages of experimenting with MediaWiki to learn its capabilities.
 
-## To-dos
-
- * Make it so that when a user attempts to edit a page, if it is a Lurch
-   document, they are alerted that they should probably not tamper with
-   its source directly in the wiki, but edit it in Lurch instead.  (See
-   Common.js information in notes at end of this file.)
-
 ## Updating the UI
 
  * Create a TinyMCE plugin for showing arbitrary dialogs, including things
@@ -73,3 +66,7 @@ The other is the loop in lines 17-19 of the code on my computer at present,
 which installs htmltag0...htmltag50 rather than just htmltag as the tags
 handled by that extensions.  This is to get around a bug in MediaWiki, which
 parses nested tags of the same type incorrectly.
+
+Several of my changes have been to MediaWiki:Common.js.  Note that pages
+within the `Mediawiki:` namespace are automatically full protected, so only
+users with sysop/admin rights on the wiki can edit it.
