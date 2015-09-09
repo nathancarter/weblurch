@@ -164,7 +164,8 @@
     var A, D, match;
     A = editor.Settings.addCategory('application');
     A.setup = function(div) {
-      return div.innerHTML = [editor.Settings.UI.heading('Wiki Login'), editor.Settings.UI.info('Entering a username and password here does NOT create an account on the wiki.  You must already have one.  If you do not, first visit <a href="/wiki/index.php" target="_blank" style="color: blue;">the wiki</a>, create an account, then return here.'), editor.Settings.UI.text('Username', 'wiki_username', A.get('wiki_username')), editor.Settings.UI.password('Password', 'wiki_password', A.get('wiki_password'))].join('\n');
+      var _ref, _ref1;
+      return div.innerHTML = [editor.Settings.UI.heading('Wiki Login'), editor.Settings.UI.info('Entering a username and password here does NOT create an account on the wiki.  You must already have one.  If you do not, first visit <a href="/wiki/index.php" target="_blank" style="color: blue;">the wiki</a>, create an account, then return here.'), editor.Settings.UI.text('Username', 'wiki_username', (_ref = A.get('wiki_username')) != null ? _ref : ''), editor.Settings.UI.password('Password', 'wiki_password', (_ref1 = A.get('wiki_password')) != null ? _ref1 : '')].join('\n');
     };
     A.teardown = function(div) {
       var elt;
@@ -183,7 +184,8 @@
       return D.metadata[key] = value;
     };
     D.setup = function(div) {
-      return div.innerHTML = [editor.Settings.UI.heading('Wiki Publishing'), editor.Settings.UI.text('Publish to wiki under this title', 'wiki_title', D.get('wiki_title'))].join('\n');
+      var _ref;
+      return div.innerHTML = [editor.Settings.UI.heading('Wiki Publishing'), editor.Settings.UI.text('Publish to wiki under this title', 'wiki_title', (_ref = D.get('wiki_title')) != null ? _ref : '')].join('\n');
     };
     D.teardown = function(div) {
       var elt;

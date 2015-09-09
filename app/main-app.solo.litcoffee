@@ -49,7 +49,7 @@ later as this application becomes mature.
         color : '#996666'
     ]
 
-Use the MediaWiki and Settings plugins.
+Use the MediaWiki, Settings, and Dialogs plugins.
 
     window.pluginsToLoad = [ 'mediawiki', 'settings', 'dialogs' ]
 
@@ -190,9 +190,9 @@ Initialize the settings plugin for global app settings.
                        style="color: blue;">the wiki</a>,
                     create an account, then return here.'
                 editor.Settings.UI.text 'Username',
-                    'wiki_username', A.get 'wiki_username'
+                    'wiki_username', A.get( 'wiki_username' ) ? ''
                 editor.Settings.UI.password 'Password',
-                    'wiki_password', A.get 'wiki_password'
+                    'wiki_password', A.get( 'wiki_password' ) ? ''
             ].join '\n'
         A.teardown = ( div ) ->
             elt = ( id ) -> div.ownerDocument.getElementById id
@@ -210,7 +210,7 @@ same metadata object.
             div.innerHTML = [
                 editor.Settings.UI.heading 'Wiki Publishing'
                 editor.Settings.UI.text 'Publish to wiki under this title',
-                    'wiki_title', D.get 'wiki_title'
+                    'wiki_title', D.get( 'wiki_title' ) ? ''
             ].join '\n'
         D.teardown = ( div ) ->
             elt = ( id ) -> div.ownerDocument.getElementById id

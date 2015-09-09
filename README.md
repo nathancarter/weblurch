@@ -2,10 +2,10 @@
 # webLurch
 
 <!--
-Removing this because the tests on Travis-CI were segmentation faulting (!),
-while they run without a single error on my laptop.  Will figure it out
-later, but for now, I don't want it to look like we have failing tests,
-when we don't, really.
+Removing this because the tests on Travis-CI are not correctly set up, and
+need to be updated.  Specifically, PhantomJS requires netstat, which isn't
+installed on the build platform, so we'll need to add configuration lines
+that install netstat from a package manager before we can proceed.
 [![Build status](https://travis-ci.org/nathancarter/weblurch.svg?branch=master)](https://travis-ci.org/nathancarter/weblurch)
 -->
 

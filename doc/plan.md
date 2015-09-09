@@ -15,17 +15,12 @@ required order of completion.
 
 ## Documenting each demo app better
 
- * Make the main gh-pages index page not simply forward to app/index.html,
-   but be an actual index page listing all pages you might want to visit,
-   with descriptions of each.
  * Write a thorough introduction at the top of its source code file.
  * Add a help menu item that opens the demo app's source code file so the
    reader can see the thorough introduction just discussed.
  * Add a help menu item that will open The Tutorial in a new tab.
  * Make the help menu flash when the page is first loaded, until someone
    clicks it, or until a certain amount of time has passed.
- * Can this be improved by running the giant URLs through a URL-shortener
-   automatically?
 
 ## Arrows among groups
 
@@ -263,6 +258,9 @@ file to someone, as follows.
    user to press Ctrl+C, just like StackOverflow does.
  * When the main app loads, if there is a document in the query string,
    place it into the editor immediately.
+ * Improve this by running the giant URLs through a URL-shortener
+   automatically, as documented [on this page for bit.ly](
+   https://bdhacker.wordpress.com/2010/03/30/dynamically-use-bitly-in-your-site-easiest-way/).
 
 Add a better ability to share documents with the world.  I considered
 [Firebase](https://www.firebase.com/), but it seemed like too much work, and
