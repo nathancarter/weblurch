@@ -308,9 +308,8 @@ __Adding new menu items to the editor's menus__
 __Showing dialog boxes__
  * [TinyMCE provides a few ways to show dialog boxes containing plain
    text](http://www.tinymce.com/wiki.php/api4:class.tinymce.WindowManager).
- * If your dialog box must contain more than just plain text, inspect the
-   `showHTMLPopup` function defined in
-   [the XML Groups module](../src/xml-groups.solo.litcoffee).
+ * If your dialog box must contain more than just plain text, see
+   [the Dialogs plugin](../app/dialogsplugin.litcoffee).
 
 __Adding decorations to group boundaries__
  * It is common to give feedback to the user about the content of a group

@@ -51,7 +51,7 @@ later as this application becomes mature.
 
 Use the MediaWiki and Settings plugins.
 
-    window.pluginsToLoad = [ 'mediawiki', 'settings' ]
+    window.pluginsToLoad = [ 'mediawiki', 'settings', 'dialogs' ]
 
 Add initial functionality for importing from a wiki on the same server, and
 exporting to it as well.  This is still in development.
@@ -81,18 +81,28 @@ exporting to it as well.  This is still in development.
                 tinymce.activeEditor.MediaWiki.getPageContent pageName,
                     ( content, error ) ->
                         if error
-                            alert 'Error loading content from wiki:' + \
-                                error.split( '\n' )[0]
+                            tinymce.activeEditor.Dialogs.alert
+                                title : 'Wiki Error'
+                                message : "<p>Error loading content from
+                                    wiki:</p>
+                                    <p>#{error.split( '\n' )[0]}</p>"
                             console.log error
                             return
                         { metadata, document } = extractMetadata content
-                        if not metadata? then return alert 'The wiki page
-                            that you attempted to import is not a Lurch
-                            document.\n\nAlthough it is possible to import
-                            any wiki page into Lurch, it does not work well
-                            to edit and re-post such pages to the wiki.
-                            \n\nTo edit a non-Lurch wiki page, just use the
-                            regular wiki editing interface for that page.'
+                        if not metadata?
+                            tinymce.activeEditor.Dialogs.alert
+                                title : 'Not a Lurch document'
+                                message : '<p><b>The wiki page that you
+                                    attempted to import is not a Lurch
+                                    document.</b></p>
+                                    <p>Although it is possible to import any
+                                    wiki page into Lurch, it does not work
+                                    well to edit and re-post such pages to
+                                    the wiki.</p>
+                                    <p>To edit a non-Lurch wiki page, visit
+                                    the page on the wiki and edit it
+                                    there.</p>'
+                            return
                         tinymce.activeEditor.setContent document
                         tinymce.activeEditor.Settings.document \
                             .metadata = metadata
@@ -103,23 +113,50 @@ exporting to it as well.  This is still in development.
                 if appIsRunningOnGitHub() then return
                 pageName = tinymce.activeEditor.Settings.document.get \
                     'wiki_title'
-                if not pageName? then return alert 'You have not yet set the
-                    title under which this document should be published on
-                    the wiki.  See the document settings on the File menu.'
+                if not pageName?
+                    tinymce.activeEditor.Dialogs.alert
+                        title : 'Page Title not set'
+                        message : '<p>You have not yet set the title under
+                            which this document should be published on the
+                            wiki.  See the document settings on the File
+                            menu.</p>'
+                    return
                 username = tinymce.activeEditor.Settings.application.get \
                     'wiki_username'
                 password = tinymce.activeEditor.Settings.application.get \
                     'wiki_password'
-                if not username? or not password? then return alert 'You
-                    have not yet set up a wiki username and password.  See
-                    the application settings on the File menu.'
+                if not username? or not password?
+                    tinymce.activeEditor.Dialogs.alert
+                        title : 'No Wiki Credentials'
+                        message : '<p>You have not given your wiki username
+                            and password to the application settings.  See
+                            the application settings on the File menu.</p>'
+                    return
                 postCallback = ( result, error ) ->
-                    if error then return alert 'Posting error:\n' + error
-                    if confirm 'Posting succeeded.  Visit new page?'
-                        window.open '/wiki/index.php?title=' + \
-                            encodeURIComponent( pageName ), '_blank'
+                    if error
+                        tinymce.activeEditor.Dialogs.alert
+                            title : 'Posting Error'
+                            message : "<p>Error when posting to the
+                                wiki:</p>
+                                <p>#{error}</p>"
+                        return
+                    match = /^[^/]+\/\/[^/]+\//.exec window.location.href
+                    url = window.location.href[...match[0].length] + \
+                        'wiki/index.php?title=' + \
+                        encodeURIComponent pageName
+                    tinymce.activeEditor.Dialogs.alert
+                        title : 'Document Posted'
+                        message : "<p>Posting succeeded.</p>
+                            <p><a href='#{url}' target='_blank'>Visit posted
+                            page.</a></p>"
                 loginCallback = ( result, error ) ->
-                    if error then return alert 'Login error:\n' + error
+                    if error
+                        tinymce.activeEditor.Dialogs.alert
+                            title : 'Wiki Login Error'
+                            message : "<p>Error when logging into the
+                                wiki:</p>
+                                <p>#{error}</p>"
+                        return
                     content = tinymce.activeEditor.getContent()
                     content = embedMetadata content,
                         tinymce.activeEditor.Settings.document.metadata
@@ -200,13 +237,17 @@ the message below for yourself.
     appIsRunningOnGitHub = ->
         result = /nathancarter\.github\.io/.test window.location.href
         if result
-            alert 'That functionality requires MediaWiki to be running on
-                the server from which you\'re accessing this web app.
-                \n\nOn GitHub, we cannot run a MediaWiki server, so the
-                functionality is disabled.
-                \n\nThe menu items remain for use in developer testing, as
-                we prepare for a dedicated server that will have MediaWiki
-                and the ability to publish documents to that wiki with a
-                single click, or edit them in Lurch with a single click.
-                \n\nTry back soon!'
+            tinymce.activeEditor.Dialogs.alert
+                title : 'Not Available Here'
+                message : '<p>That functionality requires MediaWiki to be
+                    running on the server from which you\'re accessing this
+                    web app.</p>
+                    <p>On GitHub, we cannot run a MediaWiki server, so the
+                    functionality is disabled.</p>
+                    <p>The menu items remain for use in developer testing,
+                    as we prepare for a dedicated server that will have
+                    MediaWiki and the ability to publish documents to that
+                    wiki with a single click, or edit them in Lurch with a
+                    single click.</p>
+                    <p>Try back soon!</p>'
         result

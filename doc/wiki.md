@@ -5,18 +5,6 @@ Note that [plan.md](plan.md) has details on the goals, but this document is
 a scratch pad in which I will dump immediate next steps, during the early
 stages of experimenting with MediaWiki to learn its capabilities.
 
-## Updating the UI
-
- * Create a TinyMCE plugin for showing arbitrary dialogs, including things
-   like a message box, an alert box, a prompt, a confirm, etc., all with
-   callbacks, all that use the same TinyMCE dialog style.
- * Remove from the [XML Groups module](../app/xml-groups.solo.litcoffee) the
-   `showHTMLPopup()` function, calling the plugin's version instead.
- * Make all the alert boxes in the main app use this new feature.  In
-   particular, the alert that you can now visit your newly published wiki
-   page should just have a link in it, so that the browser does not perceive
-   the navigation as a popup, and therefore permits it.
-
 ## Additional notes
 
 I like [Article Protection](
