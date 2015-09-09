@@ -59,39 +59,8 @@ Lurch.](http://lurchmath.org/2013/04/12/what-have-we-built-so-far-part-1-of-2/)
 
 ## Demo Apps
 
-Enough preliminaries -- let's dive in!  Here are some examples of what you
-can do with the *Lurch Web Platform*.  Visit as many as you like and try
-them out.
-
-### Apps to play with online
-
-(Warning:  These apps are fun to try online, but for learning to code, see
-the next section instead.)
-
- * __Math Evaluator__ - Wrap any typeset mathematical expression in a bubble
-   and you can ask the app to evaluate it or show you its internal
-   structure.
-   * [Live demo online](http://nathancarter.github.io/weblurch/app/math-example.html)
-   * [Documented source code](../app/math-example.solo.litcoffee)
- * __OpenMath Content Dictionary Creator__ - An app that lets you write an
-   [OpenMath Content Dictionary](http://www.openmath.org/cd/) in a
-   user-friendly word processor, then export its raw XML for use elsewhere.
-   This is a specific example of an entire category of apps for editing
-   hierarchically structured meanings.
-   * [Live demo online](http://nathancarter.github.io/weblurch/app/openmath-example.html)
-   * [Documented source code](../app/openmath-example.solo.litcoffee)
-
-### Apps to learn from when developing
-
- * __Simple Example__ - Developers start here because it's highly documented
-   and extremely simple.
-   * [Live demo online](http://nathancarter.github.io/weblurch/app/simple-example.html)
-   * [Documented source code](../app/simple-example.solo.litcoffee)
- * __Complex Example__ - After you understand the Simple Example, go here.
-   It defines two group types rather than one, and shows how to add context
-   menus and do lengthy background computations, among other things.
-   * [Live demo online](http://nathancarter.github.io/weblurch/app/complex-example.html)
-   * [Documented source code](../app/complex-example.solo.litcoffee)
+The content of this section got large enough to deserve
+[its own page](http://nathancarter.github.io/weblurch/app/index.html).
 
 ## Tutorial
 
