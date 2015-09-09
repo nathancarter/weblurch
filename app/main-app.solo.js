@@ -188,7 +188,7 @@
   }, false);
 
   window.afterEditorReady = function(editor) {
-    var A, D, match;
+    var A, D, match, toAutoLoad;
     A = editor.Settings.addCategory('application');
     A.setup = function(div) {
       var _ref, _ref1;
@@ -232,10 +232,15 @@
     if (match = /\?wikipage=(.*)/.exec(window.location.search)) {
       editor.MediaWiki.importPage(decodeURIComponent(match[1]));
     }
-    if (match = /\?document=(.*)/.exec(window.location.search)) {
-      return setTimeout(function() {
-        return editor.setContent(decodeURIComponent(match[1]));
+    if (toAutoLoad = localStorage.getItem('auto-load')) {
+      setTimeout(function() {
+        localStorage.removeItem('auto-load');
+        return tinymce.activeEditor.setContent(toAutoLoad);
       }, 100);
+    }
+    if (match = /\?document=(.*)/.exec(window.location.search)) {
+      localStorage.setItem('auto-load', decodeURIComponent(match[1]));
+      return window.location.href = window.location.href.split('?')[0];
     }
   };
 

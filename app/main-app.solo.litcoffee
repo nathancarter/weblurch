@@ -248,16 +248,23 @@ document metadata.
         editor.LoadSave.loadMetaData = ( object ) -> D.metadata = object
 
 If the query string told us to load a page from the wiki, or a page fully
-embedded in a (possibly enormous) URL, do so.
+embedded in a (possibly enormous) URL, do so.  Note that the way we handle
+the enormous URLs is by storing them in the browser's `localStorage`, then
+reloading the page without the query string, and then pulling the data from
+`localStorage`.
 
         editor.MediaWiki.setIndexPage '/wiki/index.php'
         editor.MediaWiki.setAPIPage '/wiki/api.php'
         if match = /\?wikipage=(.*)/.exec window.location.search
             editor.MediaWiki.importPage decodeURIComponent match[1]
-        if match = /\?document=(.*)/.exec window.location.search
+        if toAutoLoad = localStorage.getItem 'auto-load'
             setTimeout ->
-                editor.setContent decodeURIComponent match[1]
+                localStorage.removeItem 'auto-load'
+                tinymce.activeEditor.setContent toAutoLoad
             , 100
+        if match = /\?document=(.*)/.exec window.location.search
+            localStorage.setItem 'auto-load', decodeURIComponent match[1]
+            window.location.href = window.location.href.split( '?' )[0]
 
 The following function is just to ensure that functionality that depends on
 a wiki installation doesn't break when the app is served from GitHub.
