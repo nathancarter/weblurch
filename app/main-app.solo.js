@@ -51,7 +51,29 @@
   };
 
   window.groupMenuItems = {
-    file_order: 'wikiimport wikiexport | appsettings docsettings',
+    file_order: 'sharelink wikiimport wikiexport | appsettings docsettings',
+    sharelink: {
+      text: 'Share document...',
+      context: 'file',
+      onclick: function() {
+        var page, request, url;
+        page = window.location.href.split('?')[0];
+        url = page + '?document=' + encodeURIComponent(tinymce.activeEditor.getContent());
+        request = gapi.client.urlshortener.url.insert({
+          resource: {
+            longUrl: url
+          }
+        });
+        return request.execute(function(response) {
+          if (response.id != null) {
+            url = response.id;
+          } else {
+            console.log('Error creating short URL', response);
+          }
+          return prompt('Copy the following URL to your clipboard, and paste it wherever you like, such as an email message.', url);
+        });
+      }
+    },
     wikiimport: {
       text: 'Import from wiki...',
       context: 'file',
@@ -160,6 +182,11 @@
     }
   };
 
+  window.addEventListener('load', function() {
+    gapi.client.setApiKey('AIzaSyAf7F0I39DdI2jtD7zrPUa4eQvUXZ-K6W8');
+    return gapi.client.load('urlshortener', 'v1', function() {});
+  }, false);
+
   window.afterEditorReady = function(editor) {
     var A, D, match;
     A = editor.Settings.addCategory('application');
@@ -203,7 +230,12 @@
     editor.MediaWiki.setIndexPage('/wiki/index.php');
     editor.MediaWiki.setAPIPage('/wiki/api.php');
     if (match = /\?wikipage=(.*)/.exec(window.location.search)) {
-      return editor.MediaWiki.importPage(decodeURIComponent(match[1]));
+      editor.MediaWiki.importPage(decodeURIComponent(match[1]));
+    }
+    if (match = /\?document=(.*)/.exec(window.location.search)) {
+      return setTimeout(function() {
+        return editor.setContent(decodeURIComponent(match[1]));
+      }, 100);
     }
   };
 

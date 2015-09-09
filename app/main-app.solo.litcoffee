@@ -69,7 +69,25 @@ exporting to it as well.  This is still in development.
             metadata : null
             document : html
     window.groupMenuItems =
-        file_order : 'wikiimport wikiexport | appsettings docsettings'
+        file_order : 'sharelink wikiimport wikiexport
+                    | appsettings docsettings'
+        sharelink :
+            text : 'Share document...'
+            context : 'file'
+            onclick : ->
+                page = window.location.href.split( '?' )[0]
+                url = page + '?document=' + \
+                    encodeURIComponent tinymce.activeEditor.getContent()
+                request = gapi.client.urlshortener.url.insert \
+                    resource : longUrl : url
+                request.execute ( response ) ->
+                    if response.id?
+                        url = response.id
+                    else
+                        console.log 'Error creating short URL', response
+                    prompt 'Copy the following URL to your clipboard, and
+                        paste it wherever you like, such as an email
+                        message.', url
         wikiimport :
             text : 'Import from wiki...'
             context : 'file'
@@ -173,6 +191,13 @@ exporting to it as well.  This is still in development.
             context : 'file'
             onclick : -> tinymce.activeEditor.Settings.document.showUI()
 
+Set up Google API key for URL shortening.
+
+    window.addEventListener 'load', ->
+        gapi.client.setApiKey 'AIzaSyAf7F0I39DdI2jtD7zrPUa4eQvUXZ-K6W8'
+        gapi.client.load 'urlshortener', 'v1', ->
+    , no
+
 Lastly, a few actions to take after the editor has been initialized.
 
     window.afterEditorReady = ( editor ) ->
@@ -222,12 +247,17 @@ document metadata.
         editor.LoadSave.saveMetaData = -> D.metadata
         editor.LoadSave.loadMetaData = ( object ) -> D.metadata = object
 
-If the query string told us to load a page from the wiki, do so.
+If the query string told us to load a page from the wiki, or a page fully
+embedded in a (possibly enormous) URL, do so.
 
         editor.MediaWiki.setIndexPage '/wiki/index.php'
         editor.MediaWiki.setAPIPage '/wiki/api.php'
         if match = /\?wikipage=(.*)/.exec window.location.search
             editor.MediaWiki.importPage decodeURIComponent match[1]
+        if match = /\?document=(.*)/.exec window.location.search
+            setTimeout ->
+                editor.setContent decodeURIComponent match[1]
+            , 100
 
 The following function is just to ensure that functionality that depends on
 a wiki installation doesn't break when the app is served from GitHub.
