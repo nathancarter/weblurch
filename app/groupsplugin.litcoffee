@@ -1063,7 +1063,7 @@ The final parameter is optional; it prevents having to compute
 
 The following function draws groups around the user's cursor, if any.  It is
 installed in [the constructor](#groups-constructor) and called by [the
-Overay plugin](overlayplugin.litcoffee).
+Overlay plugin](overlayplugin.litcoffee).
 
         drawGroups: ( canvas, context ) =>
             @bubbleTags = [ ]
@@ -1079,7 +1079,6 @@ unstable/incorrect results.
             pad = 3
             padStep = 2
             radius = 4
-            p4 = Math.pi / 4
             tags = [ ]
             while group
                 type = group.type()

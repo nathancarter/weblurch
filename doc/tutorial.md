@@ -308,9 +308,8 @@ __Adding new menu items to the editor's menus__
 __Showing dialog boxes__
  * [TinyMCE provides a few ways to show dialog boxes containing plain
    text](http://www.tinymce.com/wiki.php/api4:class.tinymce.WindowManager).
- * If your dialog box must contain more than just plain text, inspect the
-   `showHTMLPopup` function defined in
-   [the XML Groups module](../src/xml-groups.solo.litcoffee).
+ * If your dialog box must contain more than just plain text, see
+   [the Dialogs plugin](../app/dialogsplugin.litcoffee).
 
 __Adding decorations to group boundaries__
  * It is common to give feedback to the user about the content of a group
@@ -353,6 +352,19 @@ __Adding decorations to group boundaries__
      * &amp;#10122; is &#10122;
      * ... in order through ...
      * &amp;#10131; is &#10131;
+
+### Other functionality
+
+In this section I document other configuration possibilities beyond those
+mentioned above, things that didn't fit neatly into the above categories.
+
+To run any code after the editor has been set up, assign a function to the
+global variable `window.afterEditorReady`.  Your function should accept a
+single parameter, `editor`, which will be the editor object that was just
+initialized.  Your function will be called at the end of the TinyMCE editor
+"init" event.
+
+-----
 
 This tutorial was written by [Nathan Carter](mailto:ncarter@bentley.edu).
 Feel free to contact me with questions.  I would love to know how we can

@@ -93,6 +93,10 @@ The following properties are supported for each tag name.
     window.addTagData = ( newData ) ->
         tagData[key] = value for own key, value of newData
 
+Use the Dialogs plugin.
+
+    window.pluginsToLoad = [ 'dialogs' ]
+
 ## Tagging Groups
 
 You can set the tag name for a Group object, and query it as well, with the
@@ -162,8 +166,10 @@ group's documentation.  If it has none, do nothing.
                     'a target="_blank" href='
                 result.push
                     text : "Read \"#{external}\" documentation"
-                    onclick : -> showHTMLPopup documentation,
-                        "Documentation for \"#{external}\""
+                    onclick : ->
+                        tinymce.activeEditor.Dialogs.alert
+                            title : "Documentation for \"#{external}\""
+                            message : documentation
 
 Create a menu item for seeing the XML code representing the given group.
 
@@ -173,7 +179,9 @@ Create a menu item for seeing the XML code representing the given group.
                 xml = window.convertToXML group
                 .replace /&/g, '&amp;'
                 .replace /</g, '&lt;'
-                showHTMLPopup "<pre>#{xml}</pre>", 'XML Representation'
+                tinymce.activeEditor.Dialogs.alert
+                    title : 'XML Representation'
+                    message : "<pre>#{xml}</pre>"
 
 Create a submenu for changing the tag of this group.
 
@@ -191,35 +199,6 @@ Create a submenu for changing the tag of this group.
 Return the full list of menu items we generated.
 
         result
-
-The above function uses the following utility a few times.  This function
-displays arbitrary HTML in a TinyMCE dialog (something you would think would
-be a simple built-in TinyMCE function, but it most definitely is not).  You
-may pass an options object containing keys for title, width, height, and
-button (replacement text for the "Done" button).
-
-    showHTMLPopup = ( html, options = { } ) ->
-        buttons = [
-            type : 'button'
-            text : 'OK'
-            subtype : 'primary'
-            onclick : ( event ) ->
-                tinymce.activeEditor.windowManager.close()
-                options.callback? yes
-        ]
-        if options.confirm then buttons.push
-            type : 'button'
-            text : 'Cancel'
-            onclick : ( event ) ->
-                tinymce.activeEditor.windowManager.close()
-                options.callback? no
-        tinymce.activeEditor.windowManager.open
-            title : options.title ? ' '
-            url : window.objectURLForBlob window.makeBlob html,
-                'text/html;charset=utf-8'
-            width : options.width ? 500
-            height : options.height ? 400
-            buttons : buttons
 
 ## Define one toolbar button
 
@@ -249,15 +228,15 @@ document in a new tab.
                     xml = encodeURIComponent window.convertToXML()
                     window.open "data:application/xml,#{xml}", '_blank'
                 if problems.length is 0 then return doExport()
-                showHTMLPopup "<p><b>The problems listed below exist in your
+                tinymce.activeEditor.Dialogs.confirm
+                    title : 'Problems with your document'
+                    message : "<p><b>The problems listed below exist in your
                     document.</b></p>
                     <ul><li>#{problems.join '</li><li>'}</li></ul>
                     <p>You can click OK to generate XML anyway, but
                     it may be invalid.  Click Cancel to go back and fix
-                    these problems first.</b></p>",
-                    title : 'Problems with your document'
-                    confirm : yes
-                    callback : ( clickedOK ) -> if clickedOK then doExport()
+                    these problems first.</b></p>"
+                    okCallback : doExport
 
 ## Provide generic event handlers
 

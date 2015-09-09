@@ -92,6 +92,9 @@ Groups Plugin
 
 Miscellaneous
 
+ * See [this answer](http://stackoverflow.com/a/32120344/670492) to your
+   StackOverflow question about higher resolution HTML canvas rendering on
+   retina deisplays.  See if its suggestions can work in your case.
  * Move all plugin files into the `src/` folder, if possible.
  * Bubble tags are not drawn at retina resolution on Macs with retina
    displays.  [See my question about how to fix this problem here.](http://stackoverflow.com/questions/30537138/rendering-html-to-canvas-on-retina-displays)
@@ -101,9 +104,22 @@ Miscellaneous
  * Improve build process to not compile files whose dates indicate that they
    do not need it, nor to minify files whose dates indicate that they do not
    need it.
+ * If you ever need to export PDFs of Lurch documents, consider
+   [jsPDF](https://github.com/MrRio/jsPDF).
 
-Background processing efficiency
+Background processing
 
+ * Create a way to write a foreground function tht is a series of background
+   steps as inner functions, and only the one for teh current state of the
+   group is run, automatically placing it in the next state.  The following
+   example client code would create internal state names in a linear order.
+   This could be a subclass of a more general one that's an arbitrary state
+   graph.
+```
+P = new Processor 'group type name here'
+P.addStep ( group ) -> ...
+P.addStep ( group ) -> ...
+```
  * Design and implement how this could be extended to support passing arrays
    of argument lists and receiving arrays of results, to minimize the
    overhead of message-passing.

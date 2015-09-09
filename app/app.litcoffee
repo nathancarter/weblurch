@@ -1,4 +1,80 @@
 
+# Dialogs Plugin
+
+This plugin adds to TinyMCE some much-needed convenience functions for
+showing dialog boxes and receiving callbacks from events within them.
+
+All of these functions will be installed in an object called `Dialogs` in
+the editor itself.  So, for example, you might call one via code like the
+following.
+```javascript
+tinymce.activeEditor.Dialogs.alert( {
+    title : 'Alert!'
+    message : 'Content of the alert box here.',
+    callback : function ( event ) { console.log( event );
+} );
+```
+
+    Dialogs = { }
+
+## Alert box
+
+This function shows a simple alert box, with a callback when the user
+clicks OK.  The message can be text or HTML.
+
+    Dialogs.alert = ( options ) ->
+        tinymce.activeEditor.windowManager.open
+            title : options.title ? ' '
+            url : window.objectURLForBlob window.makeBlob options.message,
+                'text/html;charset=utf-8'
+            width : options.width ? 400
+            height : options.height ? 300
+            buttons : [
+                type : 'button'
+                text : 'OK'
+                subtype : 'primary'
+                onclick : ( event ) ->
+                    tinymce.activeEditor.windowManager.close()
+                    options.callback? event
+            ]
+
+## Confirm dialog
+
+This function is just like the alert box, but with two callbacks, one for OK
+and one for Cancel, named `okCallback` and `cancelCallback`, respectively.
+The user can rename the OK and Cancel buttons by specfying strings in the
+options object with the 'OK' and 'Cancel' keys.
+
+    Dialogs.confirm = ( options ) ->
+        tinymce.activeEditor.windowManager.open
+            title : options.title ? ' '
+            url : window.objectURLForBlob window.makeBlob options.message,
+                'text/html;charset=utf-8'
+            width : options.width ? 400
+            height : options.height ? 300
+            buttons : [
+                type : 'button'
+                text : options.Cancel ? 'Cancel'
+                subtype : 'primary'
+                onclick : ( event ) ->
+                    tinymce.activeEditor.windowManager.close()
+                    options.cancelCallback? event
+            ,
+                type : 'button'
+                text : options.OK ? 'OK'
+                subtype : 'primary'
+                onclick : ( event ) ->
+                    tinymce.activeEditor.windowManager.close()
+                    options.okCallback? event
+            ]
+
+# Installing the plugin
+
+    tinymce.PluginManager.add 'dialogs', ( editor, url ) ->
+        editor.Dialogs = Dialogs
+
+
+
 # Groups Plugin for [TinyMCE](http://www.tinymce.com)
 
 This plugin adds the notion of "groups" to a TinyMCE editor.  Groups are
@@ -1063,7 +1139,7 @@ The final parameter is optional; it prevents having to compute
 
 The following function draws groups around the user's cursor, if any.  It is
 installed in [the constructor](#groups-constructor) and called by [the
-Overay plugin](overlayplugin.litcoffee).
+Overlay plugin](overlayplugin.litcoffee).
 
         drawGroups: ( canvas, context ) =>
             @bubbleTags = [ ]
@@ -1079,7 +1155,6 @@ unstable/incorrect results.
             pad = 3
             padStep = 2
             radius = 4
-            p4 = Math.pi / 4
             tags = [ ]
             while group
                 type = group.type()
@@ -1876,6 +1951,237 @@ Finally, the global function that changes the app name.
 
 
 
+# MediaWiki Integration
+
+[MediaWiki](https://www.mediawiki.org/wiki/MediaWiki) is the software that
+powers [Wikipedia](wikipedia.org).  We plan to integrate webLurch with a
+MediaWiki instance by adding features that let the software load pages from
+the wiki into webLurch for editing, and easily post changes back to the
+wiki as well.  This plugin implements that two-way communication.
+
+This first version is a start, and does not yet implement full
+functionality.
+
+## Global variable
+
+We store the editor into which we're installed in this global variable, so
+that we can access it easily later.  We initialize it to null here.
+
+    editor = null
+
+## Setup
+
+Before you do anything else with this plugin, you must specify the URLs for
+the wiki's main page (usually index.php) and API page (usually api.php).
+Do so with the following functions.
+
+    setIndexPage = ( URL ) -> editor.indexURL = URL
+    getIndexPage = -> editor.indexURL
+    setAPIPage = ( URL ) -> editor.APIURL = URL
+    getAPIPage = -> editor.APIURL
+
+## Extracting wiki pages
+
+The following (necessarily asynchronous) function accesses the wiki, fetches
+the content for the page with the given name, and sends it to the given
+callback.  The callback takes two parameters, the content and an error.
+Only one will be non-null, depending on the success or failure of the
+process.
+
+This function therefore does the grunt work.  Inserting the response data
+from this function into the editor happens in the function after this one.
+
+    getPageContent = ( pageName, callback ) ->
+        xhr = new XMLHttpRequest()
+        xhr.addEventListener 'load', ->
+            json = @responseText
+            try
+                object = JSON.parse json
+            catch e
+                callback null,
+                    'Invalid response format.\nShould be JSON:\n' + json
+                return
+            try
+                content = object.query.pages[0].revisions[0].content
+            catch e
+                callback null, 'No such page on wiki.\nRaw reply:\n' + json
+                return
+            callback content, null
+        xhr.open 'GET',
+            editor.MediaWiki.getAPIPage() + '?action=query&titles=' + \
+            encodeURIComponent( pageName ) + \
+            '&prop=revisions' + \
+            '&rvprop=content&rvparse' + \
+            '&format=json&formatversion=2'
+        xhr.setRequestHeader 'Api-User-Agent', 'webLurch application'
+        xhr.send()
+
+The following function wraps the previous in a simple UI, which either
+inserts the fetched content into the editor on success, or pops up an error
+information dialog on failure.  An optional callback will be called with
+true or false, indicating success or failure.
+
+    importPage = ( pageName, callback ) ->
+        editor.MediaWiki.getPageContent pageName, ( content, error ) ->
+            if content
+                editor.setContent content
+                callback? true # success
+            if error
+                alert 'Error loading content from wiki:' + \
+                    error.split( '\n' )[0]
+                console.log error
+                callback? false # failure
+
+The following function accesses the wiki, logs in using the given username
+and password, and sends the results to the given callback.  The "token"
+parameter is for recursive calls only, and should not be provided by
+clients.  The callback accepts result and error parameters.  The result will
+either be true, in which case login succeeded, or null, in which case the
+error parameter will contain the error message as a string.
+
+    login = ( username, password, callback, token ) ->
+        xhr = new XMLHttpRequest()
+        xhr.addEventListener 'load', ->
+            json = @responseText
+            try
+                object = JSON.parse json
+            catch e
+                callback null, 'Invalid JSON response: ' + json
+                return
+            if object?.login?.result is 'Success'
+                callback true, null
+            else if object?.login?.result is 'NeedToken'
+                editor.MediaWiki.login username, password, callback,
+                    object.login.token
+            else
+                callback null, 'Login error of type ' + \
+                    object?.login?.result
+        URL = editor.MediaWiki.getAPIPage() + '?action=login' + \
+            '&lgname=' + encodeURIComponent( username ) + \
+            '&lgpassword=' + encodeURIComponent( password ) + \
+            '&format=json&formatversion=2'
+        if token then URL += '&lgtoken=' + token
+        xhr.open 'POST', URL
+        xhr.setRequestHeader 'Api-User-Agent', 'webLurch application'
+        xhr.send()
+
+The following function accesses the wiki, attempts to overwrite the page
+with the given name, using the given content (in wikitext form), and then
+calls the given callback with the results.  That callback should take two
+parameters, result and error.  If result is `'Success'` then error will be
+null, and the edit succeeded.  If result is null, then the error will be a
+string explaining the problem.
+
+Note that if the posting you attempt to do with the following function would
+need a certain user's access rights to complete it, you should call the
+`login()` function, above, first, to establish that access.  Call this one
+from its callback (or any time thereafter).
+
+    exportPage = ( pageName, content, callback ) ->
+        xhr = new XMLHttpRequest()
+        xhr.addEventListener 'load', ->
+            json = @responseText
+            try
+                object = JSON.parse json
+            catch e
+                callback null, 'Invalid JSON response: ' + json
+                return
+            if not object?.query?.tokens?.csrftoken
+                callback null, 'No token provided: ' + json
+                return
+            xhr2 = new XMLHttpRequest()
+            xhr2.addEventListener 'load', ->
+                json = @responseText
+                try
+                    object = JSON.parse json
+                catch e
+                    callback null, 'Invalid JSON response: ' + json
+                    return
+                # callback JSON.stringify object, null, 4
+                if object?.edit?.result isnt 'Success'
+                    callback null, 'Edit failed: ' + json
+                    return
+                callback 'Success', null
+            content = formatContentForWiki content
+            xhr2.open 'POST',
+                editor.MediaWiki.getAPIPage() + '?action=edit' + \
+                '&title=' + encodeURIComponent( pageName ) + \
+                '&text=' + encodeURIComponent( content ) + \
+                '&summary=' + encodeURIComponent( 'posted from Lurch' ) + \
+                '&contentformat=' + encodeURIComponent( 'text/x-wiki' ) + \
+                '&contentmodel=' + encodeURIComponent( 'wikitext' ) + \
+                '&format=json&formatversion=2', true
+            token = 'token=' + \
+                encodeURIComponent object.query.tokens.csrftoken
+            xhr2.setRequestHeader 'Content-type',
+                'application/x-www-form-urlencoded'
+            xhr2.setRequestHeader 'Api-User-Agent', 'webLurch application'
+            xhr2.send token
+        xhr.open 'GET',
+            editor.MediaWiki.getAPIPage() + '?action=query&meta=tokens' + \
+            '&format=json&formatversion=2'
+        xhr.setRequestHeader 'Api-User-Agent', 'webLurch application'
+        xhr.send()
+
+The previous function makes use of the following one.  This depends upon the
+[HTMLTags](https://www.mediawiki.org/wiki/Extension:HTML_Tags) extension to
+MediaWiki, which permits arbitrar HTML, as long as it is encoded using tags
+of a certain form, and the MediaWiki configuration permits the tags.  See
+the documentation for the extension for details.
+
+    formatContentForWiki = ( editorHTML ) ->
+        result = ''
+        depth = 0
+        openRE = /^<([^ >]+)\s*([^>]+)?>/i
+        closeRE = /^<\/([^ >]+)\s*>/i
+        charRE = /^&([a-z0-9]+|#[0-9]+);/i
+        toReplace = [ 'img', 'span', 'var', 'sup' ]
+        decoder = document.createElement 'div'
+        while editorHTML.length > 0
+            if match = closeRE.exec editorHTML
+                tagName = match[1].toLowerCase()
+                if tagName in toReplace
+                    depth--
+                    result += "</htmltag#{depth}>"
+                else
+                    result += match[0]
+                editorHTML = editorHTML[match[0].length..]
+            else if match = openRE.exec editorHTML
+                tagName = match[1].toLowerCase()
+                if tagName in toReplace
+                    result += "<htmltag#{depth}
+                        tagname='#{tagName}' #{match[2]}>"
+                    if not /\/\s*$/.test match[2] then depth++
+                else
+                    result += match[0]
+                editorHTML = editorHTML[match[0].length..]
+            else if match = charRE.exec editorHTML
+                decoder.innerHTML = match[0]
+                result += decoder.textContent
+                editorHTML = editorHTML[match[0].length..]
+            else
+                result += editorHTML[0]
+                editorHTML = editorHTML[1..]
+        result
+
+# Installing the plugin
+
+The plugin, when initialized on an editor, installs all the functions above
+into the editor, in a namespace called `MediaWiki`.
+
+    tinymce.PluginManager.add 'mediawiki', ( ed, url ) ->
+        ( editor = ed ).MediaWiki =
+            setIndexPage : setIndexPage
+            getIndexPage : getIndexPage
+            setAPIPage : setAPIPage
+            getAPIPage : getAPIPage
+            login : login
+            getPageContent : getPageContent
+            importPage : importPage
+            exportPage : exportPage
+
+
+
 # Overlay Plugin for [TinyMCE](http://www.tinymce.com)
 
 This plugin creates a canvas element that sits directly on top of the
@@ -1998,14 +2304,189 @@ probably need to be repositioned.
 
 
 
+# Settings Plugin
+
+There are a few situations in which apps wish to specify settings.  One is
+the most common type of settings -- those global to the entire app.  Another
+is per-document settings, stored in the document's metadata.  This plugin
+therefore provides a way to create categories of settings (e.g., a global
+app category, and a per-document category) and provide ways for getting,
+setting, and editing each type.  It provides TinyMCE dialog boxes to make
+this easier for the client.
+
+We store all data about the plugin in the following object, which we will
+install into the editor into which this plugin is installed.
+
+    plugin = { }
+
+## Creating a category
+
+Any app that uses this module will want to create at least one category of
+settings (e.g., the global app category).  To do so requires just one
+function call, the following.
+
+    plugin.addCategory = ( name ) ->
+        plugin[name] =
+            get : ( key ) -> window.localStorage.getItem key
+            set : ( key, value ) -> window.localStorage.setItem key, value
+            setup : ( div ) -> null
+            teardown : ( div ) -> null
+            showUI : -> plugin.showUI name
+
+Of course, the client may not want to use these default functions.  The
+`get` and `set` implementations are perfectly fine for global settings, but
+the `setup` and `teardown` functions (explained below) do nothing at all.
+The `showUI` function is also explained below.
+
+## How settings are stored
+
+Once the client has created a category (say,
+`editor.Settings.addCategory 'global'`), he or she can then store values in
+that category using the category name, as in
+`editor.Settings.global.get 'key'` or
+`editor.Settings.global.set 'key', 'value'`.
+
+The default implementations for these, given above, use the browser's
+`localStorage` object.  But the client can define new `get` and `set`
+methods by simply overwriting the existing ones, as in
+`editor.Settings.global.get = ( key ) -> 'put new implementation here'`.
+
+## How settings are edited
+
+The client may wish to present to the user some kind of UI related to a
+category of settings, so that the user can interactively see and edit those
+settings.  The following (non-customizable) function pops up a dialog box
+and sets it up so that the user can see and edit the settings for a given
+category.
+
+The heart of this function is its reliance on the `setup` and `teardown`
+functions defined for the category, so that while this function is not
+directly customizable, it is indirectly very customizable.  See the code
+below.
+
+    plugin.showUI = ( category ) ->
+
+All the controls for editing the settings will be in a certain DIV in the
+DOM, inside the dialog box that's about to pop up.  It will be created
+below, and stored in the following variable.
+
+        div = null
+
+Create the buttons for the bottom of the dialog box.  Cancel just closes the
+dialog, but Save saves the settings if the user chooses to do so.  It will
+run the `teardown` function on the DIV with all the settings editing
+controls in it.  The `teardown` function is responsible for inspecting the
+state of all those controls and storing the corresponding values in the
+settings, via calls to `set`.
+
+        buttons = [
+            type : 'button'
+            text : 'Cancel'
+            onclick : ( event ) ->
+                tinymce.activeEditor.windowManager.close()
+        ,
+            type : 'button'
+            text : 'Save'
+            subtype : 'primary'
+            onclick : ( event ) ->
+                plugin[category].teardown div
+                tinymce.activeEditor.windowManager.close()
+        ]
+
+Create a title and show the dialog box with a blank interior.
+
+        categoryTitle = category[0].toUpperCase() + \
+            category[1..].toLowerCase() + ' Settings'
+        tinymce.activeEditor.windowManager.open
+            title : categoryTitle
+            url : 'about:blank'
+            width : 500
+            height : 400
+            buttons : buttons
+
+Find the DIV in the DOM that represents the dialog box's interior.
+
+        wins = tinymce.activeEditor.windowManager.windows
+        div = wins[wins.length-1].getEl() \
+            .getElementsByClassName( 'mce-container-body' )[0]
+
+Clear out that DIV, then allow the `setup` function to fill it with whatever
+controls (in whatever state) are appropriate for representing the current
+settings in this category.  This will happen instants after the dialog
+becomes visible, so the user will not perceive the reversal of the usual
+order (of setting up a UI and then showing it).
+
+        div.innerHTML = ''
+        plugin[category].setup div
+
+## Convenience functions for a UI
+
+A common UI for settings dialogs is a two-column view, in which the left
+column contains labels for corresponding controls in the right column.  The
+functions in this section provide a convenient way to create such a UI.
+Each function herein creates a single row of two columns, with the label on
+the left, and the control on the right (with a few exceptions).
+
+    plugin.UI = { }
+
+For creating informational lines and category headings:
+
+    plugin.UI.info = ( name ) -> plugin.UI.tr \
+        "<td style='width: 100%; text-align: center; white-space: normal;'
+         >#{name}</td>"
+    plugin.UI.heading = ( name ) ->
+        plugin.UI.info "<span style='font-size: 20px;'>#{name}</span>"
+
+For creating read-only rows:
+
+    plugin.UI.readOnly = ( label, data ) -> plugin.UI.tpair label, data
+
+For creating a text input:
+
+    plugin.UI.text = ( label, id, initial ) ->
+        plugin.UI.tpair label, "<input type='text' id='#{id}'
+            value='#{initial}'
+            style='border-width: 2px; border-style: inset;'/>"
+
+For creating a password input:
+
+    plugin.UI.password = ( label, id, initial ) ->
+        plugin.UI.tpair label, "<input type='password' id='#{id}'
+            value='#{initial}'
+            style='border-width: 2px; border-style: inset;'/>"
+
+And two utility functions used by all the functions above.
+
+    plugin.UI.tr = ( content ) ->
+        '<table border=0 cellpadding=0 cellspacing=10
+                style="width: 100%;"><tr style="width: 100%;">' + \
+        content + '</tr></table>'
+    plugin.UI.tpair = ( left, right ) ->
+        plugin.UI.tr "<td style='width: 50%; text-align: right;'>
+                        <b>#{left}:</b></td>
+                      <td style='width: 50%; text-align: left;'>
+                        #{right}</td>"
+
+# Installing the plugin
+
+The plugin, when initialized on an editor, installs all the functions above
+into the editor, in a namespace called `Settings`.
+
+    tinymce.PluginManager.add 'settings', ( editor, url ) ->
+        editor.Settings = plugin
+
+
+
 # App Setup Script
 
 ## Specify app settings
 
-First, specify that the app's name is "Lurch," so that will be used when
-creating the title for this page (e.g., to show up in the tab in Chrome).
+First, applications should specify their app's name using a call like the
+following.  In this generic setup script, we fill in a placeholder value.
+This will be used when creating the title for this page (e.g., to show up in
+the tab in Chrome).
 
-    setAppName 'Lurch'
+    setAppName 'Untitled'
 
 Second, we initialize a very simple default configuration for the Groups
 plugin.  It can be overridden by having any script assign to the global
@@ -2017,11 +2498,13 @@ place.  For examples of how to do this, see
 [the mathematical example app](math-example.solo.litcoffee).
 
     window.groupTypes ?= [
-        name : 'me'
-        text : 'Meaningful expression'
-        image : './images/red-bracket-icon.png'
-        tooltip : 'Make text a meaningful expression'
-        color : '#996666'
+        name : 'example'
+        text : 'Example group'
+        imageHTML : '['
+        openImageHTML : ']'
+        closeImageHTML : '[]'
+        tooltip : 'Wrap text in a group'
+        color : '#666666'
     ]
 
 Clients who define their own group types may also define their own toolbar
@@ -2030,19 +2513,21 @@ buttons and menu items to go with them.  But these lists default to empty.
     window.groupToolbarButtons ?= { }
     window.groupMenuItems ?= { }
 
-We also specify an icon to appear on the menu bar, at the very left.  This
-can be overridden, in the same way as `window.groupTypes`, above.  (See the
-same examples apps for specific code.)
+Similarly, a client can provide a list of plugins to load when initializing
+TinyMCE, and they will be added to the list loaded by default.
 
-    window.menuBarIcon ?=
-        src : 'icons/apple-touch-icon-76x76.png'
-        width : '26px'
-        height : '26px'
-        padding : '2px'
+    window.pluginsToLoad ?= [ ]
+
+We also provide a variable in which apps can specify an icon to appear on
+the menu bar, at the very left.  It defaults to an empty object, but can be
+overridden, in the same way as `window.groupTypes`, above.  If you override
+it, specify its file as the `src` attribute, and its `width`, `height`, and
+`padding` attributes as CSS strings (e.g., `'2px'`).
+
+    window.menuBarIcon ?= { }
 
 We also provide a set of styles to be added to the editor by default.
-Clients can also override this object if they wish different styles.  (See
-the same examples apps for specific code.)
+Clients can also override this object if they prefer different styles.
 
     window.defaultEditorStyles ?=
         fontSize : '16px'
@@ -2103,7 +2588,8 @@ that begins with a hyphen is a local plugin written as part of this project.
 
             plugins : 'advlist table charmap colorpicker image link
                 importcss paste print save searchreplace textcolor
-                fullscreen -loadsave -overlay -groups -equationeditor'
+                fullscreen -loadsave -overlay -groups -equationeditor ' + \
+                ( "-#{p}" for p in window.pluginsToLoad ).join ' '
 
 The groups plugin requires that we add the following, to prevent resizing of
 group boundary images.
@@ -2241,13 +2727,21 @@ Workaround for [this bug](http://www.tinymce.com/develop/bugtracker_view.php?id=
                         if editor.windowManager.getWindows().length isnt 0
                             editor.windowManager.close()
 
+And if the app installed a global handler for editor post-setup, run that
+function now.
+
+                    window.afterEditorReady? editor
+
 The following utility function was used to help build lists of menu items
 in the setup data above.
 
     moreMenuItems = ( menuName ) ->
-        names = ( k for k in Object.keys window.groupMenuItems \
-            when window.groupMenuItems[k].context is menuName ).join ' '
-        if names.length then "| #{names}" else ''
+        names = if window.groupMenuItems.hasOwnProperty "#{menuName}_order"
+            window.groupMenuItems["#{menuName}_order"]
+        else
+            ( k for k in Object.keys window.groupMenuItems \
+                when window.groupMenuItems[k].context is menuName ).join ' '
+        if names.length and names[...2] isnt '| ' then "| #{names}" else ''
 
 The third-party plugin for math equations can have its rough meaning
 extracted by the following function, which can be applied to any DOM element

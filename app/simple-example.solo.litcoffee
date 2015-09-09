@@ -50,8 +50,8 @@ our word processor.  The setup routine for the webLurch application will
 look for this global variable, and if it exists, respect its settings.  If
 it does not exist, a very simple default setup is used instead.
 
-In this case, we will make the array have length one,
-as we are adding just one type.
+In this case, we will make the array have length one, as we are adding just
+one type.
 
     window.groupTypes = [
         name : 'reporter'
