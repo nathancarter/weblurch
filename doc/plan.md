@@ -249,105 +249,10 @@ Local filesystem:
 
 Sharing:
 
-First, implement a trivial kind of sharing that just sends a copy of the
-file to someone, as follows.
- * Create a menu item for sharing a copy of the file with someone.
- * Embed the entire Lurch document, gzipped and base64 encoded, into a query
-   string of a URL that points to the online Lurch app.
- * Display this giant URL in a popup dialog, highlighted and ready for the
-   user to press Ctrl+C, just like StackOverflow does.
- * When the main app loads, if there is a document in the query string,
-   place it into the editor immediately.
- * Improve this by running the giant URLs through a URL-shortener
-   automatically, as documented [on this page for bit.ly](
-   https://bdhacker.wordpress.com/2010/03/30/dynamically-use-bitly-in-your-site-easiest-way/).
-
-Add a better ability to share documents with the world.  I considered
-[Firebase](https://www.firebase.com/), but it seemed like too much work, and
-requires integrating a whole new technology.  If using Dropbox, we might be
-able to make files shared, if the API supports that.  But that, too,
-introduces new sources of complexity, and requires users to get Dropbox.  So
-I have the following recommended solution.
- * Create a wiki on `lurchmath.org` into which entire Lurch HTML files
-   can be pasted as new pages, but only editable by the original author.
-   This way instructors can post on that wiki core dependencies that
-   anyone can use, and the integrity of a course (or the whole Lurch
-   project!) is not dependent on the state of any individual's Dropbox
-   folder.  [MediaWiki](https://www.mediawiki.org/) is obviously robust and
-   popular.
- * Note that external websites are not an option, since `XMLHttpRequest`
-   restricts cross-domain access, unless you run a proxy on `lurchmath.org`
-   or set up CORS rules in the web server running there.  Thus we must host
-   the webLurch application and the wiki on the same domain,
-   `lurchmath.org`.  This is even more true since many of the improvements
-   suggested below require wiki extensions to access the same `LocalStorage`
-   object that the webLurch app itself is accessing, which requires them to
-   come from the same domain.
- * Write a plugin for the wiki that can access the same LocalStorage
-   filesystem that Lurch does, and can pop up dialogs with all your Lurch
-   documents.  Just choose one and the wiki will paste its content cleanly
-   into the page you're editing, or a new page, your choice.  It's possible
-   that this may not need to be a wiki plugin, but could be accomplished
-   with only a link in the wiki navigational pane.
- * Similarly, that same wiki plugin could be useful for extracting a copy of
-   a document in a wiki page into your Lurch filesystem, for opening in the
-   Lurch app itself thereafter.
- * Make the transfer from the wiki to Lurch even easier by providing a
-   single "Open in Lurch" button in the wiki that opens Lurch in a new tab,
-   then sends it the document using [`window.postMessage()`](
-   http://davidwalsh.name/window-postmessage).  The Lurch app should listen
-   for such messages and load their contents into the editor.
- * Make the transfer from Lurch to the wiki even easier as follows:
-   * Set up permissions on the wiki so that users who create accounts cannot
-     edit much of anything, except pages in a folder whose name equals their
-     username.  Permissions to edit the main wiki pages will be restricted
-     to project leaders.
-   * Add a Lurch setting for specifying the user's wiki username, so that
-     Lurch knows where to post their files when they ask it to do so.
-   * Provide a single button in Lurch that will export to the wiki in one
-     click, as follows.
-     * If the user has not yet set a wiki username in their Lurch settings,
-       pop up an alert to that effect and do not proceed.
-     * Pop up an alert that the user must be already logged into the wiki
-       for this to succeed, with a "Don't show this message again" checkbox.
-     * Create a wiki page name for posting as follows.  Call the user's wiki
-       username W, and the name of the file F, then the page name is W_F,
-       where any underscores in F are escaped.  But first check to see if
-       this is even necessary.  If MediaWiki's permissions are sufficiently
-       sophisticated, authors may be able to restrict permissions on the
-       pages they create, so that we can let them make whatever names they
-       like, and not worry about whether there are conflicts, because
-       permissions will prevent person A from overwriting the work of person
-       B.  This would be the best case scenario.  If that works, set the
-       permissions of any newly created page to be "only editable by me" as
-       the default.  This would be great so that people can share authorship
-       permissions for projects they're working on together.
-     * At first, dump that path to the console and stop.  Then replace that
-       with a full implementation that uses the MediaWiki API as follows.
-   * How to post a new version of a page to MediaWiki with a JavaScript API:
-     * Use the lightweight JS API for MediaWiki [from this GitHub
-       repository](https://github.com/brettz9/mediawiki-js).
-     * Run a query to get an edit token, as in the example shown in [this
-       documentation](https://www.mediawiki.org/wiki/API:Tokens#Example).
-       Pop up an error dialog if the response isn't of the correct format.
-     * Post the new page content using that edit token.  This is a little
-       complicated.  See the [documentation
-       here](https://www.mediawiki.org/wiki/API:Edit#Editing_pages) and
-       [examples
-       here](https://www.mediawiki.org/wiki/API:Edit#Editing_via_Ajax).
-       It seems you will need to pass these parameters:
-       * `title` - title of page to edit, W_F from above
-       * `section` - do NOT provide this, because you're editing the whole
-         page
-       * `text` - new content, as HTML (I think??)
-       * `token` - edit token from previous step
-       * `md5` - optional, for additional data integrity check, the MD5 hash
-         of the `text` parameter
-       * `contentformat` - should be "text/x-wiki"
-       * `contentmodel` - should be "wikitext"
-     * Pop up a dialog telling the user whether the edit was successful or
-       not (based on the response from the API call above) and providing a
-       link for them to view the published version in a new window.
+Move all work done in MediaWiki locally in testing form onto a dedicated
+host on the Internet.  (This refers to work tested on Nathan's laptop so
+far, with notes taken on how to replicate it later, on, for example, a
+Linode instance.)
 
 ### Tutorials
 
