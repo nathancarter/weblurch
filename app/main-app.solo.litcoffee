@@ -49,7 +49,7 @@ later as this application becomes mature.
         color : '#996666'
     ]
 
-Use the MediaWiki and Settings plugins.
+Use the MediaWiki, Settings, and Dialogs plugins.
 
     window.pluginsToLoad = [ 'mediawiki', 'settings', 'dialogs' ]
 
