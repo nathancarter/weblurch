@@ -13,11 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Documenting each demo app better
-
- * Make the help menu flash when the page is first loaded, until someone
-   clicks it, or until a certain amount of time has passed.
-
 ## Arrows among groups
 
 Add to the Group class the following two functions for use by LAs.  When

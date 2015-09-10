@@ -299,6 +299,10 @@ code.  This will help people who want to learn Lurch coding find
 resources to do so more easily.  We thus provide this function they can use
 to do so as a one-line call.
 
+Not only does it set up the link they request, but it also sets up a link to
+the developer tutorial in general, and it flashes the Help menu briefly to
+draw the viewer's attention there.
+
     window.addHelpMenuSourceCodeLink = ( path ) ->
         window.groupMenuItems =
             sourcecode :
@@ -313,3 +317,10 @@ to do so as a one-line call.
                 onclick : ->
                     window.location.href = 'http://github.com/' + \
                         'nathancarter/weblurch/blob/master/doc/tutorial.md'
+        flash = ( count, delay, elts ) ->
+            if count-- <= 0 then return
+            elts.fadeOut( delay ).fadeIn delay, -> flash count, delay, elts
+        setTimeout ->
+            flash 3, 500, ( $ '.mce-menubtn' ).filter ( index, element ) ->
+                element.textContent.trim() is 'Help'
+        , 1000
