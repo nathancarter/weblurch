@@ -15,7 +15,6 @@ required order of completion.
 
 ## Documenting each demo app better
 
- * Write a thorough introduction at the top of its source code file.
  * Add a help menu item that opens the demo app's source code file so the
    reader can see the thorough introduction just discussed.
  * Add a help menu item that will open The Tutorial in a new tab.
@@ -225,7 +224,12 @@ Dropbox
 We may later want to add more load-and-save features, such as Dropbox
 integration.  This is a bit of a pain to do, but thankfully that pain is cut
 in half or better by [the dropbox.js project on
-GitHub](https://github.com/dropbox/dropbox-js).  Check it out!
+GitHub](https://github.com/dropbox/dropbox-js).  But it may be a better idea
+to go with [the Google Drive API](https://developers.google.com/drive/),
+because it's an equivalent JavaScript API to dropbox.js, but created and
+maintained by Google rather than by a random GitHub user.  Sounds much more
+reliable.  Also, it uses the same `gapi` object that you already have in the
+code for use in URL shortening.
 
 Sharing
 
@@ -233,6 +237,13 @@ Move all work done in MediaWiki locally in testing form onto a dedicated
 host on the Internet.  (This refers to work tested on Nathan's laptop so
 far, with notes taken on how to replicate it later, on, for example, a
 Linode instance.)
+
+Google Drive also provides a very nice [real time collaboration API](
+https://developers.google.com/google-apps/realtime/overview) that makes any
+document you like into a Google-Docs-like collaborative model where changes
+are auto-synced across collaborators.  Very nice!  Worth looking into.
+(This was an idea that Dana Ernst asked for long ago when he first heard
+about the webLurch project.)
 
 Tutorials
 
@@ -285,15 +296,6 @@ the common LMS's (e.g. Blackboard, Canvas, etc.)?  I'm envisioning students
 being able to submit assignments with ease to an LMS and then teachers can
 grade and enter grades easily without have to go back and forth between web
 pages.  
-
-Suggestion from Dana Ernst: I’ve been having my students type up their
-homework using writeLaTeX.  One huge advantage of this is that students can
-share their project with me.  This allows me to simultaneously edit their
-document, which is a great way for me to help students debug.  I give them a
-ton of help for a week or two and then they are off and running on their
-own.  It might be advantageous to allow multiple users to edit the same
-Lurch document.  No idea if this is feasible or not, nor if it is even an
-idea worth pursuing.
 
 Is it possible for the entire Lurch app to exist inside MediaWiki, so that
 editing a wiki page was done using Lurch as the editor?  That would be
