@@ -9,6 +9,7 @@ for [the complex example application](complex-example.solo.litcoffee).
 This application is more useful than either of those.
 
     setAppName 'MathApp'
+    addHelpMenuSourceCodeLink 'app/math-example.solo.litcoffee'
 
 [See a live version of this application online here.](
 http://nathancarter.github.io/weblurch/app/math-example.html)

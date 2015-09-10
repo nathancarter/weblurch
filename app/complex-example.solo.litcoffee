@@ -15,6 +15,10 @@ Set the app name with the same function we used in the simple example app.
 
     setAppName 'ComplexApp'
 
+Add a source code link to the help menu, as in the simple example app.
+
+    addHelpMenuSourceCodeLink 'app/complex-example.solo.litcoffee'
+
 ## Define two group types
 
 As in the simple example, we assign to a global variable, which is noticed

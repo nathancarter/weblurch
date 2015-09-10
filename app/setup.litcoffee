@@ -290,3 +290,26 @@ this function, similar to the result of a tokenizer, ready for a parser.
                     result.unshift '('
                     result.push ')'
         if result.length is 1 then result[0] else result
+
+## Support demo apps
+
+We want to allow the demo applications in the webLurch source code
+repository to place links on their Help menu to their documented source
+code.  This will help people who want to learn Lurch coding find
+resources to do so more easily.  We thus provide this function they can use
+to do so as a one-line call.
+
+    window.addHelpMenuSourceCodeLink = ( path ) ->
+        window.groupMenuItems =
+            sourcecode :
+                text : 'View documented source code'
+                context : 'help'
+                onclick : ->
+                    window.location.href = 'http://github.com/' + \
+                        'nathancarter/weblurch/blob/master/' + path
+            tutorial :
+                text : 'View developer tutorial'
+                context : 'help'
+                onclick : ->
+                    window.location.href = 'http://github.com/' + \
+                        'nathancarter/weblurch/blob/master/doc/tutorial.md'

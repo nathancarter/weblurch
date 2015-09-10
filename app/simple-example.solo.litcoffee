@@ -33,6 +33,13 @@ The app name appears in the browser's/tab's title bar.
 
     setAppName 'ExampleApp'
 
+## Add a help menu item
+
+We want the app itself to link to this documented source code file, so that
+users who stumble upon the app can easily find its documentation.
+
+    addHelpMenuSourceCodeLink 'app/simple-example.solo.litcoffee'
+
 ## Define one group type
 
 We assign to a global variable the array of group types we'd like to have in

@@ -19,6 +19,7 @@ enforce those rules, and provide help documentation to the user.
 http://nathancarter.github.io/weblurch/app/openmath-example.html)
 
     setAppName 'OM-CD-Writer'
+    addHelpMenuSourceCodeLink 'app/openmath-example.solo.litcoffee'
 
 ## Define one group type
 

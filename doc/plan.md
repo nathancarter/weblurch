@@ -15,9 +15,6 @@ required order of completion.
 
 ## Documenting each demo app better
 
- * Add a help menu item that opens the demo app's source code file so the
-   reader can see the thorough introduction just discussed.
- * Add a help menu item that will open The Tutorial in a new tab.
  * Make the help menu flash when the page is first loaded, until someone
    clicks it, or until a certain amount of time has passed.
 
@@ -219,18 +216,6 @@ support](#offline-support), below.
 
 ### Extending load and save
 
-Dropbox
-
-We may later want to add more load-and-save features, such as Dropbox
-integration.  This is a bit of a pain to do, but thankfully that pain is cut
-in half or better by [the dropbox.js project on
-GitHub](https://github.com/dropbox/dropbox-js).  But it may be a better idea
-to go with [the Google Drive API](https://developers.google.com/drive/),
-because it's an equivalent JavaScript API to dropbox.js, but created and
-maintained by Google rather than by a random GitHub user.  Sounds much more
-reliable.  Also, it uses the same `gapi` object that you already have in the
-code for use in URL shortening.
-
 Sharing
 
 Move all work done in MediaWiki locally in testing form onto a dedicated
@@ -241,9 +226,57 @@ Linode instance.)
 Google Drive also provides a very nice [real time collaboration API](
 https://developers.google.com/google-apps/realtime/overview) that makes any
 document you like into a Google-Docs-like collaborative model where changes
-are auto-synced across collaborators.  Very nice!  Worth looking into.
-(This was an idea that Dana Ernst asked for long ago when he first heard
-about the webLurch project.)
+are auto-synced across collaborators.  This was an idea that Dana Ernst
+asked for long ago when he first heard about the webLurch project. Integrate
+that into webLurch, imitating the UX Ken describes from typical online
+collaboration apps such as Google Docs and Overleaf, as follows.
+ * Just a note that none of the changes below impact the wiki import and
+   export functionality; that stays as it is now.
+ * Before adding Google Drive integration, change the items on the File menu
+   to behave as follows.
+   * File > New not only does what it does now--creating a new document--
+     but it also gives it a default filename (such as `Untitled 1.lurch`)
+     and begins autosaving it to the browser's Local Storage very often
+     (every few seconds).
+   * File > Document properties... will let you change the name of the
+     document (as long as you don't already have a document with that name)
+     and that will change the filename into which it's autosaved.
+   * File > Save and File > Save as... should therefore be removed.
+   * File > Open and File > Manage files... can be simplified to not permit
+     the creation of folders, so that all of a user's files are just in one
+     alphabetical list.
+   * Corresponding changes take place in the toolbar.
+   * Add File > Download, which starts a download of the file as HTML.
+   * Add File > Upload, which lets the user choose an HTML file to upload,
+     accepts the upload, strips any dangerous tags from it, then does the
+     same thing as File > New, above, before pasting the HTML content
+     directly into the new, blank document.
+ * Provide a button in the File > Application settings... dialog that users
+   can push to initiate Google's authorization UI, thereby giving Lurch
+   access to their Google Drive.  When it has been used, replace it with a
+   button that de-authorizes webLurch from the user's Google Drive.
+ * When a user gives such authorization, the following changes take place at
+   once, and persist for the remainder of their use of the webLurch app:
+   * All files formerly stored in the browser's Local Storage, if any, are
+     automatically imported into Google Drive, and the originals (in Local
+     Storage) discarded.  (Space in Local Storage is at a premium.)
+   * File > New creates a new realtime-shared file on Google Drive, which
+     automatically includes free and constant autosaving.  It will start out
+     with some stupid title like "Untitled Document" just as in Google Docs.
+     To change this title, use File > Document properties...
+   * File > Save and File > Save as... are still gone, as above.
+   * File > Open looks in your Google Drive for files to open.
+   * File > Manage files... gets replaced by File > Open my Google Drive.
+     That is another way to rename any newly-created file.
+   * Corresponding changes take place in the toolbar.
+ * If a user de-authorizes webLurch from their Google Drive, change the app
+   as follows:
+   * All entries on the File menu revert to their original behavior.
+   * Give the user the option to import back into their browser's Local
+     Storage all `.lurch` files currently sitting in their Google Drive,
+     before the de-authorization completes.  The files will *not* also be
+     deleted from the Google Drive, but the user can do so manually if they
+     choose to.
 
 Tutorials
 
