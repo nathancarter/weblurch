@@ -3,38 +3,42 @@
 
 ## Overview
 
-webLurch is first a word processor whose UI lets users group/bubble sections
-of their document, with the intent that those sections can be handled
-semantically.  Second, it is also a particular use of that foundation, for
-checking students' proofs (not yet implemented as of this writing on the
-web, only in [the desktop version](http://lurchmath.org)).  But other
-applications could be built on the same foundation, not just proof-checking.
+This explanation assumes that you  want to build an application in the Lurch
+Web Platform (LWP).  [(What's the LWP?)](../README.md)
 
-This file shows how to make an extremely simple application of that type.
-Consider it the "hello world" of webLurch application development.
+This file shows how to build an extremely simple application (like a "hello
+world") in the LWP.  [See a live version of the result
+here.](http://nathancarter.github.io/weblurch/app/simple-example.html)
 
-This file is the more important of two files that make up the example
-application.  The other is [simple-example.html](simple-example.html), which
-is almost entirely boilerplate code (as commented in its source), plus one
-line that imports the compiled version of this file.
+Two files make up this example.  This one is more important.  The other is
+[simple-example.html](simple-example.html), which is almost entirely
+boilerplate code (as commented in its source), plus one line that imports
+the compiled version of *this* file.
 
-You can [see a live version of the resulting application online now](
-http://nathancarter.github.io/weblurch/app/simple-example.html).
+To make your own app, you will also need two files.
+ * Make a copy of this file and modify its code to suit your needs.  Run
+   the [CoffeeScript](http://www.coffeescript.org) compiler on it to
+   generate JavaScript.
+ * Make a copy of `simple-example.html`, and change one (clearly marked)
+   line to import your generated JavaScript.
 
-After you've gained what you can from this example app, you might consider
-reading [the complex example app](complex-example.solo.litcoffee), and then
-[the (real) math app](math-example.solo.litcoffee).
+Now begins the code that defines this simple application. After this file,
+you can [examine other examples](
+http://nathancarter.github.io/weblurch/app/index.html).
 
-## Specify the app name
+## Set the app name
 
-We make one global function call to change the app name, which appears in
-the browser's/tab's title bar.
+The LWP provides a single function to set the app name.  Call it like so.
+The app name appears in the browser's/tab's title bar.
 
     setAppName 'ExampleApp'
 
-Clear out the default Lurch icon that appears to the left of the File menu.
+## Add a help menu item
 
-    window.menuBarIcon = { }
+We want the app itself to link to this documented source code file, so that
+users who stumble upon the app can easily find its documentation.
+
+    addHelpMenuSourceCodeLink 'app/simple-example.solo.litcoffee'
 
 We also change the Help/About menu item to be specific to this demo app.
 
@@ -46,12 +50,15 @@ We also change the Help/About menu item to be specific to this demo app.
 ## Define one group type
 
 We assign to a global variable the array of group types we'd like to have in
-our word processor.  The setup routine for the webLurch application will
-look for this global variable, and if it exists, respect its settings.  If
-it does not exist, a very simple default setup is used instead.
+our word processor.  The LWP setup process looks for this global variable,
+and, if it exists, respects its settings.  If it does not exist, a very
+simple default setup is used instead.
 
 In this case, we will make the array have length one, as we are adding just
-one type.
+one type.  You will see it show up as a button on the app's toolbar with an
+icon that looks like two brackets, `[ ]`, because such an icon will be
+generated from the `imageHTML` attribute provided below.  The open and close
+variants are used in the document to delimit group boundaries.
 
     window.groupTypes = [
         name : 'reporter'
@@ -61,11 +68,11 @@ one type.
         closeImageHTML : ']'
 
 The `tagContents` function is called on a group whenever that group is about
-to have its bubble drawn.  Thus this function should be extremely fast to
-compute, possibly even just reporting the results of previously executed
-(and stored) computations.
+to have its bubble drawn, and the result is placed in the bubble tag.  This
+function should be fast to compute, since it will be run often.  Usually it
+just reports the (stored) results of previously-executed computations.
 
-In this case, we do a very simple example:  Just report how many characters
+In this app, bubble tags are very simple:  They report how many characters
 are in the group.
 
         tagContents : ( group ) ->
@@ -73,12 +80,12 @@ are in the group.
 
 The `contentsChanged` function is called on a group whenever that group just
 had its contents changed.  The `firstTime` parameter is true when the group
-was just constructed, and false every time thereafter; if any particular
-initialization of a newly constructed group of this type needed to happen,
-it could check the `firstTime` parameter and behave accordingly.
+was just constructed, and false every time thereafter; if an app needs to do
+any particular initialization of newly constructed groups, it can check the
+`firstTime` parameter and respond accordingly.
 
-In this simple example, we just write to the browser console a notification
-that the group contents have changed.  Open your browser console to see
+In this simple app, we just write to the browser console a notification that
+the group's contents have changed.  Open your browser console to see
 notifications stream by as you type inside a "reporter" group.
 
         contentsChanged : ( group, firstTime ) ->
@@ -88,11 +95,11 @@ The `deleted` function is called on a group immediately after it has been
 removed from the document (for example, by the user deleting one or both of
 its endpoints).  The group does not exist in the document at the time of
 this function call.  Any finalization that may need to be done could be
-placed in this function.  Because it is run in the UI thread, it, too, must
-be very short.
+placed in this function.  Because it is run in the UI thread, it should be
+relatively fast.
 
-In this simple example, we just write to the browser console a notification
-that the group was deleted.  Open your browser console to see notifications
+In this simple app, we just write to the browser console a notification that
+the group was deleted.  Open your browser console to see notifications
 appear whenever you delete a "reporter" group.
 
         deleted : ( group ) ->
@@ -102,4 +109,6 @@ appear whenever you delete a "reporter" group.
 Functions that need to do lengthy computations can run them in the
 background.  webLurch has a built-in mechanism to make this easy.  To see
 how to use it, see
-[the more complex example application](complex-example.solo.litcoffee).
+[the more complex example application](complex-example.solo.litcoffee),
+one of the [many examples](
+http://nathancarter.github.io/weblurch/app/index.html) available.

@@ -20,10 +20,10 @@ turn is built on the WYSIWYG editor [TinyMCE](http://www.tinymce.com).
  * The *Lurch Web Platform* builds on that foundation, and provides:
    * [Load/Save functionality into the browser's
      LocalStorage](../app/loadsaveplugin.litcoffee)
-     <br><img src='save-commands.png'>
+     <br><img src='save-commands.png' width='50%' height='50%'>
    * A WYSIWYG math editing widget, [imported from
      here](https://github.com/foraker/tinymce_equation_editor)
-     <br><img src='equation-editor.png'>
+     <br><img src='equation-editor.png' width='50%' height='50%'>
    * __*Groups*__, the most important contribution of the *Lurch Web
      Platform*, [explained below](#what-are-groups).
    * Facilities for computing with groups, such as
@@ -44,11 +44,11 @@ Examples:
  * One demo app lets users wrap bubbles around mathematical expressions to
    tell Lurch to pay attention to the expressions' meaning.  Lurch puts a
    tag above the bubble to let the user see what the content means to Lurch.
-   <br><img src='bubble-typeset-math.png'><br>
+   <br><img src='bubble-typeset-math.png' width='50%' height='50%'><br>
  * Another demo app lets users put bubbles around text to give it
    application-specific meaning.  The following screenshot is from an
    application for authoring OpenMath Content Dictionaries.
-   <br><img src='bubble-OM-CDReviewDate.png'>
+   <br><img src='bubble-OM-CDReviewDate.png' width='50%' height='50%'>
  * Complex nested group hierarchies are possible and very useful.  Desktop
    Lurch uses them constantly:
    <br><img src='bubble-many.png'>

@@ -15,7 +15,7 @@
     {
       name: 'me',
       text: 'Meaningful expression',
-      imageHTML: '<font color="#996666">[]</font>',
+      imageHTML: '<font color="#996666">[ ]</font>',
       openImageHTML: '<font color="#996666">[</font>',
       closeImageHTML: '<font color="#996666">]</font>',
       tooltip: 'Make text a meaningful expression',

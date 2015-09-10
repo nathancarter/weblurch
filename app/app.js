@@ -2564,6 +2564,39 @@
     }
   };
 
+  window.addHelpMenuSourceCodeLink = function(path) {
+    var flash;
+    window.groupMenuItems = {
+      sourcecode: {
+        text: 'View documented source code',
+        context: 'help',
+        onclick: function() {
+          return window.location.href = 'http://github.com/' + 'nathancarter/weblurch/blob/master/' + path;
+        }
+      },
+      tutorial: {
+        text: 'View developer tutorial',
+        context: 'help',
+        onclick: function() {
+          return window.location.href = 'http://github.com/' + 'nathancarter/weblurch/blob/master/doc/tutorial.md';
+        }
+      }
+    };
+    flash = function(count, delay, elts) {
+      if (count-- <= 0) {
+        return;
+      }
+      return elts.fadeOut(delay).fadeIn(delay, function() {
+        return flash(count, delay, elts);
+      });
+    };
+    return setTimeout(function() {
+      return flash(3, 500, ($('.mce-menubtn')).filter(function(index, element) {
+        return element.textContent.trim() === 'Help';
+      }));
+    }, 1000);
+  };
+
   maybeSetupTestRecorder = function() {
     var installListeners, installed, testwin;
     if (location.search === '?test') {

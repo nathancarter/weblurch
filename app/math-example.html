@@ -1,6 +1,11 @@
+<!-- FOR AN EXPLANATION OF HOW THIS FILE WORKS, READ THE DOCUMENTATION
+     EMBEDDED IN ITS COMPANION FILE, math-example.litcoffee. -->
 <html>
     <head>
-        <!-- ALL OF THE FOLLOWING IS BOILERPLATE - DO NOT ALTER -->
+        <!-- ALL OF THE FOLLOWING LINES MERELY SET UP ICONS FOR USE ON
+             PLATFORMS THAT LET A WEB PAGE BE INSTALLED AS AN APP, SUCH AS
+             iOS AND WINDOWS MOBILE.  YOU MAY REMOVE THESE IF YOU DO NOT
+             WANT THAT FUNCTIONALITY, OR REPLACE THEM WITH YOUR ICONS. -->
         <link rel="apple-touch-icon" sizes="57x57"
               href="/weblurch/app/icons/apple-touch-icon-57x57.png">
         <link rel="apple-touch-icon" sizes="114x114"
@@ -37,6 +42,8 @@
               content="/weblurch/app/icons/mstile-144x144.png">
         <meta name="msapplication-config"
               content="/weblurch/app/icons/browserconfig.xml">
+        <!-- THE FOLLOWING LINES IMPORT CORE ELEMENTS OF THE LURCH WEB
+             PLATFORM.  DO NOT ALTER OR REMOVE THESE LINES. -->
         <script src='http://tinymce.cachefly.net/4.1/tinymce.min.js'>
         </script>
         <script src='http://code.jquery.com/jquery-2.1.1.min.js'>
@@ -49,15 +56,17 @@
         <script src='weblurch.js'></script>
         <script src='app.js'></script>
         <script src='mathquill-parser.solo.min.js'></script>
-        <!-- END OF BOILERPLATE -->
-
-        <!-- HERE WE IMPORT THE COMPILED VERSION OF THE COFFEESCRIPT
+        <!-- NEXT WE IMPORT THE COMPILED VERSION OF THE COFFEESCRIPT
              SOURCE CODE FILE THAT DEFINES THE BEHAVIOR OF THIS APP.
              SEE math-example.litcoffee IN THIS SAME FOLDER. -->
         <script src='math-example.solo.min.js'></script>
-        <script src='http://cdnjs.cloudflare.com/ajax/libs/mathjs/1.6.0/math.min.js'></script>
         <!-- OTHER WEBLURCH APPLICATIONS NEED CHANGE ONLY THAT ONE LINE,
              TO IMPORT A DIFFERENT CONFIGURATION SCRIPT OF YOUR DESIGN. -->
+        <!-- UNLIKE THE SIMPLER EXAMPLES IN THIS FOLDER, THIS APPLICATION
+             ALSO NEEDS ONE ADDITIONAL EXTERNAL LIBRARY, WHICH WE IMPORT
+             HERE.  APPLICATIONS MODELED AFTER THIS ONE MAY OR MAY NOT NEED
+             TO KEEP THIS EXTERNAL LIBRARY, DEPENDING ON THEIR NEEDS. -->
+        <script src='http://cdnjs.cloudflare.com/ajax/libs/mathjs/1.6.0/math.min.js'></script>
     </head>
     <body>
     </body>

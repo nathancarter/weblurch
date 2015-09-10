@@ -9,11 +9,7 @@ for [the complex example application](complex-example.solo.litcoffee).
 This application is more useful than either of those.
 
     setAppName 'MathApp'
-    window.menuBarIcon = { }
-    window.helpAboutText =
-        'See the fully documented source code for this demo app at the
-        following URL:\n
-        \nhttps://github.com/nathancarter/weblurch/blob/master/app/math-example.solo.litcoffee'
+    addHelpMenuSourceCodeLink 'app/math-example.solo.litcoffee'
 
 [See a live version of this application online here.](
 http://nathancarter.github.io/weblurch/app/math-example.html)
@@ -34,7 +30,12 @@ above.
 
 The `contentsChanged` function is called on a group whenever that group just
 had its contents changed.  In this case, we simply compute the contents of
-the bubble tag and store them in the group.
+the bubble tag and store them in the group.  The `inspect` function is
+central here, and is defined in [the following
+section](#utility-functions-used-by-the-code-above).  It returns an
+[OpenMath](http://www.openmath.org) data structure (as defined in [the
+OpenMath module](../src/openmath.duo.litcoffee) in this repository) that we
+can inspect to learn about the semantics of the group contents.
 
         contentsChanged : ( group, firstTime ) ->
             info = inspect group
@@ -83,13 +84,11 @@ the bubble tag and store them in the group.
                         when 'limit1.limit' then 'limit'
                     when 'b' then 'lambda closure'
 
-If we make a change to the group *in the change handler,* that will trigger
-another change handler, which will create an infinite loop (and eventually a
-"maximum call stack size exceeded" error in the browser).  Thus we first
-inspect to see if the result we're about to store in the group is already
-there; if so, we do nothing, and the loop ceases.
+We then store the resutls of that computation in an attribute of the group,
+so that it's easy to look up later, when we need to place it in the bubble
+tag.
 
-            if info isnt group.get 'tag' then group.set 'tag', info
+            group.set 'tag', info
 
 When the group's tag needs to be computed, we simply lift the data out of
 the result already stored in the group from the above computation, and use
@@ -106,14 +105,16 @@ Clicking the tag or the context menu brings up the same menu, defined in
 
 ## Utility functions used by the code above
 
-The "inspect" command looks at the contents of the group, and tries to
-interpret it as containing a single MathQuill instance.  It returns one of
-two things.  If it returns an OMNode instance, it will be the meaning of the
-one MathQuill instance in the bubble, if there is one instance in the bubble
-and such a meaning is parseable from it, using
-[the parser defined here](../src/mathquill-parser.solo.litcoffee).  If
-instead there was some error in computing that, then a string will be
-returned containing the error.
+The `inspect` functio` tries to interpret the contents of the group as
+containing a single [MathQuill](http://mathquill.com/) instance.  (The LWP
+comes with the built-in ability to insert MathQuill instances into documents
+as WYSIWYG math expression editors.)  It returns one of two things.  If it
+returns an `OMNode` instance, it will be the meaning of the one MathQuill
+instance in the bubble, implying that there is one instance in the bubble
+and a meaning is parseable from it using [the parser defined
+here](../src/mathquill-parser.solo.litcoffee).  If an error arose in
+attempting such a computation, then a string will be returned containing the
+error.
 
     inspect = ( group ) ->
         nodes = $ group.contentNodes()
@@ -126,26 +127,30 @@ returned containing the error.
         try
             toParse = mathQuillToMeaning node
         catch e
-            console.log 'node:', node
             return "Error converting math expression to text: #{e?.message}"
         try
             parsed = mathQuillParser.parse( toParse )?[0]
         catch e
-            console.log 'cannot parse:', toParse
             return "Error parsing math expression as text: #{e?.message}"
         if parsed instanceof window.OMNode then return parsed
-        console.log node, toParse
         "Could not parse this mathematical text: #{toParse?.join? ' '} --
             Error: #{parsed}"
 
 The following function provides the contents of either the tag menu or the
-context menu for a group; both are the same.
+context menu for a group; both are the same.  They contain two menu items.
+ 1. The first shows the full OpenMath structure of a group's meaning, as
+    XML.  It uses the `toXML` function
+    [defined below](#converting-mathematical-expressions-to-xml).
+ 1. The second is for evaluating the group's contents, as a mathematical
+    expression.  It uses the `compute` function,
+    [defined below](#evaluating-mathematical-expression-numerically).
+
 
     menu = ( group ) -> [
         text : 'See full OpenMath structure'
         onclick : ->
             if ( info = inspect group ) not instanceof OMNode
-                alert "Could not evaluate the bubble contents:\n #{info}"
+                alert "Could not understand the bubble contents:\n #{info}"
             else
                 try
                     alert ( toXML info ) ? "Some part of that expression is
@@ -155,7 +160,7 @@ context menu for a group; both are the same.
         text : 'Evaluate this'
         onclick : ->
             if ( info = inspect group ) not instanceof OMNode
-                info = "Could not evaluate the bubble contents:\n #{info}"
+                info = "Could not understand the bubble contents:\n #{info}"
             else
                 result = compute info
                 info = "#{result.value}"
@@ -164,8 +169,10 @@ context menu for a group; both are the same.
             alert info
     ]
 
+### Converting mathematical expressions to XML
+
 This is an incomplete implementation of the XML encoding for OpenMath trees.
-It is very piecemeal, spotty, and untested, but is here just for the
+It is piecemeal, spotty, and only partially tested, but is here just for the
 purposes of this demo application.
 
     toXML = ( node ) ->

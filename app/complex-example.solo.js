@@ -4,31 +4,28 @@
 
   setAppName('ComplexApp');
 
-  window.menuBarIcon = {};
-
-  window.helpAboutText = 'See the fully documented source code for this demo app at the following URL:\n \nhttps://github.com/nathancarter/weblurch/blob/master/app/complex-example.solo.litcoffee';
+  addHelpMenuSourceCodeLink('app/complex-example.solo.litcoffee');
 
   window.groupTypes = [
     {
       name: 'computation',
       text: 'Computation group',
-      image: './images/red-bracket-icon.png',
       tooltip: 'Make selection a computation',
       color: '#996666',
       imageHTML: '<font color="#996666"><b>[ ]</b></font>',
       openImageHTML: '<font color="#996666"><b>[</b></font>',
       closeImageHTML: '<font color="#996666"><b>]</b></font>',
       tagContents: function(group) {
-        var leftHandSide, _ref, _ref1;
-        leftHandSide = (_ref = group.contentAsText()) != null ? (_ref1 = _ref.split('=')) != null ? _ref1[0] : void 0 : void 0;
-        if ((leftHandSide != null) && isJustArithmetic(leftHandSide)) {
+        var content;
+        content = group.contentAsText();
+        if ((content != null) && isJustArithmetic(content)) {
           return 'arithmetic expression';
         } else {
           return 'unknown';
         }
       },
       contentsChanged: function(group, firstTime) {
-        if (group.doNotReEvaluate) {
+        if (group.doNotEvaluateAgain) {
           return;
         }
         group.set('closeDecoration', '<font color="#999999">...</font>');
@@ -39,15 +36,14 @@
           }
           safeResult = ("" + result).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
           safeResult = "<font color=\"#009900\">=" + safeResult + "</font>";
-          group.doNotReEvaluate = true;
+          group.doNotEvaluateAgain = true;
           group.set('closeDecoration', safeResult);
-          return group.doNotReEvaluate = false;
+          return group.doNotEvaluateAgain = false;
         });
       }
     }, {
       name: 'words',
       text: 'Group of words',
-      image: './images/red-bracket-icon.png',
       tooltip: 'Make selection about words',
       color: '#669966',
       imageHTML: '<font color="#669966"><b>( )</b></font>',
@@ -99,14 +95,13 @@
   };
 
   Background.registerFunction('do arithmetic', function(group) {
-    var e, leftHandSide, result, whenToStop, _ref, _ref1;
-    leftHandSide = group != null ? (_ref = group.text) != null ? (_ref1 = _ref.split('=')) != null ? _ref1[0] : void 0 : void 0 : void 0;
+    var e, result, whenToStop;
     whenToStop = (new Date).getTime() + 1000;
     while ((new Date).getTime() < whenToStop) {
       result = (function() {
-        if ((leftHandSide != null) && isJustArithmetic(leftHandSide)) {
+        if ((group.text != null) && isJustArithmetic(group.text)) {
           try {
-            return eval(leftHandSide);
+            return eval(group.text);
           } catch (_error) {
             e = _error;
             return '???';
@@ -119,7 +114,7 @@
     return result;
   }, {
     isJustArithmetic: isJustArithmetic
-  }, ['openmath.duo.min.js']);
+  });
 
   mightBeAName = function(text) {
     var word, words, _i, _len;

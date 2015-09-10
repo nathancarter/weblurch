@@ -3,38 +3,39 @@
 
 ## Overview
 
-To know what's going on here, you should first have read the documenation
-for [the simple example application](simple-example.solo.litcoffee).  This
-application is just a few steps more complex.  There is yet another example
-of a more complex and robust webLurch application coming soon.
+This documentation assumes that you have read [the simple example
+application](simple-example.solo.litcoffee).  This app is just a few steps
+more complex than that one.  Other example applications built with the LWP
+are [listed here](http://nathancarter.github.io/weblurch/app/index.html).
+
+[A live version of this app is online here.](
+http://nathancarter.github.io/weblurch/app/complex-example.html)
+
+Set the app name with the same function we used in the simple example app.
 
     setAppName 'ComplexApp'
-    window.menuBarIcon = { }
-    window.helpAboutText =
-        'See the fully documented source code for this demo app at the
-        following URL:\n
-        \nhttps://github.com/nathancarter/weblurch/blob/master/app/complex-example.solo.litcoffee'
 
-[See a live version of this application online here.](
-http://nathancarter.github.io/weblurch/app/complex-example.html)
+Add a source code link to the help menu, as in the simple example app.
+
+    addHelpMenuSourceCodeLink 'app/complex-example.solo.litcoffee'
 
 ## Define two group types
 
 As in the simple example, we assign to a global variable, which is noticed
-by the webLurch setup process and respected.  We define two group types.
+by the LWP setup process and respected.  This time, we define two group
+types.
 
     window.groupTypes = [
 
 ### Computations
 
-The first performs simple arithmetic computations on the contents of the
-group, and replaces the contents of the group with an equation that shows
-the result of the computation.  For instance, a group containing 3+2 would
-be transformed into 3+2=5, with the cursor position preserved.
+The first type is groups that perform simple arithmetic computations on
+their contents, decorating the ending grouper with the result.  For
+instance, a group containing 3+2 would have its ending grouper contain the
+text "=5."
 
         name : 'computation'
         text : 'Computation group'
-        image : './images/red-bracket-icon.png'
         tooltip : 'Make selection a computation'
         color : '#996666'
         imageHTML : '<font color="#996666"><b>[ ]</b></font>'
@@ -42,53 +43,57 @@ be transformed into 3+2=5, with the cursor position preserved.
         closeImageHTML : '<font color="#996666"><b>]</b></font>'
 
 The tag on a bubble will either classify it as an arithmetic expression or
-not, just as an example use of the tag as a status indicator.  The
-`isJustArithmetic` function is defined
-[at the end of this file](#auxiliary-functions).
+not.  This shows one example use of the bubble tag, as a status indicator.
+The `isJustArithmetic` function is defined [at the end of this
+file](#auxiliary-functions).
 
         tagContents : ( group ) ->
-            leftHandSide = group.contentAsText()?.split( '=' )?[0]
-            if leftHandSide? and isJustArithmetic leftHandSide
+            content = group.contentAsText()
+            if content? and isJustArithmetic content
                 'arithmetic expression'
             else
                 'unknown'
 
 Whenever the group's contents change, we must recompute their value, if the
 contents are a valid arithmetic expression.  Although such a task is nearly
-instantaneous, we run it in the background and force it to take one second,
-just to show how a lengthy computation might be handled.  The background
-computation called "do arithmetic" is defined
-[at the end of this file](#auxiliary-functions).
+instantaneous, this example app runs it in the background *and forces it to
+take one second, as an example* of how a lengthy computation could be sent
+to a background thread.  The background computation called "do arithmetic"
+is defined [at the end of this file](#auxiliary-functions).
 
 The `Background.addTask` function enqueues a task to be done later.  The
-parameters are (1) the name of the function to do (defined by a call to
-`Background.registerFunction`, as below), (2) the array of groups to pass
-as parameters, and (3) the callback to be called in this (main, UI) thread
-when the computation is complete.
+parameters are
+ 1. the name of the function to do (defined by a call to
+    `Background.registerFunction`, as [below](#auxiliary-functions)),
+ 1. the array of groups to pass as parameters, and
+ 1. the callback to be called in this (main, UI) thread when the computation
+    is complete.
 
-Note that for a variety of reasons that callback may never be called.  For
-instance, if there is an error in your background processing code, the
-callback will not be called.  Or if the user changes the contents of the
-group again before the computation completes, then that background process
-will be discarded and a new one initiated; only the callback from the
-second one will be called (assuming that it completes without error or
-early termination).
+There are situations in which that callback may never be called.  If there
+is an error in your background processing code, the callback will not be
+called.  If the user changes the contents of the group before the
+computation completes, the background process will be discarded and a new
+one initiated because the old one has become irrelevant.  In such a case,
+only the callback from the second one will be called (assuming that it
+completes without error or early termination).
 
         contentsChanged : ( group, firstTime ) ->
 
-If the change we're hearing about is one we just made ourselves (see below)
-then we do not bother responding, to prevent an infinite loop.
+First, it may be that the contents changed merely because the computation
+ended and we placed its result in the close grouper (as at the end of this
+function).  That counts as a change to this group, but we would not want to
+respond to that.  As you can see at the end of this function, we mark such
+moments with a flag `doNotEvaluateAgain`, and we check that flag here.
 
-            if group.doNotReEvaluate then return
+            if group.doNotEvaluateAgain then return
 
-We begin by placing an hourglass character as the decoration at the end of
-the group, to show that a computation is pending.  Again, these computations
-do not actually take very long, but we have artificially extended them to
-take one second, just as a demonstration of what might happen in more
+We begin by placing an ellipsis as the decoration at the end of the group,
+to show that computation is in progress.  Again, the computations in this
+app do not *actually* take very long, but we have artificially extended them
+to take one second, just as a demonstration of what might happen in more
 computationally intensive contexts.
 
-            group.set 'closeDecoration',
-                '<font color="#999999">...</font>'
+            group.set 'closeDecoration', '<font color="#999999">...</font>'
 
 Now we enqueue the background task.
 
@@ -110,35 +115,35 @@ indicate success.
                 .replace /"/g, '&quot;'
                 .replace /'/g, '&apos;'
                 safeResult = "<font color=\"#009900\">=#{safeResult}</font>"
-                group.doNotReEvaluate = yes
+                group.doNotEvaluateAgain = yes
                 group.set 'closeDecoration', safeResult
-                group.doNotReEvaluate = no
-
+                group.doNotEvaluateAgain = no
 
 ### Groups with menus
 
-We now define a group type that doesn't compute anything automatically, but
-that allows you to ask questions about it and perform operations on it with
-the context menu and/or the bubble tag menu.
+We now define a second group type, one that doesn't compute anything
+automatically, but that allows you to ask questions about it and perform
+operations on it with the context menu and/or the bubble tag menu.  This is
+to demonstrate that multiple group types can exist within the same app.
 
     ,
         name : 'words'
         text : 'Group of words'
-        image : './images/red-bracket-icon.png'
         tooltip : 'Make selection about words'
         color : '#669966'
         imageHTML : '<font color="#669966"><b>( )</b></font>'
         openImageHTML : '<font color="#669966"><b>(</b></font>'
         closeImageHTML : '<font color="#669966"><b>)</b></font>'
 
-The tag on a bubble will either classify it as something that might be a
-proper name, or somethign that probably isn't.  The function defining what
-it means for something to be name-like appears at the end of this file.
+The tag on a bubble will either classify the group as something that might
+be a proper name, or something that probably isn't.  The function
+`mightBeAName` is defined at the end of this file.
 
         tagContents : ( group ) -> mightBeAName group.contentAsText()
 
 We now provide a small popup menu that appears when the user clicks the
-group's tag, and whose actions deal with that tag's content.
+group's tag, and whose actions deal with that tag's content.  It returns an
+array of menu items, each with text and an `onclick` handler.
 
         tagMenuItems : ( group ) ->
             [
@@ -155,7 +160,7 @@ tag.
                         it is 'probably not a name.'"
 
 The second and third items give the user the ability to change the group,
-populating it with example text content that satisfies and does not satisfy
+populating it with example text content that satisfies or does not satisfy
 (respectively, for the two menu items) the criteria for namehood.
 
             ,
@@ -188,6 +193,9 @@ interior, reporting it in a popup dialog that the user must then dismiss.
             ]
     ]
 
+That completes the main part of the app.  The remainder of this file is a
+few auxiliary functions mentioned above, but not yet defined.
+
 ## Auxiliary functions
 
 The following function determines if a text string contains only numbers and
@@ -199,32 +207,32 @@ to `eval()`.
 Here we register the background function used by the testing routine above
 in `contentsChanged`.  Although this could just call `eval` and be done, we
 place it in a loop that forces the computation to last for one second (the
-1000 in the code is in milliseconds), to simulate the kind of computations
-that can take a long time, and thus would be moved into the background.
+1000 in the code is in milliseconds), to simulate a computation that takes a
+long time, and thus needed to be moved into the background.
 
 Because this routine will be run in a separate thread, it does not have
 access to the same group object as in the main, UI thread.  Rather, we get a
 simplified copy of the group, which is an object containing the members
 `id`, `typeName`, `deleted`, `text`, `html`, `parent`, `children`, and
 `data`.  These are not all documented here; see [the source code for the
-Groups plugin for details, in `Group.toJSON()`](groupsplugin.litcoffee).
+Groups plugin for details](groupsplugin.litcoffee), in `Group.toJSON()`.
 
-Note that because this will be run in a background thread, we also cannot
-make use of any functions defined in the current namespace.  In particular,
-we must rewrite the regular expression in `isJustArithmetic`, because it
-will not be available in the web worker thread in which this function will
-be run.
+Note that because this will be run in a background thread, we cannot make
+use of any functions defined in the current namespace.  In particular, we
+must copy in the regular expression in `isJustArithmetic`, because it will
+not be available in the thread in which this function will be run.  This is
+done in the second argument, which is a list of objects to be (deep) copied
+into the background thread.
 
     Background.registerFunction 'do arithmetic', ( group ) ->
-        leftHandSide = group?.text?.split( '=' )?[0]
         whenToStop = ( new Date ).getTime() + 1000
         while ( new Date ).getTime() < whenToStop
-            result = if leftHandSide? and isJustArithmetic leftHandSide
-                try eval leftHandSide catch e then '???'
+            result = if group.text? and isJustArithmetic group.text
+                try eval group.text catch e then '???'
             else
                 '???'
         result
-    , { isJustArithmetic : isJustArithmetic }, [ 'openmath.duo.min.js' ]
+    , isJustArithmetic : isJustArithmetic
 
 What does it mean for something to be a name, or probably a name?  Proper
 names are three or fewer words, each of which is capitalized.

@@ -5,9 +5,7 @@
 
   setAppName('MathApp');
 
-  window.menuBarIcon = {};
-
-  window.helpAboutText = 'See the fully documented source code for this demo app at the following URL:\n \nhttps://github.com/nathancarter/weblurch/blob/master/app/math-example.solo.litcoffee';
+  addHelpMenuSourceCodeLink('app/math-example.solo.litcoffee');
 
   window.groupTypes = [
     {
@@ -110,9 +108,7 @@
             }
           })();
         }
-        if (info !== group.get('tag')) {
-          return group.set('tag', info);
-        }
+        return group.set('tag', info);
       },
       tagContents: function(group) {
         return group.get('tag');
@@ -143,20 +139,17 @@
       toParse = mathQuillToMeaning(node);
     } catch (_error) {
       e = _error;
-      console.log('node:', node);
       return "Error converting math expression to text: " + (e != null ? e.message : void 0);
     }
     try {
       parsed = (_ref = mathQuillParser.parse(toParse)) != null ? _ref[0] : void 0;
     } catch (_error) {
       e = _error;
-      console.log('cannot parse:', toParse);
       return "Error parsing math expression as text: " + (e != null ? e.message : void 0);
     }
     if (parsed instanceof window.OMNode) {
       return parsed;
     }
-    console.log(node, toParse);
     return "Could not parse this mathematical text: " + (toParse != null ? typeof toParse.join === "function" ? toParse.join(' ') : void 0 : void 0) + " -- Error: " + parsed;
   };
 
@@ -167,7 +160,7 @@
         onclick: function() {
           var e, info, _ref, _ref1;
           if (!((info = inspect(group)) instanceof OMNode)) {
-            return alert("Could not evaluate the bubble contents:\n " + info);
+            return alert("Could not understand the bubble contents:\n " + info);
           } else {
             try {
               return alert((_ref = toXML(info)) != null ? _ref : "Some part of that expression is not supported in this demo for conversion to XML.");
@@ -182,7 +175,7 @@
         onclick: function() {
           var info, result;
           if (!((info = inspect(group)) instanceof OMNode)) {
-            info = "Could not evaluate the bubble contents:\n " + info;
+            info = "Could not understand the bubble contents:\n " + info;
           } else {
             result = compute(info);
             info = "" + result.value;

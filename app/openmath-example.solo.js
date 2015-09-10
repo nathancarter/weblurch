@@ -4,7 +4,7 @@
 
   setAppName('OM-CD-Writer');
 
-  window.menuBarIcon = {};
+  addHelpMenuSourceCodeLink('app/openmath-example.solo.litcoffee');
 
   window.groupTypes = [
     {

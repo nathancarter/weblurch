@@ -13,15 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Documenting each demo app better
-
- * Write a thorough introduction at the top of its source code file.
- * Add a help menu item that opens the demo app's source code file so the
-   reader can see the thorough introduction just discussed.
- * Add a help menu item that will open The Tutorial in a new tab.
- * Make the help menu flash when the page is first loaded, until someone
-   clicks it, or until a certain amount of time has passed.
-
 ## Arrows among groups
 
 Add to the Group class the following two functions for use by LAs.  When
@@ -220,41 +211,69 @@ support](#offline-support), below.
 
 ### Extending load and save
 
-We may later want to add more load-and-save features, such as Dropbox
-integration.  See the following web links for details on how such extensions
-could be implemented.
-
-Dropbox:
-
- * [You can use ready-made open and save dialogs.](
-   https://www.dropbox.com/developers/dropins)
-   This is minimally invasive, but does not allow you to upload files from
-   the browser's LocalStorage (at the time of this writing).  Rather, it
-   only permits uploading files from the user's hard drive.
- * [You can store tables that are a JSON-SQL hybrid.](
-   https://www.dropbox.com/developers/datastore)
-   This is quite general, but also comes with increased complexity over
-   the previous option.  It is not, however, really that complex.
- * A bonus on top of the previous bullet point is that
-   [recent, bleeding-edge changes in the API](
-   https://www.dropbox.com/developers/blog/99/using-the-new-local-datastores-feature)
-   make it possible to use one codebase for both local storage and Dropbox
-   storage, a very attractive option.
-
-Local filesystem:
-
- * If Dropbox is not used, and thus the user's files are not present on
-   their own local machine, provide a way to transfer files from their
-   local filesystem to/from the browser's LocalStorage?
-
-Sharing:
+Sharing
 
 Move all work done in MediaWiki locally in testing form onto a dedicated
 host on the Internet.  (This refers to work tested on Nathan's laptop so
 far, with notes taken on how to replicate it later, on, for example, a
 Linode instance.)
 
-### Tutorials
+Google Drive also provides a very nice [real time collaboration API](
+https://developers.google.com/google-apps/realtime/overview) that makes any
+document you like into a Google-Docs-like collaborative model where changes
+are auto-synced across collaborators.  This was an idea that Dana Ernst
+asked for long ago when he first heard about the webLurch project. Integrate
+that into webLurch, imitating the UX Ken describes from typical online
+collaboration apps such as Google Docs and Overleaf, as follows.
+ * Just a note that none of the changes below impact the wiki import and
+   export functionality; that stays as it is now.
+ * Before adding Google Drive integration, change the items on the File menu
+   to behave as follows.
+   * File > New not only does what it does now--creating a new document--
+     but it also gives it a default filename (such as `Untitled 1.lurch`)
+     and begins autosaving it to the browser's Local Storage very often
+     (every few seconds).
+   * File > Document properties... will let you change the name of the
+     document (as long as you don't already have a document with that name)
+     and that will change the filename into which it's autosaved.
+   * File > Save and File > Save as... should therefore be removed.
+   * File > Open and File > Manage files... can be simplified to not permit
+     the creation of folders, so that all of a user's files are just in one
+     alphabetical list.
+   * Corresponding changes take place in the toolbar.
+   * Add File > Download, which starts a download of the file as HTML.
+   * Add File > Upload, which lets the user choose an HTML file to upload,
+     accepts the upload, strips any dangerous tags from it, then does the
+     same thing as File > New, above, before pasting the HTML content
+     directly into the new, blank document.
+ * Provide a button in the File > Application settings... dialog that users
+   can push to initiate Google's authorization UI, thereby giving Lurch
+   access to their Google Drive.  When it has been used, replace it with a
+   button that de-authorizes webLurch from the user's Google Drive.
+ * When a user gives such authorization, the following changes take place at
+   once, and persist for the remainder of their use of the webLurch app:
+   * All files formerly stored in the browser's Local Storage, if any, are
+     automatically imported into Google Drive, and the originals (in Local
+     Storage) discarded.  (Space in Local Storage is at a premium.)
+   * File > New creates a new realtime-shared file on Google Drive, which
+     automatically includes free and constant autosaving.  It will start out
+     with some stupid title like "Untitled Document" just as in Google Docs.
+     To change this title, use File > Document properties...
+   * File > Save and File > Save as... are still gone, as above.
+   * File > Open looks in your Google Drive for files to open.
+   * File > Manage files... gets replaced by File > Open my Google Drive.
+     That is another way to rename any newly-created file.
+   * Corresponding changes take place in the toolbar.
+ * If a user de-authorizes webLurch from their Google Drive, change the app
+   as follows:
+   * All entries on the File menu revert to their original behavior.
+   * Give the user the option to import back into their browser's Local
+     Storage all `.lurch` files currently sitting in their Google Drive,
+     before the de-authorization completes.  The files will *not* also be
+     deleted from the Google Drive, but the user can do so manually if they
+     choose to.
+
+Tutorials
 
 Once the "Sharing" features above have been built (with wiki integration),
 we can make Lurch tutorials as follows.
@@ -280,11 +299,9 @@ we can make Lurch tutorials as follows.
    the Help menu, and they can check the "Don't show again" box if they so
    desire.
 
-### Making things more elegant
-
- * Eventually, pull the LoadSave plugin out into its own repository on
-   GitHub, so that anyone can easily get and use that TinyMCE plugin, and
-   improve on its code.
+Eventually, pull the LoadSave plugin out into its own repository on GitHub,
+so that anyone can easily get and use that TinyMCE plugin, and improve on
+its code.
 
 ### Offline support
 
@@ -308,43 +325,28 @@ being able to submit assignments with ease to an LMS and then teachers can
 grade and enter grades easily without have to go back and forth between web
 pages.  
 
-Suggestion from Dana Ernst: I’ve been having my students type up their
-homework using writeLaTeX.  One huge advantage of this is that students can
-share their project with me.  This allows me to simultaneously edit their
-document, which is a great way for me to help students debug.  I give them a
-ton of help for a week or two and then they are off and running on their
-own.  It might be advantageous to allow multiple users to edit the same
-Lurch document.  No idea if this is feasible or not, nor if it is even an
-idea worth pursuing.
+Is it possible for the entire Lurch app to exist inside MediaWiki, so that
+editing a wiki page was done using Lurch as the editor?  That would be
+excellent for many use cases.  Offline use would still necessitate the
+normal app, and this would be tricky to accomplish, because wiki integration
+of something that complex will be touchy, but it would be impressive and
+intuitive.
 
-If we have the wiki integration as [described
-above](#extending-load-and-save), is it possible for the entire Lurch app to
-exist inside the wiki, so that editing a wiki page was done using Lurch as
-the editor?  That would be excellent for many use cases.  Offline use would
-still necessitate the normal app, and this would be tricky to accomplish,
-because wiki integration of something that complex will be touchy, but it
-would be impressive and intuitive.
-
-A web Lurch is trivially also a desktop Lurch, as follows.  You can, of
-course, write a stupid shell app that’s just a single web view that loads
-the Lurch web app into it.  This gives the user an app that always works
+Convert webLurch into a desktop app using
+[electron](https://github.com/atom/electron).
+This gives the user an app that always works
 offline, has an icon in their Applications folder/Start menu, etc., and
 feels like an official app that they can alt-tab to, etc., but it’s the
 exact same web app, just wrapped in a thin desktop-app shell.  You can then
-add features to that as time permits.  When the user clicks “save,” you can
-have the web app first query to see if it’s sitting in a desktop-app
-wrapper, and if so, don’t save to webstorage, but pop up the usual save box.
-same for accessing the system clipboard, opening files, etc., etc.  And
-those things are so modular that a different person can be in charge of the
-app on different platforms, even!  E.g., someone does the iOS app, someone
-does the Android app, and someone does the cross-platform-Qt-based-desktop
-app.  Also, there are toolkits that do this for you.  Here are some links.
- * [Node-WebKit](https://github.com/rogerwang/node-webkit)
- * [PHP Desktop](https://code.google.com/p/phpdesktop/)
- * [Webapp XUL Wrapper](https://github.com/neam/webapp-xul-wrapper)
- * [Atom Shell](https://github.com/atom/atom-shell/) which seems to be like
-   Node-WebKit, except it's Node-Chromium
- * See more information in [this blog post](http://blog.neamlabs.com/post/36584972328/2012-11-26-web-app-cross-platform-desktop-distribution).
+add features to that as time permits.
+ * When the user clicks "save," you can have the web app first query to see
+   if it’s sitting in a desktop-app wrapper, and if so, don’t save to
+   webstorage, but pop up the usual save box.
+ * Same for File > Open.
+ * Same for accessing the system clipboard
+Similar apps could be created for iOS, Android, etc., but would need to use
+tools other than Electron.  These are orthogonal tasks, and need not all be
+done by the same developer.
 
 ### Improving documentation
 

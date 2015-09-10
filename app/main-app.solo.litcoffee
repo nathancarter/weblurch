@@ -6,18 +6,19 @@
 webLurch is first a word processor whose UI lets users group/bubble sections
 of their document, with the intent that those sections can be handled
 semantically.  Second, it is also a particular use of that foundation, for
-checking students' proofs.
+checking students' proofs.  [Read more about that dichotomy
+here.](../README.md)
 
 This file is the beginning of that main webLurch application, but it is not
 yet complete.  The only complete implementation at present is [the desktop
 version](http://lurchmath.org).
 
-This file is loaded by [index.html](index.html), which is almost entirely
+This file is loaded by [app.html](app.html), which is almost entirely
 boilerplate code (as commented in its source), plus one line that imports
 the compiled version of this file.
 
 You can [see a live version of the resulting application online now](
-http://nathancarter.github.io/weblurch/app/index.html).
+http://nathancarter.github.io/weblurch/app/app.html).
 
 ## App Configuration
 
@@ -42,7 +43,7 @@ later as this application becomes mature.
     window.groupTypes = [
         name : 'me'
         text : 'Meaningful expression'
-        imageHTML : '<font color="#996666">[]</font>'
+        imageHTML : '<font color="#996666">[ ]</font>'
         openImageHTML : '<font color="#996666">[</font>'
         closeImageHTML : '<font color="#996666">]</font>'
         tooltip : 'Make text a meaningful expression'
