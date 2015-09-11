@@ -452,6 +452,20 @@ Connections not satisfying these criterion are not candidates for deletion.
             fromGroup.set 'connections', ( c for c in \
                 fromGroup.get( 'connections' ) ? [ ] when not matches c )
 
+For looking up connections, we have two functions.  One that returns all the
+connections that lead out from the group in question (`connectionsOut()`)
+and one that returns all connections that lead into the group in question
+(`connectionsIn()`).  Each function returns an array of triples, all those
+that appear in the group's connections set and have the group as the source
+(for `connectionsOut()`) or the destination (for `connectionsIn()`).
+
+        connectionsOut: =>
+            id = @id()
+            ( c for c in @get 'connections' when c[0] is id )
+        connectionsIn: =>
+            id = @id()
+            ( c for c in @get 'connections' when c[1] is id )
+
 The `Group` class should be accessible globally.
 
     window.Group = Group

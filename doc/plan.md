@@ -15,14 +15,6 @@ required order of completion.
 
 ## Arrows among groups
 
-Add to the Group class the following two functions for use by LAs.  When
-bubbles are edited, if the contents determine any connections, the LA can
-manipulate connections based on contents using these functions.  Or the LA
-can use these functions to create connections based on other UI events.
- * `group.connectedTo()` returns the set of triples in this group's link set
-   that begin with its own ID, that is, those links that lead outward.
- * `group.connectedFrom()` is the dual of the previous.
-
 Update the way groups are drawn as follows.
  * Draw a background for only the innermost nested group, not its ancestors.
  * Draw a light background for the group over which the mouse pointer is
