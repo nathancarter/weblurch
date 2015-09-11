@@ -93,10 +93,8 @@ the list.
                 when RegExp( "/#{file}$" ).test fullpath )
         all = ( file for file in all when file not in moveup )
         all = moveup.concat all
-        all = ( fs.readFileSync name for name in all \
-            when name[-15..] isnt '.solo.litcoffee' )
-        fs.writeFileSync p.resolve( appdir, srcout ), all.join( '\n\n' ),
-            'utf8'
+        all = ( f for f in all when f[-15..] isnt '.solo.litcoffee' )
+        build.concatFiles all, '\n\n', p.resolve appdir, srcout
 
 Also compile any files specific to the main app, which will sit in the app
 folder rather than the source folder.  The exceptions to this rule are:
@@ -105,14 +103,12 @@ folder rather than the source folder.  The exceptions to this rule are:
  * if any of them end in `.duo.litcoffee`, then they've been copied to the
    app folder from the source folder, and don't need to be compiled again.
 
-        all = ( fs.readFileSync name for name in \
-            build.dir( appdir, /\.litcoffee$/ ) \
-            when name.indexOf( srcout ) is -1 and
-                 name.indexOf( appout ) is -1 and
-                 name[-15..] isnt '.solo.litcoffee' and
-                 name[-14..] isnt '.duo.litcoffee' )
-        fs.writeFileSync p.resolve( appdir, appout ), all.join( '\n\n' ),
-            'utf8'
+        all = ( f for f in build.dir( appdir, /\.litcoffee$/ ) \
+            when f.indexOf( srcout ) is -1 and
+                 f.indexOf( appout ) is -1 and
+                 f[-15..] isnt '.solo.litcoffee' and
+                 f[-14..] isnt '.duo.litcoffee' )
+        build.concatFiles all, '\n\n', p.resolve appdir, appout
 
 Run the compile process defined in [the build utilities
 module](buildutils.litcoffee.html).  This compiles, minifies, and generates
@@ -131,19 +127,10 @@ individual `.min.js` files (for importing into web workers).
                 build.compile solofiles.shift(), buildNext
             else if srcsolofiles.length > 0
                 file = srcsolofiles.shift()
-                build.compile file, ->
-                    prefix = file.split( '/' ).pop()[..-10]
-                    toMove = ( f for f in build.dir srcdir, RegExp prefix \
-                        when not /\.(solo|duo).litcoffee$/.test f )
-                    build.runShellCommands ( for result in toMove
-                        description : "\tMoving #{result[L..]} into app/..."
-                        command : "mv #{result} app/"
-                    ), ->
-                        build.runShellCommands [
-                            description : "\tCopying
-                                src/#{prefix[L..]}litcoffee into app/..."
-                            command : "cp src/#{prefix}litcoffee app/"
-                        ], buildNext
+                prefix = file.split( '/' ).pop()[..-10]
+                build.copyFile "src/#{prefix}litcoffee",
+                    "app/#{prefix}litcoffee",
+                    -> build.compile file, buildNext, appdir
             else
                 done()
 
@@ -152,12 +139,9 @@ it as the last callback, below.
 
         build.compile p.resolve( appdir, srcout ), ->
             build.compile p.resolve( appdir, appout ), ->
-                build.runShellCommands [
-                    description : '\tCopying lz-string into app folder...'
-                    command : "cp
-                        node_modules/lz-string/libs/lz-string-1.3.3.js
-                        #{appdir}/"
-                ], buildNext
+                build.copyFile \
+                    'node_modules/lz-string/libs/lz-string-1.3.3.js',
+                    "#{appdir}/lz-string-1.3.3.js", buildNext
 
 ## The `submodules` build process
 
