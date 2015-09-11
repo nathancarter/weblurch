@@ -1168,11 +1168,18 @@ themselves, we also inspect the client rectangles of all elements in the
 group, and adjust the relevant corners of the open and close groupers
 outward to make sure the bubble encloses the entire contents of the group.
 
-                rects = group.outerRange()?.getClientRects()
-                if not rects?
+The first few lines here redundantly add rects for the open and close
+groupers because there seems to be a bug in `getClientRects()` for a range
+that doesn't always include the close grouper.
+
+                toArray = ( a ) ->
+                    if a? then ( a[i] for i in [0...a.length] ) else [ ]
+                rects = toArray group.open.getClientRects()
+                .concat toArray group.outerRange()?.getClientRects()
+                .concat toArray group.close.getClientRects()
+                if rects.length is 0
                     setTimeout ( => @editor.Overlay?.redrawContents() ), 100
                     return
-                rects = ( rects[i] for i in [0...rects.length] )
                 open = rects[0]
                 open =
                     top : open.top
@@ -1190,6 +1197,7 @@ outward to make sure the bubble encloses the entire contents of the group.
                     open.top = Math.min open.top, rect.top
                     close.bottom = Math.max close.bottom, rect.bottom
                     if rect.left < open.left then onSameLine = no
+                    if rect.top > open.bottom then onSameLine = no
                 if onSameLine
                     close.top = open.top
                     open.bottom = close.bottom
