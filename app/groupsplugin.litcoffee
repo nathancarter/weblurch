@@ -1157,6 +1157,7 @@ unstable/incorrect results.
             padStep = 2
             radius = 4
             tags = [ ]
+            innermost = yes
             while group
                 type = group.type()
                 color = type?.color ? '#444444'
@@ -1242,8 +1243,10 @@ A rounded rectangle from open's top left to close's bottom right, padded by
                 context.globalAlpha = 1.0
                 context.lineWidth = 1.5
                 context.stroke()
-                context.globalAlpha = 0.3
-                context.fill()
+                if innermost
+                    context.globalAlpha = 0.3
+                    context.fill()
+                    innermost = no
                 group = group.parent
                 pad += padStep
 

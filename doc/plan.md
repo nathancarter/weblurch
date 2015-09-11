@@ -16,7 +16,6 @@ required order of completion.
 ## Arrows among groups
 
 Update the way groups are drawn as follows.
- * Draw a background for only the innermost nested group, not its ancestors.
  * Draw a light background for the group over which the mouse pointer is
    hovering, at all times, even when the cursor is not in it, and when its
    bubble is not drawn.
