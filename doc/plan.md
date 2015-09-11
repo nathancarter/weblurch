@@ -16,24 +16,9 @@ required order of completion.
 ## Arrows among groups
 
 Add to the Group class the following two functions for use by LAs.  When
-bubbles are edited, if the contents must be kept in sync with the arrows,
-the LA can manipulate the arrows to fit the contents using these functions.
-Or the LA can use these functions to create arrows based on other UI events
-in the first place.
- * `group.connect( otherGroup, optionalTag )`
-   * `optionalTag` is treated as a string, and defaults to the empty string
-   * Constructs the array `[group.id(),otherGroup.id(),tag]` and adds it
-     to the set of links in each group.  If such a link already exists, do
-     not add it again; the set of links is indeed a set.
-   * Link sets should be stored as group properties, modified via
-     `group.set()`, so that changing them triggers group updates.
- * `group.disconnect( otherGroup, optionalTag )`
-   * `optionalTag` is treated as a string, and defaults to the empty string,
-     unless it is a regular expression
-   * Finds all arrays of the form `[group.id(),otherGroup.id(),T]` stored in
-     the link sets of `group` or `otherGroup`, and removes them, where T is
-     either equal to `optionalTag` if `optionalTag` is a string, or matches
-     `optionalTag` if `optionalTag` is a regular expression.
+bubbles are edited, if the contents determine any connections, the LA can
+manipulate connections based on contents using these functions.  Or the LA
+can use these functions to create connections based on other UI events.
  * `group.connectedTo()` returns the set of triples in this group's link set
    that begin with its own ID, that is, those links that lead outward.
  * `group.connectedFrom()` is the dual of the previous.
@@ -41,12 +26,13 @@ in the first place.
 Update the way groups are drawn as follows.
  * Draw a background for only the innermost nested group, not its ancestors.
  * Draw a light background for the group over which the mouse pointer is
-   hovering, at all times.
+   hovering, at all times, even when the cursor is not in it, and when its
+   bubble is not drawn.
  * Just as `drawGroups` respects `group.type.color` and
    `group.type.tagContents`, it should also respect
    `group.type.connections`, which will return an array of links (triples)
    and other groups (Group instances) to be drawn whenever this group is the
-   innermost one containing the cursor.  For now, just call this function
+   innermost one containing the cursor.  At first, just call this function
    and dump its results to the console.  Provide a default implementation
    that returns `group.connectedTo()` plus all the targets of those links.
    (The real Lurch LA may provide a way to toggle between this and its dual,
@@ -77,7 +63,7 @@ but can be added by any LA.
    arrow-creation mode, ALL bubble outlines in the document are faintly
    drawn (not their tags), so that it's completely clear where a user wants
    to aim the mouse to hit a certain bubble.
- * Optional feature for later:  Add an optional that show-groupers (Ctrl+1)
+ * Optional feature for later:  Add an option that show-groupers (Ctrl+1)
    mode is automatically enabled when the user enters arrow-connection mode,
    and re-disabled (if it was disabled in the first place) when exiting
    arrow-connection mode.  This is like the previous feature, but more
@@ -88,7 +74,7 @@ but can be added by any LA.
    buttons hovering nearby.  If the user tapped what he/she expected to tap,
    then he/she hits OK and it creates the arrow.  Cancel (or just tapping
    elsewhere) closes the OK/cancel buttons and does nothing else.
- * Optional feature for later:  When in arrow-making mode, keystrokes are
+ * Optional feature for later:  When in arrow-creation mode, keystrokes are
    interpreted as typing bubble labels, which will scroll the view to the
    bubbles with those labels, and highlight them as if the user had
    mouse-hovered them.  If the user presses enter, the arrow will be

@@ -121,6 +121,8 @@ to do some initial setup.
                         break
             @contentsChanged yes, yes
 
+## Core group data
+
 This method returns the ID of the group, if it is available within the open
 grouper.
 
@@ -132,6 +134,8 @@ the type exists in the plugin stored in `@plugin`.
 
         typeName: => grouperInfo( @open )?.type
         type: => @plugin?.groupTypes?[@typeName()]
+
+## Group attributes
 
 We provide the following two simple methods for getting and setting
 arbitrary data within a group.  Clients should use these methods rather than
@@ -229,6 +233,8 @@ either the open or close grouper for this group.
                         grouper.setAttribute 'src', base64
                         @plugin?.editor.Overlay?.redrawContents()
 
+## Group contents
+
 We will need to be able to query the contents of a group, so that later
 computations on that group can use its contents to determine how to act.  We
 provide functions for fetching the contents of the group as plain text, as
@@ -273,6 +279,8 @@ function can only work if `@plugin` is a `Groups` class instance.
             if not inside = @innerRange() then return
             @plugin?.editor.selection.setRng inside
             @plugin?.editor.selection.setContent text
+
+## Group ranges
 
 Those functions rely on the `innerRange()` function, defined below, with a
 corresponding `outerRange` function for the sake of completeness.  We use a
@@ -341,6 +349,8 @@ Specifically,
                 range
             catch e then null
 
+## Group hierarchy
+
 The previous two functions require being able to query this group's index in
 its parent group, and to use that index to look up next and previous sibling
 groups.  We provide those functions here.
@@ -351,6 +361,8 @@ groups.  We provide those functions here.
             ( @parent?.children ? @plugin?.topLevel )?[@indexInParent()-1]
         nextSibling: =>
             ( @parent?.children ? @plugin?.topLevel )?[@indexInParent()+1]
+
+## Group change event
 
 The following function should be called whenever the contents of the group
 have changed.  It notifies the group's type, so that the requisite
@@ -368,6 +380,8 @@ constructor.
         contentsChanged: ( propagate = yes, firstTime = no ) =>
             @type()?.contentsChanged? this, firstTime
             if propagate then @parent?.contentsChanged yes
+
+## Group serialization
 
 The following serialization routine is useful for sending groups to a Web
 Worker for background processing.
@@ -388,6 +402,55 @@ Worker for background processing.
             parent : @parent?.id() ? null
             children : ( child?.id() ? null for child in @children ? [ ] )
             data : data
+
+## Group connections ("arrows")
+
+Groups can be connected in a graph.  The graph is directed, and there can be
+multiple arrows from one group to another.  Each arrow has an optional
+string attribute attached to it called its "tag," which defaults to the
+empty string. For multiple arrows between the same two groups, different
+tags are required.
+
+Connect group `A` to group `B` by calling `A.connect B`.  The optional
+second parameter is the tag string to attach.  It defaults to the empty
+string.  Calling this more than once with the same `A`, `B`, and tag has the
+same effect as calling it once.
+
+        connect: ( toGroup, tag = '' ) =>
+            connection = [ @id(), toGroup.id(), "#{tag}" ]
+            connstring = "#{connection}"
+            oldConnections = @get( 'connections' ) ? [ ]
+            mustAdd = yes
+            for oldConnection in oldConnections
+                if "#{oldConnection}" is connstring
+                    mustAdd = no
+                    break
+            if mustAdd
+                @set 'connections', [ oldConnections..., connection ]
+            oldConnections = toGroup.get( 'connections' ) ? [ ]
+            mustAdd = yes
+            for oldConnection in oldConnections
+                if "#{oldConnection}" is connstring
+                    mustAdd = no
+                    break
+            if mustAdd
+                toGroup.set 'connections', [ oldConnections..., connection ]
+
+The following function undoes the previous.  The third parameter can be
+either a string or a regular expression.  It defaults to the empty string.
+Calling `A.disconnect B, C` finds all connections from `A` to `B` satisfying
+a condition on `C`.  If `C` is a string, then the connection tag must equal
+`C`; if `C` is a regular expression, then the connection tag must match `C`.
+Connections not satisfying these criterion are not candidates for deletion.
+
+        disconnect: ( fromGroup, tag = '' ) =>
+            matches = ( array ) =>
+                array[0] is @id() and array[1] is fromGroup.id() and \
+                    ( tag is array[2] or tag.test? array[2] )
+            @set 'connections', ( c for c in @get( 'connections' ) ? [ ] \
+                when not matches c )
+            fromGroup.set 'connections', ( c for c in \
+                fromGroup.get( 'connections' ) ? [ ] when not matches c )
 
 The `Group` class should be accessible globally.
 
