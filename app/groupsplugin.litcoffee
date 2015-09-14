@@ -1157,8 +1157,11 @@ unstable/incorrect results.
             padStep = 2
             radius = 4
             tags = [ ]
-            innermost = yes
-            while group
+
+We define a group-drawing function that we will call on all groups from
+`group` on up the group hierarchy.
+
+            drawGroup = ( group, drawOutline, drawInterior ) =>
                 type = group.type()
                 color = type?.color ? '#444444'
 
@@ -1248,15 +1251,23 @@ A rounded rectangle from open's top left to close's bottom right, padded by
                         rightMar = parseInt bodyStyle['margin-right']
                     context.roundedZone x1, y1, x2, y2, open.bottom,
                         close.top, leftMar, rightMar, radius
-                context.globalAlpha = 1.0
-                context.lineWidth = 1.5
-                context.stroke()
-                if innermost
+                if drawOutline
+                    context.globalAlpha = 1.0
+                    context.lineWidth = 1.5
+                    context.stroke()
+                if drawInterior
                     context.globalAlpha = 0.3
                     context.fill()
-                    innermost = no
+
+That concludes te group-drawing function.  Let's now call it on all the
+groups in the hierarchy, from `group` on upwards.
+
+            innermost = yes
+            while group
+                drawGroup group, yes, innermost
                 group = group.parent
                 pad += padStep
+                innermost = no
 
 Now draw the tags on all the bubbles just drawn.  We proceed in reverse
 order, so that outer tags are drawn behind inner ones.  We also track the
@@ -1309,6 +1320,11 @@ loop.
                 context.drawHTML tag.content, tag.x1 + padStep, tag.y1,
                     tag.style
                 @bubbleTags.unshift tag
+
+Finally, if there is a group the mouse is hovering over, also draw its
+interior only, to show where the mouse is aiming.
+
+            if @groupUnderMouse then drawGroup @groupUnderMouse, no, yes
 
 # Installing the plugin
 
@@ -1429,3 +1445,28 @@ late to prevent the default handling of the event.
                     menu.moveTo x + pos.left, y + pos.top
                     event.preventDefault()
                     break
+
+The following functions install an event handler that highlights the
+innermost group under the mouse pointer at all times.
+
+        nodeUnderMouse = ( x, y ) ->
+            doc = tinymce.activeEditor.getDoc()
+            el = doc.elementFromPoint x, y
+            for i in [0...el.childNodes.length]
+                node = el.childNodes[i]
+                if node.nodeType is 3
+                    range = doc.createRange()
+                    range.selectNode node
+                    rects = range.getClientRects()
+                    rects = ( rects[i] for i in [0...rects.length] )
+                    for rect in rects
+                        if x > rect.left and x < rect.right and \
+                           y > rect.top and y < rect.bottom
+                            return node
+        editor.on 'mousemove', ( event ) ->
+            node = nodeUnderMouse event.clientX, event.clientY
+            tinymce.activeEditor.Groups.groupUnderMouse = if node
+                tinymce.activeEditor.Groups.groupAboveNode node
+            else
+                null
+            tinymce.activeEditor.Overlay?.redrawContents()

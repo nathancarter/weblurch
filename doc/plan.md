@@ -16,9 +16,6 @@ required order of completion.
 ## Arrows among groups
 
 Update the way groups are drawn as follows.
- * Draw a light background for the group over which the mouse pointer is
-   hovering, at all times, even when the cursor is not in it, and when its
-   bubble is not drawn.
  * Just as `drawGroups` respects `group.type.color` and
    `group.type.tagContents`, it should also respect
    `group.type.connections`, which will return an array of links (triples)
@@ -204,51 +201,58 @@ that into webLurch, imitating the UX Ken describes from typical online
 collaboration apps such as Google Docs and Overleaf, as follows.
  * Just a note that none of the changes below impact the wiki import and
    export functionality; that stays as it is now.
+ * Provide a section in the File > Application settings... dialog that will
+   be for Google Drive authentication, but you don't have to put the Google
+   login functionality there yet.  Include full explanatory text about how
+   cloud saving works with webLurch (as described below).
+ * File > Save and File > Save as... actions should be removed entirely.
  * Before adding Google Drive integration, change the items on the File menu
    to behave as follows.
-   * File > New not only does what it does now--creating a new document--
-     but it also gives it a default filename (such as `Untitled 1.lurch`)
-     and begins autosaving it to the browser's Local Storage very often
-     (every few seconds).
+   * Whenever the document is dirty, it has a warning message on the toolbar
+     that says something like "Not saved" followed by a button that says
+     "Enable cloud storage."
+   * The "Go online" button will open the document preferences dialog and
+     scroll down to/highlight the section about logging into Google Drive.
    * File > Document properties... will let you change the name of the
-     document (as long as you don't already have a document with that name)
-     and that will change the filename into which it's autosaved.
-   * File > Save and File > Save as... should therefore be removed.
-   * File > Open and File > Manage files... can be simplified to not permit
-     the creation of folders, so that all of a user's files are just in one
-     alphabetical list.
+     document which will simply be stored as document metadata; it will have
+     no impact on filename, since there is no filename (yet).
    * Corresponding changes take place in the toolbar.
    * Add File > Download, which starts a download of the file as HTML.
    * Add File > Upload, which lets the user choose an HTML file to upload,
      accepts the upload, strips any dangerous tags from it, then does the
      same thing as File > New, above, before pasting the HTML content
      directly into the new, blank document.
- * Provide a button in the File > Application settings... dialog that users
-   can push to initiate Google's authorization UI, thereby giving Lurch
-   access to their Google Drive.  When it has been used, replace it with a
-   button that de-authorizes webLurch from the user's Google Drive.
- * When a user gives such authorization, the following changes take place at
-   once, and persist for the remainder of their use of the webLurch app:
-   * All files formerly stored in the browser's Local Storage, if any, are
-     automatically imported into Google Drive, and the originals (in Local
-     Storage) discarded.  (Space in Local Storage is at a premium.)
-   * File > New creates a new realtime-shared file on Google Drive, which
-     automatically includes free and constant autosaving.  It will start out
-     with some stupid title like "Untitled Document" just as in Google Docs.
-     To change this title, use File > Document properties...
-   * File > Save and File > Save as... are still gone, as above.
-   * File > Open looks in your Google Drive for files to open.
+ * Add to the application settings section about Google Drive the actual
+   login/auth button.  Once a user has logged in, the button becomes a
+   disconnect-from-my-Drive button (de-auth).  See the tutorial on how to
+   do so [here](
+   https://developers.google.com/google-apps/realtime/realtime-quickstart),
+   and especially the JavaScript tools they've developed for your use
+   [here](https://github.com/googledrive/realtime-utils/blob/master/realtime-client-utils.js).
+ * When a user gives such authorization, the following changes take place:
+   * The currently-open file in the app should then be moved into Google
+     Drive as a new document.  Attempt to preserve document title, if one
+     was set in document properties.  If Drive requires unique titles, you
+     may need to append a number.
+   * Change File > New so that it does this same procedure of moving the
+     (newly created) document into Drive, with a default title such as
+     "Untitled Document."
+   * The toolbar will no longer say "Not saved," but will say either
+     "Saved to Drive" or "Syncing..." (if in progress).
+   * File > Open looks in your Google Drive for Lurch files to open, and
+     presents you a flat list.  If possible, sort it by most recently used.
    * File > Manage files... gets replaced by File > Open my Google Drive.
-     That is another way to rename any newly-created file.
-   * Corresponding changes take place in the toolbar.
- * If a user de-authorizes webLurch from their Google Drive, change the app
-   as follows:
-   * All entries on the File menu revert to their original behavior.
-   * Give the user the option to import back into their browser's Local
-     Storage all `.lurch` files currently sitting in their Google Drive,
-     before the de-authorization completes.  The files will *not* also be
-     deleted from the Google Drive, but the user can do so manually if they
-     choose to.
+     All file management will take place through Google's UI, not mine.
+ * If a user de-authorizes webLurch from their Google Drive, then all
+   entries on the File menu should revert to their original behavior.
+ * Get this to work across multiple instances of the Lurch app in different
+   tabs as follows.
+   * Store in Local Storage the fact that the user has given a Drive login
+     and succeeded, when that login takes place.
+   * Have the app poll that setting every second or two, and if it sees that
+     it has changed from no to yes (due to the user's logging into Drive in
+     another tab of the app), then re-run the silent Google login attempt
+     routine to complete the login in that tab as well.  (I think?)
 
 Tutorials
 
