@@ -461,10 +461,80 @@ that appear in the group's connections set and have the group as the source
 
         connectionsOut: =>
             id = @id()
-            ( c for c in @get 'connections' when c[0] is id )
+            ( c for c in ( @get 'connections' ) ? [ ] when c[0] is id )
         connectionsIn: =>
             id = @id()
-            ( c for c in @get 'connections' when c[1] is id )
+            ( c for c in ( @get 'connections' ) ? [ ] when c[1] is id )
+
+## Group screen coordinates
+
+The following function gives the sizes and positions of the open and close
+groupers.  Because the elements between them may be taller (or sink lower)
+than the groupers themselves, we also inspect the client rectangles of all
+elements in the group, and adjust the relevant corners of the open and close
+groupers outward to make sure the bubble encloses the entire contents of the
+group.
+
+        getScreenBoundaries: =>
+
+The first few lines here redundantly add rects for the open and close
+groupers because there seems to be a bug in `getClientRects()` for a range
+that doesn't always include the close grouper.  If for some reason there are
+no rectangles, we cannot return a value.  This would be a very erroneous
+situation, but is here as paranoia.
+
+            toArray = ( a ) ->
+                if a? then ( a[i] for i in [0...a.length] ) else [ ]
+            rects = toArray @open.getClientRects()
+            .concat toArray @outerRange()?.getClientRects()
+            .concat toArray @close.getClientRects()
+            if rects.length is 0 then return null
+
+Initialize the rectangle data for the open and close groupers.
+
+            open = rects[0]
+            open =
+                top : open.top
+                left : open.left
+                right : open.right
+                bottom : open.bottom
+            close = rects[rects.length-1]
+            close =
+                top : close.top
+                left : close.left
+                right : close.right
+                bottom : close.bottom
+
+Compute whether the open and close groupers are in the same line of text.
+This is done by examining whether they extend too far left/right/up/down
+compared to one another.  If they are on the same line, then force their top
+and bottom coordinates to match, to make it clear (to the caller) that this
+represents a rectangle, not a "zone."
+
+            onSameLine = yes
+            for rect, index in rects
+                open.top = Math.min open.top, rect.top
+                close.bottom = Math.max close.bottom, rect.bottom
+                if rect.left < open.left then onSameLine = no
+                if rect.top > open.bottom then onSameLine = no
+            if onSameLine
+                close.top = open.top
+                open.bottom = close.bottom
+
+If either the open or close grouper has zero size, then an image file (for
+an open/close grouper) isn't yet loaded.  Thus we need to return null, to
+tell the caller that the results couldn't be computed.  The caller should
+probably just set up a brief timer to recall this function again soon, when
+the browser has completed the image loading.
+
+            if ( open.top is open.bottom or close.top is close.bottom or \
+                 open.left is open.right or close.left is close.right ) \
+               and not ( $ @open ).hasClass 'hide' then return null
+
+Otherwise, return the results as an object.
+
+            open : open
+            close : close
 
 The `Group` class should be accessible globally.
 
@@ -620,6 +690,9 @@ routine needs, and they will be passed along directly.
                     if data.icon? then 'icon' else 'text'
                 buttonData[key] = data[key]
                 @editor.addButton name, buttonData
+            data.connections ?= ( group ) ->
+                triples = group.connectionsOut()
+                [ triples..., ( t[1] for t in triples )... ]
 
 The above function calls `updateButtonsAndMenuItems()` whenever a new button
 or menu item is first drawn.  That function is also called whenever the
@@ -1161,71 +1234,30 @@ unstable/incorrect results.
 We define a group-drawing function that we will call on all groups from
 `group` on up the group hierarchy.
 
-            drawGroup = ( group, drawOutline, drawInterior ) =>
+            drawGroup = ( group, drawOutline, drawInterior, withTag ) =>
                 type = group.type()
                 color = type?.color ? '#444444'
 
-Compute the sizes and positions of the open and close groupers.  Because the
-elements between them may be taller (or sink lower) than the groupers
-themselves, we also inspect the client rectangles of all elements in the
-group, and adjust the relevant corners of the open and close groupers
-outward to make sure the bubble encloses the entire contents of the group.
+Compute the group's boundaries, and if that's not possible, quit this whole
+routine right now.
 
-The first few lines here redundantly add rects for the open and close
-groupers because there seems to be a bug in `getClientRects()` for a range
-that doesn't always include the close grouper.
-
-                toArray = ( a ) ->
-                    if a? then ( a[i] for i in [0...a.length] ) else [ ]
-                rects = toArray group.open.getClientRects()
-                .concat toArray group.outerRange()?.getClientRects()
-                .concat toArray group.close.getClientRects()
-                if rects.length is 0
+                if not boundaries = group.getScreenBoundaries()
                     setTimeout ( => @editor.Overlay?.redrawContents() ), 100
-                    return
-                open = rects[0]
-                open =
-                    top : open.top
-                    left : open.left
-                    right : open.right
-                    bottom : open.bottom
-                close = rects[rects.length-1]
-                close =
-                    top : close.top
-                    left : close.left
-                    right : close.right
-                    bottom : close.bottom
-                onSameLine = yes
-                for rect, index in rects
-                    open.top = Math.min open.top, rect.top
-                    close.bottom = Math.max close.bottom, rect.bottom
-                    if rect.left < open.left then onSameLine = no
-                    if rect.top > open.bottom then onSameLine = no
-                if onSameLine
-                    close.top = open.top
-                    open.bottom = close.bottom
+                    return null
+                { open, close } = boundaries
 
-If any of them has zero size, then that means that an image file (for an
-open/close grouper) isn't yet loaded.  Thus we need to stop here and queue
-up a later call to this same drawing routine, at which time the image file
-may be loaded.
-
-                if ( open.top is open.bottom or \
-                     close.top is close.bottom or \
-                     open.left is open.right or \
-                     close.left is close.right ) and \
-                   not ( $ group.open ).hasClass 'hide'
-                    setTimeout ( => @editor.Overlay?.redrawContents() ), 100
-                    return
-
-Compute the group's tag contents, if any, and store where and how to draw
-them.
+Pad by `pad/3` in the x direction, `pad` in the y direction, and with corner
+radius `radius`.
 
                 x1 = open.left - pad/3
                 y1 = open.top - pad
                 x2 = close.right + pad/3
                 y2 = close.bottom + pad
-                if tagString = type?.tagContents? group
+
+Compute the group's tag contents, if any, and store where and how to draw
+them.
+
+                if withTag and tagString = type?.tagContents? group
                     tags.push
                         content : tagString
                         corner : { x : x1, y : y1 }
@@ -1233,16 +1265,11 @@ them.
                         style : createFontStyleString group.open
                         group : group
 
-Draw this group and then move one step up the group hierarchy, ready to draw
-the next one on the next pass through the loop.
+Draw this group, either a rounded rectangle or a "zone," which is a
+rounded rectangle that experienced something like word wrapping.
 
                 context.fillStyle = context.strokeStyle = color
                 if open.top is close.top and open.bottom is close.bottom
-
-A rounded rectangle from open's top left to close's bottom right, padded by
-`pad/3` in the x direction, `pad` in the y direction, and with corner radius
-`radius`.
-
                     context.roundedRect x1, y1, x2, y2, radius
                 else
                     if not bodyStyle?
@@ -1258,14 +1285,16 @@ A rounded rectangle from open's top left to close's bottom right, padded by
                 if drawInterior
                     context.globalAlpha = 0.3
                     context.fill()
+                yes # success
 
 That concludes te group-drawing function.  Let's now call it on all the
 groups in the hierarchy, from `group` on upwards.
 
             innermost = yes
-            while group
-                drawGroup group, yes, innermost
-                group = group.parent
+            walk = group
+            while walk
+                if not drawGroup walk, yes, innermost, yes then return
+                walk = walk.parent
                 pad += padStep
                 innermost = no
 
@@ -1321,10 +1350,50 @@ loop.
                     tag.style
                 @bubbleTags.unshift tag
 
-Finally, if there is a group the mouse is hovering over, also draw its
-interior only, to show where the mouse is aiming.
+If there is a group the mouse is hovering over, also draw its interior only,
+to show where the mouse is aiming.
 
-            if @groupUnderMouse then drawGroup @groupUnderMouse, no, yes
+            pad = 3
+            if @groupUnderMouse
+                if not drawGroup @groupUnderMouse, no, yes, no then return
+
+If this group has connections to any other groups, draw them now.
+
+First, define a function that draws an arrow from one group to another.
+The label is the optional string tag on the connection, and the index is an
+index into the list of connections that are to be drawn.
+
+THIS IS A FIRST, RUDIMENTARY IMPLEMENTATION.  FUTURE IMPLEMENTATIONS WILL BE
+MUCH MORE SMOOTH/CLEAR/HELPFUL.
+
+            drawArrow = ( index, from, to, label ) =>
+                context.strokeStyle = from.type()?.color or '#444444'
+                context.globalAlpha = 1.0
+                context.lineWidth = 2
+                fromBox = from.getScreenBoundaries()
+                toBox = to.getScreenBoundaries()
+                if not fromBox or not toBox then return
+                startX = ( fromBox.open.left + fromBox.open.right ) / 2
+                startY = ( fromBox.open.top + fromBox.open.bottom ) / 2
+                endX = ( toBox.open.left + toBox.open.right ) / 2
+                endY = ( toBox.open.top + toBox.open.bottom ) / 2
+                context.beginPath()
+                context.moveTo startX, startY
+                context.lineTo endX, endY
+                context.stroke()
+
+Second, draw all connections from the innermost group containing the cursor,
+if there are any.
+
+            if group
+                connections = group.type().connections? group
+                for index, connection in connections ? [ ]
+                    if connection instanceof Array
+                        drawArrow index, @[connection[0]], @[connection[1]],
+                            connection[2]
+                    else
+                        if not drawGroup @[connection], yes, no, no
+                            return
 
 # Installing the plugin
 
@@ -1449,8 +1518,7 @@ late to prevent the default handling of the event.
 The following functions install an event handler that highlights the
 innermost group under the mouse pointer at all times.
 
-        nodeUnderMouse = ( x, y ) ->
-            doc = tinymce.activeEditor.getDoc()
+        nodeUnderMouse = ( doc, x, y ) ->
             el = doc.elementFromPoint x, y
             for i in [0...el.childNodes.length]
                 node = el.childNodes[i]
@@ -1464,9 +1532,10 @@ innermost group under the mouse pointer at all times.
                            y > rect.top and y < rect.bottom
                             return node
         editor.on 'mousemove', ( event ) ->
-            node = nodeUnderMouse event.clientX, event.clientY
-            tinymce.activeEditor.Groups.groupUnderMouse = if node
-                tinymce.activeEditor.Groups.groupAboveNode node
+            node = nodeUnderMouse editor.getDoc(),
+                event.clientX, event.clientY
+            editor.Groups.groupUnderMouse = if node
+                editor.Groups.groupAboveNode node
             else
                 null
-            tinymce.activeEditor.Overlay?.redrawContents()
+            editor.Overlay?.redrawContents()
