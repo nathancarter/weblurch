@@ -1225,7 +1225,7 @@ unstable/incorrect results.
 
             if @scanLocks > 0 then return
             group = @groupAboveSelection @editor.selection.getRng()
-            bodyStyle = null
+            leftMar = rightMar = null
             pad = 3
             padStep = 2
             radius = 4
@@ -1272,7 +1272,7 @@ rounded rectangle that experienced something like word wrapping.
                 if open.top is close.top and open.bottom is close.bottom
                     context.roundedRect x1, y1, x2, y2, radius
                 else
-                    if not bodyStyle?
+                    if not leftMar?
                         bodyStyle = getComputedStyle @editor.getBody()
                         leftMar = parseInt bodyStyle['margin-left']
                         rightMar = parseInt bodyStyle['margin-right']
@@ -1387,7 +1387,7 @@ if there are any.
 
             if group
                 connections = group.type().connections? group
-                for index, connection in connections ? [ ]
+                for connection, index in connections ? [ ]
                     if connection instanceof Array
                         drawArrow index, @[connection[0]], @[connection[1]],
                             connection[2]
