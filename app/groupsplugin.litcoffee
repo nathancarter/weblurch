@@ -1377,9 +1377,9 @@ MUCH MORE SMOOTH/CLEAR/HELPFUL.
                 startY = ( fromBox.open.top + fromBox.open.bottom ) / 2
                 endX = ( toBox.open.left + toBox.open.right ) / 2
                 endY = ( toBox.open.top + toBox.open.bottom ) / 2
-                context.beginPath()
-                context.moveTo startX, startY
-                context.lineTo endX, endY
+                partWay = ( startY + endY ) / 2
+                context.bezierArrow startX, startY, startX, partWay,
+                    endX, partWay, endX, endY
                 context.stroke()
 
 Second, draw all connections from the innermost group containing the cursor,

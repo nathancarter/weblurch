@@ -4,6 +4,36 @@
 This module defines several functions useful when working with the HTML5
 Canvas.
 
+## Curved arrows
+
+The following function draws an arrow along a cubic Bézier curve.  It
+requires the four control points, each as an (x,y) pair.  The arrowhead
+size can be adjusted with the final parameter, the altitude of the arrowhead
+triangle, measured in pixels
+
+    CanvasRenderingContext2D::bezierArrow =
+    ( x1, y1, x2, y2, x3, y3, x4, y4, size = 10 ) ->
+        curve = ( C1, C2, C3, C4, t ) ->
+            Math.pow( 1-t, 3 )*C1 + Math.pow( 1-t, 2 )*t*C2 + \
+            ( 1-t )*Math.pow( t, 2 )*C2 + Math.pow( t, 3 )*C4
+        unit = ( x, y ) ->
+            length = Math.sqrt( x*x + y*y ) or 1
+            x : x/length, y : y/length
+        @beginPath()
+        @moveTo x1, y1
+        @bezierCurveTo x2, y2, x3, y3, x4, y4
+        nearEnd =
+            x : curve x1, x2, x3, x4, 0.95
+            y : curve y1, y2, y3, y4, 0.95
+        nearEndVector = x : x4 - nearEnd.x, y : y4 - nearEnd.y
+        localY = unit nearEndVector.x, nearEndVector.y
+        localY.x *= size
+        localY.y *= size
+        localX = x : localY.y, y : -localY.x
+        @moveTo x4-localX.x-localY.x, y4-localX.y-localY.y
+        @lineTo x4, y4
+        @lineTo x4+localX.x+localY.x, y4-localX.y-localY.y
+
 ## Rounded rectangles
 
 The following function traces a rounded rectangle path in the context.  It
