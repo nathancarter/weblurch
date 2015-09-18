@@ -14,8 +14,8 @@ triangle, measured in pixels
     CanvasRenderingContext2D::bezierArrow =
     ( x1, y1, x2, y2, x3, y3, x4, y4, size = 10 ) ->
         curve = ( C1, C2, C3, C4, t ) ->
-            Math.pow( 1-t, 3 )*C1 + Math.pow( 1-t, 2 )*t*C2 + \
-            ( 1-t )*Math.pow( t, 2 )*C2 + Math.pow( t, 3 )*C4
+            Math.pow( 1-t, 3 )*C1 + 3*Math.pow( 1-t, 2 )*t*C2 + \
+            3*( 1-t )*Math.pow( t, 2 )*C3 + Math.pow( t, 3 )*C4
         unit = ( x, y ) ->
             length = Math.sqrt( x*x + y*y ) or 1
             x : x/length, y : y/length
