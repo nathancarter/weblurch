@@ -1344,8 +1344,10 @@ loop.
                 context.fill()
                 context.fillStyle = '#000000'
                 context.globalAlpha = 1.0
-                context.drawHTML tag.content, tag.x1 + padStep, tag.y1,
-                    tag.style
+                if not context.drawHTML tag.content, tag.x1 + padStep, \
+                        tag.y1, tag.style
+                    setTimeout ( => @editor.Overlay?.redrawContents() ), 10
+                    return
                 @bubbleTags.unshift tag
 
 If there is a group the mouse is hovering over, also draw its interior only,
@@ -1360,9 +1362,6 @@ If this group has connections to any other groups, draw them now.
 First, define a few functions that draw an arrow from one group to another.
 The label is the optional string tag on the connection, and the index is an
 index into the list of connections that are to be drawn.
-
-THIS IS A FIRST, RUDIMENTARY IMPLEMENTATION.  FUTURE IMPLEMENTATIONS WILL BE
-MUCH MORE SMOOTH/CLEAR/HELPFUL.
 
             topEdge = ( open, close ) =>
                 left :
@@ -1432,6 +1431,33 @@ MUCH MORE SMOOTH/CLEAR/HELPFUL.
                     startX, startY + how.startDir * gap,
                     endX, endY - how.endDir * gap, endX, endY
                 context.stroke()
+                if label isnt ''
+                    centerX = context.applyBezier startX, startX, endX,
+                        endX, 0.5
+                    centerY = context.applyBezier startY,
+                        startY + how.startDir * gap,
+                        endY - how.endDir * gap, endY, 0.5
+                    style = createFontStyleString group.open
+                    if not size = context.measureHTML label, style
+                        setTimeout ( => @editor.Overlay?.redrawContents() ),
+                            10
+                        return
+                    context.roundedRect \
+                        centerX - size.width / 2 - padStep,
+                        centerY - size.height / 2 - padStep,
+                        centerX + size.width / 2 + padStep,
+                        centerY + size.width / 2, radius
+                    context.globalAlpha = 1.0
+                    context.fillStyle = '#ffffff'
+                    context.fill()
+                    context.lineWidth = 1.5
+                    context.strokeStyle = group.type()?.color ? '#444444'
+                    context.stroke()
+                    context.fillStyle = '#000000'
+                    context.globalAlpha = 1.0
+                    context.drawHTML label,
+                        centerX - size.width / 2 + padStep,
+                        centerY - size.height / 2, style
 
 Second, draw all connections from the innermost group containing the cursor,
 if there are any.

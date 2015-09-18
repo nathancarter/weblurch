@@ -15,12 +15,6 @@ required order of completion.
 
 ## Arrows among groups
 
-Update the way groups are drawn as follows.
- * Complete the implementation of `group.type.connections` by adding labels
-   to the arrows by using the tags.  Note that `group.type.connections` is
-   free to translate the tags as part of its computation, so that their
-   internal and external representations need not be the same.
-
 Create a nice UI for introducing arrows.  It will not be enabled by default,
 but can be added by any LA.
  * Provide a function that installs the arrow-creating UI.  This can begin
