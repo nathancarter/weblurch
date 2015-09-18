@@ -608,6 +608,10 @@ into the list of free ids.
                 @freeIds.push id
                 @freeIds.sort ( a, b ) -> a - b
 
+We can also check to see if an id is free.
+
+        isIdFree: ( id ) => id in @freeIds or id > @freeIds[@freeIds.length]
+
 When a free id becomes used in some way other than through a call to
 `nextFreeId`, we will want to be able to record that fact.  The following
 function does so.
@@ -847,12 +851,21 @@ new scan start *after* this one completes, not during.
             if isScanning then return setTimeout ( => @scanDocument ), 0
             isScanning = yes
 
+Group ids should be unique, so if we encounter the same one twice, we have a
+problem.  Thus we now mark all old groups as "old," so that we can tell when
+the first time we re-register them is, and avoid re-regestering the same
+group (with the same id) a second time.
+
+            for id in @ids()
+                if @[id]? then @[id].old = yes
+
 Initialize local variables:
 
             groupers = Array::slice.apply @allGroupers()
             gpStack = [ ]
             usedIds = [ ]
             @topLevel = [ ]
+            @idConversionMap = { }
             before = @freeIds[..]
             index = ( id ) ->
                 for gp, i in gpStack
@@ -897,9 +910,9 @@ the stack, because we've moved past the interior of that group.
 Furthermore, register the group and its ID in this Groups object.
 
                         groupData = gpStack.shift()
-                        usedIds.push info.id
-                        @registerGroup groupData.grouper, grouper
-                        newGroup = @[info.id]
+                        id = @registerGroup groupData.grouper, grouper
+                        usedIds.push id
+                        newGroup = @[id]
 
 Assign parent and child relationships, and store this just-created group on
 either the list of children for the next parent outwards in the hierarchy,
@@ -954,6 +967,28 @@ because it is no longer in the document anyway.
                 delete @[id]
             group?.type()?.deleted? group for group in deleted
 
+If any groups were just introduced to this document by pasting, we need to
+process their connections, because the groups themselves may have had to be
+given new ids (to preserve uniqueness within this document) and thus the ids
+in any of their connections need to be updated to stay internally consistent
+within the pasted content.
+
+            justPasted =
+                @editor.getDoc().getElementsByClassName 'justPasted'
+            justPasted = ( justPasted[i] for i in [0...justPasted.length] )
+            for grouper in justPasted
+                if /^close/.test grouper.getAttribute 'id' then continue
+                group = @grouperToGroup grouper
+                connections = group.get 'connections'
+                if not connections then continue
+                for connection in connections
+                    if @idConversionMap.hasOwnProperty connection[0]
+                        connection[0] = @idConversionMap[connection[0]]
+                    if @idConversionMap.hasOwnProperty connection[1]
+                        connection[1] = @idConversionMap[connection[1]]
+                group.set 'connections', connections
+            ( $ justPasted ).removeClass 'justPasted'
+
 Invalidate the `ids()` cache ([defined below](
 #querying-the-group-hierarchy)) so that the next time that function is run,
 it recomputes its results from the newly-generated hierarchy in `topLevel`.
@@ -974,12 +1009,27 @@ the enabled/disabled state of group-insertion buttons and menu items.
 
 The above function needs to create instances of the `Group` class, and
 associate them with their IDs.  The following function does so, re-using
-copies from the cache when possible.
+copies from the cache when possible.  When it encounters a duplicate id, it
+renames it to the first unused number in the document.  Note that we cannot
+use `@freeIds` here, because it is being updated by `@scanDocument()`, so we
+must use the more expensive version of actually querying the elements that
+exist in the document itself via `getElementById()`.
 
         registerGroup: ( open, close ) =>
             cached = @[id = grouperInfo( open ).id]
             if cached?.open isnt open or cached?.close isnt close
+                if @[id]? and not @[id].old
+                    newId = 0
+                    doc = @editor.getDoc()
+                    while doc.getElementById "open#{newId}" or \
+                          doc.getElementById "close#{newId}" then newId++
+                    open.setAttribute 'id', "open#{newId}"
+                    close.setAttribute 'id', "close#{newId}"
+                    @idConversionMap[id] = newId
+                    id = newId
                 @[id] = new Group open, close, this
+            else
+                delete @[id].old
             id
 
 ## Querying the group hierarchy
@@ -1515,6 +1565,23 @@ which the document was modified.
                 return
             editor.Groups.scanDocument()
             editor.Groups.rangeChanged editor.selection.getRng()
+
+Copying and pasting content that contains groups can be very problematic,
+because each group is supposed to have a unique ID.  If we permit direct
+copying and pasting of content, it will duplicate the same group (with its
+ID intact) throughout the document.  Thus we must process the content we've
+pasted immediately after a paste, and possibly renumber any group IDs in
+that content.  This is done in `@scanDocument()`, but it needs to know which
+content was just pasted; we mark such content here.
+
+        editor.on 'PastePostProcess', ( event ) ->
+            recur = ( node, address ) ->
+                id = node?.getAttribute? 'id'
+                if match = /^(open|close)(\d+)$/.exec id
+                    ( $ node ).addClass 'justPasted'
+                for index in [0...node?.childNodes?.length ? 0]
+                    recur node.childNodes[index], "#{address}.#{index}"
+            recur event.node, ''
 
 Whenever the cursor moves, we should update whether the group-insertion
 buttons and menu items are enabled.
