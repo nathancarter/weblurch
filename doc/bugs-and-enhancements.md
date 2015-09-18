@@ -9,6 +9,13 @@ the main project plan without these bug fixes or enhancements.
 
 ## Bug fixes
 
+Copy and paste
+
+ * Significant bug:  If you copy and paste a section of the document, while
+   it pastes perfectly, it pastes too perfectly.  Groups paste with their
+   IDs intact, while they should be pasting with newly-generated IDs
+   instead.
+
 Load and save
 
  * Not all edits cause the document to be marked dirty.  TinyMCE events are
