@@ -45,7 +45,7 @@ iframe's document.
 
 ## Change members in Group class
 
-    phantomDescribe 'Change members in Group class', './app/index.html', ->
+    phantomDescribe 'Change members in Group class', './app/app.html', ->
         beforeEach -> pageDo setup
 
 ### should call contentsChanged() upon construction
@@ -173,7 +173,7 @@ causes a change call in the outer group.
 
 ## Change support in Groups plugin
 
-    phantomDescribe 'Change support in Groups plugin', './app/index.html',
+    phantomDescribe 'Change support in Groups plugin', './app/app.html',
     ->
         beforeEach -> pageDo setup
 

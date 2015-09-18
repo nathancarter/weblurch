@@ -79,16 +79,18 @@ exporting to it as well.  This is still in development.
                 page = window.location.href.split( '?' )[0]
                 url = page + '?document=' + \
                     encodeURIComponent tinymce.activeEditor.getContent()
-                request = gapi.client.urlshortener.url.insert \
-                    resource : longUrl : url
-                request.execute ( response ) ->
-                    if response.id?
-                        url = response.id
-                    else
-                        console.log 'Error creating short URL', response
+                showURL = ( url ) ->
                     prompt 'Copy the following URL to your clipboard, and
                         paste it wherever you like, such as an email
                         message.', url
+                request = gapi?.client?.urlshortener?.url?.insert? \
+                    resource : longUrl : url
+                if not request? then return showURL url
+                request.execute ( response ) ->
+                    if response.id?
+                        showURL response.id
+                    else
+                        console.log 'Error creating short URL', response
         wikiimport :
             text : 'Import from wiki...'
             context : 'file'
@@ -195,8 +197,8 @@ exporting to it as well.  This is still in development.
 Set up Google API key for URL shortening.
 
     window.addEventListener 'load', ->
-        gapi.client.setApiKey 'AIzaSyAf7F0I39DdI2jtD7zrPUa4eQvUXZ-K6W8'
-        gapi.client.load 'urlshortener', 'v1', ->
+        gapi?.client?.setApiKey 'AIzaSyAf7F0I39DdI2jtD7zrPUa4eQvUXZ-K6W8'
+        gapi?.client?.load 'urlshortener', 'v1', ->
     , no
 
 Lastly, a few actions to take after the editor has been initialized.

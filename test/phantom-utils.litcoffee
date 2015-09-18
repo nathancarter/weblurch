@@ -205,7 +205,7 @@ for `check` enables the idiom `pageExpects -> expression` as a shortcut for
             else
                 result = [ 'value', result ]
             result
-        , ( err, result ) ->
+        , "(#{func.toString()})()", ( err, result ) ->
             expect( err ).toBeNull()
             if result?[0] is 'null'
                 result = null
@@ -222,7 +222,6 @@ for `check` enables the idiom `pageExpects -> expression` as a shortcut for
             else
                 expect( undefined )[check](args...)
             nextJob()
-        , "(#{func.toString()})()"
     exports.pageExpects = ( func, check = 'toBeTruthy', args... ) ->
         addJob pageExpects, func, check, args...
 
@@ -244,7 +243,7 @@ repeatedly until the time limit is exceeded (2 seconds by default).
     pageWaitFor = ( func, waitUntil ) ->
         P.page.evaluate ( evaluateThis ) ->
             not not eval evaluateThis
-        , ( err, result ) ->
+        , "(#{func.toString()})()", ( err, result ) ->
             expect( err ).toBeNull()
             if not result
                 if new Date < waitUntil
@@ -252,7 +251,6 @@ repeatedly until the time limit is exceeded (2 seconds by default).
                 else
                     expect( 'Waiting time expired' ).toBeFalsy() # fail
             nextJob()
-        , "(#{func.toString()})()"
     exports.pageWaitFor = ( func, maximumWaitTime = 2000 ) ->
         addJob pageWaitFor, func, ( new Date ).getTime() + maximumWaitTime
 
@@ -263,12 +261,11 @@ exists) if and only if they're provided.
     pageExpectsError = ( func, check, args... ) ->
         P.page.evaluate ( evaluateThis ) ->
             try eval evaluateThis ; null catch e then e
-        , ( err, result ) ->
+        , "(#{func.toString()})()", ( err, result ) ->
             expect( err ).toBeNull()
             expect( result ).not.toBeNull()
             if check then expect( result.message )[check](args...)
             nextJob()
-        , "(#{func.toString()})()"
     exports.pageExpectsError = ( func, check, args... ) ->
         addJob pageExpectsError, func, check, args...
 
@@ -284,10 +281,9 @@ require any tests to be called on it, but still needs to run without errors,
 then the following may be useful.
 
     pageDo = ( func, args... ) ->
-        P.page.evaluate func, ( err, result ) ->
+        P.page.evaluate func, args..., ( err, result ) ->
             expect( err ).toBeNull()
             nextJob()
-        , args...
     exports.pageDo = ( func, args... ) -> addJob pageDo, func, args...
 
 One can then do the following.

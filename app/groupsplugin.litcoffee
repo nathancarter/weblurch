@@ -749,7 +749,7 @@ placeholder after the old selection.
 If the whole selection is within one element, then we can just replace the
 selection's content with wrapped content, plus a cursor placeholder that we
 immediately remove after placing the cursor back there.  We also keep track
-of the close grouper element so that we can place the cursor immediatel to
+of the close grouper element so that we can place the cursor immediately to
 its left after removing the cursor placeholder (or else the cursor may leap
 to the start of the document).
 
@@ -758,6 +758,7 @@ to the start of the document).
                 cursor = @editor.selection.getRng()
                 close = cursor.endContainer.childNodes[cursor.endOffset] ?
                     cursor.endContainer.nextSibling
+                if close.tagName is 'P' then close = close.childNodes[0]
                 newGroup = @grouperToGroup close
                 newGroup.parent?.contentsChanged()
             else
