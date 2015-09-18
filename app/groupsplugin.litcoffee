@@ -927,11 +927,10 @@ Now update the `@freeIds` list to be the complement of the `usedIds` array.
             @freeIds = [ ]
             while usedIds.length > 0
                 if count is usedIds[0]
-                    usedIds.shift()
+                    while count is usedIds[0] then usedIds.shift()
                 else
                     @freeIds.push count
                 count++
-                if count > 20 then break
             @freeIds.push count
 
 And any ID that is free now but wasn't before must have its group deleted
