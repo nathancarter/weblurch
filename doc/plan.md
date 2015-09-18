@@ -16,20 +16,6 @@ required order of completion.
 ## Arrows among groups
 
 Update the way groups are drawn as follows.
- * Just as `drawGroups` respects `group.type.color` and
-   `group.type.tagContents`, it should also respect
-   `group.type.connections`, which will return an array of links (triples)
-   and other groups (Group instances) to be drawn whenever this group is the
-   innermost one containing the cursor.  At first, just call this function
-   and dump its results to the console.  Provide a default implementation
-   that returns `group.connectedTo()` plus all the targets of those links.
-   (The real Lurch LA may provide a way to toggle between this and its dual,
-   to see how the current statement sits in the logical flow before and
-   after it in a proof.)
- * Implement half of the support for `group.type.connections` by drawing the
-   outlines of all groups on the resulting list.
- * Implement the next quarter of the support for `group.type.connections` by
-   drawing arrows from the source group to the target groups.
  * Complete the implementation of `group.type.connections` by adding labels
    to the arrows by using the tags.  Note that `group.type.connections` is
    free to translate the tags as part of its computation, so that their

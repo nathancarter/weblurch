@@ -23,16 +23,16 @@ triangle, measured in pixels
         @moveTo x1, y1
         @bezierCurveTo x2, y2, x3, y3, x4, y4
         nearEnd =
-            x : curve x1, x2, x3, x4, 0.95
-            y : curve y1, y2, y3, y4, 0.95
+            x : curve x1, x2, x3, x4, 0.9
+            y : curve y1, y2, y3, y4, 0.9
         nearEndVector = x : x4 - nearEnd.x, y : y4 - nearEnd.y
         localY = unit nearEndVector.x, nearEndVector.y
-        localY.x *= size
+        localY.x *= size * 0.7
         localY.y *= size
         localX = x : localY.y, y : -localY.x
         @moveTo x4-localX.x-localY.x, y4-localX.y-localY.y
         @lineTo x4, y4
-        @lineTo x4+localX.x+localY.x, y4-localX.y-localY.y
+        @lineTo x4+localX.x-localY.x, y4+localX.y-localY.y
 
 ## Rounded rectangles
 

@@ -1225,7 +1225,9 @@ unstable/incorrect results.
 
             if @scanLocks > 0 then return
             group = @groupAboveSelection @editor.selection.getRng()
-            leftMar = rightMar = null
+            bodyStyle = getComputedStyle @editor.getBody()
+            leftMar = parseInt bodyStyle['margin-left']
+            rightMar = parseInt bodyStyle['margin-right']
             pad = 3
             padStep = 2
             radius = 4
@@ -1272,10 +1274,6 @@ rounded rectangle that experienced something like word wrapping.
                 if open.top is close.top and open.bottom is close.bottom
                     context.roundedRect x1, y1, x2, y2, radius
                 else
-                    if not leftMar?
-                        bodyStyle = getComputedStyle @editor.getBody()
-                        leftMar = parseInt bodyStyle['margin-left']
-                        rightMar = parseInt bodyStyle['margin-right']
                     context.roundedZone x1, y1, x2, y2, open.bottom,
                         close.top, leftMar, rightMar, radius
                 if drawOutline
@@ -1359,27 +1357,80 @@ to show where the mouse is aiming.
 
 If this group has connections to any other groups, draw them now.
 
-First, define a function that draws an arrow from one group to another.
+First, define a few functions that draw an arrow from one group to another.
 The label is the optional string tag on the connection, and the index is an
 index into the list of connections that are to be drawn.
 
 THIS IS A FIRST, RUDIMENTARY IMPLEMENTATION.  FUTURE IMPLEMENTATIONS WILL BE
 MUCH MORE SMOOTH/CLEAR/HELPFUL.
 
-            drawArrow = ( index, from, to, label ) =>
+            topEdge = ( open, close ) =>
+                left :
+                    x : open.left
+                    y : open.top
+                right :
+                    x : if open.top is close.top and \
+                           open.bottom is close.bottom
+                        close.right
+                    else
+                        canvas.width - rightMar
+                    y : open.top
+            bottomEdge = ( open, close ) =>
+                left :
+                    x : if open.top is close.top and \
+                           open.bottom is close.bottom
+                        open.left
+                    else
+                        leftMar
+                    y : close.bottom
+                right :
+                    x : close.right
+                    y : close.bottom
+            gap = 20
+            groupEdgesToConnect = ( fromBds, toBds ) =>
+                if fromBds.close.bottom + gap < toBds.open.top
+                    from : bottomEdge fromBds.open, fromBds.close
+                    to : topEdge toBds.open, toBds.close
+                    startDir : 1
+                    endDir : 1
+                else if toBds.close.bottom + gap < fromBds.open.top
+                    from : topEdge fromBds.open, fromBds.close
+                    to : bottomEdge toBds.open, toBds.close
+                    startDir : -1
+                    endDir : -1
+                else
+                    from : topEdge fromBds.open, fromBds.close
+                    to : topEdge toBds.open, toBds.close
+                    startDir : -1
+                    endDir : 1
+            interp = ( left, right, index, length ) =>
+                pct = ( index + 1 ) / ( length + 1 )
+                right = Math.min right, left + 40 * length
+                ( 1 - pct ) * left + pct * right
+            drawArrow = ( index, outOf, from, to, label ) =>
                 context.strokeStyle = from.type()?.color or '#444444'
                 context.globalAlpha = 1.0
                 context.lineWidth = 2
                 fromBox = from.getScreenBoundaries()
                 toBox = to.getScreenBoundaries()
                 if not fromBox or not toBox then return
-                startX = ( fromBox.open.left + fromBox.open.right ) / 2
-                startY = ( fromBox.open.top + fromBox.open.bottom ) / 2
-                endX = ( toBox.open.left + toBox.open.right ) / 2
-                endY = ( toBox.open.top + toBox.open.bottom ) / 2
-                partWay = ( startY + endY ) / 2
-                context.bezierArrow startX, startY, startX, partWay,
-                    endX, partWay, endX, endY
+                fromBox.open.top -= pad
+                fromBox.close.top -= pad
+                fromBox.open.bottom += pad
+                fromBox.close.bottom += pad
+                toBox.open.top -= pad
+                toBox.close.top -= pad
+                toBox.open.bottom += pad
+                toBox.close.bottom += pad
+                how = groupEdgesToConnect fromBox, toBox
+                startX = interp how.from.left.x, how.from.right.x, index,
+                    outOf
+                startY = how.from.left.y
+                endX = interp how.to.left.x, how.to.right.x, index, outOf
+                endY = how.to.left.y
+                context.bezierArrow startX, startY,
+                    startX, startY + how.startDir * gap,
+                    endX, endY - how.endDir * gap, endX, endY
                 context.stroke()
 
 Second, draw all connections from the innermost group containing the cursor,
@@ -1387,10 +1438,12 @@ if there are any.
 
             if group
                 connections = group.type().connections? group
+                numArrays = ( c for c in connections \
+                    when c instanceof Array ).length
                 for connection, index in connections ? [ ]
                     if connection instanceof Array
-                        drawArrow index, @[connection[0]], @[connection[1]],
-                            connection[2]
+                        drawArrow index, numArrays, @[connection[0]],
+                            @[connection[1]], connection[2]
                     else
                         if not drawGroup @[connection], yes, no, no
                             return
