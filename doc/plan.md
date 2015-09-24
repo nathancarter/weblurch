@@ -17,12 +17,6 @@ required order of completion.
 
 Create a nice UI for introducing arrows.  It will not be enabled by default,
 but can be added by any LA.
- * Provide a function that installs the arrow-creating UI.  This can begin
-   as a stub, and be extended with each of the following UI items.
- * Create a toolbar button for entering arrow-creation mode.  At first, just
-   make it stay down when pressed, and pop up when pressed again.  It should
-   pop up automatically if you exit all bubbles, and should be disabled when
-   the cursor is not in any bubbles.
  * In arrow-creation mode, if the user's cursor is in group G and the user
    clicks on bubble H, call `G.type.connectionRequest( H )`, if such a
    function exists.  The LA can handle this as they see fit, such as

@@ -73,6 +73,12 @@ is defined here.
             result.push "#{newkey}:#{value};"
         result.join ' '
 
+The main function that uses the previous function is one for converting
+well-formed HTML into an image URL.
+
+    htmlToImage = ( html ) ->
+        objectURLForBlob svgBlobForHTML html, createStyleString()
+
 A few functions in this module make use of a tool for computing a CSS style
 string describing the default font size and family of an element.  That
 function is defined here.
@@ -660,8 +666,7 @@ routine needs, and they will be passed along directly.
             if data.hasOwnProperty 'text'
                 plugin = this
                 if data.imageHTML?
-                    data.image = objectURLForBlob svgBlobForHTML \
-                        data.imageHTML, createStyleString()
+                    data.image = htmlToImage data.imageHTML
                 if data.openImageHTML?
                     blob = svgBlobForHTML data.openImageHTML,
                         createStyleString()
@@ -711,11 +716,23 @@ the two ends of the selection are inside the same deepest group.
             right = left.cloneRange()
             left.collapse yes
             right.collapse no
-            inSameGroup =
-                @groupAboveCursor( left ) is @groupAboveCursor( right )
+            left = @groupAboveCursor left
+            right = @groupAboveCursor right
             for own name, type of @groupTypes
-                type?.button?.disabled not inSameGroup
-                type?.menuItem?.disabled not inSameGroup
+                type?.button?.disabled left isnt right
+                type?.menuItem?.disabled left isnt right
+            @connectionsButton.disabled not left? or ( left isnt right )
+            @updateConnectionsMode()
+
+The above function calls `updateConnectionsMode()`, which checks to see if
+connections mode has been entered/exited since the last time the function
+was run, and if so, updates the UI to reflect the change.
+
+        updateConnectionsMode: =>
+            if @connectionsButton.disabled()
+                @connectionsButton.active no
+            console.log 'this is a stub, but the current state of
+                connections mode is', @connectionsButton.active()
 
 ## Inserting new groups
 
@@ -1538,6 +1555,22 @@ The plugin, when initialized on an editor, places an instance of the
             text : 'Hide/show groups'
             context : 'View'
             onclick : -> editor.Groups.hideOrShowGroupers()
+
+Applications which want to use arrows among groups often want to give the
+user a convenient way to connect groups visually.  We provide the following
+function that installs a handy UI for doing so.  This function should be
+called before `tinymce.init`, which means at page load time, not thereafter.
+
+        if window.useGroupConnectionsUI
+            editor.addButton 'connect',
+                image : htmlToImage '&#x2197;'
+                tooltip : 'Connect groups'
+                onclick : ->
+                    @active not @active()
+                    editor.Groups.updateConnectionsMode()
+                onPostRender : ->
+                    editor.Groups.connectionsButton = this
+                    editor.Groups.updateButtonsAndMenuItems()
 
 The document needs to be scanned (to rebuild the groups hierarchy) whenever
 it changes.  The editor's change event is not reliable, in that it fires

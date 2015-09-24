@@ -50,6 +50,10 @@ later as this application becomes mature.
         color : '#996666'
     ]
 
+Install the arrows UI for that group.
+
+    window.useGroupConnectionsUI = yes
+
 Use the MediaWiki, Settings, and Dialogs plugins.
 
     window.pluginsToLoad = [ 'mediawiki', 'settings', 'dialogs' ]
