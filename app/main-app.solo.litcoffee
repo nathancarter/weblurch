@@ -48,6 +48,12 @@ later as this application becomes mature.
         closeImageHTML : '<font color="#996666">]</font>'
         tooltip : 'Make text a meaningful expression'
         color : '#996666'
+        connectionRequest : ( from, to ) ->
+            existingTags = ( "#{c[2]}" for c in from.connectionsOut() \
+                when c[1] is to.id() )
+            i = 0
+            while "#{i}" in existingTags then i++
+            from.connect to, "#{i}"
     ]
 
 Install the arrows UI for that group.

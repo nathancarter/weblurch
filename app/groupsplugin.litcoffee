@@ -731,8 +731,6 @@ was run, and if so, updates the UI to reflect the change.
         updateConnectionsMode: =>
             if @connectionsButton.disabled()
                 @connectionsButton.active no
-            console.log 'this is a stub, but the current state of
-                connections mode is', @connectionsButton.active()
 
 ## Inserting new groups
 
@@ -1533,13 +1531,13 @@ if there are any.
                 connections = group.type().connections? group
                 numArrays = ( c for c in connections \
                     when c instanceof Array ).length
+                for connection in connections ? [ ]
+                    if connection not instanceof Array
+                        drawGroup @[connection], yes, no, no
                 for connection, index in connections ? [ ]
                     if connection instanceof Array
                         drawArrow index, numArrays, @[connection[0]],
                             @[connection[1]], connection[2]
-                    else
-                        if not drawGroup @[connection], yes, no, no
-                            return
 
 # Installing the plugin
 
@@ -1665,18 +1663,42 @@ Construct the menu and show it on screen.
             pos = ( $ editor.getContentAreaContainer() ).position()
             menu.moveTo x + pos.left, y + pos.top
 
-When the user clicks in a bubble tag, we must discern which bubble tag
-received the click, and trigger the tag menu for that group, if it defines
-one.
+There are two actions the plugin must take on the mouse down event in the
+editor.
 
-We use the mousedown event rather than the click event, because the
-mousedown event is the only one for which `preventDefault()` can function.
-By the time the click event happens (strictly after mousedown), it is too
-late to prevent the default handling of the event.
+In connection-making mode, if the user clicks inside a bubble, we must
+attempt to form a connection between the group the cursor is currently in
+and the group in which the user clicked.
+
+Otherwise, if the user clicks in a bubble tag, we must discern which bubble
+tag received the click, and trigger the tag menu for that group, if it
+defines one.  We use the mousedown event rather than the click event,
+because the mousedown event is the only one for which `preventDefault()` can
+function. By the time the click event happens (strictly after mousedown), it
+is too late to prevent the default handling of the event.
 
         editor.on 'mousedown', ( event ) ->
             x = event.clientX
             y = event.clientY
+
+First, the case for connection-making mode.
+
+            if editor.Groups.connectionsButton?.active()
+                if group = editor.groupUnderMouse x, y
+                    left = editor.selection?.getRng()?.cloneRange()
+                    if not left then return
+                    left.collapse yes
+                    currentGroup = editor.Groups.groupAboveCursor left
+                    currentGroup.type()?.connectionRequest? currentGroup,
+                        group
+                    event.preventDefault()
+                    editor.Groups.connectionsButton?.active false
+                    editor.Groups.updateConnectionsMode()
+                    return no
+                return
+
+Now the case for clicking bubble tags.
+
             for tag in editor.Groups.bubbleTags
                 if tag.x1 < x < tag.x2 and tag.y1 < y < tag.y2
                     menuItems = tag.group?.type()?.tagMenuItems tag.group
@@ -1692,12 +1714,23 @@ late to prevent the default handling of the event.
                     pos = ( $ editor.getContentAreaContainer() ).position()
                     menu.moveTo x + pos.left, y + pos.top
                     event.preventDefault()
-                    break
+                    return no
+
+The previous function uses the `nodeUnderMouse()` routine, defined here.
+That same routine is also used in the mouse move handler defined below.
 
 The following functions install an event handler that highlights the
 innermost group under the mouse pointer at all times.
 
-        nodeUnderMouse = ( doc, x, y ) ->
+        editor.on 'mousemove', ( event ) ->
+            editor.Groups.groupUnderMouse =
+                editor.groupUnderMouse event.clientX, event.clientY
+            editor.Overlay?.redrawContents()
+
+The previous two functions both leverage the following utility.
+
+        editor.groupUnderMouse = ( x, y ) ->
+            doc = editor.getDoc()
             el = doc.elementFromPoint x, y
             for i in [0...el.childNodes.length]
                 node = el.childNodes[i]
@@ -1709,12 +1742,5 @@ innermost group under the mouse pointer at all times.
                     for rect in rects
                         if x > rect.left and x < rect.right and \
                            y > rect.top and y < rect.bottom
-                            return node
-        editor.on 'mousemove', ( event ) ->
-            node = nodeUnderMouse editor.getDoc(),
-                event.clientX, event.clientY
-            editor.Groups.groupUnderMouse = if node
-                editor.Groups.groupAboveNode node
-            else
-                null
-            editor.Overlay?.redrawContents()
+                            return editor.Groups.groupAboveNode node
+            null
