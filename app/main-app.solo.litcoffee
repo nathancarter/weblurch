@@ -90,9 +90,41 @@ exporting to it as well.  This is still in development.
                 url = page + '?document=' + \
                     encodeURIComponent tinymce.activeEditor.getContent()
                 showURL = ( url ) ->
-                    prompt 'Copy the following URL to your clipboard, and
-                        paste it wherever you like, such as an email
-                        message.', url
+                    embed = "<iframe src='#{url}' width=800
+                        height=600></iframe>"
+                        .replace /&/g, '&amp;'
+                        .replace /'/g, '&apos;'
+                        .replace /"/g, '&quot;'
+                        .replace /</g, '&lt;'
+                        .replace />/g, '&gt;'
+                    console.log embed
+                    tinymce.activeEditor.Dialogs.alert
+                        title : 'Permanent Sharing Links'
+                        message : "
+                            <h3>Sharing URL</h3>
+                            <p>Copy this URL to your clipboard, and
+                            paste wherever you like, such as email.</p>
+                            <input type='text' size=50 id='firstURL'
+                             value='#{url}'/>
+                            <h3>Embedding HTML</h3>
+                            <p>Copy this HTML to your clipboard, and paste
+                            into any webpage or blog to embed a Lurch
+                            instance with this document in it.</p>
+                            <input type='text' size=50 value='#{embed}'/>
+                            <script>
+                            var all = document.getElementsByTagName(
+                                'input' );
+                            for ( var i = 0 ; i < all.length ; i++ ) {
+                                all[i].addEventListener( 'focus',
+                                    function ( event ) {
+                                        var t = event.target;
+                                        if ( t.select ) t.select();
+                                        else t.setSelectionRange(
+                                            0, t.value.length );
+                                    } );
+                            }
+                            document.getElementById( 'firstURL' ).focus();
+                            </script>"
                 request = gapi?.client?.urlshortener?.url?.insert? \
                     resource : longUrl : url
                 if not request? then return showURL url
@@ -100,7 +132,7 @@ exporting to it as well.  This is still in development.
                     if response.id?
                         showURL response.id
                     else
-                        console.log 'Error creating short URL', response
+                        showURL url
         wikiimport :
             text : 'Import from wiki...'
             context : 'file'
