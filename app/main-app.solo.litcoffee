@@ -232,7 +232,7 @@ exporting to it as well.  This is still in development.
             context : 'file'
             onclick : -> tinymce.activeEditor.Settings.application.showUI()
         docsettings :
-            text : 'Document properties...'
+            text : 'Document settings...'
             context : 'file'
             onclick : -> tinymce.activeEditor.Settings.document.showUI()
 
