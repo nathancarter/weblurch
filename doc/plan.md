@@ -122,10 +122,13 @@ support](#offline-support), below.
 
 Sharing
 
-Move all work done in MediaWiki locally in testing form onto a dedicated
-host on the Internet.  (This refers to work tested on Nathan's laptop so
-far, with notes taken on how to replicate it later, on, for example, a
-Linode instance.)
+Add support for Dropbox open and save using their simple
+[Chooser](https://www.dropbox.com/developers/chooser) and
+[Saver](https://www.dropbox.com/developers/saver) interfaces.  I didn't used
+to think this was possible because they could not accept uploads from Blob
+URLs, but it's possible to [convert those to a data
+URI](https://github.com/dropbox/dropbox-js/issues/144#issuecomment-32080661)
+and Dropbox Saver will accept those.
 
 Google Drive also provides a very nice [real time collaboration API](
 https://developers.google.com/google-apps/realtime/overview) that makes any
