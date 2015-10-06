@@ -1,0 +1,90 @@
+<html>
+  <head>
+    <title>LPF Compilation Test</title>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js">
+    </script>
+    <script src='./lpf-test.solo.min.js'></script>
+  </head>
+  <body>
+    <div class='container'>
+      <div class='page-header'>
+        <h1>LPF Compilation Test</h1>
+        <p>Can we reliably compile LPF arrays into Lean code,
+        execute that code, convert results into sensible English, and
+        associate them with the correct LPF elements for reporting?</p>
+      </div>
+      <div class='row'>
+        <div class='col-md-4'>
+          <p>Enter an LPF array here, using the notation given in
+          <a href='https://www.overleaf.com/read/shsbyrdpjyvf'>this
+          document</a> (e.g., <code>Begin()</code>,
+          <code>Local(x,Real,[])</code>, etc.).  One-line comments can use
+          <code>//</code>.</p>
+        </div>
+        <div class='col-md-2' style='text-align: right;'>
+          <p><button type="button" id='loadButton'
+                  data-toggle="tooltip" title="Load input code"
+                  class="btn btn-md btn-default"><span
+                  class="glyphicon glyphicon-floppy-open"
+                  aria-hidden="true"></span></button>
+          <button type="button" id='saveButton'
+                  data-toggle="tooltip" title="Save input code"
+                  class="btn btn-md btn-default"><span
+                  class="glyphicon glyphicon-floppy-save"
+                  aria-hidden="true"></span></button>
+          <button type="button" id='eraseButton'
+                  data-toggle="tooltip" title="Erase saved input code"
+                  class="btn btn-md btn-default"><span
+                  class="glyphicon glyphicon-floppy-remove"
+                  aria-hidden="true"></span></button></p>
+        </div>
+        <div class='col-md-6'>
+          <ul class="nav nav-tabs output-tabs">
+            <li role="presentation"><a href="#"
+                id='tab1'>1. Lean Code</a></li>
+            <li role="presentation"><a href="#"
+                id='tab2'>2. Lean Messages</a></li>
+            <li role="presentation" class="active"><a href="#"
+                id='tab3'>3. Translated Messages</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class='row'>
+        <div class='col-md-6'>
+          <textarea id='input'
+                    style='font-family: monospace; width: 100%;'
+                    rows=30></textarea>
+        </div>
+        <div class='col-md-6'>
+          <textarea id='output' readonly
+                    style='font-family: monospace; width: 100%;'
+                    rows=30>...LOADING...</textarea>
+        </div>
+      </div>
+      <hr>
+      <div class='row'>
+        <div class='col-md-12'>
+          <p>Keyboard shortcuts:  With cursor in input area, Alt+[ and Alt+]
+          cycle through tabs in output area.</p>
+          <p>This test application does not attempt to detect every
+          possible flaw in the LPF input.  In particular, it does not check
+          for syntax in Lean expressions inside LPF elements.  It assumes
+          that Lurch, when generating LPF elements, will generate them
+          correctly, including using valid Lean syntax within them.</p>
+          <p>What this application does test is for logic errors in the
+          proofs represented by the LPF array.  There may be errors in such
+          proofs, which originally appeared as errors in the work of the
+          Lurch user, and which Lurch faithfully translated into LPF
+          elements (logic errors and all).  A Lurch user's syntax errors,
+          however, can be policed out by Lurch before translation.</p> 
+        </div>
+      </div>
+    </div>
+    <script src="../lean/lean.js"></script>
+  </body>
+</html>
