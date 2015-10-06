@@ -14,9 +14,12 @@ write the tests below.
 These auxiliary function creates the HTML code for groupers, for use in the
 tests below.
 
+    openBase64 = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMCcgaGVpZ2h0PScyMSc+PGZvcmVpZ25PYmplY3Qgd2lkdGg9JzEwMCUnIGhlaWdodD0nMTAwJSc+PGRpdiB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCcgc3R5bGU9J2ZvbnQtc2l6ZToxNnB4OyBmb250LWZhbWlseTpWZXJkYW5hLCBBcmlhbCwgSGVsdmV0aWNhLCBzYW5zLXNlcmlmOyc+PGZvbnQgY29sb3I9IiM5OTY2NjYiPls8L2ZvbnQ+PC9kaXY+PC9mb3JlaWduT2JqZWN0Pjwvc3ZnPg=='
+    closeBase64 = 'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMCcgaGVpZ2h0PScyMSc+PGZvcmVpZ25PYmplY3Qgd2lkdGg9JzEwMCUnIGhlaWdodD0nMTAwJSc+PGRpdiB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMTk5OS94aHRtbCcgc3R5bGU9J2ZvbnQtc2l6ZToxNnB4OyBmb250LWZhbWlseTpWZXJkYW5hLCBBcmlhbCwgSGVsdmV0aWNhLCBzYW5zLXNlcmlmOyc+PGZvbnQgY29sb3I9IiM5OTY2NjYiPl08L2ZvbnQ+PC9kaXY+PC9mb3JlaWduT2JqZWN0Pjwvc3ZnPg=='
     grouper = ( openClose, id, typeName = 'me' ) ->
         "<img id=\"#{openClose}#{id}\" class=\"grouper #{typeName}\"
-          src=\"images/red-bracket-#{openClose}.png\" alt=\"\">"
+          src=\"#{if openClose is 'open' then openBase64 else closeBase64}\"
+          alt=\"\">"
     open = ( id ) -> grouper 'open', id
     close = ( id ) -> grouper 'close', id
 
@@ -24,7 +27,7 @@ tests below.
 
 Start with a simple test to verify that the plugin has been loaded.
 
-    phantomDescribe 'Groups plugin', './app/index.html', ->
+    phantomDescribe 'Groups plugin', './app/app.html', ->
 
 ### should be installed
 
@@ -38,7 +41,7 @@ Just verify that the active TinyMCE editor has a Groups plugin.
 Some aspects of this class can be tested independently of the editor, so we
 do so here, to do some tests in the simplest context possible.
 
-    phantomDescribe 'Group class', './app/index.html', ->
+    phantomDescribe 'Group class', './app/app.html', ->
 
 First, a very simple test of the constructor, just ensuring that it's
 recording its two inputs.
@@ -191,7 +194,7 @@ in the case when a valid group type is provided.
 Next, test the routines that track which IDs have been used and which
 remain free.
 
-    phantomDescribe 'Groups plugin ID tracking', './app/index.html', ->
+    phantomDescribe 'Groups plugin ID tracking', './app/app.html', ->
 
 ### nextFreeId() should count 0,1,2,...
 
@@ -237,7 +240,7 @@ should do nothing.  Then calls to `nextFreeId` should yield 2, 4, 5, 6, ...
 Now we test the foundation of the Groups plugin, those routines that wrap
 sections of the document in groupers.
 
-    phantomDescribe 'Grouping routines', './app/index.html', ->
+    phantomDescribe 'Grouping routines', './app/app.html', ->
 
 ### wrap selections in groups
 
@@ -338,14 +341,14 @@ works as well.
                      </tr>
                    </tbody>
                  </table>
-                 <p>#{close 1}<br></p>"
+                 <p>#{close 1}</p>"
 
 ## Group hierarchy
 
 Now we test the meat of the Groups plugin, those routines that maintain the
 integrity of groups and deal with the group hierarchy.
 
-    phantomDescribe 'Group hierarchy', './app/index.html', ->
+    phantomDescribe 'Group hierarchy', './app/app.html', ->
 
 ### creates correct lists of free IDs
 
@@ -605,7 +608,7 @@ demonstrating that it is re-using the result from cache.
 Now we test those functions that build on the ability to construct a groups
 hierarchy, by querying that already-constructed hierarchy in various ways.
 
-    phantomDescribe 'Hierarchy queries', './app/index.html', ->
+    phantomDescribe 'Hierarchy queries', './app/app.html', ->
 
 ### can convert groupers to groups
 
@@ -877,7 +880,7 @@ group in the hierarchy.
 Now we test the ability to store hidden attributes in groups and retrieve
 them again later.
 
-    phantomDescribe 'Group attributes', './app/index.html', ->
+    phantomDescribe 'Group attributes', './app/app.html', ->
 
 ### support atomic values
 

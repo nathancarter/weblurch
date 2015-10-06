@@ -72,6 +72,38 @@ Groups Plugin
    * `allContents()`, which returns an array of alternating strings and
      groups
 
+UI for Connections Between Groups
+
+ * Add an option that when entering arrow-creation mode, ALL bubble outlines
+   in the document are faintly drawn (not their tags), so that it's
+   completely clear where a user wants to aim the mouse to hit a certain
+   bubble.
+ * Add an option that show-groupers (Ctrl+1) mode is automatically enabled
+   when the user enters arrow-connection mode, and re-disabled (if it was
+   disabled in the first place) when exiting arrow-connection mode.  This is
+   like the previous feature, but more aggressive and techy.  (Do we still
+   need it now that we have the previous feature?)
+ * On mobile, a tap highlights the innermost bubble under it, without
+   creating the arrow yet, and shows OK/cancel buttons hovering nearby.  If
+   the user tapped what he/she expected to tap, then he/she hits OK and it
+   creates the arrow.  Cancel (or just tapping elsewhere) closes the
+   OK/cancel buttons and does nothing else.
+ * When in arrow-creation mode, keystrokes are interpreted as typing bubble
+   labels, which will scroll the view to the bubbles with those labels, and
+   highlight them as if the user had mouse-hovered them.  If the user
+   presses enter, the arrow will be created.  Hence there are
+   keyboard-shortcut ways to specify arrows among bubbles.  This would work
+   best with a keyboard shortcut for entering bubble-making mode also.  (If
+   there are ambiguous labels--i.e., ones that apply to more than one
+   bubble--just choose any one; that's the user's fault.)  Note that this
+   requires two additional features to help it out:
+   * A function in the group type for computing the default label for any
+     bubble in the document.  The default can be the address of the bubble
+     in the hierarchy, as a list of positive integers; e.g., the second
+     bubble immediate inside the tenth topmost bubble has number 10.2.
+   * Drawing bubbles in arrow-creation mode should include these labels
+     somewhere nearby.
+
 Miscellaneous
 
  * See [this answer](http://stackoverflow.com/a/32120344/670492) to your

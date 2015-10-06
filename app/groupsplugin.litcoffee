@@ -73,6 +73,12 @@ is defined here.
             result.push "#{newkey}:#{value};"
         result.join ' '
 
+The main function that uses the previous function is one for converting
+well-formed HTML into an image URL.
+
+    htmlToImage = ( html ) ->
+        objectURLForBlob svgBlobForHTML html, createStyleString()
+
 A few functions in this module make use of a tool for computing a CSS style
 string describing the default font size and family of an element.  That
 function is defined here.
@@ -121,6 +127,8 @@ to do some initial setup.
                         break
             @contentsChanged yes, yes
 
+## Core group data
+
 This method returns the ID of the group, if it is available within the open
 grouper.
 
@@ -132,6 +140,8 @@ the type exists in the plugin stored in `@plugin`.
 
         typeName: => grouperInfo( @open )?.type
         type: => @plugin?.groupTypes?[@typeName()]
+
+## Group attributes
 
 We provide the following two simple methods for getting and setting
 arbitrary data within a group.  Clients should use these methods rather than
@@ -229,6 +239,8 @@ either the open or close grouper for this group.
                         grouper.setAttribute 'src', base64
                         @plugin?.editor.Overlay?.redrawContents()
 
+## Group contents
+
 We will need to be able to query the contents of a group, so that later
 computations on that group can use its contents to determine how to act.  We
 provide functions for fetching the contents of the group as plain text, as
@@ -273,6 +285,8 @@ function can only work if `@plugin` is a `Groups` class instance.
             if not inside = @innerRange() then return
             @plugin?.editor.selection.setRng inside
             @plugin?.editor.selection.setContent text
+
+## Group ranges
 
 Those functions rely on the `innerRange()` function, defined below, with a
 corresponding `outerRange` function for the sake of completeness.  We use a
@@ -341,6 +355,8 @@ Specifically,
                 range
             catch e then null
 
+## Group hierarchy
+
 The previous two functions require being able to query this group's index in
 its parent group, and to use that index to look up next and previous sibling
 groups.  We provide those functions here.
@@ -351,6 +367,8 @@ groups.  We provide those functions here.
             ( @parent?.children ? @plugin?.topLevel )?[@indexInParent()-1]
         nextSibling: =>
             ( @parent?.children ? @plugin?.topLevel )?[@indexInParent()+1]
+
+## Group change event
 
 The following function should be called whenever the contents of the group
 have changed.  It notifies the group's type, so that the requisite
@@ -368,6 +386,8 @@ constructor.
         contentsChanged: ( propagate = yes, firstTime = no ) =>
             @type()?.contentsChanged? this, firstTime
             if propagate then @parent?.contentsChanged yes
+
+## Group serialization
 
 The following serialization routine is useful for sending groups to a Web
 Worker for background processing.
@@ -388,6 +408,139 @@ Worker for background processing.
             parent : @parent?.id() ? null
             children : ( child?.id() ? null for child in @children ? [ ] )
             data : data
+
+## Group connections ("arrows")
+
+Groups can be connected in a graph.  The graph is directed, and there can be
+multiple arrows from one group to another.  Each arrow has an optional
+string attribute attached to it called its "tag," which defaults to the
+empty string. For multiple arrows between the same two groups, different
+tags are required.
+
+Connect group `A` to group `B` by calling `A.connect B`.  The optional
+second parameter is the tag string to attach.  It defaults to the empty
+string.  Calling this more than once with the same `A`, `B`, and tag has the
+same effect as calling it once.
+
+        connect: ( toGroup, tag = '' ) =>
+            connection = [ @id(), toGroup.id(), "#{tag}" ]
+            connstring = "#{connection}"
+            oldConnections = @get( 'connections' ) ? [ ]
+            mustAdd = yes
+            for oldConnection in oldConnections
+                if "#{oldConnection}" is connstring
+                    mustAdd = no
+                    break
+            if mustAdd
+                @set 'connections', [ oldConnections..., connection ]
+            oldConnections = toGroup.get( 'connections' ) ? [ ]
+            mustAdd = yes
+            for oldConnection in oldConnections
+                if "#{oldConnection}" is connstring
+                    mustAdd = no
+                    break
+            if mustAdd
+                toGroup.set 'connections', [ oldConnections..., connection ]
+
+The following function undoes the previous.  The third parameter can be
+either a string or a regular expression.  It defaults to the empty string.
+Calling `A.disconnect B, C` finds all connections from `A` to `B` satisfying
+a condition on `C`.  If `C` is a string, then the connection tag must equal
+`C`; if `C` is a regular expression, then the connection tag must match `C`.
+Connections not satisfying these criterion are not candidates for deletion.
+
+        disconnect: ( fromGroup, tag = '' ) =>
+            matches = ( array ) =>
+                array[0] is @id() and array[1] is fromGroup.id() and \
+                    ( tag is array[2] or tag.test? array[2] )
+            @set 'connections', ( c for c in @get( 'connections' ) ? [ ] \
+                when not matches c )
+            fromGroup.set 'connections', ( c for c in \
+                fromGroup.get( 'connections' ) ? [ ] when not matches c )
+
+For looking up connections, we have two functions.  One that returns all the
+connections that lead out from the group in question (`connectionsOut()`)
+and one that returns all connections that lead into the group in question
+(`connectionsIn()`).  Each function returns an array of triples, all those
+that appear in the group's connections set and have the group as the source
+(for `connectionsOut()`) or the destination (for `connectionsIn()`).
+
+        connectionsOut: =>
+            id = @id()
+            ( c for c in ( @get 'connections' ) ? [ ] when c[0] is id )
+        connectionsIn: =>
+            id = @id()
+            ( c for c in ( @get 'connections' ) ? [ ] when c[1] is id )
+
+## Group screen coordinates
+
+The following function gives the sizes and positions of the open and close
+groupers.  Because the elements between them may be taller (or sink lower)
+than the groupers themselves, we also inspect the client rectangles of all
+elements in the group, and adjust the relevant corners of the open and close
+groupers outward to make sure the bubble encloses the entire contents of the
+group.
+
+        getScreenBoundaries: =>
+
+The first few lines here redundantly add rects for the open and close
+groupers because there seems to be a bug in `getClientRects()` for a range
+that doesn't always include the close grouper.  If for some reason there are
+no rectangles, we cannot return a value.  This would be a very erroneous
+situation, but is here as paranoia.
+
+            toArray = ( a ) ->
+                if a? then ( a[i] for i in [0...a.length] ) else [ ]
+            rects = toArray @open.getClientRects()
+            .concat toArray @outerRange()?.getClientRects()
+            .concat toArray @close.getClientRects()
+            if rects.length is 0 then return null
+
+Initialize the rectangle data for the open and close groupers.
+
+            open = rects[0]
+            open =
+                top : open.top
+                left : open.left
+                right : open.right
+                bottom : open.bottom
+            close = rects[rects.length-1]
+            close =
+                top : close.top
+                left : close.left
+                right : close.right
+                bottom : close.bottom
+
+Compute whether the open and close groupers are in the same line of text.
+This is done by examining whether they extend too far left/right/up/down
+compared to one another.  If they are on the same line, then force their top
+and bottom coordinates to match, to make it clear (to the caller) that this
+represents a rectangle, not a "zone."
+
+            onSameLine = yes
+            for rect, index in rects
+                open.top = Math.min open.top, rect.top
+                close.bottom = Math.max close.bottom, rect.bottom
+                if rect.left < open.left then onSameLine = no
+                if rect.top > open.bottom then onSameLine = no
+            if onSameLine
+                close.top = open.top
+                open.bottom = close.bottom
+
+If either the open or close grouper has zero size, then an image file (for
+an open/close grouper) isn't yet loaded.  Thus we need to return null, to
+tell the caller that the results couldn't be computed.  The caller should
+probably just set up a brief timer to recall this function again soon, when
+the browser has completed the image loading.
+
+            if ( open.top is open.bottom or close.top is close.bottom or \
+                 open.left is open.right or close.left is close.right ) \
+               and not ( $ @open ).hasClass 'hide' then return null
+
+Otherwise, return the results as an object.
+
+            open : open
+            close : close
 
 The `Group` class should be accessible globally.
 
@@ -461,6 +614,10 @@ into the list of free ids.
                 @freeIds.push id
                 @freeIds.sort ( a, b ) -> a - b
 
+We can also check to see if an id is free.
+
+        isIdFree: ( id ) => id in @freeIds or id > @freeIds[@freeIds.length]
+
 When a free id becomes used in some way other than through a call to
 `nextFreeId`, we will want to be able to record that fact.  The following
 function does so.
@@ -509,8 +666,7 @@ routine needs, and they will be passed along directly.
             if data.hasOwnProperty 'text'
                 plugin = this
                 if data.imageHTML?
-                    data.image = objectURLForBlob svgBlobForHTML \
-                        data.imageHTML, createStyleString()
+                    data.image = htmlToImage data.imageHTML
                 if data.openImageHTML?
                     blob = svgBlobForHTML data.openImageHTML,
                         createStyleString()
@@ -543,6 +699,9 @@ routine needs, and they will be passed along directly.
                     if data.icon? then 'icon' else 'text'
                 buttonData[key] = data[key]
                 @editor.addButton name, buttonData
+            data.connections ?= ( group ) ->
+                triples = group.connectionsOut()
+                [ triples..., ( t[1] for t in triples )... ]
 
 The above function calls `updateButtonsAndMenuItems()` whenever a new button
 or menu item is first drawn.  That function is also called whenever the
@@ -557,11 +716,21 @@ the two ends of the selection are inside the same deepest group.
             right = left.cloneRange()
             left.collapse yes
             right.collapse no
-            inSameGroup =
-                @groupAboveCursor( left ) is @groupAboveCursor( right )
+            left = @groupAboveCursor left
+            right = @groupAboveCursor right
             for own name, type of @groupTypes
-                type?.button?.disabled not inSameGroup
-                type?.menuItem?.disabled not inSameGroup
+                type?.button?.disabled left isnt right
+                type?.menuItem?.disabled left isnt right
+            @connectionsButton.disabled not left? or ( left isnt right )
+            @updateConnectionsMode()
+
+The above function calls `updateConnectionsMode()`, which checks to see if
+connections mode has been entered/exited since the last time the function
+was run, and if so, updates the UI to reflect the change.
+
+        updateConnectionsMode: =>
+            if @connectionsButton.disabled()
+                @connectionsButton.active no
 
 ## Inserting new groups
 
@@ -599,7 +768,7 @@ placeholder after the old selection.
 If the whole selection is within one element, then we can just replace the
 selection's content with wrapped content, plus a cursor placeholder that we
 immediately remove after placing the cursor back there.  We also keep track
-of the close grouper element so that we can place the cursor immediatel to
+of the close grouper element so that we can place the cursor immediately to
 its left after removing the cursor placeholder (or else the cursor may leap
 to the start of the document).
 
@@ -608,6 +777,7 @@ to the start of the document).
                 cursor = @editor.selection.getRng()
                 close = cursor.endContainer.childNodes[cursor.endOffset] ?
                     cursor.endContainer.nextSibling
+                if close.tagName is 'P' then close = close.childNodes[0]
                 newGroup = @grouperToGroup close
                 newGroup.parent?.contentsChanged()
             else
@@ -696,12 +866,21 @@ new scan start *after* this one completes, not during.
             if isScanning then return setTimeout ( => @scanDocument ), 0
             isScanning = yes
 
+Group ids should be unique, so if we encounter the same one twice, we have a
+problem.  Thus we now mark all old groups as "old," so that we can tell when
+the first time we re-register them is, and avoid re-regestering the same
+group (with the same id) a second time.
+
+            for id in @ids()
+                if @[id]? then @[id].old = yes
+
 Initialize local variables:
 
             groupers = Array::slice.apply @allGroupers()
             gpStack = [ ]
             usedIds = [ ]
             @topLevel = [ ]
+            @idConversionMap = { }
             before = @freeIds[..]
             index = ( id ) ->
                 for gp, i in gpStack
@@ -746,9 +925,9 @@ the stack, because we've moved past the interior of that group.
 Furthermore, register the group and its ID in this Groups object.
 
                         groupData = gpStack.shift()
-                        usedIds.push info.id
-                        @registerGroup groupData.grouper, grouper
-                        newGroup = @[info.id]
+                        id = @registerGroup groupData.grouper, grouper
+                        usedIds.push id
+                        newGroup = @[id]
 
 Assign parent and child relationships, and store this just-created group on
 either the list of children for the next parent outwards in the hierarchy,
@@ -776,11 +955,10 @@ Now update the `@freeIds` list to be the complement of the `usedIds` array.
             @freeIds = [ ]
             while usedIds.length > 0
                 if count is usedIds[0]
-                    usedIds.shift()
+                    while count is usedIds[0] then usedIds.shift()
                 else
                     @freeIds.push count
                 count++
-                if count > 20 then break
             @freeIds.push count
 
 And any ID that is free now but wasn't before must have its group deleted
@@ -804,6 +982,28 @@ because it is no longer in the document anyway.
                 delete @[id]
             group?.type()?.deleted? group for group in deleted
 
+If any groups were just introduced to this document by pasting, we need to
+process their connections, because the groups themselves may have had to be
+given new ids (to preserve uniqueness within this document) and thus the ids
+in any of their connections need to be updated to stay internally consistent
+within the pasted content.
+
+            justPasted =
+                @editor.getDoc().getElementsByClassName 'justPasted'
+            justPasted = ( justPasted[i] for i in [0...justPasted.length] )
+            for grouper in justPasted
+                if /^close/.test grouper.getAttribute 'id' then continue
+                group = @grouperToGroup grouper
+                connections = group.get 'connections'
+                if not connections then continue
+                for connection in connections
+                    if @idConversionMap.hasOwnProperty connection[0]
+                        connection[0] = @idConversionMap[connection[0]]
+                    if @idConversionMap.hasOwnProperty connection[1]
+                        connection[1] = @idConversionMap[connection[1]]
+                group.set 'connections', connections
+            ( $ justPasted ).removeClass 'justPasted'
+
 Invalidate the `ids()` cache ([defined below](
 #querying-the-group-hierarchy)) so that the next time that function is run,
 it recomputes its results from the newly-generated hierarchy in `topLevel`.
@@ -824,12 +1024,27 @@ the enabled/disabled state of group-insertion buttons and menu items.
 
 The above function needs to create instances of the `Group` class, and
 associate them with their IDs.  The following function does so, re-using
-copies from the cache when possible.
+copies from the cache when possible.  When it encounters a duplicate id, it
+renames it to the first unused number in the document.  Note that we cannot
+use `@freeIds` here, because it is being updated by `@scanDocument()`, so we
+must use the more expensive version of actually querying the elements that
+exist in the document itself via `getElementById()`.
 
         registerGroup: ( open, close ) =>
             cached = @[id = grouperInfo( open ).id]
             if cached?.open isnt open or cached?.close isnt close
+                if @[id]? and not @[id].old
+                    newId = 0
+                    doc = @editor.getDoc()
+                    while doc.getElementById "open#{newId}" or \
+                          doc.getElementById "close#{newId}" then newId++
+                    open.setAttribute 'id', "open#{newId}"
+                    close.setAttribute 'id', "close#{newId}"
+                    @idConversionMap[id] = newId
+                    id = newId
                 @[id] = new Group open, close, this
+            else
+                delete @[id].old
             id
 
 ## Querying the group hierarchy
@@ -1075,68 +1290,41 @@ unstable/incorrect results.
 
             if @scanLocks > 0 then return
             group = @groupAboveSelection @editor.selection.getRng()
-            bodyStyle = null
+            bodyStyle = getComputedStyle @editor.getBody()
+            leftMar = parseInt bodyStyle['margin-left']
+            rightMar = parseInt bodyStyle['margin-right']
             pad = 3
             padStep = 2
             radius = 4
             tags = [ ]
-            while group
+
+We define a group-drawing function that we will call on all groups from
+`group` on up the group hierarchy.
+
+            drawGroup = ( group, drawOutline, drawInterior, withTag ) =>
                 type = group.type()
                 color = type?.color ? '#444444'
 
-Compute the sizes and positions of the open and close groupers.  Because the
-elements between them may be taller (or sink lower) than the groupers
-themselves, we also inspect the client rectangles of all elements in the
-group, and adjust the relevant corners of the open and close groupers
-outward to make sure the bubble encloses the entire contents of the group.
+Compute the group's boundaries, and if that's not possible, quit this whole
+routine right now.
 
-                rects = group.outerRange()?.getClientRects()
-                if not rects?
+                if not boundaries = group.getScreenBoundaries()
                     setTimeout ( => @editor.Overlay?.redrawContents() ), 100
-                    return
-                rects = ( rects[i] for i in [0...rects.length] )
-                open = rects[0]
-                open =
-                    top : open.top
-                    left : open.left
-                    right : open.right
-                    bottom : open.bottom
-                close = rects[rects.length-1]
-                close =
-                    top : close.top
-                    left : close.left
-                    right : close.right
-                    bottom : close.bottom
-                onSameLine = yes
-                for rect, index in rects
-                    open.top = Math.min open.top, rect.top
-                    close.bottom = Math.max close.bottom, rect.bottom
-                    if rect.left < open.left then onSameLine = no
-                if onSameLine
-                    close.top = open.top
-                    open.bottom = close.bottom
+                    return null
+                { open, close } = boundaries
 
-If any of them has zero size, then that means that an image file (for an
-open/close grouper) isn't yet loaded.  Thus we need to stop here and queue
-up a later call to this same drawing routine, at which time the image file
-may be loaded.
-
-                if ( open.top is open.bottom or \
-                     close.top is close.bottom or \
-                     open.left is open.right or \
-                     close.left is close.right ) and \
-                   not ( $ group.open ).hasClass 'hide'
-                    setTimeout ( => @editor.Overlay?.redrawContents() ), 100
-                    return
-
-Compute the group's tag contents, if any, and store where and how to draw
-them.
+Pad by `pad/3` in the x direction, `pad` in the y direction, and with corner
+radius `radius`.
 
                 x1 = open.left - pad/3
                 y1 = open.top - pad
                 x2 = close.right + pad/3
                 y2 = close.bottom + pad
-                if tagString = type?.tagContents? group
+
+Compute the group's tag contents, if any, and store where and how to draw
+them.
+
+                if withTag and tagString = type?.tagContents? group
                     tags.push
                         content : tagString
                         corner : { x : x1, y : y1 }
@@ -1144,31 +1332,34 @@ them.
                         style : createFontStyleString group.open
                         group : group
 
-Draw this group and then move one step up the group hierarchy, ready to draw
-the next one on the next pass through the loop.
+Draw this group, either a rounded rectangle or a "zone," which is a
+rounded rectangle that experienced something like word wrapping.
 
                 context.fillStyle = context.strokeStyle = color
                 if open.top is close.top and open.bottom is close.bottom
-
-A rounded rectangle from open's top left to close's bottom right, padded by
-`pad/3` in the x direction, `pad` in the y direction, and with corner radius
-`radius`.
-
                     context.roundedRect x1, y1, x2, y2, radius
                 else
-                    if not bodyStyle?
-                        bodyStyle = getComputedStyle @editor.getBody()
-                        leftMar = parseInt bodyStyle['margin-left']
-                        rightMar = parseInt bodyStyle['margin-right']
                     context.roundedZone x1, y1, x2, y2, open.bottom,
                         close.top, leftMar, rightMar, radius
-                context.globalAlpha = 1.0
-                context.lineWidth = 1.5
-                context.stroke()
-                context.globalAlpha = 0.3
-                context.fill()
-                group = group.parent
+                if drawOutline
+                    context.globalAlpha = 1.0
+                    context.lineWidth = 1.5
+                    context.stroke()
+                if drawInterior
+                    context.globalAlpha = 0.3
+                    context.fill()
+                yes # success
+
+That concludes te group-drawing function.  Let's now call it on all the
+groups in the hierarchy, from `group` on upwards.
+
+            innermost = yes
+            walk = group
+            while walk
+                if not drawGroup walk, yes, innermost, yes then return
+                walk = walk.parent
                 pad += padStep
+                innermost = no
 
 Now draw the tags on all the bubbles just drawn.  We proceed in reverse
 order, so that outer tags are drawn behind inner ones.  We also track the
@@ -1218,9 +1409,135 @@ loop.
                 context.fill()
                 context.fillStyle = '#000000'
                 context.globalAlpha = 1.0
-                context.drawHTML tag.content, tag.x1 + padStep, tag.y1,
-                    tag.style
+                if not context.drawHTML tag.content, tag.x1 + padStep, \
+                        tag.y1, tag.style
+                    setTimeout ( => @editor.Overlay?.redrawContents() ), 10
+                    return
                 @bubbleTags.unshift tag
+
+If there is a group the mouse is hovering over, also draw its interior only,
+to show where the mouse is aiming.
+
+            pad = 3
+            if @groupUnderMouse
+                if not drawGroup @groupUnderMouse, no, yes, no then return
+
+If this group has connections to any other groups, draw them now.
+
+First, define a few functions that draw an arrow from one group to another.
+The label is the optional string tag on the connection, and the index is an
+index into the list of connections that are to be drawn.
+
+            topEdge = ( open, close ) =>
+                left :
+                    x : open.left
+                    y : open.top
+                right :
+                    x : if open.top is close.top and \
+                           open.bottom is close.bottom
+                        close.right
+                    else
+                        canvas.width - rightMar
+                    y : open.top
+            bottomEdge = ( open, close ) =>
+                left :
+                    x : if open.top is close.top and \
+                           open.bottom is close.bottom
+                        open.left
+                    else
+                        leftMar
+                    y : close.bottom
+                right :
+                    x : close.right
+                    y : close.bottom
+            gap = 20
+            groupEdgesToConnect = ( fromBds, toBds ) =>
+                if fromBds.close.bottom + gap < toBds.open.top
+                    from : bottomEdge fromBds.open, fromBds.close
+                    to : topEdge toBds.open, toBds.close
+                    startDir : 1
+                    endDir : 1
+                else if toBds.close.bottom + gap < fromBds.open.top
+                    from : topEdge fromBds.open, fromBds.close
+                    to : bottomEdge toBds.open, toBds.close
+                    startDir : -1
+                    endDir : -1
+                else
+                    from : topEdge fromBds.open, fromBds.close
+                    to : topEdge toBds.open, toBds.close
+                    startDir : -1
+                    endDir : 1
+            interp = ( left, right, index, length ) =>
+                pct = ( index + 1 ) / ( length + 1 )
+                right = Math.min right, left + 40 * length
+                ( 1 - pct ) * left + pct * right
+            drawArrow = ( index, outOf, from, to, label ) =>
+                context.strokeStyle = from.type()?.color or '#444444'
+                context.globalAlpha = 1.0
+                context.lineWidth = 2
+                fromBox = from.getScreenBoundaries()
+                toBox = to.getScreenBoundaries()
+                if not fromBox or not toBox then return
+                fromBox.open.top -= pad
+                fromBox.close.top -= pad
+                fromBox.open.bottom += pad
+                fromBox.close.bottom += pad
+                toBox.open.top -= pad
+                toBox.close.top -= pad
+                toBox.open.bottom += pad
+                toBox.close.bottom += pad
+                how = groupEdgesToConnect fromBox, toBox
+                startX = interp how.from.left.x, how.from.right.x, index,
+                    outOf
+                startY = how.from.left.y
+                endX = interp how.to.left.x, how.to.right.x, index, outOf
+                endY = how.to.left.y
+                context.bezierArrow startX, startY,
+                    startX, startY + how.startDir * gap,
+                    endX, endY - how.endDir * gap, endX, endY
+                context.stroke()
+                if label isnt ''
+                    centerX = context.applyBezier startX, startX, endX,
+                        endX, 0.5
+                    centerY = context.applyBezier startY,
+                        startY + how.startDir * gap,
+                        endY - how.endDir * gap, endY, 0.5
+                    style = createFontStyleString group.open
+                    if not size = context.measureHTML label, style
+                        setTimeout ( => @editor.Overlay?.redrawContents() ),
+                            10
+                        return
+                    context.roundedRect \
+                        centerX - size.width / 2 - padStep,
+                        centerY - size.height / 2 - padStep,
+                        centerX + size.width / 2 + padStep,
+                        centerY + size.width / 2, radius
+                    context.globalAlpha = 1.0
+                    context.fillStyle = '#ffffff'
+                    context.fill()
+                    context.lineWidth = 1.5
+                    context.strokeStyle = group.type()?.color ? '#444444'
+                    context.stroke()
+                    context.fillStyle = '#000000'
+                    context.globalAlpha = 1.0
+                    context.drawHTML label,
+                        centerX - size.width / 2 + padStep,
+                        centerY - size.height / 2, style
+
+Second, draw all connections from the innermost group containing the cursor,
+if there are any.
+
+            if group
+                connections = group.type().connections? group
+                numArrays = ( c for c in connections \
+                    when c instanceof Array ).length
+                for connection in connections ? [ ]
+                    if connection not instanceof Array
+                        drawGroup @[connection], yes, no, no
+                for connection, index in connections ? [ ]
+                    if connection instanceof Array
+                        drawArrow index, numArrays, @[connection[0]],
+                            @[connection[1]], connection[2]
 
 # Installing the plugin
 
@@ -1236,6 +1553,22 @@ The plugin, when initialized on an editor, places an instance of the
             text : 'Hide/show groups'
             context : 'View'
             onclick : -> editor.Groups.hideOrShowGroupers()
+
+Applications which want to use arrows among groups often want to give the
+user a convenient way to connect groups visually.  We provide the following
+function that installs a handy UI for doing so.  This function should be
+called before `tinymce.init`, which means at page load time, not thereafter.
+
+        if window.useGroupConnectionsUI
+            editor.addButton 'connect',
+                image : htmlToImage '&#x2197;'
+                tooltip : 'Connect groups'
+                onclick : ->
+                    @active not @active()
+                    editor.Groups.updateConnectionsMode()
+                onPostRender : ->
+                    editor.Groups.connectionsButton = this
+                    editor.Groups.updateButtonsAndMenuItems()
 
 The document needs to be scanned (to rebuild the groups hierarchy) whenever
 it changes.  The editor's change event is not reliable, in that it fires
@@ -1263,6 +1596,23 @@ which the document was modified.
                 return
             editor.Groups.scanDocument()
             editor.Groups.rangeChanged editor.selection.getRng()
+
+Copying and pasting content that contains groups can be very problematic,
+because each group is supposed to have a unique ID.  If we permit direct
+copying and pasting of content, it will duplicate the same group (with its
+ID intact) throughout the document.  Thus we must process the content we've
+pasted immediately after a paste, and possibly renumber any group IDs in
+that content.  This is done in `@scanDocument()`, but it needs to know which
+content was just pasted; we mark such content here.
+
+        editor.on 'PastePostProcess', ( event ) ->
+            recur = ( node, address ) ->
+                id = node?.getAttribute? 'id'
+                if match = /^(open|close)(\d+)$/.exec id
+                    ( $ node ).addClass 'justPasted'
+                for index in [0...node?.childNodes?.length ? 0]
+                    recur node.childNodes[index], "#{address}.#{index}"
+            recur event.node, ''
 
 Whenever the cursor moves, we should update whether the group-insertion
 buttons and menu items are enabled.
@@ -1313,18 +1663,42 @@ Construct the menu and show it on screen.
             pos = ( $ editor.getContentAreaContainer() ).position()
             menu.moveTo x + pos.left, y + pos.top
 
-When the user clicks in a bubble tag, we must discern which bubble tag
-received the click, and trigger the tag menu for that group, if it defines
-one.
+There are two actions the plugin must take on the mouse down event in the
+editor.
 
-We use the mousedown event rather than the click event, because the
-mousedown event is the only one for which `preventDefault()` can function.
-By the time the click event happens (strictly after mousedown), it is too
-late to prevent the default handling of the event.
+In connection-making mode, if the user clicks inside a bubble, we must
+attempt to form a connection between the group the cursor is currently in
+and the group in which the user clicked.
+
+Otherwise, if the user clicks in a bubble tag, we must discern which bubble
+tag received the click, and trigger the tag menu for that group, if it
+defines one.  We use the mousedown event rather than the click event,
+because the mousedown event is the only one for which `preventDefault()` can
+function. By the time the click event happens (strictly after mousedown), it
+is too late to prevent the default handling of the event.
 
         editor.on 'mousedown', ( event ) ->
             x = event.clientX
             y = event.clientY
+
+First, the case for connection-making mode.
+
+            if editor.Groups.connectionsButton?.active()
+                if group = editor.groupUnderMouse x, y
+                    left = editor.selection?.getRng()?.cloneRange()
+                    if not left then return
+                    left.collapse yes
+                    currentGroup = editor.Groups.groupAboveCursor left
+                    currentGroup.type()?.connectionRequest? currentGroup,
+                        group
+                    event.preventDefault()
+                    editor.Groups.connectionsButton?.active false
+                    editor.Groups.updateConnectionsMode()
+                    return no
+                return
+
+Now the case for clicking bubble tags.
+
             for tag in editor.Groups.bubbleTags
                 if tag.x1 < x < tag.x2 and tag.y1 < y < tag.y2
                     menuItems = tag.group?.type()?.tagMenuItems tag.group
@@ -1340,4 +1714,33 @@ late to prevent the default handling of the event.
                     pos = ( $ editor.getContentAreaContainer() ).position()
                     menu.moveTo x + pos.left, y + pos.top
                     event.preventDefault()
-                    break
+                    return no
+
+The previous function uses the `nodeUnderMouse()` routine, defined here.
+That same routine is also used in the mouse move handler defined below.
+
+The following functions install an event handler that highlights the
+innermost group under the mouse pointer at all times.
+
+        editor.on 'mousemove', ( event ) ->
+            editor.Groups.groupUnderMouse =
+                editor.groupUnderMouse event.clientX, event.clientY
+            editor.Overlay?.redrawContents()
+
+The previous two functions both leverage the following utility.
+
+        editor.groupUnderMouse = ( x, y ) ->
+            doc = editor.getDoc()
+            el = doc.elementFromPoint x, y
+            for i in [0...el.childNodes.length]
+                node = el.childNodes[i]
+                if node.nodeType is 3
+                    range = doc.createRange()
+                    range.selectNode node
+                    rects = range.getClientRects()
+                    rects = ( rects[i] for i in [0...rects.length] )
+                    for rect in rects
+                        if x > rect.left and x < rect.right and \
+                           y > rect.top and y < rect.bottom
+                            return editor.Groups.groupAboveNode node
+            null

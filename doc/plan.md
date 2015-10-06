@@ -13,97 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Arrows among groups
-
-Add to the Group class the following two functions for use by LAs.  When
-bubbles are edited, if the contents must be kept in sync with the arrows,
-the LA can manipulate the arrows to fit the contents using these functions.
-Or the LA can use these functions to create arrows based on other UI events
-in the first place.
- * `group.connect( otherGroup, optionalTag )`
-   * `optionalTag` is treated as a string, and defaults to the empty string
-   * Constructs the array `[group.id(),otherGroup.id(),tag]` and adds it
-     to the set of links in each group.  If such a link already exists, do
-     not add it again; the set of links is indeed a set.
-   * Link sets should be stored as group properties, modified via
-     `group.set()`, so that changing them triggers group updates.
- * `group.disconnect( otherGroup, optionalTag )`
-   * `optionalTag` is treated as a string, and defaults to the empty string,
-     unless it is a regular expression
-   * Finds all arrays of the form `[group.id(),otherGroup.id(),T]` stored in
-     the link sets of `group` or `otherGroup`, and removes them, where T is
-     either equal to `optionalTag` if `optionalTag` is a string, or matches
-     `optionalTag` if `optionalTag` is a regular expression.
- * `group.connectedTo()` returns the set of triples in this group's link set
-   that begin with its own ID, that is, those links that lead outward.
- * `group.connectedFrom()` is the dual of the previous.
-
-Update the way groups are drawn as follows.
- * Draw a background for only the innermost nested group, not its ancestors.
- * Draw a light background for the group over which the mouse pointer is
-   hovering, at all times.
- * Just as `drawGroups` respects `group.type.color` and
-   `group.type.tagContents`, it should also respect
-   `group.type.connections`, which will return an array of links (triples)
-   and other groups (Group instances) to be drawn whenever this group is the
-   innermost one containing the cursor.  For now, just call this function
-   and dump its results to the console.  Provide a default implementation
-   that returns `group.connectedTo()` plus all the targets of those links.
-   (The real Lurch LA may provide a way to toggle between this and its dual,
-   to see how the current statement sits in the logical flow before and
-   after it in a proof.)
- * Implement half of the support for `group.type.connections` by drawing the
-   outlines of all groups on the resulting list.
- * Implement the next quarter of the support for `group.type.connections` by
-   drawing arrows from the source group to the target groups.
- * Complete the implementation of `group.type.connections` by adding labels
-   to the arrows by using the tags.  Note that `group.type.connections` is
-   free to translate the tags as part of its computation, so that their
-   internal and external representations need not be the same.
-
-Create a nice UI for introducing arrows.  It will not be enabled by default,
-but can be added by any LA.
- * Provide a function that installs the arrow-creating UI.  This can begin
-   as a stub, and be extended with each of the following UI items.
- * Create a toolbar button for entering arrow-creation mode.  At first, just
-   make it stay down when pressed, and pop up when pressed again.  It should
-   pop up automatically if you exit all bubbles, and should be disabled when
-   the cursor is not in any bubbles.
- * In arrow-creation mode, if the user's cursor is in group G and the user
-   clicks on bubble H, call `G.type.connectionRequest( H )`, if such a
-   function exists.  The LA can handle this as they see fit, such as
-   toggling a link, or prompting for a link tag, or anything.
- * Optional feature for later:  Add an option that when entering
-   arrow-creation mode, ALL bubble outlines in the document are faintly
-   drawn (not their tags), so that it's completely clear where a user wants
-   to aim the mouse to hit a certain bubble.
- * Optional feature for later:  Add an optional that show-groupers (Ctrl+1)
-   mode is automatically enabled when the user enters arrow-connection mode,
-   and re-disabled (if it was disabled in the first place) when exiting
-   arrow-connection mode.  This is like the previous feature, but more
-   aggressive and techy.  (Do we still need it now that we have the previous
-   feature?)
- * Optional feature for later:  On mobile, a tap highlights the innermost
-   bubble under it, without creating the arrow yet, and shows OK/cancel
-   buttons hovering nearby.  If the user tapped what he/she expected to tap,
-   then he/she hits OK and it creates the arrow.  Cancel (or just tapping
-   elsewhere) closes the OK/cancel buttons and does nothing else.
- * Optional feature for later:  When in arrow-making mode, keystrokes are
-   interpreted as typing bubble labels, which will scroll the view to the
-   bubbles with those labels, and highlight them as if the user had
-   mouse-hovered them.  If the user presses enter, the arrow will be
-   created.  Hence there are keyboard-shortcut ways to specify arrows among
-   bubbles.  This would work best with a keyboard shortcut for entering
-   bubble-making mode also.  (If there are ambiguous labels--i.e., ones that
-   apply to more than one bubble--just choose any one; that's the user's
-   fault.)  Note that this requires two additional features to help it out:
-   * A function in the group type for computing the default label for any
-     bubble in the document.  The default can be the address of the bubble
-     in the hierarchy, as a list of positive integers; e.g., the second
-     bubble immediate inside the tenth topmost bubble has number 10.2.
-   * Drawing bubbles in arrow-creation mode should include these labels
-     somewhere nearby.
-
 ## Matching Module
 
 The Matching Module may no longer be necessary, if we build Lurch on top of
@@ -213,10 +122,13 @@ support](#offline-support), below.
 
 Sharing
 
-Move all work done in MediaWiki locally in testing form onto a dedicated
-host on the Internet.  (This refers to work tested on Nathan's laptop so
-far, with notes taken on how to replicate it later, on, for example, a
-Linode instance.)
+Add support for Dropbox open and save using their simple
+[Chooser](https://www.dropbox.com/developers/chooser) and
+[Saver](https://www.dropbox.com/developers/saver) interfaces.  I didn't used
+to think this was possible because they could not accept uploads from Blob
+URLs, but it's possible to [convert those to a data
+URI](https://github.com/dropbox/dropbox-js/issues/144#issuecomment-32080661)
+and Dropbox Saver will accept those.
 
 Google Drive also provides a very nice [real time collaboration API](
 https://developers.google.com/google-apps/realtime/overview) that makes any
@@ -227,51 +139,58 @@ that into webLurch, imitating the UX Ken describes from typical online
 collaboration apps such as Google Docs and Overleaf, as follows.
  * Just a note that none of the changes below impact the wiki import and
    export functionality; that stays as it is now.
+ * Provide a section in the File > Application settings... dialog that will
+   be for Google Drive authentication, but you don't have to put the Google
+   login functionality there yet.  Include full explanatory text about how
+   cloud saving works with webLurch (as described below).
+ * File > Save and File > Save as... actions should be removed entirely.
  * Before adding Google Drive integration, change the items on the File menu
    to behave as follows.
-   * File > New not only does what it does now--creating a new document--
-     but it also gives it a default filename (such as `Untitled 1.lurch`)
-     and begins autosaving it to the browser's Local Storage very often
-     (every few seconds).
+   * Whenever the document is dirty, it has a warning message on the toolbar
+     that says something like "Not saved" followed by a button that says
+     "Enable cloud storage."
+   * The "Go online" button will open the document preferences dialog and
+     scroll down to/highlight the section about logging into Google Drive.
    * File > Document properties... will let you change the name of the
-     document (as long as you don't already have a document with that name)
-     and that will change the filename into which it's autosaved.
-   * File > Save and File > Save as... should therefore be removed.
-   * File > Open and File > Manage files... can be simplified to not permit
-     the creation of folders, so that all of a user's files are just in one
-     alphabetical list.
+     document which will simply be stored as document metadata; it will have
+     no impact on filename, since there is no filename (yet).
    * Corresponding changes take place in the toolbar.
    * Add File > Download, which starts a download of the file as HTML.
    * Add File > Upload, which lets the user choose an HTML file to upload,
      accepts the upload, strips any dangerous tags from it, then does the
      same thing as File > New, above, before pasting the HTML content
      directly into the new, blank document.
- * Provide a button in the File > Application settings... dialog that users
-   can push to initiate Google's authorization UI, thereby giving Lurch
-   access to their Google Drive.  When it has been used, replace it with a
-   button that de-authorizes webLurch from the user's Google Drive.
- * When a user gives such authorization, the following changes take place at
-   once, and persist for the remainder of their use of the webLurch app:
-   * All files formerly stored in the browser's Local Storage, if any, are
-     automatically imported into Google Drive, and the originals (in Local
-     Storage) discarded.  (Space in Local Storage is at a premium.)
-   * File > New creates a new realtime-shared file on Google Drive, which
-     automatically includes free and constant autosaving.  It will start out
-     with some stupid title like "Untitled Document" just as in Google Docs.
-     To change this title, use File > Document properties...
-   * File > Save and File > Save as... are still gone, as above.
-   * File > Open looks in your Google Drive for files to open.
+ * Add to the application settings section about Google Drive the actual
+   login/auth button.  Once a user has logged in, the button becomes a
+   disconnect-from-my-Drive button (de-auth).  See the tutorial on how to
+   do so [here](
+   https://developers.google.com/google-apps/realtime/realtime-quickstart),
+   and especially the JavaScript tools they've developed for your use
+   [here](https://github.com/googledrive/realtime-utils/blob/master/realtime-client-utils.js).
+ * When a user gives such authorization, the following changes take place:
+   * The currently-open file in the app should then be moved into Google
+     Drive as a new document.  Attempt to preserve document title, if one
+     was set in document properties.  If Drive requires unique titles, you
+     may need to append a number.
+   * Change File > New so that it does this same procedure of moving the
+     (newly created) document into Drive, with a default title such as
+     "Untitled Document."
+   * The toolbar will no longer say "Not saved," but will say either
+     "Saved to Drive" or "Syncing..." (if in progress).
+   * File > Open looks in your Google Drive for Lurch files to open, and
+     presents you a flat list.  If possible, sort it by most recently used.
    * File > Manage files... gets replaced by File > Open my Google Drive.
-     That is another way to rename any newly-created file.
-   * Corresponding changes take place in the toolbar.
- * If a user de-authorizes webLurch from their Google Drive, change the app
-   as follows:
-   * All entries on the File menu revert to their original behavior.
-   * Give the user the option to import back into their browser's Local
-     Storage all `.lurch` files currently sitting in their Google Drive,
-     before the de-authorization completes.  The files will *not* also be
-     deleted from the Google Drive, but the user can do so manually if they
-     choose to.
+     All file management will take place through Google's UI, not mine.
+ * If a user de-authorizes webLurch from their Google Drive, then all
+   entries on the File menu should revert to their original behavior.
+ * Get this to work across multiple instances of the Lurch app in different
+   tabs as follows.
+   * Store in Local Storage the fact that the user has given a Drive login
+     and succeeded, when that login takes place.
+   * Have the app poll that setting every second or two, and if it sees that
+     it has changed from no to yes (due to the user's logging into Drive in
+     another tab of the app), then re-run the silent Google login attempt
+     routine to complete the login in that tab as well.  (I think?)
 
 Tutorials
 

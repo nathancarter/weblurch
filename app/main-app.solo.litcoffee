@@ -48,7 +48,17 @@ later as this application becomes mature.
         closeImageHTML : '<font color="#996666">]</font>'
         tooltip : 'Make text a meaningful expression'
         color : '#996666'
+        connectionRequest : ( from, to ) ->
+            existingTags = ( "#{c[2]}" for c in from.connectionsOut() \
+                when c[1] is to.id() )
+            i = 0
+            while "#{i}" in existingTags then i++
+            from.connect to, "#{i}"
     ]
+
+Install the arrows UI for that group.
+
+    window.useGroupConnectionsUI = yes
 
 Use the MediaWiki, Settings, and Dialogs plugins.
 
@@ -79,16 +89,50 @@ exporting to it as well.  This is still in development.
                 page = window.location.href.split( '?' )[0]
                 url = page + '?document=' + \
                     encodeURIComponent tinymce.activeEditor.getContent()
-                request = gapi.client.urlshortener.url.insert \
+                showURL = ( url ) ->
+                    embed = "<iframe src='#{url}' width=800
+                        height=600></iframe>"
+                        .replace /&/g, '&amp;'
+                        .replace /'/g, '&apos;'
+                        .replace /"/g, '&quot;'
+                        .replace /</g, '&lt;'
+                        .replace />/g, '&gt;'
+                    console.log embed
+                    tinymce.activeEditor.Dialogs.alert
+                        title : 'Permanent Sharing Links'
+                        message : "
+                            <h3>Sharing URL</h3>
+                            <p>Copy this URL to your clipboard, and
+                            paste wherever you like, such as email.</p>
+                            <input type='text' size=50 id='firstURL'
+                             value='#{url}'/>
+                            <h3>Embedding HTML</h3>
+                            <p>Copy this HTML to your clipboard, and paste
+                            into any webpage or blog to embed a Lurch
+                            instance with this document in it.</p>
+                            <input type='text' size=50 value='#{embed}'/>
+                            <script>
+                            var all = document.getElementsByTagName(
+                                'input' );
+                            for ( var i = 0 ; i < all.length ; i++ ) {
+                                all[i].addEventListener( 'focus',
+                                    function ( event ) {
+                                        var t = event.target;
+                                        if ( t.select ) t.select();
+                                        else t.setSelectionRange(
+                                            0, t.value.length );
+                                    } );
+                            }
+                            document.getElementById( 'firstURL' ).focus();
+                            </script>"
+                request = gapi?.client?.urlshortener?.url?.insert? \
                     resource : longUrl : url
+                if not request? then return showURL url
                 request.execute ( response ) ->
                     if response.id?
-                        url = response.id
+                        showURL response.id
                     else
-                        console.log 'Error creating short URL', response
-                    prompt 'Copy the following URL to your clipboard, and
-                        paste it wherever you like, such as an email
-                        message.', url
+                        showURL url
         wikiimport :
             text : 'Import from wiki...'
             context : 'file'
@@ -188,15 +232,15 @@ exporting to it as well.  This is still in development.
             context : 'file'
             onclick : -> tinymce.activeEditor.Settings.application.showUI()
         docsettings :
-            text : 'Document properties...'
+            text : 'Document settings...'
             context : 'file'
             onclick : -> tinymce.activeEditor.Settings.document.showUI()
 
 Set up Google API key for URL shortening.
 
     window.addEventListener 'load', ->
-        gapi.client.setApiKey 'AIzaSyAf7F0I39DdI2jtD7zrPUa4eQvUXZ-K6W8'
-        gapi.client.load 'urlshortener', 'v1', ->
+        gapi?.client?.setApiKey 'AIzaSyAf7F0I39DdI2jtD7zrPUa4eQvUXZ-K6W8'
+        gapi?.client?.load 'urlshortener', 'v1', ->
     , no
 
 Lastly, a few actions to take after the editor has been initialized.

@@ -144,6 +144,82 @@ reasonable number of text files, there is no problem.
             result[name] = fs.readFileSync name, 'utf8'
         result
 
+## Shorting filenames
+
+Shortens a filename relative to the current folder, for use in logging.
+
+    shortFilename = ( filename ) ->
+        dir = __dirname + '/'
+        if filename[...dir.length] is dir
+            filename[dir.length..]
+        else
+            filename
+
+## Testing if a file is up-to-date
+
+This can be called in one of four ways.
+ 1. `mustUpdate input, output` takes two filenames and looks up the last
+    modified time of each, returning true iff the input's time is after the
+    output's time
+ 1. The other three ways are that either or both of the arguments can be an
+    array, and the result is true iff `mustUpdate x, y` would be true for
+    any x from the first array and any y from the second.
+
+
+    exports.mustUpdate = ( input, output ) ->
+        if input instanceof Array
+            for i in input
+                if exports.mustUpdate i, output then return yes
+            return no
+        if output instanceof Array
+            for o in output
+                if exports.mustUpdate input, o then return yes
+            return no
+        try
+            fs.statSync( input ).mtime.getTime() > \
+                fs.statSync( output ).mtime.getTime()
+        catch e
+            yes
+
+## Copying a file
+
+Only copies the file if the destination is older than the source.  Calls the
+callback when done.
+
+    exports.copyFile = ( source, destination, callback ) ->
+        src = shortFilename source
+        dst = shortFilename destination
+        if exports.mustUpdate source, destination
+            exports.runShellCommands [
+                description : "\tCopying #{src} to #{dst}..."
+                command : "cp #{source} #{destination}"
+            ], callback
+        else
+            console.log "\tNot copying #{src} to #{dst}
+                -- unchanged.".gray
+            callback()
+
+## Concatenating text files
+
+This function takes an array of input text files, a separator, and a single
+filename for the output text file.  It reads all the input files, joins them
+using the separator, and writes the result to the named output file.
+
+    exports.concatFiles = ( inputs, separator, output ) ->
+
+Do we even need to do this?  Maybe nothing changed...
+
+        if not exports.mustUpdate inputs, output
+            console.log "\tNot combining files into
+                #{output.split( '/' ).pop()} -- inputs unchanged".gray
+            return
+
+Yes, we need to do it, so do so.
+
+        console.log "\tCombining files into #{output.split( '/' ).pop()}..."
+        all = ( fs.readFileSync name for name in inputs )
+        fs.writeFileSync output, all.join( separator ), 'utf8'
+
 ## Run a sequence of shell scripts
 
 The following utility function is handy for executing a sequence of shell
@@ -181,7 +257,7 @@ generate a corresponding `.js` file (compiled coffeescript), `.min.js` file
 (source map files for both). When the compilation is done, the callback
 function will be called.
 
-    exports.compile = ( srcfile, callback ) ->
+    exports.compile = ( srcfile, callback, moveTo ) ->
 
 Separate the path and filename out from one another, then the base name from
 the filename.
@@ -192,6 +268,16 @@ the filename.
         coffee = p.resolve __dirname, 'node_modules', '.bin', 'coffee'
         uglify = p.resolve __dirname, 'node_modules', '.bin', 'uglifyjs'
         prefixlen = __dirname.length + 1
+
+Do we even need to do this?  Maybe the source file didn't change.
+
+        prefix = moveTo ? path
+        outputs = ( "#{prefix}/#{base}.#{extension}" for extension in \
+            [ 'js', 'min.js', 'js.map', 'min.js.map' ] )
+        if not exports.mustUpdate srcfile, outputs
+            console.log "\tNot recompiling #{srcfile.split( '/' ).pop()}
+                -- unchanged".gray
+            return callback()
 
 Run the `coffee` compiler on the file, also creating a source map. This
 generates both `.js` and `.js.map` files.
@@ -214,4 +300,28 @@ error if there was one.
                        --in-source-map #{base}.js.map -o #{base}.min.js
                        --source-map #{base}.min.js.map"
             cwd : path
-        ], callback
+        ], ->
+            if moveTo?
+                if moveTo[-1..] isnt '/' then moveTo += '/'
+                dir = __dirname + '/'
+                short = shortFilename moveTo
+                exports.runShellCommands [
+                    description : "\tMoving #{base}.js to #{short}..."
+                    command : "mv #{base}.js #{moveTo}"
+                    cwd : path
+                ,
+                    description : "\tMoving #{base}.js.map to #{short}..."
+                    command : "mv #{base}.js.map #{moveTo}"
+                    cwd : path
+                ,
+                    description : "\tMoving #{base}.min.js to #{short}..."
+                    command : "mv #{base}.min.js #{moveTo}"
+                    cwd : path
+                ,
+                    description : "\tMoving #{base}.min.js.map to
+                        #{short}..."
+                    command : "mv #{base}.min.js.map #{moveTo}"
+                    cwd : path
+                ], callback
+            else
+                callback()

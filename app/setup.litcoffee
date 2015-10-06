@@ -129,8 +129,8 @@ We then install two toolbars, with separators indicated by pipes (`|`).
                     textcolor subscript superscript removeformat
                     | link unlink | charmap image
                     | spellchecker searchreplace | equationeditor | ' + \
-                    groupTypeNames.join( ' ' ) + ' | ' + \
-                    Object.keys( window.groupToolbarButtons ).join ' '
+                    groupTypeNames.join( ' ' ) + ' connect' + \
+                    moreToolbarItems()
             ]
 
 We then customize the menus' contents as follows.
@@ -254,8 +254,8 @@ function now.
 
                     window.afterEditorReady? editor
 
-The following utility function was used to help build lists of menu items
-in the setup data above.
+The following utility functions are used to help build lists of menu and
+toolbar items in the setup data above.
 
     moreMenuItems = ( menuName ) ->
         names = if window.groupMenuItems.hasOwnProperty "#{menuName}_order"
@@ -263,6 +263,10 @@ in the setup data above.
         else
             ( k for k in Object.keys window.groupMenuItems \
                 when window.groupMenuItems[k].context is menuName ).join ' '
+        if names.length and names[...2] isnt '| ' then "| #{names}" else ''
+    moreToolbarItems = ->
+        names = ( window.groupToolbarButtons.order ? \
+            Object.keys window.groupToolbarButtons ).join ' '
         if names.length and names[...2] isnt '| ' then "| #{names}" else ''
 
 The third-party plugin for math equations can have its rough meaning
@@ -313,19 +317,19 @@ the developer tutorial in general, and it flashes the Help menu briefly to
 draw the viewer's attention there.
 
     window.addHelpMenuSourceCodeLink = ( path ) ->
-        window.groupMenuItems =
-            sourcecode :
-                text : 'View documented source code'
-                context : 'help'
-                onclick : ->
-                    window.location.href = 'http://github.com/' + \
-                        'nathancarter/weblurch/blob/master/' + path
-            tutorial :
-                text : 'View developer tutorial'
-                context : 'help'
-                onclick : ->
-                    window.location.href = 'http://github.com/' + \
-                        'nathancarter/weblurch/blob/master/doc/tutorial.md'
+        window.groupMenuItems ?= { }
+        window.groupMenuItems.sourcecode =
+            text : 'View documented source code'
+            context : 'help'
+            onclick : ->
+                window.location.href = 'http://github.com/' + \
+                    'nathancarter/weblurch/blob/master/' + path
+        window.groupMenuItems.tutorial =
+            text : 'View developer tutorial'
+            context : 'help'
+            onclick : ->
+                window.location.href = 'http://github.com/' + \
+                    'nathancarter/weblurch/blob/master/doc/tutorial.md'
         flash = ( count, delay, elts ) ->
             if count-- <= 0 then return
             elts.fadeOut( delay ).fadeIn delay, -> flash count, delay, elts
