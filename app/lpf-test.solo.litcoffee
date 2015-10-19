@@ -326,6 +326,7 @@ possibly significantly refactored.  Right now, it is just a test.
                 leanCode : code
                 numLines : code.split( '\n' ).length
                 feedbackData : feedbackData
+        dot2comma = ( code ) -> code.replace /\./g, ','
         while code.length > 0
             positionInCode = originalCode.length - code.length
             if match = commentRE.exec code
@@ -347,31 +348,32 @@ possibly significantly refactored.  Right now, it is just a test.
                 else
                     freevars = [ ]
                 inputs = for entry, index in inputs
-                    if /:/.test entry
+                    if /^\s*[a-zA-Z_][a-zA-Z_0-9]*\s*:/.test entry
                         [ ( t.trim() for t in entry.split ':' )..., 'pair' ]
                     else
                         [ "dummy#{index}", entry, 'singleton' ]
                 if type is 'SYMBOL' and inputs.length is 0
-                    result.add "constant #{name} : #{output}"
+                    result.add "constant #{name} : #{dot2comma output}"
                 else if type is 'SYMBOL'
                     inames = ( v[0] for v in inputs )
-                    inputs = ( "(#{v[0]} : #{v[1]})" for v in inputs )
+                    inputs =
+                        ( "(#{v[0]} : #{dot2comma v[1]})" for v in inputs )
                     result.add "inductive #{name} #{inputs.join ' '} :
                         #{output} := mk : #{inames.join ' -> '} ->
                         #{name} #{inames.join ' '}"
                 else if type is 'RULE'
                     inputs = for v in inputs
                         if v[2] is 'pair'
-                            "{#{v[0]} : #{v[1]}}"
+                            "{#{v[0]} : #{dot2comma v[1]}}"
                         else
-                            "(#{v[0]} : #{v[1]})"
+                            "(#{v[0]} : #{dot2comma v[1]})"
                     result.add "constant #{name} #{inputs.join ' '} :
-                        #{output}"
+                        #{dot2comma output}"
                 else
                     result.add '-- Invalid Global type: ' + type
                 count++
             else if match = stepRE.exec code
-                conclusion = match[1]
+                conclusion = dot2comma match[1]
                 freevars = match[2]
                 if not /^\s*$/.test freevars
                     freevars = ( t.trim() for t in freevars.split ',' )
@@ -394,8 +396,8 @@ possibly significantly refactored.  Right now, it is just a test.
                 getTypeOf = ( name ) ->
                     i = env.length - 1
                     while i >= 0
-                        if env[i].hasOwnProperty name
-                            return env[i][name]
+                        for pair in env[i]
+                            if pair[0] is name then return pair[1]
                         i--
                     lastType
                 if allfrees.length > 0
@@ -407,8 +409,8 @@ possibly significantly refactored.  Right now, it is just a test.
                         result.add '-- Undeclared variable(s): ' + \
                             undeclared.join ', '
                         break
-                    allfrees =
-                        ( "(#{v} : #{getTypeOf v})" for v in allfrees )
+                    allfrees = ( "(#{v} : #{dot2comma getTypeOf v})" \
+                        for v in allfrees )
                     declarations = allfrees.join ' '
                 if premises.length > 0
                     for premise, index in premises
@@ -427,19 +429,24 @@ possibly significantly refactored.  Right now, it is just a test.
                 frees[count] = freevars[..]
                 count++
             else if match = typeRE.exec code
-                result.add '-- Type ' + match[1]
-                lastType = match[1]
+                result.add '-- Type ' + dot2comma match[1]
+                lastType = dot2comma match[1]
                 count++
             else if match = beginRE.exec code
                 result.add '-- Begin'
-                env.push { }
+                env.push [ ]
                 count++
             else if match = endRE.exec code
                 result.add '-- End'
                 if env.length is 0
                     result.add '-- Cannot do End here!'
                     break
-                env.pop()
+                if not ( conclusion = lines[count-1] )?
+                    result.add '-- Subproof had no conclusion!'
+                    break
+                premises = for pair in env.pop()
+                    "(#{pair[0]} : #{pair[1]})"
+                lines[count] = "Pi #{premises.join ' '}, (#{conclusion})"
                 count++
             else if match = localRE.exec code
                 result.add '-- Local ' + match[1] + ' ' + match[2] \
@@ -448,10 +455,18 @@ possibly significantly refactored.  Right now, it is just a test.
                     result.add '-- Cannot do Local here!'
                     break
                 last = env[env.length-1]
-                last[match[1]] = match[2]
+                okayToAdd = yes
+                for pair in last
+                    if pair[0] is match[1]
+                        result.add "-- Cannot redeclare #{match[1]} here!"
+                        okayToAdd = no
+                        break
+                if okayToAdd then last.push [ match[1], dot2comma match[2] ]
+                lines[count] = dot2comma match[2]
                 count++
             else
                 result.add '-- Cannot understand: ' + code
                 break
             code = code[match[0].length..]
+        console.log lines
         result
