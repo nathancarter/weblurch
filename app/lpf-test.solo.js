@@ -281,7 +281,7 @@
   });
 
   compileLPF = function(code) {
-    var allfrees, beginRE, commentRE, conclusion, count, declarations, endRE, entry, env, feedbackData, free, frees, freevars, getTypeOf, globalRE, i, inames, index, inputs, last, lastType, lines, localRE, match, name, originalCode, output, positionInCode, premise, premises, reason, result, stepRE, t, type, typeRE, undeclared, v, whitespaceRE, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1;
+    var allfrees, beginRE, commentRE, conclusion, count, declarations, dot2comma, endRE, entry, env, feedbackData, free, frees, freevars, getTypeOf, globalRE, i, inames, index, inputs, last, lastType, lines, localRE, match, name, okayToAdd, originalCode, output, pair, positionInCode, premise, premises, reason, result, stepRE, t, type, typeRE, undeclared, v, whitespaceRE, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1;
     result = {};
     commentRE = /^\/\/(.*)(\n|$)/;
     whitespaceRE = /^\s+/;
@@ -381,6 +381,9 @@
         feedbackData: feedbackData
       });
     };
+    dot2comma = function(code) {
+      return code.replace(/\./g, ',');
+    };
     while (code.length > 0) {
       positionInCode = originalCode.length - code.length;
       if (match = commentRE.exec(code)) {
@@ -426,7 +429,7 @@
           _results = [];
           for (index = _i = 0, _len = inputs.length; _i < _len; index = ++_i) {
             entry = inputs[index];
-            if (/:/.test(entry)) {
+            if (/^\s*[a-zA-Z_][a-zA-Z_0-9]*\s*:/.test(entry)) {
               _results.push(__slice.call((function() {
                   var _j, _len1, _ref, _results1;
                   _ref = entry.split(':');
@@ -444,7 +447,7 @@
           return _results;
         })();
         if (type === 'SYMBOL' && inputs.length === 0) {
-          result.add("constant " + name + " : " + output);
+          result.add("constant " + name + " : " + (dot2comma(output)));
         } else if (type === 'SYMBOL') {
           inames = (function() {
             var _i, _len, _results;
@@ -460,7 +463,7 @@
             _results = [];
             for (_i = 0, _len = inputs.length; _i < _len; _i++) {
               v = inputs[_i];
-              _results.push("(" + v[0] + " : " + v[1] + ")");
+              _results.push("(" + v[0] + " : " + (dot2comma(v[1])) + ")");
             }
             return _results;
           })();
@@ -472,20 +475,20 @@
             for (_i = 0, _len = inputs.length; _i < _len; _i++) {
               v = inputs[_i];
               if (v[2] === 'pair') {
-                _results.push("{" + v[0] + " : " + v[1] + "}");
+                _results.push("{" + v[0] + " : " + (dot2comma(v[1])) + "}");
               } else {
-                _results.push("(" + v[0] + " : " + v[1] + ")");
+                _results.push("(" + v[0] + " : " + (dot2comma(v[1])) + ")");
               }
             }
             return _results;
           })();
-          result.add("constant " + name + " " + (inputs.join(' ')) + " : " + output);
+          result.add("constant " + name + " " + (inputs.join(' ')) + " : " + (dot2comma(output)));
         } else {
           result.add('-- Invalid Global type: ' + type);
         }
         count++;
       } else if (match = stepRE.exec(code)) {
-        conclusion = match[1];
+        conclusion = dot2comma(match[1]);
         freevars = match[2];
         if (!/^\s*$/.test(freevars)) {
           freevars = (function() {
@@ -539,10 +542,15 @@
         }
         declarations = '';
         getTypeOf = function(name) {
+          var pair, _k, _len2, _ref2;
           i = env.length - 1;
           while (i >= 0) {
-            if (env[i].hasOwnProperty(name)) {
-              return env[i][name];
+            _ref2 = env[i];
+            for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+              pair = _ref2[_k];
+              if (pair[0] === name) {
+                return pair[1];
+              }
             }
             i--;
           }
@@ -565,7 +573,7 @@
             _results = [];
             for (_l = 0, _len3 = allfrees.length; _l < _len3; _l++) {
               v = allfrees[_l];
-              _results.push("(" + v + " : " + (getTypeOf(v)) + ")");
+              _results.push("(" + v + " : " + (dot2comma(getTypeOf(v))) + ")");
             }
             return _results;
           })();
@@ -588,12 +596,12 @@
         frees[count] = freevars.slice(0);
         count++;
       } else if (match = typeRE.exec(code)) {
-        result.add('-- Type ' + match[1]);
-        lastType = match[1];
+        result.add('-- Type ' + dot2comma(match[1]));
+        lastType = dot2comma(match[1]);
         count++;
       } else if (match = beginRE.exec(code)) {
         result.add('-- Begin');
-        env.push({});
+        env.push([]);
         count++;
       } else if (match = endRE.exec(code)) {
         result.add('-- End');
@@ -601,7 +609,21 @@
           result.add('-- Cannot do End here!');
           break;
         }
-        env.pop();
+        if ((conclusion = lines[count - 1]) == null) {
+          result.add('-- Subproof had no conclusion!');
+          break;
+        }
+        premises = (function() {
+          var _len4, _m, _ref2, _results;
+          _ref2 = env.pop();
+          _results = [];
+          for (_m = 0, _len4 = _ref2.length; _m < _len4; _m++) {
+            pair = _ref2[_m];
+            _results.push("(" + pair[0] + " : " + pair[1] + ")");
+          }
+          return _results;
+        })();
+        lines[count] = "Pi " + (premises.join(' ')) + ", (" + conclusion + ")";
         count++;
       } else if (match = localRE.exec(code)) {
         result.add('-- Local ' + match[1] + ' ' + match[2] + ' ' + match[3]);
@@ -610,7 +632,19 @@
           break;
         }
         last = env[env.length - 1];
-        last[match[1]] = match[2];
+        okayToAdd = true;
+        for (_m = 0, _len4 = last.length; _m < _len4; _m++) {
+          pair = last[_m];
+          if (pair[0] === match[1]) {
+            result.add("-- Cannot redeclare " + match[1] + " here!");
+            okayToAdd = false;
+            break;
+          }
+        }
+        if (okayToAdd) {
+          last.push([match[1], dot2comma(match[2])]);
+        }
+        lines[count] = dot2comma(match[2]);
         count++;
       } else {
         result.add('-- Cannot understand: ' + code);
@@ -618,6 +652,7 @@
       }
       code = code.slice(match[0].length);
     }
+    console.log(lines);
     return result;
   };
 
