@@ -721,7 +721,7 @@ the two ends of the selection are inside the same deepest group.
             for own name, type of @groupTypes
                 type?.button?.disabled left isnt right
                 type?.menuItem?.disabled left isnt right
-            @connectionsButton.disabled not left? or ( left isnt right )
+            @connectionsButton?.disabled not left? or ( left isnt right )
             @updateConnectionsMode()
 
 The above function calls `updateConnectionsMode()`, which checks to see if
@@ -729,8 +729,8 @@ connections mode has been entered/exited since the last time the function
 was run, and if so, updates the UI to reflect the change.
 
         updateConnectionsMode: =>
-            if @connectionsButton.disabled()
-                @connectionsButton.active no
+            if @connectionsButton?.disabled()
+                @connectionsButton?.active no
 
 ## Inserting new groups
 
