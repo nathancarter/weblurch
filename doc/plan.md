@@ -128,7 +128,8 @@ Add support for Dropbox open and save using their simple
 to think this was possible because they could not accept uploads from Blob
 URLs, but it's possible to [convert those to a data
 URI](https://github.com/dropbox/dropbox-js/issues/144#issuecomment-32080661)
-and Dropbox Saver will accept those.
+and Dropbox Saver will accept those.  Once you've done this, mark an answer
+as accepted or not [here](http://stackoverflow.com/questions/26457316/can-dropbox-saver-accept-data-from-createobjecturl?noredirect=1#comment53719255_26457316).
 
 Google Drive also provides a very nice [real time collaboration API](
 https://developers.google.com/google-apps/realtime/overview) that makes any
