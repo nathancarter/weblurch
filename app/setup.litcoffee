@@ -260,41 +260,6 @@ toolbar items in the setup data above.
             Object.keys window.groupToolbarButtons ).join ' '
         if names.length and names[...2] isnt '| ' then "| #{names}" else ''
 
-The third-party plugin for math equations can have its rough meaning
-extracted by the following function, which can be applied to any DOM element
-that has the style "mathquill-rendered-math."  For instance, the expression
-$x^2+5$ in MathQuill would become `["x","sup","2","+","5"]` as returned by
-this function, similar to the result of a tokenizer, ready for a parser.
-
-    window.mathQuillToMeaning = ( node ) ->
-        if node instanceof Text then return node.textContent
-        result = [ ]
-        for child in node.childNodes
-            if ( $ child ).hasClass( 'selectable' ) or \
-               ( $ child ).hasClass( 'cursor' ) or \
-               /width:0/.test child.getAttribute? 'style'
-                continue
-            result = result.concat mathQuillToMeaning child
-        if node.tagName in [ 'SUP', 'SUB' ]
-            name = node.tagName.toLowerCase()
-            if ( $ node ).hasClass 'nthroot' then name = 'nthroot'
-            if result.length > 1
-                result.unshift '('
-                result.push ')'
-            result.unshift name
-        for marker in [ 'fraction', 'overline', 'overarc' ]
-            if ( $ node ).hasClass marker
-                if result.length > 1
-                    result.unshift '('
-                    result.push ')'
-                result.unshift marker
-        for marker in [ 'numerator', 'denominator' ]
-            if ( $ node ).hasClass marker
-                if result.length > 1
-                    result.unshift '('
-                    result.push ')'
-        if result.length is 1 then result[0] else result
-
 ## Support demo apps
 
 We want to allow the demo applications in the webLurch source code
