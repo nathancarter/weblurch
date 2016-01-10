@@ -28,15 +28,32 @@ this function, similar to the result of a tokenizer, ready for a parser.
 That's why this function appears in this file, because it prepares MathQuill
 nodes for the parser defined below.
 
-    exports.mathQuillToMeaning = ( node ) ->
-        if node instanceof Text then return node.textContent
+The second parameter is optional, and it accepts an array of strings as
+input and tests whether some initial segment of that array, when joined
+without separators, forms a variable name.  If so, return the variable name.
+If not, return null.
+
+    exports.mathQuillToMeaning = ( node, getVariableName ) ->
+        if node instanceof Text
+            return node.textContent.replace /\u0192/g, 'f'
         result = [ ]
         for child in node.childNodes
             if ( $ child ).hasClass( 'selectable' ) or \
                ( $ child ).hasClass( 'cursor' ) or \
                /width:0/.test child.getAttribute? 'style'
                 continue
-            result = result.concat mathQuillToMeaning child
+            result = result.concat mathQuillToMeaning child, getVariableName
+        tmp = [ ]
+        while result.length > 0
+            if varname = getVariableName? result
+                tmp.push varname
+                consumed = 0
+                while consumed < varname.length
+                    piece = result.shift()
+                    consumed += piece.length
+            else
+                tmp.push result.shift()
+        result = tmp
         if node.tagName in [ 'SUP', 'SUB' ]
             name = node.tagName.toLowerCase()
             if ( $ node ).hasClass 'nthroot' then name = 'nthroot'
@@ -55,7 +72,7 @@ nodes for the parser defined below.
                 if result.length > 1
                     result.unshift '('
                     result.push ')'
-        if result.length is 1 then result[0] else result
+        result
 
 ## Grammar definition
 
@@ -76,7 +93,7 @@ Rules for numbers:
     G.addRule 'nonnegint', 'digit'
     G.addRule 'nonnegint', [ 'digit', 'nonnegint' ]
     G.addRule 'integer', 'nonnegint'
-    G.addRule 'integer', [ /-/, 'nonnegint' ]
+    G.addRule 'integer', [ /[−-]/, 'nonnegint' ]
     G.addRule 'float', [ 'integer', /\./, 'nonnegint' ]
     G.addRule 'float', [ 'integer', /\./ ]
     G.addRule 'infinity', [ /∞/ ]
@@ -101,7 +118,7 @@ Rules for the operations of arithmetic:
     G.addRule 'factor', [ 'factor', /sup/, /[∘]/ ]
     G.addRule 'prodquo', 'factor'
     G.addRule 'prodquo', [ 'prodquo', /[÷×·]/, 'factor' ]
-    G.addRule 'prodquo', [ /-/, 'prodquo' ]
+    G.addRule 'prodquo', [ /[−-]/, 'prodquo' ]
     G.addRule 'sumdiff', 'prodquo'
     G.addRule 'sumdiff', [ 'sumdiff', /[+±−-]/, 'prodquo' ]
 

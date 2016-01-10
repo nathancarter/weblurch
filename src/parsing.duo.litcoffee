@@ -105,6 +105,7 @@ name to a grammar when you construct one.
                 expressionBuilder : null
                 tokenizer : null
                 comparator : JSON.equals
+                maxIterations : -1 # which means no maximum
 
 The default options for the parsing algorithm are initialized in the
 constructor above, but you can change them using the following routine.  The
@@ -168,6 +169,10 @@ defined [above](#constructor).
    comparison, but will therefore go into an infinite loop for circular
    structures.  Feel free to provide a different one if the default does not
    meet your needs.  To return duplicates, simply set this to `-> no`.
+ * `maxIterations` defaults to infinite, but can be specified as a positive
+   integer, and the parsing algorithm will not iterate its innermost loops
+   any more than this many times.  This can be useful if you have a
+   suspected infinite loop in a grammar, and want to debug it.
 
 This algorithm is documented to some degree, but it will make much more
 sense if you have read the Wikipedia page cited at the top of this file.
@@ -180,7 +185,9 @@ sense if you have read the Wikipedia page cited at the top of this file.
             expressionBuilderFlag = { }
             options.tokenizer ?= @defaults.tokenizer
             options.comparator ?= @defaults.comparator
-            debug = if options.showDebuggingOutput then console.log else ->
+            options.maxIterations ?= @defaults.maxIterations
+            debug = if options.showDebuggingOutput then \
+                -> console.log arguments... else ->
             debug '\n\n'
 
 Run the tokenizer if there is one, and the input needs it.
@@ -206,6 +213,7 @@ set.
 
 Do the main nested loop which solves the whole problem.
 
+            numIterationsDone = 0
             for stateSet, i in stateGrid
                 debug "processing stateSet #{i} in this stateGrid
                     (with input #{input}):"
@@ -248,6 +256,32 @@ the "completer":  We just completed a nonterminal, so mark progress in
 whichever rules spawned it by copying them into the next column in
 `stateGrid`, with progress incremented one step.
 
+I make one extension to the Earley algorithm at this point to prevent a
+simple type of cyclicity.  For example, if there are production rules A -> B
+and B -> A, then upon completing an A, we will also complete a B, and then
+an A again, and so on ad infinitum.  Thus I create a function that, if the
+`addCategories` option is enabled, will prevent this simple type of infinite
+loop by preventing the second completion of the same array by any rule.
+
+                        # duplicateLabel = ( got ) ->
+                        #     if not options.addCategories then return no
+                        #     length = if options.expressionBuilder then 3 \
+                        #         else 2
+                        #     walk = got
+                        #     firstLabel = null
+                        #     while walk.length is length
+                        #         if firstLabel is null
+                        #             firstLabel = walk[length-2]
+                        #         else
+                        #             debug 'comparing', firstLabel, 'to',
+                        #                 walk[length-2]
+                        #             if walk[length-2] is firstLabel
+                        #                 return yes
+                        #         walk = walk[length-1]
+                        #     no
+
+Then we proceed with the code for the completer.
+
                         debug 'considering if this completion matters to
                             state set', state.ori
                         for s, k in stateGrid[state.ori]
@@ -261,10 +295,18 @@ whichever rules spawned it by copying them into the next column in
                                     got.unshift expressionBuilderFlag
                                 if options.collapseBranches and \
                                     got.length is 1 then got = got[0]
+                                # if duplicateLabel got
+                                #     debug 'duplicate label -- truncating
+                                #         search along that path'
+                                #     continue
                                 s.got.push got
                                 stateGrid[i].push s
                                 debug "completer added this to #{i}:",
                                     debugState s
+                                if numIterationsDone++ > \
+                                   options.maxIterations > 0
+                                    throw 'Maximum number of iterations
+                                        reached.'
                         j++
                         continue
                     if i >= input.length then j++ ; continue
@@ -314,6 +356,8 @@ the inner of the two main loops.
                             debug 'adding this state:',
                                 debugState stateSet[stateSet.length-1]
                     j++
+                    if numIterationsDone++ > options.maxIterations > 0
+                        throw 'Maximum number of iterations reached.'
             debug "finished processing this stateGrid
                 (with input #{input}):"
             debug '----------------------'
@@ -461,7 +505,8 @@ The following debugging routines are used in some of the code above.
 
     debugNestedArrays = ( ary ) ->
         if ary instanceof Array
-           '[' + ary.map( debugNestedArrays ).join( ',' ) + ']'
+            if '{}' is JSON.stringify ary[0] then ary = ary[1...]
+            '[' + ary.map( debugNestedArrays ).join( ',' ) + ']'
         else
             ary
     debugState = ( state ) ->
