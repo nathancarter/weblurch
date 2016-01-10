@@ -13,6 +13,83 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
+## Parsing test
+
+Create a Lurch Application that tests the following particular design for a
+customizable parser.
+
+ * Create a group type called "category name" that can hold any text.  Its
+   tag will always contain the phrase "category name."
+ * Create a group type called "category definition."
+   * It has an attribute called "definition type" that can be selected with
+     the bubble tag context menu, and is one of the following.
+     * Built-in types
+       * integers base 10
+       * real numbers base 10
+       * one letter a-z/A-Z
+       * (more can be added to this list later)
+     * Regular expression
+     * Symbol
+     * Pattern
+   * Whichever of the above is chosen will be used as the bubble tag
+     contents.
+   * Choosing any of the options, if the bubble is empty, fills the bubble
+     with example content for that definition type.  For built-in types, it
+     fills the bubble with a human-readable description of the built-in.
+ * Make "category name" groups able to connect by arrows to "definition
+   type" groups or "category name" groups, but only up to one target.
+ * Create a group type called "name" that can hold any text.
+   * Permit it to connect to a "definition type" group, but only up to one
+     target.
+   * Permit "category type" groups to connect to "name" type groups also,
+     but still at most one target.
+   * Its tag will behave as follows.
+     * If it is not connected to a target, the tag says "name."
+     * If it has no category name connected to it, the tag says "operator
+       name."
+     * If it contains any commas or spaces, the tag says "variable names."
+     * Otherwise, it says "variable name."
+ * Create a group type called "test" that can hold any text.  Its tag always
+   contains the phrase "test."
+ * Create a method that computes, for any given "definition type" group, a
+   simple representation of what function should be called in a parser
+   object to extend it by adding that definition; the result should be JSON.
+ * The `contentsChanged` handler for any given group in the document should
+   call that function in itself (if it's a definition type group) or (if
+   it's not) in any definition type group to which it's connected, storing
+   the result as an attribute of the group on which it was called.
+ * Create a function that applies any such JSON record of a command to a
+   parser object, thus modifying that parser appropriately.
+ * Whenever any definition type group in the document has its JSON meaning
+   recomputed, loop through all definition top-level groups in the document,
+   doing the following.
+   * Before the loop, create a parser P.
+   * Upon encountering a definition type group *after* the one that changed,
+     apply to it the function that extends P with the meaning of that group.
+   * Upon encountering a test type group, run P on its contents and place
+     the resulting structure within the test type group.
+ * Whenever any test type group in the document changes, do the same loop as
+   above, but the only test that should be recomputed is the one that
+   changed.
+ * Create a context menu item in test type groups that allows you to see, in
+   a popup window, the parsed structure stored in that group.
+ * Add a context menu item in test type groups that allows you to mark a
+   test as currently passing.  This takes the currently parsed meaning of
+   that group and stores it under a second key, the meaning that *ought* to
+   be parsed by that group.  (For later comparison purposes, if input data
+   changes, to prevent regression.)
+ * Add a context menu item for removing such marks.
+ * When writing to a test type group's meaning attribute (or to the
+   attribute storing the meaning it ought to have), also mark it with a
+   suffix that looks like one of the following.
+   * If it has no data stored for what structure it ought to have, mark it
+     with a gray question mark.  Hovering the question mark should explain
+     this.
+   * If the "what ought to be parsed" data matches the data we just parsed
+     and are now storing, mark it with a green check box.  Hovering should,
+     again, explain this.
+   * Mark it with a red check box, and a corresponding hover explanation.
+
 ## Matching Module
 
 The Matching Module may no longer be necessary, if we build Lurch on top of
@@ -52,6 +129,10 @@ have now **significantly**, as follows.
      problem is outside the capabilities of this algorithm.
    * Otherwise, progress has been made.  So repeat from 3 steps above this
      one, "Record a copy..."
+   * I cannot easily see a reason why this would enter an infinite loop, but
+     you should consider whether you can construct such an example.  If so,
+     put a limit to the number of times the above loop will repeate before
+     throwing an exception.
  * Run that algorithm on all existing unit tests, with one of three results:
    * The test passes, and you can move on to the next test.
    * The test fails, but merely due to an output formatting issue, and thus
@@ -113,10 +194,13 @@ support](#offline-support), below.
    * Or does that imply that we should recompute lots of stuff about each
      dependency as it's loaded, in invisible DOM elements somewhere?  That
      sounds expensive and error-prone.
-   * Knowing whether recomputation is needed could be determined by
-     inspecting an MD5 hash of the document to see if it has changed since
-     the last computation.  This is what [SCons
+   * Knowing whether recomputation of a dependency is needed could be
+     determined by inspecting an MD5 hash of the document to see if it has
+     changed since the last computation.  This is what [SCons
      does](http://www.scons.org/doc/0.98.4/HTML/scons-user/c779.html).
+   * Alternatively, you can also query the last modified date of a file on
+     the web without fetching the whole file.  See
+     [here](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date).
 
 ### Extending load and save
 
@@ -237,6 +321,11 @@ LocalStorage the meaning computed from all dependencies, so that Lurch is
 usable offline even when dependencies of the current document are online.
 
 ### Ideas from various sources
+
+[This GitHub comment](
+https://github.com/buddyexpress/bdesk_photo/issues/2#issuecomment-166245603)
+might be useful for ensuring that even images pasted into a document get
+converted to base64, as all the other images in the document are.
 
 Suggestion from Dana Ernst: Perhaps this is not necessary or feasible, but
 if you go with a web app, could you make it easy for teachers to "plug into"
