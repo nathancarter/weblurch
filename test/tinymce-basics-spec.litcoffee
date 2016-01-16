@@ -19,7 +19,7 @@ that can be extended.</font>
 This is a very simple test that will be extended later.
 
     phantomDescribe 'TinyMCE active editor',
-    './app/index.html', ->
+    './app/app.html', ->
 
 ### should exist
 

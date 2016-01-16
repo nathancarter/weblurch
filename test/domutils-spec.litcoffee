@@ -13,7 +13,7 @@ The tests in this section test the `address` member function in the `Node`
 prototype. [See its definition here.](domutils.litcoffee.html#address).
 
     phantomDescribe 'address member function of Node class',
-    './app/index.html', ->
+    './app/app.html', ->
 
 ### should be defined
 
@@ -83,11 +83,12 @@ address will also be the empty array.
         it 'should be length-1 for a child', inPage ->
 
 Run a baseline test to be sure we know the size of the document now.  It
-should have three children, the empty text in the document body by default,
-the editor added there by a script after the page loads, and the div used as
-a toolbar by that editor.
+should have five children: the empty text in the document body by default,
+the DIV containing the editor, the original TEXTAREA from which the editor
+was create (now invisible), plus two IFRAMEs added by the Google web API for
+URL shortening.
 
-            pageExpects ( -> document.body.childNodes.length ), 'toEqual', 3
+            pageExpects ( -> document.body.childNodes.length ), 'toEqual', 5
 
 First, add some structure to the document. We will need to run tests on a
 variety of parent-child pairs of nodes, so we need to create such pairs as
@@ -120,9 +121,9 @@ of those ways to verify that they are equal.
             pageExpects ( -> chidiv1.address pardiv ), 'toEqual', [ 0 ]
             pageExpects ( -> chidiv2.address pardiv ), 'toEqual', [ 1 ]
             pageExpects ( -> document.body.childNodes.length ),
-                'toEqual', 4
+                'toEqual', 6
             pageExpects ( -> pardiv.address document.body ),
-                'toEqual', [ 3 ]
+                'toEqual', [ 5 ]
             pageExpects ( -> inner.address outer ), 'toEqual', [ 0 ]
 
 ### should work for grandchildren, etc.
@@ -221,7 +222,7 @@ prototype.  This function is like the inverse of `address`. [See its
 definition here.](domutils.litcoffee.html#index).
 
     phantomDescribe 'index member function of Node class',
-    './app/index.html', ->
+    './app/app.html', ->
 
 ### should be defined
 
@@ -433,7 +434,7 @@ The tests in this section test the `toJSON` member function in the `Node`
 prototype. [See its definition here.](domutils.litcoffee.html#serialization)
 
     phantomDescribe 'Node toJSON conversion',
-    './app/index.html', ->
+    './app/app.html', ->
 
 ### should be defined
 
@@ -721,7 +722,7 @@ object. [See its definition here.](
 domutils.litcoffee.html#from-objects-to-dom-nodes)
 
     phantomDescribe 'Node fromJSON conversion',
-    './app/index.html', ->
+    './app/app.html', ->
 
 ### should be defined
 
@@ -919,7 +920,7 @@ functions in the `Node` prototype. [See their definition here.](
 domutils.litcoffee.html#next-and-previous-leaves).
 
     phantomDescribe 'leaf navigation in Node class',
-    './app/index.html', ->
+    './app/app.html', ->
 
 ### should be defined
 
