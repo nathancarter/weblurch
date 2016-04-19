@@ -3,7 +3,6 @@
 
 ## Terms
 
- 1. Define a group type for terms.
  1. Cause it to mark itself invalid (red light, with message) if it appears
     nested inside another term group.
  1. Define a function that converts a term group in the document into Lean

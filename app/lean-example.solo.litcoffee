@@ -96,3 +96,19 @@ the `Module.print` function, above, and collected into the global variable
         # Module.lean_process_file 'test.lean'
         # console.log '--- Lean has been run on test.lean.', checkTimer()
         LeanOutputArray
+
+## Term Groups
+
+    window.groupTypes = [
+        name : 'term'
+        text : 'Lean Term'
+        tooltip : 'Make the selection a Lean term'
+        color : '#666666'
+        imageHTML : '<font color="#666666"><b>[ ]</b></font>'
+        openImageHTML : '<font color="#666666"><b>[</b></font>'
+        closeImageHTML : '<font color="#666666"><b>]</b></font>'
+        # contentsChanged : ( group, firstTime ) -> ...nothing here yet...
+        # tagContents : ( group ) -> ...nothing here yet...
+        # tagMenuItems : ( group ) -> ...compute them here...
+        # contextMenuItems : ( group ) -> ...compute them here...
+    ]
