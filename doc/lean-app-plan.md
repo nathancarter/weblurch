@@ -3,7 +3,6 @@
 
 ## Setup
 
- 1. Create a blank Lurch Application.
  1. Import all the code necessary for running Lean in a webpage, including
     running all the setup code when the page loads. See
     [here](https://github.com/leanprover/lean.js/blob/master/examples/simple-lean-js-example.html).
