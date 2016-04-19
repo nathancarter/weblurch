@@ -3,9 +3,6 @@
 
 ## Setup
 
- 1. Import all the code necessary for running Lean in a webpage, including
-    running all the setup code when the page loads. See
-    [here](https://github.com/leanprover/lean.js/blob/master/examples/simple-lean-js-example.html).
  1. Pop up a dialog when the page loads, before the Lean virtual machine
     setup routine is called, informing the user to wait while the Lean
     engine is initialized.  Clear the dialog when the VM is ready.

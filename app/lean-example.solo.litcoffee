@@ -14,4 +14,80 @@ This application is more useful than either of those.
 [See a live version of this application online here.](
 http://nathancarter.github.io/weblurch/app/lean-example.html)
 
-This application is currently blank.  It will be expanded in the future.
+First, we import the Lean virtual machine.
+
+## Lean VM Setup
+
+Here we begin loading the Lean virtual machine.  This takes some time.  We
+do it silently, but we leave several commented-out `console.log` statements
+below, so that you can see where certain events take place, and can monitor
+those events on the console if you like, by uncommenting those lines.
+
+The global variable `LeanOutputObject` is the current (if still under
+construction) or most recent (if just completed) object dumped by the Lean
+VM on its standard output channel.  The global variable `LeanOutputArray` is
+the ordered collection of all such output objects, in the order they were
+produced.
+
+    # console.log( '--- Loading Lean VM...' );
+    Module = window.Module = { }
+    Module.TOTAL_MEMORY = 64 * 1024 * 1024
+    Module.noExitRuntime = true
+    LeanOutputObject = null
+    LeanOutputArray = null
+    Module.print = ( text ) ->
+        match = null
+        if match = /FLYCHECK_BEGIN (.*)/.exec text
+            LeanOutputObject = type : match[1], text : [ ]
+        else if not LeanOutputObject
+            throw new Error 'Unexpected output from Lean: ' + text
+        else if match = /([^:]+):(\d+):(\d+): (.*)/.exec text
+            LeanOutputObject.file = match[1]
+            LeanOutputObject.line = match[2]
+            LeanOutputObject.char = match[3]
+            LeanOutputObject.info = match[4]
+        else if /FLYCHECK_END/.test text
+            # console.log 'Lean output: ' \
+            #           + JSON.stringify LeanOutputObject, null, 4
+            LeanOutputArray.push LeanOutputObject
+            LeanOutputObject = null
+        else
+            LeanOutputObject.text.push text
+    Module.preRun = [
+        ->
+            # console.log '--- Lean VM loaded.', checkTimer()
+            # console.log '--- Running Lean VM...'
+            startTimer()
+    ]
+    # Module.postRun = ->
+    #     console.log '--- Lean VM has been run.', checkTimer()
+
+## Lean Engine
+
+The following function runs the Lean engine on a string input, treating that
+string as an entire input file (with line and column numbers, as if Lean
+were being run from the command line, not the web).  All feedback and/or
+error messages produced by the engine are converted into output objects by
+the `Module.print` function, above, and collected into the global variable
+`LeanOutputArray`, which this function then returns.
+
+    runLeanOn = window.runLeanOn = ( code ) ->
+        # console.log '--- Calling lean_init()...'
+        startTimer()
+        Module.lean_init()
+        # console.log '--- lean_init() complete.', checkTimer()
+        # console.log '--- Importing Lean standard module...'
+        # startTimer();
+        # Module.lean_import_module "standard"
+        # console.log '--- Standard module imported.', checkTimer()
+        # console.log '--- Writing test.lean to virtual FS...'
+        startTimer()
+        # console.log code
+        FS.writeFile 'test.lean', code, encoding : 'utf8'
+        # console.log '--- test.lean written.', checkTimer()
+        # console.log '--- Running Lean on test.lean...'
+        startTimer()
+        LeanOutputArray = [ ]
+        Module.lean_process_file 'test.lean'
+        # console.log '--- Lean has been run on test.lean.', checkTimer()
+        LeanOutputArray
