@@ -32,7 +32,10 @@ Load and save
 
 Other
 
- * Formats menu is currently empty
+ * The Insert Menu covers the toolbar and will not disappear, even when an
+   item is selected.  This seems like it is either a TinyMCE bug (and may go
+   away if we update TinyMCE) or it is a bug in our use of TinyMCE.
+ * Formats menu is currently empty.
  * When you open a file that's longer than the screen, you must open and
    close the JS console to force resizing, or it won't scroll vertically.
  * Some of the `.duo.litcoffee` files in `src/` in the master branch also
