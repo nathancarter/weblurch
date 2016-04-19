@@ -14,7 +14,12 @@ This application is more useful than either of those.
 [See a live version of this application online here.](
 http://nathancarter.github.io/weblurch/app/lean-example.html)
 
-First, we import the Lean virtual machine.
+## Utilities for timing things
+
+    myTimer = null
+    now = -> ( new Date ).getTime()
+    startTimer = -> myTimer = now()
+    checkTimer = -> "(took #{now() - myTimer} ms)"
 
 ## Lean VM Setup
 
@@ -57,7 +62,7 @@ produced.
         ->
             # console.log '--- Lean VM loaded.', checkTimer()
             # console.log '--- Running Lean VM...'
-            startTimer()
+            # startTimer()
     ]
     # Module.postRun = ->
     #     console.log '--- Lean VM has been run.', checkTimer()
@@ -71,23 +76,23 @@ error messages produced by the engine are converted into output objects by
 the `Module.print` function, above, and collected into the global variable
 `LeanOutputArray`, which this function then returns.
 
-    runLeanOn = window.runLeanOn = ( code ) ->
+    window.runLeanOn = ( code ) ->
         # console.log '--- Calling lean_init()...'
-        startTimer()
-        Module.lean_init()
+        # startTimer()
+        Module.lean_init false
         # console.log '--- lean_init() complete.', checkTimer()
         # console.log '--- Importing Lean standard module...'
         # startTimer();
-        # Module.lean_import_module "standard"
+        Module.lean_import_module "standard"
         # console.log '--- Standard module imported.', checkTimer()
         # console.log '--- Writing test.lean to virtual FS...'
-        startTimer()
+        # startTimer()
         # console.log code
         FS.writeFile 'test.lean', code, encoding : 'utf8'
         # console.log '--- test.lean written.', checkTimer()
         # console.log '--- Running Lean on test.lean...'
-        startTimer()
+        # startTimer()
         LeanOutputArray = [ ]
-        Module.lean_process_file 'test.lean'
+        # Module.lean_process_file 'test.lean'
         # console.log '--- Lean has been run on test.lean.', checkTimer()
         LeanOutputArray

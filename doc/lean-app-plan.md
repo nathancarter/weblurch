@@ -1,12 +1,6 @@
 
 # Plan for a Lean UI Lurch Application
 
-## Setup
-
- 1. Pop up a dialog when the page loads, before the Lean virtual machine
-    setup routine is called, informing the user to wait while the Lean
-    engine is initialized.  Clear the dialog when the VM is ready.
-
 ## Terms
 
  1. Define a group type for terms.
