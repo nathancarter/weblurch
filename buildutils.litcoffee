@@ -2,7 +2,7 @@
 # Utility functions supporting the build process
 
 Several places in this module we access the filesystem, spawn child
-processes with `exec`, or output texet in color.  So import those modules up
+processes with `exec`, or output text in color.  So import those modules up
 front.
 
     fs = require 'fs'
@@ -144,7 +144,7 @@ reasonable number of text files, there is no problem.
             result[name] = fs.readFileSync name, 'utf8'
         result
 
-## Shorting filenames
+## Shortening filenames
 
 Shortens a filename relative to the current folder, for use in logging.
 

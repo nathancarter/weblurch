@@ -111,7 +111,7 @@ folder rather than the source folder.  The exceptions to this rule are:
         build.concatFiles all, '\n\n', p.resolve appdir, appout
 
 Run the compile process defined in [the build utilities
-module](buildutils.litcoffee.html).  This compiles, minifies, and generates
+module](buildutils.litcoffee).  This compiles, minifies, and generates
 source maps.  We run it in sequence on the source files, the app-specific
 files, and the "solo" files in the app folder.
 

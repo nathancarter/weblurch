@@ -415,7 +415,7 @@ pattern, then we have a lot of freedom.
 
 There are two subcases to consider, if `v` is in `S` and if it is not.
 Consider first the case where `v` is not in `S`.  In that case there are an
-enormous number of options.  Rather than attempt to create tehm all and
+enormous number of options.  Rather than attempt to create them all and
 yield a huge explosion in the problem, we create a new variable and assign
 `lambda(newvar,newvar)` to `F` in `S`. Then assign `E` to `v` in `S`.  This
 is one of the two potential weaknesses of this algorithm; the other is a
