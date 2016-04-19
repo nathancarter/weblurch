@@ -3,13 +3,12 @@
 
 ## Terms
 
- 1. Cause it to mark itself invalid (red light, with message) if it appears
-    nested inside another term group.
  1. Define a function that converts a term group in the document into Lean
     code, as follows.  Call it `termGroupToCode`.
-    * The result is the group's contents, as text, followed by a one-line
-      comment character, followed by the group's ID.
-    * (We will extend this function more below.)
+    * If the group contains any other group, have the result be the empty
+      string.
+    * Otherwise, the result is the group's contents, as text, followed by a
+      one-line comment character, followed by the group's ID.
  1. Define a function that converts the document into Lean code by calling
     `termGroupToCode` on all top-level term groups in the document, and
     joining the results with newlines between.  Call it `documentToCode`.
@@ -23,6 +22,11 @@
     * Remove all validation data from all groups in the document; do not
       count this as a "document change," so as not to create infinite
       recursion.
+    * For any term group that appears inside another term group, mark the
+      highest ancestor term group in the chain invalid (red light, with
+      message) explaining that term group nesting is not permitted; do not
+      count this as a "document change," so as not to create infinite
+      recursion.
     * Call `documentToCode`, and create a map `lineToGroup` that maps lines
       in the Lean code to group IDs in the document.  Do so by inspecting
       each line in the `documentToCode` output, and lifting the group ID
@@ -33,11 +37,13 @@
       `receivedLeanOutput`, which you should define as a stub.
     * Whenever an error message is received, run its line through
       `lineToGroup` and mark that group with a validation error, using the
-      text from Lean as the explanation.
+      text from Lean as the explanation; do not count this as a "document
+      change," so as not to create infinite recursion.
     * Whenever a non-error message is received, run its line through
       `lineToGroup` and mark as valid all earlier top-level groups that
-      haven't been marked invalid.  The explanation can be that Lean gave
-      no errors when processing that group.
+      haven't been marked invalid; do not count this as a "document change,"
+      so as not to create infinite recursion.  The explanation can be that
+      Lean gave no errors when processing that group.
     * Set `validationRunning` to false.
     * If `validationNeeded` is true, call this same function again now.
  1. Test this by putting entire Lean commands, proofs, etc., into term
