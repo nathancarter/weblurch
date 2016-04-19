@@ -3,9 +3,6 @@
 
 ## Terms
 
- 1. Define a function that converts the document into Lean code by calling
-    `termGroupToCode` on all top-level term groups in the document, and
-    joining the results with newlines between.  Call it `documentToCode`.
  1. Declare two global variables, `validationNeeded` and
     `validationRunning`, and initialize them to false.
  1. Whenever any content in the document changes, do the following:
@@ -235,3 +232,10 @@ See [this code](https://github.com/leanprover/tutorial/blob/master/js/main_live.
 
  * Lean `notation` definitions, and how they might work together with
    MathQuill widgets in the document
+
+## Bug Fixes
+
+ * `termGroupToCode` uses `contentsAsText`, which ignores paragraph breaks,
+   as if they were not whitespace; this is problematic.  Create a new option
+   to pass to `contentsAsText` that respects paragraph breaks as newlines or
+   spaces of some kind.

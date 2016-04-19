@@ -118,6 +118,14 @@ document.  If the group contains any other group, have the result be the
 empty string.  Otherwise, the result is the group's contents, as text,
 followed by a one-line comment character, followed by the group's ID.
 
-    window.termGroupToCode = ( group ) ->
+    termGroupToCode = window.termGroupToCode = ( group ) ->
         if group.children.length > 0 then return ''
         "#{group.contentAsText()} # #{group.id()}"
+
+The following function converts the document into Lean code by calling
+`termGroupToCode` on all top-level term groups in the document, and joining
+the results with newlines between.
+
+    documentToCode = window.documentToCode = ->
+        ( termGroupToCode g \
+            for g in tinymce.activeEditor.Groups.topLevel ).join '\n'
