@@ -3,12 +3,6 @@
 
 ## Terms
 
- 1. Define a function that converts a term group in the document into Lean
-    code, as follows.  Call it `termGroupToCode`.
-    * If the group contains any other group, have the result be the empty
-      string.
-    * Otherwise, the result is the group's contents, as text, followed by a
-      one-line comment character, followed by the group's ID.
  1. Define a function that converts the document into Lean code by calling
     `termGroupToCode` on all top-level term groups in the document, and
     joining the results with newlines between.  Call it `documentToCode`.

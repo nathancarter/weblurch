@@ -112,3 +112,12 @@ the `Module.print` function, above, and collected into the global variable
         # tagMenuItems : ( group ) -> ...compute them here...
         # contextMenuItems : ( group ) -> ...compute them here...
     ]
+
+The following function computes the meaning of a top-level Term Group in the
+document.  If the group contains any other group, have the result be the
+empty string.  Otherwise, the result is the group's contents, as text,
+followed by a one-line comment character, followed by the group's ID.
+
+    window.termGroupToCode = ( group ) ->
+        if group.children.length > 0 then return ''
+        "#{group.contentAsText()} # #{group.id()}"
