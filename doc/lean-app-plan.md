@@ -1,14 +1,6 @@
 
 # Plan for a Lean UI Lurch Application
 
-## Terms
-
- 1. Start a tutorial page that shows how to use Lean in Lurch in this very
-    simple way.  Write it as if it is just the first page in a many-page
-    tutorial, and this is the first step for a Lean expert to begin using
-    a nicer UI.  Be sure to create an example document and include either
-    its HTML or a screenshot in the tutorial page.
-
 ## Commands
 
  1. Give term groups an optional command attribute, as follows.
