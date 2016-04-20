@@ -3,42 +3,11 @@
 
 ## Terms
 
- 1. Declare two global variables, `validationNeeded` and
-    `validationRunning`, and initialize them to false.
- 1. Whenever any content in the document changes, do the following:
-    * If `validationRunning` is true, set `validationNeeded` to true and
-      be done.
-    * If `validationNeeded` is true, set it to false.
-    * Set `validationRunning` to true.
-    * Remove all validation data from all groups in the document; do not
-      count this as a "document change," so as not to create infinite
-      recursion.
-    * For any term group that appears inside another term group, mark the
-      highest ancestor term group in the chain invalid (red light, with
-      message) explaining that term group nesting is not permitted; do not
-      count this as a "document change," so as not to create infinite
-      recursion.
-    * Call `documentToCode`, and create a map `lineToGroup` that maps lines
-      in the Lean code to group IDs in the document.  Do so by inspecting
-      each line in the `documentToCode` output, and lifting the group ID
-      from it, after the comment character.
-    * Run Lean on the text generated from `documentToCode`.
-    * Modify `Module.print` so that it does not call `console.log` with JSON
-      data, but instead passes the object to a new global handler function
-      `receivedLeanOutput`, which you should define as a stub.
-    * Whenever an error message is received, run its line through
-      `lineToGroup` and mark that group with a validation error, using the
-      text from Lean as the explanation; do not count this as a "document
-      change," so as not to create infinite recursion.
-    * Whenever a non-error message is received, run its line through
-      `lineToGroup` and mark as valid all earlier top-level groups that
-      haven't been marked invalid; do not count this as a "document change,"
-      so as not to create infinite recursion.  The explanation can be that
-      Lean gave no errors when processing that group.
-    * Set `validationRunning` to false.
-    * If `validationNeeded` is true, call this same function again now.
- 1. Test this by putting entire Lean commands, proofs, etc., into term
-    groups and testing if they are validated correctly.
+ 1. Add a button to the toolbar for running validation.  Its text should be
+    "Validate" followed by the green check mark.
+ 1. While validation is running, disable the validate button, and change its
+    text to "Validating...".
+ 1. Give the validation button a hotkey.
  1. Start a tutorial page that shows how to use Lean in Lurch in this very
     simple way.  Write it as if it is just the first page in a many-page
     tutorial, and this is the first step for a Lean expert to begin using
