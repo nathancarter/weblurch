@@ -168,8 +168,12 @@ Run Lean on that input and process all output.
             detail = message.info
             if message.text.length
                 detail += '\n' + message.text.join '\n'
-            markValid groups[id], not isError,
-                "#{detail}\n(at character ##{parseInt( message.char) + 1})"
+            citation = parseInt message.char
+            citation = if citation > 0
+                "\n(at character ##{citation + 1})"
+            else
+                ''
+            markValid groups[id], not isError, detail + citation
         for id in groups.ids()
             if id is lastError then break
             if not hasValidity groups[id]
@@ -199,7 +203,23 @@ the zero timeout below to ensure that the UI is updated with the
             , 0
         onPostRender : -> validateButton = this
 
+## Lean Commands
+
+The following Lean commands are permissible on terms.  Each comes with a
+format for how it is converted into a line of Lean code.
+
+    leanCommands =
+        check : 'check (TERM)'
+        eval : 'eval (TERM)'
+        print : 'print "TERM"'
+        import : 'import TERM'
+        open : 'open TERM'
+        constant : 'constant TERM'
+        variable : 'variable TERM'
+
 ## Term Groups
+
+Declare a new type of group in the document, for Lean terms.
 
     window.groupTypes = [
         name : 'term'
@@ -210,9 +230,29 @@ the zero timeout below to ensure that the UI is updated with the
         openImageHTML : '<font color="#666666"><b>[</b></font>'
         closeImageHTML : '<font color="#666666"><b>]</b></font>'
         contentsChanged : clearAllValidity
-        # tagContents : ( group ) -> ...nothing here yet...
+        tagContents : ( group ) ->
+            if command = group.get 'leanCommand'
+                "command: #{command}"
+            else
+                null
+        contextMenuItems : ( group ) -> [
+            text : 'Edit command...'
+            onclick : ->
+                newval = prompt 'Enter the Lean command to use on this code
+                    (or leave blank for none).\n
+                    \nValid options include:\n' + \
+                    Object.keys( leanCommands ).join( ' ' ),
+                    group.get( 'leanCommand' ) ? ''
+                if newval isnt null
+                    if newval is ''
+                        group.clear 'leanCommand'
+                    else if newval not of leanCommands
+                        alert 'That was not one of the choices.  No change
+                            has been made to your document.'
+                    else
+                        group.set 'leanCommand', newval
+        ]
         # tagMenuItems : ( group ) -> ...compute them here...
-        # contextMenuItems : ( group ) -> ...compute them here...
     ]
 
 The following function computes the meaning of a top-level Term Group in the
@@ -222,7 +262,10 @@ followed by a one-line comment character, followed by the group's ID.
 
     termGroupToCode = window.termGroupToCode = ( group ) ->
         if group.children.length > 0 then return ''
-        "#{group.contentAsText()} -- #{group.id()}"
+        term = group.contentAsText()
+        if command = group.get 'leanCommand'
+            term = leanCommands[command].replace 'TERM', term
+        "#{term} -- #{group.id()}"
 
 The following function converts the document into Lean code by calling
 `termGroupToCode` on all top-level term groups in the document.  If this

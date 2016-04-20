@@ -1,17 +1,6 @@
 
 # Plan for a Lean UI Lurch Application
 
-## Commands
-
- 1. Give term groups an optional command attribute, as follows.
-    * On the context menu for term groups, one option is to edit the group's
-      command.  This pops up a JavaScript `prompt` window that lets you
-      input blank (for no command) or one of a small set of Lean commands
-      (import, open, constant, check, print, eval), and any other input is
-      disregarded, with a report of its invalidity.
-    * Update the `termGroupToCode` function so that it prepends the group's
-      command in front of its contents when generating Lean code.
- 1. Test, updating your example document to use this new feature.
  1. Add the next page of the tutorial that shows how to use this feature to
     hide some Lean-specific words from the reader of the document.  Be sure
     to create an example document and include either its HTML or a
