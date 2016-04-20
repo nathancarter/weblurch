@@ -284,6 +284,12 @@ Similar apps could be created for iOS, Android, etc., but would need to use
 tools other than Electron.  These are orthogonal tasks, and need not all be
 done by the same developer.
 
+### Repository organization
+
+The `app/` folder is getting cluttered.  Create an `app/examples/` subfolder
+and move every `*-example.html` and `*-example.solo.litcoffee` into it.
+Update any relative links to other resources, and any links to those pages.
+
 ### Improving documentation
 
 Documentation at the top of most unit test spec files is incomplete. Add
