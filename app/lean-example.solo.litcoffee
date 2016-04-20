@@ -165,9 +165,11 @@ Run Lean on that input and process all output.
         for message in runLeanOn leanInput.join '\n'
             id = lineToGroupId[message.line]
             if isError = /error:/.test message.info then lastError = id
+            detail = message.info
+            if message.text.length
+                detail += '\n' + message.text.join '\n'
             markValid groups[id], not isError,
-                "#{message.info + message.text.join '\n'}
-                 (character ##{parseInt( message.char) + 1})"
+                "#{detail}\n(at character ##{parseInt( message.char) + 1})"
         for id in groups.ids()
             if id is lastError then break
             if not hasValidity groups[id]
@@ -179,7 +181,9 @@ Validation is complete.
 
 Add a validate button to the toolbar.  It disables itself and shows
 alternate text while Lean is running, because that process is time-consuming
-and therefore needs some visual cue for the user about its progress.
+and therefore needs some visual cue for the user about its progress.  We use
+the zero timeout below to ensure that the UI is updated with the
+"Running..." message before it locks up during the Lean run.
 
     validateButton = null
     window.groupToolbarButtons.validate =
