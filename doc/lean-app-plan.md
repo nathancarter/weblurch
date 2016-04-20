@@ -3,11 +3,6 @@
 
 ## Terms
 
- 1. Add a button to the toolbar for running validation.  Its text should be
-    "Validate" followed by the green check mark.
- 1. While validation is running, disable the validate button, and change its
-    text to "Validating...".
- 1. Give the validation button a hotkey.
  1. Start a tutorial page that shows how to use Lean in Lurch in this very
     simple way.  Write it as if it is just the first page in a many-page
     tutorial, and this is the first step for a Lean expert to begin using

@@ -177,6 +177,24 @@ Validation is complete.
 
         validationRunning = no
 
+Add a validate button to the toolbar.  It disables itself and shows
+alternate text while Lean is running, because that process is time-consuming
+and therefore needs some visual cue for the user about its progress.
+
+    validateButton = null
+    window.groupToolbarButtons.validate =
+        text : 'Run Lean'
+        tooltip : 'Run Lean on this document'
+        onclick : ->
+            validateButton.text 'Running...'
+            validateButton.disabled yes
+            setTimeout ->
+                validate()
+                validateButton.disabled no
+                validateButton.text 'Run Lean'
+            , 0
+        onPostRender : -> validateButton = this
+
 ## Term Groups
 
     window.groupTypes = [
