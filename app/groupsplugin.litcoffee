@@ -1658,7 +1658,8 @@ Construct the menu and show it on screen.
             menu = new tinymce.ui.Menu(
                 items : items
                 context : 'contextmenu'
-            ).addClass( 'contextmenu' ).renderTo()
+                classes : 'contextmenu'
+            ).renderTo()
             editor.on 'remove', -> menu.remove() ; menu = null
             pos = ( $ editor.getContentAreaContainer() ).position()
             menu.moveTo x + pos.left, y + pos.top
