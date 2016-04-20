@@ -1,11 +1,6 @@
 
 # Plan for a Lean UI Lurch Application
 
- 1. Add the next page of the tutorial that shows how to use this feature to
-    hide some Lean-specific words from the reader of the document.  Be sure
-    to create an example document and include either its HTML or a
-    screenshot in the tutorial page.
-
 ## Types
 
  1. Create a new group type for Lean types.
