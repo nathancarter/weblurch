@@ -183,21 +183,22 @@ Run Lean on that input and process all output.
             if not hasValidity groups[id]
                 markValid groups[id], yes, 'No errors reported.'
 
-Any type groups without arrows to term groups must be marked with a message
-to tell the user that they were not part of validation (and perhaps indicate
-a mistake on the user's part in input).
+Any type or body groups without arrows to term groups must be marked with a
+message to tell the user that they were not part of validation (and perhaps
+indicate a mistake on the user's part in input).
 
         for id in groups.ids()
-            if groups[id].typeName() is 'type'
+            typeName = groups[id].typeName()
+            if typeName is 'type' or typeName is 'body'
                 modifiedTerms = ( connection[1] \
                     for connection in groups[id].connectionsOut() \
                     when groups[connection[1]].typeName() is 'term' )
                 if modifiedTerms.length is 0
                     setValidity groups[id],
                         '<font color="#aaaa00"><b>&#10039;</b></font>',
-                        'This type does not modify any terms, and was thus
-                        ignored in validation.  Did you mean to connect it
-                        to a term?'
+                        "This #{typeName} does not modify any terms, and was
+                        thus ignored in validation.  Did you mean to connect
+                        it to a term?"
 
 Also mark invalid any group that couldn't be converted to Lean code in the
 first place.

@@ -3,10 +3,6 @@
 
 ## Bodies
 
- 1. Add to the end of validation that any body groups without arrows to term
-    groups are marked yellow, with an explanatory message saying that this
-    group was ignored in validation.
- 1. Test, updating your example document to use this new feature.
  1. Add the next page of the tutorial that shows how to use this feature to
     be able to put flarf before/amidst definitions and proofs.  Be sure to
     create an example document and include either its HTML or a screenshot
