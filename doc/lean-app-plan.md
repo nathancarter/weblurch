@@ -3,15 +3,6 @@
 
 ## Types
 
- 1. Update `termGroupToCode` as follows.
-    * First, find the set of type bubbles that point to the term group in
-      question.
-    * If the set is empty, proceed as before.
-    * If the set has more than one element, throw an error saying that is
-      invalid.
-    * Otherwise, take the contents of the one type group and insert them
-      after the first identifier in the term group, separated by a colon
-      (`:`), when converting its text to Lean code.
  1. Update the validation routine so that if `termGroupToCode` throws an
     error, that group is marked invalid without its contents being converted
     to code at all.

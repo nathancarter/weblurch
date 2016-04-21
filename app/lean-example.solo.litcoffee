@@ -155,22 +155,24 @@ group IDs that generated those lines, so that we can trace errors back to
 their origins.
 
         lineToGroupId = { }
-        for line, index in leanInput = documentToCode()
+        for line, index in ( leanCode = documentToCode() ).lines
             if m = /[ ]--[ ](\d+)$/.exec line
                 lineToGroupId[index + 1] = parseInt m[1]
 
 Run Lean on that input and process all output.
 
         lastError = -1
-        for message in runLeanOn leanInput.join '\n'
+        for message in runLeanOn leanCode.lines.join '\n'
             id = lineToGroupId[message.line]
             if isError = /error:/.test message.info then lastError = id
-            detail = message.info
+            detail = "Lean reported:\n\n#{message.info}"
             if message.text.length
                 detail += '\n' + message.text.join '\n'
             citation = parseInt message.char
             citation = if citation > 0
-                "\n(at character ##{citation + 1})"
+                codeline = leanCode.lines[message.line - 1]
+                "\n\ncharacter ##{citation + 1} in this code:
+                 \n#{/^(.*) -- \d+$/.exec( codeline )[1]}"
             else
                 ''
             markValid groups[id], not isError, detail + citation
@@ -178,6 +180,12 @@ Run Lean on that input and process all output.
             if id is lastError then break
             if not hasValidity groups[id]
                 markValid groups[id], yes, 'No errors reported.'
+
+Also mark invalid any group that couldn't be converted to Lean code in the
+first place.
+
+        for id, message in leanCode.errors
+            markValid groups[id], no, message
 
 Validation is complete.
 
@@ -273,15 +281,57 @@ term's type is clearly highlighted when the term is highlighted.)
     ]
 
 The following function computes the meaning of a top-level Term Group in the
-document.  If the group contains any other group, have the result be the
-empty string.  Otherwise, the result is the group's contents, as text,
-followed by a one-line comment character, followed by the group's ID.
+document.
 
     termGroupToCode = window.termGroupToCode = ( group ) ->
-        if group.children.length > 0 then return ''
-        term = group.contentAsText()
+
+If the group contains any other group, have the result be the empty string,
+because that structure is invalid.
+
+        if group.children.length > 0
+            throw Error 'Invalid structure: Term groups may not contain
+                other groups'
+
+Start with the group's contents, as text.  This can be something as simple
+as `1` for a term for the number one, or as complex as an entire proof
+object, written in Lean syntax (e.g., `(assume H : p, ...big proof...)`).
+
+        term = group.contentAsText().trim()
+
+Determine if there exists a unique type group modifying this group.  (If
+there is more than one type group, throw an error.)
+
+        assignedTypes = [ ]
+        for connection in group.connectionsIn()
+            source = tinymce.activeEditor.Groups[connection[0]]
+            if source.typeName() is 'type'
+                type = source.contentAsText().trim()
+                if type not in assignedTypes then assignedTypes.push type
+        if assignedTypes.length > 1
+            throw Error "Invalid structure: Two different types are assigned
+                to this term (#{assignedTypes.join ', '})"
+
+If we've found a unique type, insert it after the first identifier, or after
+the end of the whole term.  For example, if the term were `a := b` we would
+create `a : type := b`, but if it were `(and.intro H1 H2)` then we would
+create `(and.intro H1 H2) : type`.
+
+        if assignedTypes.length > 0
+            if match = /^([a-zA-Z0-9_]+)(.*)$/.exec term
+                rest = if match[2] isnt '' then " #{match[2]}" else ''
+                term = "#{match[1]} : #{assignedTypes[0]}#{rest}"
+            else
+                term = "#{term} : #{assignedTypes[0]}"
+
+Prepend any Lean command embedded in the group.
+
         if command = group.get 'leanCommand'
             term = leanCommands[command].replace 'TERM', term
+
+Append a one-line comment character, followed by the group's ID, to track
+where this line of code came from in the document, for the purposes of
+transferring Lean output back to this group as user feedback.
+
         "#{term} -- #{group.id()}"
 
 The following function converts the document into Lean code by calling
@@ -290,8 +340,14 @@ array were joined with newlines between, it would be suitable for passing
 to Lean.
 
     documentToCode = window.documentToCode = ->
+        result = lines : [ ], errors : { }
         for group in tinymce.activeEditor.Groups.topLevel
-            termGroupToCode group
+            continue unless group.typeName() is 'term'
+            try
+                result.lines.push termGroupToCode group
+            catch e
+                result.errors[group.id] = e.message
+        result
 
 ## Type Groups
 
