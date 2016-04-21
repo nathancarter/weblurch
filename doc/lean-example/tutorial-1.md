@@ -78,4 +78,4 @@ first disadvantage that comes to mind is that the reader still needs to
 speak Lean code rather fluently (e.g., `check` and `print` and other
 commands) to use this software.  How might we improve that?  Let's see:
 
-[Go on to Part 2 of the tutorial.](tutorial-2.md)
+[Continue to Part 2.](tutorial-2.md)

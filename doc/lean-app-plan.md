@@ -1,13 +1,6 @@
 
 # Plan for a Lean UI Lurch Application
 
-## Types
-
- 1. Add the next page of the tutorial that shows how to use this feature to
-    insert some explanatory phrases between a term and its type, thus
-    forming nice English sentences.  Be sure to create an example document
-    and include either its HTML or a screenshot in the tutorial page.
-
 ## Bodies
 
  1. Permit a term group's command to include "definition," "theorem," or

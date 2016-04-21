@@ -40,4 +40,4 @@ Many additional aspects of Lean syntax must still be placed inside term
 bubbles, most notably the `a : A` notation at the heart of dependant type
 theory.  Let's address that now:
 
-[Go on to Part 3 of the tutorial.](tutorial-3.md)
+[Continue to Part 3.](tutorial-3.md)
