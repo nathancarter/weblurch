@@ -3,13 +3,6 @@
 
 ## Types
 
- 1. Update the validation routine so that if `termGroupToCode` throws an
-    error, that group is marked invalid without its contents being converted
-    to code at all.
- 1. Add to the end of validation that any type groups without arrows to term
-    groups are marked yellow, with an explanatory message saying that this
-    group was ignored in validation.
- 1. Test, updating your example document to use this new feature.
  1. Add the next page of the tutorial that shows how to use this feature to
     insert some explanatory phrases between a term and its type, thus
     forming nice English sentences.  Be sure to create an example document

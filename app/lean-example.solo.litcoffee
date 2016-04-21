@@ -108,12 +108,14 @@ clearing or checking whether a group has validation information, and for
 clearing all validation information so that a new run of validation can then
 operate on a clean slate.
 
+    setValidity = ( group, symbol, hoverText ) ->
+        group.set 'closeDecoration', symbol
+        group.set 'closeHoverText', hoverText
     markValid = ( group, validOrNot, message ) ->
         color = if validOrNot then 'green' else 'red'
         symbol = if validOrNot then '&#10003;' else '&#10006;'
-        group.set 'closeDecoration',
-            "<font color='#{color}'>#{symbol}</font>"
-        group.set 'closeHoverText', message
+        setValidity group, "<font color='#{color}'>#{symbol}</font>",
+            message
     clearValidity = ( group ) ->
         group.clear 'closeDecoration'
         group.clear 'closeHoverText'
@@ -180,6 +182,22 @@ Run Lean on that input and process all output.
             if id is lastError then break
             if not hasValidity groups[id]
                 markValid groups[id], yes, 'No errors reported.'
+
+Any type groups without arrows to term groups must be marked with a message
+to tell the user that they were not part of validation (and perhaps indicate
+a mistake on the user's part in input).
+
+        for id in groups.ids()
+            if groups[id].typeName() is 'type'
+                modifiedTerms = ( connection[1] \
+                    for connection in groups[id].connectionsOut() \
+                    when groups[connection[1]].typeName() is 'term' )
+                if modifiedTerms.length is 0
+                    setValidity groups[id],
+                        '<font color="#aaaa00"><b>&#10039;</b></font>',
+                        'This type does not modify any terms, and was thus
+                        ignored in validation.  Did you mean to connect it
+                        to a term?'
 
 Also mark invalid any group that couldn't be converted to Lean code in the
 first place.
@@ -317,11 +335,16 @@ create `a : type := b`, but if it were `(and.intro H1 H2)` then we would
 create `(and.intro H1 H2) : type`.
 
         if assignedTypes.length > 0
-            if match = /^([a-zA-Z0-9_]+)(.*)$/.exec term
+            type = assignedTypes[0]
+            if match = /^\s*check\s+(.*)$/.exec term
+                term = "check (#{match[1]} : #{type})"
+            else if match = /^\s*check\s+\((.*)\)\s*$/.exec term
+                term = "check (#{match[1]} : #{type})"
+            else if match = /^([a-zA-Z0-9_]+)(.*)$/.exec term
                 rest = if match[2] isnt '' then " #{match[2]}" else ''
-                term = "#{match[1]} : #{assignedTypes[0]}#{rest}"
+                term = "#{match[1]} : #{type}#{rest}"
             else
-                term = "#{term} : #{assignedTypes[0]}"
+                term = "#{term} : #{type}"
 
 Prepend any Lean command embedded in the group.
 
