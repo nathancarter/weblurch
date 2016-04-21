@@ -3,8 +3,6 @@
 
 ## Bodies
 
- 1. Make it so that one can create arrows connecting bodies to terms, but
-    not any other new kind of arrow.
  1. Create a new function `bodyGroupToCode` as follows.
     * Obviously, it accepts a single body group as parameter.
     * Find the ordered list of immediate child groups that are either terms
