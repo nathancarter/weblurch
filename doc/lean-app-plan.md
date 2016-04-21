@@ -3,18 +3,6 @@
 
 ## Bodies
 
- 1. Update `termGroupToCode` as follows.
-    * When finding the set of type bubbles that point to the term group in
-      question, also find the set of body bubbles that do so.
-    * If the set is empty, proceed as before.
-    * If the set has more than one element, throw an error saying that is
-      invalid.
-    * If the term group to which the body group points isn't marked with a
-      command on the list "theorem," "definition," or "example," throw an
-      error saying that only those types of structures can have bodies.
-    * Otherwise, compute its meaning using `bodyGroupToCode`.  Prefix that
-      meaning with `:=` and place it, on a new line, after the meaning of
-      the term without the body.
  1. Add to the end of validation that any body groups without arrows to term
     groups are marked yellow, with an explanatory message saying that this
     group was ignored in validation.

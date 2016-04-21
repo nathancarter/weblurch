@@ -305,6 +305,7 @@ The following function computes the meaning of a top-level Term Group in the
 document.
 
     termGroupToCode = window.termGroupToCode = ( group ) ->
+        groups = tinymce.activeEditor.Groups
 
 If the group contains any other group, have the result be the empty string,
 because that structure is invalid.
@@ -324,7 +325,7 @@ there is more than one type group, throw an error.)
 
         assignedTypes = [ ]
         for connection in group.connectionsIn()
-            source = tinymce.activeEditor.Groups[connection[0]]
+            source = groups[connection[0]]
             if source.typeName() is 'type'
                 type = source.contentAsText().trim()
                 if type not in assignedTypes then assignedTypes.push type
@@ -358,7 +359,35 @@ Append a one-line comment character, followed by the group's ID, to track
 where this line of code came from in the document, for the purposes of
 transferring Lean output back to this group as user feedback.
 
-        "#{term} -- #{group.id()}"
+        result = "#{term} -- #{group.id()}"
+
+Determine if there exists a unique body group modifying this group.  (If
+there is more than one body group, throw an error.)
+
+        assignedBodies = [ ]
+        for connection in group.connectionsIn()
+            source = groups[connection[0]]
+            if source.typeName() is 'body' and \
+               source.id() not in assignedBodies
+                assignedBodies.push source.id()
+        if assignedBodies.length > 1
+            throw Error "Invalid structure:
+                Two bodies are assigned to this term."
+
+If we've found a unique body, insert it after the term, with a `:=` in
+between.
+
+        if assignedBodies.length > 0
+            commandsTakingBodies = [ 'theorem', 'definition', 'example' ]
+            if command not in commandsTakingBodies
+                throw Error "Terms may only be assigned bodies if they embed
+                    one of these commands:
+                    #{commandsTakingBodies.join ', '}."
+            result += "\n:= #{bodyGroupToCode groups[assignedBodies[0]]}"
+
+Done computing the code for this term group.
+
+        result
 
 The following function converts the document into Lean code by calling
 `termGroupToCode` on all top-level term groups in the document.  If this
@@ -417,9 +446,9 @@ theorems, examples, sections, and namespaces.
         connectionRequest : ( from, to ) ->
             if to.typeName() isnt 'term' then return
             if to.id() in ( c[1] for c in from.connectionsOut() )
-                from.disconnect to, 'type'
+                from.disconnect to, 'body'
             else
-                from.connect to, 'type'
+                from.connect to, 'body'
 
 The following function computes the meaning of a top-level Body Group in the
 document.  It is like `termGroupToCode`, but for bodies instead.
