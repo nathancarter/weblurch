@@ -37,13 +37,16 @@ Follow this process:
  1. Click the arrow button shown in the image above.
  1. Click inside the term that it modifies.
 
-This connect the type to the term visually on screen, with an arrow.  It
+This connects the type to the term visually on screen, with an arrow.  It
 also permits you to separate the type and the term in your text, and let the
 text flow as smoothly as you'd like around them.  The type can precede the
 term, or follow it.  Here is an example.
 
 <p align=center><img src='screenshot-type-term-connection.png'
 width='50%'/></p>
+
+To disconnect a type and a term, just perform the connection process again.
+It toggles the connection off.
 
 ## Validation
 
