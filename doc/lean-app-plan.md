@@ -3,23 +3,6 @@
 
 ## Bodies
 
- 1. Create a new function `bodyGroupToCode` as follows.
-    * Obviously, it accepts a single body group as parameter.
-    * Find the ordered list of immediate child groups that are either terms
-      or other bodies.
-    * If this set is empty, throw an error explaining that a body cannot be
-      empty.
-    * If this list has a body group anywhere but as its final element, throw
-      an error, because a body group cannot be an "assumption" to another
-      body group.
-    * If any term group on the list has a body group pointing to it, throw
-      an error, because those structures are not permitted here.
-    * Recursively call `termGroupToCode` or `bodyGroupToCode` on each of the
-      elements of the list; call the results `r1` through `rN`.
-    * Form the text `assume r1, assume r2, ..., assume rN-1, rN`, with each
-      assumption and the body on separate lines, ensuring that the commas
-      are correctly placed before the group-ID comments on each line.  Note
-      that there may be zero `assume` entries, if `N` is 1.
  1. Update `termGroupToCode` as follows.
     * When finding the set of type bubbles that point to the term group in
       question, also find the set of body bubbles that do so.

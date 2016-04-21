@@ -370,7 +370,8 @@ to Lean.
         for group in tinymce.activeEditor.Groups.topLevel
             continue unless group.typeName() is 'term'
             try
-                result.lines.push termGroupToCode group
+                lineOrLines = termGroupToCode group
+                result.lines = result.lines.concat lineOrLines.split '\n'
             catch e
                 result.errors[group.id] = e.message
         result
@@ -419,3 +420,52 @@ theorems, examples, sections, and namespaces.
                 from.disconnect to, 'type'
             else
                 from.connect to, 'type'
+
+The following function computes the meaning of a top-level Body Group in the
+document.  It is like `termGroupToCode`, but for bodies instead.
+
+    bodyGroupToCode = window.bodyGroupToCode = ( group ) ->
+
+Find body/term-type children, and verify that at least one exists.
+
+        children = ( child for child in group.children \
+            when child.typeName() is 'term' or child.typeName() is 'body' )
+        if children.length is 0
+            throw Error 'A body group may not be empty.'
+
+Verify that none but the last one is a body group (although the last one is
+also permitted to be a term group).
+
+        for child, index in children[...-1]
+            if child.typeName() is 'body'
+                throw Error "A body group can only contain other body groups
+                    as its final child.  This one has another body group
+                    as child ##{index + 1}."
+
+Verify that none of the children has a body group pointing to it, because
+definitions, sections, etc. cannot be nested.
+
+        groups = tinymce.activeEditor.Groups
+        traverseForBodies = ( g ) ->
+            for connection in g.connectionsIn()
+                if groups[connection[0]].typeName() is 'body'
+                    throw Error 'One of the groups inside this body has a
+                        body group connected to it.  That type of nesting is
+                        not permitted.'
+            traverseForBodies child for child in g.children
+        traverseForBodies group
+
+Recur on all children.
+
+        results = for child in children
+            if child.typeName() == 'term'
+                termGroupToCode child
+            else
+                bodyGroupToCode child
+
+Adjust all but the last entry to be assumptions, and we're done.
+
+        for index in [0...results.length-1]
+            match = /^(.*) -- (\d+)$/.exec results[index]
+            results[index] = "assume #{match[1]}, -- #{match[2]}"
+        results.join '\n'
