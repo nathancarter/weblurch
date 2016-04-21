@@ -1517,7 +1517,7 @@ index into the list of connections that are to be drawn.
                     context.fillStyle = '#ffffff'
                     context.fill()
                     context.lineWidth = 1.5
-                    context.strokeStyle = group.type()?.color ? '#444444'
+                    context.strokeStyle = from.type()?.color ? '#444444'
                     context.stroke()
                     context.fillStyle = '#000000'
                     context.globalAlpha = 1.0
