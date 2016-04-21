@@ -1004,9 +1004,10 @@ within the pasted content.
                 group.set 'connections', connections
             ( $ justPasted ).removeClass 'justPasted'
 
-Invalidate the `ids()` cache ([defined below](
-#querying-the-group-hierarchy)) so that the next time that function is run,
-it recomputes its results from the newly-generated hierarchy in `topLevel`.
+Invalidate the `ids()` cache
+([defined below](#querying-the-group-hierarchy)) so that the next time that
+function is run, it recomputes its results from the newly-generated
+hierarchy in `topLevel`.
 
             delete @idsCache
 
