@@ -230,11 +230,18 @@ Declare a new type of group in the document, for Lean terms.
         openImageHTML : '<font color="#666666"><b>[</b></font>'
         closeImageHTML : '<font color="#666666"><b>]</b></font>'
         contentsChanged : clearAllValidity
+
+Its tag will advertise any Lean command embedded in the group.
+
         tagContents : ( group ) ->
             if command = group.get 'leanCommand'
                 "command: #{command}"
             else
                 null
+
+Its context menu permits adding, editing, or removing a Lean command
+embedded in the group.
+
         contextMenuItems : ( group ) -> [
             text : 'Edit command...'
             onclick : ->
@@ -252,6 +259,16 @@ Declare a new type of group in the document, for Lean terms.
                     else
                         group.set 'leanCommand', newval
         ]
+
+When drawing term groups, draw all arrows that come in or go out.  (The
+default is to only draw arrows that go out; we override that here, so that a
+term's type is clearly highlighted when the term is highlighted.)
+
+        connections : ( group ) ->
+            outs = group.connectionsOut()
+            ins = group.connectionsIn()
+            [ outs..., ins...,
+              ( t[1] for t in outs )..., ( t[0] for t in ins )... ]
         # tagMenuItems : ( group ) -> ...compute them here...
     ]
 
@@ -275,3 +292,27 @@ to Lean.
     documentToCode = window.documentToCode = ->
         for group in tinymce.activeEditor.Groups.topLevel
             termGroupToCode group
+
+## Type Groups
+
+Declare a new type of group in the document, for Lean types.
+
+    window.groupTypes.push
+        name : 'type'
+        text : 'Lean Type'
+        tooltip : 'Make the selection a Lean type'
+        color : '#66bb66'
+        imageHTML : '<font color="#66bb66"><b>[ ]</b></font>'
+        openImageHTML : '<font color="#66bb66"><b>[</b></font>'
+        closeImageHTML : '<font color="#66bb66"><b>]</b></font>'
+        contentsChanged : clearAllValidity
+        connectionRequest : ( from, to ) ->
+            if to.typeName() isnt 'term' then return
+            if to in ( "#{c[1]}" for c in from.connectionsOut() )
+                from.disconnect to, 'type'
+            else
+                from.connect to, 'type'
+
+Install the arrows UI so that types can connect to terms.
+
+    window.useGroupConnectionsUI = yes

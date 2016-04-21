@@ -3,9 +3,6 @@
 
 ## Types
 
- 1. Create a new group type for Lean types.
- 1. Make it so that one can create arrows connecting types to terms, but not
-    yet any other kind of arrow.
  1. Update `termGroupToCode` as follows.
     * First, find the set of type bubbles that point to the term group in
       question.
