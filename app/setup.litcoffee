@@ -258,6 +258,7 @@ toolbar items in the setup data above.
     moreToolbarItems = ->
         names = ( window.groupToolbarButtons.order ? \
             Object.keys window.groupToolbarButtons ).join ' '
+        if window.useGroupConnectionsUI then names = "connect #{names}"
         if names.length and names[...2] isnt '| ' then "| #{names}" else ''
 
 ## Support demo apps
