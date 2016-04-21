@@ -242,6 +242,9 @@ format for how it is converted into a line of Lean code.
         open : 'open TERM'
         constant : 'constant TERM'
         variable : 'variable TERM'
+        definition : 'definition TERM'
+        theorem : 'theorem TERM'
+        example : 'example TERM'
 
 ## Term Groups
 

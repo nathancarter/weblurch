@@ -3,8 +3,6 @@
 
 ## Bodies
 
- 1. Permit a term group's command to include "definition," "theorem," or
-    "example," in addition to the commands already permitted.
  1. Create a new group type for bodies of definitions, theorems, examples,
     sections, and namespaces.
  1. Make it so that one can create arrows connecting bodies to terms, but
