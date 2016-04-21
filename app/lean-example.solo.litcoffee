@@ -390,7 +390,7 @@ Declare a new type of group in the document, for Lean types.
         contentsChanged : clearAllValidity
         connectionRequest : ( from, to ) ->
             if to.typeName() isnt 'term' then return
-            if to in ( "#{c[1]}" for c in from.connectionsOut() )
+            if to.id() in ( c[1] for c in from.connectionsOut() )
                 from.disconnect to, 'type'
             else
                 from.connect to, 'type'
@@ -415,7 +415,7 @@ theorems, examples, sections, and namespaces.
         contentsChanged : clearAllValidity
         connectionRequest : ( from, to ) ->
             if to.typeName() isnt 'term' then return
-            if to in ( "#{c[1]}" for c in from.connectionsOut() )
+            if to.id() in ( c[1] for c in from.connectionsOut() )
                 from.disconnect to, 'type'
             else
                 from.connect to, 'type'
