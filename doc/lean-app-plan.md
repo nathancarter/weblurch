@@ -3,8 +3,6 @@
 
 ## Bodies
 
- 1. Create a new group type for bodies of definitions, theorems, examples,
-    sections, and namespaces.
  1. Make it so that one can create arrows connecting bodies to terms, but
     not any other new kind of arrow.
  1. Create a new function `bodyGroupToCode` as follows.

@@ -398,3 +398,18 @@ Declare a new type of group in the document, for Lean types.
 Install the arrows UI so that types can connect to terms.
 
     window.useGroupConnectionsUI = yes
+
+## Body Groups
+
+Declare a new type of group in the document, for the bodies of definitions,
+theorems, examples, sections, and namespaces.
+
+    window.groupTypes.push
+        name : 'body'
+        text : 'Body of a Lean definition or section'
+        tooltip : 'Make the selection a body'
+        color : '#6666bb'
+        imageHTML : '<font color="#6666bb"><b>[ ]</b></font>'
+        openImageHTML : '<font color="#6666bb"><b>[</b></font>'
+        closeImageHTML : '<font color="#6666bb"><b>]</b></font>'
+        contentsChanged : clearAllValidity
