@@ -345,9 +345,8 @@ create `(and.intro H1 H2) : type`.
                 term = "check (#{match[1]} : #{type})"
             else if match = /^\s*check\s+\((.*)\)\s*$/.exec term
                 term = "check (#{match[1]} : #{type})"
-            else if match = /^([a-zA-Z0-9_]+)(.*)$/.exec term
-                rest = if match[2] isnt '' then " #{match[2]}" else ''
-                term = "#{match[1]} : #{type}#{rest}"
+            else if match = /^(.*):=(.*)$/.exec term
+                term = "#{match[1]} : #{type} := #{match[2]}"
             else
                 term = "#{term} : #{type}"
 
