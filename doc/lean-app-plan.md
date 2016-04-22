@@ -20,6 +20,8 @@
     that has arrows coming into it from another term group.
  1. Update the `bodyGroupToCode` function so that it ignores any term group
     that has arrows coming into it from another term group.
+ 1. Update the validation routine so that it does not mark with a yellow
+    star any body groups that have term arrows coming into them.
  1. Test, updating your example document to use this new feature.
  1. Add the next page of the tutorial that shows how to use this feature to
     be able to put flarf just about anywhere and/or rearrange the elements
