@@ -203,7 +203,7 @@ indicate a mistake on the user's part in input).
 Also mark invalid any group that couldn't be converted to Lean code in the
 first place.
 
-        for id, message in leanCode.errors
+        for own id, message of leanCode.errors
             markValid groups[id], no, message
 
 Validation is complete.
@@ -403,7 +403,7 @@ to Lean.
                 lineOrLines = termGroupToCode group
                 result.lines = result.lines.concat lineOrLines.split '\n'
             catch e
-                result.errors[group.id] = e.message
+                result.errors[group.id()] = e.message
         result
 
 ## Type Groups
