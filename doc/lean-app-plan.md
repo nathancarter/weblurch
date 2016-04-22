@@ -1,13 +1,6 @@
 
 # Plan for a Lean UI Lurch Application
 
-## Bodies
-
- 1. Add the next page of the tutorial that shows how to use this feature to
-    be able to put flarf before/amidst definitions and proofs.  Be sure to
-    create an example document and include either its HTML or a screenshot
-    in the tutorial page.
-
 ## Trees
 
  1. Permit arrows from one term group to another term group, or to a body
