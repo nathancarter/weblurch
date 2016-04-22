@@ -3,14 +3,6 @@
 
 ## Trees
 
- 1. Permit arrows from one term group to another term group, or to a body
-    group.
- 1. When creating an arrow from a term group or a body group, verify that it
-    would not create a cycle, as follows.
-    * Call `A` the proposed source group and `B` the proposed destination
-      group for the new arrow.
-    * Computing the set of all groups reachable from `B`.
-    * Permit the arrow iff that set does not contain `A`.
  1. Update the `termGroupToCode` function as follows.
     * Compute the meanings of any other groups to which this group has
       direct arrows.  Optionally replace all occurrences of `assume` with

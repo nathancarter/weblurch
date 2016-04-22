@@ -290,6 +290,20 @@ embedded in the group.
                         group.set 'leanCommand', newval
         ]
 
+We can connect term groups to other term groups, or to body groups.  We are
+not permitted to make a cycle.
+
+        connectionRequest : ( from, to ) ->
+            if to.typeName() isnt 'term' and to.typeName() isnt 'body'
+                return
+            if to.id() in ( c[1] for c in from.connectionsOut() )
+                from.disconnect to, 'body'
+            else if pathExists to.id(), from.id()
+                alert 'That would create a cycle of arrows, which is not
+                    permitted.'
+            else
+                from.connect to, 'body'
+
 When drawing term groups, draw all arrows that come in or go out.  (The
 default is to only draw arrows that go out; we override that here, so that a
 term's type is clearly highlighted when the term is highlighted.)
@@ -405,6 +419,28 @@ to Lean.
                 result.errors[group.id()] = e.message
         result
 
+The following function checks to see if you can get from one group to
+another in the document by following connections forwards.  This is useful
+in the code above for preventing cyclic connections.
+
+It tracks which nodes we've visited (starting with none) and which nodes we
+must explore from (starting with just the source).  At each step, it visits
+the next unexplored node, marks it visited, and if it's the first stop
+there, adds all its reachable neighbors to the nodes we must explore from.
+If at any point we see the destination, say so.  If we finish exploring all
+reachable nodes without seeing it, say so.
+
+    pathExists = ( source, destination ) ->
+        groups = tinymce.activeEditor.Groups
+        visited = [ ]
+        toExplore = [ source ]
+        while toExplore.length > 0
+            if ( nextId = toExplore.shift() ) is destination then return yes
+            if nextId in visited then continue else visited.push nextId
+            toExplore = toExplore.concat \
+                ( c[1] for c in groups[nextId].connectionsOut() )
+        no
+
 ## Type Groups
 
 Declare a new type of group in the document, for Lean types.
@@ -447,6 +483,9 @@ theorems, examples, sections, and namespaces.
             if to.typeName() isnt 'term' then return
             if to.id() in ( c[1] for c in from.connectionsOut() )
                 from.disconnect to, 'body'
+            else if pathExists to.id(), from.id()
+                alert 'That would create a cycle of arrows, which is not
+                    permitted.'
             else
                 from.connect to, 'body'
 
