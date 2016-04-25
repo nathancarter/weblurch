@@ -19,22 +19,21 @@ first.
 
 The app itself is [available online
 here](http://nathancarter.github.io/weblurch/app/lean-example.html).
-It is a word processor whose controls are self-explanatory, with two new
+It is a word processor whose controls are self-explanatory, with some new
 features.
 
-<p align=center><img src='screenshot-2-buttons.png' width='50%'/></p>
+<p align=center><img src='screenshot-toolbar-buttons.png' width='50%'/></p>
 
 ### Marking Lean code
 
-The two buttons on the toolbar above provide a way for users to mark
-sections of their document as Lean code and to have those sections checked
-for validity.
+The buttons on the toolbar above provide a way for users to mark sections of
+their document as Lean code and to have those sections checked for validity.
 
-The button whose icon is two square brackets, `[ ]`, can be used to wrap
-selected text in special square brackets that tell the app that that the
-contents are to be interpreted as Lean code.  When the user's cursor is
-inside such code, a bubble will be drawn around the code to make that fact
-visually obvious.
+The first of three buttons whose icon is two square brackets, `[ ]`, can be
+used to mark a section of text as Lean code.  This wraps the text in special
+square brackets as a visual indicator of the special treatment the app will
+give that text.  When the user's cursor is inside such code, a bubble will
+be drawn around the code to make that fact visually obvious.
 
 <p align=center><img src='example-bubble.png'/></p>
 
@@ -43,6 +42,9 @@ instead only on the bubbles that appear when the cursor is inside the code)
 can toggle that feature using the View menu.
 
 <p align=center><img src='example-bubble-hidden.png'/></p>
+
+The other two bracket buttons, as well as the arrow button, will be covered
+in later parts of this tutorial.
 
 ### Checking with Lean
 

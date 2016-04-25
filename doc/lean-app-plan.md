@@ -3,8 +3,6 @@
 
 ## UI Tweaks and Organization
 
- 1. Update all screenshots to take all these visual changes (plus those on
-    the toolbar) into account.
  1. Rename all screenshots to the format `tut-N-ss-DESC.png`.
 
 ## Special Characters

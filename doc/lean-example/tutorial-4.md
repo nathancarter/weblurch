@@ -46,9 +46,11 @@ same way, as shown here.
 
 ## Creating the Structure
 
-To create a body group, use the blue button shown in the image below.
+To create a body group, use the blue bracket button highlighted in the
+toolbar below (third button of those labeled "Mark Lean code in your
+document").
 
-<p align=center><img src='body-button.png' width='50%'/></p>
+<p align=center><img src='screenshot-toolbar-buttons.png' width='50%'/></p>
 
 To connect a body to the term being defined (or the statement of a theorem,
 using the body as its proof), use the same technique as discussed in [the

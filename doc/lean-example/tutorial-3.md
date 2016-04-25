@@ -12,9 +12,10 @@ This page of the tutorial introduces how it's supported.
 
 Next to the toolbar button that wraps text in a "term" bubble is a button
 for wrapping text in a "type" bubble.  While term bubbles are gray, type
-bubbles are green.
+bubbles are green.  The toolbar button for marking text as a type is
+immediately to the right of that for marking text as a term.
 
-<p align=center><img src='screenshot-type-button.png' width='50%'/></p>
+<p align=center><img src='screenshot-toolbar-buttons.png' width='50%'/></p>
 
 If you mark something as a type in your document, however, and click "Run
 Lean," it will say that the type is not attached to any term, and thus
@@ -27,9 +28,10 @@ width='50%'/></p>
 ## Connecting Types to Terms
 
 To connect one bubble to another (such as a type to the term it modifies),
-use the connection button in the toolbar, as shown below.
+use the connection button in the toolbar, labeled "Connect pieces of Lean
+code" in the image below.
 
-<p align=center><img src='screenshot-arrow-button.png' width='50%'/></p>
+<p align=center><img src='screenshot-toolbar-buttons.png' width='50%'/></p>
 
 Follow this process:
 
