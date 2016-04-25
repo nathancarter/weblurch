@@ -225,7 +225,7 @@
       if (toSave == null) {
         return;
       }
-      if (__indexOf.call(savedTests, toSave) >= 0) {
+      if (__indexOf.call(savedTests(), toSave) >= 0) {
         if (!confirm("Save over LPF array of that same name?")) {
           return;
         }

@@ -64,7 +64,8 @@
         showDebuggingOutput: false,
         expressionBuilder: null,
         tokenizer: null,
-        comparator: JSON.equals
+        comparator: JSON.equals,
+        maxIterations: -1
       };
     }
 
@@ -96,7 +97,7 @@
     };
 
     Grammar.prototype.parse = function(input, options) {
-      var copy, debug, expressionBuilderFlag, found, got, i, j, k, next, previous, recur, result, results, rhs, rhss, s, skipped, state, stateGrid, stateSet, tmpi, tmpj, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _o, _p, _q, _r, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
+      var copy, debug, expressionBuilderFlag, found, got, i, j, k, next, numIterationsDone, previous, recur, result, results, rhs, rhss, s, skipped, state, stateGrid, stateSet, tmpi, tmpj, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _o, _p, _q, _r, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
       if (options == null) {
         options = {};
       }
@@ -119,7 +120,12 @@
       if (options.comparator == null) {
         options.comparator = this.defaults.comparator;
       }
-      debug = options.showDebuggingOutput ? console.log : function() {};
+      if (options.maxIterations == null) {
+        options.maxIterations = this.defaults.maxIterations;
+      }
+      debug = options.showDebuggingOutput ? function() {
+        return console.log.apply(console, arguments);
+      } : function() {};
       debug('\n\n');
       if ((options.tokenizer != null) && typeof input === 'string') {
         input = options.tokenizer.tokenize(input);
@@ -139,6 +145,7 @@
         ori: 0,
         got: []
       });
+      numIterationsDone = 0;
       for (i = _i = 0, _len = stateGrid.length; _i < _len; i = ++_i) {
         stateSet = stateGrid[i];
         debug("processing stateSet " + i + " in this stateGrid (with input " + input + "):");
@@ -185,6 +192,9 @@
                 s.got.push(got);
                 stateGrid[i].push(s);
                 debug("completer added this to " + i + ":", debugState(s));
+                if ((numIterationsDone++ > (_ref4 = options.maxIterations) && _ref4 > 0)) {
+                  throw 'Maximum number of iterations reached.';
+                }
               }
             }
             j++;
@@ -233,14 +243,17 @@
             }
           }
           j++;
+          if ((numIterationsDone++ > (_ref5 = options.maxIterations) && _ref5 > 0)) {
+            throw 'Maximum number of iterations reached.';
+          }
         }
       }
       debug("finished processing this stateGrid (with input " + input + "):");
       debug('----------------------');
-      for (tmpi = _o = 0, _ref4 = stateGrid.length; 0 <= _ref4 ? _o < _ref4 : _o > _ref4; tmpi = 0 <= _ref4 ? ++_o : --_o) {
+      for (tmpi = _o = 0, _ref6 = stateGrid.length; 0 <= _ref6 ? _o < _ref6 : _o > _ref6; tmpi = 0 <= _ref6 ? ++_o : --_o) {
         debug("|    state set " + tmpi + ":");
         skipped = 0;
-        for (tmpj = _p = 0, _ref5 = stateGrid[tmpi].length; 0 <= _ref5 ? _p < _ref5 : _p > _ref5; tmpj = 0 <= _ref5 ? ++_p : --_p) {
+        for (tmpj = _p = 0, _ref7 = stateGrid[tmpi].length; 0 <= _ref7 ? _p < _ref7 : _p > _ref7; tmpj = 0 <= _ref7 ? ++_p : --_p) {
           if (stateGrid[tmpi].length < 15 || stateGrid[tmpi][tmpj].pos > 0) {
             debug("|        entry " + tmpj + ": " + (debugState(stateGrid[tmpi][tmpj])));
           } else {
@@ -253,9 +266,9 @@
       }
       debug('----------------------');
       results = [];
-      _ref6 = stateGrid[stateGrid.length - 1];
-      for (_q = 0, _len4 = _ref6.length; _q < _len4; _q++) {
-        stateSet = _ref6[_q];
+      _ref8 = stateGrid[stateGrid.length - 1];
+      for (_q = 0, _len4 = _ref8.length; _q < _len4; _q++) {
+        stateSet = _ref8[_q];
         if (stateSet.lhs === '' && getNext(stateSet) === null) {
           result = stateSet.got[0];
           if (options.expressionBuilder != null) {
@@ -265,11 +278,11 @@
                 return obj;
               }
               args = (function() {
-                var _len5, _r, _ref7, _results;
-                _ref7 = obj.slice(1);
+                var _len5, _r, _ref9, _results;
+                _ref9 = obj.slice(1);
                 _results = [];
-                for (_r = 0, _len5 = _ref7.length; _r < _len5; _r++) {
-                  o = _ref7[_r];
+                for (_r = 0, _len5 = _ref9.length; _r < _len5; _r++) {
+                  o = _ref9[_r];
                   _results.push(recur(o));
                 }
                 return _results;
@@ -370,6 +383,9 @@
 
   debugNestedArrays = function(ary) {
     if (ary instanceof Array) {
+      if ('{}' === JSON.stringify(ary[0])) {
+        ary = ary.slice(1);
+      }
       return '[' + ary.map(debugNestedArrays).join(',') + ']';
     } else {
       return ary;

@@ -136,7 +136,7 @@
     }
     node = nodes.get(0);
     try {
-      toParse = mathQuillToMeaning(node);
+      toParse = window.mathQuillToMeaning(node);
     } catch (_error) {
       e = _error;
       return "Error converting math expression to text: " + (e != null ? e.message : void 0);
