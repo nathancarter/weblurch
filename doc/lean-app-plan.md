@@ -1,34 +1,6 @@
 
 # Plan for a Lean UI Lurch Application
 
-## Trees
-
- 1. Update the `termGroupToCode` function as follows.
-    * Compute the meanings of any other groups to which this group has
-      direct arrows.  Optionally replace all occurrences of `assume` with
-      `fun`.
-    * If this group has an incoming arrow from a term group, do not permit
-      incoming arrows from type groups, nor from body groups.  (That would
-      create, as far as I know, invalid Lean syntax.  Subterms can't be
-      type assertions, nor definitions/theorems/etc.)
-    * Then take this group's meaning without those connections, and suffix
-      it with the ordered list of those connections.  Place one group per
-      line, to preserve the group-ID comments, and place a single-line `(`
-      before and a single-line `)` after, each with a group-ID comment
-      linked to the group of the head term.
- 1. Update the `documentToCode` function so that it ignores any term group
-    that has arrows coming into it from another term group.
- 1. Update the `bodyGroupToCode` function so that it ignores any term group
-    that has arrows coming into it from another term group.
- 1. Update the validation routine so that it does not mark with a yellow
-    star any body groups that have term arrows coming into them.
- 1. Test, updating your example document to use this new feature.
- 1. Add the next page of the tutorial that shows how to use this feature to
-    be able to put flarf just about anywhere and/or rearrange the elements
-    of a proof into a more typical logical order.  Be sure to create an
-    example document and include either its HTML or a screenshot in the
-    tutorial page.
-
 ## Sections
 
  1. Modify the body group type so that when a body group has no arrows into
@@ -80,6 +52,17 @@
  1. Add the next page of the tutorial that shows how to use this feature to
     be able to group definitions and theorems into a namespace, just as in
     the Lean tutorials.
+
+## UI Tweaks and Organization
+
+ 1. Remove arrow labels, which are distracting.
+ 1. Permit body groups to have zero children, in which case their contents
+    are processed as if it were a single term group inside the body group,
+    containing all the contents.
+ 1. Update tutorial pages to reflect this special case of body groups.
+ 1. Update all screenshots to take all these visual changes (plus those on
+    the toolbar) into account.
+ 1. Rename all screenshots to the format `tut-N-ss-DESC.png`.
 
 ## Special Characters
 

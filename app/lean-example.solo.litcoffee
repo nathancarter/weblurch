@@ -185,11 +185,13 @@ Run Lean on that input and process all output.
 
 Any type or body groups without arrows to term groups must be marked with a
 message to tell the user that they were not part of validation (and perhaps
-indicate a mistake on the user's part in input).
+indicate a mistake on the user's part in input).  The only exceptions are
+body groups acting as subterms.
 
         for id in groups.ids()
             typeName = groups[id].typeName()
             if typeName is 'type' or typeName is 'body'
+                if isSubterm groups[id] then continue
                 modifiedTerms = ( connection[1] \
                     for connection in groups[id].connectionsOut() \
                     when groups[connection[1]].typeName() is 'term' )
@@ -297,12 +299,12 @@ not permitted to make a cycle.
             if to.typeName() isnt 'term' and to.typeName() isnt 'body'
                 return
             if to.id() in ( c[1] for c in from.connectionsOut() )
-                from.disconnect to, 'body'
+                from.disconnect to
             else if pathExists to.id(), from.id()
                 alert 'That would create a cycle of arrows, which is not
                     permitted.'
             else
-                from.connect to, 'body'
+                from.connect to
 
 When drawing term groups, draw all arrows that come in or go out.  (The
 default is to only draw arrows that go out; we override that here, so that a
@@ -335,18 +337,64 @@ object, written in Lean syntax (e.g., `(assume H : p, ...big proof...)`).
 
         term = group.contentAsText().trim()
 
-Determine if there exists a unique type group modifying this group.  (If
-there is more than one type group, throw an error.)
+If this group has arrows to other groups, compute their meanings for use as
+part of this group's meaning.
 
+        args = ( connection[1] for connection in group.connectionsOut() )
+        argMeanings = for arg in args
+            try
+                if groups[arg].typeName() is 'term'
+                    termGroupToCode groups[arg]
+                else
+                    bodyGroupToCode groups[arg]
+            catch e
+                markValid groups[arg], no, e.message
+                throw Error "A term to which this term points (directly or
+                    indirectly) contains an error, and thus this term's
+                    meaning cannot be determined."
+
+If there were arguments, make this term an application of its head to those
+arguments.
+
+        if args.length > 0
+            term = "( -- #{group.id()}\n
+            #{term} -- #{group.id()}\n
+            #{argMeanings.join '\n'}\n
+            )"
+
+Find any incoming arrows to this term that may matter below.
+
+        parentTerms = [ ]
         assignedTypes = [ ]
+        assignedBodies = [ ]
         for connection in group.connectionsIn()
             source = groups[connection[0]]
             if source.typeName() is 'type'
                 type = source.contentAsText().trim()
                 if type not in assignedTypes then assignedTypes.push type
+            else if source.typeName() is 'body' and \
+               source.id() not in assignedBodies
+                assignedBodies.push source.id()
+            else if source.typeName() is 'term'
+                parentTerms.push source
+
+If there is more than one type group modifying this group, or more than one
+body group modifying this group, throw an error.  If this is a subterm of
+another term, permit no type or body assignments.
+
         if assignedTypes.length > 1
             throw Error "Invalid structure: Two different types are assigned
                 to this term (#{assignedTypes.join ', '})"
+        if assignedBodies.length > 1
+            throw Error "Invalid structure:
+                Two bodies are assigned to this term."
+        if parentTerms.length > 0
+            if assignedTypes.length > 0
+                throw Error "Invalid structure: A subterm of another term
+                    cannot have a type assigned."
+            if assignedBodies.length > 0
+                throw Error "Invalid structure: A subterm of another term
+                    cannot have a body assigned."
 
 If we've found a unique type, insert it after the first identifier, or after
 the end of the whole term.  For example, if the term were `a := b` we would
@@ -375,19 +423,6 @@ transferring Lean output back to this group as user feedback.
 
         result = "#{term} -- #{group.id()}"
 
-Determine if there exists a unique body group modifying this group.  (If
-there is more than one body group, throw an error.)
-
-        assignedBodies = [ ]
-        for connection in group.connectionsIn()
-            source = groups[connection[0]]
-            if source.typeName() is 'body' and \
-               source.id() not in assignedBodies
-                assignedBodies.push source.id()
-        if assignedBodies.length > 1
-            throw Error "Invalid structure:
-                Two bodies are assigned to this term."
-
 If we've found a unique body, insert it after the term, with a `:=` in
 between.
 
@@ -406,18 +441,36 @@ Done computing the code for this term group.
 The following function converts the document into Lean code by calling
 `termGroupToCode` on all top-level term groups in the document.  If this
 array were joined with newlines between, it would be suitable for passing
-to Lean.
+to Lean.  It ignores non-term groups, and it ignores term groups that are
+subterms of other terms.
 
     documentToCode = window.documentToCode = ->
         result = lines : [ ], errors : { }
         for group in tinymce.activeEditor.Groups.topLevel
-            continue unless group.typeName() is 'term'
+
+Here we filter out non-terms and subterms.
+
+            if group.typeName() isnt 'term' or isSubterm group
+                continue
+
+Here we call the appropriate code-generating function, and handle any errors
+it generates.
+
             try
                 lineOrLines = termGroupToCode group
                 result.lines = result.lines.concat lineOrLines.split '\n'
             catch e
                 result.errors[group.id()] = e.message
         result
+
+Here is the `isSubterm` function used below.  It determines whether a term
+group is a subterm of another term group.
+
+    isSubterm = ( term ) ->
+        for connection in term.connectionsIn()
+            if tinymce.activeEditor.Groups[connection[0]].typeName() \
+                is 'term' then return yes
+        no
 
 The following function checks to see if you can get from one group to
 another in the document by following connections forwards.  This is useful
@@ -457,9 +510,9 @@ Declare a new type of group in the document, for Lean types.
         connectionRequest : ( from, to ) ->
             if to.typeName() isnt 'term' then return
             if to.id() in ( c[1] for c in from.connectionsOut() )
-                from.disconnect to, 'type'
+                from.disconnect to
             else
-                from.connect to, 'type'
+                from.connect to
 
 Install the arrows UI so that types can connect to terms.
 
@@ -482,12 +535,12 @@ theorems, examples, sections, and namespaces.
         connectionRequest : ( from, to ) ->
             if to.typeName() isnt 'term' then return
             if to.id() in ( c[1] for c in from.connectionsOut() )
-                from.disconnect to, 'body'
+                from.disconnect to
             else if pathExists to.id(), from.id()
                 alert 'That would create a cycle of arrows, which is not
                     permitted.'
             else
-                from.connect to, 'body'
+                from.connect to
 
 The following function computes the meaning of a top-level Body Group in the
 document.  It is like `termGroupToCode`, but for bodies instead.
@@ -523,13 +576,15 @@ definitions, sections, etc. cannot be nested.
             traverseForBodies child for child in g.children
         traverseForBodies group
 
-Recur on all children.
+Recur on all children that are not subterms of something else.
 
-        results = for child in children
+        results = [ ]
+        for child in children
             if child.typeName() == 'term'
-                termGroupToCode child
+                if isSubterm child then continue
+                results.push termGroupToCode child
             else
-                bodyGroupToCode child
+                results.push bodyGroupToCode child
 
 Adjust all but the last entry to be assumptions, and we're done.
 
