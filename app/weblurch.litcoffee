@@ -635,8 +635,8 @@ supports.
    `Ai` entries before `An` must all be variables, and they will be bound;
    i.e., this yields an OpenMath binding object, not an application object.
    Examples:
-   * `logic.forall(x,P(x))`
-   * `foo.lambda(x,f(x,7,"bar"))`
+   * `logic.forall[x,P(x)]`
+   * `foo.lambda[x,f(x,7,"bar")]`
 This syntax does not allow for the expression of OpenMath error objects,
 attributions, symbol URIs, byte arrays, or very large integers.
 
@@ -1194,7 +1194,7 @@ version, to make them easy to remember.
 
 
 
-# Matching Module
+# Unification Module
 
 This file implements an algorithm for matching an expression to a pattern.
 Pattern expressions are those containing *metavariables*, which means that
@@ -1218,7 +1218,8 @@ The following lines ensure that this file works in Node.js, for testing.
 
 All of the routines in this section make use of a single common symbol, so
 we create one instance here for use repeatedly.  We also create an instance
-of a string that signifies a boolean true value.
+of a string that signifies a boolean true value, because that will be the
+value of the attribute whose key is the metavariable symbol.
 
     metavariableSymbol = OM.symbol 'metavariable', 'lurch'
     trueValue = OM.string 'true'
@@ -1257,13 +1258,13 @@ question.
 
 ## Match class
 
-A match object represents the results of a successful matching operation,
+A match object represents the results of a successful unification operation,
 and thus is a map from metavariable names to OpenMath expressions that can
 be used to instantiate those metavariables.
 
     exports.Match = Match = class
 
-### Match constructor
+### Unifier constructor
 
 Constructing a new one simply initializes the map to an empty map
 
@@ -1288,14 +1289,6 @@ mapping.  A copy of the given expression is stored.
                 varOrSym = varOrSym.simpleEncode()
             @map[varOrSym] = expr.copy()
 
-It then updates the "unavailable" list for the substitution, which will make
-sense after reading [the substitutions section below](#substitutions).
-
-            if @substitution?
-                @substitution.unavailable =
-                    ( vname for vname in @substitution.unavailable \
-                      when vname isnt varOrSym )
-
 The `get` function queries the mapping for a variable or symbol, and returns
 the same copy made at the time `set` was called (which is also still stored
 internally in the map).
@@ -1308,14 +1301,6 @@ expression it was paired with).
         clear : ( varOrSym ) =>
             varOrSym = varOrSym.simpleEncode?() ? varOrSym
             delete @map[varOrSym]
-
-Like `set`, this function, too, updates the "unavaiable" list in the
-substitution.  To understand this, refer to [the substitutions section
-below](#substitutions).
-
-            if varOrSym in ( @substitution?.metavariables ? [ ] )
-                if varOrSym not in @substitution.unavailable
-                    @substitution.unavailable.push varOrSym
 
 The `has` function just returns true or false value indicating whether the
 variable or symbol appears in the map as a key.
@@ -1343,178 +1328,57 @@ but rather in a copy, which is returned.
                     metavariable.replaceWith @get( metavariable ).copy()
             result
 
-### Substitutions
+### Functions and function applications
 
-This module supports patterns that express optional or required
-substitutions.  The informal notation `A[x=y]` means "the expression `A`
-with every free occurrence of the subexpression `x` replaced by the
-subexpression `y`, when `y` is free to replace `x`."  The informal notation
-`A[x~y]` is the same idea, but with "every occurrence" replaced by "zero or
-more occurrences."  Thus `A[x=y]` is a computation that can be done, but
-`A[x~y]` is a criterion that can be matched against.
+This module supports patterns that express the application of a function to
+a parameter, where the function maps OpenMath expressions to OpenMath
+expressions.  I will write `P[X]` to indicate the function expression `P`
+applied to the expression `X`.  For example, the pattern `pair(P[1],P[2])`
+would match the expression `pair(h(x,1,1),h(x,2,2))` with the metavariable
+`P` instantiated as the function that maps its expression input `p` to the
+output `h(x,p,p)`.
 
-We call the first of these two a "required substitution" and the second an
-"optional substitution."  In this module, we will represent them as
-applications of the following two head symbols.
+In this module, we will represent a function with the following binding head
+symbol.
 
-        @requiredSubstitution : OM.symbol 'replaceAll', 'lurch'
-        @optionalSubstitution : OM.symbol 'replaceSome', 'lurch'
+        @expressionFunction : OM.symbol 'EF', 'lurch'
 
-So for example, `A[x=y]` could be expressed as
-`OM.simple 'lurch.replaceAll(A,x,y)'`.
+We express the application of such a function to an argument as an
+application of the following symbol.
 
-[The matching algorithm defined below](#matching-algorithm) must track where
-a substitution expression appears in the pattern, and what its parts are.
-Thus this class provides methods for storing and querying the substitution
-that is in effect, if any, what type it is, and what its arguments are.  The
-matching algorithm can then track substitution data using Match objects.
+        @expressionFunctionApplication : OM.symbol 'EFA', 'lurch'
 
-First, a method for storing a substitution.  In `A[x=y]`, `x` is called the
-left hand side, `y` is called the right hand side.  When calling the
-following function to store that substitution pattern, you pass the entire
-expression and its two sides and its type (required, =, or optional, ~) are
-extracted and stored, not as copies but as the originals.
+So for example, `P[X]` would be expressed as `OM.simple
+'lurch.expressionFunctionApplication(P,X)'` and the map from input `p` to
+output `h(x,p,p)` as `OM.simple 'lurch.expressionFunction[p,h(x,p,p)]'`.
 
-        setSubstitution : ( substitution ) =>
-            @substitution =
-                original : substitution
-                required : substitution.children[0].equals \
-                    Match.requiredSubstitution
-                root : substitution.children[1]
-                leftHandSide : substitution.children[2]
-                rightHandSide : substitution.children[3]
-                metavariables : [ ]
+We therefore construct a few convenience functions for testing whether an
+expression is of one of the types above, and for constructing expressions of
+those types.
 
-This function also computes the list of metavariable names that appear in
-either side of the substitution, and then computes the subset of those names
-that do not yet appear as keys in the mapping.  This will help us know when
-the substitution has been fully determined (as this object's mapping grows).
-
-            leftMetavariables =
-                @substitution.leftHandSide.descendantsSatisfying \
-                    isMetavariable
-            for v in leftMetavariables
-                if v.name not in @substitution.metavariables
-                    @substitution.metavariables.push v.name
-            rightMetavariables =
-                @substitution.rightHandSide.descendantsSatisfying \
-                    isMetavariable
-            for v in rightMetavariables
-                if v.name not in @substitution.metavariables
-                    @substitution.metavariables.push v.name
-            @substitution.unavailable =
-                ( vname for vname in @substitution.metavariables \
-                  when not @map.hasOwnProperty vname )
-
-We also provide a reverse method, for removing a stored substitution.
-
-        clearSubstitution : => delete @substitution
-
-To go with the above function for registering a substitution pattern, we
-also provide several methods for querying the substitution data stored.
-Remember that the original values are returned, so do not modify them unless
-that is your intent.
-
-        hasSubstitution : => @substitution?
-        getSubstitutionRequired : => @substitution?.required
-        getSubstitutionRoot : => @substitution?.root
-        getSubstitutionLeft : => @substitution?.leftHandSide
-        getSubstitutionRight : => @substitution?.rightHandSide
-        getSubstitutionNode : => @substitution?.original
-
-### Completing a match
-
-When the [the matching algorithm](#matching-algorithm) has been run, but not
-all metavariables were forced into a particular instantiation, we will still
-want to return a match object that has values for *all* metavariables.  We
-therefore provide a function that finds all metavariables in the pattern,
-and for those that do not yet have an assignment, it creates a new
-assignment to a variable unused in the pattern, the expression, and any of
-the existing instantiations.
-
-In order to do so, we must know what the outermost pattern and expression
-are. We therefore begin by defining a simple function for storing the
-topmost pattern and expression, that is, those that were passed to the
-outermost call to `matches`.  That outermost execution of the `matches`
-function is responsible for calling this function to store those two values.
-They are necessary for the purpose just described.
-
-        storeTopmostPair : ( pattern, expression ) =>
-            @pattern = pattern
-            @expression = expression
-
-And now the function that completes a match object by instantiating all
-metavariables in the pattern.  We instantiate them with new variables of
-the form "unused_N" for various positive integers N, starting with the
-smallest N for which no instance of "unused_N" appears in the pattern,
-expression, or current match data.
-
-This function modifies this match object in-place.
-
-        complete : =>
-
-We need the pattern and expression, so give up if they're not here.
-
-            return unless @pattern? and @expression?
-
-We will create variables of the form "unused_N" for various positive
-integers N.  We must find a complete list of such variables already in use
-(unlikely as that may be).  We search in the pattern, the expression, and
-all existing instantiations in `@map`.
-
-            unusedRE = /^unused_([0-9]+)$/
-            unusedCheck = ( node ) ->
-                node.type is 'v' and unusedRE.test node.name
-            unused = @pattern.descendantsSatisfying unusedCheck
-                .concat @expression.descendantsSatisfying unusedCheck
-            for own key, value of @map
-                unused =
-                    unused.concat value.descendantsSatisfying unusedCheck
-
-We then begin counting after the largest of them.  E.g., if it was unused_7,
-we start using unused_8, unused_9, etc.
-
-            integers = [ 0 ] # ensure there is one
-            for variable in unused
-                match = unusedRE.exec variable.name
-                integers.push parseInt match[1]
-            integers = integers.sort ( a, b ) -> a - b
-            last = integers[integers.length-1]
-
-Find all uninstantiated metavariables in the pattern, and give them values
-from the unused list, as just described.
-
-            metavariables = @pattern.descendantsSatisfying isMetavariable
-            for metavariable in metavariables
-                if not @has metavariable
-                    @set metavariable, OM.variable "unused_#{++last}"
+        @makeExpressionFunction : ( input, body ) =>
+            if input.type isnt 'v' then throw 'When creating an expression
+                function, its parameter must be a variable'
+            OM.bin @expressionFunction, input, body
+        @isExpressionFunction : ( expr ) =>
+            expr.type is 'bi' and expr.variables.length is 1 and \
+                expr.symbol.equals @expressionFunction
+        @makeExpressionFunctionApplication : ( ef, arg ) =>
+            OM.app @expressionFunctionApplication, ef, arg
+        @isExpressionFunctionApplication : ( expr ) =>
+            c = expr.children
+            expr.type is 'a' and c.length is 3 and \
+                c[0].equals @expressionFunctionApplication
 
 ### Copying match objects
 
-It is straightforward to copy a match object; just copy all of its members.
-But it matters which ones are deeply copied and which ones are not.  Here
-are the details.
- * The values in the map are copies of those in the original map.
- * The result's substitution is a shallow copy of this object's
-   substitution; only the variable arrays are copied deeply.
- * The pattern and expression are not deeply copied; the same objects are
-   shared with the result of this function.
+It is straightforward to copy a match object; just copy the map within it, a
+deep copy.
 
         copy : =>
             result = new Match
             for own key, value of @map
                 result.map[key] = value.copy()
-            if @substitution?
-                result.substitution =
-                    original : @substitution.original
-                    root : @substitution.root
-                    leftHandSide : @substitution.leftHandSide
-                    rightHandSide : @substitution.rightHandSide
-                    required : @substitution.required
-                    metavariables : @substitution.metavariables[..]
-                    unavailable : @substitution.unavailable[..]
-            if @pattern? then result.pattern = @pattern
-            if @expression? then result.expression = @expression
             result
 
 ### For debugging
@@ -1528,346 +1392,520 @@ object.
             for own key, value of @map ? { }
                 if result.length > 1 then result += ','
                 result += "#{key}:#{value.simpleEncode()}"
-            result += '}'
-            if @hasSubstitution()
-                result += '[' + @getSubstitutionLeft().simpleEncode() + \
-                    ( if @getSubstitutionRequired() then '=' else '~' ) + \
-                    @getSubstitutionRight().simpleEncode() + ' in ' + \
-                    @getSubstitutionRoot().simpleEncode() + ']'
-            result
+            result + '}'
 
-## Matching Algorithm
+## Unification Algorithm
+
+For both this algorithm and the next, it is handy to be able to create a new
+variable that does not appear anywhere in a certain expression.  We thus
+create the following convenience function for doing so.  You can pass any
+number of expressions as parameters, and this will yield a new variable
+that appears in none of them.
+
+    newVariableNotIn = ( expressions... ) ->
+        index = 0
+        varname = -> OM.var "v#{index}"
+        works = ->
+            a = varname()
+            isBad = ( node ) -> node.equals a, no
+            for expression in expressions
+                if expression.hasDescendantSatisfying isBad then return no
+            yes
+        while not works() then index++
+        varname()
 
 This routine is complex and occasionally needs careful debugging.  We do not
 wish, however, to spam the console in production code.  So we define a
 debugging routine here that can be enabled or disabled.
 
-    matchDebuggingEnabled = no
-    mdebug = ( args... ) ->
-        if matchDebuggingEnabled then console.log args...
+    exports.debugOn = no
+    udebug = ( args... ) ->
+        if exports.debugOn then console.log args...
 
-The main purpose of this module is to expose this function to the client. It
-matches the given pattern against the given expression and returns a match
-object, a mapping from metavariables to their instantiations.  The third and
-fourth parameters are for internal use during recursion, and should not be
-passed by clients.  To see many examples of how this routine functions, see
-[its unit tests](../test/matching-spec.litcoffee#matching).
+The main purpose of this module is to expose this function to the client.
+It unifies the given pattern with the given expression and returns a match
+object, a mapping from metavariables to their instantiations.  To see many
+examples of how this routine functions, see
+[its unit tests](../test/unification-spec.litcoffee).  Clients should ignore
+the third parameter; it is for internal use only.
 
-    exports.matches = matches = ( pattern, expression, soFar ) ->
+    exports.unify = unify = ( pattern, expression, solution = new Match ) ->
+        udebug '\nunify', pattern.simpleEncode(), expression.simpleEncode()
 
-Determine whether we're the outermost call in the recursion, for use below.
+First, verify that the `expression` input is valid; it is not permitted to
+contain metavariables.
 
-        outermost = not soFar?
-        soFar ?= new Match
-        mdebug "#{if outermost then '\n' else ''}MATCHES:",
-            pattern?.simpleEncode?() ? pattern,
-            expression?.simpleEncode?() ? expression,
-            "#{soFar}"
+        if expression.hasDescendantSatisfying isMetavariable
+            throw 'Unifier rejects expressions containing metavariables'
 
-If this is the outermost call, then apply all substitutions in the
-expression.  (The expression must contain only required substitutions, not
-optional ones.)
+Next, create a convenience function that can generate new variables whose
+names do not appear in the pattern or the expression.
 
-        if outermost
-            soFar.storeTopmostPair pattern, expression
-            substitutions = expression.descendantsSatisfying ( x ) ->
-                x.type is 'a' and x.children.length is 4 and \
-                    x.children[0].equals Match.requiredSubstitution
-            for substitution in substitutions
-                left = substitution.children[2]
-                right = substitution.children[3]
-                substitution.replaceWith substitution.children[1]
-                substitution.replaceFree left, right
-        mdebug '  --pattern inside topmost pattern?',
-            soFar.pattern.hasDescendantSatisfying ( d ) ->
-                d.sameObjectAs pattern
-        mdebug '  --expression inside topmost expression?',
-            soFar.expression.hasDescendantSatisfying ( d ) ->
-                d.sameObjectAs expression
-        mdebug '  --pattern inside substitution root?',
-            soFar.getSubstitutionRoot()?.hasDescendantSatisfying ( d ) ->
-                d.sameObjectAs pattern
+        newVariable = -> newVariableNotIn pattern, expression
 
-We build one final preparatory function before diving into the actual
-algorithm.  This function should be returned when the match would fail
-without the aid of any substitution that may be in effect.  This function
-checks to see if the current substitution in effect (if any) can make the
-match pass; if so, it returns the array of match objects corresopnding to
-the successful matches.  If not, it returns the empty array.
+Create a list of problems to solve, and initialize it with just the one
+problem we've been given in the parameters, with a so-far-empty solution
+that will grow (or be destroyed) as this routine does its work.
 
-At many points in the algorithm below, rather than returning an empty array
-to indicate a failed match, we return `trySubs()`, because it gives any
-substitution currently in effect a chance to save the day.
+        problemsToSolve = [
+            constraints : [ { pattern : pattern, expression : expression } ]
+            solution : solution
+        ]
 
-        trySubs = ->
-            if not soFar.hasSubstitution() then return [ ]
-            mdebug '    match of', pattern.simpleEncode(), 'to',
-                expression.simpleEncode(), 'failed; trying subs...',
-                soFar.toString()
-            save = soFar.getSubstitutionNode()
-            root = soFar.getSubstitutionRoot()
-            rhs = soFar.getSubstitutionRight()
-            pair = OM.application
-            sub = pair soFar.getSubstitutionLeft(), rhs
-            soFar.clearSubstitution()
-            [ walk1, walk2, results ] = [ pattern, expression, [ ] ]
-            while walk1? and walk2?
-                mdebug '    attempting subs at this level:',
-                    sub.simpleEncode(), pair( walk1, walk2 ).simpleEncode(),
-                    "#{soFar}..."
-                for match in matches sub, pair( walk1, walk2 ), soFar, no
-                    mdebug '        checking this:', "#{match}"
-                    lhsLocation = walk1.address root
-                    instantiated = match.applyTo root
-                    lhsInThere = instantiated.index lhsLocation
-                    fullRHS = match.applyTo rhs
-                    mdebug "        is #{fullRHS?.simpleEncode?()}
-                        free to replace #{lhsInThere?.simpleEncode?()} in
-                        #{instantiated?.simpleEncode?()}?
-                        #{fullRHS.isFreeToReplace lhsInThere, instantiated}"
-                    if fullRHS.isFreeToReplace lhsInThere, instantiated
-                        results.push match
-                if walk1.sameObjectAs root then break
-                [ walk1, walk2 ] = [ walk1.parent, walk2.parent ]
-            result.setSubstitution save for result in results
-            mdebug '    done attempting all subs; results:',
-                ( "#{result}" for result in results )
-            results
+The following loop goes forever, but various points in its code will break
+out if we solve all the problems in `problemsToSolve`.
 
-Now the preparatory phase of the routine is complete, and we begin some of
-the cases of the actual matching algorithm.
+        loop
 
-If the patterns of the form `x[y=z]` or `x[y~z]`, proceed as follows, first
-detect which of the two it is.  Then ensure that this is the first
-substitution encountered in the pattern (since only one is permitted).  Then
-pop off its left and right hand sides, store them in the match object, and
-recur.  There is no need to filter the results after the recursion, because
-filtering only matters inside a substitution, and we are currently just
-outside of one.
+Find the first problem with constraints left for us to solve.
 
-        if pattern.type is 'a' and pattern.children.length is 4 and \
-            ( pattern.children[0].equals( Match.requiredSubstitution ) or \
-              pattern.children[0].equals( Match.optionalSubstitution ) )
-            mdebug '    pattern is a substitution...'
-            if soFar.hasSubstitution()
-                throw 'Only one substitution permitted in a pattern'
-            soFar.setSubstitution pattern
-            rhs = soFar.getSubstitutionRight()
-            results = matches pattern.children[1], expression, soFar
-            newResults = [ ]
-            for result in results
-                mdebug '    checking substitution match', "#{result}"
+            i = 0
+            while i < problemsToSolve.length and
+                  problemsToSolve[i].constraints.length is 0
+                i++
+            udebug '\tloop', i, 'in', ( ''+( "(#{c.pattern?.simpleEncode()},#{c.expression?.simpleEncode()})" for c in P.constraints )+P.solution?.toString() for P in problemsToSolve ).join( ' ; ' )
 
-Optional substitutions always pass this check.
+If there wasn't one, then we've solved all the problems and can return their
+solutions as our list of results.
 
-                if pattern.children[0].equals Match.optionalSubstitution
-                    mdebug '        optional, so we approve it'
-                    result.clearSubstitution()
-                    newResults.push result
-                    continue
+            if i >= problemsToSolve.length
+                udebug '\tabout to check constraints and return solutions'
+                for p in problemsToSolve
+                    udebug '\t\twould', pattern.simpleEncode(),
+                        'and', p.solution?.toString(),
+                        'violate capture constraints?',
+                        ( if p.solution then violatesCaptureConstraints( \
+                            pattern, p.solution ) else 'N/A' )
+                return ( p.solution for p in problemsToSolve \
+                         when p.solution isnt null and not \
+                         violatesCaptureConstraints pattern, p.solution )
 
-Substitutions with not-yet-instantiated metavariables in their left hand
-sides pass the check, because they will have no impact on the final result;
-those metavariables will be instantiated into unused identifiers.
+Otherwise, we have a problem with at least one constraint left to work on.
+Call that problem it `Q`, and call its first pattern `P`, its first
+expression `E`, and it solution (so far) `S`.
 
-                lhs = result.getSubstitutionLeft()
-                existUnusedMetavars = lhs.hasDescendantSatisfying ( d ) ->
-                    isMetavariable( d ) and not result.has d
-                if existUnusedMetavars
-                    mdebug '        approved because of unused metavars'
-                    result.clearSubstitution()
-                    newResults.push result
-                    continue
+            Q = problemsToSolve[i]
+            first = Q.constraints.shift()
+            P = first.pattern
+            E = first.expression
+            S = Q.solution
 
-Compute the list of descendants of the instantiated pattern that equal the
-left hand side, have no metavariables in them and are free in the
-instantiated pattern.
+We will sometimes want to add new constraints to `Q`, but it is important
+not to add duplicate constraints.  Thus we create the following function for
+pushing or unshifting a constraint iff the constraint isn't already present.
 
-                root = result.getSubstitutionRoot()
-                rinstantiated = result.applyTo root
-                lhs = result.applyTo lhs
-                descs = rinstantiated.descendantsSatisfying ( d ) ->
-                    d.equals( lhs ) and \
-                    not d.hasDescendantSatisfying( isMetavariable ) \
-                    and d.isFree rinstantiated
-                mdebug '        instantiated root:',
-                    rinstantiated.simpleEncode()
-                mdebug '        instances of lhs:',
-                    ( d.address pattern for d in descs )
+            addConstraint = ( pushOrUnshift, pat, exp ) ->
+                if pushOrUnshift not in [ 'push', 'unshift' ] then return
+                for constraint in Q.constraints
+                    if constraint.pattern.equals( pat ) and \
+                       constraint.expression.equals exp then return
+                Q.constraints[pushOrUnshift]
+                    pattern : pat
+                    expression : exp
 
-Compute the list of subexpressions at the corresponding locations within
-`expression`.
+If `P` is atomic and not a metavariable, we do a simple equality comparison.
+If it succeeds, we leave the existing solution intact.  Otherwise, mark the
+problem as hopeless and finished.
 
-                einstantiated = result.applyTo expression
-                mdebug '        instantiated expression:',
-                    einstantiated.simpleEncode()
-                exprs = for d in descs
-                    einstantiated.index d.address rinstantiated
-                mdebug '        corresponding expression subtrees:',
-                    ( e.simpleEncode() for e in exprs )
+            if P.type not in [ 'a', 'bi', 'e' ] and not isMetavariable P
+                if not P.equals E, no
+                    Q.constraints = [ ]
+                    Q.solution = null
+                continue
 
-Recur matching `exprs` as a tuple against a tuple of the same size
-containing repeated copies of the instantiated RHS of the substitution.
+If `P` is a metavariable in `S`, then add back onto the constraints list the
+pair `S[P]` and `E`.
 
-                tuple = ( args... ) ->
-                    OM.application OM.string( "tuple" ), args...
-                fullRHS = result.applyTo rhs
-                many = ( fullRHS for e in exprs )
-                mdebug '        will now recur on these tuples:'
-                mdebug "        #{tuple( many... ).simpleEncode()}"
-                mdebug "        #{tuple( exprs... ).simpleEncode()}"
-                result.clearSubstitution()
-                recur = matches tuple( many... ), tuple( exprs... ),
-                    result
-                mdebug '        recursion on tuples complete; testing...'
+            if isMetavariable P
+                if S.has P
+                    addConstraint 'push', S.get( P ), E
 
-With each match object in the result of that recursion, proceed as follows.
+If `P` is a metavariable not in `S`, then assign `E` to `P` in `S`.
 
-                for recurResult in recur
+                else
+                    S.set P, E
+                continue
 
-Re-instantiate `rhs` with the (now expanded) match result.  If it's free to
-replace every one of the `exprs`, then push this match object onto the list
-of new results.
+We now know that `P` is compound, not atomic.
 
-                    mdebug '        testing:', "#{recurResult}"
-                    newRHS = recurResult.applyTo rhs
-                    freeToReplace = yes
-                    for expr in exprs
-                        if not newRHS.isFreeToReplace expr, expression
-                            freeToReplace = no
-                            break
-                    if freeToReplace
-                        mdebug '        approved after extending:',
-                            "#{recurResult}"
-                        newResults.push recurResult
-                    else
-                        mdebug '        rejected after extending:',
-                            "#{recurResult}"
-            results = newResults
-            if outermost then result.complete() for result in results
-            mdebug '    results have been completed:',
-                ( "#{r}" for r in results )
-            mdebug '<--', ( "#{r}" for r in newResults )
-            return newResults
+If `P` is not a substitution form, then it must match `E` in type and we
+must unify each of its children against those of `E`.  We must therefore
+first check to see if they have the same number of children.  If not, this
+problem fails to unify.  If so, add the child constraints to the constraints
+list.
 
-If the pattern is a single metavariables, then there are two cases.  If it
-has an instantiation, then we must use that instantiation and either return
-the current match object or failure.  But if it has no instantiation, we can
-store the current expression as its instantiation, to permit the matching
-process to continue.
-
-        if isMetavariable pattern
-            mdebug '    pattern is a metavariable'
-            if test = soFar.get pattern
-                mdebug '    we use its already-determined value:'
-                result = matches test, expression, soFar
-                mdebug '<--', ( "#{r}" for r in result )
-                return result
-            soFar.set pattern, expression
-            mdebug '    stored new assignment', pattern.simpleEncode(),
-                '=', expression.simpleEncode(), 'yielding', "#{soFar}"
-            results = [ soFar ]
-            if outermost then result.complete() for result in results
-            mdebug '    results have been completed:',
-                ( "#{r}" for r in results )
-            mdebug '<--', ( "#{r}" for r in results )
-            return results
-
-If the types of the pattern and expression don't match, then the only thing
-that might save us is a substitution, if there is one.
-
-        mdebug '    comparing types...', pattern.type, expression.type
-        if pattern.type isnt expression.type
-            result = trySubs()
-            mdebug '<--', ( "#{r}" for r in result )
-            return result
-
-If the pattern is atomic, then it must flat-out equal the expression.  If
-this is not the case, we can only fall back on a possible substitution.
-
-        if pattern.type in [ 'i', 'f', 'st', 'ba', 'sy', 'v' ]
-            if pattern.equals expression, no
-                results = [ soFar ]
-                if outermost then result.complete() for result in results
-                mdebug '    results have been completed:',
-                    ( "#{r}" for r in results )
+            if P.type is 'bi'
+                pc = [ P.symbol, P.variables..., P.body ]
+                ec = [ E.symbol, E.variables..., E.body ]
             else
-                results = trySubs()
-            mdebug '<--', ( "#{r}" for r in results )
-            return results
+                pc = P.children
+                ec = E.children
+            if not Match.isExpressionFunctionApplication P
+                if P.type isnt E.type or pc.length isnt ec.length
+                    Q.constraints = [ ]
+                    Q.solution = null
+                else
+                    for index in [pc.length-1..0]
+                        addConstraint 'unshift', pc[index], ec[index]
+                continue
 
-If the pattern is non-atomic, then it must match the expression
-structurally.  The first step in doing so is to have the same size.  We use
-`childrenSatisfying()` here because it returns all immediate subexpressions,
-children or head symbols or bound variables or binding bodies.
+We now know that `P` is a substitution form, so extract its contents.  Say
+it is of the form `F(v)`, so we use those names below.
 
-        pchildren = pattern.childrenSatisfying()
-        mdebug '    pattern children:',
-            ( p.simpleEncode() for p in pchildren )
-        echildren = expression.childrenSatisfying()
-        mdebug '    expression children:',
-            ( e.simpleEncode() for e in echildren )
-        if pchildren.length isnt echildren.length
-            result = trySubs()
-            mdebug '<--', ( "#{r}" for r in result )
-            return result
+            F = pc[1]
+            v = pc[2]
 
-Now that we've determined that the pattern and expression have the same
-structure at this level, we must compute the match recursively on the
-children.  Before we can do so, however, we must verify the assumptions of
-this routine:  There can be no more than one substitution expression in the
-pattern, and it must appear as the last child.  If there is more than one,
-we throw an error.  If there is one, we permute the children to put it as
-the last.
+If `F` is not a metavariable, throw an exception, because we do not support
+that.
 
-        substIndex = -1
-        isASubstitution = ( node ) ->
-            node.type is 'a' and \
-            ( ( node.children[0].equals Match.requiredSubstitution ) or \
-              ( node.children[0].equals Match.optionalSubstitution ) )
-        for pchild, index in pchildren
-            if pchild.descendantsSatisfying( isASubstitution ).length > 0
-                if substIndex > -1
-                    throw 'Only one substitution permitted in a pattern'
-                substIndex = index
-        if substIndex > -1
-            last = pchildren.length-1
-            [ pchildren[substIndex], pchildren[last] ] =
-                [ pchildren[last], pchildren[substIndex] ]
-            [ echildren[substIndex], echildren[last] ] =
-                [ echildren[last], echildren[substIndex] ]
-            mdebug '    reordered children to put substitution at end...'
-            mdebug '    pattern children:',
-                ( p.simpleEncode() for p in pchildren )
-            mdebug '    expression children:',
-                ( e.simpleEncode() for e in echildren )
+            if not isMetavariable F then throw 'First argument to an
+                expression function must be a metavariable'
 
-We now form an array of results, containing just the one match object we've
-been building so far, and then let that array grow as we test it against
-each child.
+If there are any non-substitution forms in the constraint list, let's handle
+those first, to have as much information in `S` as possible when addressing
+substitution forms.  So we handle the current constraint later; right now we
+just push it to the end of the constraints list.
 
-        results = [ soFar ]
-        for pchild, index in pchildren
-            echild = echildren[index]
-            mdebug '    recurring at', index, 'on', pchild.simpleEncode(),
-                'and', echild.simpleEncode(), 'with results',
-                ( "#{r}" for r in results )
-            newResults = [ ]
-            for sf in results
-                newResults = newResults.concat matches pchild, echild,
-                    sf.copy()
-            if ( results = newResults ).length is 0 then break
-        mdebug '    recursion complete; new result set:',
-            ( "#{r}" for r in results )
+            nonSubstForms = ( c for c in Q.constraints \
+                when not Match.isExpressionFunctionApplication c.pattern )
+            if nonSubstForms.length > 0
+                udebug '\t\tdelaying substitution forms...'
+                addConstraint 'push', P, E
+                continue
 
-Before returning the results, if we are the outermost call, instantiate all
-unused metavariables to things like "unused_1", etc.
+If `F` is in `S`, apply `F` to `v` and push the result back onto the
+constraints list, to be matched against the same expression.
 
-        if outermost then result.complete() for result in results
-        mdebug '    results have been completed:',
-            ( "#{r}" for r in results )
-        mdebug '<--', ( "#{r}" for r in results )
-        results
+            if S.has F
+                udebug '\t\tthe ef is in the solution set'
+                body = S.get( F ).body.copy()
+                body.replaceFree S.get( F ).variables[0], v
+                addConstraint 'unshift', body, E
+                continue
+
+If any constraint on the list contains `v` but not `F`, throw an exception
+because we can't handle that type of complexity.
+
+            for constraint in Q.constraints
+                isV = ( node ) -> node.equals v
+                isF = ( node ) -> node.equals F
+                if constraint.pattern.hasDescendantSatisfying( isV ) and \
+                   not constraint.pattern.hasDescendantSatisfying( isF )
+                    throw 'Parameter of one function application appears in
+                        another function application; this level of
+                        complexity is not supported by this unification
+                        algorithm.'
+
+If no other constraint on the list has `F` applied to something as its
+pattern, then we have a lot of freedom.
+
+            anotherStartingWithF = -1
+            for constraint, index in Q.constraints
+                if Match.isExpressionFunctionApplication( \
+                        constraint.pattern ) \
+                   and constraint.pattern.children[1].equals F
+                    anotherStartingWithF = index
+                    break
+            if anotherStartingWithF is -1
+
+There are two subcases to consider, if `v` is in `S` and if it is not.
+Consider first the case where `v` is not in `S`.  In that case there are an
+enormous number of options.  Rather than attempt to create them all and
+yield a huge explosion in the problem, we create a new variable and assign
+`lambda(newvar,newvar)` to `F` in `S`. Then assign `E` to `v` in `S`.  This
+is one of the two potential weaknesses of this algorithm; the other is a
+similar situation that shows up in `merge()`, below.
+
+                N = newVariable()
+                if not S.has v
+                    S.set F, Match.makeExpressionFunction N, N
+                    S.set v, E
+                    udebug '\t\t1 constraint w/this func, v known'
+
+The other subcase is when `v` is in `S`.  In that case, we must find all
+occurrences of `S[v]` in `E` and consider all the possible `F`s we might
+create (exponential in the number of occurrences) and construct all of them.
+
+                else
+                    value = S.get v
+                    udebug '\t\texponential explosion w/v',
+                        value.simpleEncode(), 'and E', E.simpleEncode()
+                    newsolutions = allBinaryFunctions E, value, N, S, F
+                    problemsToSolve.splice i, 1,
+                        ( { constraints : Q.constraints[..], \
+                            solution : s } for s in newsolutions )...
+                continue
+
+Since some other constraint on the list has `F` applied to something as its
+pattern, we have less freedom.  Remove the first such constraint and call it
+`(F(v'),E')`.  Replace `Q` in the problems list with the result of calling
+the merge algorithm below on `(F,E,E',v,v',S)`.
+
+            vprime = Q.constraints[anotherStartingWithF].pattern.children[2]
+            Eprime = Q.constraints[anotherStartingWithF].expression
+            Q.constraints.splice anotherStartingWithF, 1
+            mergeResults = merge F, E, Eprime, v, vprime, S
+            problemsToSolve.splice i, 1,
+                ( { constraints : Q.constraints[..], \
+                    solution : MR.copy() } for MR in mergeResults )...
+            udebug '\t\tmerging with index', anotherStartingWithF
+
+## Merge Algorithm
+
+This algorithm attempts to determine what function `F` satisfies the
+constraint that `F(v)` unifies with `E` while `F(v')` unifies with `E'`, in
+the context of the solution object `S`.  `F` must be a metavariable that
+will be added to solution object `S`, and `F` must not already be in `S`.
+The expressions `v` and `v'` may be metavariables or other types of
+expressions, including compound expressions with metavariables inside; in
+any of those cases, the metavariable(s) in `v` and `v'` may or may not
+appear in `S`.
+
+    merge = ( F, E, Eprime, v, vprime, S ) ->
+        udebug '\nmerge F:', F.simpleEncode(), ', E:', E.simpleEncode(),
+            ', E\':', Eprime.simpleEncode(), ', v:', v.simpleEncode(),
+            ', v\':', vprime.simpleEncode(), ', S:', S.toString()
+
+First, create a convenience function that can generate a new variable not in
+any of the expressions passed to this function.
+
+        newVariable = -> newVariableNotIn F, E, Eprime, v, vprime
+
+If `E` or `E'` contains a metavariable or a substitution expression, throw
+an exception because we do not support that.
+
+        if E.hasDescendantSatisfying( \
+           Match.isExpressionFunctionApplication ) or \
+           Eprime.hasDescendantSatisfying( \
+           Match.isExpressionFunctionApplication )
+            throw 'The merge algorithm does not support expressions
+                containing applications of expression functions.'
+
+Compute the set of addresses at which `E` and `E'` differ.  Initialize the
+set of addresses to the empty list, then create and run a recursive function
+to fill that list.
+
+        differences = [ ]
+        findDifferencesBetween = ( A, B ) ->
+            udebug '\t\t\tdiff', A.simpleEncode(), A.address( E ),
+                B.simpleEncode(), B.address( Eprime )
+            if A.type isnt B.type
+                udebug '\t\t\ttypes diff;', A.address E
+                differences.push A.address E
+                return
+            if A.type is 'bi'
+                Ac = [ A.symbol, A.variables..., A.body ]
+                Bc = [ B.symbol, B.variables..., B.body ]
+            else
+                Ac = A.children
+                Bc = B.children
+            udebug '\t\t\tchildren:',
+                ( c.simpleEncode() for c in Ac ).join( ',' ), ';',
+                ( c.simpleEncode() for c in Bc ).join( ',' )
+            if Ac.length isnt Bc.length or \
+               ( Ac.length + Bc.length is 0 and not A.equals B, no )
+                udebug '\t\t\tnon-recursive difference;', A.address E
+                differences.push A.address E
+            else
+                for child, index in Ac
+                    findDifferencesBetween child, Bc[index]
+        findDifferencesBetween E, Eprime
+
+If there were no differences, there are many possibilities.
+
+        if differences.length is 0
+            udebug '\tno differences!'
+
+First, if `v` and `v'` are both known (either non-metavariables, or
+metavariables with instantiations specified already in `S`) then we consider
+two cases.
+
+            known = ( x ) -> not isMetavariable( x ) or S.has x
+            value = ( x ) -> if not isMetavariable x then x else S.get x
+            udebug '\t\tv known?', known( v ), 'value',
+                value( v )?.simpleEncode(), 'v\' known?', known( vprime ),
+                'value', value( vprime )?.simpleEncode()
+            N = newVariable()
+            return if known( v ) and known vprime
+
+If the values of `v` and `v'` are different, then the only
+possibility is to have `F` be a constant function.
+
+                if not value( v ).equals value vprime
+                    S.set F, Match.makeExpressionFunction N, E
+                    [ S ]
+
+Otherwise, there are many possibilities, and we return them all.
+
+                else
+                    allBinaryFunctions E, value( v ), N, S, F
+
+Second, if `v` has a value but `v'` is an uninstantiated metavariable, then
+we consider the case where `v'` is unconstrainted and `F` is a constant
+function, together with the case where `F` is any other of the many
+functions that would yield `E` when applied to `v`, and `v'` equal to `v`.
+
+            else if known v
+                newsols = allBinaryFunctions E, value( v ), N, S, F
+                sol.set vprime, value v for sol in newsols[1..]
+                udebug '\t\tknown/unknown result:',
+                    ( s.toString() for s in newsols ).join ' ; '
+                newsols
+
+Third is the symmetrical case with `v` and `v'` reversed.
+
+            else if known vprime
+                newsols = allBinaryFunctions E, value( vprime ), N, S, F
+                sol.set v, value vprime for sol in newsols[1..]
+                udebug '\t\tunknown/known result:',
+                    ( s.toString() for s in newsols ).join ' ; '
+                newsols
+
+Finally, if neither `v` nor `v'` is known, there are a huge number of
+possibilities.  One could write an algorithm that considers all the
+subexpressions of `E` as possible values for `v` or `v'` and runs the
+`allBinaryFunctions()` procedure in each case, but the number of solutions
+would explode.  To avoid this, we simply return the single simplest
+solution, although I honestly don't know if that could every cause problems,
+because it's not perfectly general.  I suspect one could cook up a rare
+example that causes some complex form to fail to unify when it ought to
+unify.  I should come back to this eventually.
+
+            else
+                S.set F, Match.makeExpressionFunction N, E
+                [ S ]
+
+Initialize the solution set to the empty list, then proceed with a loop
+that considers first the differences just computed, then their parents, then
+grandparents, and so on until we hit the top level.
+
+        solutions = [ ]
+        loop
+            udebug '\tdifferences: [',
+                ( "[#{d}]" for d in differences ).join( ' ; ' ), ']'
+            udebug '\t\trecursively calling unify...'
+
+Create a function `F` that replaces all the differences with its parameter,
+and attempt to simultaneously unify `F(v)` with `E` and `F(v')` with `E'`
+(by creating pairs).  If this works, add it to the solution set.  If not,
+don't.
+
+            parameter = newVariable()
+            body = E.copy()
+            for address in differences
+                body.index( address ).replaceWith parameter.copy()
+            func = Match.makeExpressionFunction parameter, body
+            Fofv = body.copy()
+            Fofv.replaceFree parameter, v
+            Fofvprime = body.copy()
+            Fofvprime.replaceFree parameter, vprime
+            lhs = OM.app Fofv, Fofvprime
+            rhs = OM.app E, Eprime
+            udebug '\t\t\tfunc', func.simpleEncode()
+            udebug '\t\t\tF(v)', Fofv.simpleEncode(), 'F(v\')',
+                Fofvprime.simpleEncode()
+            udebug '\t\t\tE', E.simpleEncode(), 'E\'', Eprime.simpleEncode()
+            for solution in unify lhs, rhs, S.copy()
+                solution.set F, func
+                solutions.push solution
+            udebug '\t\tafter recursion, extended solutions:'
+            udebug '\t\t', ( s.toString() for s in solutions ).join ' ; '
+
+Attempt to move upwards, from each of the differences addresses, to the next
+ancestor upwards.  If this cannot be done for any of them (because it is
+length zero) then terminate the loop.  Also, ensure there are no duplicates
+in the list (since trimming the last entry of an address is not injective).
+
+            newDifferences = [ ]
+            newDifferencesAsStrings = [ ]
+            terminateTheLoop = no
+            for difference in differences
+                if difference.length is 0
+                    terminateTheLoop = yes
+                    break
+                shorter = difference[0...-1]
+                asString = "#{shorter}"
+                if asString not in newDifferencesAsStrings
+                    newDifferences.push shorter
+                    newDifferencesAsStrings.push asString
+            if terminateTheLoop then break
+            differences = newDifferences
+
+Return the solution set computed in the above loop.
+
+        udebug '\tfinishing merge with these solutions:'
+        udebug '\t\t', ( s.toString() for s in solutions ).join ' ; '
+        solutions
+
+## Checking whether a solution violates variable capture constraints
+
+A solution is not valid if, when its map is substituted back into the
+pattern, variable capture constraints are violated.  Those constraints are,
+specifically, these.
+ * When substituting a metavariable's value for the variable itself, if any
+   free variable in the value becomes bound by the substitution, variable
+   capture constraints have been violated.
+ * Substitution takes place from the top down, so that bound metavariables
+   have been filled in before the body of the binder is processed.  Capture
+   violations occur only in the bodies of binding expressions, not in the
+   variables that precede the body.
+ * When processing the application of an expression function, we do not
+   process the parameter.  Expression function applications are understood
+   to be permission, given by the creator of the pattern, to substitute
+   *any* value, even if capture would occur.  This is consistent with how
+   that notation is used in the typical rules of first-order logic, for
+   example.
+
+The following routine determines whether a solution violates variable
+capture constraints.  The parameters are the pattern that was used in the
+match, together with the solution to be tested.  The third parameter is used
+only in recursive calls; do not pass it a value.
+
+    violatesCaptureConstraints = ( pattern, solution, boundVars = [ ] ) ->
+        # udebug '\t\t', pattern.simpleEncode(), boundVars
+        if isMetavariable pattern
+            for freeVarName in solution.get( pattern ).freeVariables()
+                if freeVarName in boundVars then return yes
+            no
+        else if pattern.type is 'bi'
+            moreBoundVars = for variable in pattern.variables
+                if isMetavariable variable
+                    solution.get( variable ).name
+                else
+                    variable.name
+            violatesCaptureConstraints pattern.body, solution,
+                boundVars.concat moreBoundVars
+        else if Match.isExpressionFunctionApplication pattern
+            violatesCaptureConstraints pattern.children[1], solution,
+                boundVars
+        else
+            for child in pattern.children
+                if violatesCaptureConstraints child, solution, boundVars
+                    return yes
+            no
+
+The following routine returns the $2^n$ expressions generated by replacing
+all possible subsets of the $n$ occurrences of the given subexpression in
+the given expression with the given variable.  It assumes the
+replacement is not equal to the subexpression.  The results are then
+converted into expression functions parameterized by the variable, and used
+to extend the solution set `S` into an array of solution sets, which is
+returned.  The solution sets are extended at the entry named `E`.
+
+    allBinaryFunctions = ( expr, subexpr, variable, S, E ) ->
+        addresses = ( subexpression.address expr for subexpression in \
+            expr.descendantsSatisfying ( node ) -> node.equals subexpr )
+        if addresses.length > 4
+            throw 'Problem size growing too large for the unification
+                algorithm'
+        for bits in [0...1<<addresses.length]
+            body = expr.copy()
+            newsol = S.copy()
+            for i in [0...addresses.length]
+                if bits & (1<<i)
+                    body.index( addresses[i] ).replaceWith variable.copy()
+            newsol.set E, Match.makeExpressionFunction variable, body
+            newsol
 
 
 
@@ -2167,6 +2205,40 @@ Return the promise object, for chaining.
 
 This module defines several functions useful when working with the HTML5
 Canvas.
+
+## Curved arrows
+
+The following function draws an arrow along a cubic Bézier curve.  It
+requires the four control points, each as an (x,y) pair.  The arrowhead
+size can be adjusted with the final parameter, the altitude of the arrowhead
+triangle, measured in pixels
+
+    CanvasRenderingContext2D::bezierArrow =
+    ( x1, y1, x2, y2, x3, y3, x4, y4, size = 10 ) ->
+        unit = ( x, y ) ->
+            length = Math.sqrt( x*x + y*y ) or 1
+            x : x/length, y : y/length
+        @beginPath()
+        @moveTo x1, y1
+        @bezierCurveTo x2, y2, x3, y3, x4, y4
+        nearEnd =
+            x : @applyBezier x1, x2, x3, x4, 0.9
+            y : @applyBezier y1, y2, y3, y4, 0.9
+        nearEndVector = x : x4 - nearEnd.x, y : y4 - nearEnd.y
+        localY = unit nearEndVector.x, nearEndVector.y
+        localY.x *= size * 0.7
+        localY.y *= size
+        localX = x : localY.y, y : -localY.x
+        @moveTo x4-localX.x-localY.x, y4-localX.y-localY.y
+        @lineTo x4, y4
+        @lineTo x4+localX.x-localY.x, y4+localX.y-localY.y
+
+The following utility function is useful to the function above, as well as
+to other functions in the codebase.
+
+    CanvasRenderingContext2D::applyBezier = ( C1, C2, C3, C4, t ) ->
+        Math.pow( 1-t, 3 )*C1 + 3*Math.pow( 1-t, 2 )*t*C2 + \
+        3*( 1-t )*Math.pow( t, 2 )*C3 + Math.pow( t, 3 )*C4
 
 ## Rounded rectangles
 
@@ -2818,6 +2890,7 @@ name to a grammar when you construct one.
                 expressionBuilder : null
                 tokenizer : null
                 comparator : JSON.equals
+                maxIterations : -1 # which means no maximum
 
 The default options for the parsing algorithm are initialized in the
 constructor above, but you can change them using the following routine.  The
@@ -2881,6 +2954,10 @@ defined [above](#constructor).
    comparison, but will therefore go into an infinite loop for circular
    structures.  Feel free to provide a different one if the default does not
    meet your needs.  To return duplicates, simply set this to `-> no`.
+ * `maxIterations` defaults to infinite, but can be specified as a positive
+   integer, and the parsing algorithm will not iterate its innermost loops
+   any more than this many times.  This can be useful if you have a
+   suspected infinite loop in a grammar, and want to debug it.
 
 This algorithm is documented to some degree, but it will make much more
 sense if you have read the Wikipedia page cited at the top of this file.
@@ -2893,7 +2970,9 @@ sense if you have read the Wikipedia page cited at the top of this file.
             expressionBuilderFlag = { }
             options.tokenizer ?= @defaults.tokenizer
             options.comparator ?= @defaults.comparator
-            debug = if options.showDebuggingOutput then console.log else ->
+            options.maxIterations ?= @defaults.maxIterations
+            debug = if options.showDebuggingOutput then \
+                -> console.log arguments... else ->
             debug '\n\n'
 
 Run the tokenizer if there is one, and the input needs it.
@@ -2919,6 +2998,7 @@ set.
 
 Do the main nested loop which solves the whole problem.
 
+            numIterationsDone = 0
             for stateSet, i in stateGrid
                 debug "processing stateSet #{i} in this stateGrid
                     (with input #{input}):"
@@ -2961,6 +3041,32 @@ the "completer":  We just completed a nonterminal, so mark progress in
 whichever rules spawned it by copying them into the next column in
 `stateGrid`, with progress incremented one step.
 
+I make one extension to the Earley algorithm at this point to prevent a
+simple type of cyclicity.  For example, if there are production rules A -> B
+and B -> A, then upon completing an A, we will also complete a B, and then
+an A again, and so on ad infinitum.  Thus I create a function that, if the
+`addCategories` option is enabled, will prevent this simple type of infinite
+loop by preventing the second completion of the same array by any rule.
+
+                        # duplicateLabel = ( got ) ->
+                        #     if not options.addCategories then return no
+                        #     length = if options.expressionBuilder then 3 \
+                        #         else 2
+                        #     walk = got
+                        #     firstLabel = null
+                        #     while walk.length is length
+                        #         if firstLabel is null
+                        #             firstLabel = walk[length-2]
+                        #         else
+                        #             debug 'comparing', firstLabel, 'to',
+                        #                 walk[length-2]
+                        #             if walk[length-2] is firstLabel
+                        #                 return yes
+                        #         walk = walk[length-1]
+                        #     no
+
+Then we proceed with the code for the completer.
+
                         debug 'considering if this completion matters to
                             state set', state.ori
                         for s, k in stateGrid[state.ori]
@@ -2974,10 +3080,18 @@ whichever rules spawned it by copying them into the next column in
                                     got.unshift expressionBuilderFlag
                                 if options.collapseBranches and \
                                     got.length is 1 then got = got[0]
+                                # if duplicateLabel got
+                                #     debug 'duplicate label -- truncating
+                                #         search along that path'
+                                #     continue
                                 s.got.push got
                                 stateGrid[i].push s
                                 debug "completer added this to #{i}:",
                                     debugState s
+                                if numIterationsDone++ > \
+                                   options.maxIterations > 0
+                                    throw 'Maximum number of iterations
+                                        reached.'
                         j++
                         continue
                     if i >= input.length then j++ ; continue
@@ -3027,6 +3141,8 @@ the inner of the two main loops.
                             debug 'adding this state:',
                                 debugState stateSet[stateSet.length-1]
                     j++
+                    if numIterationsDone++ > options.maxIterations > 0
+                        throw 'Maximum number of iterations reached.'
             debug "finished processing this stateGrid
                 (with input #{input}):"
             debug '----------------------'
@@ -3174,7 +3290,8 @@ The following debugging routines are used in some of the code above.
 
     debugNestedArrays = ( ary ) ->
         if ary instanceof Array
-           '[' + ary.map( debugNestedArrays ).join( ',' ) + ']'
+            if '{}' is JSON.stringify ary[0] then ary = ary[1...]
+            '[' + ary.map( debugNestedArrays ).join( ',' ) + ']'
         else
             ary
     debugState = ( state ) ->
