@@ -1,12 +1,6 @@
 
 # Plan for a Lean UI Lurch Application
 
-## Namespaces
-
- 1. Add the next page of the tutorial that shows how to use this feature to
-    be able to group definitions and theorems into a namespace, just as in
-    the Lean tutorials.
-
 ## UI Tweaks and Organization
 
  1. Remove arrow labels, which are distracting.
