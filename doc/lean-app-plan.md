@@ -3,11 +3,6 @@
 
 ## UI Tweaks and Organization
 
- 1. Remove arrow labels, which are distracting.
- 1. Permit body groups to have zero children, in which case their contents
-    are processed as if it were a single term group inside the body group,
-    containing all the contents.
- 1. Update tutorial pages to reflect this special case of body groups.
  1. Update all screenshots to take all these visual changes (plus those on
     the toolbar) into account.
  1. Rename all screenshots to the format `tut-N-ss-DESC.png`.

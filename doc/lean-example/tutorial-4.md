@@ -58,6 +58,29 @@ previous part of this tutorial](tutorial-3.md):
  1. Click the arrow button in the toolbar.
  1. Click inside the term for which that body is the definition or proof.
 
+## What goes inside
+
+A body bubble's contents, if they are just plain text, are interpreted like
+the contents of a term bubble.  This is how the example above works.  But
+that is just the simplest of the ways you can use a body bubble.  Here is a
+comprehensive list.
+
+ * If a body bubble contains no other bubbles, then its text content is
+   interpreted as the Lean code for a term (as above).
+ * If a body bubble contains a single term bubble, then the body bubble's
+   meaning is the same as that of the single term bubble.
+ * If a body bubble contains n term bubbles, then the first n-1 are seen as
+   parameters and the final one is seen as the body of a lambda expression.
+   Thus for example, the structure shown below defines a function.  It could
+   be used as the body of a definition.
+
+<p align=center><img src='screenshot-body-as-function.png' width='50%'/></p>
+
+The second case is a generalization of the first, permitting explanator text
+outside the inner bubble; the first case can be seen as shorthand for the
+second.  The third case is more general still, because the second case is
+the 0-parameter version of the third case.
+
 ## Example 2: Theorem and Proof
 
 This permits us to put a little exposition in our theorems and proofs, as
@@ -69,6 +92,9 @@ The structure that reveals itself when your cursor is inside the main term
 (the name and premises of the theorem) is as shown below.
 
 <p align=center><img src='example-theorem-arrows.png' width='50%'/></p>
+
+In these examples, I've placed a term bubble inside the body bubble, just to
+show that the meaning is the same.
 
 ## So what?
 

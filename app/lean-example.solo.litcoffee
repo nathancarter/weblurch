@@ -164,7 +164,9 @@ their origins.
 Run Lean on that input and process all output.
 
         lastError = -1
-        for message in runLeanOn leanCode.lines.join '\n'
+        code = leanCode.lines.join( '\n' ).replace \
+            String.fromCharCode( 160 ), String.fromCharCode( 32 )
+        for message in runLeanOn code
             id = lineToGroupId[message.line]
             if isError = /error:/.test message.info then lastError = id
             detail = "Lean reported:\n\n#{message.info}"
@@ -611,12 +613,15 @@ document.  It is like `termGroupToCode`, but for bodies instead.
 
     bodyGroupToCode = window.bodyGroupToCode = ( group ) ->
 
-Find body/term-type children, and verify that at least one exists.
+Find body/term-type children, and verify that at least one exists.  If not,
+then we treat this as a special case, a body containing just one term,
+expressed as Lean code.  (This is handy for very small bodies, such as a
+single identifier or number.)
 
         children = ( child for child in group.children \
             when child.typeName() is 'term' or child.typeName() is 'body' )
         if children.length is 0
-            throw Error 'A body group may not be empty.'
+            return "#{group.contentAsText()} -- #{group.id()}"
 
 Verify that none but the last one is a body group (although the last one is
 also permitted to be a term group).
