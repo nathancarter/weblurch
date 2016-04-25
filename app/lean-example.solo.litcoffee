@@ -553,10 +553,45 @@ theorems, examples, sections, and namespaces.
         closeImageHTML : '<font color="#6666bb"><b>]</b></font>'
         contentsChanged : clearAllValidity
 
+Its context menu permits converting an unconnected body group between being
+a namespace and being a section.
+
+        contextMenuItems : ( group ) ->
+            rename = ->
+                newval = prompt 'Enter the identifier to use as the name of
+                    the namespace.', group.get 'namespace'
+                if newval isnt null
+                    if not /^[a-zA-Z_][a-zA-Z0-9_]*$/.test newval
+                        alert 'That was a valid Lean identifier.  No change
+                            has been made to your document.'
+                    else
+                        group.set 'namespace', newval
+            if not bodyIsASection group
+                [ ]
+            else if name = group.get 'namespace'
+                [
+                    text : 'Make this a section'
+                    onclick : -> group.clear 'namespace'
+                ,
+                    text : 'Rename this namespace...'
+                    onclick : rename
+                ]
+            else
+                [
+                    text : 'Make this a namespace...'
+                    onclick : rename
+                ]
+
 If this body is unconnected to a term, then it functions as a section.
 
         tagContents : ( group ) ->
-            if bodyIsASection group then 'Section' else ''
+            if bodyIsASection group
+                if name = group.get 'namespace'
+                    "Namespace: #{name}"
+                else
+                    'Section'
+            else
+                ''
 
 We can connect body groups to term groups only.  We are not permitted to
 make a cycle.

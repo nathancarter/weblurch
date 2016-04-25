@@ -3,23 +3,6 @@
 
 ## Namespaces
 
- 1. Modify the context menu for body groups as follows.
-    * If the group has no connections and no `namespace` attribute, add to
-      the context menu an item called "Make this a namespace..."  For now,
-      the handler can be a stub, which will be fleshed out below.
-    * If the group has no connections but has a `namespace` attribute, add
-      to the context menu two items:
-      * One called "Make this a section" should remove the group's
-        `namespace` attribute.
-      * One called "Rename this namespace..." should behave just like "Make
-        this a namespace..." as described further below.  (Stub for now.)
-    * If the group has connections, then do not modify the context menu.
- 1. Fill in the handler for the "Make this a namespace..." action (which can
-    also be the "Rename this namespace..." action) so that it gives the user
-    a JavaScript `prompt` asking for the name of the namespace.  The initial
-    value should be the current value of the group's namespace attribute (or
-    empty string if it has none), and canceling should do nothing.  Clicking
-    OK should update the value of that attribute.
  1. Update the `sectionGroupToCode` function so that if the group has a
     namespace attribute with value `N`, then in place of `section S`, use
     the text `namespace N`, and in place of `end S`, use the text `end N`.
