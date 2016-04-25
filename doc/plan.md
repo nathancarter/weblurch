@@ -13,74 +13,82 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Matching Module
+## Parsing test
 
-The Matching Module may no longer be necessary, if we build Lurch on top of
-[Lean](http://leanprover.github.io/).  Therefore these tasks are on hold.
+Create a Lurch Application that tests the following particular design for a
+customizable parser.
 
-If you end up needing to complete your own Matching Module, rework what you
-have now **significantly**, as follows.
-
- * The matching algorithm should first verify that metavariables appear only
-   in the pattern, not the expression.  If they appear in the expression,
-   throw an exception.
- * The matching algorithm should proceed as if there are no replacement
-   expressions within the pattern, using the ordinary matching algorithm.
-   When it encounters a replacement pattern, it should add it to a list of
-   "deferred for later" computations, stored in the match object itself.
- * Before returning any match objects, their deferred computations must be
-   processed.  Here is the algorithm for doing so on a match object M.
-   * Record a copy of the set of deferred computations, for later
-     comparison.
-   * For each deferred computation C in M:
-     * If enough of C's metavariables have been instantiated in M to compute
-       the rest, do so.  Here are the possible outcomes:
-       * This may reject M:  Return a failure value.  M should then be
-         removed from the list of match results from the outer algorithm.
-       * There may be multiple matches:  Remove C from M's deferred list,
-         and create copies of M, one for each of the matches, extended with
-         those matches.  Return that list of copies.  The outer algorithm
-         should replace M on its list of results with this new list.  But
-         it should not return them yet; each may have deferred computations
-         still waiting to be done.
-       * There may be one match:  Extend M with that match and proceed with
-         the loop, to handle the next deferred computation on the list.
-     * Otherwise (not enough of C's metavariables are known) then just move
-       on to the next deferred computation on the list.
-   * If the set of deferred computations is equal to the recorded copy, then
-     no progress has been made.  Throw an error saying that this matching
-     problem is outside the capabilities of this algorithm.
-   * Otherwise, progress has been made.  So repeat from 3 steps above this
-     one, "Record a copy..."
- * Run that algorithm on all existing unit tests, with one of three results:
-   * The test passes, and you can move on to the next test.
-   * The test fails, but merely due to an output formatting issue, and thus
-     the test itself can be tweaked so that it passes.
-   * The test fails, but because it throws an error about the test being
-     outside the algorithm's capabilities.  Verify yourself that this is so,
-     and if it is, change the test to expect such an error to be thrown, and
-     thereafter function as a test that the algorithm knows its limits.
-   * Any other possibility is a bug that needs to be fixed.
- * Add the following unit tests as well.
-```
-    a(X,X(Y))[M~N]     a(b,b(c,d,e))      [ { X : b,
-                                              Y : unused_1,
-                                              M : b(unused_1),
-                                              N : b(c,d,e) },
-                                            { X : b,
-                                              Y : unused_1,
-                                              M : a(b,b(unused_1)),
-                                              N : a(b,b(c,d,e)) } ]
-    a(X,X(Y))[M~N]     a(b,b(c,d,e))      [ { X : b,
-                                              Y : unused_1,
-                                              M : b(unused_1),
-                                              N : b(c,d,e) },
-                                            { X : unused_1,
-                                              Y : unused_2,
-                                              M : a(unused_1,
-                                                    unused_1(unused_2)),
-                                              N : a(b,b(c,d,e)) } ]
-```
+ * Create a group type called "category name" that can hold any text.  Its
+   tag will always contain the phrase "category name."
+ * Create a group type called "category definition."
+   * It has an attribute called "definition type" that can be selected with
+     the bubble tag context menu, and is one of the following.
+     * Built-in types
+       * integers base 10
+       * real numbers base 10
+       * one letter a-z/A-Z
+       * (more can be added to this list later)
+     * Regular expression
+     * Symbol
+     * Pattern
+   * Whichever of the above is chosen will be used as the bubble tag
+     contents.
+   * Choosing any of the options, if the bubble is empty, fills the bubble
+     with example content for that definition type.  For built-in types, it
+     fills the bubble with a human-readable description of the built-in.
+ * Make "category name" groups able to connect by arrows to "definition
+   type" groups or "category name" groups, but only up to one target.
+ * Create a group type called "name" that can hold any text.
+   * Permit it to connect to a "definition type" group, but only up to one
+     target.
+   * Permit "category type" groups to connect to "name" type groups also,
+     but still at most one target.
+   * Its tag will behave as follows.
+     * If it is not connected to a target, the tag says "name."
+     * If it has no category name connected to it, the tag says "operator
+       name."
+     * If it contains any commas or spaces, the tag says "variable names."
+     * Otherwise, it says "variable name."
+ * Create a group type called "test" that can hold any text.  Its tag always
+   contains the phrase "test."
+ * Create a method that computes, for any given "definition type" group, a
+   simple representation of what function should be called in a parser
+   object to extend it by adding that definition; the result should be JSON.
+ * The `contentsChanged` handler for any given group in the document should
+   call that function in itself (if it's a definition type group) or (if
+   it's not) in any definition type group to which it's connected, storing
+   the result as an attribute of the group on which it was called.
+ * Create a function that applies any such JSON record of a command to a
+   parser object, thus modifying that parser appropriately.
+ * Whenever any definition type group in the document has its JSON meaning
+   recomputed, loop through all definition top-level groups in the document,
+   doing the following.
+   * Before the loop, create a parser P.
+   * Upon encountering a definition type group *after* the one that changed,
+     apply to it the function that extends P with the meaning of that group.
+   * Upon encountering a test type group, run P on its contents and place
+     the resulting structure within the test type group.
+ * Whenever any test type group in the document changes, do the same loop as
+   above, but the only test that should be recomputed is the one that
+   changed.
+ * Create a context menu item in test type groups that allows you to see, in
+   a popup window, the parsed structure stored in that group.
+ * Add a context menu item in test type groups that allows you to mark a
+   test as currently passing.  This takes the currently parsed meaning of
+   that group and stores it under a second key, the meaning that *ought* to
+   be parsed by that group.  (For later comparison purposes, if input data
+   changes, to prevent regression.)
+ * Add a context menu item for removing such marks.
+ * When writing to a test type group's meaning attribute (or to the
+   attribute storing the meaning it ought to have), also mark it with a
+   suffix that looks like one of the following.
+   * If it has no data stored for what structure it ought to have, mark it
+     with a gray question mark.  Hovering the question mark should explain
+     this.
+   * If the "what ought to be parsed" data matches the data we just parsed
+     and are now storing, mark it with a green check box.  Hovering should,
+     again, explain this.
+   * Mark it with a red check box, and a corresponding hover explanation.
 
 ## Real Lurch
 
@@ -113,10 +121,13 @@ support](#offline-support), below.
    * Or does that imply that we should recompute lots of stuff about each
      dependency as it's loaded, in invisible DOM elements somewhere?  That
      sounds expensive and error-prone.
-   * Knowing whether recomputation is needed could be determined by
-     inspecting an MD5 hash of the document to see if it has changed since
-     the last computation.  This is what [SCons
+   * Knowing whether recomputation of a dependency is needed could be
+     determined by inspecting an MD5 hash of the document to see if it has
+     changed since the last computation.  This is what [SCons
      does](http://www.scons.org/doc/0.98.4/HTML/scons-user/c779.html).
+   * Alternatively, you can also query the last modified date of a file on
+     the web without fetching the whole file.  See
+     [here](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date).
 
 ### Extending load and save
 
@@ -128,7 +139,8 @@ Add support for Dropbox open and save using their simple
 to think this was possible because they could not accept uploads from Blob
 URLs, but it's possible to [convert those to a data
 URI](https://github.com/dropbox/dropbox-js/issues/144#issuecomment-32080661)
-and Dropbox Saver will accept those.
+and Dropbox Saver will accept those.  Once you've done this, mark an answer
+as accepted or not [here](http://stackoverflow.com/questions/26457316/can-dropbox-saver-accept-data-from-createobjecturl?noredirect=1#comment53719255_26457316).
 
 Google Drive also provides a very nice [real time collaboration API](
 https://developers.google.com/google-apps/realtime/overview) that makes any
@@ -237,6 +249,11 @@ usable offline even when dependencies of the current document are online.
 
 ### Ideas from various sources
 
+[This GitHub comment](
+https://github.com/buddyexpress/bdesk_photo/issues/2#issuecomment-166245603)
+might be useful for ensuring that even images pasted into a document get
+converted to base64, as all the other images in the document are.
+
 Suggestion from Dana Ernst: Perhaps this is not necessary or feasible, but
 if you go with a web app, could you make it easy for teachers to "plug into"
 the common LMS's (e.g. Blackboard, Canvas, etc.)?  I'm envisioning students
@@ -266,6 +283,12 @@ add features to that as time permits.
 Similar apps could be created for iOS, Android, etc., but would need to use
 tools other than Electron.  These are orthogonal tasks, and need not all be
 done by the same developer.
+
+### Repository organization
+
+The `app/` folder is getting cluttered.  Create an `app/examples/` subfolder
+and move every `*-example.html` and `*-example.solo.litcoffee` into it.
+Update any relative links to other resources, and any links to those pages.
 
 ### Improving documentation
 

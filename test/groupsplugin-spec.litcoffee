@@ -184,6 +184,7 @@ in the case when a valid group type is provided.
                 open = htmlToNode grouperHTML 'exa', 'open', 2
                 close = htmlToNode grouperHTML 'exa', 'close', 2
                 window._tmp = new Group open, close
+                return # for some reason it waits forever without this
             pageExpects ->
                 window._tmp.open.ownerDocument() is \
                     tinymce.activeEditor.getDoc()

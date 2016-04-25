@@ -1004,9 +1004,10 @@ within the pasted content.
                 group.set 'connections', connections
             ( $ justPasted ).removeClass 'justPasted'
 
-Invalidate the `ids()` cache ([defined below](
-#querying-the-group-hierarchy)) so that the next time that function is run,
-it recomputes its results from the newly-generated hierarchy in `topLevel`.
+Invalidate the `ids()` cache
+([defined below](#querying-the-group-hierarchy)) so that the next time that
+function is run, it recomputes its results from the newly-generated
+hierarchy in `topLevel`.
 
             delete @idsCache
 
@@ -1516,7 +1517,7 @@ index into the list of connections that are to be drawn.
                     context.fillStyle = '#ffffff'
                     context.fill()
                     context.lineWidth = 1.5
-                    context.strokeStyle = group.type()?.color ? '#444444'
+                    context.strokeStyle = from.type()?.color ? '#444444'
                     context.stroke()
                     context.fillStyle = '#000000'
                     context.globalAlpha = 1.0
@@ -1658,7 +1659,8 @@ Construct the menu and show it on screen.
             menu = new tinymce.ui.Menu(
                 items : items
                 context : 'contextmenu'
-            ).addClass( 'contextmenu' ).renderTo()
+                classes : 'contextmenu'
+            ).renderTo()
             editor.on 'remove', -> menu.remove() ; menu = null
             pos = ( $ editor.getContentAreaContainer() ).position()
             menu.moveTo x + pos.left, y + pos.top

@@ -580,8 +580,8 @@ supports.
    `Ai` entries before `An` must all be variables, and they will be bound;
    i.e., this yields an OpenMath binding object, not an application object.
    Examples:
-   * `logic.forall(x,P(x))`
-   * `foo.lambda(x,f(x,7,"bar"))`
+   * `logic.forall[x,P(x)]`
+   * `foo.lambda[x,f(x,7,"bar")]`
 This syntax does not allow for the expression of OpenMath error objects,
 attributions, symbol URIs, byte arrays, or very large integers.
 

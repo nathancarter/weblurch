@@ -260,7 +260,10 @@ exists) if and only if they're provided.
 
     pageExpectsError = ( func, check, args... ) ->
         P.page.evaluate ( evaluateThis ) ->
-            try eval evaluateThis ; null catch e then e
+            try eval evaluateThis ; null catch e
+                message : e.message
+                line : e.line
+                stack : e.stack
         , "(#{func.toString()})()", ( err, result ) ->
             expect( err ).toBeNull()
             expect( result ).not.toBeNull()

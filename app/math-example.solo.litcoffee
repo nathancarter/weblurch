@@ -125,7 +125,7 @@ error.
         if nodes.length > 1 then return 'more than one math expression'
         node = nodes.get 0
         try
-            toParse = mathQuillToMeaning node
+            toParse = window.mathQuillToMeaning node
         catch e
             return "Error converting math expression to text: #{e?.message}"
         try

@@ -1,0 +1,59 @@
+<html>
+  <head>
+    <title>Customizable Parsing Test</title>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.7.5/css/bootstrap-select.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.7.5/js/bootstrap-select.min.js">
+    </script>
+    <script src='./cp-test.solo.min.js'></script>
+    <script src='./parsing.duo.min.js'></script>
+    <script src='./openmath.duo.min.js'></script>
+    <script src='eqed/mathquill.min.js'></script>
+    <link rel="stylesheet" href="eqed/mathquill.css">
+    <script src='mathquill-parser.solo.min.js'></script>
+    <style>
+      .hidden { display : none; }
+    </style>
+  </head>
+  <body>
+    <div class='container'>
+      <div class='row'>
+        <div class='col-md-10'>
+          <div class='page-header'>
+            <h1>Customizable Parsing Test</h1>
+            <p>Are the following tools sufficient to define any language we
+            can envision Lurch users wanting to define?</p>
+          </div>
+        </div>
+        <div class='col-md-2' style='text-align: right;'>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+          <p><button type="button" id='loadButton'
+                  data-toggle="tooltip" title="Load language definition"
+                  class="btn btn-md btn-default"><span
+                  class="glyphicon glyphicon-floppy-open"
+                  aria-hidden="true"></span></button>
+          <button type="button" id='saveButton'
+                  data-toggle="tooltip" title="Save language definition"
+                  class="btn btn-md btn-default"><span
+                  class="glyphicon glyphicon-floppy-save"
+                  aria-hidden="true"></span></button>
+          <button type="button" id='eraseButton'
+                  data-toggle="tooltip"
+                  title="Erase saved language definition"
+                  class="btn btn-md btn-default"><span
+                  class="glyphicon glyphicon-floppy-remove"
+                  aria-hidden="true"></span></button></p>
+        </div>
+      </div>
+    </div>
+    <div class='container' id='main'></div>
+  </body>
+</html>

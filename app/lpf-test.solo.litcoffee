@@ -186,7 +186,7 @@ possibly significantly refactored.  Right now, it is just a test.
             toSave = prompt "Type the name under which to save this LPF
                 array.", lastSavedFilename
             if not toSave? then return
-            if toSave in savedTests
+            if toSave in savedTests()
                 if not confirm "Save over LPF array of that same name?"
                     return
             saveTest toSave, ( $ '#input' ).val()

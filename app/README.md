@@ -13,3 +13,8 @@ repository.
 The page containing the app is [index.html](index.html), and you can see it
 runnin live on GitHub Pages [by clicking
 here](http://nathancarter.github.io/weblurch/app/index.html).
+
+Thanks to [the lean.js project](https://github.com/leanprover/lean.js) for
+many ideas that went into [the Lean example
+app](lean-example.solo.litcoffee), and for the freely available
+[input-method.js file](input-method.js).
