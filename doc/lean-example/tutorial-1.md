@@ -9,7 +9,7 @@ applications](http://nathancarter.github.io/weblurch/app/index.html)
 built on that foundation uses the software
 [Lean](http://leanprover.github.io/) (actually, its
 [JavaScript implementation](https://github.com/leanprover/lean.js))
-to validate documents expressing mathematics using dependant type theory.
+to validate documents expressing mathematics using dependent type theory.
 
 ## What does it do?
 
