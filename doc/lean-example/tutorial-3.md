@@ -4,6 +4,8 @@
 This page assumes you've read Parts [1](tutorial-1.md) and
 [2](tutorial-2.md).
 
+[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html).
+
 [Part 2](tutorial-2.md) ended by pointing out that the UI could be better
 if the common syntactic form `a : A` in Lean were supported in this app.
 This page of the tutorial introduces how it's supported.

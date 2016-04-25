@@ -17,12 +17,12 @@ This tutorial assumes that you're familiar with Lean.  If not, consider
 starting with [Lean's own tutorial](https://leanprover.github.io/tutorial/)
 first.
 
-The app itself is [available online
-here](http://nathancarter.github.io/weblurch/app/lean-example.html).
-It is a word processor whose controls are self-explanatory, with some new
-features.
+The app documented here is a web-based word processor whose controls are
+self-explanatory, with some new features.
 
 <p align=center><img src='tut-1-ss-buttons.png' width='50%'/></p>
+
+[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html).
 
 ### Marking Lean code
 
