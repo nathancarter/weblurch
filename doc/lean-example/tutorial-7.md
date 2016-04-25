@@ -12,7 +12,7 @@ just as easily as Lean sections.  This tutorial page covers how to do so.
 
 Recall the beautiful theorem from [the previous tutorial page](tutorial-6.md).
 
-<p align=center><img src='example-theorem-section-details.png' width=50%/></p>
+<p align=center><img src='tut-6-ss-theorem-section-details.png' width=50%/></p>
 
 We could do the same thing in a namespace rather than a section, if we
 wanted to.  (We might want to in order to avoid filling the global
@@ -35,7 +35,7 @@ If the bubble shown above were a namespace, we could then access its
 contents outside the namespace using dot notation, as in any Lean code.
 See the following example.
 
-<p align=center><img src='example-namespace.png' width=50%/></p>
+<p align=center><img src='tut-7-ss-namespace.png' width=50%/></p>
 
 ## So what?
 

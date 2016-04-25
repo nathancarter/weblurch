@@ -29,7 +29,7 @@ proofs are common.
 
 We would like to do something more like the following.
 
-<p align=center><img src='example-theorem-bare.png' width=50%/></p>
+<p align=center><img src='tut-5-ss-theorem-bare.png' width=50%/></p>
 
 This is possible by breaking the syntax tree for the proof term into
 smaller pieces, which we then connect with arrows, so that the app knows
@@ -64,16 +64,16 @@ in any sequence.
 Consider the image shown earlier in this tutorial.  Here is how it was
 created.  Bubbles were placed as follows:
 
-<p align=center><img src='example-theorem-boundaries.png' width=50%/></p>
+<p align=center><img src='tut-5-ss-theorem-boundaries.png' width=50%/></p>
 
 Connections were made from the theorem statement and body to the theorem
 name in the way you already know from [the previous tutorial page](tutorial-4.md):
 
-<p align=center><img src='example-theorem-arrows-1.png' width=50%/></p>
+<p align=center><img src='tut-5-ss-theorem-arrows-1.png' width=50%/></p>
 
 Inside a body, the first term is treated as an assumption, and should be assigned a type, as shown here.
 
-<p align=center><img src='example-theorem-arrows-2.png' width=50%/></p>
+<p align=center><img src='tut-5-ss-theorem-arrows-2.png' width=50%/></p>
 
 Each of the elimination steps in the body is applied to its argument, and in
 turn, has the introduction step applied to it.  Thus the remainder of the
@@ -82,7 +82,7 @@ forming one term tree.  In the following image, the cursor is in the shaded
 bubble, so you can see only the arrows into and out of that bubble.  There
 are corresponding arrows into and out of the `and.elim_left` step as well.
 
-<p align=center><img src='example-theorem-arrows-3.png' width=50%/></p>
+<p align=center><img src='tut-5-ss-theorem-arrows-3.png' width=50%/></p>
 
 ## So what?
 

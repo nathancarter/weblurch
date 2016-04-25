@@ -1,10 +1,6 @@
 
 # Plan for a Lean UI Lurch Application
 
-## UI Tweaks and Organization
-
- 1. Rename all screenshots to the format `tut-N-ss-DESC.png`.
-
 ## Special Characters
 
  1. Include [this file](https://raw.githubusercontent.com/leanprover/tutorial/master/js/input-method.js) from the Lean-JS Live Demo into this project.

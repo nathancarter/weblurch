@@ -22,7 +22,7 @@ here](http://nathancarter.github.io/weblurch/app/lean-example.html).
 It is a word processor whose controls are self-explanatory, with some new
 features.
 
-<p align=center><img src='screenshot-toolbar-buttons.png' width='50%'/></p>
+<p align=center><img src='tut-1-ss-buttons.png' width='50%'/></p>
 
 ### Marking Lean code
 
@@ -35,13 +35,13 @@ square brackets as a visual indicator of the special treatment the app will
 give that text.  When the user's cursor is inside such code, a bubble will
 be drawn around the code to make that fact visually obvious.
 
-<p align=center><img src='example-bubble.png'/></p>
+<p align=center><img src='tut-1-ss-bubble.png'/></p>
 
 Users who do not wish to see the brackets (and rely
 instead only on the bubbles that appear when the cursor is inside the code)
 can toggle that feature using the View menu.
 
-<p align=center><img src='example-bubble-hidden.png'/></p>
+<p align=center><img src='tut-1-ss-bubble-hidden.png'/></p>
 
 The other two bracket buttons, as well as the arrow button, will be covered
 in later parts of this tutorial.
@@ -60,7 +60,7 @@ color=red>&#10006;</font>, indicating whether the message was an error.  You
 can find details about the Lean output by hovering your mouse over the
 symbol in question, as shown below.
 
-<p align=center><img src='example-validation-detail.png'/></p>
+<p align=center><img src='tut-1-ss-validation-detail.png'/></p>
 
 ## So what?
 
