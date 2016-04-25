@@ -9,7 +9,8 @@ out of the names of theorems, and this tutorial page shows how.
 
 ## Sections
 
-Recall the beautiful theorem from [the previous tutorial page](tutorial-5.md).
+Recall the nicely organized theorem from [the previous tutorial
+page](tutorial-5.md).
 
 <p align=center><img src='tut-5-ss-theorem-bare.png' width=50%/></p>
 

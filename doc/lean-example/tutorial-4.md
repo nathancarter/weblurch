@@ -20,7 +20,7 @@ type for it in the app.
 
 Let's assume that we want to write a document embodying the Lean code
 `definition three : nat := 3`.  Certainly, we could simply put that code
-inside a term bubble, but that restricts our document to contain Lean
+inside a term bubble, but that requires our document to contain Lean
 syntax.  Here is an alternate way.
 
 <p align=center><img src='tut-4-ss-body-clean.png' width='50%'/></p>
@@ -28,10 +28,11 @@ syntax.  Here is an alternate way.
 This document has plenty of non-bubbled text that is irrelevant to the
 results of the "Run Lean" operation, which pays attention only to the
 contents of the bubbles.  But that non-bubbled text is very helpful, for
-reasons described [at the end of this page](#benefits).
+somewhat obvious reasons (also described [at the end of this
+page](#benefits)).
 
-If we use the View menu to show the boundaries of the groups (i.e., bubbles)
-then the result looks like the following.
+If we use the View menu to show the boundaries of the bubbles then the
+result looks like the following.
 
 <p align=center><img src='tut-4-ss-body-validated.png' width='50%'/></p>
 
@@ -39,16 +40,15 @@ Notice that the app can convert these broken-apart pieces into Lean code
 correctly, so that it validates.
 
 The type is connected to the term in the manner introduced in [the previous
-part of this tutoria](tutorial-3.md).  But the body is also connected in the
-same way, as shown here.
+part of this tutorial](tutorial-3.md).  But the body is also connected in
+the same way, as shown here.
 
 <p align=center><img src='tut-4-ss-body-structure.png' width='50%'/></p>
 
 ## Creating the Structure
 
-To create a body group, use the blue bracket button highlighted in the
-toolbar below (third button of those labeled "Mark Lean code in your
-document").
+To create a body group, use the blue bracket button in the toolbar below
+(third button of those labeled "Mark Lean code in your document").
 
 <p align=center><img src='tut-1-ss-buttons.png' width='50%'/></p>
 
@@ -78,10 +78,10 @@ comprehensive list.
 
 <p align=center><img src='tut-4-ss-body-as-function.png' width='50%'/></p>
 
-The second case is a generalization of the first, permitting explanator text
-outside the inner bubble; the first case can be seen as shorthand for the
-second.  The third case is more general still, because the second case is
-the 0-parameter version of the third case.
+The second case is a generalization of the first, permitting explanatory
+text outside the inner bubble; the first case can be seen as shorthand for
+the second.  The third case is more general still, because the second case
+is the 0-parameter version of the third case.
 
 ## Example 2: Theorem and Proof
 
@@ -95,14 +95,14 @@ The structure that reveals itself when your cursor is inside the main term
 
 <p align=center><img src='tut-4-ss-theorem-arrows.png' width='50%'/></p>
 
-In these examples, I've placed a term bubble inside the body bubble, just to
-show that the meaning is the same.
+In these examples, I've placed a term bubble inside the body bubble, which
+shows that the meaning is the same.
 
 ## So what?
 
 ### Benefits
 
-This lets us make very readable definitions and theorems, as shown above.
+This lets us make more readable definitions and theorems, as shown above.
 The expository text between bubbles has two main benefits.  A human reader
 can understand the document without thinking through Lean syntax.  And the
 document author, when that writer is a student, can practice expressing

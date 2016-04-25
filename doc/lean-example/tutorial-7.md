@@ -10,7 +10,8 @@ just as easily as Lean sections.  This tutorial page covers how to do so.
 
 ## Namespaces
 
-Recall the beautiful theorem from [the previous tutorial page](tutorial-6.md).
+Recall the nicely organized theorem from [the previous tutorial
+page](tutorial-6.md).
 
 <p align=center><img src='tut-6-ss-theorem-section-details.png' width=50%/></p>
 
