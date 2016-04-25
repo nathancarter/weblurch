@@ -1,12 +1,6 @@
 
 # Plan for a Lean UI Lurch Application
 
-## Sections
-
- 1. Add the next page of the tutorial that shows how to use this feature to
-    be able to declare temporary variables and constants, just as in the
-    Lean tutorials.
-
 ## Namespaces
 
  1. Modify the context menu for body groups as follows.
