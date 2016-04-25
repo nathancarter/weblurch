@@ -267,7 +267,7 @@ Its tag will advertise any Lean command embedded in the group.
 
         tagContents : ( group ) ->
             if command = group.get 'leanCommand'
-                "command: #{command}"
+                "Command: #{command}"
             else
                 null
 
@@ -507,6 +507,10 @@ Declare a new type of group in the document, for Lean types.
         openImageHTML : '<font color="#66bb66"><b>[</b></font>'
         closeImageHTML : '<font color="#66bb66"><b>]</b></font>'
         contentsChanged : clearAllValidity
+
+We can connect type groups to term groups only.  We are not permitted to
+make a cycle.
+
         connectionRequest : ( from, to ) ->
             if to.typeName() isnt 'term' then return
             if to.id() in ( c[1] for c in from.connectionsOut() )
@@ -532,6 +536,18 @@ theorems, examples, sections, and namespaces.
         openImageHTML : '<font color="#6666bb"><b>[</b></font>'
         closeImageHTML : '<font color="#6666bb"><b>]</b></font>'
         contentsChanged : clearAllValidity
+
+If this body is unconnected to a term, then it functions as a section.
+
+        tagContents : ( group ) ->
+            for connection in group.connectionsOut()
+                if tinymce.activeEditor.Groups[connection[1]].typeName() \
+                    is 'term' then return ''
+            'Section'
+
+We can connect body groups to term groups only.  We are not permitted to
+make a cycle.
+
         connectionRequest : ( from, to ) ->
             if to.typeName() isnt 'term' then return
             if to.id() in ( c[1] for c in from.connectionsOut() )

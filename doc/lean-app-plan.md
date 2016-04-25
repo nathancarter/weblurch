@@ -3,8 +3,6 @@
 
 ## Sections
 
- 1. Modify the body group type so that when a body group has no arrows into
-    or out of it, its group tag says "Section."
  1. Create a new function `sectionGroupToCode` as follows.
     * It accepts a single body group as parameter.
     * Let `S` be the bubble ID for that body group, prefixed by some dummy
