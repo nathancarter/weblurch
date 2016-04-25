@@ -3,7 +3,7 @@
 
 This page assumes you've read [Part 1](tutorial-1.md).
 
-[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html).
+[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html)
 
 The end of that document pointed out a needed improvement:  The bubbles in a
 document all contain Lean code, which expects the reader to be fluent in it.

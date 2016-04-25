@@ -5,7 +5,7 @@ This page assumes you've read Parts [1](tutorial-1.md), [2](tutorial-2.md),
 [3](tutorial-3.md), [4](tutorial-4.md), [5](tutorial-5.md), and
 [6](tutorial-6.md).
 
-[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html).
+[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html)
 
 The end of [Part 6](tutorial-6.md) stated that you can use Lean namespaces
 just as easily as Lean sections.  This tutorial page covers how to do so.

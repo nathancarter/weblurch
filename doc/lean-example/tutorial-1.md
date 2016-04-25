@@ -22,7 +22,7 @@ self-explanatory, with some new features.
 
 <p align=center><img src='tut-1-ss-buttons.png' width='50%'/></p>
 
-[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html).
+[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html)
 
 ### Marking Lean code
 

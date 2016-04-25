@@ -4,7 +4,7 @@
 This page assumes you've read Parts [1](tutorial-1.md), [2](tutorial-2.md),
 [3](tutorial-3.md), [4](tutorial-4.md), and [5](tutorial-5.md).
 
-[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html).
+[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html)
 
 The end of [Part 5](tutorial-5.md) promised to take code like `{P Q : Prop}`
 out of the names of theorems, and this tutorial page shows how.

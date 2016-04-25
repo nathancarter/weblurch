@@ -4,7 +4,7 @@
 This page assumes you've read Parts [1](tutorial-1.md), [2](tutorial-2.md),
 and [3](tutorial-3.md).
 
-[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html).
+[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html)
 
 The end of [Part 3](tutorial-3.md) pointed out that Lean definitions (and
 hence theorems and examples) cannot yet have their body split out from the
