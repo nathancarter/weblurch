@@ -46,8 +46,10 @@ could in Lean.  This is useful for the reasons stated above.
 
 ### Missing pieces
 
-This is the last page of the tutorial, but surely you can think of ways that
-this app could be improved.  Feel free to visit [the webLurch project GitHub
-site](https://github.com/nathancarter/weblurch) and see how to fork the
-project and contribute your own code.  Feel free also to contact one of the
-members of the development team, through GitHub, or just open an issue.
+The final missing piece is that this app does not seem to use any of the
+attractive symbols Lean uses, such as the blackboard bold N for natural
+numbers, and so on.
+
+Let's see how to fix that in the final part of the tutorial.
+
+[Continue to Part 8.](tutorial-8.md)

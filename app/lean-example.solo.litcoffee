@@ -683,3 +683,40 @@ An empty body functions as a section.
         "#{type} #{identifier} -- #{group.id()}\n
         #{results.join '\n'}\n
         end #{identifier} -- #{group.id()}"
+
+## Substitutions
+
+Now we install code that watches for certain key text pieces that can be
+replaced by Lean-related symbols.
+
+    window.afterEditorReady = ( editor ) ->
+        editor.on 'KeyUp', ( event ) ->
+            movements = [ 33..40 ] # arrows, pgup/pgdn/home/end
+            modifiers = [ 16, 17, 18, 91 ] # alt, shift, ctrl, meta
+            if event.keyCode in movements or event.keyCode in modifiers
+                return
+            range = editor.selection.getRng()
+            if range.startContainer is range.endContainer and \
+               range.startContainer instanceof editor.getWin().Text
+                allText = range.startContainer.textContent
+                lastCharacter = allText[range.startOffset-1]
+                if lastCharacter isnt ' ' and lastCharacter isnt '\\' and \
+                   lastCharacter isnt String.fromCharCode( 160 )
+                    return
+                allBefore = allText.substr 0, range.startOffset - 1
+                allAfter = allText.substring range.startOffset - 1
+                startFrom = allBefore.lastIndexOf '\\'
+                if startFrom is -1 then return
+                toReplace = allBefore.substr startFrom + 1
+                allBefore = allBefore.substr 0, startFrom
+                if not replaceWith = corrections[toReplace] then return
+                newCursorPos = range.startOffset - toReplace.length - 1 + \
+                    replaceWith.length
+                if lastCharacter isnt '\\'
+                    allAfter = allAfter.substr 1
+                    newCursorPos--
+                range.startContainer.textContent =
+                    allBefore + replaceWith + allAfter
+                range.setStart range.startContainer, newCursorPos
+                range.setEnd range.startContainer, newCursorPos
+                editor.selection.setRng range
