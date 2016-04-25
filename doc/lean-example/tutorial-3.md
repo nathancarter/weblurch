@@ -4,6 +4,8 @@
 This page assumes you've read Parts [1](tutorial-1.md) and
 [2](tutorial-2.md).
 
+[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html).
+
 [Part 2](tutorial-2.md) ended by pointing out that the UI could be better
 if the common syntactic form `a : A` in Lean were supported in this app.
 This page of the tutorial introduces how it's supported.
@@ -57,6 +59,9 @@ type is treated as modifying the term.  If the term has a "check" command
 embedded in it, for instance, the check will include the type assertion, as
 shown here.
 
+<p align=center><img src='tut-3-ss-type-term-paragraph.png'
+width='50%'/></p>
+
 ## So what?
 
 ### Benefits
@@ -66,9 +71,6 @@ document author to structure your text as you see fit, without needing to
 be bound by the notational conventions of Lean.  The example images above
 show how you can structure your prose as you like, and fit bubbles and
 connections among them into your prose in whatever way it necessitates.
-
-<p align=center><img src='tut-3-ss-type-term-paragraph.png'
-width='50%'/></p>
 
 Note that the visual clutter shown above completely disappears when the user
 takes their cursor out of the bubbles in question.  The image below shows
@@ -82,7 +84,7 @@ width='50%'/></p>
 
 Of course, there are still occasions where some Lean syntax is unavoidable.
 For instance, in the code `definition A : B := C`, we have no way to
-separate the `C` (which may be large) from the rest.  We'll see how to
-solve that problem next.
+separate the `C` (which may be a very large expression) from the rest.
+We'll see how to solve that problem next.
 
 [Continue to Part 4.](tutorial-4.md)

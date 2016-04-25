@@ -4,6 +4,8 @@
 This page assumes you've read Parts [1](tutorial-1.md), [2](tutorial-2.md),
 [3](tutorial-3.md), and [4](tutorial-4.md).
 
+[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html).
+
 The end of [Part 4](tutorial-4.md) pointed out that while the bodies of Lean
 definitions, theorems, and examples can be split out from the name and type
 of the definition, etc., they remain indivisible, which presents a challenge
@@ -40,7 +42,8 @@ how to reconstruct the original Lean code from the pieces.
 If you have a term of the form `operator operand1 ... operandN` in a
 document, and you wish to break it up, do so as follows.
 
- 1. Break the term bubble surrounding the term.
+ 1. Break the term bubble surrounding the term.  (Do so by using the delete
+    or backspace key on either of its boundaries.)
  1. Place a new term bubble around just the operator.
  1. Place a new term bubble around the first operand.
  1. Use the arrow button on the toolbar to connect the operator to that
@@ -51,18 +54,18 @@ document, and you wish to break it up, do so as follows.
 The app will understand that the source of the arrows is the operator, and
 the destinations are the operands.  The order of the arrows is significant,
 and is displayed by the order in which the arrows leave the operator bubble.
-To destroy arrows and reform them, simply repeat a connecting process, and
+To destroy arrows and reform them, simply repeat the connecting process, and
 the arrow will be toggled off; this can help you reorder them.
 
 Note that the operator and operands do not need to appear in the document in
-the order in which they originally did.  As long as the arrows exist in the
-correct direction and the correct order, the bubbles themselves can appear
-in any sequence.
+the order in which they would appear in Lean code.  As long as the arrows
+exist in the correct direction and the correct order, the bubbles themselves
+can appear in any sequence.
 
 ## Example
 
-Consider the image shown earlier in this tutorial.  Here is how it was
-created.  Bubbles were placed as follows:
+Consider the image shown earlier on this page.  Here is how it was created.
+Bubbles were placed as follows:
 
 <p align=center><img src='tut-5-ss-theorem-boundaries.png' width=50%/></p>
 
@@ -71,7 +74,9 @@ name in the way you already know from [the previous tutorial page](tutorial-4.md
 
 <p align=center><img src='tut-5-ss-theorem-arrows-1.png' width=50%/></p>
 
-Inside a body, the first term is treated as an assumption, and should be assigned a type, as shown here.
+Inside a body, the first terms are treated as parameters, which in the case
+of proofs means that they function as assumptions.  In this proof, we have
+one assumption, which should be assigned a type as shown here.
 
 <p align=center><img src='tut-5-ss-theorem-arrows-2.png' width=50%/></p>
 
@@ -83,6 +88,10 @@ bubble, so you can see only the arrows into and out of that bubble.  There
 are corresponding arrows into and out of the `and.elim_left` step as well.
 
 <p align=center><img src='tut-5-ss-theorem-arrows-3.png' width=50%/></p>
+
+Thus the set of arrows connecting the last five term bubbles in the proof
+form the same tree shown at the top of this page, with the arrows pointing
+from each term to its subterm(s).
 
 ## So what?
 
@@ -96,7 +105,7 @@ In fact, the example shows that we can even reorder the elements of the
 proof term to be in whatever sequence we feel natural; the introduction
 step, which would appear first in the Lean code
 `and.intro (and.elim_right E) (and.elim_left E)`, appears last in the
-document!
+document.
 
 ### Missing pieces
 
