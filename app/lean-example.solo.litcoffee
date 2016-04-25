@@ -183,14 +183,13 @@ Run Lean on that input and process all output.
             if not hasValidity groups[id]
                 markValid groups[id], yes, 'No errors reported.'
 
-Any type or body groups without arrows to term groups must be marked with a
-message to tell the user that they were not part of validation (and perhaps
-indicate a mistake on the user's part in input).  The only exceptions are
-body groups acting as subterms.
+Any type groups without arrows to term groups must be marked with a message
+to tell the user that they were not part of validation (and perhaps indicate
+a mistake on the user's part in input).  The only exceptions are body groups
+acting as subterms.
 
         for id in groups.ids()
-            typeName = groups[id].typeName()
-            if typeName is 'type' or typeName is 'body'
+            if ( typeName = groups[id].typeName() ) is 'type'
                 if isSubterm groups[id] then continue
                 modifiedTerms = ( connection[1] \
                     for connection in groups[id].connectionsOut() \
@@ -442,13 +441,21 @@ The following function converts the document into Lean code by calling
 `termGroupToCode` on all top-level term groups in the document.  If this
 array were joined with newlines between, it would be suitable for passing
 to Lean.  It ignores non-term groups, and it ignores term groups that are
-subterms of other terms.
+subterms of other terms.  The only exception to this is body terms not
+attached to a term, which therefore function as sections.
 
     documentToCode = window.documentToCode = ->
         result = lines : [ ], errors : { }
         for group in tinymce.activeEditor.Groups.topLevel
 
-Here we filter out non-terms and subterms.
+If it's a section, handle that with `sectionGroupToCode`.
+
+            if group.typeName() is 'body' and bodyIsASection group
+                lineOrLines = sectionGroupToCode group
+                result.lines = result.lines.concat lineOrLines.split '\n'
+                continue
+
+Then filter out non-terms and subterms.
 
             if group.typeName() isnt 'term' or isSubterm group
                 continue
@@ -471,6 +478,15 @@ group is a subterm of another term group.
             if tinymce.activeEditor.Groups[connection[0]].typeName() \
                 is 'term' then return yes
         no
+
+The following function determines if a body is attached to no term, and thus
+functions as a section.
+
+    bodyIsASection = ( group ) ->
+        for connection in group.connectionsOut()
+            if tinymce.activeEditor.Groups[connection[1]].typeName() \
+                is 'term' then return no
+        yes
 
 The following function checks to see if you can get from one group to
 another in the document by following connections forwards.  This is useful
@@ -540,10 +556,7 @@ theorems, examples, sections, and namespaces.
 If this body is unconnected to a term, then it functions as a section.
 
         tagContents : ( group ) ->
-            for connection in group.connectionsOut()
-                if tinymce.activeEditor.Groups[connection[1]].typeName() \
-                    is 'term' then return ''
-            'Section'
+            if bodyIsASection group then 'Section' else ''
 
 We can connect body groups to term groups only.  We are not permitted to
 make a cycle.
@@ -608,3 +621,22 @@ Adjust all but the last entry to be assumptions, and we're done.
             match = /^(.*) -- (\d+)$/.exec results[index]
             results[index] = "assume #{match[1]}, -- #{match[2]}"
         results.join '\n'
+
+An empty body functions as a section.
+
+    sectionGroupToCode = window.sectionGroupToCode = ( group ) ->
+        identifier = "section#{group.id()}"
+        results = [ ]
+        for child in group.children
+            if isSubterm child then continue
+            try
+                if child.typeName() is 'term'
+                    results.push termGroupToCode child
+                else if child.typeName() is 'body'
+                    if not bodyIsASection child then continue
+                    results.push sectionGroupToCode child
+            catch e
+                markValid child, no, e.message
+        "section #{identifier} -- #{group.id()}\n
+        #{results.join '\n'}\n
+        end #{identifier} -- #{group.id()}"

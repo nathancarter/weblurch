@@ -3,23 +3,6 @@
 
 ## Sections
 
- 1. Create a new function `sectionGroupToCode` as follows.
-    * It accepts a single body group as parameter.
-    * Let `S` be the bubble ID for that body group, prefixed by some dummy
-      ID to make it an identifier.
-    * Find the ordered list of immediate child groups that are either terms
-      that do not have any arrows coming into them from another term group,
-      or that are bodies with no arrows in or out of any kind.
-    * Recursively call `termGroupToCode` or `sectionGroupToCode` on each of
-      the elements of the list; call the results `r1` through `rN`.
-    * Form the text `section S r1 r2 ... rN end S`, with each `ri` and the
-      start/end markers on separate lines, and with group-ID comments added
-      to the start and end markers for the section group.  Note that `S` is
-      as computed above (not a literal letter S).
- 1. Remove the feature from validation that marks body groups yellow if they
-    have no arrows to term groups; instead, create code from them using
-    `sectionGroupToCode`.
- 1. Test, updating your example document to use this new feature.
  1. Add the next page of the tutorial that shows how to use this feature to
     be able to declare temporary variables and constants, just as in the
     Lean tutorials.
