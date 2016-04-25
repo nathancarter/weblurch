@@ -5,7 +5,7 @@ This page assumes you've read Parts [1](tutorial-1.md), [2](tutorial-2.md),
 [3](tutorial-3.md), [4](tutorial-4.md), [5](tutorial-5.md),
 [6](tutorial-6.md), and [7](tutorial-7.md).
 
-[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html).
+[Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html)
 
 The end of [Part 7](tutorial-7.md) promised a tutorial on inserting special
 symbols into the document, which Lean understands.
