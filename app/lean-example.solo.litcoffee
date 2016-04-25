@@ -660,7 +660,10 @@ Adjust all but the last entry to be assumptions, and we're done.
 An empty body functions as a section.
 
     sectionGroupToCode = window.sectionGroupToCode = ( group ) ->
-        identifier = "section#{group.id()}"
+        name = group.get 'namespace'
+        type = if name then 'namespace' else 'section'
+        suffix = name ? group.id()
+        identifier = ( if type is 'namespace' then '' else type ) + suffix
         results = [ ]
         for child in group.children
             if isSubterm child then continue
@@ -672,6 +675,6 @@ An empty body functions as a section.
                     results.push sectionGroupToCode child
             catch e
                 markValid child, no, e.message
-        "section #{identifier} -- #{group.id()}\n
+        "#{type} #{identifier} -- #{group.id()}\n
         #{results.join '\n'}\n
         end #{identifier} -- #{group.id()}"

@@ -3,10 +3,6 @@
 
 ## Namespaces
 
- 1. Update the `sectionGroupToCode` function so that if the group has a
-    namespace attribute with value `N`, then in place of `section S`, use
-    the text `namespace N`, and in place of `end S`, use the text `end N`.
- 1. Test, updating your example document to use this new feature.
  1. Add the next page of the tutorial that shows how to use this feature to
     be able to group definitions and theorems into a namespace, just as in
     the Lean tutorials.
