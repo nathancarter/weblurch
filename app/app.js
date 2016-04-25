@@ -799,7 +799,7 @@
     };
 
     Groups.prototype.updateButtonsAndMenuItems = function() {
-      var left, name, right, type, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+      var left, name, right, type, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
       left = (_ref = this.editor) != null ? (_ref1 = _ref.selection) != null ? (_ref2 = _ref1.getRng()) != null ? _ref2.cloneRange() : void 0 : void 0 : void 0;
       if (!left) {
         return;
@@ -824,13 +824,16 @@
           }
         }
       }
-      this.connectionsButton.disabled((left == null) || (left !== right));
+      if ((_ref6 = this.connectionsButton) != null) {
+        _ref6.disabled((left == null) || (left !== right));
+      }
       return this.updateConnectionsMode();
     };
 
     Groups.prototype.updateConnectionsMode = function() {
-      if (this.connectionsButton.disabled()) {
-        return this.connectionsButton.active(false);
+      var _ref, _ref1;
+      if ((_ref = this.connectionsButton) != null ? _ref.disabled() : void 0) {
+        return (_ref1 = this.connectionsButton) != null ? _ref1.active(false) : void 0;
       }
     };
 
@@ -1580,7 +1583,7 @@
             context.fillStyle = '#ffffff';
             context.fill();
             context.lineWidth = 1.5;
-            context.strokeStyle = (_ref2 = (_ref3 = group.type()) != null ? _ref3.color : void 0) != null ? _ref2 : '#444444';
+            context.strokeStyle = (_ref2 = (_ref3 = from.type()) != null ? _ref3.color : void 0) != null ? _ref2 : '#444444';
             context.stroke();
             context.fillStyle = '#000000';
             context.globalAlpha = 1.0;
@@ -1730,8 +1733,9 @@
       }
       menu = new tinymce.ui.Menu({
         items: items,
-        context: 'contextmenu'
-      }).addClass('contextmenu').renderTo();
+        context: 'contextmenu',
+        classes: 'contextmenu'
+      }).renderTo();
       editor.on('remove', function() {
         menu.remove();
         return menu = null;
@@ -2966,63 +2970,13 @@
   moreToolbarItems = function() {
     var names, _ref;
     names = ((_ref = window.groupToolbarButtons.order) != null ? _ref : Object.keys(window.groupToolbarButtons)).join(' ');
+    if (window.useGroupConnectionsUI) {
+      names = "connect " + names;
+    }
     if (names.length && names.slice(0, 2) !== '| ') {
       return "| " + names;
     } else {
       return '';
-    }
-  };
-
-  window.mathQuillToMeaning = function(node) {
-    var child, marker, name, result, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2, _ref3;
-    if (node instanceof Text) {
-      return node.textContent;
-    }
-    result = [];
-    _ref = node.childNodes;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      child = _ref[_i];
-      if (($(child)).hasClass('selectable') || ($(child)).hasClass('cursor') || /width:0/.test(typeof child.getAttribute === "function" ? child.getAttribute('style') : void 0)) {
-        continue;
-      }
-      result = result.concat(mathQuillToMeaning(child));
-    }
-    if ((_ref1 = node.tagName) === 'SUP' || _ref1 === 'SUB') {
-      name = node.tagName.toLowerCase();
-      if (($(node)).hasClass('nthroot')) {
-        name = 'nthroot';
-      }
-      if (result.length > 1) {
-        result.unshift('(');
-        result.push(')');
-      }
-      result.unshift(name);
-    }
-    _ref2 = ['fraction', 'overline', 'overarc'];
-    for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-      marker = _ref2[_j];
-      if (($(node)).hasClass(marker)) {
-        if (result.length > 1) {
-          result.unshift('(');
-          result.push(')');
-        }
-        result.unshift(marker);
-      }
-    }
-    _ref3 = ['numerator', 'denominator'];
-    for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
-      marker = _ref3[_k];
-      if (($(node)).hasClass(marker)) {
-        if (result.length > 1) {
-          result.unshift('(');
-          result.push(')');
-        }
-      }
-    }
-    if (result.length === 1) {
-      return result[0];
-    } else {
-      return result;
     }
   };
 

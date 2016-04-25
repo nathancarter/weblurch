@@ -797,7 +797,7 @@ the two ends of the selection are inside the same deepest group.
             for own name, type of @groupTypes
                 type?.button?.disabled left isnt right
                 type?.menuItem?.disabled left isnt right
-            @connectionsButton.disabled not left? or ( left isnt right )
+            @connectionsButton?.disabled not left? or ( left isnt right )
             @updateConnectionsMode()
 
 The above function calls `updateConnectionsMode()`, which checks to see if
@@ -805,8 +805,8 @@ connections mode has been entered/exited since the last time the function
 was run, and if so, updates the UI to reflect the change.
 
         updateConnectionsMode: =>
-            if @connectionsButton.disabled()
-                @connectionsButton.active no
+            if @connectionsButton?.disabled()
+                @connectionsButton?.active no
 
 ## Inserting new groups
 
@@ -1080,9 +1080,10 @@ within the pasted content.
                 group.set 'connections', connections
             ( $ justPasted ).removeClass 'justPasted'
 
-Invalidate the `ids()` cache ([defined below](
-#querying-the-group-hierarchy)) so that the next time that function is run,
-it recomputes its results from the newly-generated hierarchy in `topLevel`.
+Invalidate the `ids()` cache
+([defined below](#querying-the-group-hierarchy)) so that the next time that
+function is run, it recomputes its results from the newly-generated
+hierarchy in `topLevel`.
 
             delete @idsCache
 
@@ -1592,7 +1593,7 @@ index into the list of connections that are to be drawn.
                     context.fillStyle = '#ffffff'
                     context.fill()
                     context.lineWidth = 1.5
-                    context.strokeStyle = group.type()?.color ? '#444444'
+                    context.strokeStyle = from.type()?.color ? '#444444'
                     context.stroke()
                     context.fillStyle = '#000000'
                     context.globalAlpha = 1.0
@@ -1734,7 +1735,8 @@ Construct the menu and show it on screen.
             menu = new tinymce.ui.Menu(
                 items : items
                 context : 'contextmenu'
-            ).addClass( 'contextmenu' ).renderTo()
+                classes : 'contextmenu'
+            ).renderTo()
             editor.on 'remove', -> menu.remove() ; menu = null
             pos = ( $ editor.getContentAreaContainer() ).position()
             menu.moveTo x + pos.left, y + pos.top
@@ -3148,42 +3150,8 @@ toolbar items in the setup data above.
     moreToolbarItems = ->
         names = ( window.groupToolbarButtons.order ? \
             Object.keys window.groupToolbarButtons ).join ' '
+        if window.useGroupConnectionsUI then names = "connect #{names}"
         if names.length and names[...2] isnt '| ' then "| #{names}" else ''
-
-The third-party plugin for math equations can have its rough meaning
-extracted by the following function, which can be applied to any DOM element
-that has the style "mathquill-rendered-math."  For instance, the expression
-$x^2+5$ in MathQuill would become `["x","sup","2","+","5"]` as returned by
-this function, similar to the result of a tokenizer, ready for a parser.
-
-    window.mathQuillToMeaning = ( node ) ->
-        if node instanceof Text then return node.textContent
-        result = [ ]
-        for child in node.childNodes
-            if ( $ child ).hasClass( 'selectable' ) or \
-               ( $ child ).hasClass( 'cursor' ) or \
-               /width:0/.test child.getAttribute? 'style'
-                continue
-            result = result.concat mathQuillToMeaning child
-        if node.tagName in [ 'SUP', 'SUB' ]
-            name = node.tagName.toLowerCase()
-            if ( $ node ).hasClass 'nthroot' then name = 'nthroot'
-            if result.length > 1
-                result.unshift '('
-                result.push ')'
-            result.unshift name
-        for marker in [ 'fraction', 'overline', 'overarc' ]
-            if ( $ node ).hasClass marker
-                if result.length > 1
-                    result.unshift '('
-                    result.push ')'
-                result.unshift marker
-        for marker in [ 'numerator', 'denominator' ]
-            if ( $ node ).hasClass marker
-                if result.length > 1
-                    result.unshift '('
-                    result.push ')'
-        if result.length is 1 then result[0] else result
 
 ## Support demo apps
 
