@@ -173,7 +173,7 @@ from its callback (or any time thereafter).
 
 The previous function makes use of the following one.  This depends upon the
 [HTMLTags](https://www.mediawiki.org/wiki/Extension:HTML_Tags) extension to
-MediaWiki, which permits arbitrar HTML, as long as it is encoded using tags
+MediaWiki, which permits arbitrary HTML, as long as it is encoded using tags
 of a certain form, and the MediaWiki configuration permits the tags.  See
 the documentation for the extension for details.
 
