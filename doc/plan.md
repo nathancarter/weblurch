@@ -13,6 +13,82 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
+## Dependencies
+
+Extend the `LoadSavePlugin` as follows.
+
+ * Add an event that fires before documents save, so that application
+   developers that need to write code that listens for such an event can do
+   so.  This will be used in the Dependencies Plugin, below, to embed
+   export data into a document's metadata before save.
+ * Add an event that fires after documents load, so that application
+   developers that need to write code that listens for such an event can do
+   so.
+ * Extend the documentation for application developers to explain that
+   applications that do background processing must be smart as follows:  If
+   the document is saved while background processing is underway, but not
+   saved thereafter (when processing completes), the application should be
+   smart enough to complete the processing (again) once the document is
+   re-opened (in a half-processed, or unprocessed) state.  Thus applications
+   with background processing support should monitor the document open
+   event, look for incomplete processing, and complete it.
+
+Create a `DependenciesPlugin` as follows.
+
+ * Lurch Applications can enable or disable the "dependencies" feature by
+   importing (or not) this plugin, in their app's setup code.  They must
+   provide an `exports` function that, when run, does one of two things:
+   * Return the JSON object of serialized data that the current document
+     exports to anything that uses it as a dependency, or...
+   * Throw an error, with a message indicating why such data could not be
+     computed.  (For example, perhaps the document is still doing some
+     background processing in response to the latest user edits, and has not
+     yet recomputed all the data needed to construct its export object.)
+ * When saving the document, if the dependencies feature is enabled, the
+   `exports` function will be called.  The resulting object (or an object
+   indicating the error thrown) will be stored in the document's metadata
+   as its export data, immediately before the save.  This is the only time
+   that the `exports` function will be called, so that function can, before
+   it throws an error, optionally report to the user (e.g., with an alert
+   box) that the current save will not contain export data, and therefore
+   cannot be used as a dependency.
+ * In applications with the dependencies feature enabled, the foundation
+   should provide a UI for editing the dependency list for a document.
+   Store this data in the document's metadata.  Reference dependencies by
+   URLs; these can be file:/// URLs, which is a reference to LocalStorage,
+   or http:// URLs, which is a reference to `lurchmath.org`.
+ * When a user attempts to add a dependency to a document, if that
+   dependency is not accessible, an error should be shown to the user, and
+   the dependency not added.  (It cannot be added because it is not
+   available.)  Note that cached dependencies are always accessible.
+ * When a user successfully adds a dependency to a document, it should be
+   added to the dependency cache, if it's not already in there.  Adding a
+   document to the dependency cache means checking to see if the date in the
+   cache is earlier than the last-modified date of the file (which you can
+   get using the HTTP protocol without fetching the whole file, like
+   [this](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date)); if it's earlier, then
+   re-fetch the document, extract its metadata, and store that in the cache.
+   If not, do nothing.
+ * When a user opens a document that has dependencies, each of those
+   dependencies is fetched (from the cache or the web, as just described)
+   and its export data stored as in this plugin.  The plugin will have a
+   `length` attribute, and attributes 0, 1, 2, ..., allowing it to act as an
+   array with the following structure.  So clients can write
+   `tinymce.activeEditor.Dependencies[0].URL`, for example.  Note that it
+   will be very common for the `data` member to also have a `dependencies`
+   member, for access to indirect dependencies' data.  But this is not
+   required, and must be handled by each application developer.
+```javascript
+    [
+        {
+            URL : 'dependency URL here',
+            data : /* exported data, only if no error when exporting */,
+            error : /* error message, only if error when exporting */,
+        },
+        /* ...one of these objects for each direct dependency... */
+    ]
+```
+
 ## Parsing test
 
 Create a Lurch Application that tests the following particular design for a
@@ -90,48 +166,7 @@ customizable parser.
      again, explain this.
    * Mark it with a red check box, and a corresponding hover explanation.
 
-## Real Lurch
-
-We are currently considering building webLurch on top of
-[Lean](http://leanprover.github.io/), and are designing how we might do so.
-
-## For thereafter
-
-### Dependencies
-
-This subsection connects tightly with the other subsections of this same
-section.  Be sure to read them all together.  This one connects most tightly
-with the subsection about a wiki.  Also, this will need to be extended later
-when enhancing Lurch to be usable offline; see [Offline
-support](#offline-support), below.
-
- * Reference dependencies by URLs; these can be file:/// URLs, which is a
-   reference to LocalStorage, or http:// URLs, which is a reference to
-   `lurchmath.org`.
- * Provide a UI for editing the dependency list for a document.  Store this
-   data in JavaScript variables in the Lurch app.
- * Load/save that metadata using the `loadMetaData` and `saveMetaData`
-   members of the LoadSave plugin.
- * Design what you will do when files are opened/closed, re: computation of
-   the meaning in them and their dependencies.  Issues to consider:
-   * If background computations are pending on a document, should the user
-     be permitted to save it?  What if it's used as a dependency elsewhere?
-     Will that cause it to be loaded in a permanently-paused-as-incomplete
-     state in the other document?
-   * Or does that imply that we should recompute lots of stuff about each
-     dependency as it's loaded, in invisible DOM elements somewhere?  That
-     sounds expensive and error-prone.
-   * Knowing whether recomputation of a dependency is needed could be
-     determined by inspecting an MD5 hash of the document to see if it has
-     changed since the last computation.  This is what [SCons
-     does](http://www.scons.org/doc/0.98.4/HTML/scons-user/c779.html).
-   * Alternatively, you can also query the last modified date of a file on
-     the web without fetching the whole file.  See
-     [here](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date).
-
-### Extending load and save
-
-Sharing
+## Dropbox support
 
 Add support for Dropbox open and save using their simple
 [Chooser](https://www.dropbox.com/developers/chooser) and
@@ -141,6 +176,8 @@ URLs, but it's possible to [convert those to a data
 URI](https://github.com/dropbox/dropbox-js/issues/144#issuecomment-32080661)
 and Dropbox Saver will accept those.  Once you've done this, mark an answer
 as accepted or not [here](http://stackoverflow.com/questions/26457316/can-dropbox-saver-accept-data-from-createobjecturl?noredirect=1#comment53719255_26457316).
+
+## Google Drive support
 
 Google Drive also provides a very nice [real time collaboration API](
 https://developers.google.com/google-apps/realtime/overview) that makes any
@@ -204,10 +241,8 @@ collaboration apps such as Google Docs and Overleaf, as follows.
      another tab of the app), then re-run the silent Google login attempt
      routine to complete the login in that tab as well.  (I think?)
 
-Tutorials
+## Tutorials
 
-Once the "Sharing" features above have been built (with wiki integration),
-we can make Lurch tutorials as follows.
  * Create a way for users to navigate the pages of a tutorial.  Probably the
    easiest and most flexible way to do this is to make it so that one of a
    document's settings is whether clicking links in it navigates to them.
@@ -230,11 +265,7 @@ we can make Lurch tutorials as follows.
    the Help menu, and they can check the "Don't show again" box if they so
    desire.
 
-Eventually, pull the LoadSave plugin out into its own repository on GitHub,
-so that anyone can easily get and use that TinyMCE plugin, and improve on
-its code.
-
-### Offline support
+## Offline support
 
 To make an HTML5 app available offline, I believe the appropriate step is
 simply to provide an app manifest.  I'm verifying that with [this
@@ -247,19 +278,25 @@ Once the app is usable offline, it will also be helpful to cache in
 LocalStorage the meaning computed from all dependencies, so that Lurch is
 usable offline even when dependencies of the current document are online.
 
-### Ideas from various sources
+## Ideas from various sources
+
+### All images consistently base64
 
 [This GitHub comment](
 https://github.com/buddyexpress/bdesk_photo/issues/2#issuecomment-166245603)
 might be useful for ensuring that even images pasted into a document get
 converted to base64, as all the other images in the document are.
 
+### LMS integration
+
 Suggestion from Dana Ernst: Perhaps this is not necessary or feasible, but
 if you go with a web app, could you make it easy for teachers to "plug into"
 the common LMS's (e.g. Blackboard, Canvas, etc.)?  I'm envisioning students
 being able to submit assignments with ease to an LMS and then teachers can
 grade and enter grades easily without have to go back and forth between web
-pages.  
+pages.
+
+### Further wiki integration?
 
 Is it possible for the entire Lurch app to exist inside MediaWiki, so that
 editing a wiki page was done using Lurch as the editor?  That would be
@@ -267,6 +304,8 @@ excellent for many use cases.  Offline use would still necessitate the
 normal app, and this would be tricky to accomplish, because wiki integration
 of something that complex will be touchy, but it would be impressive and
 intuitive.
+
+### Desktop app
 
 Convert webLurch into a desktop app using
 [electron](https://github.com/atom/electron).
@@ -284,13 +323,19 @@ Similar apps could be created for iOS, Android, etc., but would need to use
 tools other than Electron.  These are orthogonal tasks, and need not all be
 done by the same developer.
 
-### Repository organization
+## Repository organization
 
-The `app/` folder is getting cluttered.  Create an `app/examples/` subfolder
-and move every `*-example.html` and `*-example.solo.litcoffee` into it.
-Update any relative links to other resources, and any links to those pages.
+ * Change the `.solo.litcoffee` and `.duo.litcoffee` to instad use
+   `-solo.litcoffee` and `-duo.litcoffee`, so that source code will be
+   correctly highlighted on GitHub, which is currently confused into
+   thinking that the `.solo.litcoffee` extension is different from the
+   `.litcoffee` extension.
+ * The `app/` folder is getting cluttered.  Create an `app/examples/`
+   subfolder and move every `*-example.html` and `*-example.solo.litcoffee`
+   into it.  Update any relative links to other resources, and any links to
+   those pages.
 
-### Improving documentation
+## Improving documentation
 
 Documentation at the top of most unit test spec files is incomplete. Add
 documentation so that someone who does not know how to read a test spec file

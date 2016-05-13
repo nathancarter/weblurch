@@ -123,6 +123,9 @@ Miscellaneous
    need it.
  * If you ever need to export PDFs of Lurch documents, consider
    [jsPDF](https://github.com/MrRio/jsPDF).
+ * Eventually, pull the LoadSave plugin out into its own repository on
+   GitHub, so that anyone can easily get and use that TinyMCE plugin, and
+   improve on its code.
 
 Background processing
 
