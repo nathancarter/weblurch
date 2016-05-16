@@ -325,11 +325,6 @@ done by the same developer.
 
 ## Repository organization
 
- * Change the `.solo.litcoffee` and `.duo.litcoffee` to instad use
-   `-solo.litcoffee` and `-duo.litcoffee`, so that source code will be
-   correctly highlighted on GitHub, which is currently confused into
-   thinking that the `.solo.litcoffee` extension is different from the
-   `.litcoffee` extension.
  * The `app/` folder is getting cluttered.  Create an `app/examples/`
    subfolder and move every `*-example.html` and `*-example.solo.litcoffee`
    into it.  Update any relative links to other resources, and any links to

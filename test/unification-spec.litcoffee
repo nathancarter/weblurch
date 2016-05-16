@@ -10,7 +10,7 @@ we'll use when testing.
 
 We create two convenience functions for creating expression functions
 and applications thereof, as defined in [the unification source
-code](#../src/unification.duo.litcoffee#functions-and-function-applications).  These use the `quick` function defined below.
+code](#../src/unification-duo.litcoffee#functions-and-function-applications).  These use the `quick` function defined below.
 
     ef = ( variable, body ) ->
         if variable not instanceof OMNode then variable = quick variable

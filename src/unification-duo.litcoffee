@@ -31,7 +31,7 @@ value of the attribute whose key is the metavariable symbol.
 
 We begin with a routine that marks a variable as a metavariable.  It accepts
 as parameter any `OMNode` instance (as implemented
-[here](openmath.duo.litcoffee)) and gives it an attribute that the rest of
+[here](openmath-duo.litcoffee)) and gives it an attribute that the rest of
 this package recognizes as meaning "this variable is actually a
 metavariable."  This routine does nothing if the given input is not an
 OMNode of type variable or type symbol.

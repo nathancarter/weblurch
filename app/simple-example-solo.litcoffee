@@ -38,7 +38,7 @@ The app name appears in the browser's/tab's title bar.
 We want the app itself to link to this documented source code file, so that
 users who stumble upon the app can easily find its documentation.
 
-    addHelpMenuSourceCodeLink 'app/simple-example.solo.litcoffee'
+    addHelpMenuSourceCodeLink 'app/simple-example-solo.litcoffee'
 
 ## Define one group type
 
@@ -102,6 +102,6 @@ appear whenever you delete a "reporter" group.
 Functions that need to do lengthy computations can run them in the
 background.  webLurch has a built-in mechanism to make this easy.  To see
 how to use it, see
-[the more complex example application](complex-example.solo.litcoffee),
+[the more complex example application](complex-example-solo.litcoffee),
 one of the [many examples](
 http://nathancarter.github.io/weblurch/app/index.html) available.

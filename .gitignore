@@ -1,7 +1,7 @@
 *.swp
 app/*.min.js
-app/*.solo.js
-app/*.duo.js
+app/*-solo.js
+app/*-duo.js
 app/weblurch.js
 app/app.js
 app/lz-string*.js
@@ -13,7 +13,7 @@ app/filedialog/*.png
 app/filedialog/*.js
 app/filedialog/*.litcoffee
 app/filedialog/*.map
-app/*.duo.litcoffee
+app/*-duo.litcoffee
 node_modules/*
 test/reports/*
 test/test-results.md

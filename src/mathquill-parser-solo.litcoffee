@@ -1,7 +1,7 @@
 
 # MathQuill Parser
 
-This file depends upon [the parsing module](parsing.duo.litcoffee), and uses
+This file depends upon [the parsing module](parsing-duo.litcoffee), and uses
 it to define a parser for the types of expressions that come out of the
 [MathQuill](www.mathquill.com) plugin ([stored here](../app/eqed)).  More
 details are given below.
@@ -16,63 +16,6 @@ The following lines ensure that this file works in Node.js, for testing.
         Grammar = window.Grammar
         OM = window.OM
         OMNode = window.OMNode
-
-## Extracting text from MathQuill DOM nodes
-
-The third-party plugin for math equations can have its rough meaning
-extracted by the following function, which can be applied to any DOM element
-that has the style "mathquill-rendered-math."  For instance, the expression
-$x^2+5$ in MathQuill would become `["x","sup","2","+","5"]` as returned by
-this function, similar to the result of a tokenizer, ready for a parser.
-
-That's why this function appears in this file, because it prepares MathQuill
-nodes for the parser defined below.
-
-The second parameter is optional, and it accepts an array of strings as
-input and tests whether some initial segment of that array, when joined
-without separators, forms a variable name.  If so, return the variable name.
-If not, return null.
-
-    exports.mathQuillToMeaning = ( node, getVariableName ) ->
-        if node instanceof Text
-            return node.textContent.replace /\u0192/g, 'f'
-        result = [ ]
-        for child in node.childNodes
-            if ( $ child ).hasClass( 'selectable' ) or \
-               ( $ child ).hasClass( 'cursor' ) or \
-               /width:0/.test child.getAttribute? 'style'
-                continue
-            result = result.concat mathQuillToMeaning child, getVariableName
-        tmp = [ ]
-        while result.length > 0
-            if varname = getVariableName? result
-                tmp.push varname
-                consumed = 0
-                while consumed < varname.length
-                    piece = result.shift()
-                    consumed += piece.length
-            else
-                tmp.push result.shift()
-        result = tmp
-        if node.tagName in [ 'SUP', 'SUB' ]
-            name = node.tagName.toLowerCase()
-            if ( $ node ).hasClass 'nthroot' then name = 'nthroot'
-            if result.length > 1
-                result.unshift '('
-                result.push ')'
-            result.unshift name
-        for marker in [ 'fraction', 'overline', 'overarc' ]
-            if ( $ node ).hasClass marker
-                if result.length > 1
-                    result.unshift '('
-                    result.push ')'
-                result.unshift marker
-        for marker in [ 'numerator', 'denominator' ]
-            if ( $ node ).hasClass marker
-                if result.length > 1
-                    result.unshift '('
-                    result.push ')'
-        result
 
 ## Grammar definition
 
@@ -93,7 +36,7 @@ Rules for numbers:
     G.addRule 'nonnegint', 'digit'
     G.addRule 'nonnegint', [ 'digit', 'nonnegint' ]
     G.addRule 'integer', 'nonnegint'
-    G.addRule 'integer', [ /[−-]/, 'nonnegint' ]
+    G.addRule 'integer', [ /-/, 'nonnegint' ]
     G.addRule 'float', [ 'integer', /\./, 'nonnegint' ]
     G.addRule 'float', [ 'integer', /\./ ]
     G.addRule 'infinity', [ /∞/ ]
@@ -118,7 +61,7 @@ Rules for the operations of arithmetic:
     G.addRule 'factor', [ 'factor', /sup/, /[∘]/ ]
     G.addRule 'prodquo', 'factor'
     G.addRule 'prodquo', [ 'prodquo', /[÷×·]/, 'factor' ]
-    G.addRule 'prodquo', [ /[−-]/, 'prodquo' ]
+    G.addRule 'prodquo', [ /-/, 'prodquo' ]
     G.addRule 'sumdiff', 'prodquo'
     G.addRule 'sumdiff', [ 'sumdiff', /[+±−-]/, 'prodquo' ]
 
