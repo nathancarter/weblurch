@@ -200,10 +200,15 @@ failure.  If there is no filename in the `@filename` member, failure is
 returned and no action taken.  If the save succeeds, mark the document
 clean.
 
+This also fires the `beforeSave` event in the editor.  Applications can
+listen to that event if they need to modify the document before it's saved,
+such as embedding metadata.
+
         save: =>
             if @filename is null then return
             tmp = new FileSystem @fileSystem
             tmp.cd @filepath
+            @editor.fire 'beforeSave'
             objectToSave = [ @editor.getContent(), @saveMetaData?() ]
             if tmp.write @filename, objectToSave, yes # use compression
                 @setDocumentDirty no
@@ -336,6 +341,12 @@ must be a file containing a string of HTML, because that content will be
 directly used as the content of the editor.  The current path and filename
 of this plugin are set to be the parameters passed here.
 
+This also fires the `afterLoad` event in the editor.  Applications can
+listen to that event if they need to do something immediately after a
+document is loaded.  For example, if there are sections of the document that
+need to be re-processed or updated every time a document is loaded, they can
+be done in response to that event.
+
         load: ( filepath, filename ) =>
             if filename is null then return
             if filepath is null then filepath = '.'
@@ -348,6 +359,7 @@ of this plugin are set to be the parameters passed here.
             @setFilename filename
             @setDocumentDirty no
             if metadata then @loadMetaData? metadata
+            @editor.fire 'afterLoad'
 
 The following function pops up a dialog to the user, allowing them to choose
 a filename to open.  If they choose a file, it (with the current directory)

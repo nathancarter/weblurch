@@ -5,6 +5,20 @@ This module defines an API for enqueueing background computations on groups
 in webLurch.  It provides an efficient means for running those computations,
 no matter how numerous they might be, while keeping the UI responsive.
 
+Warning:  If you do background computation in your document, you may find
+the user saving the document and exiting the editor (e.g., closing the
+browser tab) while your background computations are occurring.  When such a
+file is later loaded by the user, it will be in whatever intermediate state
+it was left in by those pending background computations.  To solve this
+problem, you may wish to listen to the `beforeSave` and `afterLoad` events
+in the editor.  (See
+[this function](../app/loadsaveplugin.litcoffee#saving-documents) and
+[this function](../app/loadsaveplugin.litcoffee#loading-documents) for
+details.)  For example, you could mark a document as pending recomputation
+when you begin background processing, and unmark it when that processing
+completes; in an `afterLoad` handler, if the document is marked as pending
+recomputation, fully reprocess the document from scratch.
+
 ## Global Background object
 
 The first object defined herein is the global `Background` object, which
