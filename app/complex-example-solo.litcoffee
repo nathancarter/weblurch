@@ -19,6 +19,13 @@ Add a source code link to the help menu, as in the simple example app.
 
     addHelpMenuSourceCodeLink 'app/complex-example-solo.litcoffee'
 
+We also change the Help/About menu item to be specific to this demo app.
+
+    window.helpAboutText =
+        'See the fully documented source code for this demo app at the
+        following URL:\n
+        \nhttps://github.com/nathancarter/weblurch/blob/master/app/complex-example-solo.litcoffee'
+
 ## Define two group types
 
 As in the simple example, we assign to a global variable, which is noticed
