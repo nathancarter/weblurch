@@ -216,7 +216,7 @@ this background function.  Otherwise, we do not, and we will have to fall
 back on a much simpler technique later.
 
             if window.Worker
-                @worker = new window.Worker 'worker.solo.js'
+                @worker = new window.Worker 'worker-solo.js'
                 @worker.addEventListener 'message', ( event ) =>
                     @promise.result = event.data
                     @promise?.resultCallback? event.data

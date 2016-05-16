@@ -326,7 +326,7 @@ done by the same developer.
 ## Repository organization
 
  * The `app/` folder is getting cluttered.  Create an `app/examples/`
-   subfolder and move every `*-example.html` and `*-example.solo.litcoffee`
+   subfolder and move every `*-example.html` and `*-example-solo.litcoffee`
    into it.  Update any relative links to other resources, and any links to
    those pages.  (This requires also updating the `cake.litcoffee` to
    compile files in that subfolder as well.)
