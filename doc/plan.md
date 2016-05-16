@@ -15,51 +15,92 @@ required order of completion.
 
 ## Dependencies
 
-Create a `DependenciesPlugin` as follows.
+Plugin
 
- * Lurch Applications can enable or disable the "dependencies" feature by
-   importing (or not) this plugin, in their app's setup code.  They must
-   provide an `exports` function that, when run, does one of two things:
+ * Create a `DependenciesPlugin`.
+ * Initialize its `exports` member to null.
+ * This member is "virtual" in the C++ sense.  Document it for clients to
+   use; applications that import this plugin should install their own
+   `exports` functions that do one of two things:
    * Return the JSON object of serialized data that the current document
      exports to anything that uses it as a dependency, or...
    * Throw an error, with a message indicating why such data could not be
      computed.  (For example, perhaps the document is still doing some
      background processing in response to the latest user edits, and has not
      yet recomputed all the data needed to construct its export object.)
- * When saving the document, if the dependencies feature is enabled, the
-   `exports` function will be called.  The resulting object (or an object
-   indicating the error thrown) will be stored in the document's metadata
-   as its export data, immediately before the save.  This is the only time
-   that the `exports` function will be called, so that function can, before
-   it throws an error, optionally report to the user (e.g., with an alert
-   box) that the current save will not contain export data, and therefore
-   cannot be used as a dependency.
- * In applications with the dependencies feature enabled, the foundation
-   should provide a UI for editing the dependency list for a document.
-   Store this data in the document's metadata.  Reference dependencies by
-   URLs; these can be file:/// URLs, which is a reference to LocalStorage,
-   or http:// URLs, which is a reference to `lurchmath.org`.
- * When a user attempts to add a dependency to a document, if that
-   dependency is not accessible, an error should be shown to the user, and
-   the dependency not added.  (It cannot be added because it is not
-   available.)  Note that cached dependencies are always accessible.
- * When a user successfully adds a dependency to a document, it should be
-   added to the dependency cache, if it's not already in there.  Adding a
-   document to the dependency cache means checking to see if the date in the
-   cache is earlier than the last-modified date of the file (which you can
-   get using the HTTP protocol without fetching the whole file, like
-   [this](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date)); if it's earlier, then
-   re-fetch the document, extract its metadata, and store that in the cache.
-   If not, do nothing.
- * When a user opens a document that has dependencies, each of those
-   dependencies is fetched (from the cache or the web, as just described)
-   and its export data stored as in this plugin.  The plugin will have a
+ * Install a `beforeSave` event listener (a stub at first).
+ * Expand that event listener so that if the `exports` member is null, it
+   dumps a warning message to the console saying that the plugin was
+   installed but the necessary `exports` function was not provided.
+ * If the `exports` member is not null, then call it and embed the resulting
+   object (or an object indicating the error thrown) in the document's
+   metadata as its export data.
+ * Add documentation explaining that the only time the `exports` function
+   will be called is right before a save, so implementers could, if their
+   implementation is about to throw an error, optionally report to the user
+   (e.g., with an alert box) that the current save will not contain export
+   data, and therefore cannot be used as a dependency.
+
+Add/Remove UI
+
+ * At line 280 of `main-app-solo.litcoffee`, add a section heading for
+   dependencies.
+ * Extend the UI functions in `settingsplugin.litcoffee` so that each takes
+   an optional ID argument and uses it as the ID of the element created.
+ * Extend the UI functions in `settingsplugin.litcoffee` with a function for
+   creating buttons with a given text on them (and any ID).
+ * Create a DIV beneath that heading and in it place two buttons, one for
+   "Add file dependency" and one for "Add URL dependency".
+ * When setting up that window, for every dependency in the
+   `D.metadata.dependencies` array, create a table row above the buttons DIV
+   showing the dependency URL, with a "Remove" button.
+ * Test that by running code in the console (or elsewhere) to inject
+   dependencies into a test document, and ensure that they show up.
+ * Implement the "Remove" buttons to modify that dependency array, as well
+   as its visual representation in the table.
+ * Write a function that looks at a file in `jsfs` and gets its `exports`
+   metadata, returning it.
+ * Implement the "Add file dependency" feature to prompt the user to choose
+   a file with the same dialog used for opening files.  If the user chooses
+   a file, use that function to get its exports, store that in this
+   document's metadata as a dependency (with the current date and time),
+   then add a table row to indicate as much.  If any of that fails, tell the
+   user the dependency is not a valid document, and don't update anything.
+ * Write a function that fetches a URL, extracts its `exports` metadata,
+   and sends that metadata to a callback, or an error object if this fails.
+ * Implement the "Add URL dependency" feature to prompt the user to paste in
+   an URL.  Run the above fetching function.  If it succeeds, cache the data
+   in the document's metadata (with a date and time stamp) and add a table
+   row to indicate as much.  If it fails, tell the user the dependency is
+   not accessible, and don't update anything.  While the fetching function
+   is running, put up a "please wait" indicator.
+
+Keeping up-to-date
+
+ * Extend the dependency-fetching function so that you can provide it a
+   date and time, and it will first
+   [examine the last modified time of the given URL](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date),
+   and only fetch the new data if it is truly new.  Otherwise, it will
+   return an up-to-date indicator.  Modify all calls to the function to use
+   this feature.
+ * Write a function that takes dependency metadata from a document, fetches
+   each dependency (which may mean not fetching it at all if it's up to
+   date), and stores the results in the plugin object itself, giving it a
    `length` attribute, and attributes 0, 1, 2, ..., allowing it to act as an
-   array with the following structure.  So clients can write
-   `tinymce.activeEditor.Dependencies[0].URL`, for example.  Note that it
-   will be very common for the `data` member to also have a `dependencies`
-   member, for access to indirect dependencies' data.  But this is not
-   required, and must be handled by each application developer.
+   array with the structure shown in the next item.  This function should
+   work if run multiple times, clearing out old values before adding new
+   ones.
+ * Extend that function to first save the old array off to the side, then
+   compare the new array afterwards to the old one.  Fire a change event iff
+   there was an actual change.
+ * Call that function whenever a document is opened.
+ * Call that function whenever the document's attributes are saved (and the
+   list of dependencies changed).
+ * Document how applications should access dependency information.  They
+   can write `tinymce.activeEditor.Dependencies[0].URL`, for example.  Note
+   that it will be very common for the `data` member to also have a
+   `dependencies` member, for access to indirect dependencies' data.  But
+   this is not required, and must be handled by each application developer.
 ```javascript
     [
         {
@@ -70,6 +111,9 @@ Create a `DependenciesPlugin` as follows.
         /* ...one of these objects for each direct dependency... */
     ]
 ```
+ * Document the fact that the change event will be fired iff dependencies
+   have changed, and that most applications will want to listen to that
+   event.
 
 ## Parsing test
 
