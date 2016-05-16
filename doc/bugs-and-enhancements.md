@@ -38,7 +38,7 @@ Other
  * Formats menu is currently empty.
  * When you open a file that's longer than the screen, you must open and
    close the JS console to force resizing, or it won't scroll vertically.
- * Some of the `.duo.litcoffee` files in `src/` in the master branch also
+ * Some of the `*-duo.litcoffee` files in `src/` in the master branch also
    have committed versions in `app/` that are merely copies.  This is
    necessary in the gh-pages branch, but in master it's redundant.  Fix.
  * Travis-CI build was segmentation faulting, though the tests run just fine
@@ -123,6 +123,9 @@ Miscellaneous
    need it.
  * If you ever need to export PDFs of Lurch documents, consider
    [jsPDF](https://github.com/MrRio/jsPDF).
+ * Eventually, pull the LoadSave plugin out into its own repository on
+   GitHub, so that anyone can easily get and use that TinyMCE plugin, and
+   improve on its code.
 
 Background processing
 

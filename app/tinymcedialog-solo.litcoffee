@@ -1,5 +1,5 @@
 
-A "solo" source file (ending in `.solo.litcoffee`) does not get compiled
+A "solo" source file (ending in `-solo.litcoffee`) does not get compiled
 into the app itself, but rather gets compiled into its own `.min.js` file,
 usable wherever it is needed.
 

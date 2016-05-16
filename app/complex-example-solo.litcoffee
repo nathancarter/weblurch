@@ -4,7 +4,7 @@
 ## Overview
 
 This documentation assumes that you have read [the simple example
-application](simple-example.solo.litcoffee).  This app is just a few steps
+application](simple-example-solo.litcoffee).  This app is just a few steps
 more complex than that one.  Other example applications built with the LWP
 are [listed here](http://nathancarter.github.io/weblurch/app/index.html).
 
@@ -17,7 +17,7 @@ Set the app name with the same function we used in the simple example app.
 
 Add a source code link to the help menu, as in the simple example app.
 
-    addHelpMenuSourceCodeLink 'app/complex-example.solo.litcoffee'
+    addHelpMenuSourceCodeLink 'app/complex-example-solo.litcoffee'
 
 ## Define two group types
 

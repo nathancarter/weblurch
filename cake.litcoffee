@@ -46,8 +46,8 @@ These constants define how the functions below perform.
     srcdir = p.resolve __dirname, 'src'
     srcorder = [
         'utils.litcoffee'
-        'openmath.duo.litcoffee'
-        'unification.duo.litcoffee'
+        'openmath-duo.litcoffee'
+        'unification-duo.litcoffee'
     ]
     appdir = p.resolve __dirname, 'app'
     fddir = p.resolve appdir, 'filedialog'
@@ -81,7 +81,7 @@ brevity.
         L = __dirname.length + 1
 
 Next concatenate all `.litcoffee` source files into one.  The only exception
-to this rule is if any of them end in `.solo.litcoffee`, then they're
+to this rule is if any of them end in `-solo.litcoffee`, then they're
 requesting that they be compiled individually.  So we filter those out.  We
 also respect the ordering in `srcorder` to put some of the files first on
 the list.
@@ -93,21 +93,21 @@ the list.
                 when RegExp( "/#{file}$" ).test fullpath )
         all = ( file for file in all when file not in moveup )
         all = moveup.concat all
-        all = ( f for f in all when f[-15..] isnt '.solo.litcoffee' )
+        all = ( f for f in all when f[-15..] isnt '-solo.litcoffee' )
         build.concatFiles all, '\n\n', p.resolve appdir, srcout
 
 Also compile any files specific to the main app, which will sit in the app
 folder rather than the source folder.  The exceptions to this rule are:
- * if any of them end in `.solo.litcoffee`, then they're requesting that
+ * if any of them end in `-solo.litcoffee`, then they're requesting that
    they be compiled individually, so we filter those out, and
- * if any of them end in `.duo.litcoffee`, then they've been copied to the
+ * if any of them end in `-duo.litcoffee`, then they've been copied to the
    app folder from the source folder, and don't need to be compiled again.
 
         all = ( f for f in build.dir( appdir, /\.litcoffee$/ ) \
             when f.indexOf( srcout ) is -1 and
                  f.indexOf( appout ) is -1 and
-                 f[-15..] isnt '.solo.litcoffee' and
-                 f[-14..] isnt '.duo.litcoffee' )
+                 f[-15..] isnt '-solo.litcoffee' and
+                 f[-14..] isnt '-duo.litcoffee' )
         build.concatFiles all, '\n\n', p.resolve appdir, appout
 
 Run the compile process defined in [the build utilities
@@ -116,12 +116,12 @@ source maps.  We run it in sequence on the source files, the app-specific
 files, and the "solo" files in the app folder.
 
 First, here is a little function that recursively runs the build process on
-all `.solo.litcoffee` files in the src and app folders.  It also processes
-`.duo.litcoffee` files, which are compiled into the app *and* compiled into
+all `*-solo.litcoffee` files in the src and app folders.  It also processes
+`*-duo.litcoffee` files, which are compiled into the app *and* compiled into
 individual `.min.js` files (for importing into web workers).
 
-        solofiles = build.dir appdir, /\.solo.litcoffee$/
-        srcsolofiles = build.dir srcdir, /\.(solo|duo).litcoffee$/
+        solofiles = build.dir appdir, /\-solo.litcoffee$/
+        srcsolofiles = build.dir srcdir, /\-(solo|duo).litcoffee$/
         buildNext = ->
             if solofiles.length > 0
                 build.compile solofiles.shift(), buildNext

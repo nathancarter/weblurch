@@ -12,7 +12,7 @@ That mode is implemented in two script files:
  * This file pops up a separate browser window that presents the
    test-recording UI.
  * That popup window uses the script
-   [testrecorder.solo.litcoffee](#testrecorder.solo.litcoffee), which
+   [testrecorder-solo.litcoffee](testrecorder-solo.litcoffee), which
    implements all that window's UI interactivity.
 
 First, we have a function that switches the app into test-recording mode, if

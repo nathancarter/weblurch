@@ -3,7 +3,7 @@ app/weblurch*.js
 app/app*.js
 app/weblurch.litcoffee
 app/app.litcoffee
-app/*.duo.litcoffee
+app/*-duo.litcoffee
 test/reports/*
 test/test-results.md
 nps-jn-test

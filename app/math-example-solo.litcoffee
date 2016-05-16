@@ -4,12 +4,12 @@
 ## Overview
 
 To know what's going on here, you should first have read the documenation
-for [the simple example application](simple-example.solo.litcoffee) and then
-for [the complex example application](complex-example.solo.litcoffee).
+for [the simple example application](simple-example-solo.litcoffee) and then
+for [the complex example application](complex-example-solo.litcoffee).
 This application is more useful than either of those.
 
     setAppName 'MathApp'
-    addHelpMenuSourceCodeLink 'app/math-example.solo.litcoffee'
+    addHelpMenuSourceCodeLink 'app/math-example-solo.litcoffee'
 
 [See a live version of this application online here.](
 http://nathancarter.github.io/weblurch/app/math-example.html)
@@ -34,7 +34,7 @@ the bubble tag and store them in the group.  The `inspect` function is
 central here, and is defined in [the following
 section](#utility-functions-used-by-the-code-above).  It returns an
 [OpenMath](http://www.openmath.org) data structure (as defined in [the
-OpenMath module](../src/openmath.duo.litcoffee) in this repository) that we
+OpenMath module](../src/openmath-duo.litcoffee) in this repository) that we
 can inspect to learn about the semantics of the group contents.
 
         contentsChanged : ( group, firstTime ) ->
@@ -112,7 +112,7 @@ as WYSIWYG math expression editors.)  It returns one of two things.  If it
 returns an `OMNode` instance, it will be the meaning of the one MathQuill
 instance in the bubble, implying that there is one instance in the bubble
 and a meaning is parseable from it using [the parser defined
-here](../src/mathquill-parser.solo.litcoffee).  If an error arose in
+here](../src/mathquill-parser-solo.litcoffee).  If an error arose in
 attempting such a computation, then a string will be returned containing the
 error.
 

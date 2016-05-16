@@ -1,7 +1,7 @@
 
 # MathQuill Parser
 
-This file depends upon [the parsing module](parsing.duo.litcoffee), and uses
+This file depends upon [the parsing module](parsing-duo.litcoffee), and uses
 it to define a parser for the types of expressions that come out of the
 [MathQuill](www.mathquill.com) plugin ([stored here](../app/eqed)).  More
 details are given below.
