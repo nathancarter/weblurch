@@ -88,17 +88,17 @@ Phases 1 and 2 on the list, and will know where to go to explore Phase 3.
       simple example app in action.
  1. Make a copy of that app to use as the basis for your own.
     * In the `app/` subfolder, make copies of the files
-      `simple-example.html` and `simple-example.solo.litcoffee`, naming them
-      something like `myapp.html` and `myapp.solo.litcoffee`.
+      `simple-example.html` and `simple-example-solo.litcoffee`, naming them
+      something like `myapp.html` and `myapp-solo.litcoffee`.
     * Re-run `cake app` from the terminal to compile your new `.litcoffee`
       file.  (You will need to do this after each change to the source.)
-      This should create several files that start with `app/myapp.solo`.
+      This should create several files that start with `app/myapp-solo`.
     * Change the last `<script>` tag in the `.html` file you just created so
-      that it imports `myapp.solo.min.js` file rather than
-      `simple-example.solo.min.js`.
+      that it imports `myapp-solo.min.js` file rather than
+      `simple-example-solo.min.js`.
     * Visit `http://localhost:8000/app/myapp.html` to ensure that this
       worked.  It should look exactly like the simple app you already saw.
- 1. Edit `myapp.solo.min.js`.
+ 1. Edit `myapp-solo.min.js`.
     * The file begins with a lot of documentation, and then the first line
       of code is `setAppName 'ExampleApp'`.  Change the contents of the
       string to your app's name.
@@ -118,13 +118,13 @@ needs of the application.  Examples:
  * In the simple app you have, there is only one group type, and it does
    almost nothing.  (It does write to the browser console, but that's
    hardly exciting.)
- * [The complex demo app](../app/complex-example.solo.litcoffee) defines two
+ * [The complex demo app](../app/complex-example-solo.litcoffee) defines two
    group types, one for wrapping and evaluating expressions of arithmetic
    and another for wrapping and doing simple computations on words.
- * In [the math demo app](.../app/math-example.solo.litcoffee) there is only
+ * In [the math demo app](.../app/math-example-solo.litcoffee) there is only
    one group type, for parsing and evaluating mathematical expressions.
  * In [the OpenMath Content Dictionary demo
-   app](../app/openmath-example.solo.litcoffee) there is only one group
+   app](../app/openmath-example-solo.litcoffee) there is only one group
    type, but it can have any of over a dozen different purposes, editable
    using the context menu on each individual group.
 
@@ -146,7 +146,7 @@ window.groupTypes = [
 ```
 
 All of this is fully documented [in the original
-file](../app/simple-example.solo.litcoffee#define-one-group-type), so I do
+file](../app/simple-example-solo.litcoffee#define-one-group-type), so I do
 not repeat here what any of it means.  But note that this is simply the
 assignment to a global variable of an array of group type data.  You could
 extend it to add another group type as follows.
@@ -243,7 +243,7 @@ __Pushing complex computations into the background__
    computations into one or more background threads, with parallelization
    managed efficiently for you.  This lengthy topic is covered in two
    files:
- * [The "complex example" demo app](../app/complex-example.solo.litcoffee)
+ * [The "complex example" demo app](../app/complex-example-solo.litcoffee)
    pushes some computations into the background, and you can follow its
    example code.
  * [The background module](../src/background.litcoffee) documents the full
@@ -255,7 +255,7 @@ its bubble tag__
    `contextMenuItems` function in the group type definition.  Search the
    repository for that phrase to see examples.  One appears in [the
    source code for the complex example demo
-   app](../app/complex-example.solo.litcoffee).
+   app](../app/complex-example-solo.litcoffee).
  * Extending a group's tag menu is done by providing a `tagMenuItems`
    function that behaves exactly the same way, but may choose to return a
    different list of menu items.
@@ -264,7 +264,7 @@ __Adding new buttons to the editor toolbar__
  * This is done by assigning to the global object
    `window.groupToolbarButtons`.
  * [See an example
-   here.](../src/xml-groups.solo.litcoffee#define-one-toolbar-button)
+   here.](../src/xml-groups-solo.litcoffee#define-one-toolbar-button)
 
 __Adding new menu items to the editor's menus__
  * This is done by assigning to the global object
@@ -288,7 +288,7 @@ __Adding decorations to group boundaries__
    flag it in an obvious way, as the <font color="red">&#10006;</font>
    does in the following example from
    [the OpenMath Content Dictionary Editor demo
-   app](../app/openmath-example.solo.litcoffee).
+   app](../app/openmath-example-solo.litcoffee).
    <br><img src='bubble-with-error.png'><br>
    This is a special case of "decorating" a group.  To add decorations to
    a group `G`, you have the following API.

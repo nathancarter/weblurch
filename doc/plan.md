@@ -15,24 +15,6 @@ required order of completion.
 
 ## Dependencies
 
-Extend the `LoadSavePlugin` as follows.
-
- * Add an event that fires before documents save, so that application
-   developers that need to write code that listens for such an event can do
-   so.  This will be used in the Dependencies Plugin, below, to embed
-   export data into a document's metadata before save.
- * Add an event that fires after documents load, so that application
-   developers that need to write code that listens for such an event can do
-   so.
- * Extend the documentation for application developers to explain that
-   applications that do background processing must be smart as follows:  If
-   the document is saved while background processing is underway, but not
-   saved thereafter (when processing completes), the application should be
-   smart enough to complete the processing (again) once the document is
-   re-opened (in a half-processed, or unprocessed) state.  Thus applications
-   with background processing support should monitor the document open
-   event, look for incomplete processing, and complete it.
-
 Create a `DependenciesPlugin` as follows.
 
  * Lurch Applications can enable or disable the "dependencies" feature by
@@ -326,9 +308,10 @@ done by the same developer.
 ## Repository organization
 
  * The `app/` folder is getting cluttered.  Create an `app/examples/`
-   subfolder and move every `*-example.html` and `*-example.solo.litcoffee`
+   subfolder and move every `*-example.html` and `*-example-solo.litcoffee`
    into it.  Update any relative links to other resources, and any links to
-   those pages.
+   those pages.  (This requires also updating the `cake.litcoffee` to
+   compile files in that subfolder as well.)
 
 ## Improving documentation
 

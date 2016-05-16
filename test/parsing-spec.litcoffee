@@ -293,7 +293,7 @@ Here we define the grammar.
 
         G = null
         beforeEach ->
-            G = require( '../src/mathquill-parser.solo' ).mathQuillParser
+            G = require( '../src/mathquill-parser-solo' ).mathQuillParser
 
 ### should parse numbers
 
