@@ -17,7 +17,6 @@ required order of completion.
 
 Plugin
 
- * Create a `DependenciesPlugin`.
  * Initialize its `exports` member to null.
  * This member is "virtual" in the C++ sense.  Document it for clients to
    use; applications that import this plugin should install their own
