@@ -138,11 +138,11 @@ customizable parser.
    * Choosing any of the options, if the bubble is empty, fills the bubble
      with example content for that definition type.  For built-in types, it
      fills the bubble with a human-readable description of the built-in.
- * Make "category name" groups able to connect by arrows to "definition
-   type" groups or "category name" groups, but only up to one target.
+ * Make "category name" groups able to connect by arrows to "category
+   definition" groups or "category name" groups, but only up to one target.
  * Create a group type called "name" that can hold any text.
-   * Permit it to connect to a "definition type" group, but only up to one
-     target.
+   * Permit it to connect to a "category definition" group, but only up to
+     one target.
    * Permit "category type" groups to connect to "name" type groups also,
      but still at most one target.
    * Its tag will behave as follows.
@@ -153,21 +153,22 @@ customizable parser.
      * Otherwise, it says "variable name."
  * Create a group type called "test" that can hold any text.  Its tag always
    contains the phrase "test."
- * Create a method that computes, for any given "definition type" group, a
-   simple representation of what function should be called in a parser
+ * Create a method that computes, for any given "category definition" group,
+   a simple representation of what function should be called in a parser
    object to extend it by adding that definition; the result should be JSON.
  * The `contentsChanged` handler for any given group in the document should
-   call that function in itself (if it's a definition type group) or (if
-   it's not) in any definition type group to which it's connected, storing
-   the result as an attribute of the group on which it was called.
+   call that function in itself (if it's a category definition group) or (if
+   it's not) in any category definition group to which it's connected,
+   storing the result as an attribute of the group on which it was called.
  * Create a function that applies any such JSON record of a command to a
    parser object, thus modifying that parser appropriately.
  * Whenever any definition type group in the document has its JSON meaning
-   recomputed, loop through all definition top-level groups in the document,
-   doing the following.
+   recomputed, loop through all category definition top-level groups in the
+   document, doing the following.
    * Before the loop, create a parser P.
-   * Upon encountering a definition type group *after* the one that changed,
-     apply to it the function that extends P with the meaning of that group.
+   * Upon encountering a category definition group *after* the one that
+     changed, apply to it the function that extends P with the meaning of
+     that group.
    * Upon encountering a test type group, run P on its contents and place
      the resulting structure within the test type group.
  * Whenever any test type group in the document changes, do the same loop as
@@ -300,10 +301,6 @@ question](http://stackoverflow.com/questions/27136144/how-can-online-offline-ver
 That question links to a tutorial on app manifests, if the answer turns out
 to be "yes" to that question.
 
-Once the app is usable offline, it will also be helpful to cache in
-LocalStorage the meaning computed from all dependencies, so that Lurch is
-usable offline even when dependencies of the current document are online.
-
 ## Ideas from various sources
 
 ### All images consistently base64
@@ -335,11 +332,11 @@ intuitive.
 
 Convert webLurch into a desktop app using
 [electron](https://github.com/atom/electron).
-This gives the user an app that always works
-offline, has an icon in their Applications folder/Start menu, etc., and
-feels like an official app that they can alt-tab to, etc., but it’s the
-exact same web app, just wrapped in a thin desktop-app shell.  You can then
-add features to that as time permits.
+This gives the user an app that always works offline, has an icon in their
+Applications folder/Start menu, etc., and feels like an official app that
+they can alt-tab to, etc., but it’s the exact same web app, just wrapped in
+a thin desktop-app shell.  You can then add features to that as time
+permits.
  * When the user clicks "save," you can have the web app first query to see
    if it’s sitting in a desktop-app wrapper, and if so, don’t save to
    webstorage, but pop up the usual save box.
@@ -354,8 +351,11 @@ done by the same developer.
  * The `app/` folder is getting cluttered.  Create an `app/examples/`
    subfolder and move every `*-example.html` and `*-example-solo.litcoffee`
    into it.  Update any relative links to other resources, and any links to
-   those pages.  (This requires also updating the `cake.litcoffee` to
-   compile files in that subfolder as well.)
+   those pages.
+    * This requires also updating the `cake.litcoffee` to compile files in
+      that subfolder as well.
+    * It also requires taking care with the `gh-pages` merge, so that
+      compiled files get deleted/recreated correctly in that branch (once).
 
 ## Improving documentation
 

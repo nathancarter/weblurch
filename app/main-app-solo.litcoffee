@@ -269,8 +269,9 @@ Initialize the settings plugin for global app settings.
             A.set 'wiki_username', elt( 'wiki_username' ).value
             A.set 'wiki_password', elt( 'wiki_password' ).value
 
-Initialize the settings plugin for per-document settings, stored in that
-same metadata object.
+Initialize the settings plugin for per-document settings.  Here we override
+the default set/get methods (which use the browser's `LocalStorage`) and use
+a metadata object that gets embedded in the document itself.
 
         D = editor.Settings.addCategory 'document'
         D.metadata = { }
