@@ -31,9 +31,25 @@ are inserted as members of the corresponding editor by means of the code
 
         constructor: ( @editor ) ->
 
-This class is currently a stub, so we don't do anything on editor
-initialization, but we will almost certainly want to do something in this
-event later.  So we put this stub here.
+See the top of this page for an explanation of the `exports` function.  App
+developers importing this plugin should override this function with one that
+takes a TinyMCE document (the `iframe`'s document element) as input and
+yields any valid JSON object as output, the data the document exports.  (It
+may return null, meaning no data to export.)
+
+Alternately, it may throw an error, meaning that the document is not in a
+state for which its exports data can be computed.  Implementations that do
+throw errors may also choose to alert the user with a dialog box, so that
+the user knows that the document they're trying do save will not contain
+valid "exports" data.
+
+Therefore the default value of this member is a function that always returns
+null (meaning that no document exports any data).  Since that is not very
+useful, app developers will certainly want to override this default.
+
+            @exports = -> null
+
+Later we may wish to fill in this event handler.  For now, it's a stub.
 
             @editor.on 'init', =>
                 # nothing

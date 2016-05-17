@@ -17,16 +17,6 @@ required order of completion.
 
 Plugin
 
- * Initialize its `exports` member to null.
- * This member is "virtual" in the C++ sense.  Document it for clients to
-   use; applications that import this plugin should install their own
-   `exports` functions that do one of two things:
-   * Return the JSON object of serialized data that the current document
-     exports to anything that uses it as a dependency, or...
-   * Throw an error, with a message indicating why such data could not be
-     computed.  (For example, perhaps the document is still doing some
-     background processing in response to the latest user edits, and has not
-     yet recomputed all the data needed to construct its export object.)
  * Install a `beforeSave` event listener (a stub at first).
  * Expand that event listener so that if the `exports` member is null, it
    dumps a warning message to the console saying that the plugin was
