@@ -280,6 +280,7 @@ into the editor, in a namespace called `MediaWiki`.
             getAPIPage : getAPIPage
             login : login
             getPageContent : getPageContent
+            getPageTimestamp : getPageTimestamp
             importPage : importPage
             exportPage : exportPage
             embedMetadata : embedMetadata
