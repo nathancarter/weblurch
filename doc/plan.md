@@ -17,20 +17,68 @@ required order of completion.
 
 Plugin
 
- * Install a `beforeSave` event listener (a stub at first).
- * Expand that event listener so that if the `exports` member is null, it
-   dumps a warning message to the console saying that the plugin was
-   installed but the necessary `exports` function was not provided.
- * If the `exports` member is not null, then call it and embed the resulting
-   object (or an object indicating the error thrown) in the document's
-   metadata as its export data.
- * Add documentation explaining that the only time the `exports` function
-   will be called is right before a save, so implementers could, if their
-   implementation is about to throw an error, optionally report to the user
-   (e.g., with an alert box) that the current save will not contain export
-   data, and therefore cannot be used as a dependency.
+ * Write a member that looks at a file in `jsfs` and gets its `exports`
+   metadata, returning it.
+ * Temporarily alter the `saveMetadata` function in the main Lurch app so
+   that it writes some unimportant metadata (such as the text content of
+   each top-level group) to prepare to test this functionality.
+ * Test it by saving a file with some top-level groups, then calling this
+   new function from the console to ensure that it extracts the metadata
+   correctly.
+ * Write a member that fetches a URL, extracts its `exports` metadata,
+   and sends that metadata to a callback, or an error object if this fails.
+ * Test it by saving a file to the wiki with some top-level groups, then
+   calling this new function from the console to ensure that it extracts the
+   metadata correctly.
+ * Write a wrapper function that does the same thing iff the last-modified
+   date for the resource is later than the given date.  [See here fore more
+   information.](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date)
+ * Create a member in the plugin for storing the list of dependencies of the
+   current document.  Initialize it to an empty array.
+ * Create a `import` member that takes an array of the following form.  It
+   should store the data in the plugin object itself, giving it a `length`
+   attribute, and attributes 0, 1, 2, ..., allowing it to act as an array
+   with the same structure.  (Clear out old values before adding new ones.)
+```javascript
+    [
+        {
+            address : 'dependency URL here',
+            data : /* exported data, as JSON */,
+            date : /* time of last data update */,
+        },
+        /* ...one of these objects for each direct dependency... */
+    ]
+```
+ * Document how applications should access dependency information.  They
+   can write `tinymce.activeEditor.Dependencies[0].URL`, for example.  Note
+   that it will be very common for the `data` member to also have a
+   `dependencies` member, for access to indirect dependencies' data.  But
+   this is not required, and must be handled by each application developer.
+ * Create an `export` member that produces an array of the above form from
+   the data stored in the plugin.
+ * Create an `update` member that fetches the latest metadata for each
+   dependency stored in the plugin iff its date is newer than the stored
+   date.  When it does so, update the date to now.  Call this function at
+   the end of `import`.
+ * Create a `remove` member that takes an index into the dependencies array
+   and does the following:
+    * Remove that dependency.
+    * Move the later ones down to earlier indices.
+    * Fire a `dependenciesChanged` event in the editor.
+ * Create an `add` member that takes a URL or filename of a dependency and
+   does the following:
+    * Attempt to fetch the latest data for that dependency.
+    * If that fails, return the reason why as a string.
+    * If it succeeds, append the dependency (with its data and the current
+      timestamp) to the internal array of stored dependencies, as the new
+      last entry.
+    * Fire a `dependenciesChanged` event in the editor.
+    * Return null.
+ * Document the fact that the change event will be fired iff dependencies
+   have changed, and that most applications will want to listen to that
+   event.
 
-Add/Remove UI
+UI
 
  * At line 280 of `main-app-solo.litcoffee`, add a section heading for
    dependencies.
@@ -47,62 +95,26 @@ Add/Remove UI
    dependencies into a test document, and ensure that they show up.
  * Implement the "Remove" buttons to modify that dependency array, as well
    as its visual representation in the table.
- * Write a function that looks at a file in `jsfs` and gets its `exports`
-   metadata, returning it.
  * Implement the "Add file dependency" feature to prompt the user to choose
    a file with the same dialog used for opening files.  If the user chooses
-   a file, use that function to get its exports, store that in this
-   document's metadata as a dependency (with the current date and time),
-   then add a table row to indicate as much.  If any of that fails, tell the
-   user the dependency is not a valid document, and don't update anything.
- * Write a function that fetches a URL, extracts its `exports` metadata,
-   and sends that metadata to a callback, or an error object if this fails.
+   a file, call the `add` member of the plugin.  If it returns a string,
+   show the user that string as an explanation of failure.
  * Implement the "Add URL dependency" feature to prompt the user to paste in
-   an URL.  Run the above fetching function.  If it succeeds, cache the data
-   in the document's metadata (with a date and time stamp) and add a table
-   row to indicate as much.  If it fails, tell the user the dependency is
-   not accessible, and don't update anything.  While the fetching function
-   is running, put up a "please wait" indicator.
+   an URL.  Call the `add` member of the plugin.  If it returns a string,
+   show the user that string as an explanation of failure.
+ * Extend the "Add URL dependency" function with a "please wait" indicator
+   while the document is being fetched.
+ * Update the documentation in the Dependencies Plugin file, immediately
+   before the class definition section, which promises to link to an example
+   of how to show the dependency-editing UI.  Link to the example you just
+   built.
 
 Keeping up-to-date
 
- * Extend the dependency-fetching function so that you can provide it a
-   date and time, and it will first
-   [examine the last modified time of the given URL](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date),
-   and only fetch the new data if it is truly new.  Otherwise, it will
-   return an up-to-date indicator.  Modify all calls to the function to use
-   this feature.
- * Write a function that takes dependency metadata from a document, fetches
-   each dependency (which may mean not fetching it at all if it's up to
-   date), and stores the results in the plugin object itself, giving it a
-   `length` attribute, and attributes 0, 1, 2, ..., allowing it to act as an
-   array with the structure shown in the next item.  This function should
-   work if run multiple times, clearing out old values before adding new
-   ones.
- * Extend that function to first save the old array off to the side, then
-   compare the new array afterwards to the old one.  Fire a change event iff
-   there was an actual change.
- * Call that function whenever a document is opened.
- * Call that function whenever the document's attributes are saved (and the
-   list of dependencies changed).
- * Document how applications should access dependency information.  They
-   can write `tinymce.activeEditor.Dependencies[0].URL`, for example.  Note
-   that it will be very common for the `data` member to also have a
-   `dependencies` member, for access to indirect dependencies' data.  But
-   this is not required, and must be handled by each application developer.
-```javascript
-    [
-        {
-            URL : 'dependency URL here',
-            data : /* exported data, only if no error when exporting */,
-            error : /* error message, only if error when exporting */,
-        },
-        /* ...one of these objects for each direct dependency... */
-    ]
-```
- * Document the fact that the change event will be fired iff dependencies
-   have changed, and that most applications will want to listen to that
-   event.
+ * Use the plugin's `import` function from within `loadMetadata` in the
+   main app.
+ * Use the plugin's `export` function from within `saveMetadata` in the
+   main app.
 
 ## Parsing test
 
