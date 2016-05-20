@@ -15,61 +15,96 @@ required order of completion.
 
 ## Dependencies
 
-Create a `DependenciesPlugin` as follows.
+Plugin
 
- * Lurch Applications can enable or disable the "dependencies" feature by
-   importing (or not) this plugin, in their app's setup code.  They must
-   provide an `exports` function that, when run, does one of two things:
-   * Return the JSON object of serialized data that the current document
-     exports to anything that uses it as a dependency, or...
-   * Throw an error, with a message indicating why such data could not be
-     computed.  (For example, perhaps the document is still doing some
-     background processing in response to the latest user edits, and has not
-     yet recomputed all the data needed to construct its export object.)
- * When saving the document, if the dependencies feature is enabled, the
-   `exports` function will be called.  The resulting object (or an object
-   indicating the error thrown) will be stored in the document's metadata
-   as its export data, immediately before the save.  This is the only time
-   that the `exports` function will be called, so that function can, before
-   it throws an error, optionally report to the user (e.g., with an alert
-   box) that the current save will not contain export data, and therefore
-   cannot be used as a dependency.
- * In applications with the dependencies feature enabled, the foundation
-   should provide a UI for editing the dependency list for a document.
-   Store this data in the document's metadata.  Reference dependencies by
-   URLs; these can be file:/// URLs, which is a reference to LocalStorage,
-   or http:// URLs, which is a reference to `lurchmath.org`.
- * When a user attempts to add a dependency to a document, if that
-   dependency is not accessible, an error should be shown to the user, and
-   the dependency not added.  (It cannot be added because it is not
-   available.)  Note that cached dependencies are always accessible.
- * When a user successfully adds a dependency to a document, it should be
-   added to the dependency cache, if it's not already in there.  Adding a
-   document to the dependency cache means checking to see if the date in the
-   cache is earlier than the last-modified date of the file (which you can
-   get using the HTTP protocol without fetching the whole file, like
-   [this](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date)); if it's earlier, then
-   re-fetch the document, extract its metadata, and store that in the cache.
-   If not, do nothing.
- * When a user opens a document that has dependencies, each of those
-   dependencies is fetched (from the cache or the web, as just described)
-   and its export data stored as in this plugin.  The plugin will have a
-   `length` attribute, and attributes 0, 1, 2, ..., allowing it to act as an
-   array with the following structure.  So clients can write
-   `tinymce.activeEditor.Dependencies[0].URL`, for example.  Note that it
-   will be very common for the `data` member to also have a `dependencies`
-   member, for access to indirect dependencies' data.  But this is not
-   required, and must be handled by each application developer.
+ * Test it by saving a file to the wiki with some top-level groups, then
+   calling this new function from the console to ensure that it extracts the
+   metadata correctly.
+ * Write a wrapper function that does the same thing iff the last-modified
+   date for the resource is later than the given date.  [See here fore more
+   information.](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date)
+ * Create a member in the plugin for storing the list of dependencies of the
+   current document.  Initialize it to an empty array.
+ * Create a `import` member that takes an array of the following form.  It
+   should store the data in the plugin object itself, giving it a `length`
+   attribute, and attributes 0, 1, 2, ..., allowing it to act as an array
+   with the same structure.  (Clear out old values before adding new ones.)
 ```javascript
     [
         {
-            URL : 'dependency URL here',
-            data : /* exported data, only if no error when exporting */,
-            error : /* error message, only if error when exporting */,
+            address : 'dependency URL here',
+            data : /* exported data, as JSON */,
+            date : /* time of last data update */,
         },
         /* ...one of these objects for each direct dependency... */
     ]
 ```
+ * Document how applications should access dependency information.  They
+   can write `tinymce.activeEditor.Dependencies[0].URL`, for example.  Note
+   that it will be very common for the `data` member to also have a
+   `dependencies` member, for access to indirect dependencies' data.  But
+   this is not required, and must be handled by each application developer.
+ * Create an `export` member that produces an array of the above form from
+   the data stored in the plugin.
+ * Create an `update` member that fetches the latest metadata for each
+   dependency stored in the plugin iff its date is newer than the stored
+   date.  When it does so, update the date to now.  Call this function at
+   the end of `import`.
+ * Create a `remove` member that takes an index into the dependencies array
+   and does the following:
+    * Remove that dependency.
+    * Move the later ones down to earlier indices.
+    * Fire a `dependenciesChanged` event in the editor.
+ * Create an `add` member that takes a URL or filename of a dependency and
+   does the following:
+    * Attempt to fetch the latest data for that dependency.
+    * If that fails, return the reason why as a string.
+    * If it succeeds, append the dependency (with its data and the current
+      timestamp) to the internal array of stored dependencies, as the new
+      last entry.
+    * Fire a `dependenciesChanged` event in the editor.
+    * Return null.
+ * Document the fact that the change event will be fired iff dependencies
+   have changed, and that most applications will want to listen to that
+   event.
+
+UI
+
+ * At line 280 of `main-app-solo.litcoffee`, add a section heading for
+   dependencies.
+ * Extend the UI functions in `settingsplugin.litcoffee` so that each takes
+   an optional ID argument and uses it as the ID of the element created.
+ * Extend the UI functions in `settingsplugin.litcoffee` with a function for
+   creating buttons with a given text on them (and any ID).
+ * Create a DIV beneath that heading and in it place two buttons, one for
+   "Add file dependency" and one for "Add URL dependency".
+ * When setting up that window, for every dependency in the
+   `D.metadata.dependencies` array, create a table row above the buttons DIV
+   showing the dependency URL, with a "Remove" button.
+ * Test that by running code in the console (or elsewhere) to inject
+   dependencies into a test document, and ensure that they show up.
+ * Implement the "Remove" buttons to modify that dependency array, as well
+   as its visual representation in the table.
+ * Implement the "Add file dependency" feature to prompt the user to choose
+   a file with the same dialog used for opening files.  If the user chooses
+   a file, call the `add` member of the plugin.  If it returns a string,
+   show the user that string as an explanation of failure.
+ * Implement the "Add URL dependency" feature to prompt the user to paste in
+   an URL.  Call the `add` member of the plugin.  If it returns a string,
+   show the user that string as an explanation of failure.
+ * Extend the "Add URL dependency" function with a "please wait" indicator
+   while the document is being fetched.
+ * Update the documentation in the Dependencies Plugin file, immediately
+   before the class definition section, which promises to link to an example
+   of how to show the dependency-editing UI.  Link to the example you just
+   built.
+
+Keeping up-to-date
+
+ * Use the plugin's `import` function from within `loadMetadata` in the
+   main app.
+ * Use the plugin's `export` function from within `saveMetadata` in the
+   main app.
 
 ## Parsing test
 
@@ -94,11 +129,11 @@ customizable parser.
    * Choosing any of the options, if the bubble is empty, fills the bubble
      with example content for that definition type.  For built-in types, it
      fills the bubble with a human-readable description of the built-in.
- * Make "category name" groups able to connect by arrows to "definition
-   type" groups or "category name" groups, but only up to one target.
+ * Make "category name" groups able to connect by arrows to "category
+   definition" groups or "category name" groups, but only up to one target.
  * Create a group type called "name" that can hold any text.
-   * Permit it to connect to a "definition type" group, but only up to one
-     target.
+   * Permit it to connect to a "category definition" group, but only up to
+     one target.
    * Permit "category type" groups to connect to "name" type groups also,
      but still at most one target.
    * Its tag will behave as follows.
@@ -109,21 +144,22 @@ customizable parser.
      * Otherwise, it says "variable name."
  * Create a group type called "test" that can hold any text.  Its tag always
    contains the phrase "test."
- * Create a method that computes, for any given "definition type" group, a
-   simple representation of what function should be called in a parser
+ * Create a method that computes, for any given "category definition" group,
+   a simple representation of what function should be called in a parser
    object to extend it by adding that definition; the result should be JSON.
  * The `contentsChanged` handler for any given group in the document should
-   call that function in itself (if it's a definition type group) or (if
-   it's not) in any definition type group to which it's connected, storing
-   the result as an attribute of the group on which it was called.
+   call that function in itself (if it's a category definition group) or (if
+   it's not) in any category definition group to which it's connected,
+   storing the result as an attribute of the group on which it was called.
  * Create a function that applies any such JSON record of a command to a
    parser object, thus modifying that parser appropriately.
  * Whenever any definition type group in the document has its JSON meaning
-   recomputed, loop through all definition top-level groups in the document,
-   doing the following.
+   recomputed, loop through all category definition top-level groups in the
+   document, doing the following.
    * Before the loop, create a parser P.
-   * Upon encountering a definition type group *after* the one that changed,
-     apply to it the function that extends P with the meaning of that group.
+   * Upon encountering a category definition group *after* the one that
+     changed, apply to it the function that extends P with the meaning of
+     that group.
    * Upon encountering a test type group, run P on its contents and place
      the resulting structure within the test type group.
  * Whenever any test type group in the document changes, do the same loop as
@@ -256,10 +292,6 @@ question](http://stackoverflow.com/questions/27136144/how-can-online-offline-ver
 That question links to a tutorial on app manifests, if the answer turns out
 to be "yes" to that question.
 
-Once the app is usable offline, it will also be helpful to cache in
-LocalStorage the meaning computed from all dependencies, so that Lurch is
-usable offline even when dependencies of the current document are online.
-
 ## Ideas from various sources
 
 ### All images consistently base64
@@ -291,11 +323,11 @@ intuitive.
 
 Convert webLurch into a desktop app using
 [electron](https://github.com/atom/electron).
-This gives the user an app that always works
-offline, has an icon in their Applications folder/Start menu, etc., and
-feels like an official app that they can alt-tab to, etc., but it’s the
-exact same web app, just wrapped in a thin desktop-app shell.  You can then
-add features to that as time permits.
+This gives the user an app that always works offline, has an icon in their
+Applications folder/Start menu, etc., and feels like an official app that
+they can alt-tab to, etc., but it’s the exact same web app, just wrapped in
+a thin desktop-app shell.  You can then add features to that as time
+permits.
  * When the user clicks "save," you can have the web app first query to see
    if it’s sitting in a desktop-app wrapper, and if so, don’t save to
    webstorage, but pop up the usual save box.
@@ -310,8 +342,11 @@ done by the same developer.
  * The `app/` folder is getting cluttered.  Create an `app/examples/`
    subfolder and move every `*-example.html` and `*-example-solo.litcoffee`
    into it.  Update any relative links to other resources, and any links to
-   those pages.  (This requires also updating the `cake.litcoffee` to
-   compile files in that subfolder as well.)
+   those pages.
+    * This requires also updating the `cake.litcoffee` to compile files in
+      that subfolder as well.
+    * It also requires taking care with the `gh-pages` merge, so that
+      compiled files get deleted/recreated correctly in that branch (once).
 
 ## Improving documentation
 

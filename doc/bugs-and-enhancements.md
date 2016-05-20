@@ -32,12 +32,15 @@ Load and save
 
 Other
 
+ * When you open (or type) a file that's longer than the screen, you must
+   open and close the JS console to force resizing, or it won't scroll
+   vertically.  Alternatively, you can resize the window.  Seems like the
+   resize event handler needs to be called immediately after the page
+   geometry is set up.
  * The Insert Menu covers the toolbar and will not disappear, even when an
    item is selected.  This seems like it is either a TinyMCE bug (and may go
    away if we update TinyMCE) or it is a bug in our use of TinyMCE.
  * Formats menu is currently empty.
- * When you open a file that's longer than the screen, you must open and
-   close the JS console to force resizing, or it won't scroll vertically.
  * Some of the `*-duo.litcoffee` files in `src/` in the master branch also
    have committed versions in `app/` that are merely copies.  This is
    necessary in the gh-pages branch, but in master it's redundant.  Fix.
@@ -52,6 +55,25 @@ MathQuill parsing
  * Support adjacent atomics as factors in a product
  * Support chained equations
  * Add tests for things that should *not* parse, and verify that they do not
+
+HTML export/import
+
+Currently the only ways to load/save Lurch documents are `localStorage` and
+the wiki.  Consequently, dependencies can only be specified in one of these
+two ways.  Extend this to general HTML pages, as follows:
+
+ * Add an HTML export function that lets you download the contents of the
+   editor (plus metadata at the front, just like when exporting to the wiki)
+   for publishing on your own website, for example, or pasting into a blog
+   post.  Wrap it in a DIV with class "EmbeddedLurchDocument" or something
+   similarly unique.
+ * Expose that functionality to the user, on the File menu.
+ * Add an HTML import function that lets you specify a URL, sends an XHR to
+   get the page at that URL, and extracts the full content of the Lurch DIV.
+   Be sure to extract the metadata as well, just as with a wiki import.
+ * Expose that functionality to the user, on the File menu.
+ * Extend dependencies so that they can be at arbitrary URLs, now, not just
+   on the wiki.  Use the HTML import function just created for this purpose.
 
 Groups Plugin
 
