@@ -1,4 +1,185 @@
 
+# Dependencies Plugin for [TinyMCE](http://www.tinymce.com)
+
+## Overview
+
+This plugin adds features for making the current document depend on others,
+much like programming languages permit one file importing the definitions in
+another file (such as with `#include` in C, for example).
+
+The particular mechanism by which this is implemented in Lurch is described
+here.  It will be convenient to assume we're discussing two documents, A and
+B, with A being used as a dependency by B (that is, B imports A).
+
+ * Document B must store in its metadata a member called `exports`.  As with
+   all document metadata, it must be JSON data.
+ * Document A will see none of the actual contents of document B.  Rather,
+   it will see all the data stored in that `exports` member of B.
+ * Both documents must leave the `dependencies` member of their metadata
+   untouched; this plugin will manage it.
+ * When the user indicates that document A should import document B as a
+   dependency, this plugin will store the address (URL or filename) of
+   document B in the `dependencies` member of document A's metadata.  It
+   will also fetch all of document B's `exports` data and store that, too.
+ * Whenever document A is opened, the last modified time of document B will
+   be checked.  If it is newer than the last import, B's `exports` data will
+   be re-fetched, and the updated version stored in A.
+ * If B depended on another document C, then both the `exports` data in B
+   (if any) *and* its `dependencies` data would be imported into A.  The
+   `dependencies` would be embedded as a member of the `exports`, so do not
+   ever include a `dependencies` member inside an `exports` member, or it
+   may be overwritten and/or misinterpreted.
+ * Documents may import more than one dependency, and so the dependencies
+   data is actually an array.  These examples have considered the case of
+   importing only one dependency, for simplicity.
+
+## Example
+
+Here is a summary of the metadata structure described by the above bullet
+points.
+
+### Document C
+
+ * Exports some data about its own contents.  Thus its metadata has an
+   `exports` member, let's say this one for example:
+
+```json
+    [ "example", "C", "data" ]
+```
+
+ * Has no dependencies.  Thus its metadata has no dependencies member, which
+   by default is equivalent to an empty array, `[ ]`.
+
+### Document B
+
+ * Exports some data about its own contents.  Thus its metadata has an
+   `exports` member, let's say this one for example:
+
+```json
+    { "what" : "example data", "whence" : "document B" }
+```
+
+ * Imports document C.  Thus its metadata has a dependencies member like
+   the following.  Recall that this is a one-element array just for the
+   simplicity of this example.
+
+```json
+    [
+        {
+            "address" : "http://www.example.com/document_c",
+            "data" : [ "example", "C", "data" ],
+            "date" : "2012-04-23T18:25:43.511Z"
+        }
+    ]
+```
+
+### Document A
+
+ * Exports some data about its own contents, but that's irrelevant here
+   because in this example no document depends on A.
+ * Imports document B.  Thus its metadata has a dependencies member like
+   the following.  Note the embedding of C's dependencies inside B's.
+
+```json
+    [
+        {
+            "address" : "http://www.example.com/document_b",
+            "data" : {
+                "what" : "example data",
+                "whence" : "document B",
+                "dependencies" : [
+                    {
+                        "address" : "http://www.example.com/document_c",
+                        "data" : [ "example", "C", "data" ],
+                        "date" : "2012-04-23T18:25:43.511Z"
+                    }
+                ]
+            },
+            "date" : "2012-05-21T16:00:51.278Z",
+        }
+    ]
+```
+
+## Responsibilities
+
+The author of a Lurch Application (see [tutorial](../doc/tutorial.md)) must
+implement a `saveMetadata` function (as documented
+[here](loadsaveplugin.litcoffee#constructor)) to store the appropriate
+`exports` data in the document's metadata upon each save.
+
+Sometimes, however, it is not possible, to give accurate `exports` data.
+For example, if a lengthy background computation is taking place, the
+application may not know up-to-date exports information for the current
+document state.  If `saveMetadata` is called at such times, the application
+should do two things.
+ 1. Inform the user that the document was saved while a background
+    computation (or other cause) left the document's data not fully updated.
+    Consequently, the document *cannot* be used as a dependency until this
+    problem is corrected.  Wait for background computations (or whatever)
+    to complete, and then save again.
+ 1. Store in the `exports` member an object of the following form.  The
+    error message will be used if another user attempts to import this
+    document as a dependency, to explain why that operation is not valid.
+
+```json
+    { "error" : "Error message explaining why exports data not available." }
+```
+
+This plugin provides functionality for constructing a user interface for
+editing a document's dependency list.  That functionality is responsible for
+importing other documents' `exports` data into the current document's
+`dependencies` array, and managing the structure of that array.  The
+recursive embedding show in the examples above is handled by this plugin.
+
+Applications need to give users access to that interface, using methods not
+yet documented in this file.  Coming soon.
+
+# `Dependencies` class
+
+We begin by defining a class that will contain all the information needed
+about the current document's dependencies.  An instance of this class will
+be stored as a member in the TinyMCE editor object.
+
+This convention is adopted for all TinyMCE plugins in the Lurch project;
+each will come with a class, and an instance of that class will be stored as
+a member of the editor object when the plugin is installed in that editor.
+The presence of that member indicates that the plugin has been installed,
+and provides access to the full range of functionality that the plugin
+grants to that editor.
+
+    class Dependencies
+
+We construct new instances of the Dependencies class as follows, and these
+are inserted as members of the corresponding editor by means of the code
+[below, under "Installing the Plugin."](#installing-the-plugin)
+
+        constructor: ( @editor ) ->
+            # no constructor needed yet, beyond storing the editor
+
+This function takes a path into a `jsfs` filesystem and extracts the
+`exports` metadata from the file, returning it.  It assumes that the
+filesystem into which it should look is the same one used by [the Load/Save
+Plugin](loadsaveplugin.litcoffee), and fetches the name of the filesystem
+from there.
+
+        getFileExports: ( filepath, filename ) ->
+            if filename is null then return
+            if filepath is null then filepath = '.'
+            tmp = new FileSystem @editor.LoadSave.fileSystem
+            tmp.cd filepath
+            [ content, metadata ] = tmp.read filename
+            metadata.exports
+
+# Installing the plugin
+
+The plugin, when initialized on an editor, places an instance of the
+`Dependencies` class inside the editor, and points the class at that editor.
+
+    tinymce.PluginManager.add 'dependencies', ( editor, url ) ->
+        editor.Dependencies = new Dependencies editor
+
+
+
 # Dialogs Plugin
 
 This plugin adds to TinyMCE some much-needed convenience functions for
@@ -2385,6 +2566,25 @@ Do so with the following functions.
     setAPIPage = ( URL ) -> editor.APIURL = URL
     getAPIPage = -> editor.APIURL
 
+## Embedding metadata
+
+Here are two functions for embedding metadata into/extracting metadata from
+the HTML content of a document.  These are useful before export to/after
+import from the wiki.
+
+    embedMetadata = ( documentHTML, metadataObject = { } ) ->
+        encoding = encodeURIComponent JSON.stringify metadataObject
+        "<span id='metadata' style='display: none;'
+         >#{encoding}</span>#{documentHTML}"
+    extractMetadata = ( html ) ->
+        re = /^<span[^>]+id=.metadata.[^>]*>([^<]*)<\/span>/
+        if match = re.exec html
+            metadata : JSON.parse decodeURIComponent match[1]
+            document : html[match[0].length..]
+        else
+            metadata : null
+            document : html
+
 ## Extracting wiki pages
 
 The following (necessarily asynchronous) function accesses the wiki, fetches
@@ -2428,14 +2628,36 @@ true or false, indicating success or failure.
 
     importPage = ( pageName, callback ) ->
         editor.MediaWiki.getPageContent pageName, ( content, error ) ->
-            if content
-                editor.setContent content
-                callback? true # success
             if error
-                alert 'Error loading content from wiki:' + \
-                    error.split( '\n' )[0]
+                editor.Dialogs.alert
+                    title : 'Wiki Error'
+                    message : "<p>Error loading content from wiki:</p>
+                        <p>#{error.split( '\n' )[0]}</p>"
                 console.log error
                 callback? false # failure
+            { metadata, document } = extractMetadata content
+            if not metadata?
+                editor.Dialogs.alert
+                    title : 'Not a Lurch document'
+                    message : '<p><b>The wiki page that you attempted to
+                        import is not a Lurch document.</b></p>
+                        <p>Although it is possible to import any wiki page
+                        into Lurch, it does not work well to edit and
+                        re-post such pages to the wiki.</p>
+                        <p>To edit a non-Lurch wiki page, visit the page on
+                        the wiki and edit it there.</p>'
+                callback? false # failure
+            editor.setContent document
+            callback? document, metadata # success
+
+A variant of the previous function silently attempts to fetch just the
+metadata from a document stored in the wiki.  It calls the callback with
+null on any failure, and the metadata as JSON on success.
+
+    getPageMetadata = ( pageName, callback ) ->
+        editor.MediaWiki.getPageContent pageName, ( content, error ) ->
+            callback? if error then null else \
+                extractMetadata( content ).metadata
 
 The following function accesses the wiki, logs in using the given username
 and password, and sends the results to the given callback.  The "token"
@@ -2530,7 +2752,7 @@ from its callback (or any time thereafter).
 
 The previous function makes use of the following one.  This depends upon the
 [HTMLTags](https://www.mediawiki.org/wiki/Extension:HTML_Tags) extension to
-MediaWiki, which permits arbitrar HTML, as long as it is encoded using tags
+MediaWiki, which permits arbitrary HTML, as long as it is encoded using tags
 of a certain form, and the MediaWiki configuration permits the tags.  See
 the documentation for the extension for details.
 
@@ -2584,6 +2806,9 @@ into the editor, in a namespace called `MediaWiki`.
             getPageContent : getPageContent
             importPage : importPage
             exportPage : exportPage
+            embedMetadata : embedMetadata
+            extractMetadata : extractMetadata
+            getPageMetadata : getPageMetadata
 
 
 
@@ -2991,10 +3216,11 @@ that no server-side callback needs to be done for spellchecking.
 Not all of the following plugins are working yet, but most are.  A plugin
 that begins with a hyphen is a local plugin written as part of this project.
 
-            plugins : 'advlist table charmap colorpicker image link
-                importcss paste print save searchreplace textcolor
-                fullscreen -loadsave -overlay -groups -equationeditor ' + \
-                ( "-#{p}" for p in window.pluginsToLoad ).join ' '
+            plugins :
+                'advlist table charmap colorpicker image link importcss
+                paste print save searchreplace textcolor fullscreen
+                -loadsave -overlay -groups -equationeditor -dependencies ' \
+                + ( "-#{p}" for p in window.pluginsToLoad ).join ' '
 
 The groups plugin requires that we add the following, to prevent resizing of
 group boundary images.
@@ -3202,7 +3428,7 @@ That mode is implemented in two script files:
  * This file pops up a separate browser window that presents the
    test-recording UI.
  * That popup window uses the script
-   [testrecorder.solo.litcoffee](#testrecorder.solo.litcoffee), which
+   [testrecorder-solo.litcoffee](testrecorder-solo.litcoffee), which
    implements all that window's UI interactivity.
 
 First, we have a function that switches the app into test-recording mode, if
