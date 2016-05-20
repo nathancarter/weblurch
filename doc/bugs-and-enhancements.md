@@ -74,6 +74,8 @@ two ways.  Extend this to general HTML pages, as follows:
  * Expose that functionality to the user, on the File menu.
  * Extend dependencies so that they can be at arbitrary URLs, now, not just
    on the wiki.  Use the HTML import function just created for this purpose.
+   To check the last modified date of arbitrary web pages, see
+   [here.](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date)
 
 Groups Plugin
 

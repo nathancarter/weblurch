@@ -2593,10 +2593,12 @@ callback.  The callback takes two parameters, the content and an error.
 Only one will be non-null, depending on the success or failure of the
 process.
 
-This function therefore does the grunt work.  Inserting the response data
-from this function into the editor happens in the function after this one.
+This internal function therefore does the grunt work.  It can fetch any data
+about a wiki page using the `rvprop` parameter of [the MediaWiki Revisions
+API](https://www.mediawiki.org/wiki/API:Revisions).  Two convenience
+functions for common use cases follow.
 
-    getPageContent = ( pageName, callback ) ->
+    getPageData = ( pageName, rvprop, callback ) ->
         xhr = new XMLHttpRequest()
         xhr.addEventListener 'load', ->
             json = @responseText
@@ -2607,7 +2609,7 @@ from this function into the editor happens in the function after this one.
                     'Invalid response format.\nShould be JSON:\n' + json
                 return
             try
-                content = object.query.pages[0].revisions[0].content
+                content = object.query.pages[0].revisions[0][rvprop]
             catch e
                 callback null, 'No such page on wiki.\nRaw reply:\n' + json
                 return
@@ -2616,12 +2618,24 @@ from this function into the editor happens in the function after this one.
             editor.MediaWiki.getAPIPage() + '?action=query&titles=' + \
             encodeURIComponent( pageName ) + \
             '&prop=revisions' + \
-            '&rvprop=content&rvparse' + \
+            '&rvprop=' + rvprop + '&rvparse' + \
             '&format=json&formatversion=2'
         xhr.setRequestHeader 'Api-User-Agent', 'webLurch application'
         xhr.send()
 
-The following function wraps the previous in a simple UI, which either
+Inserting the response data from this function into the editor happens in
+the function after this one.
+
+    getPageContent = ( pageName, callback ) ->
+        getPageData pageName, 'content', callback
+
+This function is very similar to `getPageContent`, but gets the last
+modified date of the page instead of its content.
+
+    getPageTimestamp = ( pageName, callback ) ->
+        getPageData pageName, 'timestamp', callback
+
+The following function wraps `getPageContent` in a simple UI, which either
 inserts the fetched content into the editor on success, or pops up an error
 information dialog on failure.  An optional callback will be called with
 true or false, indicating success or failure.
