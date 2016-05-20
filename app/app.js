@@ -2652,6 +2652,7 @@
       getAPIPage: getAPIPage,
       login: login,
       getPageContent: getPageContent,
+      getPageTimestamp: getPageTimestamp,
       importPage: importPage,
       exportPage: exportPage,
       embedMetadata: embedMetadata,
