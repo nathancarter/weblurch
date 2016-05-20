@@ -17,12 +17,6 @@ required order of completion.
 
 Plugin
 
- * Test it by saving a file to the wiki with some top-level groups, then
-   calling this new function from the console to ensure that it extracts the
-   metadata correctly.
- * Write a wrapper function that does the same thing iff the last-modified
-   date for the resource is later than the given date.  [See here fore more
-   information.](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date)
  * Create a member in the plugin for storing the list of dependencies of the
    current document.  Initialize it to an empty array.
  * Create a `import` member that takes an array of the following form.  It
