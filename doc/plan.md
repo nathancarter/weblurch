@@ -17,9 +17,6 @@ required order of completion.
 
 Plugin
 
- * Write a member that fetches a wiki page by name, extracts its `exports`
-   metadata, and sends that metadata to a callback, or an error object if
-   this fails.
  * Test it by saving a file to the wiki with some top-level groups, then
    calling this new function from the console to ensure that it extracts the
    metadata correctly.

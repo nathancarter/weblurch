@@ -65,20 +65,8 @@ Use the MediaWiki, Settings, and Dialogs plugins.
     window.pluginsToLoad = [ 'mediawiki', 'settings', 'dialogs' ]
 
 Add initial functionality for importing from a wiki on the same server, and
-exporting to it as well.  This is still in development.
+exporting to it as well.
 
-    embedMetadata = ( documentHTML, metadataObject = { } ) ->
-        encoding = encodeURIComponent JSON.stringify metadataObject
-        "<span id='metadata' style='display: none;'
-         >#{encoding}</span>#{documentHTML}"
-    extractMetadata = ( html ) ->
-        re = /^<span[^>]+id=.metadata.[^>]*>([^<]*)<\/span>/
-        if match = re.exec html
-            metadata : JSON.parse decodeURIComponent match[1]
-            document : html[match[0].length..]
-        else
-            metadata : null
-            document : html
     window.groupMenuItems =
         file_order : 'sharelink wikiimport wikiexport
                     | appsettings docsettings'
@@ -141,34 +129,11 @@ exporting to it as well.  This is still in development.
                 pageName = prompt 'Give the name of the page to import (case
                     sensitive)', 'Main Page'
                 if pageName is null then return
-                tinymce.activeEditor.MediaWiki.getPageContent pageName,
-                    ( content, error ) ->
-                        if error
-                            tinymce.activeEditor.Dialogs.alert
-                                title : 'Wiki Error'
-                                message : "<p>Error loading content from
-                                    wiki:</p>
-                                    <p>#{error.split( '\n' )[0]}</p>"
-                            console.log error
-                            return
-                        { metadata, document } = extractMetadata content
-                        if not metadata?
-                            tinymce.activeEditor.Dialogs.alert
-                                title : 'Not a Lurch document'
-                                message : '<p><b>The wiki page that you
-                                    attempted to import is not a Lurch
-                                    document.</b></p>
-                                    <p>Although it is possible to import any
-                                    wiki page into Lurch, it does not work
-                                    well to edit and re-post such pages to
-                                    the wiki.</p>
-                                    <p>To edit a non-Lurch wiki page, visit
-                                    the page on the wiki and edit it
-                                    there.</p>'
-                            return
-                        tinymce.activeEditor.setContent document
-                        tinymce.activeEditor.Settings.document \
-                            .metadata = metadata
+                tinymce.activeEditor.MediaWiki.importPage pageName,
+                    ( document, metadata ) ->
+                        if metadata?
+                            tinymce.activeEditor.Settings.document \
+                                .metadata = metadata
         wikiexport :
             text : 'Export to wiki'
             context : 'file'
@@ -220,8 +185,8 @@ exporting to it as well.  This is still in development.
                                 wiki:</p>
                                 <p>#{error}</p>"
                         return
-                    content = tinymce.activeEditor.getContent()
-                    content = embedMetadata content,
+                    content = tinymce.activeEditor.MediaWiki.embedMetadata \
+                        tinymce.activeEditor.getContent(),
                         tinymce.activeEditor.Settings.document.metadata
                     tinymce.activeEditor.MediaWiki.exportPage pageName,
                         content, postCallback
@@ -290,7 +255,10 @@ a metadata object that gets embedded in the document itself.
 Set up the load/save plugin with the functions needed for loading and saving
 document metadata.
 
-        editor.LoadSave.saveMetaData = -> D.metadata
+        editor.LoadSave.saveMetaData = ->
+            D.metadata.exports = for group in editor.Groups.topLevel
+                group.contentAsText()
+            D.metadata
         editor.LoadSave.loadMetaData = ( object ) -> D.metadata = object
 
 If the query string told us to load a page from the wiki, or a page fully
@@ -302,7 +270,10 @@ reloading the page without the query string, and then pulling the data from
         editor.MediaWiki.setIndexPage '/wiki/index.php'
         editor.MediaWiki.setAPIPage '/wiki/api.php'
         if match = /\?wikipage=(.*)/.exec window.location.search
-            editor.MediaWiki.importPage decodeURIComponent match[1]
+            editor.MediaWiki.importPage decodeURIComponent match[1],
+                ( document, metadata ) ->
+                    if metadata?
+                        editor.Settings.document.metadata = metadata
         if toAutoLoad = localStorage.getItem 'auto-load'
             setTimeout ->
                 localStorage.removeItem 'auto-load'

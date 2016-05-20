@@ -28,6 +28,25 @@ Do so with the following functions.
     setAPIPage = ( URL ) -> editor.APIURL = URL
     getAPIPage = -> editor.APIURL
 
+## Embedding metadata
+
+Here are two functions for embedding metadata into/extracting metadata from
+the HTML content of a document.  These are useful before export to/after
+import from the wiki.
+
+    embedMetadata = ( documentHTML, metadataObject = { } ) ->
+        encoding = encodeURIComponent JSON.stringify metadataObject
+        "<span id='metadata' style='display: none;'
+         >#{encoding}</span>#{documentHTML}"
+    extractMetadata = ( html ) ->
+        re = /^<span[^>]+id=.metadata.[^>]*>([^<]*)<\/span>/
+        if match = re.exec html
+            metadata : JSON.parse decodeURIComponent match[1]
+            document : html[match[0].length..]
+        else
+            metadata : null
+            document : html
+
 ## Extracting wiki pages
 
 The following (necessarily asynchronous) function accesses the wiki, fetches
@@ -71,14 +90,36 @@ true or false, indicating success or failure.
 
     importPage = ( pageName, callback ) ->
         editor.MediaWiki.getPageContent pageName, ( content, error ) ->
-            if content
-                editor.setContent content
-                callback? true # success
             if error
-                alert 'Error loading content from wiki:' + \
-                    error.split( '\n' )[0]
+                editor.Dialogs.alert
+                    title : 'Wiki Error'
+                    message : "<p>Error loading content from wiki:</p>
+                        <p>#{error.split( '\n' )[0]}</p>"
                 console.log error
                 callback? false # failure
+            { metadata, document } = extractMetadata content
+            if not metadata?
+                editor.Dialogs.alert
+                    title : 'Not a Lurch document'
+                    message : '<p><b>The wiki page that you attempted to
+                        import is not a Lurch document.</b></p>
+                        <p>Although it is possible to import any wiki page
+                        into Lurch, it does not work well to edit and
+                        re-post such pages to the wiki.</p>
+                        <p>To edit a non-Lurch wiki page, visit the page on
+                        the wiki and edit it there.</p>'
+                callback? false # failure
+            editor.setContent document
+            callback? document, metadata # success
+
+A variant of the previous function silently attempts to fetch just the
+metadata from a document stored in the wiki.  It calls the callback with
+null on any failure, and the metadata as JSON on success.
+
+    getPageMetadata = ( pageName, callback ) ->
+        editor.MediaWiki.getPageContent pageName, ( content, error ) ->
+            callback? if error then null else \
+                extractMetadata( content ).metadata
 
 The following function accesses the wiki, logs in using the given username
 and password, and sends the results to the given callback.  The "token"
@@ -227,3 +268,6 @@ into the editor, in a namespace called `MediaWiki`.
             getPageContent : getPageContent
             importPage : importPage
             exportPage : exportPage
+            embedMetadata : embedMetadata
+            extractMetadata : extractMetadata
+            getPageMetadata : getPageMetadata
