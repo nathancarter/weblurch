@@ -56,6 +56,25 @@ MathQuill parsing
  * Support chained equations
  * Add tests for things that should *not* parse, and verify that they do not
 
+HTML export/import
+
+Currently the only ways to load/save Lurch documents are `localStorage` and
+the wiki.  Consequently, dependencies can only be specified in one of these
+two ways.  Extend this to general HTML pages, as follows:
+
+ * Add an HTML export function that lets you download the contents of the
+   editor (plus metadata at the front, just like when exporting to the wiki)
+   for publishing on your own website, for example, or pasting into a blog
+   post.  Wrap it in a DIV with class "EmbeddedLurchDocument" or something
+   similarly unique.
+ * Expose that functionality to the user, on the File menu.
+ * Add an HTML import function that lets you specify a URL, sends an XHR to
+   get the page at that URL, and extracts the full content of the Lurch DIV.
+   Be sure to extract the metadata as well, just as with a wiki import.
+ * Expose that functionality to the user, on the File menu.
+ * Extend dependencies so that they can be at arbitrary URLs, now, not just
+   on the wiki.  Use the HTML import function just created for this purpose.
+
 Groups Plugin
 
  * Make a menu item for hiding/showing group decorations.
