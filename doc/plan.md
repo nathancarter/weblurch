@@ -17,8 +17,6 @@ required order of completion.
 
 Plugin
 
- * Create a member in the plugin for storing the list of dependencies of the
-   current document.  Initialize it to an empty array.
  * Create a `import` member that takes an array of the following form.  It
    should store the data in the plugin object itself, giving it a `length`
    attribute, and attributes 0, 1, 2, ..., allowing it to act as an array
