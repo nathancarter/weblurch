@@ -17,14 +17,6 @@ required order of completion.
 
 Plugin
 
- * Write a member that looks at a file in `jsfs` and gets its `exports`
-   metadata, returning it.
- * Temporarily alter the `saveMetadata` function in the main Lurch app so
-   that it writes some unimportant metadata (such as the text content of
-   each top-level group) to prepare to test this functionality.
- * Test it by saving a file with some top-level groups, then calling this
-   new function from the console to ensure that it extracts the metadata
-   correctly.
  * Write a member that fetches a URL, extracts its `exports` metadata,
    and sends that metadata to a callback, or an error object if this fails.
  * Test it by saving a file to the wiki with some top-level groups, then

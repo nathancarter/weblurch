@@ -156,6 +156,20 @@ are inserted as members of the corresponding editor by means of the code
         constructor: ( @editor ) ->
             # no constructor needed yet, beyond storing the editor
 
+This function takes a path into a `jsfs` filesystem and extracts the
+`exports` metadata from the file, returning it.  It assumes that the
+filesystem into which it should look is the same one used by [the Load/Save
+Plugin](loadsaveplugin.litcoffee), and fetches the name of the filesystem
+from there.
+
+        getFileExports: ( filepath, filename ) ->
+            if filename is null then return
+            if filepath is null then filepath = '.'
+            tmp = new FileSystem @editor.LoadSave.fileSystem
+            tmp.cd filepath
+            [ content, metadata ] = tmp.read filename
+            metadata.exports
+
 # Installing the plugin
 
 The plugin, when initialized on an editor, places an instance of the
