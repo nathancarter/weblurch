@@ -157,18 +157,88 @@ are inserted as members of the corresponding editor by means of the code
             # no constructor needed yet, beyond storing the editor
 
 This function takes a path into a `jsfs` filesystem and extracts the
-`exports` metadata from the file, returning it.  It assumes that the
-filesystem into which it should look is the same one used by [the Load/Save
+metadata from the file, returning it.  It assumes that the filesystem into
+which it should look is the same one used by [the Load/Save
 Plugin](loadsaveplugin.litcoffee), and fetches the name of the filesystem
 from there.
 
-        getFileExports: ( filepath, filename ) ->
+        getFileMetadata: ( filepath, filename ) ->
             if filename is null then return
             if filepath is null then filepath = '.'
             tmp = new FileSystem @editor.LoadSave.fileSystem
             tmp.cd filepath
-            [ content, metadata ] = tmp.read filename
-            metadata.exports
+            tmp.read( filename ).metadata
+
+To make this plugin aware of the dependency information in the current
+document, call this function.  Pass to it the `dependencies` member of the
+document's metadata, which must be of the form documented at the top of this
+file.  It uses JSON methods to make deep copies of the parameter's entries,
+rather than re-using the same objects.
+
+This function gives this plugin a `length` member, and storing the entries
+of the `dependencies` array as entries 0, 1, 2, etc. of this plugin object.
+Therefore clients can treat the plugin itself as an array, writing code like
+`tinymce.activeEditor.Dependencies[2].address`, for example, or looping
+through all dependencies in this object based on its length.
+
+After importing dependencies, this function also updates them to their
+latest versions.  See the `update` function defined further below for
+details.
+
+        import: ( dependencies ) ->
+            for i in [0...@length] then delete @[i]
+            for i in [0...@length = dependencies.length]
+                @[i] = JSON.parse JSON.stringify dependencies[i]
+            @update()
+
+The following function is the inverse of the previous.  It, too, makes deep
+copies using JSON methods.
+
+        export: -> ( JSON.parse JSON.stringify @[i] for i in [0...@length] )
+
+This function updates a dependency to its most recent version.  If the
+dependency is not reachable at the time this function is invoked or if its
+last modified date is newer than the date stored in this plugin, this
+function does not update the dependency.  The parameter indicates the
+dependency to update by index.  If no index is given, then all dependencies
+are updated, one at a time, in order.
+
+Note that update may not complete its task immediately.  The function may
+return while files are still being fetched from the wiki, and callback
+functions waiting to be run.  (Parts of this function are asynchronous.)
+
+        update: ( index ) ->
+            if not index?
+                for i in [0...@length] then @update i
+                return
+            return unless index >= 0 and index < length
+            dependency = @[index]
+            if dependency.address[...7] is 'file://'
+
+A `file://`-type dependency is in the `jsfs` filesystem.  It does not have
+last modified dates, so we always update file dependencies.
+
+                splitPoint = dependency.lastIndexOf '/'
+                filename = dependency[splitPoint...]
+                filepath = dependency[7...splitPoint]
+                @[index] = @getFileMetadata( filepath, filename ).exports
+            else if dependency.address[...7] is 'wiki://'
+
+A `wiki://`-type dependency is in the wiki.  It does have last modified
+dates, so we check to see if updating is necessary
+
+                pageName = dependency.address[7...]
+                @editor.MediaWiki.getPageTimestamp pageName,
+                ( result, error ) ->
+                    return unless result?
+                    lastModified = new Date result
+                    currentVersion = new Date dependency.date
+                    return unless lastModified > currentVersion
+                    @editor.MediaWiki.getPageMetadata pageName,
+                    ( metadata ) ->
+                        if metadata? then @[index] = metadata.exports
+
+No other types of dependencies are supported (yet).
 
 # Installing the plugin
 

@@ -17,31 +17,6 @@ required order of completion.
 
 Plugin
 
- * Create a `import` member that takes an array of the following form.  It
-   should store the data in the plugin object itself, giving it a `length`
-   attribute, and attributes 0, 1, 2, ..., allowing it to act as an array
-   with the same structure.  (Clear out old values before adding new ones.)
-```javascript
-    [
-        {
-            address : 'dependency URL here',
-            data : /* exported data, as JSON */,
-            date : /* time of last data update */,
-        },
-        /* ...one of these objects for each direct dependency... */
-    ]
-```
- * Document how applications should access dependency information.  They
-   can write `tinymce.activeEditor.Dependencies[0].URL`, for example.  Note
-   that it will be very common for the `data` member to also have a
-   `dependencies` member, for access to indirect dependencies' data.  But
-   this is not required, and must be handled by each application developer.
- * Create an `export` member that produces an array of the above form from
-   the data stored in the plugin.
- * Create an `update` member that fetches the latest metadata for each
-   dependency stored in the plugin iff its date is newer than the stored
-   date.  When it does so, update the date to now.  Call this function at
-   the end of `import`.
  * Create a `remove` member that takes an index into the dependencies array
    and does the following:
     * Remove that dependency.
