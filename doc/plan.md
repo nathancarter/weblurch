@@ -89,8 +89,9 @@ customizable parser.
        * one letter a-z/A-Z
        * (more can be added to this list later)
      * Regular expression
-     * Symbol
-     * Pattern
+     * Symbol (containing, for example, the infinity symbol or π)
+     * Pattern (containing, for example, a non-atomic bubble, or a
+       MathQuill instance)
    * Whichever of the above is chosen will be used as the bubble tag
      contents.
    * Choosing any of the options, if the bubble is empty, fills the bubble
@@ -114,6 +115,27 @@ customizable parser.
  * Create a method that computes, for any given "category definition" group,
    a simple representation of what function should be called in a parser
    object to extend it by adding that definition; the result should be JSON.
+   * A built-in category definition B modified by a category name N should
+     represent the grammar rule N -> B.
+   * A regular expression category definition R modified by a category name
+     N should represent the grammar rule N -> R.
+   * A symbol category definition S modified by a category name N should
+     represent the grammar rule N -> S.
+   * One category name N1 modified by another N2 should represent the
+     grammar rule N2 -> N1.  This is the first rule for which the right-hand
+     side is a non-terminal.
+   * A pattern category definition P modified by a category name N will
+     usually also have other things modifying it.  An optional operator name
+     (as a name bubble) can target P; call that bubble O.  Also there may be
+     bubble V1 through Vn targeting P, each of type name, specifying which
+     identifiers in P are to be seen as placeholders (not literals).  Each
+     such Vi should be modified by a category name Ni to give it a type (in
+     the sense of grammar non-terminals).  This entire structure should
+     represent the grammar rule N -> P', where P' is P with each Vi replaced
+     by Ni.  The bubble O will be used to construct an OpenMath symbol used
+     when constructing a parse tree, and which will be mentioned in the
+     bubble tag for expressions with this operator as their outermost.  Note
+     also that each Vi may contain one or more variables.
  * The `contentsChanged` handler for any given group in the document should
    call that function in itself (if it's a category definition group) or (if
    it's not) in any category definition group to which it's connected,
