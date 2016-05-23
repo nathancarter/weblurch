@@ -46,13 +46,6 @@ UI
    of how to show the dependency-editing UI.  Link to the example you just
    built.
 
-Keeping up-to-date
-
- * Use the plugin's `import` function from within `loadMetadata` in the
-   main app.
- * Use the plugin's `export` function from within `saveMetadata` in the
-   main app.
-
 ## Parsing test
 
 Create a Lurch Application that tests the following particular design for a

@@ -256,10 +256,15 @@ Set up the load/save plugin with the functions needed for loading and saving
 document metadata.
 
         editor.LoadSave.saveMetaData = ->
+            # the following two lines are a temporary measure used when
+            # testing the dependencies plugin; they are not permanent
             D.metadata.exports = for group in editor.Groups.topLevel
                 group.contentAsText()
+            D.metadata.dependencies = editor.Dependencies.export()
             D.metadata
-        editor.LoadSave.loadMetaData = ( object ) -> D.metadata = object
+        editor.LoadSave.loadMetaData = ( object ) ->
+            D.metadata = object
+            editor.Dependencies.import D.metadata.dependencies ? [ ]
 
 If the query string told us to load a page from the wiki, or a page fully
 embedded in a (possibly enormous) URL, do so.  Note that the way we handle

@@ -105,7 +105,9 @@ points.
 The author of a Lurch Application (see [tutorial](../doc/tutorial.md)) must
 implement a `saveMetadata` function (as documented
 [here](loadsaveplugin.litcoffee#constructor)) to store the appropriate
-`exports` data in the document's metadata upon each save.
+`exports` data in the document's metadata upon each save.  It should also
+store the document's `dependencies` data, which can be obtained by calling
+`export` in this plugin.
 
 Sometimes, however, it is not possible, to give accurate `exports` data.
 For example, if a lengthy background computation is taking place, the
@@ -124,6 +126,11 @@ should do two things.
 ```json
     { "error" : "Error message explaining why exports data not available." }
 ```
+
+The author of a Lurch Application must also have the application call this
+plugin's `import` function immediately after a document is loaded, on the
+dependency data stored in that document's metadata.  This can happen as part
+of the `loadMetadata` event, for example.
 
 Whenever any dependency is added, removed, or updated, a
 `dependenciesChanged` event is fired in the editor, with no parameters.  Any
@@ -166,7 +173,7 @@ are inserted as members of the corresponding editor by means of the code
 [below, under "Installing the Plugin."](#installing-the-plugin)
 
         constructor: ( @editor ) ->
-            # no constructor needed yet, beyond storing the editor
+            @length = 0
 
 This function takes a path into a `jsfs` filesystem and extracts the
 metadata from the file, returning it.  It assumes that the filesystem into
@@ -242,12 +249,13 @@ A `file://`-type dependency is in the `jsfs` filesystem.  It does not have
 last modified dates, so we always update file dependencies.
 
             if dependency.address[...7] is 'file://'
-                splitPoint = dependency.lastIndexOf '/'
-                filename = dependency[splitPoint...]
-                filepath = dependency[7...splitPoint]
+                splitPoint = dependency.address.lastIndexOf '/'
+                filename = dependency.address[splitPoint...]
+                filepath = dependency.address[7...splitPoint]
                 newData = @getFileMetadata( filepath, filename ).exports
                 if JSON.stringify( newData ) isnt JSON.stringify @[index]
-                    @[index] = newData
+                    @[index].data = newData
+                    @[index].date = new Date
                     @editor.fire 'dependenciesChanged'
 
 A `wiki://`-type dependency is in the wiki.  It does have last modified
@@ -265,7 +273,8 @@ dates, so we check to see if updating is necessary
                     ( metadata ) ->
                         if metadata? and JSON.stringify( @[index] ) isnt \
                                 JSON.stringify metadata.exports
-                            @[index] = metadata.exports
+                            @[index].data = metadata.exports
+                            @[index].date = lastModified
                             @editor.fire 'dependenciesChanged'
 
 No other types of dependencies are supported (yet).
@@ -287,24 +296,37 @@ the `dependenciesChanged` event in the editor if and only if the dependency
 was successfully added.
 
         add: ( address, callback ) ->
-            if dependency.address[...7] is 'file://'
-                splitPoint = dependency.lastIndexOf '/'
-                filename = dependency[splitPoint...]
-                filepath = dependency[7...splitPoint]
+            if address[...7] is 'file://'
+                splitPoint = address.lastIndexOf '/'
+                filename = address[splitPoint...]
+                filepath = address[7...splitPoint]
                 if newData = @getFileMetadata( filepath, filename ).exports
-                    callback? @[@length++] = newData, null
+                    @[@length++] =
+                        address : address
+                        data : newData
+                        date : new Date
+                    callback? newData, null
                     @editor.fire 'dependenciesChanged'
                 else
                     callback? null, 'No such file'
-            else if dependency.address[...7] is 'wiki://'
-                pageName = dependency.address[7...]
-                @editor.MediaWiki.getPageMetadata pageName,
-                ( metadata ) ->
-                    if metadata?
-                        callback? @[@length++] = metadata.exports, null
+            else if address[...7] is 'wiki://'
+                pageName = address[7...]
+                @editor.MediaWiki.getPageTimestamp pageName,
+                ( result, error ) ->
+                    if not result?
+                        return callback? null,
+                            'Could not get wiki page timestamp'
+                    @editor.MediaWiki.getPageMetadata pageName,
+                    ( metadata ) ->
+                        if not metadata?
+                            return callback? null,
+                                'Could not access wiki page'
+                        @[@length++] =
+                            address : address
+                            data : metadata.exports
+                            date : new Date result
+                        callback? metadata.exports, null
                         @editor.fire 'dependenciesChanged'
-                    else
-                        callback? null, 'Could not access wiki page'
 
 To remove a dependency (which should happen only in reponse to user input),
 call this function.  It updates the indices and length of this plugin, much
