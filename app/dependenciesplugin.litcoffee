@@ -125,6 +125,16 @@ should do two things.
     { "error" : "Error message explaining why exports data not available." }
 ```
 
+Whenever any dependency is added, removed, or updated, a
+`dependenciesChanged` event is fired in the editor, with no parameters.  Any
+aspect of the current document that the app needs to update or recompute
+based on the fact that the dependencies list or data has changed should be
+done in response to that event.  That event will (rarely) fire several times
+in succession.  This happens only if `update` was called in this plugin in
+a document for which many dependencies have new versions that need to be
+imported, replacing the cached data from old versions.  See the `update`
+function below for details.
+
 This plugin provides functionality for constructing a user interface for
 editing a document's dependency list.  That functionality is responsible for
 importing other documents' `exports` data into the current document's
@@ -149,6 +159,8 @@ grants to that editor.
 
     class Dependencies
 
+## Constructor and static members
+
 We construct new instances of the Dependencies class as follows, and these
 are inserted as members of the corresponding editor by means of the code
 [below, under "Installing the Plugin."](#installing-the-plugin)
@@ -167,7 +179,9 @@ from there.
             if filepath is null then filepath = '.'
             tmp = new FileSystem @editor.LoadSave.fileSystem
             tmp.cd filepath
-            tmp.read( filename ).metadata
+            tmp.read( filename )[1]
+
+## Importing, exporting, and updating
 
 To make this plugin aware of the dependency information in the current
 document, call this function.  Pass to it the `dependencies` member of the
@@ -182,8 +196,9 @@ Therefore clients can treat the plugin itself as an array, writing code like
 through all dependencies in this object based on its length.
 
 After importing dependencies, this function also updates them to their
-latest versions.  See the `update` function defined further below for
-details.
+latest versions.  (See the `update` function defined further below for
+details.)  Note that `update` may result in many `dependenciesChanged`
+events.
 
         import: ( dependencies ) ->
             for i in [0...@length] then delete @[i]
@@ -207,26 +222,38 @@ Note that update may not complete its task immediately.  The function may
 return while files are still being fetched from the wiki, and callback
 functions waiting to be run.  (Parts of this function are asynchronous.)
 
+Any time the dependency data actually changes, a `dependenciesChanged` event
+is fired in the editor.  This may result in many such events, if this
+function is called with no argument, and depending on how many dependencies
+need updating.
+
         update: ( index ) ->
-            if not index?
-                for i in [0...@length] then @update i
-                return
-            return unless index >= 0 and index < length
+
+Handle the no-parameter case first, as a loop.
+
+            if not index? then return ( @update i for i in [0...@length] )
+
+Ensure that the parameter makes sense.
+
+            return unless index >= 0 and index < @length
             dependency = @[index]
-            if dependency.address[...7] is 'file://'
 
 A `file://`-type dependency is in the `jsfs` filesystem.  It does not have
 last modified dates, so we always update file dependencies.
 
+            if dependency.address[...7] is 'file://'
                 splitPoint = dependency.lastIndexOf '/'
                 filename = dependency[splitPoint...]
                 filepath = dependency[7...splitPoint]
-                @[index] = @getFileMetadata( filepath, filename ).exports
-            else if dependency.address[...7] is 'wiki://'
+                newData = @getFileMetadata( filepath, filename ).exports
+                if JSON.stringify( newData ) isnt JSON.stringify @[index]
+                    @[index] = newData
+                    @editor.fire 'dependenciesChanged'
 
 A `wiki://`-type dependency is in the wiki.  It does have last modified
 dates, so we check to see if updating is necessary
 
+            else if dependency.address[...7] is 'wiki://'
                 pageName = dependency.address[7...]
                 @editor.MediaWiki.getPageTimestamp pageName,
                 ( result, error ) ->
@@ -236,9 +263,59 @@ dates, so we check to see if updating is necessary
                     return unless lastModified > currentVersion
                     @editor.MediaWiki.getPageMetadata pageName,
                     ( metadata ) ->
-                        if metadata? then @[index] = metadata.exports
+                        if metadata? and JSON.stringify( @[index] ) isnt \
+                                JSON.stringify metadata.exports
+                            @[index] = metadata.exports
+                            @editor.fire 'dependenciesChanged'
 
 No other types of dependencies are supported (yet).
+
+## Adding and removing dependencies
+
+Adding a dependency is an inherently asynchronous activity, because the
+dependency may need to be fetched from the wiki.  Thus this function takes
+a dependency address and a callback function.  The new dependency is always
+appended to the end of the list.
+
+The address must be of a type supported by `update` (see above).  The
+callback will be passed result and an error, exactly one of which will be
+non-null, depending on success or failure.
+
+If the callback is null, it will not be used, but the dependency will still
+be added.  Whether the callback is null or not, this function ends by firing
+the `dependenciesChanged` event in the editor if and only if the dependency
+was successfully added.
+
+        add: ( address, callback ) ->
+            if dependency.address[...7] is 'file://'
+                splitPoint = dependency.lastIndexOf '/'
+                filename = dependency[splitPoint...]
+                filepath = dependency[7...splitPoint]
+                if newData = @getFileMetadata( filepath, filename ).exports
+                    callback? @[@length++] = newData, null
+                    @editor.fire 'dependenciesChanged'
+                else
+                    callback? null, 'No such file'
+            else if dependency.address[...7] is 'wiki://'
+                pageName = dependency.address[7...]
+                @editor.MediaWiki.getPageMetadata pageName,
+                ( metadata ) ->
+                    if metadata?
+                        callback? @[@length++] = metadata.exports, null
+                        @editor.fire 'dependenciesChanged'
+                    else
+                        callback? null, 'Could not access wiki page'
+
+To remove a dependency (which should happen only in reponse to user input),
+call this function.  It updates the indices and length of this plugin, much
+like `splice` does for JavaScript arrays, and then fires a
+`dependenciesChanged` event.
+
+        remove: ( index ) ->
+            return unless index >= 0 and index < @length
+            @[i] = @[i+1] for i in [index...@length-1]
+            delete @[--@length]
+            @editor.fire 'dependenciesChanged'
 
 # Installing the plugin
 

@@ -15,26 +15,6 @@ required order of completion.
 
 ## Dependencies
 
-Plugin
-
- * Create a `remove` member that takes an index into the dependencies array
-   and does the following:
-    * Remove that dependency.
-    * Move the later ones down to earlier indices.
-    * Fire a `dependenciesChanged` event in the editor.
- * Create an `add` member that takes a URL or filename of a dependency and
-   does the following:
-    * Attempt to fetch the latest data for that dependency.
-    * If that fails, return the reason why as a string.
-    * If it succeeds, append the dependency (with its data and the current
-      timestamp) to the internal array of stored dependencies, as the new
-      last entry.
-    * Fire a `dependenciesChanged` event in the editor.
-    * Return null.
- * Document the fact that the change event will be fired iff dependencies
-   have changed, and that most applications will want to listen to that
-   event.
-
 UI
 
  * At line 280 of `main-app-solo.litcoffee`, add a section heading for
