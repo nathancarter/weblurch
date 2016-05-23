@@ -17,19 +17,6 @@ required order of completion.
 
 UI
 
- * At line 280 of `main-app-solo.litcoffee`, add a section heading for
-   dependencies.
- * Extend the UI functions in `settingsplugin.litcoffee` so that each takes
-   an optional ID argument and uses it as the ID of the element created.
- * Extend the UI functions in `settingsplugin.litcoffee` with a function for
-   creating buttons with a given text on them (and any ID).
- * Create a DIV beneath that heading and in it place two buttons, one for
-   "Add file dependency" and one for "Add URL dependency".
- * When setting up that window, for every dependency in the
-   `D.metadata.dependencies` array, create a table row above the buttons DIV
-   showing the dependency URL, with a "Remove" button.
- * Test that by running code in the console (or elsewhere) to inject
-   dependencies into a test document, and ensure that they show up.
  * Implement the "Remove" buttons to modify that dependency array, as well
    as its visual representation in the table.
  * Implement the "Add file dependency" feature to prompt the user to choose

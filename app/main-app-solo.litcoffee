@@ -243,11 +243,21 @@ a metadata object that gets embedded in the document itself.
         D.get = ( key ) -> D.metadata[key]
         D.set = ( key, value ) -> D.metadata[key] = value
         D.setup = ( div ) ->
-            div.innerHTML = [
+            parts = [
+                editor.Settings.UI.heading 'Dependencies'
+            ]
+            for dependency, index in editor.Dependencies
+                parts.push editor.Settings.UI.readOnly dependency.address,
+                    editor.Settings.UI.button 'Remove'
+            parts = parts.concat [
+                editor.Settings.UI.info \
+                    "#{editor.Settings.UI.button 'Add file dependency'}
+                     #{editor.Settings.UI.button 'Add URL dependency'}"
                 editor.Settings.UI.heading 'Wiki Publishing'
                 editor.Settings.UI.text 'Publish to wiki under this title',
                     'wiki_title', D.get( 'wiki_title' ) ? ''
-            ].join '\n'
+            ]
+            div.innerHTML = parts.join '\n'
         D.teardown = ( div ) ->
             elt = ( id ) -> div.ownerDocument.getElementById id
             D.set 'wiki_title', elt( 'wiki_title' ).value
