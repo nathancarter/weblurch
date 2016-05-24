@@ -133,16 +133,16 @@ For creating informational lines and category headings:
 
     plugin.UI.info = ( name, id ) -> plugin.UI.tr \
         "<td style='width: 100%; text-align: center; white-space: normal;'
-         #{if id? then " id='#{id}'" else ''}>#{name}</td>"
+         >#{name}</td>", id
     plugin.UI.heading = ( name, id ) ->
         plugin.UI.info "<hr style='border: 1px solid black;'>
-            <span style='font-size: 20px;'
-            #{if id? then " id='#{id}'" else ''}>#{name}</span>
-            <hr style='border: 1px solid black;'>"
+            <span style='font-size: 20px;'>#{name}</span>
+            <hr style='border: 1px solid black;'>", id
 
 For creating read-only rows:
 
-    plugin.UI.readOnly = ( label, data ) -> plugin.UI.tpair label, data
+    plugin.UI.readOnly = ( label, data, id ) ->
+        plugin.UI.tpair label, data, id
 
 For creating a text input (`id` not optional in this case):
 
@@ -167,18 +167,23 @@ For creating a button:
           onmouseover='this.style.background=\"#eeeeee\";'
           onmouseout='this.style.background=\"#dddddd\";'/>"
 
-And two utility functions used by all the functions above.
+And some utility functions used by functions above.
 
-    plugin.UI.tr = ( content ) ->
-        '<table border=0 cellpadding=0 cellspacing=10
-                style="width: 100%;">
-            <tr style="width: 100%; vertical-align: middle;">' + \
+    plugin.UI.tr = ( content, id ) ->
+        "<table border=0 cellpadding=0 cellspacing=10
+                style='width: 100%;' #{if id? then " id='#{id}'" else ''}>
+            <tr style='width: 100%; vertical-align: middle;'>" + \
         content + '</tr></table>'
-    plugin.UI.tpair = ( left, right ) ->
+    plugin.UI.tpair = ( left, right, id ) ->
         plugin.UI.tr "<td style='width: 50%; text-align: right;
                         vertical-align: middle;'><b>#{left}:</b></td>
                       <td style='width: 50%; text-align: left;
-                        vertical-align: bottom;'>#{right}</td>"
+                        vertical-align: middle;'>#{right}</td>", id
+    plugin.UI.generalPair = ( left, right, id, percent, align = 'left' ) ->
+        plugin.UI.tr "<td style='width: #{percent}%; text-align: #{align};
+                        vertical-align: middle;'>#{left}</td>
+                      <td style='width: #{100-percent}%; text-align: left;
+                        vertical-align: middle;'>#{right}</td>", id
 
 # Installing the plugin
 

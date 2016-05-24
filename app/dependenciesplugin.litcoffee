@@ -148,8 +148,8 @@ importing other documents' `exports` data into the current document's
 `dependencies` array, and managing the structure of that array.  The
 recursive embedding show in the examples above is handled by this plugin.
 
-Applications need to give users access to that interface, using methods not
-yet documented in this file.  Coming soon.
+Applications need to give users access to that interface, using the methods
+documented in the [Presenting a UI](#presenting-a-ui) section, below.
 
 # `Dependencies` class
 
@@ -300,15 +300,16 @@ was successfully added.
                 splitPoint = address.lastIndexOf '/'
                 filename = address[splitPoint...]
                 filepath = address[7...splitPoint]
-                if newData = @getFileMetadata( filepath, filename ).exports
+                try
+                    newData = @getFileMetadata( filepath, filename ).exports
                     @[@length++] =
                         address : address
                         data : newData
                         date : new Date
                     callback? newData, null
                     @editor.fire 'dependenciesChanged'
-                else
-                    callback? null, 'No such file'
+                catch e
+                    callback? null, e
             else if address[...7] is 'wiki://'
                 pageName = address[7...]
                 @editor.MediaWiki.getPageTimestamp pageName,
@@ -338,6 +339,45 @@ like `splice` does for JavaScript arrays, and then fires a
             @[i] = @[i+1] for i in [index...@length-1]
             delete @[--@length]
             @editor.fire 'dependenciesChanged'
+
+## Presenting a UI
+
+The following method fills a DIV (probably in a pop-up dialog) with the
+necessary user interface elements necessary for viewing and editing the
+dependencies stored in this plugin.  It also installs event handlers for the
+buttons it creates, so that they will respond to clicks by calling methods
+in this plugin, and updating that user interface accordingly.
+
+        installUI: ( div ) ->
+            parts = [ ]
+            for dependency, index in @
+                parts.push editor.Settings.UI.generalPair \
+                    dependency.address,
+                    editor.Settings.UI.button( 'Remove',
+                        "dependencyRemove#{index}" ),
+                    "dependencyRow#{index}", 80, 'center'
+            if @length is 0
+                parts.push editor.Settings.UI.info '(no dependencies)'
+            parts.push editor.Settings.UI.info \
+                "#{editor.Settings.UI.button 'Add file dependency',
+                    'dependencyAddFile'}
+                 #{editor.Settings.UI.button 'Add wiki page dependency',
+                    'dependencyAddWiki'}"
+            div.innerHTML = parts.join '\n'
+            elt = ( id ) -> div.ownerDocument.getElementById id
+            for dependency, index in @
+                elt( "dependencyRemove#{index}" ).addEventListener 'click',
+                    do ( index ) => => @remove index ; @installUI div
+            elt( 'dependencyAddFile' ).addEventListener 'click', =>
+                if file = prompt 'Enter the file name of the dependency
+                        to add.', 'example file name.html'
+                    @add "file://#{file}", ( result, error ) =>
+                        if error? then alert error else @installUI div
+            elt( 'dependencyAddWiki' ).addEventListener 'click', =>
+                if url = prompt 'Enter the wiki page name of the dependency
+                        to add.', 'Example Page Name'
+                    @add "wiki://#{url}", ( result, error ) =>
+                        if error? then alert error else @installUI div
 
 # Installing the plugin
 

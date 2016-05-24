@@ -17,21 +17,12 @@ required order of completion.
 
 UI
 
- * Implement the "Remove" buttons to modify that dependency array, as well
-   as its visual representation in the table.
  * Implement the "Add file dependency" feature to prompt the user to choose
    a file with the same dialog used for opening files.  If the user chooses
    a file, call the `add` member of the plugin.  If it returns a string,
    show the user that string as an explanation of failure.
- * Implement the "Add URL dependency" feature to prompt the user to paste in
-   an URL.  Call the `add` member of the plugin.  If it returns a string,
-   show the user that string as an explanation of failure.
  * Extend the "Add URL dependency" function with a "please wait" indicator
    while the document is being fetched.
- * Update the documentation in the Dependencies Plugin file, immediately
-   before the class definition section, which promises to link to an example
-   of how to show the dependency-editing UI.  Link to the example you just
-   built.
 
 ## Parsing test
 
