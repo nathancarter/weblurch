@@ -73,24 +73,26 @@
         }
       } else if (dependency.address.slice(0, 7) === 'wiki://') {
         pageName = dependency.address.slice(7);
-        return this.editor.MediaWiki.getPageTimestamp(pageName, function(result, error) {
-          var currentVersion, lastModified;
-          if (result == null) {
-            return;
-          }
-          lastModified = new Date(result);
-          currentVersion = new Date(dependency.date);
-          if (!(lastModified > currentVersion)) {
-            return;
-          }
-          return this.editor.MediaWiki.getPageMetadata(pageName, function(metadata) {
-            if ((metadata != null) && JSON.stringify(this[index]) !== JSON.stringify(metadata.exports)) {
-              this[index].data = metadata.exports;
-              this[index].date = lastModified;
-              return this.editor.fire('dependenciesChanged');
+        return this.editor.MediaWiki.getPageTimestamp(pageName, (function(_this) {
+          return function(result, error) {
+            var currentVersion, lastModified;
+            if (result == null) {
+              return;
             }
-          });
-        });
+            lastModified = new Date(result);
+            currentVersion = new Date(dependency.date);
+            if (!(lastModified > currentVersion)) {
+              return;
+            }
+            return _this.editor.MediaWiki.getPageMetadata(pageName, function(metadata) {
+              if ((metadata != null) && JSON.stringify(_this[index]) !== JSON.stringify(metadata.exports)) {
+                _this[index].data = metadata.exports;
+                _this[index].date = lastModified;
+                return _this.editor.fire('dependenciesChanged');
+              }
+            });
+          };
+        })(this));
       }
     };
 
@@ -117,25 +119,27 @@
         }
       } else if (address.slice(0, 7) === 'wiki://') {
         pageName = address.slice(7);
-        return this.editor.MediaWiki.getPageTimestamp(pageName, function(result, error) {
-          if (result == null) {
-            return typeof callback === "function" ? callback(null, 'Could not get wiki page timestamp') : void 0;
-          }
-          return this.editor.MediaWiki.getPageMetadata(pageName, function(metadata) {
-            if (metadata == null) {
-              return typeof callback === "function" ? callback(null, 'Could not access wiki page') : void 0;
+        return this.editor.MediaWiki.getPageTimestamp(pageName, (function(_this) {
+          return function(result, error) {
+            if (result == null) {
+              return typeof callback === "function" ? callback(null, 'Could not get wiki page timestamp') : void 0;
             }
-            this[this.length++] = {
-              address: address,
-              data: metadata.exports,
-              date: new Date(result)
-            };
-            if (typeof callback === "function") {
-              callback(metadata.exports, null);
-            }
-            return this.editor.fire('dependenciesChanged');
-          });
-        });
+            return _this.editor.MediaWiki.getPageMetadata(pageName, function(metadata) {
+              if (metadata == null) {
+                return typeof callback === "function" ? callback(null, 'Could not access wiki page') : void 0;
+              }
+              _this[_this.length++] = {
+                address: address,
+                data: metadata.exports,
+                date: new Date(result)
+              };
+              if (typeof callback === "function") {
+                callback(metadata.exports, null);
+              }
+              return _this.editor.fire('dependenciesChanged');
+            });
+          };
+        })(this));
       }
     };
 
