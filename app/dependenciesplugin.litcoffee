@@ -264,13 +264,13 @@ dates, so we check to see if updating is necessary
             else if dependency.address[...7] is 'wiki://'
                 pageName = dependency.address[7...]
                 @editor.MediaWiki.getPageTimestamp pageName,
-                ( result, error ) ->
+                ( result, error ) =>
                     return unless result?
                     lastModified = new Date result
                     currentVersion = new Date dependency.date
                     return unless lastModified > currentVersion
                     @editor.MediaWiki.getPageMetadata pageName,
-                    ( metadata ) ->
+                    ( metadata ) =>
                         if metadata? and JSON.stringify( @[index] ) isnt \
                                 JSON.stringify metadata.exports
                             @[index].data = metadata.exports
@@ -313,12 +313,12 @@ was successfully added.
             else if address[...7] is 'wiki://'
                 pageName = address[7...]
                 @editor.MediaWiki.getPageTimestamp pageName,
-                ( result, error ) ->
+                ( result, error ) =>
                     if not result?
                         return callback? null,
                             'Could not get wiki page timestamp'
                     @editor.MediaWiki.getPageMetadata pageName,
-                    ( metadata ) ->
+                    ( metadata ) =>
                         if not metadata?
                             return callback? null,
                                 'Could not access wiki page'
