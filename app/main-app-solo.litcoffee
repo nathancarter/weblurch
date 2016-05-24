@@ -260,10 +260,9 @@ Set up the load/save plugin with the functions needed for loading and saving
 document metadata.
 
         editor.LoadSave.saveMetaData = ->
-            # the following two lines are a temporary measure used when
-            # testing the dependencies plugin; they are not permanent
-            D.metadata.exports = for group in editor.Groups.topLevel
-                group.contentAsText()
+            # later, when this app knows what data it wants to export to
+            # documents that depend on it, do so here, with a line like
+            # D.metadata.exports = [ "some", "JSON", "here" ]
             D.metadata.dependencies = editor.Dependencies.export()
             D.metadata
         editor.LoadSave.loadMetaData = ( object ) ->

@@ -13,17 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Dependencies
-
-UI
-
- * Implement the "Add file dependency" feature to prompt the user to choose
-   a file with the same dialog used for opening files.  If the user chooses
-   a file, call the `add` member of the plugin.  If it returns a string,
-   show the user that string as an explanation of failure.
- * Extend the "Add URL dependency" function with a "please wait" indicator
-   while the document is being fetched.
-
 ## Parsing test
 
 Create a Lurch Application that tests the following particular design for a

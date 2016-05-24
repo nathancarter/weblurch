@@ -351,17 +351,17 @@ in this plugin, and updating that user interface accordingly.
         installUI: ( div ) ->
             parts = [ ]
             for dependency, index in @
-                parts.push editor.Settings.UI.generalPair \
+                parts.push @editor.Settings.UI.generalPair \
                     dependency.address,
-                    editor.Settings.UI.button( 'Remove',
+                    @editor.Settings.UI.button( 'Remove',
                         "dependencyRemove#{index}" ),
                     "dependencyRow#{index}", 80, 'center'
             if @length is 0
-                parts.push editor.Settings.UI.info '(no dependencies)'
-            parts.push editor.Settings.UI.info \
-                "#{editor.Settings.UI.button 'Add file dependency',
+                parts.push @editor.Settings.UI.info '(no dependencies)'
+            parts.push @editor.Settings.UI.info \
+                "#{@editor.Settings.UI.button 'Add file dependency',
                     'dependencyAddFile'}
-                 #{editor.Settings.UI.button 'Add wiki page dependency',
+                 #{@editor.Settings.UI.button 'Add wiki page dependency',
                     'dependencyAddWiki'}"
             div.innerHTML = parts.join '\n'
             elt = ( id ) -> div.ownerDocument.getElementById id
@@ -369,10 +369,11 @@ in this plugin, and updating that user interface accordingly.
                 elt( "dependencyRemove#{index}" ).addEventListener 'click',
                     do ( index ) => => @remove index ; @installUI div
             elt( 'dependencyAddFile' ).addEventListener 'click', =>
-                if file = prompt 'Enter the file name of the dependency
-                        to add.', 'example file name.html'
-                    @add "file://#{file}", ( result, error ) =>
-                        if error? then alert error else @installUI div
+                @editor.LoadSave.tryToOpen ( path, file ) =>
+                    if file?
+                        if path? then path += '/' else path = ''
+                        @add "file://#{path}#{file}", ( result, error ) =>
+                            if error? then alert error else @installUI div
             elt( 'dependencyAddWiki' ).addEventListener 'click', =>
                 if url = prompt 'Enter the wiki page name of the dependency
                         to add.', 'Example Page Name'
