@@ -13,93 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Dependencies
-
-Plugin
-
- * Create a member in the plugin for storing the list of dependencies of the
-   current document.  Initialize it to an empty array.
- * Create a `import` member that takes an array of the following form.  It
-   should store the data in the plugin object itself, giving it a `length`
-   attribute, and attributes 0, 1, 2, ..., allowing it to act as an array
-   with the same structure.  (Clear out old values before adding new ones.)
-```javascript
-    [
-        {
-            address : 'dependency URL here',
-            data : /* exported data, as JSON */,
-            date : /* time of last data update */,
-        },
-        /* ...one of these objects for each direct dependency... */
-    ]
-```
- * Document how applications should access dependency information.  They
-   can write `tinymce.activeEditor.Dependencies[0].URL`, for example.  Note
-   that it will be very common for the `data` member to also have a
-   `dependencies` member, for access to indirect dependencies' data.  But
-   this is not required, and must be handled by each application developer.
- * Create an `export` member that produces an array of the above form from
-   the data stored in the plugin.
- * Create an `update` member that fetches the latest metadata for each
-   dependency stored in the plugin iff its date is newer than the stored
-   date.  When it does so, update the date to now.  Call this function at
-   the end of `import`.
- * Create a `remove` member that takes an index into the dependencies array
-   and does the following:
-    * Remove that dependency.
-    * Move the later ones down to earlier indices.
-    * Fire a `dependenciesChanged` event in the editor.
- * Create an `add` member that takes a URL or filename of a dependency and
-   does the following:
-    * Attempt to fetch the latest data for that dependency.
-    * If that fails, return the reason why as a string.
-    * If it succeeds, append the dependency (with its data and the current
-      timestamp) to the internal array of stored dependencies, as the new
-      last entry.
-    * Fire a `dependenciesChanged` event in the editor.
-    * Return null.
- * Document the fact that the change event will be fired iff dependencies
-   have changed, and that most applications will want to listen to that
-   event.
-
-UI
-
- * At line 280 of `main-app-solo.litcoffee`, add a section heading for
-   dependencies.
- * Extend the UI functions in `settingsplugin.litcoffee` so that each takes
-   an optional ID argument and uses it as the ID of the element created.
- * Extend the UI functions in `settingsplugin.litcoffee` with a function for
-   creating buttons with a given text on them (and any ID).
- * Create a DIV beneath that heading and in it place two buttons, one for
-   "Add file dependency" and one for "Add URL dependency".
- * When setting up that window, for every dependency in the
-   `D.metadata.dependencies` array, create a table row above the buttons DIV
-   showing the dependency URL, with a "Remove" button.
- * Test that by running code in the console (or elsewhere) to inject
-   dependencies into a test document, and ensure that they show up.
- * Implement the "Remove" buttons to modify that dependency array, as well
-   as its visual representation in the table.
- * Implement the "Add file dependency" feature to prompt the user to choose
-   a file with the same dialog used for opening files.  If the user chooses
-   a file, call the `add` member of the plugin.  If it returns a string,
-   show the user that string as an explanation of failure.
- * Implement the "Add URL dependency" feature to prompt the user to paste in
-   an URL.  Call the `add` member of the plugin.  If it returns a string,
-   show the user that string as an explanation of failure.
- * Extend the "Add URL dependency" function with a "please wait" indicator
-   while the document is being fetched.
- * Update the documentation in the Dependencies Plugin file, immediately
-   before the class definition section, which promises to link to an example
-   of how to show the dependency-editing UI.  Link to the example you just
-   built.
-
-Keeping up-to-date
-
- * Use the plugin's `import` function from within `loadMetadata` in the
-   main app.
- * Use the plugin's `export` function from within `saveMetadata` in the
-   main app.
-
 ## Parsing test
 
 Create a Lurch Application that tests the following particular design for a
@@ -116,8 +29,9 @@ customizable parser.
        * one letter a-z/A-Z
        * (more can be added to this list later)
      * Regular expression
-     * Symbol
-     * Pattern
+     * Symbol (containing, for example, the infinity symbol or π)
+     * Pattern (containing, for example, a non-atomic bubble, or a
+       MathQuill instance)
    * Whichever of the above is chosen will be used as the bubble tag
      contents.
    * Choosing any of the options, if the bubble is empty, fills the bubble
@@ -141,6 +55,27 @@ customizable parser.
  * Create a method that computes, for any given "category definition" group,
    a simple representation of what function should be called in a parser
    object to extend it by adding that definition; the result should be JSON.
+   * A built-in category definition B modified by a category name N should
+     represent the grammar rule N -> B.
+   * A regular expression category definition R modified by a category name
+     N should represent the grammar rule N -> R.
+   * A symbol category definition S modified by a category name N should
+     represent the grammar rule N -> S.
+   * One category name N1 modified by another N2 should represent the
+     grammar rule N2 -> N1.  This is the first rule for which the right-hand
+     side is a non-terminal.
+   * A pattern category definition P modified by a category name N will
+     usually also have other things modifying it.  An optional operator name
+     (as a name bubble) can target P; call that bubble O.  Also there may be
+     bubble V1 through Vn targeting P, each of type name, specifying which
+     identifiers in P are to be seen as placeholders (not literals).  Each
+     such Vi should be modified by a category name Ni to give it a type (in
+     the sense of grammar non-terminals).  This entire structure should
+     represent the grammar rule N -> P', where P' is P with each Vi replaced
+     by Ni.  The bubble O will be used to construct an OpenMath symbol used
+     when constructing a parse tree, and which will be mentioned in the
+     bubble tag for expressions with this operator as their outermost.  Note
+     also that each Vi may contain one or more variables.
  * The `contentsChanged` handler for any given group in the document should
    call that function in itself (if it's a category definition group) or (if
    it's not) in any category definition group to which it's connected,

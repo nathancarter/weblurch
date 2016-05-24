@@ -77,6 +77,22 @@ two ways.  Extend this to general HTML pages, as follows:
    To check the last modified date of arbitrary web pages, see
    [here.](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date)
 
+Dependencies
+
+ * Right now circular dependency relationships never cause an infinite loop
+   because dependency content is only embedded when a document is opened.
+   So if A depends on B which depends on A, then when A is opened, it will
+   embed B, which indirectly embeds the saved version of A.  If A is saved
+   and B is opened, that will embed the (new, larger) A, and this can
+   continue to increase file sizes as we repeatedly open documents.  But
+   each step of this infinite expansion requires a user action, so the
+   application will never hang.  However, it can be a silent and highly
+   undesirable file inflater.  Expand the dependency loading mechanism to
+   check for a loop by finding the same filename or wiki URL nested within
+   itself in the dependency data of a document, and alert the user.
+ * Extend the "Add URL dependency" event handler with a "please wait"
+   indicator while the document is being fetched.
+
 Groups Plugin
 
  * Make a menu item for hiding/showing group decorations.

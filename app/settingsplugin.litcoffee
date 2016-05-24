@@ -124,43 +124,66 @@ the left, and the control on the right (with a few exceptions).
 
     plugin.UI = { }
 
+Each function below takes an optional `id` argument.  If it is omitted, the
+generated HTML code will contain no `id` attributes.  If it is present, the
+generated HTML code will contain an `id` attribute, and its value will be
+the value of that parameter.
+
 For creating informational lines and category headings:
 
-    plugin.UI.info = ( name ) -> plugin.UI.tr \
+    plugin.UI.info = ( name, id ) -> plugin.UI.tr \
         "<td style='width: 100%; text-align: center; white-space: normal;'
-         >#{name}</td>"
-    plugin.UI.heading = ( name ) ->
-        plugin.UI.info "<span style='font-size: 20px;'>#{name}</span>"
+         >#{name}</td>", id
+    plugin.UI.heading = ( name, id ) ->
+        plugin.UI.info "<hr style='border: 1px solid black;'>
+            <span style='font-size: 20px;'>#{name}</span>
+            <hr style='border: 1px solid black;'>", id
 
 For creating read-only rows:
 
-    plugin.UI.readOnly = ( label, data ) -> plugin.UI.tpair label, data
+    plugin.UI.readOnly = ( label, data, id ) ->
+        plugin.UI.tpair label, data, id
 
-For creating a text input:
+For creating a text input (`id` not optional in this case):
 
     plugin.UI.text = ( label, id, initial ) ->
-        plugin.UI.tpair label, "<input type='text' id='#{id}'
-            value='#{initial}'
+        plugin.UI.tpair label,
+            "<input type='text' id='#{id}' value='#{initial}'
             style='border-width: 2px; border-style: inset;'/>"
 
-For creating a password input:
+For creating a password input (`id` not optional in this case):
 
     plugin.UI.password = ( label, id, initial ) ->
-        plugin.UI.tpair label, "<input type='password' id='#{id}'
-            value='#{initial}'
+        plugin.UI.tpair label,
+            "<input type='password' id='#{id}' value='#{initial}'
             style='border-width: 2px; border-style: inset;'/>"
 
-And two utility functions used by all the functions above.
+For creating a button:
 
-    plugin.UI.tr = ( content ) ->
-        '<table border=0 cellpadding=0 cellspacing=10
-                style="width: 100%;"><tr style="width: 100%;">' + \
+    plugin.UI.button = ( text, id ) ->
+        "<input type='button' #{if id? then " id='#{id}'" else ''}
+          value='#{text}' style='border: 1px solid #999999; background:
+          #dddddd; padding: 2px; margin: 2px;'
+          onmouseover='this.style.background=\"#eeeeee\";'
+          onmouseout='this.style.background=\"#dddddd\";'/>"
+
+And some utility functions used by functions above.
+
+    plugin.UI.tr = ( content, id ) ->
+        "<table border=0 cellpadding=0 cellspacing=10
+                style='width: 100%;' #{if id? then " id='#{id}'" else ''}>
+            <tr style='width: 100%; vertical-align: middle;'>" + \
         content + '</tr></table>'
-    plugin.UI.tpair = ( left, right ) ->
-        plugin.UI.tr "<td style='width: 50%; text-align: right;'>
-                        <b>#{left}:</b></td>
-                      <td style='width: 50%; text-align: left;'>
-                        #{right}</td>"
+    plugin.UI.tpair = ( left, right, id ) ->
+        plugin.UI.tr "<td style='width: 50%; text-align: right;
+                        vertical-align: middle;'><b>#{left}:</b></td>
+                      <td style='width: 50%; text-align: left;
+                        vertical-align: middle;'>#{right}</td>", id
+    plugin.UI.generalPair = ( left, right, id, percent, align = 'left' ) ->
+        plugin.UI.tr "<td style='width: #{percent}%; text-align: #{align};
+                        vertical-align: middle;'>#{left}</td>
+                      <td style='width: #{100-percent}%; text-align: left;
+                        vertical-align: middle;'>#{right}</td>", id
 
 # Installing the plugin
 

@@ -244,10 +244,14 @@ a metadata object that gets embedded in the document itself.
         D.set = ( key, value ) -> D.metadata[key] = value
         D.setup = ( div ) ->
             div.innerHTML = [
+                editor.Settings.UI.heading 'Dependencies'
+                "<div id='dependenciesSection'></div>"
                 editor.Settings.UI.heading 'Wiki Publishing'
                 editor.Settings.UI.text 'Publish to wiki under this title',
                     'wiki_title', D.get( 'wiki_title' ) ? ''
             ].join '\n'
+            editor.Dependencies.installUI \
+                div.ownerDocument.getElementById 'dependenciesSection'
         D.teardown = ( div ) ->
             elt = ( id ) -> div.ownerDocument.getElementById id
             D.set 'wiki_title', elt( 'wiki_title' ).value
@@ -256,10 +260,14 @@ Set up the load/save plugin with the functions needed for loading and saving
 document metadata.
 
         editor.LoadSave.saveMetaData = ->
-            D.metadata.exports = for group in editor.Groups.topLevel
-                group.contentAsText()
+            # later, when this app knows what data it wants to export to
+            # documents that depend on it, do so here, with a line like
+            # D.metadata.exports = [ "some", "JSON", "here" ]
+            D.metadata.dependencies = editor.Dependencies.export()
             D.metadata
-        editor.LoadSave.loadMetaData = ( object ) -> D.metadata = object
+        editor.LoadSave.loadMetaData = ( object ) ->
+            D.metadata = object
+            editor.Dependencies.import D.metadata.dependencies ? [ ]
 
 If the query string told us to load a page from the wiki, or a page fully
 embedded in a (possibly enormous) URL, do so.  Note that the way we handle
