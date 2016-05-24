@@ -105,7 +105,9 @@ points.
 The author of a Lurch Application (see [tutorial](../doc/tutorial.md)) must
 implement a `saveMetadata` function (as documented
 [here](loadsaveplugin.litcoffee#constructor)) to store the appropriate
-`exports` data in the document's metadata upon each save.
+`exports` data in the document's metadata upon each save.  It should also
+store the document's `dependencies` data, which can be obtained by calling
+`export` in this plugin.
 
 Sometimes, however, it is not possible, to give accurate `exports` data.
 For example, if a lengthy background computation is taking place, the
@@ -125,14 +127,29 @@ should do two things.
     { "error" : "Error message explaining why exports data not available." }
 ```
 
+The author of a Lurch Application must also have the application call this
+plugin's `import` function immediately after a document is loaded, on the
+dependency data stored in that document's metadata.  This can happen as part
+of the `loadMetadata` event, for example.
+
+Whenever any dependency is added, removed, or updated, a
+`dependenciesChanged` event is fired in the editor, with no parameters.  Any
+aspect of the current document that the app needs to update or recompute
+based on the fact that the dependencies list or data has changed should be
+done in response to that event.  That event will (rarely) fire several times
+in succession.  This happens only if `update` was called in this plugin in
+a document for which many dependencies have new versions that need to be
+imported, replacing the cached data from old versions.  See the `update`
+function below for details.
+
 This plugin provides functionality for constructing a user interface for
 editing a document's dependency list.  That functionality is responsible for
 importing other documents' `exports` data into the current document's
 `dependencies` array, and managing the structure of that array.  The
 recursive embedding show in the examples above is handled by this plugin.
 
-Applications need to give users access to that interface, using methods not
-yet documented in this file.  Coming soon.
+Applications need to give users access to that interface, using the methods
+documented in the [Presenting a UI](#presenting-a-ui) section, below.
 
 # `Dependencies` class
 
@@ -149,26 +166,219 @@ grants to that editor.
 
     class Dependencies
 
+## Constructor and static members
+
 We construct new instances of the Dependencies class as follows, and these
 are inserted as members of the corresponding editor by means of the code
 [below, under "Installing the Plugin."](#installing-the-plugin)
 
         constructor: ( @editor ) ->
-            # no constructor needed yet, beyond storing the editor
+            @length = 0
 
 This function takes a path into a `jsfs` filesystem and extracts the
-`exports` metadata from the file, returning it.  It assumes that the
-filesystem into which it should look is the same one used by [the Load/Save
+metadata from the file, returning it.  It assumes that the filesystem into
+which it should look is the same one used by [the Load/Save
 Plugin](loadsaveplugin.litcoffee), and fetches the name of the filesystem
 from there.
 
-        getFileExports: ( filepath, filename ) ->
+        getFileMetadata: ( filepath, filename ) ->
             if filename is null then return
             if filepath is null then filepath = '.'
             tmp = new FileSystem @editor.LoadSave.fileSystem
             tmp.cd filepath
-            [ content, metadata ] = tmp.read filename
-            metadata.exports
+            tmp.read( filename )[1]
+
+## Importing, exporting, and updating
+
+To make this plugin aware of the dependency information in the current
+document, call this function.  Pass to it the `dependencies` member of the
+document's metadata, which must be of the form documented at the top of this
+file.  It uses JSON methods to make deep copies of the parameter's entries,
+rather than re-using the same objects.
+
+This function gives this plugin a `length` member, and storing the entries
+of the `dependencies` array as entries 0, 1, 2, etc. of this plugin object.
+Therefore clients can treat the plugin itself as an array, writing code like
+`tinymce.activeEditor.Dependencies[2].address`, for example, or looping
+through all dependencies in this object based on its length.
+
+After importing dependencies, this function also updates them to their
+latest versions.  (See the `update` function defined further below for
+details.)  Note that `update` may result in many `dependenciesChanged`
+events.
+
+        import: ( dependencies ) ->
+            for i in [0...@length] then delete @[i]
+            for i in [0...@length = dependencies.length]
+                @[i] = JSON.parse JSON.stringify dependencies[i]
+            @update()
+
+The following function is the inverse of the previous.  It, too, makes deep
+copies using JSON methods.
+
+        export: -> ( JSON.parse JSON.stringify @[i] for i in [0...@length] )
+
+This function updates a dependency to its most recent version.  If the
+dependency is not reachable at the time this function is invoked or if its
+last modified date is newer than the date stored in this plugin, this
+function does not update the dependency.  The parameter indicates the
+dependency to update by index.  If no index is given, then all dependencies
+are updated, one at a time, in order.
+
+Note that update may not complete its task immediately.  The function may
+return while files are still being fetched from the wiki, and callback
+functions waiting to be run.  (Parts of this function are asynchronous.)
+
+Any time the dependency data actually changes, a `dependenciesChanged` event
+is fired in the editor.  This may result in many such events, if this
+function is called with no argument, and depending on how many dependencies
+need updating.
+
+        update: ( index ) ->
+
+Handle the no-parameter case first, as a loop.
+
+            if not index? then return ( @update i for i in [0...@length] )
+
+Ensure that the parameter makes sense.
+
+            return unless index >= 0 and index < @length
+            dependency = @[index]
+
+A `file://`-type dependency is in the `jsfs` filesystem.  It does not have
+last modified dates, so we always update file dependencies.
+
+            if dependency.address[...7] is 'file://'
+                splitPoint = dependency.address.lastIndexOf '/'
+                filename = dependency.address[splitPoint...]
+                filepath = dependency.address[7...splitPoint]
+                newData = @getFileMetadata( filepath, filename ).exports
+                if JSON.stringify( newData ) isnt JSON.stringify @[index]
+                    @[index].data = newData
+                    @[index].date = new Date
+                    @editor.fire 'dependenciesChanged'
+
+A `wiki://`-type dependency is in the wiki.  It does have last modified
+dates, so we check to see if updating is necessary
+
+            else if dependency.address[...7] is 'wiki://'
+                pageName = dependency.address[7...]
+                @editor.MediaWiki.getPageTimestamp pageName,
+                ( result, error ) ->
+                    return unless result?
+                    lastModified = new Date result
+                    currentVersion = new Date dependency.date
+                    return unless lastModified > currentVersion
+                    @editor.MediaWiki.getPageMetadata pageName,
+                    ( metadata ) ->
+                        if metadata? and JSON.stringify( @[index] ) isnt \
+                                JSON.stringify metadata.exports
+                            @[index].data = metadata.exports
+                            @[index].date = lastModified
+                            @editor.fire 'dependenciesChanged'
+
+No other types of dependencies are supported (yet).
+
+## Adding and removing dependencies
+
+Adding a dependency is an inherently asynchronous activity, because the
+dependency may need to be fetched from the wiki.  Thus this function takes
+a dependency address and a callback function.  The new dependency is always
+appended to the end of the list.
+
+The address must be of a type supported by `update` (see above).  The
+callback will be passed result and an error, exactly one of which will be
+non-null, depending on success or failure.
+
+If the callback is null, it will not be used, but the dependency will still
+be added.  Whether the callback is null or not, this function ends by firing
+the `dependenciesChanged` event in the editor if and only if the dependency
+was successfully added.
+
+        add: ( address, callback ) ->
+            if address[...7] is 'file://'
+                splitPoint = address.lastIndexOf '/'
+                filename = address[splitPoint...]
+                filepath = address[7...splitPoint]
+                try
+                    newData = @getFileMetadata( filepath, filename ).exports
+                    @[@length++] =
+                        address : address
+                        data : newData
+                        date : new Date
+                    callback? newData, null
+                    @editor.fire 'dependenciesChanged'
+                catch e
+                    callback? null, e
+            else if address[...7] is 'wiki://'
+                pageName = address[7...]
+                @editor.MediaWiki.getPageTimestamp pageName,
+                ( result, error ) ->
+                    if not result?
+                        return callback? null,
+                            'Could not get wiki page timestamp'
+                    @editor.MediaWiki.getPageMetadata pageName,
+                    ( metadata ) ->
+                        if not metadata?
+                            return callback? null,
+                                'Could not access wiki page'
+                        @[@length++] =
+                            address : address
+                            data : metadata.exports
+                            date : new Date result
+                        callback? metadata.exports, null
+                        @editor.fire 'dependenciesChanged'
+
+To remove a dependency (which should happen only in reponse to user input),
+call this function.  It updates the indices and length of this plugin, much
+like `splice` does for JavaScript arrays, and then fires a
+`dependenciesChanged` event.
+
+        remove: ( index ) ->
+            return unless index >= 0 and index < @length
+            @[i] = @[i+1] for i in [index...@length-1]
+            delete @[--@length]
+            @editor.fire 'dependenciesChanged'
+
+## Presenting a UI
+
+The following method fills a DIV (probably in a pop-up dialog) with the
+necessary user interface elements necessary for viewing and editing the
+dependencies stored in this plugin.  It also installs event handlers for the
+buttons it creates, so that they will respond to clicks by calling methods
+in this plugin, and updating that user interface accordingly.
+
+        installUI: ( div ) ->
+            parts = [ ]
+            for dependency, index in @
+                parts.push @editor.Settings.UI.generalPair \
+                    dependency.address,
+                    @editor.Settings.UI.button( 'Remove',
+                        "dependencyRemove#{index}" ),
+                    "dependencyRow#{index}", 80, 'center'
+            if @length is 0
+                parts.push @editor.Settings.UI.info '(no dependencies)'
+            parts.push @editor.Settings.UI.info \
+                "#{@editor.Settings.UI.button 'Add file dependency',
+                    'dependencyAddFile'}
+                 #{@editor.Settings.UI.button 'Add wiki page dependency',
+                    'dependencyAddWiki'}"
+            div.innerHTML = parts.join '\n'
+            elt = ( id ) -> div.ownerDocument.getElementById id
+            for dependency, index in @
+                elt( "dependencyRemove#{index}" ).addEventListener 'click',
+                    do ( index ) => => @remove index ; @installUI div
+            elt( 'dependencyAddFile' ).addEventListener 'click', =>
+                @editor.LoadSave.tryToOpen ( path, file ) =>
+                    if file?
+                        if path? then path += '/' else path = ''
+                        @add "file://#{path}#{file}", ( result, error ) =>
+                            if error? then alert error else @installUI div
+            elt( 'dependencyAddWiki' ).addEventListener 'click', =>
+                if url = prompt 'Enter the wiki page name of the dependency
+                        to add.', 'Example Page Name'
+                    @add "wiki://#{url}", ( result, error ) =>
+                        if error? then alert error else @installUI div
 
 # Installing the plugin
 
@@ -3074,43 +3284,66 @@ the left, and the control on the right (with a few exceptions).
 
     plugin.UI = { }
 
+Each function below takes an optional `id` argument.  If it is omitted, the
+generated HTML code will contain no `id` attributes.  If it is present, the
+generated HTML code will contain an `id` attribute, and its value will be
+the value of that parameter.
+
 For creating informational lines and category headings:
 
-    plugin.UI.info = ( name ) -> plugin.UI.tr \
+    plugin.UI.info = ( name, id ) -> plugin.UI.tr \
         "<td style='width: 100%; text-align: center; white-space: normal;'
-         >#{name}</td>"
-    plugin.UI.heading = ( name ) ->
-        plugin.UI.info "<span style='font-size: 20px;'>#{name}</span>"
+         >#{name}</td>", id
+    plugin.UI.heading = ( name, id ) ->
+        plugin.UI.info "<hr style='border: 1px solid black;'>
+            <span style='font-size: 20px;'>#{name}</span>
+            <hr style='border: 1px solid black;'>", id
 
 For creating read-only rows:
 
-    plugin.UI.readOnly = ( label, data ) -> plugin.UI.tpair label, data
+    plugin.UI.readOnly = ( label, data, id ) ->
+        plugin.UI.tpair label, data, id
 
-For creating a text input:
+For creating a text input (`id` not optional in this case):
 
     plugin.UI.text = ( label, id, initial ) ->
-        plugin.UI.tpair label, "<input type='text' id='#{id}'
-            value='#{initial}'
+        plugin.UI.tpair label,
+            "<input type='text' id='#{id}' value='#{initial}'
             style='border-width: 2px; border-style: inset;'/>"
 
-For creating a password input:
+For creating a password input (`id` not optional in this case):
 
     plugin.UI.password = ( label, id, initial ) ->
-        plugin.UI.tpair label, "<input type='password' id='#{id}'
-            value='#{initial}'
+        plugin.UI.tpair label,
+            "<input type='password' id='#{id}' value='#{initial}'
             style='border-width: 2px; border-style: inset;'/>"
 
-And two utility functions used by all the functions above.
+For creating a button:
 
-    plugin.UI.tr = ( content ) ->
-        '<table border=0 cellpadding=0 cellspacing=10
-                style="width: 100%;"><tr style="width: 100%;">' + \
+    plugin.UI.button = ( text, id ) ->
+        "<input type='button' #{if id? then " id='#{id}'" else ''}
+          value='#{text}' style='border: 1px solid #999999; background:
+          #dddddd; padding: 2px; margin: 2px;'
+          onmouseover='this.style.background=\"#eeeeee\";'
+          onmouseout='this.style.background=\"#dddddd\";'/>"
+
+And some utility functions used by functions above.
+
+    plugin.UI.tr = ( content, id ) ->
+        "<table border=0 cellpadding=0 cellspacing=10
+                style='width: 100%;' #{if id? then " id='#{id}'" else ''}>
+            <tr style='width: 100%; vertical-align: middle;'>" + \
         content + '</tr></table>'
-    plugin.UI.tpair = ( left, right ) ->
-        plugin.UI.tr "<td style='width: 50%; text-align: right;'>
-                        <b>#{left}:</b></td>
-                      <td style='width: 50%; text-align: left;'>
-                        #{right}</td>"
+    plugin.UI.tpair = ( left, right, id ) ->
+        plugin.UI.tr "<td style='width: 50%; text-align: right;
+                        vertical-align: middle;'><b>#{left}:</b></td>
+                      <td style='width: 50%; text-align: left;
+                        vertical-align: middle;'>#{right}</td>", id
+    plugin.UI.generalPair = ( left, right, id, percent, align = 'left' ) ->
+        plugin.UI.tr "<td style='width: #{percent}%; text-align: #{align};
+                        vertical-align: middle;'>#{left}</td>
+                      <td style='width: #{100-percent}%; text-align: left;
+                        vertical-align: middle;'>#{right}</td>", id
 
 # Installing the plugin
 

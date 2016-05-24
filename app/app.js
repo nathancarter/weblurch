@@ -9,10 +9,11 @@
   Dependencies = (function() {
     function Dependencies(editor) {
       this.editor = editor;
+      this.length = 0;
     }
 
-    Dependencies.prototype.getFileExports = function(filepath, filename) {
-      var content, metadata, tmp, _ref;
+    Dependencies.prototype.getFileMetadata = function(filepath, filename) {
+      var tmp;
       if (filename === null) {
         return;
       }
@@ -21,8 +22,195 @@
       }
       tmp = new FileSystem(this.editor.LoadSave.fileSystem);
       tmp.cd(filepath);
-      _ref = tmp.read(filename), content = _ref[0], metadata = _ref[1];
-      return metadata.exports;
+      return tmp.read(filename)[1];
+    };
+
+    Dependencies.prototype["import"] = function(dependencies) {
+      var i, _i, _j, _ref, _ref1;
+      for (i = _i = 0, _ref = this.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+        delete this[i];
+      }
+      for (i = _j = 0, _ref1 = this.length = dependencies.length; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
+        this[i] = JSON.parse(JSON.stringify(dependencies[i]));
+      }
+      return this.update();
+    };
+
+    Dependencies.prototype["export"] = function() {
+      var i, _i, _ref, _results;
+      _results = [];
+      for (i = _i = 0, _ref = this.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+        _results.push(JSON.parse(JSON.stringify(this[i])));
+      }
+      return _results;
+    };
+
+    Dependencies.prototype.update = function(index) {
+      var dependency, filename, filepath, i, newData, pageName, splitPoint;
+      if (index == null) {
+        return (function() {
+          var _i, _ref, _results;
+          _results = [];
+          for (i = _i = 0, _ref = this.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+            _results.push(this.update(i));
+          }
+          return _results;
+        }).call(this);
+      }
+      if (!(index >= 0 && index < this.length)) {
+        return;
+      }
+      dependency = this[index];
+      if (dependency.address.slice(0, 7) === 'file://') {
+        splitPoint = dependency.address.lastIndexOf('/');
+        filename = dependency.address.slice(splitPoint);
+        filepath = dependency.address.slice(7, splitPoint);
+        newData = this.getFileMetadata(filepath, filename).exports;
+        if (JSON.stringify(newData) !== JSON.stringify(this[index])) {
+          this[index].data = newData;
+          this[index].date = new Date;
+          return this.editor.fire('dependenciesChanged');
+        }
+      } else if (dependency.address.slice(0, 7) === 'wiki://') {
+        pageName = dependency.address.slice(7);
+        return this.editor.MediaWiki.getPageTimestamp(pageName, function(result, error) {
+          var currentVersion, lastModified;
+          if (result == null) {
+            return;
+          }
+          lastModified = new Date(result);
+          currentVersion = new Date(dependency.date);
+          if (!(lastModified > currentVersion)) {
+            return;
+          }
+          return this.editor.MediaWiki.getPageMetadata(pageName, function(metadata) {
+            if ((metadata != null) && JSON.stringify(this[index]) !== JSON.stringify(metadata.exports)) {
+              this[index].data = metadata.exports;
+              this[index].date = lastModified;
+              return this.editor.fire('dependenciesChanged');
+            }
+          });
+        });
+      }
+    };
+
+    Dependencies.prototype.add = function(address, callback) {
+      var e, filename, filepath, newData, pageName, splitPoint;
+      if (address.slice(0, 7) === 'file://') {
+        splitPoint = address.lastIndexOf('/');
+        filename = address.slice(splitPoint);
+        filepath = address.slice(7, splitPoint);
+        try {
+          newData = this.getFileMetadata(filepath, filename).exports;
+          this[this.length++] = {
+            address: address,
+            data: newData,
+            date: new Date
+          };
+          if (typeof callback === "function") {
+            callback(newData, null);
+          }
+          return this.editor.fire('dependenciesChanged');
+        } catch (_error) {
+          e = _error;
+          return typeof callback === "function" ? callback(null, e) : void 0;
+        }
+      } else if (address.slice(0, 7) === 'wiki://') {
+        pageName = address.slice(7);
+        return this.editor.MediaWiki.getPageTimestamp(pageName, function(result, error) {
+          if (result == null) {
+            return typeof callback === "function" ? callback(null, 'Could not get wiki page timestamp') : void 0;
+          }
+          return this.editor.MediaWiki.getPageMetadata(pageName, function(metadata) {
+            if (metadata == null) {
+              return typeof callback === "function" ? callback(null, 'Could not access wiki page') : void 0;
+            }
+            this[this.length++] = {
+              address: address,
+              data: metadata.exports,
+              date: new Date(result)
+            };
+            if (typeof callback === "function") {
+              callback(metadata.exports, null);
+            }
+            return this.editor.fire('dependenciesChanged');
+          });
+        });
+      }
+    };
+
+    Dependencies.prototype.remove = function(index) {
+      var i, _i, _ref;
+      if (!(index >= 0 && index < this.length)) {
+        return;
+      }
+      for (i = _i = index, _ref = this.length - 1; index <= _ref ? _i < _ref : _i > _ref; i = index <= _ref ? ++_i : --_i) {
+        this[i] = this[i + 1];
+      }
+      delete this[--this.length];
+      return this.editor.fire('dependenciesChanged');
+    };
+
+    Dependencies.prototype.installUI = function(div) {
+      var dependency, elt, index, parts, _i, _j, _len, _len1;
+      parts = [];
+      for (index = _i = 0, _len = this.length; _i < _len; index = ++_i) {
+        dependency = this[index];
+        parts.push(this.editor.Settings.UI.generalPair(dependency.address, this.editor.Settings.UI.button('Remove', "dependencyRemove" + index), "dependencyRow" + index, 80, 'center'));
+      }
+      if (this.length === 0) {
+        parts.push(this.editor.Settings.UI.info('(no dependencies)'));
+      }
+      parts.push(this.editor.Settings.UI.info("" + (this.editor.Settings.UI.button('Add file dependency', 'dependencyAddFile')) + " " + (this.editor.Settings.UI.button('Add wiki page dependency', 'dependencyAddWiki'))));
+      div.innerHTML = parts.join('\n');
+      elt = function(id) {
+        return div.ownerDocument.getElementById(id);
+      };
+      for (index = _j = 0, _len1 = this.length; _j < _len1; index = ++_j) {
+        dependency = this[index];
+        elt("dependencyRemove" + index).addEventListener('click', (function(_this) {
+          return function(index) {
+            return function() {
+              _this.remove(index);
+              return _this.installUI(div);
+            };
+          };
+        })(this)(index));
+      }
+      elt('dependencyAddFile').addEventListener('click', (function(_this) {
+        return function() {
+          return _this.editor.LoadSave.tryToOpen(function(path, file) {
+            if (file != null) {
+              if (path != null) {
+                path += '/';
+              } else {
+                path = '';
+              }
+              return _this.add("file://" + path + file, function(result, error) {
+                if (error != null) {
+                  return alert(error);
+                } else {
+                  return _this.installUI(div);
+                }
+              });
+            }
+          });
+        };
+      })(this));
+      return elt('dependencyAddWiki').addEventListener('click', (function(_this) {
+        return function() {
+          var url;
+          if (url = prompt('Enter the wiki page name of the dependency to add.', 'Example Page Name')) {
+            return _this.add("wiki://" + url, function(result, error) {
+              if (error != null) {
+                return alert(error);
+              } else {
+                return _this.installUI(div);
+              }
+            });
+          }
+        };
+      })(this));
     };
 
     return Dependencies;
@@ -2809,16 +2997,16 @@
 
   plugin.UI = {};
 
-  plugin.UI.info = function(name) {
-    return plugin.UI.tr("<td style='width: 100%; text-align: center; white-space: normal;' >" + name + "</td>");
+  plugin.UI.info = function(name, id) {
+    return plugin.UI.tr("<td style='width: 100%; text-align: center; white-space: normal;' >" + name + "</td>", id);
   };
 
-  plugin.UI.heading = function(name) {
-    return plugin.UI.info("<span style='font-size: 20px;'>" + name + "</span>");
+  plugin.UI.heading = function(name, id) {
+    return plugin.UI.info("<hr style='border: 1px solid black;'> <span style='font-size: 20px;'>" + name + "</span> <hr style='border: 1px solid black;'>", id);
   };
 
-  plugin.UI.readOnly = function(label, data) {
-    return plugin.UI.tpair(label, data);
+  plugin.UI.readOnly = function(label, data, id) {
+    return plugin.UI.tpair(label, data, id);
   };
 
   plugin.UI.text = function(label, id, initial) {
@@ -2829,12 +3017,23 @@
     return plugin.UI.tpair(label, "<input type='password' id='" + id + "' value='" + initial + "' style='border-width: 2px; border-style: inset;'/>");
   };
 
-  plugin.UI.tr = function(content) {
-    return '<table border=0 cellpadding=0 cellspacing=10 style="width: 100%;"><tr style="width: 100%;">' + content + '</tr></table>';
+  plugin.UI.button = function(text, id) {
+    return "<input type='button' " + (id != null ? " id='" + id + "'" : '') + " value='" + text + "' style='border: 1px solid #999999; background: #dddddd; padding: 2px; margin: 2px;' onmouseover='this.style.background=\"#eeeeee\";' onmouseout='this.style.background=\"#dddddd\";'/>";
   };
 
-  plugin.UI.tpair = function(left, right) {
-    return plugin.UI.tr("<td style='width: 50%; text-align: right;'> <b>" + left + ":</b></td> <td style='width: 50%; text-align: left;'> " + right + "</td>");
+  plugin.UI.tr = function(content, id) {
+    return ("<table border=0 cellpadding=0 cellspacing=10 style='width: 100%;' " + (id != null ? " id='" + id + "'" : '') + "> <tr style='width: 100%; vertical-align: middle;'>") + content + '</tr></table>';
+  };
+
+  plugin.UI.tpair = function(left, right, id) {
+    return plugin.UI.tr("<td style='width: 50%; text-align: right; vertical-align: middle;'><b>" + left + ":</b></td> <td style='width: 50%; text-align: left; vertical-align: middle;'>" + right + "</td>", id);
+  };
+
+  plugin.UI.generalPair = function(left, right, id, percent, align) {
+    if (align == null) {
+      align = 'left';
+    }
+    return plugin.UI.tr("<td style='width: " + percent + "%; text-align: " + align + "; vertical-align: middle;'>" + left + "</td> <td style='width: " + (100 - percent) + "%; text-align: left; vertical-align: middle;'>" + right + "</td>", id);
   };
 
   tinymce.PluginManager.add('settings', function(editor, url) {
