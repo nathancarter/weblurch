@@ -149,6 +149,10 @@ UI for Connections Between Groups
 
 Miscellaneous
 
+ * Aiming the mouse at the close grouper, to bring up validation hover info,
+   turns the mouse pointer into a text cursor (shaped like an I, rather than
+   an arrow), which can be confusing.  Make the mouse pointer over groupers
+   be a plain old ordinary arrow, like usual.
  * See [this answer](http://stackoverflow.com/a/32120344/670492) to your
    StackOverflow question about higher resolution HTML canvas rendering on
    retina deisplays.  See if its suggestions can work in your case.
