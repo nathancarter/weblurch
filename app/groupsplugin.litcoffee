@@ -1711,7 +1711,8 @@ Now the case for clicking bubble tags.
                     menu = new tinymce.ui.Menu(
                         items : menuItems
                         context : 'contextmenu'
-                    ).addClass( 'contextmenu' ).renderTo()
+                        classes : 'contextmenu'
+                    ).renderTo()
                     editor.on 'remove', -> menu.remove() ; menu = null
                     pos = ( $ editor.getContentAreaContainer() ).position()
                     menu.moveTo x + pos.left, y + pos.top
