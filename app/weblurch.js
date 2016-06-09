@@ -2112,7 +2112,7 @@
         })(this)
       };
       if (window.Worker) {
-        this.worker = new window.Worker('worker.solo.js');
+        this.worker = new window.Worker('worker-solo.js');
         this.worker.addEventListener('message', (function(_this) {
           return function(event) {
             var _ref3;

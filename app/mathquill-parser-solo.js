@@ -16,6 +16,59 @@
     OMNode = window.OMNode;
   }
 
+  window.mathQuillToMeaning = exports.mathQuillToMeaning = function(node) {
+    var child, marker, name, result, _i, _j, _k, _len, _len1, _len2, _ref2, _ref3, _ref4, _ref5;
+    if (node instanceof Text) {
+      return node.textContent;
+    }
+    result = [];
+    _ref2 = node.childNodes;
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      child = _ref2[_i];
+      if (($(child)).hasClass('selectable') || ($(child)).hasClass('cursor') || /width:0/.test(typeof child.getAttribute === "function" ? child.getAttribute('style') : void 0)) {
+        continue;
+      }
+      result = result.concat(mathQuillToMeaning(child));
+    }
+    if ((_ref3 = node.tagName) === 'SUP' || _ref3 === 'SUB') {
+      name = node.tagName.toLowerCase();
+      if (($(node)).hasClass('nthroot')) {
+        name = 'nthroot';
+      }
+      if (result.length > 1) {
+        result.unshift('(');
+        result.push(')');
+      }
+      result.unshift(name);
+    }
+    _ref4 = ['fraction', 'overline', 'overarc'];
+    for (_j = 0, _len1 = _ref4.length; _j < _len1; _j++) {
+      marker = _ref4[_j];
+      if (($(node)).hasClass(marker)) {
+        if (result.length > 1) {
+          result.unshift('(');
+          result.push(')');
+        }
+        result.unshift(marker);
+      }
+    }
+    _ref5 = ['numerator', 'denominator'];
+    for (_k = 0, _len2 = _ref5.length; _k < _len2; _k++) {
+      marker = _ref5[_k];
+      if (($(node)).hasClass(marker)) {
+        if (result.length > 1) {
+          result.unshift('(');
+          result.push(')');
+        }
+      }
+    }
+    if (result.length === 1) {
+      return result[0];
+    } else {
+      return result;
+    }
+  };
+
   exports.mathQuillParser = G = new Grammar('expression');
 
   G.addRule('digit', /[0-9]/);

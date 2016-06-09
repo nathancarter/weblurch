@@ -4,7 +4,7 @@
 
   addHelpMenuSourceCodeLink('app/simple-example-solo.litcoffee');
 
-  window.helpAboutText = 'See the fully documented source code for this demo app at the following URL:\n \nhttps://github.com/nathancarter/weblurch/blob/master/app/simple-example.solo.litcoffee';
+  window.helpAboutText = 'See the fully documented source code for this demo app at the following URL:\n \nhttps://github.com/nathancarter/weblurch/blob/master/app/simple-example-solo.litcoffee';
 
   window.groupTypes = [
     {

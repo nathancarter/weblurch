@@ -49,7 +49,68 @@
   window.pluginsToLoad = ['mediawiki', 'settings', 'dialogs'];
 
   window.groupMenuItems = {
-    file_order: 'sharelink wikiimport wikiexport | appsettings docsettings',
+    file_order: 'dropboxopen dropboxsave | sharelink wikiimport wikiexport | appsettings docsettings',
+    dropboxopen: {
+      text: 'Open from Dropbox...',
+      context: 'file',
+      onclick: function() {
+        return tinymce.activeEditor.LoadSave.handleOpen(function() {
+          return Dropbox.choose({
+            success: function(files) {
+              return $.ajax({
+                url: files[0].link,
+                success: function(result) {
+                  tinymce.activeEditor.setContent(result);
+                  return tinymce.activeEditor.LoadSave.setFilename(files[0].name);
+                },
+                error: function(jqxhr, message, error) {
+                  return tinymce.activeEditor.Dialogs.alert({
+                    title: 'File load error',
+                    message: "<h1>Error loading file</h1> <p>The file failed to load from the URL Dropbox provided, with an error of type " + message + ".</p>"
+                  });
+                }
+              });
+            },
+            linkType: 'direct',
+            multiselect: false
+          });
+        });
+      }
+    },
+    dropboxsave: {
+      text: 'Save to Dropbox...',
+      context: 'file',
+      onclick: function() {
+        var filename, url;
+        url = 'data:text/html,' + encodeURIComponent(tinymce.activeEditor.getContent());
+        if (tinymce.activeEditor.LoadSave.filename == null) {
+          tinymce.activeEditor.LoadSave.setFilename(prompt('Choose a filename', 'My Lurch Document.html'));
+          if (tinymce.activeEditor.LoadSave.filename == null) {
+            tinymce.activeEditor.Dialogs.alert({
+              title: 'Saving requires a filename',
+              message: 'You must specify a filename before you can save the file into your Dropbox.'
+            });
+            return;
+          }
+        }
+        filename = tinymce.activeEditor.LoadSave.filename;
+        return Dropbox.save(url, filename, {
+          success: function() {
+            tinymce.activeEditor.Dialogs.alert({
+              title: 'File saved successfully.',
+              message: "<h1>Saved successfully.</h1> <p>File saved to Dropbox:<br> " + filename + "</p>"
+            });
+            return tinymce.activeEditor.LoadSave.setDocumentDirty(false);
+          },
+          error: function(message) {
+            return tinymce.activeEditor.Dialogs.alert({
+              title: 'Error saving file',
+              message: "<h1>File not saved!</h1> <p>File NOT saved to Dropbox:<br> " + filename + "</p> <p>Reason: " + message + "</p>"
+            });
+          }
+        });
+      }
+    },
     sharelink: {
       text: 'Share document...',
       context: 'file',
