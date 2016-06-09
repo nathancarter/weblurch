@@ -189,17 +189,29 @@ collaboration apps such as Google Docs and Overleaf, as follows.
  * Make it so that following such links first prompts you with an "Are you
    sure?" dialog, so that you can save first or optionally open the link in
    a new tab.
- * Make links with protocol "load://" fetch their results from the wiki
-   using AJAX and load them in the current editor, again after prompting
-   with an "Are you sure?" dialog.
- * Now you can create an number of tutorials by simply publishing all the
+ * In such documents, links whose target is not "new window" (as determined
+   by the checkbox in the link-editing UI built into TinyMCE) should fetch
+   their results using AJAX and load them in the current editor, again after
+   prompting with an "Are you sure?" dialog.
+ * Now you can create any number of tutorials by simply publishing all the
    pages to the wiki, and having them link to one another in whatever
-   configuration you want (linear or otherwise).
+   configuration you want (linear or otherwise) using absolute URLs.
  * Create an initial Lurch tutorial and post it to the wiki.
  * Create a Help menu item that loads that tutorial.
  * When Lurch launches, pop up a dialog saying that there is a tutorial on
    the Help menu, and they can check the "Don't show again" box if they so
-   desire.
+   desire.  Alternately, just flash the Help menu as you do in the demo
+   apps.
+
+On a related note, the "Cheatsheets" menu item of the RStudio GUI is an
+excellent resource for many users.  It contains links to online PDFs of
+one- or two-sided printable, dense reference sheets for common topics in
+RStudio.  A similar cheatsheet (or set thereof) could be created about
+Lurch.  Consider these topics.
+
+ * The advanced users guide, condensed into a two-sided reference
+ * Understanding and dealing with validation messages
+ * A reference for each of the built-in libraries
 
 ## Offline support
 
