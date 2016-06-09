@@ -113,17 +113,6 @@ customizable parser.
      again, explain this.
    * Mark it with a red check box, and a corresponding hover explanation.
 
-## Dropbox support
-
-Add support for Dropbox open and save using their simple
-[Chooser](https://www.dropbox.com/developers/chooser) and
-[Saver](https://www.dropbox.com/developers/saver) interfaces.  I didn't used
-to think this was possible because they could not accept uploads from Blob
-URLs, but it's possible to [convert those to a data
-URI](https://github.com/dropbox/dropbox-js/issues/144#issuecomment-32080661)
-and Dropbox Saver will accept those.  Once you've done this, mark an answer
-as accepted or not [here](http://stackoverflow.com/questions/26457316/can-dropbox-saver-accept-data-from-createobjecturl?noredirect=1#comment53719255_26457316).
-
 ## Google Drive support
 
 Google Drive also provides a very nice [real time collaboration API](
