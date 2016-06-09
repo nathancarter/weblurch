@@ -64,12 +64,70 @@ Use the MediaWiki, Settings, and Dialogs plugins.
 
     window.pluginsToLoad = [ 'mediawiki', 'settings', 'dialogs' ]
 
-Add initial functionality for importing from a wiki on the same server, and
-exporting to it as well.
+Add several menu items:
 
     window.groupMenuItems =
-        file_order : 'sharelink wikiimport wikiexport
+        file_order : 'dropboxopen dropboxsave
+                    | sharelink wikiimport wikiexport
                     | appsettings docsettings'
+
+Opening files from Dropbox:
+
+        dropboxopen :
+            text : 'Open from Dropbox...'
+            context : 'file'
+            onclick : ->
+                tinymce.activeEditor.LoadSave.handleOpen -> Dropbox.choose
+                    success : ( files ) -> $.ajax
+                        url : files[0].link
+                        success : ( result ) ->
+                            tinymce.activeEditor.setContent result
+                            tinymce.activeEditor.LoadSave.setFilename \
+                                files[0].name
+                        error : ( jqxhr, message, error ) ->
+                            tinymce.activeEditor.Dialogs.alert
+                                title : 'File load error'
+                                message : "<h1>Error loading file</h1>
+                                           <p>The file failed to load from
+                                           the URL Dropbox provided, with
+                                           an error of type
+                                           #{message}.</p>"
+                    linkType : 'direct'
+                    multiselect : no
+        dropboxsave :
+            text : 'Save to Dropbox...'
+            context : 'file'
+            onclick : ->
+                url = 'data:text/html,' +
+                    encodeURIComponent tinymce.activeEditor.getContent()
+                if not tinymce.activeEditor.LoadSave.filename?
+                    tinymce.activeEditor.LoadSave.setFilename \
+                        prompt 'Choose a filename', 'My Lurch Document.html'
+                    if not tinymce.activeEditor.LoadSave.filename?
+                        tinymce.activeEditor.Dialogs.alert
+                            title : 'Saving requires a filename'
+                            message : 'You must specify a filename before
+                                you can save the file into your Dropbox.'
+                        return
+                filename = tinymce.activeEditor.LoadSave.filename
+                Dropbox.save url, filename,
+                    success : ->
+                        tinymce.activeEditor.Dialogs.alert
+                            title : 'File saved successfully.'
+                            message : "<h1>Saved successfully.</h1>
+                                       <p>File saved to Dropbox:<br>
+                                       #{filename}</p>"
+                        tinymce.activeEditor.LoadSave.setDocumentDirty no
+                    error : ( message ) ->
+                        tinymce.activeEditor.Dialogs.alert
+                            title : 'Error saving file'
+                            message : "<h1>File not saved!</h1>
+                                       <p>File NOT saved to Dropbox:<br>
+                                       #{filename}</p>
+                                       <p>Reason: #{message}</p>"
+
+Sharing files with permalinks (shortened via goo.gl):
+
         sharelink :
             text : 'Share document...'
             context : 'file'
@@ -121,6 +179,9 @@ exporting to it as well.
                         showURL response.id
                     else
                         showURL url
+
+Importing from a wiki on the same server, and exporting to it as well:
+
         wikiimport :
             text : 'Import from wiki...'
             context : 'file'
@@ -192,6 +253,9 @@ exporting to it as well.
                         content, postCallback
                 tinymce.activeEditor.MediaWiki.login username, password,
                     loginCallback
+
+App-level and document-level settings dialogs:
+
         appsettings :
             text : 'Application settings...'
             context : 'file'

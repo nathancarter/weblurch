@@ -474,7 +474,7 @@ The following routine tokenizes the input, returning one of two things:
 
 The routine simply tries every regular expression of every token type added
 with `addType()`, above, and when one succeeds, it pops that text off the
-input string, saving it to a results list after passing it throught he
+input string, saving it to a results list after passing it through the
 corresponding formatter.  If at any point none of the regular expressions
 matches the beginning of the remaining input, null is returned.
 

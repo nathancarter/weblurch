@@ -432,11 +432,16 @@ The following handler for the "open" controls checks with the user to see if
 they wish to save their current document first, if and only if that document
 is dirty.  The user may save, or cancel, or discard the document.
 
-        handleOpen: =>
+By default, the function called to open the document is `@tryToOpen`, but if
+the caller provides a different function, it can be used instead.  For
+instance, if this function is called before showing the open dialog for an
+online file-sharing service, that function could be used as the callback.
+
+        handleOpen: ( callback = => @tryToOpen() ) =>
 
 First, if the document does not need to be saved, just do a regular "open."
 
-            if not @documentDirty then return @tryToOpen()
+            if not @documentDirty then return callback()
 
 Now, we know that the document needs to be saved.  So prompt the user with a
 dialog box asking what they wish to do.
@@ -447,13 +452,12 @@ dialog box asking what they wish to do.
                     text : 'Save'
                     onclick : =>
                         @editor.windowManager.close()
-                        @tryToSave ( success ) =>
-                            if success then @tryToOpen()
+                        @tryToSave ( success ) => callback() if success
                 ,
                     text : 'Discard'
                     onclick : =>
                         @editor.windowManager.close()
-                        @tryToOpen()
+                        callback()
                 ,
                     text : 'Cancel'
                     onclick : => @editor.windowManager.close()
