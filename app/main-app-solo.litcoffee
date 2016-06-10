@@ -81,7 +81,11 @@ Opening files from Dropbox:
                     success : ( files ) -> $.ajax
                         url : files[0].link
                         success : ( result ) ->
-                            tinymce.activeEditor.setContent result
+                            { metadata, document } = extractMetadata result
+                            tinymce.activeEditor.setContent document
+                            if metadata?
+                                tinymce.activeEditor.LoadSave.loadMetaData \
+                                    metadata
                             tinymce.activeEditor.LoadSave.setFilename \
                                 files[0].name
                         error : ( jqxhr, message, error ) ->
@@ -98,8 +102,9 @@ Opening files from Dropbox:
             text : 'Save to Dropbox...'
             context : 'file'
             onclick : ->
-                url = 'data:text/html,' +
-                    encodeURIComponent tinymce.activeEditor.getContent()
+                content = embedMetadata tinymce.activeEditor.getContent(),
+                    tinymce.activeEditor.LoadSave.saveMetaData()
+                url = 'data:text/html,' + encodeURIComponent content
                 if not tinymce.activeEditor.LoadSave.filename?
                     tinymce.activeEditor.LoadSave.setFilename \
                         prompt 'Choose a filename', 'My Lurch Document.html'
@@ -344,8 +349,7 @@ reloading the page without the query string, and then pulling the data from
         if match = /\?wikipage=(.*)/.exec window.location.search
             editor.MediaWiki.importPage decodeURIComponent match[1],
                 ( document, metadata ) ->
-                    if metadata?
-                        editor.Settings.document.metadata = metadata
+                    if metadata? then editor.LoadSave.loadMetaData metadata
         if toAutoLoad = localStorage.getItem 'auto-load'
             setTimeout ->
                 localStorage.removeItem 'auto-load'
