@@ -2003,8 +2003,9 @@
           }
           menu = new tinymce.ui.Menu({
             items: menuItems,
-            context: 'contextmenu'
-          }).addClass('contextmenu').renderTo();
+            context: 'contextmenu',
+            classes: 'contextmenu'
+          }).renderTo();
           editor.on('remove', function() {
             menu.remove();
             return menu = null;
@@ -2225,7 +2226,8 @@
     LoadSave.prototype.clear = function() {
       this.editor.setContent('');
       this.setDocumentDirty(false);
-      return this.setFilename(null);
+      this.setFilename(null);
+      return typeof this.loadMetaData === "function" ? this.loadMetaData({}) : void 0;
     };
 
     LoadSave.prototype.tryToClear = function() {
@@ -2404,9 +2406,7 @@
       this.setFilepath(filepath);
       this.setFilename(filename);
       this.setDocumentDirty(false);
-      if (metadata) {
-        return typeof this.loadMetaData === "function" ? this.loadMetaData(metadata) : void 0;
-      }
+      return typeof this.loadMetaData === "function" ? this.loadMetaData(metadata != null ? metadata : {}) : void 0;
     };
 
     LoadSave.prototype.tryToOpen = function(callback) {
@@ -2499,9 +2499,16 @@
       return refreshDialog();
     };
 
-    LoadSave.prototype.handleOpen = function() {
+    LoadSave.prototype.handleOpen = function(callback) {
+      if (callback == null) {
+        callback = (function(_this) {
+          return function() {
+            return _this.tryToOpen();
+          };
+        })(this);
+      }
       if (!this.documentDirty) {
-        return this.tryToOpen();
+        return callback();
       }
       return this.editor.windowManager.open({
         title: 'Save first?',
@@ -2513,7 +2520,7 @@
                 _this.editor.windowManager.close();
                 return _this.tryToSave(function(success) {
                   if (success) {
-                    return _this.tryToOpen();
+                    return callback();
                   }
                 });
               };
@@ -2523,7 +2530,7 @@
             onclick: (function(_this) {
               return function() {
                 _this.editor.windowManager.close();
-                return _this.tryToOpen();
+                return callback();
               };
             })(this)
           }, {
@@ -2624,7 +2631,7 @@
     return editor.APIURL;
   };
 
-  embedMetadata = function(documentHTML, metadataObject) {
+  window.embedMetadata = embedMetadata = function(documentHTML, metadataObject) {
     var encoding;
     if (metadataObject == null) {
       metadataObject = {};
@@ -2633,7 +2640,7 @@
     return "<span id='metadata' style='display: none;' >" + encoding + "</span>" + documentHTML;
   };
 
-  extractMetadata = function(html) {
+  window.extractMetadata = extractMetadata = function(html) {
     var match, re;
     re = /^<span[^>]+id=.metadata.[^>]*>([^<]*)<\/span>/;
     if (match = re.exec(html)) {

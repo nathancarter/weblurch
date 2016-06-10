@@ -60,7 +60,12 @@
               return $.ajax({
                 url: files[0].link,
                 success: function(result) {
-                  tinymce.activeEditor.setContent(result);
+                  var document, metadata, _ref;
+                  _ref = extractMetadata(result), metadata = _ref.metadata, document = _ref.document;
+                  tinymce.activeEditor.setContent(document);
+                  if (metadata != null) {
+                    tinymce.activeEditor.LoadSave.loadMetaData(metadata);
+                  }
                   return tinymce.activeEditor.LoadSave.setFilename(files[0].name);
                 },
                 error: function(jqxhr, message, error) {
@@ -81,8 +86,9 @@
       text: 'Save to Dropbox...',
       context: 'file',
       onclick: function() {
-        var filename, url;
-        url = 'data:text/html,' + encodeURIComponent(tinymce.activeEditor.getContent());
+        var content, filename, url;
+        content = embedMetadata(tinymce.activeEditor.getContent(), tinymce.activeEditor.LoadSave.saveMetaData());
+        url = 'data:text/html,' + encodeURIComponent(content);
         if (tinymce.activeEditor.LoadSave.filename == null) {
           tinymce.activeEditor.LoadSave.setFilename(prompt('Choose a filename', 'My Lurch Document.html'));
           if (tinymce.activeEditor.LoadSave.filename == null) {
@@ -294,7 +300,7 @@
     if (match = /\?wikipage=(.*)/.exec(window.location.search)) {
       editor.MediaWiki.importPage(decodeURIComponent(match[1], function(document, metadata) {
         if (metadata != null) {
-          return editor.Settings.document.metadata = metadata;
+          return editor.LoadSave.loadMetaData(metadata);
         }
       }));
     }

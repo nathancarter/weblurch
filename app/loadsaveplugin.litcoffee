@@ -64,7 +64,8 @@ It will be saved together with the document content.
 The `loadMetaData` function should take as input one argument, an object
 that was previously created by the a call to `saveMetaData`, and repopulate
 the UI and memory with the relevant portions of that document metadata.  It
-is called immediately after a document is loaded.
+is called immediately after a document is loaded.  It is also called when a
+new document is created, with an empty object to initialize the metadata.
 
             @saveMetaData = @loadMetaData = null
 
@@ -164,6 +165,7 @@ document.
             @editor.setContent ''
             @setDocumentDirty no
             @setFilename null
+            @loadMetaData? { }
 
 Unlike the previous, this function *does* first check to see if the contents
 of the editor need to be saved.  If they do, and they aren't saved (or if
@@ -347,7 +349,7 @@ of this plugin are set to be the parameters passed here.
             @setFilepath filepath
             @setFilename filename
             @setDocumentDirty no
-            if metadata then @loadMetaData? metadata
+            @loadMetaData? metadata ? { }
 
 The following function pops up a dialog to the user, allowing them to choose
 a filename to open.  If they choose a file, it (with the current directory)

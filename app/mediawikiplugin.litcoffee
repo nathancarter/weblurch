@@ -34,11 +34,12 @@ Here are two functions for embedding metadata into/extracting metadata from
 the HTML content of a document.  These are useful before export to/after
 import from the wiki.
 
-    embedMetadata = ( documentHTML, metadataObject = { } ) ->
+    window.embedMetadata = embedMetadata =
+    ( documentHTML, metadataObject = { } ) ->
         encoding = encodeURIComponent JSON.stringify metadataObject
         "<span id='metadata' style='display: none;'
          >#{encoding}</span>#{documentHTML}"
-    extractMetadata = ( html ) ->
+    window.extractMetadata = extractMetadata = ( html ) ->
         re = /^<span[^>]+id=.metadata.[^>]*>([^<]*)<\/span>/
         if match = re.exec html
             metadata : JSON.parse decodeURIComponent match[1]
