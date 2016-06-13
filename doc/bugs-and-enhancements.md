@@ -65,8 +65,7 @@ two ways.  Extend this to general HTML pages, as follows:
  * Add an HTML export function that lets you download the contents of the
    editor (plus metadata at the front, just like when exporting to the wiki)
    for publishing on your own website, for example, or pasting into a blog
-   post.  Wrap it in a DIV with class "EmbeddedLurchDocument" or something
-   similarly unique.
+   post.  Wrap it in a DIV with class "EmbeddedLurchDocument".
  * Expose that functionality to the user, on the File menu.
  * Add an HTML import function that lets you specify a URL, sends an XHR to
    get the page at that URL, and extracts the full content of the Lurch DIV.
@@ -76,6 +75,65 @@ two ways.  Extend this to general HTML pages, as follows:
    on the wiki.  Use the HTML import function just created for this purpose.
    To check the last modified date of arbitrary web pages, see
    [here.](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date)
+
+Finish Dropbox Integration
+
+ * Extend the LoadSave plugin with a function that accepts a function and
+   installs it as a new handler for File > Open (or the corresponding
+   toolbar button).  If the argument is omitted, put back the original
+   handler.  This amounts to providing a replacement for `tryToOpen`.
+   The documentation for this method should point out that `tryToOpen` is
+   always called with no arguments, and should present a dialog.  Note that
+   the plugin calls `tryToOpen` in multiple places, and it must be replaced
+   by the given replacement in all of those places!
+ * Do the same for the File > Save handler, providing a replacement for
+   `tryToSave` (or expecting the old one to be re-installed).  Document that
+   it may take a filename (with path) as parameter, or may not, depending on
+   whether Save or Save as... is called.
+ * Do the same for Manage Files, a replacement for `manageFiles`.
+ * Create a Dropbox plugin.
+ * Add to the Dropbox plugin a method that can replace `tryToOpen`, using
+   code lifted from the current `main-app-solo.litcoffee` file.  This should
+   always just call `Dropbox.choose`.
+ * In the main app, install this in place of the LoadSave plugin's default
+   open method, and ensure that it works.
+ * Add to the Dropbox plugin a method that can replace `tryToSave`, using
+   code lifted from the current `main-app-solo.litcoffee` file.  For now,
+   this should always call `Dropbox.save`, which will always pop up a
+   dialog that starts in the root of their Dropbox.
+ * In the main app, install this in place of the LoadSave plugin's default
+   save method, and ensure that it works.
+ * Add to the Dropbox plugin a function that navigates to dropbox.com in a
+   new tab, which is essentially a file management feature for Dropbox.
+ * In the main app, install this in place of the LoadSave plugin's default
+   manage files method, and ensure that it works.
+ * Create in the Settings plugin a UI function for making check boxes, by
+   putting the check box in the left column of a table, and the description
+   on the right (with an optional lengthier description below it).
+ * Duplicate that function for radio buttons, with a given group.
+ * Use that feature to add radio buttons for choosing Dropbox vs. Local
+   Storage in the main app.  (Implement them below.)
+ * Add code that reacts to changes in those settings by calling the
+   functions in the LoadSave plugin to install/uninstall the Dropbox
+   plugin's replacement handlers.
+ * Remove the Dropbox items from the File menu.
+ * Extend the save method in the Dropbox plugin so that it wraps the
+   document in a DIV with class "EmbeddedLurchDocument."  Test to be sure
+   it saves in this way, but this will break loading; we fix that next.
+ * Extend the load method in the Dropbox plugin so that it finds the start
+   and end of that DIV (even if there are nested DIVs!) and pulls out all of
+   its content as the loaded file.
+ * Extend the save method so that it appends after that DIV a script tag
+   that dumps the DIV's `.innerHTML` to the console. as a test.  Ensure that
+   opening a Dropbox-saved file in the browser succeeds in this.
+ * Change that script so that instead it places the contents of the DIV
+   into the Local Storage with `localStorage.setItem 'auto-load', HTML`, and
+   then redirects the current URL, without any query string.  ("Current"
+   means at the time the script is written by the Dropbox saver, not the
+   time the script is later run!)
+ * Ensure that opening a file in Dropbox by double-clicking it from the OS
+   file manager redirects to the main Lurch app and loads the file, with
+   metadata.
 
 Dependencies
 
