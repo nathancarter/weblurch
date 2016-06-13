@@ -76,26 +76,6 @@ two ways.  Extend this to general HTML pages, as follows:
    To check the last modified date of arbitrary web pages, see
    [here.](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date)
 
-Finish Dropbox Integration
-
- * Extend the save method in the Dropbox plugin so that it wraps the
-   document in a DIV with class "EmbeddedLurchDocument."  Test to be sure
-   it saves in this way, but this will break loading; we fix that next.
- * Extend the load method in the Dropbox plugin so that it finds the start
-   and end of that DIV (even if there are nested DIVs!) and pulls out all of
-   its content as the loaded file.
- * Extend the save method so that it appends after that DIV a script tag
-   that dumps the DIV's `.innerHTML` to the console. as a test.  Ensure that
-   opening a Dropbox-saved file in the browser succeeds in this.
- * Change that script so that instead it places the contents of the DIV
-   into the Local Storage with `localStorage.setItem 'auto-load', HTML`, and
-   then redirects the current URL, without any query string.  ("Current"
-   means at the time the script is written by the Dropbox saver, not the
-   time the script is later run!)
- * Ensure that opening a file in Dropbox by double-clicking it from the OS
-   file manager redirects to the main Lurch app and loads the file, with
-   metadata.
-
 Dependencies
 
  * Right now circular dependency relationships never cause an infinite loop

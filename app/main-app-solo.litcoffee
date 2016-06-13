@@ -324,15 +324,18 @@ reloading the page without the query string, and then pulling the data from
                 ( document, metadata ) ->
                     if metadata? then editor.LoadSave.loadMetaData metadata
         if toAutoLoad = localStorage.getItem 'auto-load'
-            setTimeout ->
-                localStorage.removeItem 'auto-load'
-                tinymce.activeEditor.setContent toAutoLoad[1]
-                editor.LoadSave.loadMetaData toAutoLoad[0]
-            , 100
+            try
+                [ metadata, document ] = JSON.parse toAutoLoad
+                setTimeout ->
+                    localStorage.removeItem 'auto-load'
+                    tinymce.activeEditor.setContent document
+                    editor.LoadSave.loadMetaData metadata
+                , 100
         if match = /\?document=(.*)/.exec window.location.search
             html = decodeURIComponent match[1]
             { metadata, document } = extractMetadata html
-            localStorage.setItem 'auto-load', [ metadata, document ]
+            localStorage.setItem 'auto-load',
+                JSON.stringify [ metadata, document ]
             window.location.href = window.location.href.split( '?' )[0]
 
 The following function is just to ensure that functionality that depends on

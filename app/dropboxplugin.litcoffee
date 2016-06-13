@@ -41,6 +41,38 @@ plugin.
                 success : ( files ) => $.ajax
                     url : files[0].link
                     success : ( result ) =>
+
+The following section of code finds the interior of the main DIV, by finding
+all DIVs and ensuring we count nesting correctly.
+
+                        open = '<div id="EmbeddedLurchDocument">'
+                        start = result.indexOf open
+                        if start > -1
+                            start += open.length
+                            rest = result.substring start
+                            interior = ''
+                            munge = ( n ) ->
+                                interior += rest.substring 0, n
+                                rest = rest.substring n
+                            nextDivTag = /<\s*([/]?)\s*div(>|\s+)/i
+                            depth = 1
+                            while match = nextDivTag.exec rest
+                                munge match.index
+                                if match[1] is '/'
+                                    depth--
+                                else
+                                    depth++
+                                if depth is 0
+                                    rest = ''
+                                    break
+                                else
+                                    munge match[0].length
+                            munge rest.length
+                            result = interior
+
+Now we can extract the metadata from the interior of the main DIV, and
+finish.
+
                         { metadata, document } = extractMetadata result
                         tinymce.activeEditor.setContent document
                         if metadata? then @loadMetaData metadata
@@ -68,7 +100,18 @@ plugin.
 
         saveHandler: ->
             content = embedMetadata editor.getContent(), @saveMetaData()
+            content = '<div id="EmbeddedLurchDocument">' + \
+                      content + \
+                      "</div>
+                      <script>
+                      window.location.href =
+                          '#{window.location.href.split( '?' )[0]}'
+                        + '?document='
+                        + encodeURIComponent(
+                            EmbeddedLurchDocument.innerHTML );
+                      </script>"
             url = 'data:text/html,' + encodeURIComponent content
+            console.log document, content, url
             if not editor.LoadSave.filename?
                 @setFilename prompt 'Choose a filename',
                     'My Lurch Document.html'
