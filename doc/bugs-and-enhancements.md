@@ -78,16 +78,6 @@ two ways.  Extend this to general HTML pages, as follows:
 
 Finish Dropbox Integration
 
- * Create in the Settings plugin a UI function for making check boxes, by
-   putting the check box in the left column of a table, and the description
-   on the right (with an optional lengthier description below it).
- * Duplicate that function for radio buttons, with a given group.
- * Use that feature to add radio buttons for choosing Dropbox vs. Local
-   Storage in the main app.  (Implement them below.)
- * Add code that reacts to changes in those settings by calling the
-   functions in the LoadSave plugin to install/uninstall the Dropbox
-   plugin's replacement handlers.
- * Remove the Dropbox items from the File menu.
  * Extend the save method in the Dropbox plugin so that it wraps the
    document in a DIV with class "EmbeddedLurchDocument."  Test to be sure
    it saves in this way, but this will break loading; we fix that next.

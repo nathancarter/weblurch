@@ -158,6 +158,32 @@ For creating a password input (`id` not optional in this case):
             "<input type='password' id='#{id}' value='#{initial}'
             style='border-width: 2px; border-style: inset;'/>"
 
+For creating a check box input (`id` not optional in this case):
+
+    plugin.UI.checkbox = ( text, checked = no, id, optionalDescription ) ->
+
+        checked = if checked then ' checked' else ''
+        result = plugin.UI.generalPair \
+            "<input type='checkbox' id='#{id}' #{checked}/>",
+            "<b>#{text}</b>", null, 10
+        if optionalDescription
+            result += plugin.UI.generalPair '',
+                "<p>#{optionalDescription}</p>", null, 10
+        result
+
+For creating a radio box input (`id` not optional in this case):
+
+    plugin.UI.radioButton = ( text, groupName, checked = no, id,
+                              optionalDescription ) ->
+        checked = if checked then ' checked' else ''
+        result = plugin.UI.generalPair \
+            "<input type='radio' name='#{groupName}' id='#{id}'
+             #{checked}/>", "<b>#{text}</b>", null, 10
+        if optionalDescription
+            result += plugin.UI.generalPair '',
+                "<p>#{optionalDescription}</p>", null, 10
+        result
+
 For creating a button:
 
     plugin.UI.button = ( text, id ) ->
