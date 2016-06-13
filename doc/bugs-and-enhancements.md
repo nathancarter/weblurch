@@ -78,19 +78,6 @@ two ways.  Extend this to general HTML pages, as follows:
 
 Finish Dropbox Integration
 
- * Extend the LoadSave plugin with a function that accepts a function and
-   installs it as a new handler for File > Open (or the corresponding
-   toolbar button).  If the argument is omitted, put back the original
-   handler.  This amounts to providing a replacement for `tryToOpen`.
-   The documentation for this method should point out that `tryToOpen` is
-   always called with no arguments, and should present a dialog.  Note that
-   the plugin calls `tryToOpen` in multiple places, and it must be replaced
-   by the given replacement in all of those places!
- * Do the same for the File > Save handler, providing a replacement for
-   `tryToSave` (or expecting the old one to be re-installed).  Document that
-   it may take a filename (with path) as parameter, or may not, depending on
-   whether Save or Save as... is called.
- * Do the same for Manage Files, a replacement for `manageFiles`.
  * Create a Dropbox plugin.
  * Add to the Dropbox plugin a method that can replace `tryToOpen`, using
    code lifted from the current `main-app-solo.litcoffee` file.  This should

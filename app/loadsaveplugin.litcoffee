@@ -506,6 +506,53 @@ it and move, rename, and delete files, create folders, etc.
                 mode : 'manage files'
             }
 
+## Changing UI handlers
+
+This plugin is in charge of presenting the UI for loading and saving
+documents, and providing default handlers for that UI that use the browser's
+Local Storage.  But there may be other ways to load and save files, such as
+upload/download, integration with an online storage provider (Dropbox,
+Google Drive, etc.).  For that reason, we provide the following functions.
+
+The first allows you to install your own handler in place of the built-in
+`tryToOpen` handler.  It accepts no arguments, and should present the user
+with a UI for choosing a file to open, from whatever source.  If called with
+no arguments, this function installs the original handler again.  (For the
+implementation of `replaceInternalHandler`, see further below.)
+
+        installOpenHandler: ( handler ) ->
+            @replaceInternalHandler 'tryToOpen', handler
+
+The second allows you to install your own handler in place of the built-in
+`tryToSave` handler.  It accepts two arguments, a path and filename, which
+may be null/undefined/empty strings if "Save as..." was invoked.  It should
+either save to the file specified (if one was specified), or present the
+user with a UI for choosing where to save (if none was specified) before
+obeying the request to save.  If called with no arguments, this function
+installs the original handler again.
+
+        installSaveHandler: ( handler ) ->
+            @replaceInternalHandler 'tryToSave', handler
+
+The third allows you to install your own handler in place of the built-in
+`manageFiles` handler.  It accepts no arguments, and should show the user a
+UI for browsing the files in the data store in question, if possible.  If
+not, respond to the user's request in some way (e.g., a dialog stating that
+it is not possible, and why.)
+
+        installSaveHandler: ( handler ) ->
+            @replaceInternalHandler 'tryToSave', handler
+
+The following utility function was used to implement the three functions
+above.
+
+        replaceInternalHandler: ( internalName, newHandler ) ->
+            if newHandler?
+                ( @handlerBackups ?= { } )[internalName] ?= @[internalName]
+                @[internalName] = newHandler
+            else if @handlerBackups[internalName]?
+                @[internalName] = @handlerBackups[internalName]
+
 # Global stuff
 
 ## Installing the plugin
