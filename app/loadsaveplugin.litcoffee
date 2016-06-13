@@ -540,8 +540,8 @@ UI for browsing the files in the data store in question, if possible.  If
 not, respond to the user's request in some way (e.g., a dialog stating that
 it is not possible, and why.)
 
-        installSaveHandler: ( handler ) ->
-            @replaceInternalHandler 'tryToSave', handler
+        installManageFilesHandler: ( handler ) ->
+            @replaceInternalHandler 'manageFiles', handler
 
 The following utility function was used to implement the three functions
 above.

@@ -78,22 +78,6 @@ two ways.  Extend this to general HTML pages, as follows:
 
 Finish Dropbox Integration
 
- * Create a Dropbox plugin.
- * Add to the Dropbox plugin a method that can replace `tryToOpen`, using
-   code lifted from the current `main-app-solo.litcoffee` file.  This should
-   always just call `Dropbox.choose`.
- * In the main app, install this in place of the LoadSave plugin's default
-   open method, and ensure that it works.
- * Add to the Dropbox plugin a method that can replace `tryToSave`, using
-   code lifted from the current `main-app-solo.litcoffee` file.  For now,
-   this should always call `Dropbox.save`, which will always pop up a
-   dialog that starts in the root of their Dropbox.
- * In the main app, install this in place of the LoadSave plugin's default
-   save method, and ensure that it works.
- * Add to the Dropbox plugin a function that navigates to dropbox.com in a
-   new tab, which is essentially a file management feature for Dropbox.
- * In the main app, install this in place of the LoadSave plugin's default
-   manage files method, and ensure that it works.
  * Create in the Settings plugin a UI function for making check boxes, by
    putting the check box in the left column of a table, and the description
    on the right (with an optional lengthier description below it).

@@ -60,76 +60,15 @@ Install the arrows UI for that group.
 
     window.useGroupConnectionsUI = yes
 
-Use the MediaWiki, Settings, and Dialogs plugins.
+Use the MediaWiki, Settings, Dialogs, and Dropbox plugins.
 
-    window.pluginsToLoad = [ 'mediawiki', 'settings', 'dialogs' ]
+    window.pluginsToLoad = [ 'mediawiki', 'settings', 'dialogs', 'dropbox' ]
 
 Add several menu items:
 
     window.groupMenuItems =
-        file_order : 'dropboxopen dropboxsave
-                    | sharelink wikiimport wikiexport
+        file_order : 'sharelink wikiimport wikiexport
                     | appsettings docsettings'
-
-Opening files from Dropbox:
-
-        dropboxopen :
-            text : 'Open from Dropbox...'
-            context : 'file'
-            onclick : ->
-                tinymce.activeEditor.LoadSave.handleOpen -> Dropbox.choose
-                    success : ( files ) -> $.ajax
-                        url : files[0].link
-                        success : ( result ) ->
-                            { metadata, document } = extractMetadata result
-                            tinymce.activeEditor.setContent document
-                            if metadata?
-                                tinymce.activeEditor.LoadSave.loadMetaData \
-                                    metadata
-                            tinymce.activeEditor.LoadSave.setFilename \
-                                files[0].name
-                        error : ( jqxhr, message, error ) ->
-                            tinymce.activeEditor.Dialogs.alert
-                                title : 'File load error'
-                                message : "<h1>Error loading file</h1>
-                                           <p>The file failed to load from
-                                           the URL Dropbox provided, with
-                                           an error of type
-                                           #{message}.</p>"
-                    linkType : 'direct'
-                    multiselect : no
-        dropboxsave :
-            text : 'Save to Dropbox...'
-            context : 'file'
-            onclick : ->
-                content = embedMetadata tinymce.activeEditor.getContent(),
-                    tinymce.activeEditor.LoadSave.saveMetaData()
-                url = 'data:text/html,' + encodeURIComponent content
-                if not tinymce.activeEditor.LoadSave.filename?
-                    tinymce.activeEditor.LoadSave.setFilename \
-                        prompt 'Choose a filename', 'My Lurch Document.html'
-                    if not tinymce.activeEditor.LoadSave.filename?
-                        tinymce.activeEditor.Dialogs.alert
-                            title : 'Saving requires a filename'
-                            message : 'You must specify a filename before
-                                you can save the file into your Dropbox.'
-                        return
-                filename = tinymce.activeEditor.LoadSave.filename
-                Dropbox.save url, filename,
-                    success : ->
-                        tinymce.activeEditor.Dialogs.alert
-                            title : 'File saved successfully.'
-                            message : "<h1>Saved successfully.</h1>
-                                       <p>File saved to Dropbox:<br>
-                                       #{filename}</p>"
-                        tinymce.activeEditor.LoadSave.setDocumentDirty no
-                    error : ( message ) ->
-                        tinymce.activeEditor.Dialogs.alert
-                            title : 'Error saving file'
-                            message : "<h1>File not saved!</h1>
-                                       <p>File NOT saved to Dropbox:<br>
-                                       #{filename}</p>
-                                       <p>Reason: #{message}</p>"
 
 Sharing files with permalinks (shortened via goo.gl):
 
@@ -327,7 +266,7 @@ a metadata object that gets embedded in the document itself.
             D.set 'wiki_title', elt( 'wiki_title' ).value
 
 Set up the load/save plugin with the functions needed for loading and saving
-document metadata.
+document metadata.  Also, switch it to Dropbox mode by default.
 
         editor.LoadSave.saveMetaData = ->
             # later, when this app knows what data it wants to export to
@@ -338,6 +277,10 @@ document metadata.
         editor.LoadSave.loadMetaData = ( object ) ->
             D.metadata = object
             editor.Dependencies.import D.metadata.dependencies ? [ ]
+        editor.LoadSave.installOpenHandler editor.Dropbox.openHandler
+        editor.LoadSave.installSaveHandler editor.Dropbox.saveHandler
+        editor.LoadSave.installManageFilesHandler \
+            editor.Dropbox.manageFilesHandler
 
 If the query string told us to load a page from the wiki, or a page fully
 embedded in a (possibly enormous) URL, do so.  Note that the way we handle
