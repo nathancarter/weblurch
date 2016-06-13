@@ -138,8 +138,9 @@ Sharing files with permalinks (shortened via goo.gl):
             context : 'file'
             onclick : ->
                 page = window.location.href.split( '?' )[0]
-                url = page + '?document=' + \
-                    encodeURIComponent tinymce.activeEditor.getContent()
+                content = embedMetadata tinymce.activeEditor.getContent(),
+                    tinymce.activeEditor.LoadSave.saveMetaData()
+                url = page + '?document=' + encodeURIComponent content
                 showURL = ( url ) ->
                     embed = "<iframe src='#{url}' width=800
                         height=600></iframe>"
@@ -353,10 +354,13 @@ reloading the page without the query string, and then pulling the data from
         if toAutoLoad = localStorage.getItem 'auto-load'
             setTimeout ->
                 localStorage.removeItem 'auto-load'
-                tinymce.activeEditor.setContent toAutoLoad
+                tinymce.activeEditor.setContent toAutoLoad[1]
+                editor.LoadSave.loadMetaData toAutoLoad[0]
             , 100
         if match = /\?document=(.*)/.exec window.location.search
-            localStorage.setItem 'auto-load', decodeURIComponent match[1]
+            html = decodeURIComponent match[1]
+            { metadata, document } = extractMetadata html
+            localStorage.setItem 'auto-load', [ metadata, document ]
             window.location.href = window.location.href.split( '?' )[0]
 
 The following function is just to ensure that functionality that depends on
