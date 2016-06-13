@@ -60,76 +60,15 @@ Install the arrows UI for that group.
 
     window.useGroupConnectionsUI = yes
 
-Use the MediaWiki, Settings, and Dialogs plugins.
+Use the MediaWiki, Settings, Dialogs, and Dropbox plugins.
 
-    window.pluginsToLoad = [ 'mediawiki', 'settings', 'dialogs' ]
+    window.pluginsToLoad = [ 'mediawiki', 'settings', 'dialogs', 'dropbox' ]
 
 Add several menu items:
 
     window.groupMenuItems =
-        file_order : 'dropboxopen dropboxsave
-                    | sharelink wikiimport wikiexport
+        file_order : 'sharelink wikiimport wikiexport
                     | appsettings docsettings'
-
-Opening files from Dropbox:
-
-        dropboxopen :
-            text : 'Open from Dropbox...'
-            context : 'file'
-            onclick : ->
-                tinymce.activeEditor.LoadSave.handleOpen -> Dropbox.choose
-                    success : ( files ) -> $.ajax
-                        url : files[0].link
-                        success : ( result ) ->
-                            { metadata, document } = extractMetadata result
-                            tinymce.activeEditor.setContent document
-                            if metadata?
-                                tinymce.activeEditor.LoadSave.loadMetaData \
-                                    metadata
-                            tinymce.activeEditor.LoadSave.setFilename \
-                                files[0].name
-                        error : ( jqxhr, message, error ) ->
-                            tinymce.activeEditor.Dialogs.alert
-                                title : 'File load error'
-                                message : "<h1>Error loading file</h1>
-                                           <p>The file failed to load from
-                                           the URL Dropbox provided, with
-                                           an error of type
-                                           #{message}.</p>"
-                    linkType : 'direct'
-                    multiselect : no
-        dropboxsave :
-            text : 'Save to Dropbox...'
-            context : 'file'
-            onclick : ->
-                content = embedMetadata tinymce.activeEditor.getContent(),
-                    tinymce.activeEditor.LoadSave.saveMetaData()
-                url = 'data:text/html,' + encodeURIComponent content
-                if not tinymce.activeEditor.LoadSave.filename?
-                    tinymce.activeEditor.LoadSave.setFilename \
-                        prompt 'Choose a filename', 'My Lurch Document.html'
-                    if not tinymce.activeEditor.LoadSave.filename?
-                        tinymce.activeEditor.Dialogs.alert
-                            title : 'Saving requires a filename'
-                            message : 'You must specify a filename before
-                                you can save the file into your Dropbox.'
-                        return
-                filename = tinymce.activeEditor.LoadSave.filename
-                Dropbox.save url, filename,
-                    success : ->
-                        tinymce.activeEditor.Dialogs.alert
-                            title : 'File saved successfully.'
-                            message : "<h1>Saved successfully.</h1>
-                                       <p>File saved to Dropbox:<br>
-                                       #{filename}</p>"
-                        tinymce.activeEditor.LoadSave.setDocumentDirty no
-                    error : ( message ) ->
-                        tinymce.activeEditor.Dialogs.alert
-                            title : 'Error saving file'
-                            message : "<h1>File not saved!</h1>
-                                       <p>File NOT saved to Dropbox:<br>
-                                       #{filename}</p>
-                                       <p>Reason: #{message}</p>"
 
 Sharing files with permalinks (shortened via goo.gl):
 
@@ -138,8 +77,9 @@ Sharing files with permalinks (shortened via goo.gl):
             context : 'file'
             onclick : ->
                 page = window.location.href.split( '?' )[0]
-                url = page + '?document=' + \
-                    encodeURIComponent tinymce.activeEditor.getContent()
+                content = embedMetadata tinymce.activeEditor.getContent(),
+                    tinymce.activeEditor.LoadSave.saveMetaData()
+                url = page + '?document=' + encodeURIComponent content
                 showURL = ( url ) ->
                     embed = "<iframe src='#{url}' width=800
                         height=600></iframe>"
@@ -284,7 +224,9 @@ Lastly, a few actions to take after the editor has been initialized.
 Initialize the settings plugin for global app settings.
 
         A = editor.Settings.addCategory 'application'
+        if not A.get 'filesystem' then A.set 'filesystem', 'dropbox'
         A.setup = ( div ) ->
+            fs = A.get 'filesystem'
             div.innerHTML = [
                 editor.Settings.UI.heading 'Wiki Login'
                 editor.Settings.UI.info 'Entering a username and password
@@ -297,11 +239,42 @@ Initialize the settings plugin for global app settings.
                     'wiki_username', A.get( 'wiki_username' ) ? ''
                 editor.Settings.UI.password 'Password',
                     'wiki_password', A.get( 'wiki_password' ) ? ''
+                editor.Settings.UI.heading 'Open/Save Filesystem'
+                editor.Settings.UI.radioButton \
+                    'Dropbox (cloud storage, requires account)',
+                    'filesystem', fs is 'dropbox', 'filesystem_dropbox'
+                editor.Settings.UI.radioButton \
+                    'Local Storage (kept permanently, in browser only)',
+                    'filesystem', fs is 'local storage',
+                    'filesystem_local_storage'
             ].join '\n'
         A.teardown = ( div ) ->
             elt = ( id ) -> div.ownerDocument.getElementById id
             A.set 'wiki_username', elt( 'wiki_username' ).value
             A.set 'wiki_password', elt( 'wiki_password' ).value
+            A.setFilesystem if elt( 'filesystem_dropbox' ).checked then \
+                'dropbox' else 'local storage'
+
+Install in `A` a special handler for setting the filesytem, which updates UI
+controls to respect that setting.
+
+        A.setFilesystem = ( name ) ->
+            A.set 'filesystem', name
+            if name is 'dropbox'
+                editor.LoadSave.installOpenHandler \
+                    editor.Dropbox.openHandler
+                editor.LoadSave.installSaveHandler \
+                    editor.Dropbox.saveHandler
+                editor.LoadSave.installManageFilesHandler \
+                    editor.Dropbox.manageFilesHandler
+            else
+                editor.LoadSave.installOpenHandler()
+                editor.LoadSave.installSaveHandler()
+                editor.LoadSave.installManageFilesHandler()
+
+Initialize the UI to whatever the user's current filesystem setting is.
+
+        A.setFilesystem A.get 'filesystem'
 
 Initialize the settings plugin for per-document settings.  Here we override
 the default set/get methods (which use the browser's `LocalStorage`) and use
@@ -351,12 +324,18 @@ reloading the page without the query string, and then pulling the data from
                 ( document, metadata ) ->
                     if metadata? then editor.LoadSave.loadMetaData metadata
         if toAutoLoad = localStorage.getItem 'auto-load'
-            setTimeout ->
-                localStorage.removeItem 'auto-load'
-                tinymce.activeEditor.setContent toAutoLoad
-            , 100
+            try
+                [ metadata, document ] = JSON.parse toAutoLoad
+                setTimeout ->
+                    localStorage.removeItem 'auto-load'
+                    tinymce.activeEditor.setContent document
+                    editor.LoadSave.loadMetaData metadata
+                , 100
         if match = /\?document=(.*)/.exec window.location.search
-            localStorage.setItem 'auto-load', decodeURIComponent match[1]
+            html = decodeURIComponent match[1]
+            { metadata, document } = extractMetadata html
+            localStorage.setItem 'auto-load',
+                JSON.stringify [ metadata, document ]
             window.location.href = window.location.href.split( '?' )[0]
 
 The following function is just to ensure that functionality that depends on

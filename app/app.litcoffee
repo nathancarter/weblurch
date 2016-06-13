@@ -466,6 +466,161 @@ options object with the 'OK' and 'Cancel' keys.
 
 
 
+# Dropbox Plugin for [TinyMCE](http://www.tinymce.com)
+
+This plugin provides functions for loading *Lurch* documents from and saving
+*Lurch* documents to a user's Dropbox.
+
+# `Dropbox` class
+
+We begin by defining a class that will contain all the information needed
+about the overlay element and how to use it.  An instance of this class will
+be stored as a member in the TinyMCE editor object.
+
+This convention is adopted for all TinyMCE plugins in the Lurch project;
+each will come with a class, and an instance of that class will be stored as
+a member of the editor object when the plugin is installed in that editor.
+The presence of that member indicates that the plugin has been installed,
+and provides access to the full range of functionality that the plugin
+grants to that editor.
+
+    class Dropbox
+
+We construct new instances of the Dropbox class as follows, and these are
+inserted as members of the corresponding editor by means of the code [below,
+under "Installing the Plugin."](#installing-the-plugin)
+
+        constructor: ( @editor ) ->
+
+The constructor does not yet take any action.
+
+            @editor.on 'init', => # pass
+
+The following function can be used as a handler for the "File > Open" event
+in the UI (or the Open button on the toolbar).
+
+It assumes that it will be installed as an open handler in [the LoadSave
+plugin](loadsaveplugin.litcoffee), and thus uses `this` as if it were that
+plugin.
+
+        openHandler: ->
+            window.Dropbox.choose
+                success : ( files ) => $.ajax
+                    url : files[0].link
+                    success : ( result ) =>
+
+The following section of code finds the interior of the main DIV, by finding
+all DIVs and ensuring we count nesting correctly.
+
+                        open = '<div id="EmbeddedLurchDocument">'
+                        start = result.indexOf open
+                        if start > -1
+                            start += open.length
+                            rest = result.substring start
+                            interior = ''
+                            munge = ( n ) ->
+                                interior += rest.substring 0, n
+                                rest = rest.substring n
+                            nextDivTag = /<\s*([/]?)\s*div(>|\s+)/i
+                            depth = 1
+                            while match = nextDivTag.exec rest
+                                munge match.index
+                                if match[1] is '/'
+                                    depth--
+                                else
+                                    depth++
+                                if depth is 0
+                                    rest = ''
+                                    break
+                                else
+                                    munge match[0].length
+                            munge rest.length
+                            result = interior
+
+Now we can extract the metadata from the interior of the main DIV, and
+finish.
+
+                        { metadata, document } = extractMetadata result
+                        tinymce.activeEditor.setContent document
+                        if metadata? then @loadMetaData metadata
+                        @setFilename files[0].name
+                    error : ( jqxhr, message, error ) ->
+                        editor.Dialogs.alert
+                            title : 'File load error'
+                            message : "<h1>Error loading file</h1>
+                                       <p>The file failed to load from the
+                                       URL Dropbox provided, with an error
+                                       of type #{message}.</p>"
+                linkType : 'direct'
+                multiselect : no
+
+The following function can be used as a handler for the "File > Save" event
+in the UI (or the Save button on the toolbar).  Unfortunately, the Dropbox
+Saver does not allow us to specify a file path, and have the save completed
+without the user's direct involvement.  Thus "Save" cannot happen in just
+one click; the user must choose where to save each time.  We hope to add
+functionality for an improved user experience in a future commit.
+
+It assumes that it will be installed as an open handler in [the LoadSave
+plugin](loadsaveplugin.litcoffee), and thus uses `this` as if it were that
+plugin.
+
+        saveHandler: ->
+            content = embedMetadata editor.getContent(), @saveMetaData()
+            content = '<div id="EmbeddedLurchDocument">' + \
+                      content + \
+                      "</div>
+                      <script>
+                      window.location.href =
+                          '#{window.location.href.split( '?' )[0]}'
+                        + '?document='
+                        + encodeURIComponent(
+                            EmbeddedLurchDocument.innerHTML );
+                      </script>"
+            url = 'data:text/html,' + encodeURIComponent content
+            console.log document, content, url
+            if not editor.LoadSave.filename?
+                @setFilename prompt 'Choose a filename',
+                    'My Lurch Document.html'
+                if not @filename?
+                    editor.Dialogs.alert
+                        title : 'Saving requires a filename'
+                        message : 'You must specify a filename before
+                            you can save the file into your Dropbox.'
+                    return
+            window.Dropbox.save url, @filename,
+                success : =>
+                    editor.Dialogs.alert
+                        title : 'File saved successfully.'
+                        message : "<h1>Saved successfully.</h1>
+                                   <p>File saved to Dropbox:<br>
+                                   #{@filename}</p>"
+                    @setDocumentDirty no
+                error : ( message ) =>
+                    editor.Dialogs.alert
+                        title : 'Error saving file'
+                        message : "<h1>File not saved!</h1>
+                                   <p>File NOT saved to Dropbox:<br>
+                                   #{@filename}</p>
+                                   <p>Reason: #{message}</p>"
+
+The following function can be used as a handler for the "File > Manage
+files" event in the UI.  It simply navigates to [dropbox.com], because that
+website will show the user his or her own Dropbox.
+
+        manageFilesHandler: ->
+            window.location.href = 'https://www.dropbox.com'
+
+# Installing the plugin
+
+The plugin, when initialized on an editor, places an instance of the
+`Dropbox` class inside the editor, and points the class at that editor.
+
+    tinymce.PluginManager.add 'dropbox', ( editor, url ) ->
+        editor.Dropbox = new Dropbox editor
+
+
+
 # Groups Plugin for [TinyMCE](http://www.tinymce.com)
 
 This plugin adds the notion of "groups" to a TinyMCE editor.  Groups are
@@ -2724,6 +2879,53 @@ it and move, rename, and delete files, create folders, etc.
                 mode : 'manage files'
             }
 
+## Changing UI handlers
+
+This plugin is in charge of presenting the UI for loading and saving
+documents, and providing default handlers for that UI that use the browser's
+Local Storage.  But there may be other ways to load and save files, such as
+upload/download, integration with an online storage provider (Dropbox,
+Google Drive, etc.).  For that reason, we provide the following functions.
+
+The first allows you to install your own handler in place of the built-in
+`tryToOpen` handler.  It accepts no arguments, and should present the user
+with a UI for choosing a file to open, from whatever source.  If called with
+no arguments, this function installs the original handler again.  (For the
+implementation of `replaceInternalHandler`, see further below.)
+
+        installOpenHandler: ( handler ) ->
+            @replaceInternalHandler 'tryToOpen', handler
+
+The second allows you to install your own handler in place of the built-in
+`tryToSave` handler.  It accepts two arguments, a path and filename, which
+may be null/undefined/empty strings if "Save as..." was invoked.  It should
+either save to the file specified (if one was specified), or present the
+user with a UI for choosing where to save (if none was specified) before
+obeying the request to save.  If called with no arguments, this function
+installs the original handler again.
+
+        installSaveHandler: ( handler ) ->
+            @replaceInternalHandler 'tryToSave', handler
+
+The third allows you to install your own handler in place of the built-in
+`manageFiles` handler.  It accepts no arguments, and should show the user a
+UI for browsing the files in the data store in question, if possible.  If
+not, respond to the user's request in some way (e.g., a dialog stating that
+it is not possible, and why.)
+
+        installManageFilesHandler: ( handler ) ->
+            @replaceInternalHandler 'manageFiles', handler
+
+The following utility function was used to implement the three functions
+above.
+
+        replaceInternalHandler: ( internalName, newHandler ) ->
+            if newHandler?
+                ( @handlerBackups ?= { } )[internalName] ?= @[internalName]
+                @[internalName] = newHandler
+            else if @handlerBackups[internalName]?
+                @[internalName] = @handlerBackups[internalName]
+
 # Global stuff
 
 ## Installing the plugin
@@ -3325,6 +3527,32 @@ For creating a password input (`id` not optional in this case):
         plugin.UI.tpair label,
             "<input type='password' id='#{id}' value='#{initial}'
             style='border-width: 2px; border-style: inset;'/>"
+
+For creating a check box input (`id` not optional in this case):
+
+    plugin.UI.checkbox = ( text, checked = no, id, optionalDescription ) ->
+
+        checked = if checked then ' checked' else ''
+        result = plugin.UI.generalPair \
+            "<input type='checkbox' id='#{id}' #{checked}/>",
+            "<b>#{text}</b>", null, 10
+        if optionalDescription
+            result += plugin.UI.generalPair '',
+                "<p>#{optionalDescription}</p>", null, 10
+        result
+
+For creating a radio box input (`id` not optional in this case):
+
+    plugin.UI.radioButton = ( text, groupName, checked = no, id,
+                              optionalDescription ) ->
+        checked = if checked then ' checked' else ''
+        result = plugin.UI.generalPair \
+            "<input type='radio' name='#{groupName}' id='#{id}'
+             #{checked}/>", "<b>#{text}</b>", null, 10
+        if optionalDescription
+            result += plugin.UI.generalPair '',
+                "<p>#{optionalDescription}</p>", null, 10
+        result
 
 For creating a button:
 

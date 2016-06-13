@@ -65,8 +65,7 @@ two ways.  Extend this to general HTML pages, as follows:
  * Add an HTML export function that lets you download the contents of the
    editor (plus metadata at the front, just like when exporting to the wiki)
    for publishing on your own website, for example, or pasting into a blog
-   post.  Wrap it in a DIV with class "EmbeddedLurchDocument" or something
-   similarly unique.
+   post.  Wrap it in a DIV with class "EmbeddedLurchDocument".
  * Expose that functionality to the user, on the File menu.
  * Add an HTML import function that lets you specify a URL, sends an XHR to
    get the page at that URL, and extracts the full content of the Lurch DIV.

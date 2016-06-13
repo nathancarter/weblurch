@@ -46,84 +46,18 @@
 
   window.useGroupConnectionsUI = true;
 
-  window.pluginsToLoad = ['mediawiki', 'settings', 'dialogs'];
+  window.pluginsToLoad = ['mediawiki', 'settings', 'dialogs', 'dropbox'];
 
   window.groupMenuItems = {
-    file_order: 'dropboxopen dropboxsave | sharelink wikiimport wikiexport | appsettings docsettings',
-    dropboxopen: {
-      text: 'Open from Dropbox...',
-      context: 'file',
-      onclick: function() {
-        return tinymce.activeEditor.LoadSave.handleOpen(function() {
-          return Dropbox.choose({
-            success: function(files) {
-              return $.ajax({
-                url: files[0].link,
-                success: function(result) {
-                  var document, metadata, _ref;
-                  _ref = extractMetadata(result), metadata = _ref.metadata, document = _ref.document;
-                  tinymce.activeEditor.setContent(document);
-                  if (metadata != null) {
-                    tinymce.activeEditor.LoadSave.loadMetaData(metadata);
-                  }
-                  return tinymce.activeEditor.LoadSave.setFilename(files[0].name);
-                },
-                error: function(jqxhr, message, error) {
-                  return tinymce.activeEditor.Dialogs.alert({
-                    title: 'File load error',
-                    message: "<h1>Error loading file</h1> <p>The file failed to load from the URL Dropbox provided, with an error of type " + message + ".</p>"
-                  });
-                }
-              });
-            },
-            linkType: 'direct',
-            multiselect: false
-          });
-        });
-      }
-    },
-    dropboxsave: {
-      text: 'Save to Dropbox...',
-      context: 'file',
-      onclick: function() {
-        var content, filename, url;
-        content = embedMetadata(tinymce.activeEditor.getContent(), tinymce.activeEditor.LoadSave.saveMetaData());
-        url = 'data:text/html,' + encodeURIComponent(content);
-        if (tinymce.activeEditor.LoadSave.filename == null) {
-          tinymce.activeEditor.LoadSave.setFilename(prompt('Choose a filename', 'My Lurch Document.html'));
-          if (tinymce.activeEditor.LoadSave.filename == null) {
-            tinymce.activeEditor.Dialogs.alert({
-              title: 'Saving requires a filename',
-              message: 'You must specify a filename before you can save the file into your Dropbox.'
-            });
-            return;
-          }
-        }
-        filename = tinymce.activeEditor.LoadSave.filename;
-        return Dropbox.save(url, filename, {
-          success: function() {
-            tinymce.activeEditor.Dialogs.alert({
-              title: 'File saved successfully.',
-              message: "<h1>Saved successfully.</h1> <p>File saved to Dropbox:<br> " + filename + "</p>"
-            });
-            return tinymce.activeEditor.LoadSave.setDocumentDirty(false);
-          },
-          error: function(message) {
-            return tinymce.activeEditor.Dialogs.alert({
-              title: 'Error saving file',
-              message: "<h1>File not saved!</h1> <p>File NOT saved to Dropbox:<br> " + filename + "</p> <p>Reason: " + message + "</p>"
-            });
-          }
-        });
-      }
-    },
+    file_order: 'sharelink wikiimport wikiexport | appsettings docsettings',
     sharelink: {
       text: 'Share document...',
       context: 'file',
       onclick: function() {
-        var page, request, showURL, url, _ref, _ref1, _ref2;
+        var content, page, request, showURL, url, _ref, _ref1, _ref2;
         page = window.location.href.split('?')[0];
-        url = page + '?document=' + encodeURIComponent(tinymce.activeEditor.getContent());
+        content = embedMetadata(tinymce.activeEditor.getContent(), tinymce.activeEditor.LoadSave.saveMetaData());
+        url = page + '?document=' + encodeURIComponent(content);
         showURL = function(url) {
           var embed;
           embed = ("<iframe src='" + url + "' width=800 height=600></iframe>").replace(/&/g, '&amp;').replace(/'/g, '&apos;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -252,11 +186,15 @@
   }, false);
 
   window.afterEditorReady = function(editor) {
-    var A, D, match, toAutoLoad;
+    var A, D, document, html, match, metadata, toAutoLoad, _ref, _ref1;
     A = editor.Settings.addCategory('application');
+    if (!A.get('filesystem')) {
+      A.set('filesystem', 'dropbox');
+    }
     A.setup = function(div) {
-      var _ref, _ref1;
-      return div.innerHTML = [editor.Settings.UI.heading('Wiki Login'), editor.Settings.UI.info('Entering a username and password here does NOT create an account on the wiki.  You must already have one.  If you do not, first visit <a href="/wiki/index.php" target="_blank" style="color: blue;">the wiki</a>, create an account, then return here.'), editor.Settings.UI.text('Username', 'wiki_username', (_ref = A.get('wiki_username')) != null ? _ref : ''), editor.Settings.UI.password('Password', 'wiki_password', (_ref1 = A.get('wiki_password')) != null ? _ref1 : '')].join('\n');
+      var fs, _ref, _ref1;
+      fs = A.get('filesystem');
+      return div.innerHTML = [editor.Settings.UI.heading('Wiki Login'), editor.Settings.UI.info('Entering a username and password here does NOT create an account on the wiki.  You must already have one.  If you do not, first visit <a href="/wiki/index.php" target="_blank" style="color: blue;">the wiki</a>, create an account, then return here.'), editor.Settings.UI.text('Username', 'wiki_username', (_ref = A.get('wiki_username')) != null ? _ref : ''), editor.Settings.UI.password('Password', 'wiki_password', (_ref1 = A.get('wiki_password')) != null ? _ref1 : ''), editor.Settings.UI.heading('Open/Save Filesystem'), editor.Settings.UI.radioButton('Dropbox (cloud storage, requires account)', 'filesystem', fs === 'dropbox', 'filesystem_dropbox'), editor.Settings.UI.radioButton('Local Storage (kept permanently, in browser only)', 'filesystem', fs === 'local storage', 'filesystem_local_storage')].join('\n');
     };
     A.teardown = function(div) {
       var elt;
@@ -264,8 +202,22 @@
         return div.ownerDocument.getElementById(id);
       };
       A.set('wiki_username', elt('wiki_username').value);
-      return A.set('wiki_password', elt('wiki_password').value);
+      A.set('wiki_password', elt('wiki_password').value);
+      return A.setFilesystem(elt('filesystem_dropbox').checked ? 'dropbox' : 'local storage');
     };
+    A.setFilesystem = function(name) {
+      A.set('filesystem', name);
+      if (name === 'dropbox') {
+        editor.LoadSave.installOpenHandler(editor.Dropbox.openHandler);
+        editor.LoadSave.installSaveHandler(editor.Dropbox.saveHandler);
+        return editor.LoadSave.installManageFilesHandler(editor.Dropbox.manageFilesHandler);
+      } else {
+        editor.LoadSave.installOpenHandler();
+        editor.LoadSave.installSaveHandler();
+        return editor.LoadSave.installManageFilesHandler();
+      }
+    };
+    A.setFilesystem(A.get('filesystem'));
     D = editor.Settings.addCategory('document');
     D.metadata = {};
     D.get = function(key) {
@@ -305,13 +257,19 @@
       }));
     }
     if (toAutoLoad = localStorage.getItem('auto-load')) {
-      setTimeout(function() {
-        localStorage.removeItem('auto-load');
-        return tinymce.activeEditor.setContent(toAutoLoad);
-      }, 100);
+      try {
+        _ref = JSON.parse(toAutoLoad), metadata = _ref[0], document = _ref[1];
+        setTimeout(function() {
+          localStorage.removeItem('auto-load');
+          tinymce.activeEditor.setContent(document);
+          return editor.LoadSave.loadMetaData(metadata);
+        }, 100);
+      } catch (_error) {}
     }
     if (match = /\?document=(.*)/.exec(window.location.search)) {
-      localStorage.setItem('auto-load', decodeURIComponent(match[1]));
+      html = decodeURIComponent(match[1]);
+      _ref1 = extractMetadata(html), metadata = _ref1.metadata, document = _ref1.document;
+      localStorage.setItem('auto-load', JSON.stringify([metadata, document]));
       return window.location.href = window.location.href.split('?')[0];
     }
   };
