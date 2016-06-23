@@ -5,8 +5,8 @@ Here we import the module we're about to test and the related OM module that
 we'll use when testing.
 
     { Match, setMetavariable, clearMetavariable, isMetavariable, unify } =
-        unification = require '../src/unification.duo'
-    { OM, OMNode } = require '../src/openmath.duo'
+        unification = require '../src/unification-duo'
+    { OM, OMNode } = require '../src/openmath-duo'
 
 We create two convenience functions for creating expression functions
 and applications thereof, as defined in [the unification source

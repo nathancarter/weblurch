@@ -17,7 +17,7 @@ match `f(2,3)`, for the structural difference in number of parameters.
 The following lines ensure that this file works in Node.js, for testing.
 
     if not exports? then exports = module?.exports ? window
-    if require? then { OM, OMNode } = require './openmath.duo'
+    if require? then { OM, OMNode } = require './openmath-duo'
 
 ## Metavariables
 

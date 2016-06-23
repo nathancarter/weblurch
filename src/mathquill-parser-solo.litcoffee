@@ -10,8 +10,8 @@ The following lines ensure that this file works in Node.js, for testing.
 
     if not exports? then exports = module?.exports ? window
     if require?
-        { OM, OMNode } = require './openmath.duo'
-        { Grammar } = require './parsing.duo'
+        { OM, OMNode } = require './openmath-duo'
+        { Grammar } = require './parsing-duo'
     else
         Grammar = window.Grammar
         OM = window.OM
