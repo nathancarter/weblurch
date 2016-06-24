@@ -9,9 +9,10 @@ we'll use when testing.
       makeExpressionFunctionApplication, applyExpressionFunction,
       isExpressionFunctionApplication, findDifferencesBetween,
       parentAddresses, partitionedAddresses, differenceIterator,
-      subexpressionIterator, prefixIterator, suffixIterator, filterIterator,
-      composeIterator, alphaEquivalent, consistentPatterns, multiReplace,
-      nextMatch, setMatchDebug, bindingConstraints1, bindingConstraints2,
+      expressionDepth, sameDepthAncestors, subexpressionIterator,
+      prefixIterator, suffixIterator, filterIterator, composeIterator,
+      alphaEquivalent, consistentPatterns, multiReplace, nextMatch,
+      setMatchDebug, bindingConstraints1, bindingConstraints2,
       satisfiesBindingConstraints1, satisfiesBindingConstraints2 } =
         matching = require '../src/matching-duo'
     { OM, OMNode } = require '../src/openmath-duo'
@@ -88,12 +89,23 @@ related functions are defined.
             expect( findDifferencesBetween ).toBeTruthy()
             expect( parentAddresses ).toBeTruthy()
             expect( partitionedAddresses ).toBeTruthy()
+            expect( expressionDepth ).toBeTruthy()
+            expect( sameDepthAncestors ).toBeTruthy()
             expect( differenceIterator ).toBeTruthy()
             expect( subexpressionIterator ).toBeTruthy()
             expect( prefixIterator ).toBeTruthy()
             expect( suffixIterator ).toBeTruthy()
+            expect( composeIterator ).toBeTruthy()
+            expect( filterIterator ).toBeTruthy()
             expect( alphaEquivalent ).toBeTruthy()
             expect( consistentPatterns ).toBeTruthy()
+            expect( multiReplace ).toBeTruthy()
+            expect( nextMatch ).toBeTruthy()
+            expect( setMatchDebug ).toBeTruthy()
+            expect( bindingConstraints1 ).toBeTruthy()
+            expect( bindingConstraints2 ).toBeTruthy()
+            expect( satisfiesBindingConstraints1 ).toBeTruthy()
+            expect( satisfiesBindingConstraints2 ).toBeTruthy()
 
 ### should reliably mark metavariables
 
@@ -841,13 +853,90 @@ This section tests the `partitionedAddresses` function.
 
 ## Difference iterators
 
-This section tests the `differenceIterator` function.
+This section tests the `differenceIterator` function and its related
+supporting functions.
 
     describe 'Difference iterators', ->
 
+### should compute expression depth correctly
+
+        it 'should compute expression depth correctly', ->
+            expect( expressionDepth quick 'f' ).toBe 1
+            expect( expressionDepth quick '2' ).toBe 1
+            expect( expressionDepth quick '"yo"' ).toBe 1
+            expect( expressionDepth quick 'sym.bol' ).toBe 1
+            expect( expressionDepth quick 'f(x)' ).toBe 2
+            expect( expressionDepth quick 'f(x,y,z)' ).toBe 2
+            expect( expressionDepth quick 'f(g(2))' ).toBe 3
+            expect( expressionDepth quick 'f("hi",g("bye"))' ).toBe 3
+
+### should compute same depth ancestor sets correctly
+
+        it 'should compute same depth ancestor sets correctly', ->
+            expr = quick 'f(g(1,h(2)),3,x(y,z(w),a))'
+
+Applying it to two leaves should yield just those leaves.
+
+            addresses = [ [ 'c1', 'c2', 'c1' ], # 2
+                          [ 'c3', 'c2', 'c1' ] ] # w
+            result = sameDepthAncestors expr, addresses
+            expect( result.length ).toBe 2
+            expect( result[0] ).toEqual addresses[0]
+            expect( result[1] ).toEqual addresses[1]
+
+Applying it to a leaf and a depth-2 subtree should yield two depth-2
+subtrees (because of the configuration of the tree surrounding the two
+addresses in question).
+
+            addresses = [ [ 'c1', 'c2', 'c1' ], # 2
+                          [ 'c3', 'c2' ] ] # z
+            result = sameDepthAncestors expr, addresses
+            expect( result.length ).toBe 2
+            expect( result[0] ).toEqual addresses[0][...-1]
+            expect( result[1] ).toEqual addresses[1]
+
+Applying it to a leaf and a depth-2 subtree should yield two depth-3
+subtrees (because of the configuration of the tree surrounding the two
+addresses in question).
+
+            addresses = [ [ 'c1', 'c1' ], # 1
+                          [ 'c3', 'c2' ] ] # z
+            result = sameDepthAncestors expr, addresses
+            expect( result.length ).toBe 2
+            expect( result[0] ).toEqual [ 'c1' ]
+            expect( result[1] ).toEqual [ 'c3' ]
+
+Applying it to three leaves should yield those same three leaves.
+
+            addresses = [ [ 'c1', 'c2', 'c1' ], # 2
+                          [ 'c3', 'c2', 'c1' ], # w
+                          [ 'c2' ] ] # 3
+            result = sameDepthAncestors expr, addresses
+            expect( result.length ).toBe 3
+            expect( result[0] ).toEqual addresses[0]
+            expect( result[1] ).toEqual addresses[1]
+            expect( result[2] ).toEqual addresses[2]
+
+Applying it to two leaves and a depth-2 subtree, in this case, requires
+moving all the way back to the root before the criteria are satisfied.
+
+            addresses = [ [ 'c1', 'c1' ], # 1
+                          [ 'c3', 'c2' ], # z
+                          [ 'c2' ] ] # 3
+            result = sameDepthAncestors expr, addresses
+            expect( result.length ).toBe 1
+            expect( result[0] ).toEqual []
+
 ### should yield the correct results when called iteratively
 
+Finally, we have the test of the iterator itself.
+
         it 'should yield the correct results when called iteratively', ->
+
+First, the easy cases when the complexities of the difference iterator are
+not really shown, because parent address computations can be done simply,
+without the need for the full power of `sameDepthAncestors`.
+
             e1 = OM.simple 'f'
             e2 = OM.simple 'g'
             it = differenceIterator e1, e2
@@ -879,6 +968,41 @@ This section tests the `differenceIterator` function.
             it = differenceIterator e1, e2
             expect( it ).toBeTruthy()
             expect( it() ).toEqual [ [ 'c1' ], [ 'c2' ] ]
+            expect( it() ).toEqual [ [] ]
+            expect( it() ).toBeNull()
+
+Now some tests where differences occur at different depths, thus making a
+better test of `sameDepthAncestors`.
+
+            e1 = OM.simple 'f(x,y(x))'
+            e2 = OM.simple 'f(1,y(1))'
+            it = differenceIterator e1, e2
+            expect( it ).toBeTruthy()
+            expect( it() ).toEqual [ [ 'c1' ], [ 'c2', 'c1' ] ]
+            expect( it() ).toEqual [ [] ]
+            expect( it() ).toBeNull()
+            e1 = OM.simple 'f(x,y(y))'
+            e2 = OM.simple 'f(1,y(1))'
+            it = differenceIterator e1, e2
+            expect( it ).toBeTruthy()
+            expect( it() ).toEqual [ [] ]
+            expect( it() ).toBeNull()
+            e1 = OM.simple 'f(x,y(x))'
+            e2 = OM.simple 'f(1,y(2))'
+            it = differenceIterator e1, e2
+            expect( it ).toBeTruthy()
+            expect( it() ).toEqual [ [] ]
+            expect( it() ).toBeNull()
+            e1 = OM.simple 'f(x,y(y))'
+            e2 = OM.simple 'f(1,y(2))'
+            it = differenceIterator e1, e2
+            expect( it ).toBeTruthy()
+            expect( it() ).toEqual [ [] ]
+            expect( it() ).toBeNull()
+            e1 = OM.simple 'f(y,g(x))'
+            e2 = OM.simple 'f(h,h(x))'
+            it = differenceIterator e1, e2
+            expect( it ).toBeTruthy()
             expect( it() ).toEqual [ [] ]
             expect( it() ).toBeNull()
 
@@ -1290,7 +1414,12 @@ the binding constraints embodied in
                 [ result, args ] = nextMatch args...
                 if result? and satisfiesBindingConstraints1( result, bc1 ) \
                         and satisfiesBindingConstraints2( result, bc2 )
-                    results.push result
+                    already = no
+                    for earlier in results
+                        if earlier.equals result
+                            already = yes
+                            break
+                    if not already then results.push result
                 if not args? then break
             results
 
@@ -1934,7 +2063,6 @@ x to x, P to lambda[v0,R(v0,v0)], and t to x.
             left = quick 'Rule(for.all[_x,_P_of__x],_P_of__t)'
             right = quick 'Rule(for.all[x,R(x,x)],R(x,x))'
             result = someMatches left, right
-            console.log CLSetToString result
             expect( result.length ).toBe 1
             expect( result[0].length() ).toBe 3
             expect( result[0].lookup( 'x' ).equals quick 'x' ).toBeTruthy()
@@ -1957,7 +2085,6 @@ mapping x to x, P to lambda[v0,eq(v0,v0)], and t to iff(P,Q).
             left = quick 'Rule(for.all[_x,_P_of__x],_P_of__t)'
             right = quick 'Rule(for.all[x,eq(x,x)],eq(iff(P,Q),iff(P,Q)))'
             result = someMatches left, right
-            console.log CLSetToString result
             expect( result.length ).toBe 1
             expect( result[0].length() ).toBe 3
             expect( result[0].lookup( 'x' ).equals quick 'x' ).toBeTruthy()
@@ -1973,5 +2100,504 @@ solutions.
             left = quick 'Rule(for.all[_x,_P_of__x],_P_of__t)'
             right = quick \
                 'Rule(for.all[x,exi.sts[y,lt(x,y)]],exi.sts[y,lt(y,y)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+### should handle the universal introduction rule
+
+The following tests deal with one particular use of expression functions,
+the universal introduction rule from first-order logic.  Here I use `S` to
+indicate a subproof structure.
+
+        it 'should handle the universal introduction rule', ->
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_x,_P((_x))])` to
+`Rule(sub.prf[a,r(a,a)],for.all[b,r(b,b)])` should give no results.
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_x,_P_of__x])'
+            right = quick 'Rule(sub.prf[a,r(a,a)],for.all[b,r(b,b)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` to
+`Rule(sub.prf[a,r(a,a)],for.all[b,r(b,b)])` should give one solution,
+mapping x to a, P to lambda[v0,r(v0,v0)], and y to b.
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
+            right = quick 'Rule(sub.prf[a,r(a,a)],for.all[b,r(b,b)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'x' ).equals quick 'a' ).toBeTruthy()
+            expect( result[0].lookup( 'y' ).equals quick 'b' ).toBeTruthy()
+            expect( result[0].lookup( 'P' ).equals ef 'v0', 'r(v0,v0)' ) \
+                .toBeTruthy()
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` to
+`Rule(sub.prf[a,gt(a,3)],for.all[a,gt(a,3)])` should give one solution,
+mapping x to a, P to lambda[v0,gt(v0,3)], and y to a.
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
+            right = quick 'Rule(sub.prf[a,gt(a,3)],for.all[a,gt(a,3)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'x' ).equals quick 'a' ).toBeTruthy()
+            expect( result[0].lookup( 'y' ).equals quick 'a' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'gt(v0,3)' ).toBeTruthy()
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` to
+`Rule(sub.prf[a,gt(a,3)],for.all[x,gt(x,3)])` should give one solution,
+mapping x to a, P to lambda[v0,gt(v0,3)], and y to x.
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
+            right = quick 'Rule(sub.prf[a,gt(a,3)],for.all[x,gt(x,3)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'x' ).equals quick 'a' ).toBeTruthy()
+            expect( result[0].lookup( 'y' ).equals quick 'x' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'gt(v0,3)' ).toBeTruthy()
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` to
+`Rule(sub.prf[T,R(T,T)],for.all[T,R(T,T)])` should give one solution,
+mapping x to T, P to lambda[v0,R(v0,v0)], and y to T.
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
+            right = quick 'Rule(sub.prf[T,R(T,T)],for.all[T,R(T,T)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'x' ).equals quick 'T' ).toBeTruthy()
+            expect( result[0].lookup( 'y' ).equals quick 'T' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'R(v0,v0)' ).toBeTruthy()
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` to
+`Rule(sub.prf[T,R(T,T)],for.all[x,R(T,x)])` should give no solutions.
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
+            right = quick 'Rule(sub.prf[T,R(T,T)],for.all[x,R(T,x)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` to
+`Rule(sub.prf[y,ne(0,1)],for.all[z,ne(0,1)])` should give one solution,
+mapping x to y, P to lambda[v0,ne(0,1)], and y to z.
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
+            right = quick 'Rule(sub.prf[y,ne(0,1)],for.all[z,ne(0,1)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'x' ).equals quick 'y' ).toBeTruthy()
+            expect( result[0].lookup( 'y' ).equals quick 'z' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'ne(0,1)' ).toBeTruthy()
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` to
+`Rule(sub.prf[b,eq(minus(b,b),0)],for.all[c,eq(minus(b,c),0)])` should give
+no solutions.
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
+            right = quick \
+            'Rule(sub.prf[b,eq(minus(b,b),0)],for.all[c,eq(minus(b,c),0)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_x,_P((_x))])` to
+`Rule(sub.prf[a,gt(a,3)],for.all[a,gt(a,3)])` should give one solution,
+mapping x to a and P to lambda[v0,gt(v0,3)].
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_x,_P_of__x])'
+            right = quick 'Rule(sub.prf[a,gt(a,3)],for.all[a,gt(a,3)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 2
+            expect( result[0].lookup( 'x' ).equals quick 'a' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'gt(v0,3)' ).toBeTruthy()
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_x,_P((_x))])` to
+`Rule(sub.prf[a,gt(a,3)],for.all[x,gt(x,3)])` should give no solutions.
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_x,_P_of__x])'
+            right = quick 'Rule(sub.prf[a,gt(a,3)],for.all[x,gt(x,3)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_x,_P((_x))])` to
+`Rule(sub.prf[T,R(T,T)],for.all[T,R(T,T)])` should give one solution,
+mapping x to T and P to lambda[v0,R(v0,v0)].
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_x,_P_of__x])'
+            right = quick 'Rule(sub.prf[T,R(T,T)],for.all[T,R(T,T)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 2
+            expect( result[0].lookup( 'x' ).equals quick 'T' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'R(v0,v0)' ).toBeTruthy()
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_x,_P((_x))])` to
+`Rule(sub.prf[T,R(T,T)],for.all[x,R(T,x)])` should give no solutions.
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_x,_P_of__x])'
+            right = quick 'Rule(sub.prf[T,R(T,T)],for.all[x,R(T,x)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_x,_P((_x))])` to
+`Rule(sub.prf[y,ne(0,1)],for.all[y,ne(0,1)])` should give one solution,
+mapping x to y and P to lambda[v0,ne(0,1)].
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_x,_P_of__x])'
+            right = quick 'Rule(sub.prf[y,ne(0,1)],for.all[y,ne(0,1)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 2
+            expect( result[0].lookup( 'x' ).equals quick 'y' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'ne(0,1)' ).toBeTruthy()
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` to
+`Rule(sub.prf[x,eq(x,x)],for.all[x,eq(x,x)])` should give one solution,
+mapping x to x, y to x, and P to lambda[v0,eq(v0,v0)].
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
+            right = quick 'Rule(sub.prf[x,eq(x,x)],for.all[x,eq(x,x)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'x' ).equals quick 'x' ).toBeTruthy()
+            expect( result[0].lookup( 'y' ).equals quick 'x' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'eq(v0,v0)' ).toBeTruthy()
+
+Matching `Rule(sub.prf[_x,_P((_x))],for.all[_x,_P((_x))])` to
+`Rule(sub.prf[x,exi.sts[y,lt(x,y)]],for.all[y,exi.sts[y,lt(y,y)]])` should
+give no solutions.
+
+            left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_x,_P_of__x])'
+            right = quick 'Rule(sub.prf[x,exi.sts[y,lt(x,y)]],' + \
+                          'for.all[y,exi.sts[y,lt(y,y)]])'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+### should handle the existential introduction rule
+
+The following tests deal with one particular use of expression functions,
+the existential introduction rule from first-order logic.
+
+        it 'should handle the existential introduction rule', ->
+
+Matching `Rule(_P((_t)),exi.sts[_x,_P((_x))])` to
+`Rule(ge(1,0),exi.sts[x,ge(x,0)])` should yield one solution, mapping P to
+lambda[v0,ge(v0,0)], t to 1, and x to x.
+
+            left = quick 'Rule(_P_of__t,exi.sts[_x,_P_of__x])'
+            right = quick 'Rule(ge(1,0),exi.sts[x,ge(x,0)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 't' ).equals quick '1' ).toBeTruthy()
+            expect( result[0].lookup( 'x' ).equals quick 'x' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'ge(v0,0)' ).toBeTruthy()
+
+Matching `Rule(_P((_t)),exi.sts[_x,_P((_x))])` to
+`Rule(eq(choose(6,3),20),exi.sts[n,eq(choose(6,n),20)])` should yield one
+solution, mapping P to lambda[v0,eq(choose(6,v0),20)], t to 3, and x to n.
+
+            left = quick 'Rule(_P_of__t,exi.sts[_x,_P_of__x])'
+            right = quick 'Rule(eq(choose(6,3),20),' + \
+                          'exi.sts[n,eq(choose(6,n),20)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 't' ).equals quick '3' ).toBeTruthy()
+            expect( result[0].lookup( 'x' ).equals quick 'n' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'eq(choose(6,v0),20)' ).toBeTruthy()
+
+Matching `Rule(_P_of__t,exi.sts[_x,_P_of__x])` to
+`Rule(lt(pow(t,x),5),exi.sts[x,lt(pow(x,x),5)])` should give no solutions.
+
+            left = quick 'Rule(_P_of__t,exi.sts[_x,_P_of__x])'
+            right = quick 'Rule(lt(pow(t,x),5),exi.sts[x,lt(pow(x,x),5)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+Matching `Rule(_P((_t)),exi.sts[_x,_P((_x))])` to
+`Rule(ne(x,t),exi.sts[y,ne(y,t)])` should yield one
+solution, mapping P to lambda[v0,ne(v0,t)], t to x, and x to y.
+
+            left = quick 'Rule(_P_of__t,exi.sts[_x,_P_of__x])'
+            right = quick 'Rule(ne(x,t),exi.sts[y,ne(y,t)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 't' ).equals quick 'x' ).toBeTruthy()
+            expect( result[0].lookup( 'x' ).equals quick 'y' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'ne(v0,t)' ).toBeTruthy()
+
+Matching `Rule(_P_of__t,exi.sts[_x,_P_of__x])` to
+`Rule(ne(x,t),exi.sts[x,ne(x,x)])` should give no solutions.
+
+            left = quick 'Rule(_P_of__t,exi.sts[_x,_P_of__x])'
+            right = quick 'Rule(ne(x,t),exi.sts[x,ne(x,x)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+Matching `Rule(_P_of__t,exi.sts[_x,_P_of__x])` to
+`Rule(for.all[t,eq(t,t)],exi.sts[x,for.all[t,eq(x,t)]])` should give no
+solutions.
+
+            left = quick 'Rule(_P_of__t,exi.sts[_x,_P_of__x])'
+            right = quick \
+                'Rule(for.all[t,eq(t,t)],exi.sts[x,for.all[t,eq(x,t)]])'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+### should handle the induction scheme for N
+
+The following tests deal with one particular use of expression functions,
+the induction scheme for the natural numbers.
+
+        it 'should handle the induction scheme for N', ->
+
+The induction scheme is the lengthy expression
+`Rule(_P((0)),for.all[_k,imp(_P((_k)),_P((plus(_k,1))))],for.all[_n,_P((_n))])`.
+Matching it to
+`Rule(ge(0,0),for.all[n,imp(ge(n,0),ge(plus(n,1),0))],for.all[n,ge(n,0)])`
+should give one solution, mapping P to lambda[v0,ge(v0,0)], k to n, and n to
+n.
+
+            piece = quick 'plus(_k,1)'
+            piece = aef '_P', piece
+            piece = OM.app quick( 'imp' ), quick( '_P_of__k' ), piece
+            left = OM.app quick( 'Rule' ),
+                quick( '_P_of_0' ),
+                OM.bin( quick( 'for.all' ), quick( '_k' ), piece ),
+                quick 'for.all[_n,_P_of__n]'
+            right = quick 'Rule(ge(0,0),' + \
+                          'for.all[n,imp(ge(n,0),ge(plus(n,1),0))],' + \
+                          'for.all[n,ge(n,0)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'k' ).equals quick 'n' ).toBeTruthy()
+            expect( result[0].lookup( 'n' ).equals quick 'n' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'ge(v0,0)' ).toBeTruthy()
+
+Matching the same induction scheme to
+`Rule(eq(plus(0,0),0),for.all[m,imp(eq(plus(m,0),m),eq(plus(plus(m,1),0),plus(m,1)))],for.all[k,eq(plus(k,0),k)])`
+should give one solution, mapping P to lambda[v0,eq(plus(v0,0),v0)], k to m,
+and n to k.
+
+            right = quick 'Rule(eq(plus(0,0),0),' + \
+                          'for.all[m,imp(eq(plus(m,0),m),' + \
+                            'eq(plus(plus(m,1),0),plus(m,1)))],' + \
+                          'for.all[k,eq(plus(k,0),k)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'k' ).equals quick 'm' ).toBeTruthy()
+            expect( result[0].lookup( 'n' ).equals quick 'k' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'eq(plus(v0,0),v0)' ).toBeTruthy()
+
+Matching the same induction scheme to
+`Rule(P(0),for.all[k,imp(P(k),P(plus(k,1)))],for.all[n,P(n)])`
+should give one solution, mapping P to lambda[v0,P(v0)], k to k,
+and n to n.
+
+            right = quick 'Rule(P(0),for.all[k,imp(P(k),P(plus(k,1)))],' + \
+                          'for.all[n,P(n)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'k' ).equals quick 'k' ).toBeTruthy()
+            expect( result[0].lookup( 'n' ).equals quick 'n' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'P(v0)' ).toBeTruthy()
+
+Matching the same induction scheme to
+`Rule(eq(7,5),for.all[n,imp(eq(7,5),eq(7,5))],for.all[n,eq(7,5)])`
+should give one solution, mapping P to lambda[v0,eq(7,5)], k to n,
+and n to n.
+
+            right = quick 'Rule(eq(7,5),for.all[n,imp(eq(7,5),eq(7,5))],' +\
+                          'for.all[n,eq(7,5)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'k' ).equals quick 'n' ).toBeTruthy()
+            expect( result[0].lookup( 'n' ).equals quick 'n' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'eq(7,5)' ).toBeTruthy()
+
+Matching the same induction scheme to
+`Rule(R(n,1),for.all[m,imp(R(m,1),R(plus(m,1),1))],for.all[m,R(m,1)])`
+should give no solutions.
+
+            right = quick 'Rule(R(n,1),' + \
+                'for.all[m,imp(R(m,1),R(plus(m,1),1))],for.all[m,R(m,1)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+Matching the same induction scheme to
+`Rule(ge(k,0),for.all[k,imp(ge(k,k),ge(k,plus(k,1)))],for.all[n,ge(n,k)])`
+should give no solutions.
+
+            right = quick 'Rule(ge(k,0),' + \
+            'for.all[k,imp(ge(k,k),ge(k,plus(k,1)))],for.all[n,ge(n,k)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+Matching the same induction scheme to
+`Rule(ge(n,0),for.all[k,imp(ge(n,k),ge(n,plus(k,1)))],for.all[n,ge(n,n)])`
+should give no solutions.
+
+            right = quick 'Rule(ge(n,0),' + \
+            'for.all[k,imp(ge(n,k),ge(n,plus(k,1)))],for.all[n,ge(n,n)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+Matching the same induction scheme to
+`Rule(ge(0,0),for.all[n,imp(ge(n,0),ge(plus(n,1),0))],for.all[n,ge(0,0)])`
+should give no solutions.
+
+            right = quick 'Rule(ge(0,0),' + \
+            'for.all[n,imp(ge(n,0),ge(plus(n,1),0))],for.all[n,ge(0,0)])'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+### should handle the existential elimination rule
+
+The following tests deal with one particular use of expression functions,
+the existential elimination rule from first-order logic.
+
+        it 'should handle the existential elimination rule', ->
+
+Matching `Rule(exi.sts[_x,_P((_x))],for.all[_x,imp(_P((_x)),_Q)],_Q)` to
+`Rule(exi.sts[x,eq(sq(x),1)],for.all[x,imp(eq(sq(x),1),ge(1,0))],ge(1,0))`
+should give one solution, mapping x to x, P to lambda[v0,eq(sq(v0),1)], and
+Q to ge(1,0).
+
+            left = quick 'Rule(exi.sts[_x,_P_of__x],' + \
+                         'for.all[_x,imp(_P_of__x,_Q)],_Q)'
+            right = quick 'Rule(exi.sts[x,eq(sq(x),1)],' + \
+                          'for.all[x,imp(eq(sq(x),1),ge(1,0))],ge(1,0))'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'x' ).equals quick 'x' ).toBeTruthy()
+            expect( result[0].lookup( 'Q' ).equals quick 'ge(1,0)' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'eq(sq(v0),1)' ).toBeTruthy()
+
+Matching `Rule(exi.sts[_x,_P((_x))],for.all[_x,imp(_P((_x)),_Q)],_Q)` to
+`Rule(exi.sts[x,eq(sq(x),1)],for.all[x,imp(eq(sq(x),1),le(x,1))],le(x,1))`
+should give no solutions.
+
+            left = quick 'Rule(exi.sts[_x,_P_of__x],' + \
+                         'for.all[_x,imp(_P_of__x,_Q)],_Q)'
+            right = quick 'Rule(exi.sts[x,eq(sq(x),1)],' + \
+                          'for.all[x,imp(eq(sq(x),1),le(x,1))],le(x,1))'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+Matching `Rule(exi.sts[_x,_P((_x))],for.all[_x,imp(_P((_x)),_Q)],_Q)` to
+`Rule(exi.sts[x,gt(x,0)],imp(for.all[x,gt(x,0)],gt(-1,0)),gt(-1,0))`
+should give no solutions.
+
+            left = quick 'Rule(exi.sts[_x,_P_of__x],' + \
+                         'for.all[_x,imp(_P_of__x,_Q)],_Q)'
+            right = quick 'Rule(exi.sts[x,gt(x,0)],' + \
+                          'imp(for.all[x,gt(x,0)],gt(-1,0)),gt(-1,0))'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+Matching `Rule(exi.sts[_x,_P((_x))],for.all[_x,imp(_P((_x)),_Q)],_Q)` to
+`Rule(exi.sts[x,gt(x,0)],for.all[x,imp(gt(x,0),gt(-1,0))],gt(-1,0))`
+should give one solution, mapping x to x, P to lambda[v0,gt(v0,0)], and
+Q to gt(-1,0).
+
+            left = quick 'Rule(exi.sts[_x,_P_of__x],' + \
+                         'for.all[_x,imp(_P_of__x,_Q)],_Q)'
+            right = quick 'Rule(exi.sts[x,gt(x,0)],' + \
+                          'for.all[x,imp(gt(x,0),gt(-1,0))],gt(-1,0))'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'x' ).equals quick 'x' ).toBeTruthy()
+            expect( result[0].lookup( 'Q' ).equals quick 'gt(-1,0)' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'gt(v0,0)' ).toBeTruthy()
+
+Matching `Rule(exi.sts[_x,_P((_x))],for.all[_x,imp(_P((_x)),_Q)],_Q)` to
+`Rule(exi.sts[m,gt(m,0)],for.all[n,imp(gt(n,0),gt(-1,0))],gt(-1,0))`
+should give no solutions.
+
+            left = quick 'Rule(exi.sts[_x,_P_of__x],' + \
+                         'for.all[_x,imp(_P_of__x,_Q)],_Q)'
+            right = quick 'Rule(exi.sts[m,gt(m,0)],' + \
+                          'for.all[n,imp(gt(n,0),gt(-1,0))],gt(-1,0))'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+Matching `Rule(exi.sts[_x,_P((_x))],for.all[_y,imp(_P((_y)),_Q)],_Q)` to
+`Rule(exi.sts[x,gt(x,0)],for.all[x,imp(gt(x,0),gt(-1,0))],gt(-1,0))`
+should give one solution, mapping x to x, y to x, P to lambda[v0,gt(v0,0)],
+and Q to gt(-1,0).
+
+            left = quick 'Rule(exi.sts[_x,_P_of__x],' + \
+                         'for.all[_y,imp(_P_of__y,_Q)],_Q)'
+            right = quick 'Rule(exi.sts[x,gt(x,0)],' + \
+                          'for.all[x,imp(gt(x,0),gt(-1,0))],gt(-1,0))'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 4
+            expect( result[0].lookup( 'x' ).equals quick 'x' ).toBeTruthy()
+            expect( result[0].lookup( 'y' ).equals quick 'x' ).toBeTruthy()
+            expect( result[0].lookup( 'Q' ).equals quick 'gt(-1,0)' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'gt(v0,0)' ).toBeTruthy()
+
+Matching `Rule(exi.sts[_x,_P((_x))],for.all[_y,imp(_P((_y)),_Q)],_Q)` to
+`Rule(exi.sts[m,gt(m,0)],for.all[n,imp(gt(n,0),gt(-1,0))],gt(-1,0))`
+should give one solution, mapping x to m, y to n, P to lambda[v0,gt(v0,0)],
+and Q to gt(-1,0).
+
+            left = quick 'Rule(exi.sts[_x,_P_of__x],' + \
+                         'for.all[_y,imp(_P_of__y,_Q)],_Q)'
+            right = quick 'Rule(exi.sts[m,gt(m,0)],' + \
+                          'for.all[n,imp(gt(n,0),gt(-1,0))],gt(-1,0))'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 4
+            expect( result[0].lookup( 'x' ).equals quick 'm' ).toBeTruthy()
+            expect( result[0].lookup( 'y' ).equals quick 'n' ).toBeTruthy()
+            expect( result[0].lookup( 'Q' ).equals quick 'gt(-1,0)' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'gt(v0,0)' ).toBeTruthy()
+
+Matching `Rule(exi.sts[_x,_P((_x))],for.all[_x,imp(_P((_x)),_Q)],_Q)` to
+`Rule(exi.sts[n,lt(n,a)],for.all[a,imp(lt(a,a),lt(a,a))],lt(a,a))`
+should give no solutions.
+
+            left = quick 'Rule(exi.sts[_x,_P_of__x],' + \
+                         'for.all[_y,imp(_P_of__y,_Q)],_Q)'
+            right = quick 'RRule(exi.sts[n,lt(n,a)],' + \
+                          'for.all[a,imp(lt(a,a),lt(a,a))],lt(a,a))'
             result = someMatches left, right
             expect( result.length ).toBe 0

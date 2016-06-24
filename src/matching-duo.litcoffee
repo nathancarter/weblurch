@@ -314,6 +314,17 @@ as not to alter the original.
                     metavariable.replaceWith value
             result
 
+Two constraint lists are equal if a pair in either is also in the other.
+
+        equals : ( other ) ->
+            for constraint in @contents
+                if not other.firstSatisfying( ( c ) -> c.equals constraint )
+                    return no
+            for constraint in other.contents
+                if not @firstSatisfying( ( c ) -> c.equals constraint )
+                    return no
+            yes
+
 ## Differences and parent addresses
 
 The notion of an address is defined in [the OpenMath
@@ -390,20 +401,74 @@ returns null (which is a fixed point, and it will continue to return null
 for all subsequent calls).
 
 Given two expressions $e_1$ and $e_2$, compute their difference set, as
-defined in the paper cited at the top of this document, and call it $A_1$.
-Compute the parent set of $A_1$ using the function above and call it $A_2$.
-Iterate until you reach $A_n$, which should be the single-element set
-containing just the empty address.  Let $S_1,\ldots,S_k$ be the subset of
-$\{A_1,\ldots,A_n\}$ such that each element $s$ in $S_i$ yields the same
-subexpression $e_1[s]$ and $e_2[s]$, again as defined in the same paper.
-Then the following iterator returns the list $S_1,\ldots,S_k$.
+defined in the paper cited at the top of this document, and call it $D$.
+Let $A$ be the set of ancestor sets to $D$ that are uniform on both $e_1$
+and $e_2$.  This iterator enumerates $A$.
 
-Note that this assumes that the two expressions passed in are not equal, so
-that there exists a difference set.
+It relies on the fact that, in order for an address set to be uniform on any
+expression, the addresses in the set must all be to subtrees of the same
+height.  Thus the first step of the iteration is to shrink the addresses in
+a difference set until all subtrees have the same height.  Then we can
+enumerate $A$ by simply repeatedly computing parent addresses of the entire
+set.  This makes the enumeration linear.  Consequently, we need the
+following handy function.
+
+    exports.expressionDepth = expressionDepth = ( expression ) ->
+        children = [ expression.children..., expression.variables... ]
+        if expression.body then children.push expression.body
+        if expression.symbol then children.push expression.symbol
+        1 + Math.max 0, ( expressionDepth child for child in children )...
+
+Given a set $S$ of addresses into an expression $e$, with varying depths of
+subtrees $e[s]$ for $s\in S$, we will want to compute the set of ancestors
+of addresses in $S$ whose subexpressions in $e$ all have the same depth, the
+maximum depth of the $e[s]$ for $s\in S$.  This function does so.  Note that
+it never returns an empty array (if the input list was nonempty) because the
+address `[]` is an ancestor to every address, and so the set `[ [] ]` will
+always be a valid same-depth ancestor set to the input (though possibly not
+the minimum depth one).
+
+    exports.sameDepthAncestors =
+    sameDepthAncestors = ( expression, addresses ) ->
+
+Try to find a pair of addresses of different depths.
+
+        for address1, index1 in addresses
+            depth1 = expressionDepth expression.index address1
+            for address2, index2 in addresses
+                depth2 = expressionDepth expression.index address2
+                if depth1 is depth2 then continue
+
+Ensure the shallower is #1 and the deeper is #2, then deepen #1.
+
+                if depth1 > depth2
+                    [ address1, address2 ] = [ address2, address1 ]
+                    [ index1, index2 ] = [ index2, index1 ]
+                deeper = address1[...-1]
+
+Replace the old, shallower version with its deeper version, then recur.
+
+                improvement = addresses[..]
+                improvement[index1] = address1[...-1]
+                return sameDepthAncestors expression, improvement
+
+If there was no pair of addresses of different depths, then we just remove
+duplicates to ensure that this is a set, and we're done.
+
+        results = []
+        for address in addresses
+            serialized = JSON.stringify address
+            if serialized not in results then results.push serialized
+        JSON.parse serialized for serialized in results
+
+Now we can use those two functions to build the difference iterator
+specified at the start of this section.  Note that it assumes that the two
+expressions passed in are not equal, so that there exists a difference set.
 
     exports.differenceIterator =
     differenceIterator = ( expression1, expression2 ) ->
-        nextAddressSet = findDifferencesBetween expression1, expression2
+        nextAddressSet = sameDepthAncestors expression1, \
+            findDifferencesBetween expression1, expression2
         indexedSubexpressionsAreEqual = ( addresses ) ->
             for address1 in addresses
                 for address2 in addresses
@@ -415,10 +480,14 @@ that there exists a difference set.
         ->
             while nextAddressSet? and \
                   not indexedSubexpressionsAreEqual nextAddressSet
-                nextAddressSet = parentAddresses nextAddressSet
+                pars = parentAddresses nextAddressSet
+                nextAddressSet =
+                    pars and sameDepthAncestors expression1, pars
             result = nextAddressSet
             if result isnt null
-                nextAddressSet = parentAddresses nextAddressSet
+                pars = parentAddresses nextAddressSet
+                nextAddressSet =
+                    pars and sameDepthAncestors expression1, pars
             result
 
 Given an expression $e$, we consider the set of all subexpressions $U$ of
@@ -730,7 +799,6 @@ the arguments to the expression function applications.
             if pair?
                 [ c1, c2 ] = pair
                 smallerC = constraints.minus c1, c2
-                sCopy = solution.copy()
                 metavariable = c1.pattern.children[1]
                 t1 = c1.pattern.children[2]
                 t2 = c2.pattern.children[2]
@@ -776,7 +844,6 @@ parameters to the expression functions must be different.)
             if pair?
                 [ c1, c2 ] = pair
                 smallerC = constraints.minus c1, c2
-                sCopy = solution.copy()
                 metavariable = c1.pattern.children[1]
                 t1 = c1.pattern.children[2]
                 t2 = c2.pattern.children[2]
@@ -785,6 +852,9 @@ parameters to the expression functions must be different.)
                     v = constraints.nextNewVariable()
                     makeExpressionFunction v, multiReplace e, subset, v
                 iterator = subexpressionIterator e
+                iterator = filterIterator iterator, ( subset ) ->
+                    mValue = solution.lookup metavariable
+                    not mValue? or alphaEquivalent mValue, makeMValue subset
                 iterator = suffixIterator iterator, 'done'
                 iterator = composeIterator iterator, ( subset ) ->
                     if subset is 'done'
@@ -825,6 +895,9 @@ that metavariable as follows.
                 v = constraints.nextNewVariable()
                 makeExpressionFunction v, multiReplace e, subset, v
             iterator = subexpressionIterator e
+            iterator = filterIterator iterator, ( subset ) ->
+                mValue = solution.lookup metavariable
+                not mValue? or alphaEquivalent mValue, makeMValue subset
             iterator = suffixIterator iterator, 'done'
             iterator = composeIterator iterator, ( subset ) ->
                 if subset is 'done'

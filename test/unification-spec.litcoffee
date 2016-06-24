@@ -939,8 +939,8 @@ Unifying `Rule(for.all[_x,_P((_x))],_P((_t)))` with
             expect( result[0].get( 'P' ).equals ef 'v0', 'eq(sq(v0),v0)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(forall[_x,_P((_x))],_P((_t)))` with
-`Rule(forall[x,R(x,y)],R(x,3))` should fail.
+Unifying `Rule(for.all[_x,_P((_x))],_P((_t)))` with
+`Rule(for.all[x,R(x,y)],R(x,3))` should fail.
 
             left = quick 'Rule(for.all[_x,_P_of__x],_P_of__t)'
             right = quick 'Rule(for.all[x,R(x,y)],R(x,3))'
@@ -1029,7 +1029,7 @@ Unifying `Rule(for.all[_x,_P((_x))],_P((_t)))` with
                 .toBeTruthy()
 
 Unifying `Rule(for.all[_x,_P((_x))],_P((_t)))` with
-`Rule(for.all[x,exists[y,lt(x,y)]],exists[y,lt(y,y)])` should fail.
+`Rule(for.all[x,exi.sts[y,lt(x,y)]],exi.sts[y,lt(y,y)])` should fail.
 
             left = quick 'Rule(for.all[_x,_P_of__x],_P_of__t)'
             right = quick 'Rule(for.all[x,exi.sts[y,lt(x,y)]],exi.sts[y,lt(y,y)])'
@@ -1044,16 +1044,16 @@ indicate a subproof structure.
 
         it 'should handle the universal introduction rule', ->
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_x,_P((_x))])` with
-`Rule(subproof[a,r(a,a)],forall[b,r(b,b)])` should fail.
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_x,_P((_x))])` with
+`Rule(sub.prf[a,r(a,a)],for.all[b,r(b,b)])` should fail.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_x,_P_of__x])'
             right = quick 'Rule(sub.prf[a,r(a,a)],for.all[b,r(b,b)])'
             result = unify left, right
             expect( result.length ).toBe 0
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_y,_P((_y))])` with
-`Rule(subproof[a,r(a,a)],forall[b,r(b,b)])` should yield `x : a, P :
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` with
+`Rule(sub.prf[a,r(a,a)],for.all[b,r(b,b)])` should yield `x : a, P :
 lambda(v0,r(v0,v0)), y : b`.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
@@ -1066,8 +1066,8 @@ lambda(v0,r(v0,v0)), y : b`.
             expect( result[0].get( 'P' ).equals ef 'v0', 'r(v0,v0)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_y,_P((_y))])` with
-`Rule(subproof[a,gt(a,3)],forall[a,gt(a,3)])` should yield `x : a, P :
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` with
+`Rule(sub.prf[a,gt(a,3)],for.all[a,gt(a,3)])` should yield `x : a, P :
 lambda(v0,gt(v0,3)), y : a`.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
@@ -1080,8 +1080,8 @@ lambda(v0,gt(v0,3)), y : a`.
             expect( result[0].get( 'P' ).equals ef 'v0', 'gt(v0,3)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_y,_P((_y))])` with
-`Rule(subproof[a,gt(a,3)],forall[x,gt(x,3)])` should yield `x : a, P :
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` with
+`Rule(sub.prf[a,gt(a,3)],for.all[x,gt(x,3)])` should yield `x : a, P :
 lambda(v0,gt(v0,3)), y : x`.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
@@ -1094,8 +1094,8 @@ lambda(v0,gt(v0,3)), y : x`.
             expect( result[0].get( 'P' ).equals ef 'v0', 'gt(v0,3)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_y,_P((_y))])` with
-`Rule(subproof[T,R(T,T)],forall[T,R(T,T)])` should yield `x : T, P :
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` with
+`Rule(sub.prf[T,R(T,T)],for.all[T,R(T,T)])` should yield `x : T, P :
 lambda(v0,R(v0,v0)), y : T`.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
@@ -1108,16 +1108,16 @@ lambda(v0,R(v0,v0)), y : T`.
             expect( result[0].get( 'P' ).equals ef 'v0', 'R(v0,v0)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_y,_P((_y))])` with
-`Rule(subproof[T,R(T,T)],forall[x,R(T,x)])` should fail.
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` with
+`Rule(sub.prf[T,R(T,T)],for.all[x,R(T,x)])` should fail.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
             right = quick 'Rule(sub.prf[T,R(T,T)],for.all[x,R(T,x)])'
             result = unify left, right
             expect( result.length ).toBe 0
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_y,_P((_y))])` with
-`Rule(subproof[y,ne(0,1)],forall[z,ne(0,1)])` should yield `x : y, P :
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` with
+`Rule(sub.prf[y,ne(0,1)],for.all[z,ne(0,1)])` should yield `x : y, P :
 lambda(v0,ne(0,1)), y : z`.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
@@ -1130,16 +1130,16 @@ lambda(v0,ne(0,1)), y : z`.
             expect( result[0].get( 'P' ).equals ef 'v0', 'ne(0,1)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_y,_P((_y))])` with
-`Rule(subproof[b,eq(minus(b,b),0)],forall[c,eq(minus(b,c),0)])` should fail.
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` with
+`Rule(sub.prf[b,eq(minus(b,b),0)],for.all[c,eq(minus(b,c),0)])` should fail.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
             right = quick 'Rule(sub.prf[b,eq(minus(b,b),0)],for.all[c,eq(minus(b,c),0)])'
             result = unify left, right
             expect( result.length ).toBe 0
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_x,_P((_x))])` with
-`Rule(subproof[a,gt(a,3)],forall[a,gt(a,3)])` should yield `x : a, P :
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_x,_P((_x))])` with
+`Rule(sub.prf[a,gt(a,3)],for.all[a,gt(a,3)])` should yield `x : a, P :
 lambda(v0,gt(v0,3))`.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_x,_P_of__x])'
@@ -1151,16 +1151,16 @@ lambda(v0,gt(v0,3))`.
             expect( result[0].get( 'P' ).equals ef 'v0', 'gt(v0,3)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_x,_P((_x))])` with
-`Rule(subproof[a,gt(a,3)],forall[x,gt(x,3)])` should fail.
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_x,_P((_x))])` with
+`Rule(sub.prf[a,gt(a,3)],for.all[x,gt(x,3)])` should fail.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_x,_P_of__x])'
             right = quick 'Rule(sub.prf[a,gt(a,3)],for.all[x,gt(x,3)])'
             result = unify left, right
             expect( result.length ).toBe 0
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_x,_P((_x))])` with
-`Rule(subproof[T,R(T,T)],forall[T,R(T,T)])` should yield `x : T, P :
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_x,_P((_x))])` with
+`Rule(sub.prf[T,R(T,T)],for.all[T,R(T,T)])` should yield `x : T, P :
 lambda(v0,R(v0,v0))`.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_x,_P_of__x])'
@@ -1172,16 +1172,16 @@ lambda(v0,R(v0,v0))`.
             expect( result[0].get( 'P' ).equals ef 'v0', 'R(v0,v0)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_x,_P((_x))])` with
-`Rule(subproof[T,R(T,T)],forall[x,R(T,x)])` should fail.
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_x,_P((_x))])` with
+`Rule(sub.prf[T,R(T,T)],for.all[x,R(T,x)])` should fail.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_x,_P_of__x])'
             right = quick 'Rule(sub.prf[T,R(T,T)],for.all[x,R(T,x)])'
             result = unify left, right
             expect( result.length ).toBe 0
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_x,_P((_x))])` with
-`Rule(subproof[y,ne(0,1)],forall[y,ne(0,1)])` should yield `x : y, P :
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_x,_P((_x))])` with
+`Rule(sub.prf[y,ne(0,1)],for.all[y,ne(0,1)])` should yield `x : y, P :
 lambda(v0,ne(0,1))`.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_x,_P_of__x])'
@@ -1193,8 +1193,8 @@ lambda(v0,ne(0,1))`.
             expect( result[0].get( 'P' ).equals ef 'v0', 'ne(0,1)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_y,_P((_y))])` with
-`Rule(subproof[x,eq(x,x)],forall[x,eq(x,x)])` should yield `x : x, y : x,
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` with
+`Rule(sub.prf[x,eq(x,x)],for.all[x,eq(x,x)])` should yield `x : x, y : x,
 P : lambda(v0,eq(v0,v0))`.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
@@ -1203,12 +1203,12 @@ P : lambda(v0,eq(v0,v0))`.
             expect( result.length ).toBe 1
             expect( result[0].keys().sort() ).toEqual [ 'P', 'x', 'y' ]
             expect( result[0].get( 'x' ).equals quick 'x' ).toBeTruthy()
-            expect( result[0].get( 'x' ).equals quick 'x' ).toBeTruthy()
+            expect( result[0].get( 'y' ).equals quick 'x' ).toBeTruthy()
             expect( result[0].get( 'P' ).equals ef 'v0', 'eq(v0,v0)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(subproof[_x,_P((_x))],forall[_y,_P((_y))])` with
-`Rule(subproof[x,exists[y,lt(x,y)]],forall[y,exists[y,lt(y,y)]])`
+Unifying `Rule(sub.prf[_x,_P((_x))],for.all[_y,_P((_y))])` with
+`Rule(sub.prf[x,exi.sts[y,lt(x,y)]],for.all[y,exi.sts[y,lt(y,y)]])`
 should fail.
 
             left = quick 'Rule(sub.prf[_x,_P_of__x],for.all[_y,_P_of__y])'
@@ -1223,9 +1223,9 @@ the existential introduction rule from first-order logic.
 
         it 'should handle the existential introduction rule', ->
 
-Unifying `Rule(_P((_t)),exists[_x,_P((_x))])` with
-`Rule(ge(1,0),exists[x,ge(x,0)])` should yield `P : lambda(v0,ge(v0,0)), t :
-1, x : x`.
+Unifying `Rule(_P((_t)),exi.sts[_x,_P((_x))])` with
+`Rule(ge(1,0),exi.sts[x,ge(x,0)])` should yield `P : lambda(v0,ge(v0,0)),
+t : 1, x : x`.
 
             left = quick 'Rule(_P_of__t,exi.sts[_x,_P_of__x])'
             right = quick 'Rule(ge(1,0),exi.sts[x,ge(x,0)])'
@@ -1237,8 +1237,8 @@ Unifying `Rule(_P((_t)),exists[_x,_P((_x))])` with
             expect( result[0].get( 'P' ).equals ef 'v0', 'ge(v0,0)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(_P((_t)),exists[_x,_P((_x))])` with
-`Rule(eq(choose(6,3),20),exists[n,eq(choose(6,n),20)])` should yield
+Unifying `Rule(_P((_t)),exi.sts[_x,_P((_x))])` with
+`Rule(eq(choose(6,3),20),exi.sts[n,eq(choose(6,n),20)])` should yield
 `P : lambda(v0,eq(choose(6,v0),20)), t : 3, x : n`.
 
             left = quick 'Rule(_P_of__t,exi.sts[_x,_P_of__x])'
@@ -1251,17 +1251,17 @@ Unifying `Rule(_P((_t)),exists[_x,_P((_x))])` with
             expect( result[0].get( 'P' ).equals ef 'v0',
                 'eq(choose(6,v0),20)' ).toBeTruthy()
 
-Unifying `Rule(_P((_t)),exists[_x,_P((_x))])` with
-`Rule(lt(pow(t,x),5),exists[x,lt(pow(x,x),5)])` should fail.
+Unifying `Rule(_P((_t)),exi.sts[_x,_P((_x))])` with
+`Rule(lt(pow(t,x),5),exi.sts[x,lt(pow(x,x),5)])` should fail.
 
             left = quick 'Rule(_P_of__t,exi.sts[_x,_P_of__x])'
             right = quick 'Rule(lt(pow(t,x),5),exi.sts[x,lt(pow(x,x),5)])'
             result = unify left, right
             expect( result.length ).toBe 0
 
-Unifying `Rule(_P((_t)),exists[_x,_P((_x))])` with
-`Rule(eq(int[x,sq(x)],etc.etc),exists[f,eq(int[x,f],etc.etc)])` should yield
-`P : lambda(v0,eq(int[x,v0],etc.etc)), t : sq(x), x : f`.
+Unifying `Rule(_P((_t)),exi.sts[_x,_P((_x))])` with
+`Rule(eq(int[x,sq(x)],etc.etc),exi.sts[f,eq(int[x,f],etc.etc)])` should
+yield `P : lambda(v0,eq(int[x,v0],etc.etc)), t : sq(x), x : f`.
 
 No, this fails because `sq(x)` contains an `x` bound by the integral.  (At
 least, I think that's why.)  This requires more thought before it becomes a
@@ -1277,8 +1277,8 @@ unit test.
             # expect( result[0].get( 'P' ).equals ef 'v0',
             #     'lambda(v0,eq(inte.gral[x,v0],etc.etc))' ).toBeTruthy()
 
-Unifying `Rule(_P((_t)),exists[_x,_P((_x))])` with
-`Rule(ne(x,t),exists[y,ne(y,t)])` should yield
+Unifying `Rule(_P((_t)),exi.sts[_x,_P((_x))])` with
+`Rule(ne(x,t),exi.sts[y,ne(y,t)])` should yield
 `P : lambda(v0,ne(v0,t)), t : x, x : y`.
 
             left = quick 'Rule(_P_of__t,exi.sts[_x,_P_of__x])'
@@ -1291,16 +1291,16 @@ Unifying `Rule(_P((_t)),exists[_x,_P((_x))])` with
             expect( result[0].get( 'P' ).equals ef 'v0', 'ne(v0,t)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(_P((_t)),exists[_x,_P((_x))])` with
-`Rule(ne(x,t),exists[x,ne(x,x)])` should fail.
+Unifying `Rule(_P((_t)),exi.sts[_x,_P((_x))])` with
+`Rule(ne(x,t),exi.sts[x,ne(x,x)])` should fail.
 
             left = quick 'Rule(_P_of__t,exi.sts[_x,_P_of__x])'
             right = quick 'Rule(ne(x,t),exi.sts[x,ne(x,x)])'
             result = unify left, right
             expect( result.length ).toBe 0
 
-Unifying `Rule(_P((_t)),exists[_x,_P((_x))])` with
-`Rule(forall[t,eq(t,t)],exists[x,forall[t,eq(x,t)]])` should fail.
+Unifying `Rule(_P((_t)),exi.sts[_x,_P((_x))])` with
+`Rule(for.all[t,eq(t,t)],exi.sts[x,for.all[t,eq(x,t)]])` should fail.
 
             left = quick 'Rule(_P_of__t,exi.sts[_x,_P_of__x])'
             right = quick 'Rule(for.all[t,eq(t,t)],exi.sts[x,for.all[t,eq(x,t)]])'
@@ -1315,9 +1315,9 @@ the induction scheme for the natural numbers.
         it 'should handle the induction scheme for N', ->
 
 The induction scheme is the lengthy expression
-`Rule(_P((0)),forall[_k,imp(_P((_k)),_P((plus(_k,1))))],forall[_n,_P((_n))])`.
+`Rule(_P((0)),for.all[_k,imp(_P((_k)),_P((plus(_k,1))))],for.all[_n,_P((_n))])`.
 Unifying it with
-`Rule(ge(0,0),forall[n,imp(ge(n,0),ge(plus(n,1),0))],forall[n,ge(n,0)])`
+`Rule(ge(0,0),for.all[n,imp(ge(n,0),ge(plus(n,1),0))],for.all[n,ge(n,0)])`
 should yield `P : lambda(v0,ge(v0,0)), k : n, n : n`.
 
             piece = quick 'plus(_k,1)'
@@ -1337,8 +1337,8 @@ should yield `P : lambda(v0,ge(v0,0)), k : n, n : n`.
                 .toBeTruthy()
 
 Unifying the same induction rule with
-`Rule(eq(plus(0,0),0),forall[m,imp(eq(plus(m,0),m),eq(plus(plus(m,1),0),plus(m,1)))],forall[k,eq(plus(k,0),k)])`
-should yield `P : lambda(v0,eq(plus(v0,0),0)), k : m, n : k`.
+`Rule(eq(plus(0,0),0),for.all[m,imp(eq(plus(m,0),m),eq(plus(plus(m,1),0),plus(m,1)))],for.all[k,eq(plus(k,0),k)])`
+should yield `P : lambda(v0,eq(plus(v0,0),v0)), k : m, n : k`.
 
             right = quick 'Rule(eq(plus(0,0),0),for.all[m,imp(eq(plus(m,0),m),eq(plus(plus(m,1),0),plus(m,1)))],for.all[k,eq(plus(k,0),k)])'
             result = unify left, right
@@ -1350,7 +1350,7 @@ should yield `P : lambda(v0,eq(plus(v0,0),0)), k : m, n : k`.
                 'eq(plus(v0,0),v0)' ).toBeTruthy()
 
 Unifying the same induction rule with
-`Rule(P(0),forall[k,imp(P(k),P(plus(k,1)))],forall[n,P(n)])`
+`Rule(P(0),for.all[k,imp(P(k),P(plus(k,1)))],for.all[n,P(n)])`
 should yield `P : lambda(v0,P(v0)), k : k, n : n`.
 
             right = quick 'Rule(P(0),for.all[k,imp(P(k),P(plus(k,1)))],for.all[n,P(n)])'
@@ -1363,7 +1363,7 @@ should yield `P : lambda(v0,P(v0)), k : k, n : n`.
                 .toBeTruthy()
 
 Unifying the same induction rule with
-`Rule(eq(7,5),forall[k,imp(eq(7,5),eq(7,5))],forall[n,eq(7,5)])`
+`Rule(eq(7,5),for.all[n,imp(eq(7,5),eq(7,5))],for.all[n,eq(7,5)])`
 should yield `P : lambda(v0,eq(7,5)), k : n, n : n`.
 
             right = quick 'Rule(eq(7,5),for.all[n,imp(eq(7,5),eq(7,5))],for.all[n,eq(7,5)])'
@@ -1376,7 +1376,7 @@ should yield `P : lambda(v0,eq(7,5)), k : n, n : n`.
                 .toBeTruthy()
 
 Unifying the same induction rule with
-`Rule(R(n,1),forall[m,imp(R(m,1),R(plus(m,1),1))],forall[m,R(m,1)])`
+`Rule(R(n,1),for.all[m,imp(R(m,1),R(plus(m,1),1))],for.all[m,R(m,1)])`
 should fail.
 
             right = quick 'Rule(R(n,1),for.all[m,imp(R(m,1),R(plus(m,1),1))],for.all[m,R(m,1)])'
@@ -1384,7 +1384,7 @@ should fail.
             expect( result.length ).toBe 0
 
 Unifying the same induction rule with
-`Rule(ge(k,0),forall[k,imp(ge(k,k),ge(k,plus(k,1)))],forall[n,ge(n,k)])`
+`Rule(ge(k,0),for.all[k,imp(ge(k,k),ge(k,plus(k,1)))],for.all[n,ge(n,k)])`
 should fail.
 
             right = quick 'Rule(ge(k,0),for.all[k,imp(ge(k,k),ge(k,plus(k,1)))],for.all[n,ge(n,k)])'
@@ -1392,7 +1392,7 @@ should fail.
             expect( result.length ).toBe 0
 
 Unifying the same induction rule with
-`Rule(ge(n,0),forall[k,imp(ge(n,k),ge(n,plus(k,1)))],forall[n,ge(n,n)])`
+`Rule(ge(n,0),for.all[k,imp(ge(n,k),ge(n,plus(k,1)))],for.all[n,ge(n,n)])`
 should fail.
 
             right = quick 'Rule(ge(n,0),for.all[k,imp(ge(n,k),ge(n,plus(k,1)))],for.all[n,ge(n,n)])'
@@ -1400,7 +1400,7 @@ should fail.
             expect( result.length ).toBe 0
 
 Unifying the same induction rule with
-`Rule(ge(0,0),forall[n,imp(ge(n,0),ge(plus(n,1),0))],forall[n,ge(0,0)])`
+`Rule(ge(0,0),for.all[n,imp(ge(n,0),ge(plus(n,1),0))],for.all[n,ge(0,0)])`
 (just changing the final `n` to a zero) should fail.
 
             right = quick 'Rule(ge(0,0),for.all[n,imp(ge(n,0),ge(plus(n,1),0))],for.all[n,ge(0,0)])'
@@ -1414,8 +1414,8 @@ the existential elimination rule from first-order logic.
 
         it 'should handle the existential elimination rule', ->
 
-Unifying `Rule(exists[_x,_P((_x))],forall[_x,imp(_P((_x)),_Q)],_Q)` with
-`Rule(exists[x,eq(sq(x),1)],forall[x,imp(eq(sq(x),1),ge(1,0))],ge(1,0))`
+Unifying `Rule(exi.sts[_x,_P((_x))],for.all[_x,imp(_P((_x)),_Q)],_Q)` with
+`Rule(exi.sts[x,eq(sq(x),1)],for.all[x,imp(eq(sq(x),1),ge(1,0))],ge(1,0))`
 should yield `x : x, P : lambda(v0,eq(sq(v0),1)), Q : ge(1,0)`.
 
             left = quick 'Rule(exi.sts[_x,_P_of__x],for.all[_x,imp(_P_of__x,_Q)],_Q)'
@@ -1429,8 +1429,8 @@ should yield `x : x, P : lambda(v0,eq(sq(v0),1)), Q : ge(1,0)`.
             expect( result[0].get( 'P' ).equals ef 'v0', 'eq(sq(v0),1)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(exists[_x,_P((_x))],forall[_x,imp(_P((_x)),_Q)],_Q)` with
-`Rule(exists[x,eq(sq(x),1)],forall[x,imp(eq(sq(x),1),le(x,1))],le(x,1))`
+Unifying `Rule(exi.sts[_x,_P((_x))],for.all[_x,imp(_P((_x)),_Q)],_Q)` with
+`Rule(exi.sts[x,eq(sq(x),1)],for.all[x,imp(eq(sq(x),1),le(x,1))],le(x,1))`
 should fail.
 
             left = quick 'Rule(exi.sts[_x,_P_of__x],for.all[_x,imp(_P_of__x,_Q)],_Q)'
@@ -1438,8 +1438,8 @@ should fail.
             result = unify left, right
             expect( result.length ).toBe 0
 
-Unifying `Rule(exists[_x,_P((_x))],forall[_x,imp(_P((_x)),_Q)],_Q)` with
-`Rule(exists[x,gt(x,0)],imp(forall[x,gt(x,0)],gt(-1,0)),gt(-1,0))`
+Unifying `Rule(exi.sts[_x,_P((_x))],for.all[_x,imp(_P((_x)),_Q)],_Q)` with
+`Rule(exi.sts[x,gt(x,0)],imp(for.all[x,gt(x,0)],gt(-1,0)),gt(-1,0))`
 should fail.
 
             left = quick 'Rule(exi.sts[_x,_P_of__x],for.all[_x,imp(_P_of__x,_Q)],_Q)'
@@ -1447,8 +1447,8 @@ should fail.
             result = unify left, right
             expect( result.length ).toBe 0
 
-Unifying `Rule(exists[_x,_P((_x))],forall[_x,imp(_P((_x)),_Q)],_Q)` with
-`Rule(exists[x,gt(x,0)],forall[x,imp(gt(x,0),gt(-1,0))],gt(-1,0))`
+Unifying `Rule(exi.sts[_x,_P((_x))],for.all[_x,imp(_P((_x)),_Q)],_Q)` with
+`Rule(exi.sts[x,gt(x,0)],for.all[x,imp(gt(x,0),gt(-1,0))],gt(-1,0))`
 should yield `x : x, P : lambda(v0,gt(v0,0)), Q : gt(-1,0)`.
 
             left = quick 'Rule(exi.sts[_x,_P_of__x],for.all[_x,imp(_P_of__x,_Q)],_Q)'
@@ -1462,8 +1462,8 @@ should yield `x : x, P : lambda(v0,gt(v0,0)), Q : gt(-1,0)`.
             expect( result[0].get( 'P' ).equals ef 'v0', 'gt(v0,0)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(exists[_x,_P((_x))],forall[_x,imp(_P((_x)),_Q)],_Q)` with
-`Rule(exists[m,gt(m,0)],forall[n,imp(gt(n,0),gt(-1,0))],gt(-1,0))`
+Unifying `Rule(exi.sts[_x,_P((_x))],for.all[_x,imp(_P((_x)),_Q)],_Q)` with
+`Rule(exi.sts[m,gt(m,0)],for.all[n,imp(gt(n,0),gt(-1,0))],gt(-1,0))`
 should fail.
 
             left = quick 'Rule(exi.sts[_x,_P_of__x],for.all[_x,imp(_P_of__x,_Q)],_Q)'
@@ -1471,8 +1471,8 @@ should fail.
             result = unify left, right
             expect( result.length ).toBe 0
 
-Unifying `Rule(exists[_x,_P((_x))],forall[_y,imp(_P((_y)),_Q)],_Q)` with
-`Rule(exists[m,gt(m,0)],forall[n,imp(gt(n,0),gt(-1,0))],gt(-1,0))`
+Unifying `Rule(exi.sts[_x,_P((_x))],for.all[_y,imp(_P((_y)),_Q)],_Q)` with
+`Rule(exi.sts[x,gt(x,0)],for.all[x,imp(gt(x,0),gt(-1,0))],gt(-1,0))`
 should yield `x : x, y : x, P : lambda(v0,gt(v0,0)), Q : gt(-1,0)`.
 
             left = quick 'Rule(exi.sts[_x,_P_of__x],for.all[_y,imp(_P_of__y,_Q)],_Q)'
@@ -1487,8 +1487,8 @@ should yield `x : x, y : x, P : lambda(v0,gt(v0,0)), Q : gt(-1,0)`.
             expect( result[0].get( 'P' ).equals ef 'v0', 'gt(v0,0)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(exists[_x,_P((_x))],forall[_y,imp(_P((_y)),_Q)],_Q)` with
-`Rule(exists[m,gt(m,0)],forall[n,imp(gt(n,0),gt(-1,0))],gt(-1,0))`
+Unifying `Rule(exi.sts[_x,_P((_x))],for.all[_y,imp(_P((_y)),_Q)],_Q)` with
+`Rule(exi.sts[m,gt(m,0)],for.all[n,imp(gt(n,0),gt(-1,0))],gt(-1,0))`
 should yield `x : m, y : n, P : lambda(v0,gt(v0,0)), Q : gt(-1,0)`.
 
             left = quick 'Rule(exi.sts[_x,_P_of__x],for.all[_y,imp(_P_of__y,_Q)],_Q)'
@@ -1503,8 +1503,8 @@ should yield `x : m, y : n, P : lambda(v0,gt(v0,0)), Q : gt(-1,0)`.
             expect( result[0].get( 'P' ).equals ef 'v0', 'gt(v0,0)' ) \
                 .toBeTruthy()
 
-Unifying `Rule(exists[_x,_P((_x))],forall[_y,imp(_P((_y)),_Q)],_Q)` with
-`Rule(exists[n,lt(n,a)],forall[a,imp(lt(a,a),lt(a,a))],lt(a,a))`
+Unifying `Rule(exi.sts[_x,_P((_x))],for.all[_y,imp(_P((_y)),_Q)],_Q)` with
+`Rule(exi.sts[n,lt(n,a)],for.all[a,imp(lt(a,a),lt(a,a))],lt(a,a))`
 should fail.
 
             left = quick 'Rule(exi.sts[_x,_P_of__x],for.all[_y,imp(_P_of__y,_Q)],_Q)'
