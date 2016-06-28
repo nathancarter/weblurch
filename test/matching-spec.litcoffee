@@ -11,9 +11,10 @@ we'll use when testing.
       parentAddresses, partitionedAddresses, differenceIterator,
       expressionDepth, sameDepthAncestors, subexpressionIterator,
       prefixIterator, suffixIterator, filterIterator, composeIterator,
-      alphaEquivalent, consistentPatterns, multiReplace, nextMatch,
-      setMatchDebug, bindingConstraints1, bindingConstraints2,
-      satisfiesBindingConstraints1, satisfiesBindingConstraints2 } =
+      concatenateIterators, alphaEquivalent, consistentPatterns,
+      multiReplace, nextMatch, setMatchDebug, bindingConstraints1,
+      bindingConstraints2, satisfiesBindingConstraints1,
+      satisfiesBindingConstraints2 } =
         matching = require '../src/matching-duo'
     { OM, OMNode } = require '../src/openmath-duo'
 
@@ -97,6 +98,7 @@ related functions are defined.
             expect( suffixIterator ).toBeTruthy()
             expect( composeIterator ).toBeTruthy()
             expect( filterIterator ).toBeTruthy()
+            expect( concatenateIterators ).toBeTruthy()
             expect( alphaEquivalent ).toBeTruthy()
             expect( consistentPatterns ).toBeTruthy()
             expect( multiReplace ).toBeTruthy()
@@ -1170,6 +1172,37 @@ iterator defined in an earlier section.
             it2 = filterIterator it, ( value ) -> false
             expect( it2() ).toBeNull()
 
+## Concatenate iterators
+
+This section tests the `concatenateIterators` function.  It re-uses the
+array iterator defined in an earlier section.
+
+    describe 'Concatenate iterators', ->
+
+### should yield the correct results when called iteratively
+
+        it 'should yield the correct results when called iteratively', ->
+            it1 = arrayIterator [ 10, 20, 30 ]
+            it2 = arrayIterator [ 'sam', 'bob', 'dee' ]
+            it = concatenateIterators it1, it2
+            expect( it() ).toBe 10
+            expect( it() ).toBe 20
+            expect( it() ).toBe 30
+            expect( it() ).toBe 'sam'
+            expect( it() ).toBe 'bob'
+            expect( it() ).toBe 'dee'
+            expect( it() ).toBeNull()
+            it3 = arrayIterator 'things we love'.split ' '
+            it4 = arrayIterator 'to do today'.split ' '
+            it = concatenateIterators it4, it3
+            expect( it() ).toBe 'to'
+            expect( it() ).toBe 'do'
+            expect( it() ).toBe 'today'
+            expect( it() ).toBe 'things'
+            expect( it() ).toBe 'we'
+            expect( it() ).toBe 'love'
+            expect( it() ).toBeNull()
+
 ## Matching
 
 The main event of this test suite, the matching algorithm itself.  This
@@ -1405,13 +1438,14 @@ We create the following function to make this easier.
 It also embodies the idea that it will not return matches that do not pass
 the binding constraints embodied in
 
-        someMatches = ( LHS, RHS, number = 10 ) ->
+        someMatches = ( LHS, RHS, number = 10, debug = no ) ->
             results = [ ]
             bc1 = bindingConstraints1 LHS
             bc2 = bindingConstraints2 LHS
             args = [ new ConstraintList new Constraint LHS, RHS ]
             while results.length < number
                 [ result, args ] = nextMatch args...
+                if debug then console.log 'NEXT RESULT:', CLToString result
                 if result? and satisfiesBindingConstraints1( result, bc1 ) \
                         and satisfiesBindingConstraints2( result, bc2 )
                     already = no
@@ -1732,8 +1766,8 @@ in the pattern or the expression.
                 .toBeTruthy()
             expect( result[0].lookup( 'v' ).equals quick '2' ).toBeTruthy()
             expect( result[1].length() ).toBe 1
-            expect( result[1].lookup( 'F' ).equals ef 'v0', '2' )
-                .toBeTruthy()
+            expect( alphaEquivalent result[1].lookup( 'F' ),
+                ef 'v0', '2' ).toBeTruthy()
 
 Matching `f(_F((0)),_F((x)))` to `f(0,x)` should give one solution, mapping
 F to lambda[v0,v0].
@@ -1812,6 +1846,346 @@ Matching `f(_F((0)),_F((1)))` to `f(0,2)` should give no solutions.
             right = quick 'f(0,2)'
             result = someMatches left, right
             expect( result.length ).toBe 0
+
+### should ambiguous expression function situations
+
+The following tests ensure that the algorithm works correctly in situations
+where the constraints are not as tight as they would be in normal usage in a
+logical system, but instead produce strange or very ambiguous situations.
+
+        it 'should ambiguous expression function situations', ->
+
+Matching `Rule(P((x)),P((y)))` to `Rule(b(2),b(3))` gives two solutions:
+ * x=2, y=3, and P=lambda[v,b(v)]
+ * x=b(2), y=b(3), and P=lambda[v,v]
+
+            left = quick 'Rule(_P_of__x,_P_of__y)'
+            right = quick 'Rule(b(2),b(3))'
+            result = someMatches left, right
+            expect( result.length ).toBe 2
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'x' ).equals quick '2' ).toBeTruthy()
+            expect( result[0].lookup( 'y' ).equals quick '3' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'b(v0)' ).toBeTruthy()
+            expect( result[1].length() ).toBe 3
+            expect( result[1].lookup( 'x' ).equals quick 'b(2)' )
+                .toBeTruthy()
+            expect( result[1].lookup( 'y' ).equals quick 'b(3)' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[1].lookup( 'P' ),
+                ef 'v0', 'v0' ).toBeTruthy()
+
+Matching `Rule(P((x)),P((y)))` to `Rule(eq(plus(2,3),5),eq(5,5))` gives two
+solutions:
+ * x=plus(2,3), y=5, and P=lambda[v,eq(v,5)]
+ * x=eq(plus(2,3),5), y=eq(5,5), and P=lambda[v,v]
+
+            left = quick 'Rule(_P_of__x,_P_of__y)'
+            right = quick 'Rule(eq(plus(2,3),5),eq(5,5))'
+            result = someMatches left, right
+            expect( result.length ).toBe 2
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'x' ).equals quick 'plus(2,3)' )
+                .toBeTruthy()
+            expect( result[0].lookup( 'y' ).equals quick '5' ).toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'eq(v0,5)' ).toBeTruthy()
+            expect( result[1].length() ).toBe 3
+            expect( result[1].lookup( 'x' ).equals quick 'eq(plus(2,3),5)' )
+                .toBeTruthy()
+            expect( result[1].lookup( 'y' ).equals quick 'eq(5,5)' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[1].lookup( 'P' ),
+                ef 'v0', 'v0' ).toBeTruthy()
+
+Matching `Rule(P((x)),P((y)))` to `Rule(A(1,2,3),A(2,1,3))` gives one
+solution:  x=A(1,2,3), y=A(2,1,3), and P=lambda[v,v].
+
+            left = quick 'Rule(_P_of__x,_P_of__y)'
+            right = quick 'Rule(A(1,2,3),A(2,1,3))'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'x' ).equals quick 'A(1,2,3)' )
+                .toBeTruthy()
+            expect( result[0].lookup( 'y' ).equals quick 'A(2,1,3)' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'v0' ).toBeTruthy()
+
+Matching `Rule(P((x)),P((y)))` to `Rule(A(1,2,3),A(2,1,3))` gives one
+solution:  x=A(1,2,3), y=A(2,1,3), and P=lambda[v,v].
+
+            left = quick 'Rule(_P_of__x,_P_of__y)'
+            right = quick 'Rule(A(1,2,3),A(2,1,3))'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'x' ).equals quick 'A(1,2,3)' )
+                .toBeTruthy()
+            expect( result[0].lookup( 'y' ).equals quick 'A(2,1,3)' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'v0' ).toBeTruthy()
+
+Matching `Rule(P((x)),P((x)))` to `Rule(A(1,2,3),A(2,1,3))` gives no
+solutions.  (The only change from the previous test is that both of the
+children of the pattern expression use the variable x.)
+
+            left = quick 'Rule(_P_of__x,_P_of__x)'
+            right = quick 'Rule(A(1,2,3),A(2,1,3))'
+            result = someMatches left, right
+            expect( result.length ).toBe 0
+
+Matching `Rule(P((x)),P((y)))` to `Rule(f(1,2),f(1,2))` gives five
+solutions:
+ * x=f, y=f, P=lambda[v,v(1,2)]
+ * x=1, y=1, and P=lambda[v,f(v,2)]
+ * x=2, y=2, and P=lambda[v,f(1,2)]
+ * x=f(1,2), y=f(1,2), P=lambda[v,v]
+ * P=lambda[v,f(1,2)], with x and y unconstrained
+
+            left = quick 'Rule(_P_of__x,_P_of__y)'
+            right = quick 'Rule(f(1,2),f(1,2))'
+            result = someMatches left, right
+            expect( result.length ).toBe 5
+            expect( result[0].length() ).toBe 3
+            expect( result[0].lookup( 'x' ).equals quick 'f(1,2)' )
+                .toBeTruthy()
+            expect( result[0].lookup( 'y' ).equals quick 'f(1,2)' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'v0' ).toBeTruthy()
+            expect( result[1].length() ).toBe 3
+            expect( result[1].lookup( 'x' ).equals quick 'f' )
+                .toBeTruthy()
+            expect( result[1].lookup( 'y' ).equals quick 'f' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[1].lookup( 'P' ),
+                ef 'v0', 'v0(1,2)' ).toBeTruthy()
+            expect( result[2].length() ).toBe 3
+            expect( result[2].lookup( 'x' ).equals quick '1' )
+                .toBeTruthy()
+            expect( result[2].lookup( 'y' ).equals quick '1' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[2].lookup( 'P' ),
+                ef 'v0', 'f(v0,2)' ).toBeTruthy()
+            expect( result[3].length() ).toBe 3
+            expect( result[3].lookup( 'x' ).equals quick '2' )
+                .toBeTruthy()
+            expect( result[3].lookup( 'y' ).equals quick '2' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[3].lookup( 'P' ),
+                ef 'v0', 'f(1,v0)' ).toBeTruthy()
+            expect( result[4].length() ).toBe 1
+            expect( alphaEquivalent result[4].lookup( 'P' ),
+                ef 'v0', 'f(1,2)' ).toBeTruthy()
+
+Matching `P((x))` to `g(k,e(2))` gives six solutions:
+ * x=g(k,e(2)) and P=lambda[v,v]
+ * x=g and P=lambda[v,v(k,e(2))]
+ * x=k and P=lambda[v,g(v,e(2))]
+ * x=e(2) and P=lambda[v,g(k,v)]
+ * x=e and P=lambda[v,g(k,v(2))]
+ * x=2 and P=lambda[v,g(k,e(v))]
+ * P=lambda[v,g(k,e(2))] and x is unconstrained
+
+            left = quick '_P_of__x'
+            right = quick 'g(k,e(2))'
+            result = someMatches left, right
+            expect( result.length ).toBe 7
+            expect( result[0].length() ).toBe 2
+            expect( result[0].lookup( 'x' ).equals quick 'g(k,e(2))' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'v0' ).toBeTruthy()
+            expect( result[1].length() ).toBe 2
+            expect( result[1].lookup( 'x' ).equals quick 'g' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[1].lookup( 'P' ),
+                ef 'v0', 'v0(k,e(2))' ).toBeTruthy()
+            expect( result[2].length() ).toBe 2
+            expect( result[2].lookup( 'x' ).equals quick 'k' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[2].lookup( 'P' ),
+                ef 'v0', 'g(v0,e(2))' ).toBeTruthy()
+            expect( result[3].length() ).toBe 2
+            expect( result[3].lookup( 'x' ).equals quick 'e(2)' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[3].lookup( 'P' ),
+                ef 'v0', 'g(k,v0)' ).toBeTruthy()
+            expect( result[4].length() ).toBe 2
+            expect( result[4].lookup( 'x' ).equals quick 'e' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[4].lookup( 'P' ),
+                ef 'v0', 'g(k,v0(2))' ).toBeTruthy()
+            expect( result[5].length() ).toBe 2
+            expect( result[5].lookup( 'x' ).equals quick '2' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[5].lookup( 'P' ),
+                ef 'v0', 'g(k,e(v0))' ).toBeTruthy()
+            expect( result[6].length() ).toBe 1
+            expect( alphaEquivalent result[6].lookup( 'P' ),
+                ef 'v0', 'g(k,e(2))' ).toBeTruthy()
+
+Matching `P((x))` to `f(a,a)` gives six solutions:
+ * x=f(a,a) and P=lambda[v,v]
+ * x=f and P=lambda[v,v(a,a)]
+ * x=a and P=lambda[x,f(a,v)]
+ * x=a and P=lambda[x,f(v,a)]
+ * x=a and P=lambda[x,f(v,v)]
+ * P=lambda[x,f(a,a)] and x is unconstrained
+
+            left = quick '_P_of__x'
+            right = quick 'f(a,a)'
+            result = someMatches left, right
+            expect( result.length ).toBe 6
+            expect( result[0].length() ).toBe 2
+            expect( result[0].lookup( 'x' ).equals quick 'f(a,a)' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'v0' ).toBeTruthy()
+            expect( result[1].length() ).toBe 2
+            expect( result[1].lookup( 'x' ).equals quick 'f' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[1].lookup( 'P' ),
+                ef 'v0', 'v0(a,a)' ).toBeTruthy()
+            expect( result[2].length() ).toBe 2
+            expect( result[2].lookup( 'x' ).equals quick 'a' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[2].lookup( 'P' ),
+                ef 'v0', 'f(v0,a)' ).toBeTruthy()
+            expect( result[3].length() ).toBe 2
+            expect( result[3].lookup( 'x' ).equals quick 'a' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[3].lookup( 'P' ),
+                ef 'v0', 'f(a,v0)' ).toBeTruthy()
+            expect( result[4].length() ).toBe 2
+            expect( result[4].lookup( 'x' ).equals quick 'a' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[4].lookup( 'P' ),
+                ef 'v0', 'f(v0,v0)' ).toBeTruthy()
+            expect( result[5].length() ).toBe 1
+            expect( alphaEquivalent result[5].lookup( 'P' ),
+                ef 'v0', 'f(a,a)' ).toBeTruthy()
+
+Matching `Rule(P((x)),x)` to `Rule(f(a,a),b)` gives one solution:
+x=b and P=lambda[v,f(a,a)].
+
+            left = quick 'Rule(_P_of__x,_x)'
+            right = quick 'Rule(f(a,a),b)'
+            result = someMatches left, right
+            expect( result.length ).toBe 1
+            expect( result[0].length() ).toBe 2
+            expect( result[0].lookup( 'x' ).equals quick 'b' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'f(a,a)' ).toBeTruthy()
+
+Matching `Rule(P((x)),x)` to `Rule(f(a,a),f)` gives two solutions:
+ * x=f and P=lambda[v,v(a,a)]
+ * x=f and P=lambda[v,f(a,a)]
+
+            left = quick 'Rule(_P_of__x,_x)'
+            right = quick 'Rule(f(a,a),f)'
+            result = someMatches left, right
+            expect( result.length ).toBe 2
+            expect( result[0].length() ).toBe 2
+            expect( result[0].lookup( 'x' ).equals quick 'f' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'v0(a,a)' ).toBeTruthy()
+            expect( result[1].length() ).toBe 2
+            expect( result[1].lookup( 'x' ).equals quick 'f' )
+                .toBeTruthy()
+            expect( alphaEquivalent result[1].lookup( 'P' ),
+                ef 'v0', 'f(a,a)' ).toBeTruthy()
+
+Matching `Rule(P((a)),Q((b)))` to `Rule(eq(3,3),gt(5,4))` gives thirty
+solutions.  The solutions will be all the combinations of solutions
+constructed from the following two lists.
+
+First, the list of partial solutions involving a and P:
+ * a=eq(3,3) and P=lambda[v,v]
+ * a=eq and P=lambda[v,v(3,3)]
+ * a=3 and P=lambda[v,eq(v,3)]
+ * a=3 and P=lambda[v,eq(3,v)]
+ * a=3 and P=lambda[v,eq(v,v)]
+ * P=lambda[v,eq(3,3)] and a is unconstrained
+
+Second, the list of partial solutions involving b and Q:
+ * b=gt(5,4) and P=lambda[v,v]
+ * b=gt and P=lambda[v,v(5,4)]
+ * b=5 and P=lambda[v,gt(v,4)]
+ * b=4 and P=lambda[v,gt(5,v)]
+ * P=lambda[v,gt(5,4)] and b is unconstrained
+
+            left = quick 'Rule(_P_of__a,_Q_of__b)'
+            right = quick 'Rule(eq(3,3),gt(5,4))'
+            setMatchDebug off
+            result = someMatches left, right, 50, yes
+            setMatchDebug off
+            expect( result.length ).toBe 30
+            for i in [0..5]
+                numPa = if i < 5 then 2 else 1
+                for j in [0..4]
+                    numQb = if j < 4 then 2 else 1
+                    next = result.shift()
+                    expect( next.length() ).toBe numPa + numQb
+                    switch i
+                        when 0
+                            expect( next.lookup( 'a' ).equals \
+                                quick 'eq(3,3)' ).toBeTruthy()
+                            expect( alphaEquivalent next.lookup( 'P' ),
+                                ef 'v0', 'v0' ).toBeTruthy()
+                        when 1
+                            expect( next.lookup( 'a' ).equals \
+                                quick 'eq' ).toBeTruthy()
+                            expect( alphaEquivalent next.lookup( 'P' ),
+                                ef 'v0', 'v0(3,3)' ).toBeTruthy()
+                        when 2
+                            expect( next.lookup( 'a' ).equals \
+                                quick '3' ).toBeTruthy()
+                            expect( alphaEquivalent next.lookup( 'P' ),
+                                ef 'v0', 'eq(v0,3)' ).toBeTruthy()
+                        when 3
+                            expect( next.lookup( 'a' ).equals \
+                                quick '3' ).toBeTruthy()
+                            expect( alphaEquivalent next.lookup( 'P' ),
+                                ef 'v0', 'eq(3,v0)' ).toBeTruthy()
+                        when 4
+                            expect( next.lookup( 'a' ).equals \
+                                quick '3' ).toBeTruthy()
+                            expect( alphaEquivalent next.lookup( 'P' ),
+                                ef 'v0', 'eq(v0,v0)' ).toBeTruthy()
+                        when 5
+                            expect( alphaEquivalent next.lookup( 'P' ),
+                                ef 'v0', 'eq(3,3)' ).toBeTruthy()
+                    switch j
+                        when 0
+                            expect( next.lookup( 'b' ).equals \
+                                quick 'gt(5,4)' ).toBeTruthy()
+                            expect( alphaEquivalent next.lookup( 'Q' ),
+                                ef 'v0', 'v0' ).toBeTruthy()
+                        when 1
+                            expect( next.lookup( 'b' ).equals \
+                                quick 'gt' ).toBeTruthy()
+                            expect( alphaEquivalent next.lookup( 'Q' ),
+                                ef 'v0', 'v0(5,4)' ).toBeTruthy()
+                        when 2
+                            expect( next.lookup( 'b' ).equals \
+                                quick '5' ).toBeTruthy()
+                            expect( alphaEquivalent next.lookup( 'Q' ),
+                                ef 'v0', 'gt(v0,4)' ).toBeTruthy()
+                        when 3
+                            expect( next.lookup( 'b' ).equals \
+                                quick '4' ).toBeTruthy()
+                            expect( alphaEquivalent next.lookup( 'Q' ),
+                                ef 'v0', 'gt(5,v0)' ).toBeTruthy()
+                        when 4
+                            expect( alphaEquivalent next.lookup( 'Q' ),
+                                ef 'v0', 'gt(5,4)' ).toBeTruthy()
 
 ### should handle the equality elimination rule
 
@@ -1918,7 +2292,7 @@ mapping a to 1, b to 2, and P to lambda[v0,eq(plus(1,1),2)].
             expect( result[0].length() ).toBe 3
             expect( result[0].lookup( 'a' ).equals quick '1' ).toBeTruthy()
             expect( result[0].lookup( 'b' ).equals quick '2' ).toBeTruthy()
-            expect( result[0].lookup( 'P' ).equals \
+            expect( alphaEquivalent result[0].lookup( 'P' ),
                 ef 'v0', 'eq(plus(1,1),2)' ).toBeTruthy()
 
 Matching `Rule(eq(_a,_b),_P((_a)),_P((_b)))` to
@@ -1987,8 +2361,8 @@ P to lambda[v0,Q], and t unconstrained.
             expect( result.length ).toBe 1
             expect( result[0].length() ).toBe 2
             expect( result[0].lookup( 'x' ).equals quick 'x' ).toBeTruthy()
-            expect( result[0].lookup( 'P' ).equals ef 'v0', 'Q' )
-                .toBeTruthy()
+            expect( alphaEquivalent result[0].lookup( 'P' ),
+                ef 'v0', 'Q' ).toBeTruthy()
 
 Matching `Rule(for.all[_x,_P((_x))],_P((_t)))` to
 `Rule(for.all[s,eq(sq(s),s)],eq(sq(1),1))` should give one solution, mapping
@@ -2597,7 +2971,7 @@ should give no solutions.
 
             left = quick 'Rule(exi.sts[_x,_P_of__x],' + \
                          'for.all[_y,imp(_P_of__y,_Q)],_Q)'
-            right = quick 'RRule(exi.sts[n,lt(n,a)],' + \
+            right = quick 'Rule(exi.sts[n,lt(n,a)],' + \
                           'for.all[a,imp(lt(a,a),lt(a,a))],lt(a,a))'
             result = someMatches left, right
             expect( result.length ).toBe 0

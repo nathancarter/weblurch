@@ -506,6 +506,11 @@ $S_{1,1},S_{1,2},\ldots,S_{n,m_n}$, followed by the string `'done'`.
             rest : partition
             subsetIndex : 1
         iterator = ->
+            matchDebug '\t\tsubexpression iterator for',
+                expression.simpleEncode(), 'next:',
+                JSON.stringify( state.next.addresses ), 'rest:',
+                JSON.stringify( ( x.addresses for x in state.rest ) ),
+                'subsetIndex:', state.subsetIndex
             if state.subsetIndex < 2 ** state.next.addresses.length
                 result = ( state.next.addresses[i] \
                     for i in [0...state.next.addresses.length] \
@@ -560,6 +565,14 @@ specifically exactly those results that pass the test of the filter.
             next = iterator()
             while next and not filter next then next = iterator()
             next
+
+The following function takes two iterators and concatenates them, returning
+a new iterator that returns first all the items from the first iterator (not
+including the terminating null sequence), followed by all the items from the
+second iterator (including the terminating null sequence).
+
+    exports.concatenateIterators = concatenateIterators =
+        ( first, second ) -> -> first() or second()
 
 ## Matching
 
@@ -638,6 +651,8 @@ returns a boolean.
     satisfiesBindingConstraints2 = ( solution, constraints ) ->
         for constraint in constraints.contents
             ef = solution.lookup constraint.pattern
+            if not ef?
+                matchDebug CLToString( solution ), CLToString( constraints )
             arg = solution.apply constraint.expression
             check = ( d ) -> d.equals ef.variables[0]
             for v in ef.body.descendantsSatisfying check
@@ -685,8 +700,9 @@ rather than a list of them, then convert it to the correct type.
             constraints = new ConstraintList constraints
         if constraints not instanceof ConstraintList
             throw 'Invalid first parameter, not a constraint list'
-        matchDebug 'matchDebug', CLToString( constraints ),
-            CLToString( solution ), 'iterator?', iterator?
+        matchDebug '\nmatchDebug', CLToString( constraints ),
+            CLToString( solution ),
+            if iterator? then '  ...ITERATOR...' else ''
 
 If we have not been given an iterator, then proceed with normal matching.
 When we have an iterator, it means we must take a union over a series of
@@ -793,8 +809,8 @@ the arguments to the expression function applications.
             pair = constraints.firstPairSatisfying ( c1, c2 ) ->
                 isExpressionFunctionApplication( c1.pattern ) and \
                 isExpressionFunctionApplication( c2.pattern ) and \
-                c1.pattern.children[0].equals(
-                    c2.pattern.children[0], no ) and \
+                c1.pattern.children[1].equals(
+                    c2.pattern.children[1], no ) and \
                 not c1.expression.equals c2.expression, no
             if pair?
                 [ c1, c2 ] = pair
@@ -807,7 +823,11 @@ the arguments to the expression function applications.
                 makeMValue = ( subset ) ->
                     v = constraints.nextNewVariable()
                     makeExpressionFunction v, multiReplace e1, subset, v
-                f = ( subset ) ->
+                iterator = differenceIterator e1, e2
+                iterator = filterIterator iterator, ( subset ) ->
+                    mValue = solution.lookup metavariable
+                    not mValue? or alphaEquivalent mValue, makeMValue subset
+                iterator = composeIterator iterator, ( subset ) ->
                     maybeExtended = if solution.lookup metavariable
                         solution.copy()
                     else
@@ -816,12 +836,7 @@ the arguments to the expression function applications.
                     [ smallerC.plus(
                         new Constraint( t1, e1.index subset[0] ),
                         new Constraint( t2, e2.index subset[0] ) ),
-                      maybeExtended ]
-                iterator = differenceIterator e1, e2
-                iterator = filterIterator iterator, ( subset ) ->
-                    mValue = solution.lookup metavariable
-                    not mValue? or alphaEquivalent mValue, makeMValue subset
-                iterator = composeIterator iterator, f
+                      maybeExtended, null ]
                 matchDebug '\tefa case 1 of 2, iterating:',
                     CToString( c1 ), CToString( c2 )
                 return nextMatch smallerC, solution, iterator
@@ -838,8 +853,8 @@ parameters to the expression functions must be different.)
             pair = constraints.firstPairSatisfying ( c1, c2 ) ->
                 isExpressionFunctionApplication( c1.pattern ) and \
                 isExpressionFunctionApplication( c2.pattern ) and \
-                c1.pattern.children[0].equals(
-                    c2.pattern.children[0], no ) and \
+                c1.pattern.children[1].equals(
+                    c2.pattern.children[1], no ) and \
                 c1.expression.equals c2.expression, no
             if pair?
                 [ c1, c2 ] = pair
@@ -855,20 +870,22 @@ parameters to the expression functions must be different.)
                 iterator = filterIterator iterator, ( subset ) ->
                     mValue = solution.lookup metavariable
                     not mValue? or alphaEquivalent mValue, makeMValue subset
-                iterator = suffixIterator iterator, 'done'
+                iterator = suffixIterator iterator, [ ]
                 iterator = composeIterator iterator, ( subset ) ->
-                    if subset is 'done'
-                        [ 'done', metavariable, e ]
+                    newMValue = makeMValue subset
+                    if oldMValue = solution.lookup metavariable
+                        if not alphaEquivalent oldMValue, newMValue
+                            return null
+                        maybeExtended = solution.copy()
                     else
-                        maybeExtended = if solution.lookup metavariable
-                            solution.copy()
-                        else
-                            solution.plus new Constraint metavariable,
-                                makeMValue subset
-                        [ smallerC.plus(
+                        maybeExtended = solution.plus \
+                            new Constraint metavariable, newMValue
+                    newConstraints = smallerC
+                    if subset.length isnt 0
+                        newConstraints = newConstraints.plus \
                             new Constraint( t1, e.index subset[0] ),
-                            new Constraint( t2, e.index subset[0] ) ),
-                          maybeExtended ]
+                            new Constraint( t2, e.index subset[0] )
+                    [ newConstraints, maybeExtended, null ]
                 matchDebug '\tefa case 2 of 2, iterating:',
                     CToString( c1 ), CToString( c2 )
                 return nextMatch smallerC, solution, iterator
@@ -898,18 +915,27 @@ that metavariable as follows.
             iterator = filterIterator iterator, ( subset ) ->
                 mValue = solution.lookup metavariable
                 not mValue? or alphaEquivalent mValue, makeMValue subset
-            iterator = suffixIterator iterator, 'done'
+            iterator = suffixIterator iterator, [ ]
             iterator = composeIterator iterator, ( subset ) ->
-                if subset is 'done'
-                    [ 'done', metavariable, e ]
+                matchDebug '\t\tnext subexpression, with subset',
+                    JSON.stringify( subset ), 'solution',
+                    CLToString( solution ), 'constraints',
+                    CLToString( smallerC ), 't', t.simpleEncode(), 'e'
+                    e.simpleEncode(), 'metavariable',
+                    metavariable.simpleEncode()
+                newMValue = makeMValue subset
+                if oldMValue = solution.lookup metavariable
+                    if not alphaEquivalent oldMValue, newMValue
+                        return null
+                    maybeExtended = solution.copy()
                 else
-                    maybeExtended = if solution.lookup metavariable
-                        solution.copy()
-                    else
-                        solution.plus new Constraint metavariable,
-                            makeMValue subset
-                    [ smallerC.plus( new Constraint t, e.index subset[0] ),
-                      maybeExtended ]
+                    maybeExtended = solution.plus \
+                        new Constraint metavariable, newMValue
+                newConstraints = smallerC
+                if subset.length isnt 0
+                    newConstraints = newConstraints.plus \
+                        new Constraint t, e.index subset[0]
+                [ newConstraints, maybeExtended, null ]
             matchDebug '\tfinal case, iterating:', CToString constraint
             return nextMatch smallerC, solution, iterator
 
@@ -922,26 +948,25 @@ iterator.
             if next is null
                 matchDebug '\titerator case, next is null, done!'
                 return [ null, null ]
-            if next[0] is 'done'
-                [ metavariable, e ] = next[1..]
-                v = constraints.nextNewVariable()
-                solution = solution.plus new Constraint metavariable,
-                    makeExpressionFunction v, e
-                matchDebug '\titerator case, next is "done", so the last
-                    solution is:', CLToString solution
-                return [ solution, null ]
-            [ nextConstraints, nextSolution ] = next
-            matchDebug '\titerator case, using the iterator...'
+            [ nextConstraints, nextSolution, nextIterator ] = next
+            matchDebug '\titerator case, using iterator.next():',
+                CLToString( nextConstraints ), CLToString( nextSolution ),
+                nextIterator?, '\n--->'
             [ nextResult, nextArguments ] =
-                nextMatch nextConstraints, nextSolution, null
+                nextMatch nextConstraints, nextSolution, nextIterator
             if not nextResult?
-                matchDebug '\titerator case, exiting the iterator...'
+                matchDebug '\n<---\n' + \
+                    '\tafter iterator recursion, no result;
+                    keep iterating...'
                 return nextMatch constraints, solution, iterator
             if not nextArguments?
-                matchDebug '\titerator case, last iterator solution is:',
-                    CLToString nextResult
+                matchDebug '\n<---\n\tafter iterator recursion, ' + \
+                    'got a unique solution:', CLToString nextResult
                 return [ nextResult, [ constraints, solution, iterator ] ]
-            matchDebug '\titerator case, next iterator solution is:',
-                CLToString nextResult
-            return [ nextResult, [ constraints, solution,
-                prefixIterator nextArguments, iterator ] ]
+            matchDebug '\n<---\n\tafter iterator recursion, ' + \
+                'got a(nother?) solution:', CLToString( nextResult ),
+                'PLUS nextArguments', CLToString( nextArguments[0] ),
+                CLToString( nextArguments[1] ), nextArguments[2]?
+            nextArguments[2] = concatenateIterators \
+                nextArguments[2], iterator
+            return [ nextResult, nextArguments ]
