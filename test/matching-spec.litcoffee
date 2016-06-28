@@ -1847,13 +1847,13 @@ Matching `f(_F((0)),_F((1)))` to `f(0,2)` should give no solutions.
             result = someMatches left, right
             expect( result.length ).toBe 0
 
-### should ambiguous expression function situations
+### should handle ambiguous expression function situations
 
 The following tests ensure that the algorithm works correctly in situations
 where the constraints are not as tight as they would be in normal usage in a
 logical system, but instead produce strange or very ambiguous situations.
 
-        it 'should ambiguous expression function situations', ->
+        it 'should handle ambiguous expression function situations', ->
 
 Matching `Rule(P((x)),P((y)))` to `Rule(b(2),b(3))` gives two solutions:
  * x=2, y=3, and P=lambda[v,b(v)]
