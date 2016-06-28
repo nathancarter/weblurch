@@ -35,8 +35,7 @@ The following utility function is useful to the function above, as well as
 to other functions in the codebase.
 
     CanvasRenderingContext2D::applyBezier = ( C1, C2, C3, C4, t ) ->
-        Math.pow( 1-t, 3 )*C1 + 3*Math.pow( 1-t, 2 )*t*C2 + \
-        3*( 1-t )*Math.pow( t, 2 )*C3 + Math.pow( t, 3 )*C4
+        ( 1-t )**3*C1 + 3*( 1-t )**2*t*C2 + 3*( 1-t )*t**2*C3 + t**3*C4
 
 ## Rounded rectangles
 

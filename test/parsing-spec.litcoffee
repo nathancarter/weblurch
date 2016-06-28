@@ -3,8 +3,8 @@
 
 Here we import the module we're about to test.
 
-    { Grammar, Tokenizer } = require '../src/parsing.duo'
-    { OM, OMNode } = require '../src/openmath.duo'
+    { Grammar, Tokenizer } = require '../src/parsing-duo'
+    { OM, OMNode } = require '../src/openmath-duo'
     full = ( x ) -> require( 'util' ).inspect x, depth : null
 
 ## The Grammar class
