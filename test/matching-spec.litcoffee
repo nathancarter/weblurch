@@ -1859,6 +1859,7 @@ Matching `Rule(P((x)),P((y)))` to `Rule(b(2),b(3))` gives two solutions:
  * x=2, y=3, and P=lambda[v,b(v)]
  * x=b(2), y=b(3), and P=lambda[v,v]
 
+
             left = quick 'Rule(_P_of__x,_P_of__y)'
             right = quick 'Rule(b(2),b(3))'
             result = someMatches left, right
@@ -1880,6 +1881,7 @@ Matching `Rule(P((x)),P((y)))` to `Rule(eq(plus(2,3),5),eq(5,5))` gives two
 solutions:
  * x=plus(2,3), y=5, and P=lambda[v,eq(v,5)]
  * x=eq(plus(2,3),5), y=eq(5,5), and P=lambda[v,v]
+
 
             left = quick 'Rule(_P_of__x,_P_of__y)'
             right = quick 'Rule(eq(plus(2,3),5),eq(5,5))'
@@ -1946,6 +1948,7 @@ solutions:
  * x=f(1,2), y=f(1,2), P=lambda[v,v]
  * P=lambda[v,f(1,2)], with x and y unconstrained
 
+
             left = quick 'Rule(_P_of__x,_P_of__y)'
             right = quick 'Rule(f(1,2),f(1,2))'
             result = someMatches left, right
@@ -1990,6 +1993,7 @@ Matching `P((x))` to `g(k,e(2))` gives six solutions:
  * x=e and P=lambda[v,g(k,v(2))]
  * x=2 and P=lambda[v,g(k,e(v))]
  * P=lambda[v,g(k,e(2))] and x is unconstrained
+
 
             left = quick '_P_of__x'
             right = quick 'g(k,e(2))'
@@ -2036,6 +2040,7 @@ Matching `P((x))` to `f(a,a)` gives six solutions:
  * x=a and P=lambda[x,f(v,a)]
  * x=a and P=lambda[x,f(v,v)]
  * P=lambda[x,f(a,a)] and x is unconstrained
+
 
             left = quick '_P_of__x'
             right = quick 'f(a,a)'
@@ -2087,6 +2092,7 @@ Matching `Rule(P((x)),x)` to `Rule(f(a,a),f)` gives two solutions:
  * x=f and P=lambda[v,v(a,a)]
  * x=f and P=lambda[v,f(a,a)]
 
+
             left = quick 'Rule(_P_of__x,_x)'
             right = quick 'Rule(f(a,a),f)'
             result = someMatches left, right
@@ -2120,6 +2126,7 @@ Second, the list of partial solutions involving b and Q:
  * b=5 and P=lambda[v,gt(v,4)]
  * b=4 and P=lambda[v,gt(5,v)]
  * P=lambda[v,gt(5,4)] and b is unconstrained
+
 
             left = quick 'Rule(_P_of__a,_Q_of__b)'
             right = quick 'Rule(eq(3,3),gt(5,4))'
