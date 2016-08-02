@@ -41,19 +41,21 @@ This application needs just one group type for now, but it will need more
 later as this application becomes mature.
 
     window.groupTypes = [
-        name : 'me'
-        text : 'Meaningful expression'
+        name : 'expression'
+        text : 'Expression'
         imageHTML : '<font color="#996666">[ ]</font>'
         openImageHTML : '<font color="#996666">[</font>'
         closeImageHTML : '<font color="#996666">]</font>'
-        tooltip : 'Make text a meaningful expression'
+        tooltip : 'Make the selected text an expression'
         color : '#996666'
-        connectionRequest : ( from, to ) ->
-            existingTags = ( "#{c[2]}" for c in from.connectionsOut() \
-                when c[1] is to.id() )
-            i = 0
-            while "#{i}" in existingTags then i++
-            from.connect to, "#{i}"
+        shortcut : 'Ctrl+['
+        LaTeXshortcut : '\\['
+        # connectionRequest : ( from, to ) ->
+        #     existingTags = ( "#{c[2]}" for c in from.connectionsOut() \
+        #         when c[1] is to.id() )
+        #     i = 0
+        #     while "#{i}" in existingTags then i++
+        #     from.connect to, "#{i}"
     ]
 
 Install the arrows UI for that group.
