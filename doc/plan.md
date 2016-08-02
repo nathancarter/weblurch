@@ -13,10 +13,218 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
+## Expressions
+
+ * Give the group type a `canonicalForm` method, which should produce an
+   OpenMath form internally isomorphic to the nested-group form defined in
+   the specification
+
+## Attributes
+
+ * Permit connections among expression groups as long as they do not form a
+   cycle.  Use an empty connection type.
+ * Fix the bug that connections are not currently added to the undo/redo
+   stack.
+ * When forming the connection, if the source does not have a "key"
+   attribute, set it to be "label."
+ * When forming the connection, if the source does not have a "key position"
+   attribute, set it to be "arrow."
+ * When drawing a bubble, show all incoming and outgoing connections.
+ * If the "key position" attribute of the source of a connection is "arrow,"
+   then use that as the arrow label when drawing the connection.
+ * If the "key position" attribute of the source of a connection is
+   "source," then use the key as the bubble tag for the source group.
+ * Provide a tag menu item on sources for moving the key to the arrow.
+ * Provide a group context menu item on sources for moving the key between
+   the arrow and the source group's bubble tag.
+ * Provide a group context menu item for choosing a new key from among
+   "label," "reason," "premise," and "Other..." which opens a dialog
+   permitting any attribute key to be entered as text.
+ * Give the group type an `attributeGroups` method, which lists all groups
+   attached to this one as its attributes.
+ * Give the group type an `attributionAncestry` method, which computes the
+   set of attributes, and attributes of attributes, etc., recursively.
+ * Give the group type a `completeForm` method, which functions like
+   `canonicalForm`, but with attributes as well.  Ignore attributes with the
+   key "reason" when computing complete form.
+ * Enhance arrow drawing with the ability to specify, for each connection,
+   what color and line style should be used for it.
+ * For premise attributions, use a dotted line.
+
+## Embedding
+
+ * If group $A$ connects to group $B$ with key $k$, and nothing else
+   connects to $B$ using $k$, and $A$ connects to nothing else, then the
+   context menu for $A$ will contain an item for embedding it into $B$.
+   This embeds $A$'s entire attribution ancestry, not just $A$, with the
+   exception of any "premise" connections, which are broken by this action.
+   If any such breaks will occur, prompt the user first.  Ensure that this
+   is all seen as one action on the undo/redo stack.
+ * Ensure that `completeForm` takes embedded attributes into account.
+ * Same as the previous, but $A$ may connect to many targets using $k$.  In
+   such a situation, it can still be embedded, but prompt the user first to
+   be sure they understand what they're about to do.  Again, handle
+   undo/redo correctly.
+ * Same as the first, but $B$ may be connected to by many sources using $k$.
+   In such a situation, the sources will all be embedded at once, forming a
+   list-type value in the order they appear in the document.  Again, prompt
+   the user first.  Again, handle undo/redo correctly.
+ * Provide a context menu item on any expression for seeing the attributes
+   of that expression summarized in a dialog.
+ * For expressions without attributes, it simply says there are none, and
+   the user's only available action is to close the dialog.
+ * When there are attributes, they are listed alphabetically by key, with
+   values also listed, whether they are embedded or in-document values.
+ * Next to any embedded attribute, provide a "Remove" button that deletes
+   the attribute internally from the expression.  Ensure that this action is
+   placed correctly on the undo/redo stack.
+ * Next to any non-embedded attribute, provide a "Remove" button that
+   deletes the connection from the source to the target.  Ensure that this
+   action is placed correctly on the undo/redo stack.
+ * Next to any embedded attribute whose value is not a list, provide an
+   "Expand" button that places the in-document version of that attribute,
+   with the appropriate connection, immediately after the group in which it
+   is embedded.  This also removes the embedded version.  Ensure that this
+   action is one single action on the undo/redo stack.
+ * Next to any embedded attribute whose value is a list, provide an "Expand"
+   button that places the in-document version of that attribute's elements,
+   in the order they appear in the list, with the appropriate connections,
+   immediately after the group in which it is embedded.  This also removes
+   the embedded version.  Ensure that this action is one single action on
+   the undo/redo stack.
+ * For any hidden attribute whose value is atomic, show it as an editable
+   text box.  When edits take place in that text box, immediately update the
+   value of the hidden attribute in accordance with the edits.  Place each
+   such change on the undo/redo stack, merging when possible.
+ * Every key should also be shown as an editable text box.  When edits take
+   place in that text box, immediately update the value of the hidden
+   attribute in accordance with the edits.  Place each such change on the
+   undo/redo stack, merging when possible.
+ * At the end of the dialog, provide a button to add a new key-value pair to
+   the attributes list.  It will always create an atomic value, which can
+   immediately be edited, either in key or in value.  Ensure that this action is one single action on the undo/redo stack.
+
+## Code attributes
+
+ * Add to the list of suggested key types on the group context menu "code."
+ * For expressions that have an attribute with key "code," add to their
+   context menu an item "Edit as code."  It should pop up a dialog
+   containing a [CodeMirror](http://codemirror.net/) editor and the contents
+   of the expression as plain text.  Approved edits are propagated back into
+   the document, inside the expression.  Some work may need to be done to
+   preserve newlines and indentation.  Ensure that any such change is placed
+   correctly on the undo/redo stack.
+ * In the attributes dialog, for any value that is code (i.e., it itself has
+   a code attribute), provide an "Edit" button next to it that pops up the
+   same code editor that would be used if the value were in the document and
+   its "Edit as code" context menu item were chosen.  The only difference is
+   that changes will be stored within a hidden attribute instead of in the
+   document, and thus care may need to be taken regarding the undo/redo
+   stack.
+
+## Labels
+
+ * Create a global array of all labeled expressions.
+ * Create a function for initializing the array to empty, and do so whenever
+   a new document is created, or the app is launched, or a new document is
+   loaded.
+ * Create an `addPair` function for adding a label-expression pair to the
+   list.  It should store both the labeled group and the label attribute
+   attached to it.  Ensure that it never adds the same pair more than once
+   to the list.  (That is, this function is idempotent when called on the
+   same set of arguments a second time.)
+ * Create a function `addExpression` that inspects an expression and calls
+   `addPair` zero or more times, once for each label the expression has,
+   hidden or visible.
+ * Whenever a document is loaded, loop through all of its expressions and
+   call `addExpression` on each.
+ * Create a `deleteExpression` function for deleting from the list any pair
+   that mentions the expression, either as the label or as the labeled
+   expression.
+ * Whenever an expression is deleted from the document, call
+   `deleteExpression` on it.  This includes when it is deleted in order to
+   be embedded as a hidden attribute in something else.
+ * Update the specification to state that hidden expressions cannot be the
+   targets of labels; only expressions *in the document* can.
+ * Whenever a group's contents, attributes, or connections change, call
+   `deleteExpression` on it, and then `addExpression` on it.  Also, if it is
+   a label, call `addExpression` on each expression that it labels.
+ * Add a function for looking up a label and receiving a set of pairs as the
+   result, those pairs whose label matches the given text.  They should be
+   returned in the order in which they appear in the document.
+ * Add a function for looking up a label from a certain position in the
+   document.  This will call the previous function, then filter its results
+   to only those that apply at the point in the document in question.
+
+## Validation
+
+ * Extend the Background Computation module with a convenience function that
+   lets us skip the two-step process of `registerFunction`/`addTask`, and
+   just provide code to run and the groups on which to run it.  This can use
+   the code itself (or a hash thereof) as the name *and* code for the
+   function to register, and later to run.  Name this new function
+   `addCodeTask`.
+ * Write a function `saveValidation` that records validation results into an
+   expression.  If it receives `null` as the validation data, it removes any
+   validation data that formerly was in the expression.
+ * Add to the list of suggested key types on the group context menu "rule."
+ * Create a `validate` function that can be applied to any expression, and
+   takes a verbosity flag as well.
+ * If the expression has no reason attributes, call `saveValidation` on the
+   step, with `null`.
+ * If the expression has more than one reason attribute, the function
+   saves a validation result that explains that this is not permitted (at
+   most one reason per step).
+ * If the expression's single reason attribute does not name an actual
+   reason accessible from that point in the document, the function saves a
+   validation result that explains the problem (incorrect reason citation).
+ * If the expressions cited by the reason attribute are not rule definitions
+   (none of them) then the function saves a validation result explaining
+   that exactly one rule must be cited as the reason for a step, but none
+   were.
+ * If any of the cited rules are invalid, discard them from the list of
+   cited rules.  If none remain, the function returns a validation result
+   explaining that none of the cited rules were valid.  If more than one
+   remain, the function saves a validation result explaining that too many
+   rules were cited (at most one per step is allowed).
+ * If the unique valid cited rule is not a piece of code, the function
+   saves a validation result explaining that Lurch doesn't (yet?) know the
+   type of rule cited.
+ * If the unique valid cited rule is code in a language other than
+   JavaScript, the function saves a validation result explaining that Lurch
+   doesn't (yet?) know the language in which the rule is coded.
+ * Otherwise, call `Background.addCodeTask` on the code and step in
+   question, with a callback that saves the result as the validation result.
+ * Whenever an expression attributed by a reason changes, call `validate` on
+   it.
+ * Whenever a reason attribute changes, call `validate` on its target.
+ * Whenever a rule's content changes, call `validate` on all later
+   expressions whose reason cites the rule that just changed.
+
+## Dependencies
+
+ * Extend the Background Computation module so that it can accept as
+   parameters for a task not only groups in the document, but also groups in
+   dependencies.
+ * Implement the `saveMetaData` function used by [the Dependencies
+   plugin](../app/dependenciesplugin.litcoffee) to export the list of
+   labeled, top-level expressions.
+ * Implement a handler for `loadMetaData` that calls `import`, as documented
+   in that plugin's ["Responsibilities"
+   section](../app/dependenciesplugin.litcoffee#responsibilities).
+ * Extend the global list of label-labeled pairs to support pairs from
+   dependencies.  
+ * Implement a handler for `dependenciesChanged` that does these things:
+    * Recompute the label-labeled pairs in that global list that come from
+      dependencies.
+    * Call `validate` again on any expression whose reason cites a rule in a
+      dependency.
+
 ## Parsing test
 
-Create a Lurch Application that tests the following particular design for a
-customizable parser.
+Rewrite the following section to more accurately reflect Section 24 of the
+specification, then implement it as a module attached to the main Lurch
+application, a module that can easily be disabled if we need to redesign it.
 
  * Create a group type called "category name" that can hold any text.  Its
    tag will always contain the phrase "category name."
