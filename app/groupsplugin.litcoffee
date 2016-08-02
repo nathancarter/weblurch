@@ -1747,3 +1747,50 @@ The previous two functions both leverage the following utility.
                            y > rect.top and y < rect.bottom
                             return editor.Groups.groupAboveNode node
             null
+
+## LaTeX-like shortcuts for groups
+
+Now we install code that watches for certain text sequences that should be
+interpreted as the insertion of groups.
+
+This relies on the KeyUp event, which may only fire once for a few quick
+successive keystrokes.  Thus someone typing very quickly may not have these
+shortcuts work correctly for them, but I do not yet have a workaround for
+this behavior.
+
+        editor.on 'KeyUp', ( event ) ->
+            movements = [ 33..40 ] # arrows, pgup/pgdn/home/end
+            modifiers = [ 16, 17, 18, 91 ] # alt, shift, ctrl, meta
+            if event.keyCode in movements or event.keyCode in modifiers
+                return
+            range = editor.selection.getRng()
+            if range.startContainer is range.endContainer and \
+               range.startContainer instanceof editor.getWin().Text
+                allText = range.startContainer.textContent
+                lastCharacter = allText[range.startOffset-1]
+                if lastCharacter isnt ' ' and lastCharacter isnt '\\' and \
+                   lastCharacter isnt String.fromCharCode( 160 )
+                    return
+                allBefore = allText.substr 0, range.startOffset - 1
+                allAfter = allText.substring range.startOffset - 1
+                for typeName, typeData of editor.Groups.groupTypes
+                    if shortcut = typeData.LaTeXshortcut
+                        if allBefore[-shortcut.length..] is shortcut
+                            newCursorPos = range.startOffset -
+                                shortcut.length - 1
+                            if lastCharacter isnt '\\'
+                                allAfter = allAfter.substr 1
+                            allBefore = allBefore[...-shortcut.length]
+                            range.startContainer.textContent =
+                                allBefore + allAfter
+                            range.setStart range.startContainer,
+                                newCursorPos
+                            if lastCharacter is '\\'
+                                range.setEnd range.startContainer,
+                                    newCursorPos + 1
+                            else
+                                range.setEnd range.startContainer,
+                                    newCursorPos
+                            editor.selection.setRng range
+                            editor.Groups.groupCurrentSelection typeName
+                            break
