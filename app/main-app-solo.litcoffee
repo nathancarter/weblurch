@@ -212,7 +212,7 @@ App-level and document-level settings dialogs:
             context : 'file'
             onclick : -> tinymce.activeEditor.Settings.document.showUI()
 
-Set up Google API key for URL shortening.
+Set up the Google API key for URL shortening.
 
     window.addEventListener 'load', ->
         gapi?.client?.setApiKey 'AIzaSyAf7F0I39DdI2jtD7zrPUa4eQvUXZ-K6W8'

@@ -368,6 +368,11 @@ groups.  We provide those functions here.
         nextSibling: =>
             ( @parent?.children ? @plugin?.topLevel )?[@indexInParent()+1]
 
+Note that the `@children` array for a group is constructed by the
+`scanDocument` function of the `Groups` class, defined [below](#scanning).
+Thus one can get an array of child groups for any group `G` by writing
+`G.children`.
+
 ## Group change event
 
 The following function should be called whenever the contents of the group
