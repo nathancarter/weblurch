@@ -67,9 +67,8 @@ more steps through connections) reach its second argument.
                 alert 'Forming that connection would create a cycle,
                     which is not permitted.'
             else
-                tinymce.activeEditor.undoManager.beforeChange()
-                from.connect to
-                tinymce.activeEditor.undoManager.add()
+                undoable ->
+                    from.connect to
     ]
 
 In this app, groups have a special attribute called "canonical form," which

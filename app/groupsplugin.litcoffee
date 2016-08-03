@@ -161,6 +161,10 @@ that stack, you should obey the following coding pattern.
    `editor.undoManager.beforeChange()`.
  * After you've made all of your changes, call `editor.undoManager.add()`.
 
+In fact, because this is such a common idiom, we create a global function
+that executes its argument, wrapped in the two calls just described.  The
+code is [at the end of this file](#undo-redo-idiom).
+
 You may or may not wish to have your changes stored on the undo/redo stack.
 In general, if the change you're making to the group is in direct and
 immediate response to the user's actions, then it should be on the undo/redo
@@ -425,7 +429,8 @@ tags are required.
 IMPORTANT: Connections among groups are not added to the undo/redo stack (by
 default).  Many apps do want them on the undo/redo stack, and you can
 achieve this by following the same directions given under `get` and `set`,
-[above](#group-attributes).
+[above](#group-attributes), which reference the convenience function [at
+the end of this file](#undo-redo-idiom).
 
 Connect group `A` to group `B` by calling `A.connect B`.  The optional
 second parameter is the tag string to attach.  It defaults to the empty
@@ -1804,3 +1809,23 @@ this behavior.
                             editor.selection.setRng range
                             editor.Groups.groupCurrentSelection typeName
                             break
+
+# Undo/redo idiom
+
+It is very common when writing Lurch Applications to manipulate the
+properties of groups and connections in response to user actions, and thus
+those changes should be placed on the undo/redo stack.  While this can be
+done by surrounding any changes in two function calls (one to
+`tinymce.activeEditor.undoManager.beforeChange()` and the other to
+`tinymce.activeEditor.undoManager.add()`), that would not be DRY code.
+
+So we create the following function that executes its argument, as a
+function, in between calls to the two functions just mentioned.  Hence one
+can then write `undoable -> ACTION`, where `ACTION` is replaced by any
+sequence of changes to group data or connections that should be lumped
+together into a single undoable action.
+
+    window.undoable = ( action ) ->
+        tinymce.activeEditor.undoManager.beforeChange()
+        action()
+        tinymce.activeEditor.undoManager.add()
