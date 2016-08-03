@@ -58,6 +58,21 @@ later as this application becomes mature.
         #     from.connect to, "#{i}"
     ]
 
+In this app, groups have a special attribute called "canonical form," which
+we want to be able to compute conveniently for all groups.  So we extend the
+Group class itself.
+
+The canonical form of an atomic group (one with no children) is the text
+content of the group, which we encode as an OpenMath string.  The canonical
+form of a non-atomic group is just the array of children of the group, which
+we encode as an OpenMath application with the children in the same order.
+
+    window.Group.prototype.canonicalForm = ->
+        if @children.length is 0
+            OM.str @contentAsText()
+        else
+            OM.app ( child.canonicalForm() for child in @children )...
+
 Install the arrows UI for that group.
 
     window.useGroupConnectionsUI = yes

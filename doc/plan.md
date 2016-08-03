@@ -13,12 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Expressions
-
- * Give the group type a `canonicalForm` method, which should produce an
-   OpenMath form internally isomorphic to the nested-group form defined in
-   the specification
-
 ## Attributes
 
  * Permit connections among expression groups as long as they do not form a
