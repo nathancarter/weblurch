@@ -422,6 +422,11 @@ string attribute attached to it called its "tag," which defaults to the
 empty string. For multiple arrows between the same two groups, different
 tags are required.
 
+IMPORTANT: Connections among groups are not added to the undo/redo stack (by
+default).  Many apps do want them on the undo/redo stack, and you can
+achieve this by following the same directions given under `get` and `set`,
+[above](#group-attributes).
+
 Connect group `A` to group `B` by calling `A.connect B`.  The optional
 second parameter is the tag string to attach.  It defaults to the empty
 string.  Calling this more than once with the same `A`, `B`, and tag has the

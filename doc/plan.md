@@ -15,8 +15,6 @@ required order of completion.
 
 ## Attributes
 
- * Fix the bug that connections are not currently added to the undo/redo
-   stack.
  * When forming the connection, if the source does not have a "key"
    attribute, set it to be "label."
  * When forming the connection, if the source does not have a "key position"
