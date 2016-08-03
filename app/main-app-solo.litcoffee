@@ -50,12 +50,24 @@ later as this application becomes mature.
         color : '#996666'
         shortcut : 'Ctrl+['
         LaTeXshortcut : '\\['
-        # connectionRequest : ( from, to ) ->
-        #     existingTags = ( "#{c[2]}" for c in from.connectionsOut() \
-        #         when c[1] is to.id() )
-        #     i = 0
-        #     while "#{i}" in existingTags then i++
-        #     from.connect to, "#{i}"
+
+You can form a connection from any expression to any other, provided that no
+cycle of connections is formed in the process.  Thus we write the
+`reachable` function to test whether its first argument can (through zero or
+more steps through connections) reach its second argument.
+
+        connectionRequest : ( from, to ) ->
+            reachable = ( source, target ) ->
+                if source is target then return yes
+                for c in source.connectionsOut()
+                    next = tinymce.activeEditor.Groups[c[1]]
+                    if reachable next, target then return yes
+                no
+            if reachable to, from
+                alert 'Forming that connection would create a cycle,
+                    which is not permitted.'
+            else
+                from.connect to
     ]
 
 In this app, groups have a special attribute called "canonical form," which

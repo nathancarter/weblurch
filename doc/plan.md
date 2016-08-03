@@ -15,8 +15,6 @@ required order of completion.
 
 ## Attributes
 
- * Permit connections among expression groups as long as they do not form a
-   cycle.  Use an empty connection type.
  * Fix the bug that connections are not currently added to the undo/redo
    stack.
  * When forming the connection, if the source does not have a "key"
