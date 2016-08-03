@@ -69,6 +69,80 @@ more steps through connections) reach its second argument.
             else
                 undoable ->
                     from.connect to
+                    if not from.get 'key' then from.set 'key', 'label'
+                    if not from.get 'keyPosition'
+                        from.set 'keyPosition', 'arrow'
+
+When drawing expressions, draw all arrows that come in or go out.  (The
+default is to only draw arrows that go out; we override that here, so that
+an expression highlights both its attributes and those things for which it
+is an attribute.)
+
+        connections : ( group ) ->
+            outs = group.connectionsOut()
+            ins = group.connectionsIn()
+            for cxn in [ ins..., outs... ]
+                source = tinymce.activeEditor.Groups[cxn[0]]
+                if source.get( 'keyPosition' ) is 'arrow'
+                    cxn[2] = source.get 'key'
+            [ outs..., ins...,
+              ( t[1] for t in outs )..., ( t[0] for t in ins )... ]
+
+An expression used as an attribute, with the key stored in the attribute
+itself, will show that key on its bubble tag.
+
+        tagContents : ( group ) ->
+            if group.get( 'keyPosition' ) is 'source'
+                group.get 'key'
+            else
+                null
+
+In the case where the tag shows the key, as in the code immediately above,
+the tag menu should let the user move the tag out onto the arrow instead.
+
+        tagMenuItems : ( group ) ->
+            result = [ ]
+            if group.get( 'keyPosition' ) is 'source'
+                result.push
+                    text : "Move \"#{group.get 'key'}\" onto arrow"
+                    onclick : ->
+                        undoable -> group.set 'keyPosition', 'arrow'
+            result
+
+However, when the attribute key is already shown on the arrow, the
+expression should have a context menu item for moving it back.
+
+        contextMenuItems : ( group ) ->
+            result = [ ]
+            if group.get( 'keyPosition' ) is 'arrow'
+                result.push
+                    text : "Move \"#{group.get 'key'}\" onto attribute"
+                    onclick : ->
+                        undoable -> group.set 'keyPosition', 'source'
+
+The context menu should also contain a submenu for changing the key to any
+of several common choices, or "Other..." which lets the user input any text
+key they choose.
+
+            result.push
+                text : 'Change attribute key to...'
+                menu : [
+                    text : 'Label'
+                    onclick : -> undoable -> group.set 'key', 'label'
+                ,
+                    text : 'Reason'
+                    onclick : -> undoable -> group.set 'key', 'reason'
+                ,
+                    text : 'Premise'
+                    onclick : -> undoable -> group.set 'key', 'premise'
+                ,
+                    text : 'Other...'
+                    onclick : ->
+                        newKey = prompt 'Choose a new key:', group.get 'key'
+                        if newKey then undoable -> group.set 'key', newKey
+                ]
+            result
+
     ]
 
 In this app, groups have a special attribute called "canonical form," which

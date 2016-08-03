@@ -15,21 +15,6 @@ required order of completion.
 
 ## Attributes
 
- * When forming the connection, if the source does not have a "key"
-   attribute, set it to be "label."
- * When forming the connection, if the source does not have a "key position"
-   attribute, set it to be "arrow."
- * When drawing a bubble, show all incoming and outgoing connections.
- * If the "key position" attribute of the source of a connection is "arrow,"
-   then use that as the arrow label when drawing the connection.
- * If the "key position" attribute of the source of a connection is
-   "source," then use the key as the bubble tag for the source group.
- * Provide a tag menu item on sources for moving the key to the arrow.
- * Provide a group context menu item on sources for moving the key between
-   the arrow and the source group's bubble tag.
- * Provide a group context menu item for choosing a new key from among
-   "label," "reason," "premise," and "Other..." which opens a dialog
-   permitting any attribute key to be entered as text.
  * Give the group type an `attributeGroups` method, which lists all groups
    attached to this one as its attributes.
  * Give the group type an `attributionAncestry` method, which computes the
