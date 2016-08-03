@@ -160,6 +160,42 @@ we encode as an OpenMath application with the children in the same order.
         else
             OM.app ( child.canonicalForm() for child in @children )...
 
+Groups can also compute the list of attributes attached to them, returning
+it as an array.  We provide the following extension to the Group class to
+accomplish this.
+
+    window.Group.prototype.attributeGroups = ->
+        result = [ ]
+        for connection in @connectionsIn()
+            source = tinymce.activeEditor.Groups[connection[0]]
+            if source.get 'key' then result.push source
+        result
+
+The following function is like the transitive closure of the previous; it
+gives all groups that directly or indirectly attribute this group.
+
+    window.Group.prototype.attributionAncestry = ->
+        result = [ ]
+        for group in @attributeGroups()
+            for otherGroup in [ group, group.attributionAncestry()... ]
+                if otherGroup not in result then result.push otherGroup
+        result
+
+Leveraging the idea of a list of groups that attribute a given group, we can
+implement the notion of "complete form."  This is the same as canonical
+form, except that all attributes of the encoded group are also encoded,
+using OpenMath attributions.  The keys are encoded as symbols using their
+own names, and "Lurch" as the content dictionary.
+
+    window.Group.prototype.completeForm = ->
+        result = @canonicalForm()
+        for group in @attributeGroups()
+            key = group.get 'key'
+            if not key or key is 'premise' then continue
+            result = OM.att result, OM.sym( key, 'Lurch' ),
+                group.completeForm()
+        result
+
 Install the arrows UI for that group.
 
     window.useGroupConnectionsUI = yes

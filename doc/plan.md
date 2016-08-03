@@ -15,13 +15,6 @@ required order of completion.
 
 ## Attributes
 
- * Give the group type an `attributeGroups` method, which lists all groups
-   attached to this one as its attributes.
- * Give the group type an `attributionAncestry` method, which computes the
-   set of attributes, and attributes of attributes, etc., recursively.
- * Give the group type a `completeForm` method, which functions like
-   `canonicalForm`, but with attributes as well.  Ignore attributes with the
-   key "reason" when computing complete form.
  * Enhance arrow drawing with the ability to specify, for each connection,
    what color and line style should be used for it.
  * For premise attributions, use a dotted line.
