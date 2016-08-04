@@ -212,8 +212,8 @@ stack.
 The `set` and `clear` functions above call an update routine if the
 attribute changed was the decoration data for a grouper.  This update
 routine recomputes the appearance of that grouper as an image, and stores it
-in the `src` attribute grouper itself (which is an `img` element).  We
-implement that routine here.
+in the `src` attribute of the grouper itself (which is an `img` element).
+We implement that routine here.
 
 This routine is also called from `hideOrShowGroupers`, defined later in this
 file.  It can accept any of three parameter types, the string "open", the
@@ -998,10 +998,7 @@ because it is no longer in the document anyway.
             group?.type()?.deleted? group for group in deleted
 
 If any groups were just introduced to this document by pasting, we need to
-process their connections, because the groups themselves may have had to be
-given new ids (to preserve uniqueness within this document) and thus the ids
-in any of their connections need to be updated to stay internally consistent
-within the pasted content.
+take two actions, described below.
 
             justPasted =
                 @editor.getDoc().getElementsByClassName 'justPasted'
@@ -1009,6 +1006,21 @@ within the pasted content.
             for grouper in justPasted
                 if /^close/.test grouper.getAttribute 'id' then continue
                 group = @grouperToGroup grouper
+
+First, we must ask the group to update its appearance, because pasted
+content may have come from a different browser tab, or from this same page
+before a page reload, or any other source that would invalidate object URLs.
+Thus to avoid broken images for our groupers, we must recompute their `src`
+attributes.
+
+                group.updateGrouper 'open'
+                group.updateGrouper 'close'
+
+Second, we need to process their connections, because the groups themselves
+may have had to be given new ids (to preserve uniqueness within this
+document) and thus the ids in any of their connections need to be updated to
+stay internally consistent within the pasted content.
+
                 connections = group.get 'connections'
                 if not connections then continue
                 for connection in connections
