@@ -304,12 +304,13 @@ not permitted to make a cycle.
             if to.typeName() isnt 'term' and to.typeName() isnt 'body'
                 return
             if to.id() in ( c[1] for c in from.connectionsOut() )
-                undoable -> from.disconnect to
+                tinymce.activeEditor.undoManager.transact ->
+                    from.disconnect to
             else if pathExists to.id(), from.id()
                 alert 'That would create a cycle of arrows, which is not
                     permitted.'
             else
-                undoable -> from.connect to
+                tinymce.activeEditor.undoManager.transact -> from.connect to
 
 When drawing term groups, draw all arrows that come in or go out.  (The
 default is to only draw arrows that go out; we override that here, so that a
@@ -536,9 +537,10 @@ make a cycle.
         connectionRequest : ( from, to ) ->
             if to.typeName() isnt 'term' then return
             if to.id() in ( c[1] for c in from.connectionsOut() )
-                undoable -> from.disconnect to
+                tinymce.activeEditor.undoManager.transact ->
+                    from.disconnect to
             else
-                undoable -> from.connect to
+                tinymce.activeEditor.undoManager.transact -> from.connect to
 
 Install the arrows UI so that types can connect to terms.
 
@@ -605,12 +607,13 @@ make a cycle.
         connectionRequest : ( from, to ) ->
             if to.typeName() isnt 'term' then return
             if to.id() in ( c[1] for c in from.connectionsOut() )
-                undoable -> from.disconnect to
+                tinymce.activeEditor.undoManager.transact ->
+                    from.disconnect to
             else if pathExists to.id(), from.id()
                 alert 'That would create a cycle of arrows, which is not
                     permitted.'
             else
-                undoable -> from.connect to
+                tinymce.activeEditor.undoManager.transact -> from.connect to
 
 The following function computes the meaning of a top-level Body Group in the
 document.  It is like `termGroupToCode`, but for bodies instead.

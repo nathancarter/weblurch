@@ -67,7 +67,7 @@ more steps through connections) reach its second argument.
                 alert 'Forming that connection would create a cycle,
                     which is not permitted.'
             else
-                undoable ->
+                tinymce.activeEditor.undoManager.transact ->
                     from.connect to
                     if not from.get 'key' then from.set 'key', 'label'
                     if not from.get 'keyPosition'
@@ -108,7 +108,8 @@ the tag menu should let the user move the tag out onto the arrow instead.
                 result.push
                     text : "Move \"#{group.get 'key'}\" onto arrow"
                     onclick : ->
-                        undoable -> group.set 'keyPosition', 'arrow'
+                        tinymce.activeEditor.undoManager.transact ->
+                            group.set 'keyPosition', 'arrow'
             result
 
 However, when the attribute key is already shown on the arrow, the
@@ -120,7 +121,8 @@ expression should have a context menu item for moving it back.
                 result.push
                     text : "Move \"#{group.get 'key'}\" onto attribute"
                     onclick : ->
-                        undoable -> group.set 'keyPosition', 'source'
+                        tinymce.activeEditor.undoManager.transact ->
+                            group.set 'keyPosition', 'source'
 
 The context menu should also contain a submenu for changing the key to any
 of several common choices, or "Other..." which lets the user input any text
@@ -130,18 +132,26 @@ key they choose.
                 text : 'Change attribute key to...'
                 menu : [
                     text : 'Label'
-                    onclick : -> undoable -> group.set 'key', 'label'
+                    onclick : ->
+                        tinymce.activeEditor.undoManager.transact ->
+                            group.set 'key', 'label'
                 ,
                     text : 'Reason'
-                    onclick : -> undoable -> group.set 'key', 'reason'
+                    onclick : ->
+                        tinymce.activeEditor.undoManager.transact ->
+                            group.set 'key', 'reason'
                 ,
                     text : 'Premise'
-                    onclick : -> undoable -> group.set 'key', 'premise'
+                    onclick : ->
+                        tinymce.activeEditor.undoManager.transact ->
+                            group.set 'key', 'premise'
                 ,
                     text : 'Other...'
                     onclick : ->
                         newKey = prompt 'Choose a new key:', group.get 'key'
-                        if newKey then undoable -> group.set 'key', newKey
+                        if newKey
+                            tinymce.activeEditor.undoManager.transact ->
+                                group.set 'key', newKey
                 ]
             result
 
