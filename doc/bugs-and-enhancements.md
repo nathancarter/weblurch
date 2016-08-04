@@ -21,6 +21,8 @@ Load and save
    or by installing a workaround here.  Although you've heard about the
    KeyUp and SetContent events that you're using in the Groups package, so
    you may be able to correct this problem partially with those events.
+   (We have updated to a newer version of TinyMCE, but not yet checked to
+   see if this bug persists.)
  * Using the keyboard shortcut for New or Open on Mac triggers the Chrome
    behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
    menu.  See [my question about this on the TinyMCE forum,](
@@ -152,18 +154,16 @@ Miscellaneous
    turns the mouse pointer into a text cursor (shaped like an I, rather than
    an arrow), which can be confusing.  Make the mouse pointer over groupers
    be a plain old ordinary arrow, like usual.
+ * Move all plugin files into the `src/` folder, if possible.
  * See [this answer](http://stackoverflow.com/a/32120344/670492) to your
    StackOverflow question about higher resolution HTML canvas rendering on
-   retina deisplays.  See if its suggestions can work in your case.
- * Move all plugin files into the `src/` folder, if possible.
+   retina deisplays.  See if its suggestions can work in your case.  This
+   may be the same as the following one...
  * Bubble tags are not drawn at retina resolution on Macs with retina
    displays.  [See my question about how to fix this problem here.](http://stackoverflow.com/questions/30537138/rendering-html-to-canvas-on-retina-displays)
  * Complete [the unit test for the DOM Utils
    package](../test/domutils-spec.litcoffee).  See the end of that file for
    the few missing tests.
- * Improve build process to not compile files whose dates indicate that they
-   do not need it, nor to minify files whose dates indicate that they do not
-   need it.
  * If you ever need to export PDFs of Lurch documents, consider
    [jsPDF](https://github.com/MrRio/jsPDF).
  * Eventually, pull the LoadSave plugin out into its own repository on
