@@ -13,12 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Attributes
-
- * Enhance arrow drawing with the ability to specify, for each connection,
-   what color and line style should be used for it.
- * For premise attributions, use a dotted line.
-
 ## Embedding
 
  * If group $A$ connects to group $B$ with key $k$, and nothing else

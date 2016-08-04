@@ -85,6 +85,8 @@ is an attribute.)
                 source = tinymce.activeEditor.Groups[cxn[0]]
                 if source.get( 'keyPosition' ) is 'arrow'
                     cxn[2] = source.get 'key'
+                if source.get( 'key' ) is 'premise'
+                    cxn[3] = ( context ) -> context.setLineDash [ 3, 3 ]
             [ outs..., ins...,
               ( t[1] for t in outs )..., ( t[0] for t in ins )... ]
 

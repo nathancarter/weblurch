@@ -1366,7 +1366,7 @@ rounded rectangle that experienced something like word wrapping.
                     context.fill()
                 yes # success
 
-That concludes te group-drawing function.  Let's now call it on all the
+That concludes the group-drawing function.  Let's now call it on all the
 groups in the hierarchy, from `group` on upwards.
 
             innermost = yes
@@ -1487,8 +1487,9 @@ index into the list of connections that are to be drawn.
                 pct = ( index + 1 ) / ( length + 1 )
                 right = Math.min right, left + 40 * length
                 ( 1 - pct ) * left + pct * right
-            drawArrow = ( index, outOf, from, to, label ) =>
+            drawArrow = ( index, outOf, from, to, label, setStyle ) =>
                 context.strokeStyle = from.type()?.color or '#444444'
+                setStyle? context
                 context.globalAlpha = 1.0
                 context.lineWidth = 2
                 fromBox = from.getScreenBoundaries()
@@ -1553,7 +1554,7 @@ if there are any.
                 for connection, index in connections ? [ ]
                     if connection instanceof Array
                         drawArrow index, numArrays, @[connection[0]],
-                            @[connection[1]], connection[2]
+                            @[connection[1]], connection[2..]...
 
 # Installing the plugin
 
