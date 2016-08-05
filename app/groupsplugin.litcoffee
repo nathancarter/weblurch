@@ -1493,6 +1493,7 @@ index into the list of connections that are to be drawn.
                 right = Math.min right, left + 40 * length
                 ( 1 - pct ) * left + pct * right
             drawArrow = ( index, outOf, from, to, label, setStyle ) =>
+                context.save()
                 context.strokeStyle = from.type()?.color or '#444444'
                 setStyle? context
                 context.globalAlpha = 1.0
@@ -1545,6 +1546,7 @@ index into the list of connections that are to be drawn.
                     context.drawHTML label,
                         centerX - size.width / 2 + padStep,
                         centerY - size.height / 2, style
+                context.restore()
 
 Second, draw all connections from the innermost group containing the cursor,
 if there are any.
