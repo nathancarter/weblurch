@@ -13,17 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## OpenMath identifiers
-
- * Create a function injecting any string into a valid OpenMath identifier.
-    * Place this function in the OpenMath module.
-    * It should be a class method called `encodeAsIdentifier`.
-    * Results should be of the form "id_" followed by hexadecimal
-      representation of the string's characters.
- * Create the inverse of `encodeAsIdentifier`.
-    * Place this function in the OpenMath module.
-    * It should be a class method called `decodeIdentifier`.
-
 ## Embedding a single attribute
 
  * Add a method for deleting a group from the document.
