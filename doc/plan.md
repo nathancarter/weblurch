@@ -13,24 +13,138 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Embedding
+## Fixing attribute/form functions
 
+ * Fix the `attributeGroups` function so that you can specify, through an
+   optional boolean parameter, whether to include premise attributes or not
+   (default false).
+ * Fix the `attributionAncestry` function so that you can specify, through
+   an optional boolean parameter, whether to include premise attributes or
+   not (default false).
+ * Update the `completeForm` function so that it no longer needs to filter
+   by key (rejecting premises) because that is already done for it by the
+   call to `attributeGroups`.
+ * Fix the `completeForm` function so that multiple attributes create a
+   key-value pair whose value is a list containing the complete forms of all
+   the relevant attribute expressions, in the order they appear in the
+   document.
+
+## OpenMath identifiers
+
+ * Create a function injecting any string into a valid OpenMath identifier.
+    * Place this function in the OpenMath module.
+    * It should be a class method called `encodeAsIdentifier`.
+    * Results should be of the form "id_" followed by hexadecimal
+      representation of the string's characters.
+ * Create the inverse of `encodeAsIdentifier`.
+    * Place this function in the OpenMath module.
+    * It should be a class method called `decodeIdentifier`.
+
+## Embedding a single attribute
+
+ * Add a method for deleting a group from the document.
+    * It should be a method of the Group class, called `remove`.
+    * It should do the whole thing in a single undo/redo transaction.
+    * Verify that when this method is called, connections are automatically
+      removed from groups that are left behind in the document.
+ * Add a method for computing the HTML representation of an entire group.
+    * Name it `groupAsHTML`.
+    * Unlike `contentAsHTML`, include both groupers.
+    * It can use the `outerRange` method of the group.
+    * Otherwise, imitate the implementation of the `contentAsHTML` method.
+ * Add a method for embedding one group as an attribute of another.
+    * It should be a member of the Group class, called `embedAttribute`.
+    * It should accept one parameter, the expression attribute key.
+    * For now, assume there is only one attributing group with that key.
+    * Use the group's `set` method for storing the data.
+    * As the key, use the embedded expression's attribute key, encoded using
+      the OpenMath module's `encodeAsIdentifier` function.
+    * As the value, use a pair of data, described below, represented as an
+      object with "m" and "v" members (can mean meaning/visual, or
+      model/view).
+    * The "m" element of the pair is the complete form of the embedded
+      group, which is an OpenMath object, and thus already in JSON form.
+    * The "v" element is a string.  It contains the group's HTML form,
+      followed by the HTML form of every group in the attribute's
+      attribution ancestry, in the order they appear in the document, each
+      computed using the function `groupAsHTML`, all joined into one long
+      string of HTML.
+    * Before computing v, delete the connection from the attribute
+      expression to the attributed expression.
+    * After embedding the data, delete the attribute group from the
+      document, using `group.remove()`.
+    * Also delete all groups in its attribution ancestry iff they are not
+      attributing any group outside that attribution ancestry.
+    * Do the whole thing in a single undo/redo transaction.  (Yes,
+      `undoManager.transact` permits nested calls.)
+ * Extend `completeForm` to take embedded attributes into account.
+    * It will need to use `decodeIdentifier` to translate the group
+      attribute key into an expression attribute key.
+ * Extend the embedding method so that it applies `LZString.compress` to the
+   "v" member of the embedded group (i.e., just the array of HTML forms, not
+   the complete form) before embedding, to save space.
+
+## Unembedding a single attribute
+
+ * Write a method that expands an embedded attribute back into the document.
+    * It should be a member of the Group class, called `unembedAttribute`.
+    * It accepts as parameter the key of the embedded attribute, in the form
+      it had before being run through `encodeAsIdentifier`.
+    * It applies `LZString.decompress` to its embedded HTML form to find the
+      HTML it should insert in the document.
+    * It discards the complete form in the same pair, since that is
+      computable from the expanded HTML form.
+    * It inserts it, by default, immediately after the group in which it's
+      embedded.  Note that it may be inserting more than one group.
+    * After inserting, it forms a connection from the newly inserted
+      expression to the expression in which it was (until recently)
+      embedded.
+    * It accepts an optional second parameter, a boolean, which defaults to
+      false, but if true, indicates that it should use the cursor position
+      as the point of insertion, rather than just putting it immediately
+      after teh group in which it's embedded.
+    * It must mark all groupers in the inserted HTML with the class
+      `justPasted`, to re-use the already-implemented process of renumbering
+      groups to preserve ID uniqueness, while keeping connections
+      consistent.
  * If group $A$ connects to group $B$ with key $k$, and nothing else
-   connects to $B$ using $k$, and $A$ connects to nothing else, then the
-   context menu for $A$ will contain an item for embedding it into $B$.
-   This embeds $A$'s entire attribution ancestry, not just $A$, with the
-   exception of any "premise" connections, which are broken by this action.
-   If any such breaks will occur, prompt the user first.  Ensure that this
-   is all seen as one action on the undo/redo stack.
- * Ensure that `completeForm` takes embedded attributes into account.
- * Same as the previous, but $A$ may connect to many targets using $k$.  In
-   such a situation, it can still be embedded, but prompt the user first to
-   be sure they understand what they're about to do.  Again, handle
-   undo/redo correctly.
- * Same as the first, but $B$ may be connected to by many sources using $k$.
-   In such a situation, the sources will all be embedded at once, forming a
-   list-type value in the order they appear in the document.  Again, prompt
-   the user first.  Again, handle undo/redo correctly.
+   connects to $B$ using $k$, and $A$ connects to nothing else, then:
+    * Add to the context menu for $A$ an item for embedding it into $B$.
+    * Invoking the item should call `embedAttribute` on $B$ with the key of
+      $A$ as the parameter.
+    * If the attribution ancestry of $A$ contains any premise-type
+      attributes, be sure to prompt the user that those connections will be
+      broken by this action, and see if they still wish to proceed.
+ * Add an optional parameter to `embedAttribute` in the Group class, a
+   boolean that defaults to true, of whether to delete the attribute group
+   from the document.
+ * If group $A$ connects to groups $B_1$ through $B_n$ with key $k$, for
+   $n>1$, and nothing else connects to any of the $B_i$ using $k$, then:
+    * Embed $A$ into each $B_i$, setting the optional parameter of
+      `embedAttribute` to false in all calls but the final one, so that the
+      groups are only deleted once at the end of the loop.
+    * Wrap that loop in a single call to `undoManager.transact`.
+
+## Embedding list attributes
+
+ * Extend `embedAttribute` so that it no longer assumes that the key is
+   associated with at most one attribute group.  If there is more than one
+   attribute group with the given key, then:
+    * The v value to be embedded is the concatenated sequence of HTML for
+      each of the attribute groups' attribution ancestries, in the order
+      they appear in the document.
+    * The m value to be embedded is an OpenMath application of a special
+      "List" symbol to a list of the complete forms of the attribute groups,
+      in the order they appear in the document.
+    * All the groups should be embedded and deleted inside a call to
+      `undoManager.transact`.
+ * If groups $A_1$ through $A_n$ connect to group $B$ with key $k$, for
+   $n>1$, and no $A_i$ connects to anything else, then proceed exactly as in
+   the case when $n=1$, because `embedAttribute` has been upgraded to handle
+   it.
+
+## Attribute dialog
+
  * Provide a context menu item on any expression for seeing the attributes
    of that expression summarized in a dialog.
  * For expressions without attributes, it simply says there are none, and
