@@ -353,6 +353,24 @@ Specifically,
                 range
             catch e then null
 
+## Working with whole groups
+
+You can remove an entire group from the document using the following method.
+It does two things:  First, it disconnects this group from any group to
+which it's connected.  Second, relying on the `contentNodes` member above,
+it removes all the nodes returned by that member.
+
+This function requires that the `@plugin` member exists, or it does nothing.
+It also tells the TinyMCE instance that this should all be considered part
+of one action for the purposes of undo/redo.
+
+        remove: =>
+            if not @plugin then return
+            @disconnect @plugin[cxn[0]] for cxn in @connectionsIn()
+            @disconnect @plugin[cxn[1]] for cxn in @connectionsOut()
+            @plugin.editor.undoManager.transact =>
+                ( $ [ @open, @contentNodes()..., @close ] ).remove()
+
 ## Group hierarchy
 
 The previous two functions require being able to query this group's index in
@@ -991,7 +1009,10 @@ because it is no longer in the document anyway.
             group?.type()?.deleted? group for group in deleted
 
 If any groups were just introduced to this document by pasting, we need to
-take two actions, described below.
+process their connections, because the groups themselves may have had to be
+given new ids (to preserve uniqueness within this document) and thus the ids
+in any of their connections need to be updated to stay internally consistent
+within the pasted content.
 
             justPasted =
                 @editor.getDoc().getElementsByClassName 'justPasted'
@@ -999,21 +1020,6 @@ take two actions, described below.
             for grouper in justPasted
                 if /^close/.test grouper.getAttribute 'id' then continue
                 group = @grouperToGroup grouper
-
-First, we must ask the group to update its appearance, because pasted
-content may have come from a different browser tab, or from this same page
-before a page reload, or any other source that would invalidate object URLs.
-Thus to avoid broken images for our groupers, we must recompute their `src`
-attributes.
-
-                group.updateGrouper 'open'
-                group.updateGrouper 'close'
-
-Second, we need to process their connections, because the groups themselves
-may have had to be given new ids (to preserve uniqueness within this
-document) and thus the ids in any of their connections need to be updated to
-stay internally consistent within the pasted content.
-
                 connections = group.get 'connections'
                 if not connections then continue
                 for connection in connections
@@ -1066,6 +1072,21 @@ exist in the document itself via `getElementById()`.
                 @[id] = new Group open, close, this
             else
                 delete @[id].old
+
+Also, for each group, we inspect whether its groupers have correctly loaded
+their images (by checking their `naturalWidth`), because in several cases
+(e.g., content pasted from a different browser tab, or pasted from this same
+page before a page reload, or re-inserted by an undo operation) the object
+URLs for the images can become invalid.  Thus to avoid broken images for our
+groupers, we must recompute their `src` attributes.
+
+            if open.naturalWidth is undefined or open.naturalWidth is 0
+                @[id].updateGrouper 'open'
+            if close.naturalWidth is undefined or close.naturalWidth is 0
+                @[id].updateGrouper 'close'
+
+Return the (old and kept, or newly updated) ID.
+
             id
 
 ## Querying the group hierarchy

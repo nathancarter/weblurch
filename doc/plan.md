@@ -15,11 +15,6 @@ required order of completion.
 
 ## Embedding a single attribute
 
- * Add a method for deleting a group from the document.
-    * It should be a method of the Group class, called `remove`.
-    * It should do the whole thing in a single undo/redo transaction.
-    * Verify that when this method is called, connections are automatically
-      removed from groups that are left behind in the document.
  * Add a method for computing the HTML representation of an entire group.
     * Name it `groupAsHTML`.
     * Unlike `contentAsHTML`, include both groupers.
