@@ -13,22 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Fixing attribute/form functions
-
- * Fix the `attributeGroups` function so that you can specify, through an
-   optional boolean parameter, whether to include premise attributes or not
-   (default false).
- * Fix the `attributionAncestry` function so that you can specify, through
-   an optional boolean parameter, whether to include premise attributes or
-   not (default false).
- * Update the `completeForm` function so that it no longer needs to filter
-   by key (rejecting premises) because that is already done for it by the
-   call to `attributeGroups`.
- * Fix the `completeForm` function so that multiple attributes create a
-   key-value pair whose value is a list containing the complete forms of all
-   the relevant attribute expressions, in the order they appear in the
-   document.
-
 ## OpenMath identifiers
 
  * Create a function injecting any string into a valid OpenMath identifier.

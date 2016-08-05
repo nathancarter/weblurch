@@ -176,19 +176,21 @@ Groups can also compute the list of attributes attached to them, returning
 it as an array.  We provide the following extension to the Group class to
 accomplish this.
 
-    window.Group.prototype.attributeGroups = ->
+    window.Group.prototype.attributeGroups = ( includePremises = no ) ->
         result = [ ]
         for connection in @connectionsIn()
             source = tinymce.activeEditor.Groups[connection[0]]
-            if source.get 'key' then result.push source
+            if key = source.get 'key'
+                if not includePremises and key is 'premise' then continue
+                result.push source
         result
 
 The following function is like the transitive closure of the previous; it
 gives all groups that directly or indirectly attribute this group.
 
-    window.Group.prototype.attributionAncestry = ->
+    window.Group.prototype.attributionAncestry = ( includePremises = no ) ->
         result = [ ]
-        for group in @attributeGroups()
+        for group in @attributeGroups includePremises
             for otherGroup in [ group, group.attributionAncestry()... ]
                 if otherGroup not in result then result.push otherGroup
         result
@@ -199,13 +201,24 @@ form, except that all attributes of the encoded group are also encoded,
 using OpenMath attributions.  The keys are encoded as symbols using their
 own names, and "Lurch" as the content dictionary.
 
-    window.Group.prototype.completeForm = ->
+    window.Group.prototype.completeForm = ( includePremises = no ) ->
         result = @canonicalForm()
-        for group in @attributeGroups()
+        prepare = { }
+        for group in @attributeGroups includePremises
             key = group.get 'key'
-            if not key or key is 'premise' then continue
+            ( prepare[key] ?= [ ] ).push group
+        documentOrder = ( groupA, groupB ) ->
+            if groupA is groupB then return 0
+            cmp = groupA.open.compareDocumentPosition groupB.open
+            return if Node.DOCUMENT_POSITION_FOLLOWING & cmp then -1 else 1
+        for key, list of prepare
+            list = ( group.completeForm includePremises \
+                for group in list.sort documentOrder )
             result = OM.att result, OM.sym( key, 'Lurch' ),
-                group.completeForm()
+                if list.length is 1
+                    list[0]
+                else
+                    OM.app OM.sym( 'List', 'Lurch' ), list...
         result
 
 Install the arrows UI for that group.
