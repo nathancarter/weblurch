@@ -286,9 +286,9 @@ function can only work if `@plugin` is a `Groups` class instance.
 
 ## Group ranges
 
-Those functions rely on the `innerRange()` function, defined below, with a
-corresponding `outerRange` function for the sake of completeness.  We use a
-`try`/`catch` block because it's possible that the group has been removed
+The above functions rely on the `innerRange()` function, defined below, with
+a corresponding `outerRange` function for the sake of completeness.  We use
+a `try`/`catch` block because it's possible that the group has been removed
 from the document, and thus we can no longer set range start and end points
 relative to the group's open and close groupers.
 
