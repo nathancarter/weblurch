@@ -301,7 +301,6 @@ Sharing files with permalinks (shortened via goo.gl):
                         .replace /"/g, '&quot;'
                         .replace /</g, '&lt;'
                         .replace />/g, '&gt;'
-                    console.log embed
                     tinymce.activeEditor.Dialogs.alert
                         title : 'Permanent Sharing Links'
                         message : "
