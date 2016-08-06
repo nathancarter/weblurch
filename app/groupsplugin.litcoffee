@@ -371,6 +371,17 @@ of one action for the purposes of undo/redo.
             @plugin.editor.undoManager.transact =>
                 ( $ [ @open, @contentNodes()..., @close ] ).remove()
 
+Sometimes you want the HTML representation of the entire group.  The
+following method gives it to you, by imitating the code of `contentAsHTML`,
+except using `outerRange` rather than `innerRange`.
+
+        groupAsHTML: =>
+            if not fragment = @outerRange()?.cloneContents()
+                return null
+            tmp = @open.ownerDocument.createElement 'div'
+            tmp.appendChild fragment
+            tmp.innerHTML
+
 ## Group hierarchy
 
 The previous two functions require being able to query this group's index in

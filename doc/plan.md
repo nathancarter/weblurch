@@ -15,11 +15,6 @@ required order of completion.
 
 ## Embedding a single attribute
 
- * Add a method for computing the HTML representation of an entire group.
-    * Name it `groupAsHTML`.
-    * Unlike `contentAsHTML`, include both groupers.
-    * It can use the `outerRange` method of the group.
-    * Otherwise, imitate the implementation of the `contentAsHTML` method.
  * Add a method for embedding one group as an attribute of another.
     * It should be a member of the Group class, called `embedAttribute`.
     * It should accept one parameter, the expression attribute key.
