@@ -371,11 +371,19 @@ Sometimes you want the HTML representation of the entire group.  The
 following method gives it to you, by imitating the code of `contentAsHTML`,
 except using `outerRange` rather than `innerRange`.
 
-        groupAsHTML: =>
+The optional parameter, if set to false, will omit the `src` attributes on
+all groupers (the two for this group, as well as each pair for every inner
+group as well).  This can be useful because those `src` attributes can be
+recomputed from the other grouper data, and they are enormous, so omitting
+them saves significant space.
+
+        groupAsHTML: ( withSrcAttributes = yes ) =>
             if not fragment = @outerRange()?.cloneContents()
                 return null
             tmp = @open.ownerDocument.createElement 'div'
             tmp.appendChild fragment
+            if not withSrcAttributes
+                ( $ tmp ).find( '.grouper' ).removeAttr 'src'
             tmp.innerHTML
 
 ## Group hierarchy

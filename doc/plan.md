@@ -15,12 +15,8 @@ required order of completion.
 
 ## Embedding a single attribute
 
- * Improve the efficiency of the "v" embedding member.
-    * Before converting to HTML form, set each grouper's `src` attribute to
-      empty.  (It will be reconstructed if it gets expanded back into the
-      document anyway, so throwing out this huge, useless data is crucial.)
-    * Apply `LZString.compress` to the string to be assigned to the "v"
-      member before storing it.
+ * Improve the efficiency of attribute embedding by applying
+   `LZString.compress` to the data before storing it.
  * Extend `completeForm` to take embedded attributes into account.
     * If there are embedded and non-embedded attributes with the same key,
       form list values the same way you would with multiple non-embedded

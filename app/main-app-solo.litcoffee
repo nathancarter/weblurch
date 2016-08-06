@@ -247,7 +247,7 @@ group.
         ancestry = groups[0].attributionAncestry()
         ancestry.sort strictNodeComparator
         internalValue.v =
-            ( g.groupAsHTML() for g in [ groups[0], ancestry... ] ).join ''
+            ( g.groupAsHTML no for g in [ groups[0], ancestry... ] ).join ''
 
 Embed the data, then remove the attribute expression from the document.
 Then delete every expression in the attribution ancestry iff it's not also
