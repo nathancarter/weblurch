@@ -15,8 +15,6 @@ required order of completion.
 
 ## Embedding a single attribute
 
- * Improve the efficiency of attribute embedding by applying
-   `LZString.compress` to the data before storing it.
  * Extend `completeForm` to take embedded attributes into account.
     * If there are embedded and non-embedded attributes with the same key,
       form list values the same way you would with multiple non-embedded

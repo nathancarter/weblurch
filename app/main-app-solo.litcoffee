@@ -246,7 +246,7 @@ group.
         groups[0].disconnect this
         ancestry = groups[0].attributionAncestry()
         ancestry.sort strictNodeComparator
-        internalValue.v =
+        internalValue.v = LZString.compress \
             ( g.groupAsHTML no for g in [ groups[0], ancestry... ] ).join ''
 
 Embed the data, then remove the attribute expression from the document.
