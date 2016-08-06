@@ -70,8 +70,8 @@ more steps through connections) reach its second argument.
                 tinymce.activeEditor.undoManager.transact ->
                     from.connect to
                     if not from.get 'key' then from.set 'key', 'label'
-                    if not from.get 'keyPosition'
-                        from.set 'keyPosition', 'arrow'
+                    if not from.get 'keyposition'
+                        from.set 'keyposition', 'arrow'
 
 When drawing expressions, draw all arrows that come in or go out.  (The
 default is to only draw arrows that go out; we override that here, so that
@@ -83,7 +83,7 @@ is an attribute.)
             ins = group.connectionsIn()
             for cxn in [ ins..., outs... ]
                 source = tinymce.activeEditor.Groups[cxn[0]]
-                if source.get( 'keyPosition' ) is 'arrow'
+                if source.get( 'keyposition' ) is 'arrow'
                     cxn[2] = source.get 'key'
                 if source.get( 'key' ) is 'premise'
                     cxn[3] = ( context ) -> context.setLineDash [ 3, 3 ]
@@ -94,7 +94,7 @@ An expression used as an attribute, with the key stored in the attribute
 itself, will show that key on its bubble tag.
 
         tagContents : ( group ) ->
-            if group.get( 'keyPosition' ) is 'source'
+            if group.get( 'keyposition' ) is 'source'
                 group.get 'key'
             else
                 null
@@ -104,12 +104,12 @@ the tag menu should let the user move the tag out onto the arrow instead.
 
         tagMenuItems : ( group ) ->
             result = [ ]
-            if group.get( 'keyPosition' ) is 'source'
+            if group.get( 'keyposition' ) is 'source'
                 result.push
                     text : "Move \"#{group.get 'key'}\" onto arrow"
                     onclick : ->
                         tinymce.activeEditor.undoManager.transact ->
-                            group.set 'keyPosition', 'arrow'
+                            group.set 'keyposition', 'arrow'
             result
 
 However, when the attribute key is already shown on the arrow, the
@@ -117,12 +117,12 @@ expression should have a context menu item for moving it back.
 
         contextMenuItems : ( group ) ->
             result = [ ]
-            if group.get( 'keyPosition' ) is 'arrow'
+            if group.get( 'keyposition' ) is 'arrow'
                 result.push
                     text : "Move \"#{group.get 'key'}\" onto attribute"
                     onclick : ->
                         tinymce.activeEditor.undoManager.transact ->
-                            group.set 'keyPosition', 'source'
+                            group.set 'keyposition', 'source'
 
 The context menu should also contain a submenu for changing the key to any
 of several common choices, or "Other..." which lets the user input any text
