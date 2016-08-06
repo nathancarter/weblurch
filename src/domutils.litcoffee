@@ -306,6 +306,25 @@ to [this StackOverflow answer](http://stackoverflow.com/a/13789789/670492).
                            rect.top < y < rect.bottom then return node
             return elt
 
+## Order of DOM nodes
+
+To check whether DOM node A appears strictly before DOM node B in the
+document, use the following function.  Note that if node B is contained in
+node A, this returns false.
+
+        window.strictNodeOrder = ( A, B ) ->
+            cmp = A.compareDocumentPosition B
+            ( Node.DOCUMENT_POSITION_FOLLOWING & cmp ) and \
+                not ( Node.DOCUMENT_POSITION_CONTAINED_BY & cmp )
+
+To sort an array of document nodes, using a comparator that will return -1,
+0, or 1, indicating whether nodes are in order, the same, or out of order
+(respectively), use the following comparator function.
+
+        window.strictNodeComparator = ( groupA, groupB ) ->
+            if groupA is groupB then return 0
+            if strictNodeOrder groupA, groupB then -1 else 1
+
 ## Installation into main window global namespace
 
 As mentioned above, we defined all of the functions in one big `installIn`

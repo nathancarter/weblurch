@@ -207,19 +207,67 @@ own names, and "Lurch" as the content dictionary.
         for group in @attributeGroups includePremises
             key = group.get 'key'
             ( prepare[key] ?= [ ] ).push group
-        documentOrder = ( groupA, groupB ) ->
-            if groupA is groupB then return 0
-            cmp = groupA.open.compareDocumentPosition groupB.open
-            return if Node.DOCUMENT_POSITION_FOLLOWING & cmp then -1 else 1
         for key, list of prepare
             list = ( group.completeForm includePremises \
-                for group in list.sort documentOrder )
+                for group in list.sort strictNodeComparator )
             result = OM.att result, OM.sym( key, 'Lurch' ),
                 if list.length is 1
                     list[0]
                 else
                     OM.app OM.sym( 'List', 'Lurch' ), list...
         result
+
+Now we add a member function to the group class for embedding in an
+expression an attribute expression, including its entire attribution
+ancestry.
+
+    window.Group.prototype.embedAttribute = ( key ) ->
+
+For now, we support only the case where there is exactly one attribute
+expression with the given key.
+
+        groups = ( g for g in @attributeGroups() \
+            when g.get( 'key' ) is key )
+        if groups.length isnt 1 then return
+
+The key to use inside this group is the expression key, encoded so that it
+can function as an OpenMath identifier.  The value to use will have two
+fields, the first ("m" for meaning) will be the complete form of the
+attribute to embed.
+
+        internalKey = OM.encodeAsIdentifier key
+        internalValue = m : g.completeForm()
+
+The second ("v" for visual) will be its representation in HTML form, for
+later extraction back into the document if the user so chooses.  Before
+computing that HTML representation, we disconnect the attribute from this
+group.
+
+        groups[0].disconnect this
+        ancestry = groups[0].attributionAncestry()
+        ancestry.sort strictNodeComparator
+        internalValue.v =
+            ( g.groupAsHTML() for g in [ groups[0], ancestry... ] ).join ''
+
+Embed the data, then remove the attribute expression from the document.
+Then delete every expression in the attribution ancestry iff it's not also
+attributing another node outside the attribution ancestry.  Do all of this
+in a single undo/redo transaction.
+
+        groups[0].plugin.editor.undoManager.transact =>
+            this.set internalKey, internalValue
+            groups[0].remove()
+            ancestorIds = [
+                groups[0].id()
+                ( a.id() for a in ancestry )...
+            ]
+            for ancestor in ancestry
+                hasConnectionToNonAncestor = no
+                for connection in ancestor.connectionsOut()
+                    if connection[1] not in ancestorIds
+                        hasConnectionToNonAncestor = yes
+                        break
+                ancestor.remove() unless hasConnectionToNonAncestor
 
 Install the arrows UI for that group.
 

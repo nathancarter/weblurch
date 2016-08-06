@@ -151,8 +151,8 @@ thus the document) dirty, and ensure that changes to a group's data bring
 about any recomputation/reprocessing of that group in the document.
 
 Because we use HTML data attributes to store the data, the keys must be
-alphanumeric, optionally with dashes.  Furthermore, the data must be able to
-be amenable to JSON stringification.
+alphanumeric, optionally with dashes and/or underscores.  Furthermore, the
+data must be able to be amenable to JSON stringification.
 
 IMPORTANT:  If you call `set()` in a group, the changes you make will NOT be
 stored on the TinyMCE undo/redo stack.  If you want your changes stored on
@@ -169,7 +169,7 @@ able to undo it, and thus you should not place the change on the undo/redo
 stack.
 
         set: ( key, value ) =>
-            if not /^[a-zA-Z0-9-]+$/.test key then return
+            if not /^[a-zA-Z0-9-_]+$/.test key then return
             toStore = JSON.stringify [ value ]
             if @open.getAttribute( "data-#{key}" ) isnt toStore
                 @open.setAttribute "data-#{key}", toStore
@@ -258,18 +258,14 @@ be redundant) using the following routine.
 
         contentNodes: =>
             result = [ ]
-            strictOrder = ( a, b ) ->
-                cmp = a.compareDocumentPosition b
-                ( Node.DOCUMENT_POSITION_FOLLOWING & cmp ) and \
-                    not ( Node.DOCUMENT_POSITION_CONTAINED_BY & cmp )
             walk = @open
             while walk?
-                if strictOrder walk, @close
-                    if strictOrder @open, walk then result.push walk
+                if strictNodeOrder walk, @close
+                    if strictNodeOrder @open, walk then result.push walk
                     if walk.nextSibling? then walk = walk.nextSibling \
                         else walk = walk.parentNode
                     continue
-                if strictOrder @close, walk
+                if strictNodeOrder @close, walk
                     console.log 'Warning!! walked past @close...something
                         is wrong with this loop'
                     break
@@ -1131,15 +1127,12 @@ group.  If it is a close grouper, the node is in its parent group.
 
         groupAboveNode: ( node ) =>
             if ( all = @allGroupers() ).length is 0 then return null
-            less = ( a, b ) ->
-                Node.DOCUMENT_POSITION_FOLLOWING & \
-                    a.compareDocumentPosition( b )
             left = index : 0, grouper : all[0], leftOfNode : yes
             return @grouperToGroup left.grouper if left.grouper is node
-            return null if not less left.grouper, node
+            return null if not strictNodeOrder left.grouper, node
             right = index : all.length - 1, grouper : all[all.length - 1]
             return @grouperToGroup right.grouper if right.grouper is node
-            return null if less right.grouper, node
+            return null if strictNodeOrder right.grouper, node
             loop
                 if left.grouper is node
                     return @grouperToGroup left.grouper
@@ -1150,7 +1143,7 @@ group.  If it is a close grouper, the node is in its parent group.
                     return if left.grouper is group.open then group \
                         else group.parent
                 middle = Math.floor ( left.index + right.index ) / 2
-                if less all[middle], node
+                if strictNodeOrder all[middle], node
                     left =
                         index : middle
                         grouper : all[middle]

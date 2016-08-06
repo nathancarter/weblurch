@@ -15,37 +15,18 @@ required order of completion.
 
 ## Embedding a single attribute
 
- * Add a method for embedding one group as an attribute of another.
-    * It should be a member of the Group class, called `embedAttribute`.
-    * It should accept one parameter, the expression attribute key.
-    * For now, assume there is only one attributing group with that key.
-    * Use the group's `set` method for storing the data.
-    * As the key, use the embedded expression's attribute key, encoded using
-      the OpenMath module's `encodeAsIdentifier` function.
-    * As the value, use a pair of data, described below, represented as an
-      object with "m" and "v" members (can mean meaning/visual, or
-      model/view).
-    * The "m" element of the pair is the complete form of the embedded
-      group, which is an OpenMath object, and thus already in JSON form.
-    * The "v" element is a string.  It contains the group's HTML form,
-      followed by the HTML form of every group in the attribute's
-      attribution ancestry, in the order they appear in the document, each
-      computed using the function `groupAsHTML`, all joined into one long
-      string of HTML.
-    * Before computing v, delete the connection from the attribute
-      expression to the attributed expression.
-    * After embedding the data, delete the attribute group from the
-      document, using `group.remove()`.
-    * Also delete all groups in its attribution ancestry iff they are not
-      attributing any group outside that attribution ancestry.
-    * Do the whole thing in a single undo/redo transaction.  (Yes,
-      `undoManager.transact` permits nested calls.)
+ * Improve the efficiency of the "v" embedding member.
+    * Before converting to HTML form, set each grouper's `src` attribute to
+      empty.  (It will be reconstructed if it gets expanded back into the
+      document anyway, so throwing out this huge, useless data is crucial.)
+    * Apply `LZString.compress` to the string to be assigned to the "v"
+      member before storing it.
  * Extend `completeForm` to take embedded attributes into account.
+    * If there are embedded and non-embedded attributes with the same key,
+      form list values the same way you would with multiple non-embedded
+      attributes with the same key.
     * It will need to use `decodeIdentifier` to translate the group
       attribute key into an expression attribute key.
- * Extend the embedding method so that it applies `LZString.compress` to the
-   "v" member of the embedded group (i.e., just the array of HTML forms, not
-   the complete form) before embedding, to save space.
 
 ## Unembedding a single attribute
 
