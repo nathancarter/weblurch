@@ -113,4 +113,4 @@ document metadata.
             D.metadata
         editor.LoadSave.loadMetaData = ( object ) ->
             D.metadata = object
-            editor.Dependencies.import D.metadata.dependencies ? [ ]
+            editor.Dependencies.import D.metadata?.dependencies ? [ ]
