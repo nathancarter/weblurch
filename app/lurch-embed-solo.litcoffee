@@ -15,12 +15,8 @@ We use the following namespace.
 
 The default location of the main webLurch application is the following.
 
-IT IS SET TO LOCALHOST ONLY WHEN TESTING.  IT SHOULD ACTUALLY BE AT
-`http://nathancarter.github.io/weblurch/app/app.html` BEFORE PUSHING THIS
-CODE TO GITHUB.  IF YOU SEE THIS CODE ON GITHUB, I GOOFED.  SEND ME AN
-EMAIL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    window.LurchEmbed.defaultURL = 'http://localhost:8000/app/app.html'
+    window.LurchEmbed.defaultURL =
+        'http://nathancarter.github.io/weblurch/app/app.html'
 
 ## Making snippets live
 
