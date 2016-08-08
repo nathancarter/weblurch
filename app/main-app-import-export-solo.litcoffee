@@ -120,7 +120,7 @@ reloading the page without the query string, and then pulling the data from
                 JSON.stringify [ metadata, document ]
             window.location.href = window.location.href.split( '?' )[0]
 
-## Helper functions
+## GitHub check
 
 The following function is just to ensure that functionality that depends on
 a wiki installation doesn't break when the app is served from GitHub.
@@ -145,9 +145,7 @@ the message below for yourself.
                     <p>Try back soon!</p>'
         result
 
-Here is a function that takes an HTML string in notation called "Lurch
-shorthand" and fills the active TinyMCE editor with the corresponding HTML
-form used by Lurch in the main webLurch application.
+## Lurch shorthand
 
 Lurch Shorthand solves two problems that would arise from exposing to
 authors of raw HTML (or something related, such as Markdown) the HTML form
@@ -194,10 +192,10 @@ Lurch Shorthand is defined as HTML plus the following new tags.
 
 The following function takes a string of Lurch Shorthand code and converts
 it to the corresponding raw HTML for use by the main webLurch application,
-places it into the active TinyMCE editor, then forms the necessary
-connections Group instances, and connections among them.  It also clears the
-undo/redo stack, so that this action cannot be undone, as if the document
-were just opened from a file.
+places it into the active TinyMCE editor, then forms the necessary Group
+instances and connections among them.  It also clears the undo/redo stack,
+so that this action cannot be undone, as if the document were just opened
+from a file.
 
     translateShorthandIntoEditor = ( shorthand ) ->
 

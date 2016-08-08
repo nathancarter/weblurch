@@ -4,7 +4,7 @@
 
   window.LurchEmbed = {};
 
-  window.LurchEmbed.defaultURL = 'http://localhost:8000/app/app.html';
+  window.LurchEmbed.defaultURL = 'http://nathancarter.github.io/weblurch/app/app.html';
 
   window.LurchEmbed.makeLive = function(element, attributes, applicationURL) {
     var filename, index, key, replacement, url, value;
@@ -34,7 +34,7 @@
     return replacement.setAttribute('src', url);
   };
 
-  $(function() {
+  $(window.LurchEmbed.makeAllLive = function() {
     return ($('.lurch-embed')).each(function(index, element) {
       element.setAttribute('data-embed-index', index);
       return window.LurchEmbed.makeLive(element);

@@ -15,12 +15,8 @@ We use the following namespace.
 
 The default location of the main webLurch application is the following.
 
-IT IS SET TO LOCALHOST ONLY WHEN TESTING.  IT SHOULD ACTUALLY BE AT
-`http://nathancarter.github.io/weblurch/app/app.html` BEFORE PUSHING THIS
-CODE TO GITHUB.  IF YOU SEE THIS CODE ON GITHUB, I GOOFED.  SEND ME AN
-EMAIL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    window.LurchEmbed.defaultURL = 'http://localhost:8000/app/app.html'
+    window.LurchEmbed.defaultURL =
+        'http://nathancarter.github.io/weblurch/app/app.html'
 
 ## Making snippets live
 
@@ -59,12 +55,18 @@ the [automation section](#automating-the-process), below.
 
 ## Automating the process
 
-For convenience, we invoke the above function on every element in the
-document with the class "lurch-embed".  Thus web page and blog authors do
-not need to call any script functions.  They just mark some elements with a
-specific class, and all is taken care of for them.
+For convenience, we create a function that calls the `makeLive` function on
+every element in the document with the class "lurch-embed".  Thus web page
+and blog authors can call that script function whenever they need to make
+all Lurch source blocks in the page live.
 
-    $ ->
+Also, we call that function as soon as the page is done loading, so that
+page and blog authors may not need to call any script functions (depending
+on the complexity of their page, and whether they are dynamically adding
+elements after loading).  They just mark some elements with a specific
+class, and all is taken care of for them.
+
+    $ window.LurchEmbed.makeAllLive = ->
         ( $ '.lurch-embed' ).each ( index, element ) ->
             element.setAttribute 'data-embed-index', index
             window.LurchEmbed.makeLive element
