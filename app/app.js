@@ -476,6 +476,8 @@
       this.nextSibling = __bind(this.nextSibling, this);
       this.previousSibling = __bind(this.previousSibling, this);
       this.indexInParent = __bind(this.indexInParent, this);
+      this.groupAsHTML = __bind(this.groupAsHTML, this);
+      this.remove = __bind(this.remove, this);
       this.rangeAfter = __bind(this.rangeAfter, this);
       this.rangeBefore = __bind(this.rangeBefore, this);
       this.outerRange = __bind(this.outerRange, this);
@@ -522,7 +524,7 @@
 
     Group.prototype.set = function(key, value) {
       var attr, grouper, toStore, _i, _len, _ref, _results;
-      if (!/^[a-zA-Z0-9-]+$/.test(key)) {
+      if (!/^[a-zA-Z0-9-_]+$/.test(key)) {
         return;
       }
       toStore = JSON.stringify([value]);
@@ -643,17 +645,12 @@
     };
 
     Group.prototype.contentNodes = function() {
-      var result, strictOrder, walk;
+      var result, walk;
       result = [];
-      strictOrder = function(a, b) {
-        var cmp;
-        cmp = a.compareDocumentPosition(b);
-        return (Node.DOCUMENT_POSITION_FOLLOWING & cmp) && !(Node.DOCUMENT_POSITION_CONTAINED_BY & cmp);
-      };
       walk = this.open;
       while (walk != null) {
-        if (strictOrder(walk, this.close)) {
-          if (strictOrder(this.open, walk)) {
+        if (strictNodeOrder(walk, this.close)) {
+          if (strictNodeOrder(this.open, walk)) {
             result.push(walk);
           }
           if (walk.nextSibling != null) {
@@ -663,7 +660,7 @@
           }
           continue;
         }
-        if (strictOrder(this.close, walk)) {
+        if (strictNodeOrder(this.close, walk)) {
           console.log('Warning!! walked past @close...something is wrong with this loop');
           break;
         }
@@ -749,6 +746,44 @@
         e = _error;
         return null;
       }
+    };
+
+    Group.prototype.remove = function() {
+      var cxn, _i, _j, _len, _len1, _ref, _ref1;
+      if (!this.plugin) {
+        return;
+      }
+      _ref = this.connectionsIn();
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        cxn = _ref[_i];
+        this.disconnect(this.plugin[cxn[0]]);
+      }
+      _ref1 = this.connectionsOut();
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        cxn = _ref1[_j];
+        this.disconnect(this.plugin[cxn[1]]);
+      }
+      return this.plugin.editor.undoManager.transact((function(_this) {
+        return function() {
+          return ($([_this.open].concat(__slice.call(_this.contentNodes()), [_this.close]))).remove();
+        };
+      })(this));
+    };
+
+    Group.prototype.groupAsHTML = function(withSrcAttributes) {
+      var fragment, tmp, _ref;
+      if (withSrcAttributes == null) {
+        withSrcAttributes = true;
+      }
+      if (!(fragment = (_ref = this.outerRange()) != null ? _ref.cloneContents() : void 0)) {
+        return null;
+      }
+      tmp = this.open.ownerDocument.createElement('div');
+      tmp.appendChild(fragment);
+      if (!withSrcAttributes) {
+        ($(tmp)).find('.grouper').removeAttr('src');
+      }
+      return tmp.innerHTML;
     };
 
     Group.prototype.indexInParent = function() {
@@ -1443,6 +1478,12 @@
       } else {
         delete this[id].old;
       }
+      if (open.naturalWidth === void 0 || open.naturalWidth === 0) {
+        this[id].updateGrouper('open');
+      }
+      if (close.naturalWidth === void 0 || close.naturalWidth === 0) {
+        this[id].updateGrouper('close');
+      }
       return id;
     };
 
@@ -1482,13 +1523,10 @@
     };
 
     Groups.prototype.groupAboveNode = function(node) {
-      var all, group, left, less, middle, right;
+      var all, group, left, middle, right;
       if ((all = this.allGroupers()).length === 0) {
         return null;
       }
-      less = function(a, b) {
-        return Node.DOCUMENT_POSITION_FOLLOWING & a.compareDocumentPosition(b);
-      };
       left = {
         index: 0,
         grouper: all[0],
@@ -1497,7 +1535,7 @@
       if (left.grouper === node) {
         return this.grouperToGroup(left.grouper);
       }
-      if (!less(left.grouper, node)) {
+      if (!strictNodeOrder(left.grouper, node)) {
         return null;
       }
       right = {
@@ -1507,7 +1545,7 @@
       if (right.grouper === node) {
         return this.grouperToGroup(right.grouper);
       }
-      if (less(right.grouper, node)) {
+      if (strictNodeOrder(right.grouper, node)) {
         return null;
       }
       while (true) {
@@ -1528,7 +1566,7 @@
           }
         }
         middle = Math.floor((left.index + right.index) / 2);
-        if (less(all[middle], node)) {
+        if (strictNodeOrder(all[middle], node)) {
           left = {
             index: middle,
             grouper: all[middle],
@@ -1876,9 +1914,13 @@
         };
       })(this);
       drawArrow = (function(_this) {
-        return function(index, outOf, from, to, label) {
+        return function(index, outOf, from, to, label, setStyle) {
           var centerX, centerY, endX, endY, fromBox, how, startX, startY, style, toBox, _ref1, _ref2, _ref3;
+          context.save();
           context.strokeStyle = ((_ref1 = from.type()) != null ? _ref1.color : void 0) || '#444444';
+          if (typeof setStyle === "function") {
+            setStyle(context);
+          }
           context.globalAlpha = 1.0;
           context.lineWidth = 2;
           fromBox = from.getScreenBoundaries();
@@ -1921,8 +1963,9 @@
             context.stroke();
             context.fillStyle = '#000000';
             context.globalAlpha = 1.0;
-            return context.drawHTML(label, centerX - size.width / 2 + padStep, centerY - size.height / 2, style);
+            context.drawHTML(label, centerX - size.width / 2 + padStep, centerY - size.height / 2, style);
           }
+          return context.restore();
         };
       })(this);
       if (group) {
@@ -1950,7 +1993,7 @@
         for (index = _l = 0, _len3 = _ref2.length; _l < _len3; index = ++_l) {
           connection = _ref2[index];
           if (connection instanceof Array) {
-            _results.push(drawArrow(index, numArrays, this[connection[0]], this[connection[1]], connection[2]));
+            _results.push(drawArrow.apply(null, [index, numArrays, this[connection[0]], this[connection[1]]].concat(__slice.call(connection.slice(2)))));
           } else {
             _results.push(void 0);
           }
@@ -2137,7 +2180,7 @@
       editor.Groups.groupUnderMouse = editor.groupUnderMouse(event.clientX, event.clientY);
       return (_ref1 = editor.Overlay) != null ? _ref1.redrawContents() : void 0;
     });
-    return editor.groupUnderMouse = function(x, y) {
+    editor.groupUnderMouse = function(x, y) {
       var doc, el, i, node, range, rect, rects, _j, _k, _len1, _ref1;
       doc = editor.getDoc();
       el = doc.elementFromPoint(x, y);
@@ -2165,6 +2208,53 @@
       }
       return null;
     };
+    return editor.on('KeyUp', function(event) {
+      var allAfter, allBefore, allText, lastCharacter, modifiers, movements, newCursorPos, range, shortcut, typeData, typeName, _ref1, _ref2, _ref3, _results;
+      movements = [33, 34, 35, 36, 37, 38, 39, 40];
+      modifiers = [16, 17, 18, 91];
+      if ((_ref1 = event.keyCode, __indexOf.call(movements, _ref1) >= 0) || (_ref2 = event.keyCode, __indexOf.call(modifiers, _ref2) >= 0)) {
+        return;
+      }
+      range = editor.selection.getRng();
+      if (range.startContainer === range.endContainer && range.startContainer instanceof editor.getWin().Text) {
+        allText = range.startContainer.textContent;
+        lastCharacter = allText[range.startOffset - 1];
+        if (lastCharacter !== ' ' && lastCharacter !== '\\' && lastCharacter !== String.fromCharCode(160)) {
+          return;
+        }
+        allBefore = allText.substr(0, range.startOffset - 1);
+        allAfter = allText.substring(range.startOffset - 1);
+        _ref3 = editor.Groups.groupTypes;
+        _results = [];
+        for (typeName in _ref3) {
+          typeData = _ref3[typeName];
+          if (shortcut = typeData.LaTeXshortcut) {
+            if (allBefore.slice(-shortcut.length) === shortcut) {
+              newCursorPos = range.startOffset - shortcut.length - 1;
+              if (lastCharacter !== '\\') {
+                allAfter = allAfter.substr(1);
+              }
+              allBefore = allBefore.slice(0, -shortcut.length);
+              range.startContainer.textContent = allBefore + allAfter;
+              range.setStart(range.startContainer, newCursorPos);
+              if (lastCharacter === '\\') {
+                range.setEnd(range.startContainer, newCursorPos + 1);
+              } else {
+                range.setEnd(range.startContainer, newCursorPos);
+              }
+              editor.selection.setRng(range);
+              editor.Groups.groupCurrentSelection(typeName);
+              break;
+            } else {
+              _results.push(void 0);
+            }
+          } else {
+            _results.push(void 0);
+          }
+        }
+        return _results;
+      }
+    });
   });
 
   LoadSave = (function() {
@@ -3395,6 +3485,12 @@
           editor.getBody().addEventListener('focus', function() {
             if (editor.windowManager.getWindows().length !== 0) {
               return editor.windowManager.close();
+            }
+          });
+          editor.on('KeyDown', function(event) {
+            if (event.keyCode === 9) {
+              event.preventDefault();
+              return editor.insertContent('&emsp;');
             }
           });
           return typeof window.afterEditorReady === "function" ? window.afterEditorReady(editor) : void 0;

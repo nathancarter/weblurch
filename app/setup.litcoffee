@@ -250,6 +250,17 @@ Workaround for [this bug](http://www.tinymce.com/develop/bugtracker_view.php?id=
                         if editor.windowManager.getWindows().length isnt 0
                             editor.windowManager.close()
 
+Override the default handling of the tab key so that it does not leave the
+editor, but instead inserts a large space ("em space").  In HTML, if we were
+to insert a tab, it would be treated as any other whitespace, and look just
+like a single, small space.  So we use this instead, the largest space in
+HTML.
+
+                    editor.on 'KeyDown', ( event ) ->
+                        if event.keyCode is 9 # tab key
+                            event.preventDefault()
+                            editor.insertContent '&emsp;'
+
 And if the app installed a global handler for editor post-setup, run that
 function now.
 

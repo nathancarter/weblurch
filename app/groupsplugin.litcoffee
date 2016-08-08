@@ -151,15 +151,13 @@ thus the document) dirty, and ensure that changes to a group's data bring
 about any recomputation/reprocessing of that group in the document.
 
 Because we use HTML data attributes to store the data, the keys must be
-alphanumeric, optionally with dashes.  Furthermore, the data must be able to
-be amenable to JSON stringification.
+alphanumeric, optionally with dashes and/or underscores.  Furthermore, the
+data must be able to be amenable to JSON stringification.
 
 IMPORTANT:  If you call `set()` in a group, the changes you make will NOT be
 stored on the TinyMCE undo/redo stack.  If you want your changes stored on
-that stack, you should obey the following coding pattern.
- * Before you make any of your changes, call
-   `editor.undoManager.beforeChange()`.
- * After you've made all of your changes, call `editor.undoManager.add()`.
+that stack, you should make the changes inside a function passed to the
+TinyMCE Undo Manager's [transact](https://www.tinymce.com/docs/api/tinymce/tinymce.undomanager/#transact) method.
 
 You may or may not wish to have your changes stored on the undo/redo stack.
 In general, if the change you're making to the group is in direct and
@@ -171,7 +169,7 @@ able to undo it, and thus you should not place the change on the undo/redo
 stack.
 
         set: ( key, value ) =>
-            if not /^[a-zA-Z0-9-]+$/.test key then return
+            if not /^[a-zA-Z0-9-_]+$/.test key then return
             toStore = JSON.stringify [ value ]
             if @open.getAttribute( "data-#{key}" ) isnt toStore
                 @open.setAttribute "data-#{key}", toStore
@@ -208,8 +206,8 @@ stack.
 The `set` and `clear` functions above call an update routine if the
 attribute changed was the decoration data for a grouper.  This update
 routine recomputes the appearance of that grouper as an image, and stores it
-in the `src` attribute grouper itself (which is an `img` element).  We
-implement that routine here.
+in the `src` attribute of the grouper itself (which is an `img` element).
+We implement that routine here.
 
 This routine is also called from `hideOrShowGroupers`, defined later in this
 file.  It can accept any of three parameter types, the string "open", the
@@ -260,18 +258,14 @@ be redundant) using the following routine.
 
         contentNodes: =>
             result = [ ]
-            strictOrder = ( a, b ) ->
-                cmp = a.compareDocumentPosition b
-                ( Node.DOCUMENT_POSITION_FOLLOWING & cmp ) and \
-                    not ( Node.DOCUMENT_POSITION_CONTAINED_BY & cmp )
             walk = @open
             while walk?
-                if strictOrder walk, @close
-                    if strictOrder @open, walk then result.push walk
+                if strictNodeOrder walk, @close
+                    if strictNodeOrder @open, walk then result.push walk
                     if walk.nextSibling? then walk = walk.nextSibling \
                         else walk = walk.parentNode
                     continue
-                if strictOrder @close, walk
+                if strictNodeOrder @close, walk
                     console.log 'Warning!! walked past @close...something
                         is wrong with this loop'
                     break
@@ -288,9 +282,9 @@ function can only work if `@plugin` is a `Groups` class instance.
 
 ## Group ranges
 
-Those functions rely on the `innerRange()` function, defined below, with a
-corresponding `outerRange` function for the sake of completeness.  We use a
-`try`/`catch` block because it's possible that the group has been removed
+The above functions rely on the `innerRange()` function, defined below, with
+a corresponding `outerRange` function for the sake of completeness.  We use
+a `try`/`catch` block because it's possible that the group has been removed
 from the document, and thus we can no longer set range start and end points
 relative to the group's open and close groupers.
 
@@ -355,6 +349,43 @@ Specifically,
                 range
             catch e then null
 
+## Working with whole groups
+
+You can remove an entire group from the document using the following method.
+It does two things:  First, it disconnects this group from any group to
+which it's connected.  Second, relying on the `contentNodes` member above,
+it removes all the nodes returned by that member.
+
+This function requires that the `@plugin` member exists, or it does nothing.
+It also tells the TinyMCE instance that this should all be considered part
+of one action for the purposes of undo/redo.
+
+        remove: =>
+            if not @plugin then return
+            @disconnect @plugin[cxn[0]] for cxn in @connectionsIn()
+            @disconnect @plugin[cxn[1]] for cxn in @connectionsOut()
+            @plugin.editor.undoManager.transact =>
+                ( $ [ @open, @contentNodes()..., @close ] ).remove()
+
+Sometimes you want the HTML representation of the entire group.  The
+following method gives it to you, by imitating the code of `contentAsHTML`,
+except using `outerRange` rather than `innerRange`.
+
+The optional parameter, if set to false, will omit the `src` attributes on
+all groupers (the two for this group, as well as each pair for every inner
+group as well).  This can be useful because those `src` attributes can be
+recomputed from the other grouper data, and they are enormous, so omitting
+them saves significant space.
+
+        groupAsHTML: ( withSrcAttributes = yes ) =>
+            if not fragment = @outerRange()?.cloneContents()
+                return null
+            tmp = @open.ownerDocument.createElement 'div'
+            tmp.appendChild fragment
+            if not withSrcAttributes
+                ( $ tmp ).find( '.grouper' ).removeAttr 'src'
+            tmp.innerHTML
+
 ## Group hierarchy
 
 The previous two functions require being able to query this group's index in
@@ -367,6 +398,11 @@ groups.  We provide those functions here.
             ( @parent?.children ? @plugin?.topLevel )?[@indexInParent()-1]
         nextSibling: =>
             ( @parent?.children ? @plugin?.topLevel )?[@indexInParent()+1]
+
+Note that the `@children` array for a group is constructed by the
+`scanDocument` function of the `Groups` class, defined [below](#scanning).
+Thus one can get an array of child groups for any group `G` by writing
+`G.children`.
 
 ## Group change event
 
@@ -416,6 +452,11 @@ multiple arrows from one group to another.  Each arrow has an optional
 string attribute attached to it called its "tag," which defaults to the
 empty string. For multiple arrows between the same two groups, different
 tags are required.
+
+IMPORTANT: Connections among groups are not added to the undo/redo stack (by
+default).  Many apps do want them on the undo/redo stack, and you can
+achieve this by following the same directions given under `get` and `set`,
+using the TinyMCE Undo Manager's [transact](https://www.tinymce.com/docs/api/tinymce/tinymce.undomanager/#transact) method.
 
 Connect group `A` to group `B` by calling `A.connect B`.  The optional
 second parameter is the tag string to attach.  It defaults to the empty
@@ -1046,6 +1087,21 @@ exist in the document itself via `getElementById()`.
                 @[id] = new Group open, close, this
             else
                 delete @[id].old
+
+Also, for each group, we inspect whether its groupers have correctly loaded
+their images (by checking their `naturalWidth`), because in several cases
+(e.g., content pasted from a different browser tab, or pasted from this same
+page before a page reload, or re-inserted by an undo operation) the object
+URLs for the images can become invalid.  Thus to avoid broken images for our
+groupers, we must recompute their `src` attributes.
+
+            if open.naturalWidth is undefined or open.naturalWidth is 0
+                @[id].updateGrouper 'open'
+            if close.naturalWidth is undefined or close.naturalWidth is 0
+                @[id].updateGrouper 'close'
+
+Return the (old and kept, or newly updated) ID.
+
             id
 
 ## Querying the group hierarchy
@@ -1079,15 +1135,12 @@ group.  If it is a close grouper, the node is in its parent group.
 
         groupAboveNode: ( node ) =>
             if ( all = @allGroupers() ).length is 0 then return null
-            less = ( a, b ) ->
-                Node.DOCUMENT_POSITION_FOLLOWING & \
-                    a.compareDocumentPosition( b )
             left = index : 0, grouper : all[0], leftOfNode : yes
             return @grouperToGroup left.grouper if left.grouper is node
-            return null if not less left.grouper, node
+            return null if not strictNodeOrder left.grouper, node
             right = index : all.length - 1, grouper : all[all.length - 1]
             return @grouperToGroup right.grouper if right.grouper is node
-            return null if less right.grouper, node
+            return null if strictNodeOrder right.grouper, node
             loop
                 if left.grouper is node
                     return @grouperToGroup left.grouper
@@ -1098,7 +1151,7 @@ group.  If it is a close grouper, the node is in its parent group.
                     return if left.grouper is group.open then group \
                         else group.parent
                 middle = Math.floor ( left.index + right.index ) / 2
-                if less all[middle], node
+                if strictNodeOrder all[middle], node
                     left =
                         index : middle
                         grouper : all[middle]
@@ -1351,7 +1404,7 @@ rounded rectangle that experienced something like word wrapping.
                     context.fill()
                 yes # success
 
-That concludes te group-drawing function.  Let's now call it on all the
+That concludes the group-drawing function.  Let's now call it on all the
 groups in the hierarchy, from `group` on upwards.
 
             innermost = yes
@@ -1472,8 +1525,10 @@ index into the list of connections that are to be drawn.
                 pct = ( index + 1 ) / ( length + 1 )
                 right = Math.min right, left + 40 * length
                 ( 1 - pct ) * left + pct * right
-            drawArrow = ( index, outOf, from, to, label ) =>
+            drawArrow = ( index, outOf, from, to, label, setStyle ) =>
+                context.save()
                 context.strokeStyle = from.type()?.color or '#444444'
+                setStyle? context
                 context.globalAlpha = 1.0
                 context.lineWidth = 2
                 fromBox = from.getScreenBoundaries()
@@ -1524,6 +1579,7 @@ index into the list of connections that are to be drawn.
                     context.drawHTML label,
                         centerX - size.width / 2 + padStep,
                         centerY - size.height / 2, style
+                context.restore()
 
 Second, draw all connections from the innermost group containing the cursor,
 if there are any.
@@ -1538,7 +1594,7 @@ if there are any.
                 for connection, index in connections ? [ ]
                     if connection instanceof Array
                         drawArrow index, numArrays, @[connection[0]],
-                            @[connection[1]], connection[2]
+                            @[connection[1]], connection[2..]...
 
 # Installing the plugin
 
@@ -1747,3 +1803,50 @@ The previous two functions both leverage the following utility.
                            y > rect.top and y < rect.bottom
                             return editor.Groups.groupAboveNode node
             null
+
+## LaTeX-like shortcuts for groups
+
+Now we install code that watches for certain text sequences that should be
+interpreted as the insertion of groups.
+
+This relies on the KeyUp event, which may only fire once for a few quick
+successive keystrokes.  Thus someone typing very quickly may not have these
+shortcuts work correctly for them, but I do not yet have a workaround for
+this behavior.
+
+        editor.on 'KeyUp', ( event ) ->
+            movements = [ 33..40 ] # arrows, pgup/pgdn/home/end
+            modifiers = [ 16, 17, 18, 91 ] # alt, shift, ctrl, meta
+            if event.keyCode in movements or event.keyCode in modifiers
+                return
+            range = editor.selection.getRng()
+            if range.startContainer is range.endContainer and \
+               range.startContainer instanceof editor.getWin().Text
+                allText = range.startContainer.textContent
+                lastCharacter = allText[range.startOffset-1]
+                if lastCharacter isnt ' ' and lastCharacter isnt '\\' and \
+                   lastCharacter isnt String.fromCharCode( 160 )
+                    return
+                allBefore = allText.substr 0, range.startOffset - 1
+                allAfter = allText.substring range.startOffset - 1
+                for typeName, typeData of editor.Groups.groupTypes
+                    if shortcut = typeData.LaTeXshortcut
+                        if allBefore[-shortcut.length..] is shortcut
+                            newCursorPos = range.startOffset -
+                                shortcut.length - 1
+                            if lastCharacter isnt '\\'
+                                allAfter = allAfter.substr 1
+                            allBefore = allBefore[...-shortcut.length]
+                            range.startContainer.textContent =
+                                allBefore + allAfter
+                            range.setStart range.startContainer,
+                                newCursorPos
+                            if lastCharacter is '\\'
+                                range.setEnd range.startContainer,
+                                    newCursorPos + 1
+                            else
+                                range.setEnd range.startContainer,
+                                    newCursorPos
+                            editor.selection.setRng range
+                            editor.Groups.groupCurrentSelection typeName
+                            break

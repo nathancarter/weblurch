@@ -195,9 +195,7 @@ been) computed, it returns 1.
 ## `BackgroundFunction` class
 
 We define the following class for encapsulating functions that are ready to
-be run in the background.  For now, it runs them in the main thread, but
-this abstraction is ready for later changes when we add support for Web
-Workers.
+be run in the background.
 
     BackgroundFunction = class
 
@@ -207,7 +205,7 @@ object is able to run in the background.
         constructor : ( @function, @globals, @scripts ) ->
 
 The promise object, which will be returned from the `call` member, permits
-chaining.  Thus all of its method return the promise object itself.  There
+chaining.  Thus all of its methods return the promise object itself.  There
 are only two methods, `sendTo`, for specifying the result callback, and
 `orElse`, for specifying the error callback.  Thus the use of the call
 member looks like `bgfunc.call( args... ).sendTo( resultHandler ).orElse(

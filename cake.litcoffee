@@ -47,7 +47,7 @@ These constants define how the functions below perform.
     srcorder = [
         'utils.litcoffee'
         'openmath-duo.litcoffee'
-        'unification-duo.litcoffee'
+        'matching-duo.litcoffee'
     ]
     appdir = p.resolve __dirname, 'app'
     fddir = p.resolve appdir, 'filedialog'

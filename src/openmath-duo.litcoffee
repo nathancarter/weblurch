@@ -1136,3 +1136,26 @@ version, to make them easy to remember.
     OM.bin = OM.binding
     OM.err = OM.error
     OM.simple = OM.simpleDecode
+
+## Creating valid identifiers
+
+Because OpenMath symbols and variables are restricted to have names that are
+valid OpenMath identifiers, not all strings can be used as variable or
+symbol names.  Sometimes, however, one wants to encode an arbitrary string
+as a symbol or variable.  Thus we create the following injection from the
+set of all strings into the set of valid OpenMath identifiers (together with
+its inverse, which goes in the other direction).
+
+    OM.encodeAsIdentifier = ( string ) ->
+        charTo4Digits = ( index ) ->
+            ( '000' + string.charCodeAt( index ).toString( 16 ) ).slice -4
+        result = 'id_'
+        result += charTo4Digits i for i in [0...string.length]
+        result
+    OM.decodeIdentifier = ( ident ) ->
+        result = ''
+        ident = ident[3...]
+        while ident.length > 0
+            result += String.fromCharCode parseInt ident[...4], 16
+            ident = ident[4...]
+        result
