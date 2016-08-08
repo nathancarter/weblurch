@@ -1192,6 +1192,2424 @@ version, to make them easy to remember.
     OM.err = OM.error
     OM.simple = OM.simpleDecode
 
+## Creating valid identifiers
+
+Because OpenMath symbols and variables are restricted to have names that are
+valid OpenMath identifiers, not all strings can be used as variable or
+symbol names.  Sometimes, however, one wants to encode an arbitrary string
+as a symbol or variable.  Thus we create the following injection from the
+set of all strings into the set of valid OpenMath identifiers (together with
+its inverse, which goes in the other direction).
+
+    OM.encodeAsIdentifier = ( string ) ->
+        charTo4Digits = ( index ) ->
+            ( '000' + string.charCodeAt( index ).toString( 16 ) ).slice -4
+        result = 'id_'
+        result += charTo4Digits i for i in [0...string.length]
+        result
+    OM.decodeIdentifier = ( ident ) ->
+        result = ''
+        ident = ident[3...]
+        while ident.length > 0
+            result += String.fromCharCode parseInt ident[...4], 16
+            ident = ident[4...]
+        result
+
+
+
+# The Matching Module
+
+This module implements the algorithm documented thoroughly in an unpublished
+paper entitled "A First Matching Algorithm for Lurch."  Contact the owners
+of this source code repository for a copy.
+
+The following lines ensure that this file works in Node.js, for testing.
+
+    if not exports? then exports = module?.exports ? window
+    if require? then { OM, OMNode } = require './openmath-duo'
+
+## Metavariables
+
+All of the routines in this section make use of a single common symbol, so
+we create one instance here for use repeatedly.  We also create an instance
+of a string that signifies a boolean true value, because that will be the
+value of the attribute whose key is the metavariable symbol.
+
+    metavariableSymbol = OM.symbol 'metavariable', 'lurch'
+    trueValue = OM.string 'true'
+
+We begin with a routine that marks a variable as a metavariable.  It accepts
+as parameter any `OMNode` instance (as implemented
+[here](openmath-duo.litcoffee)) and gives it an attribute that the rest of
+this package recognizes as meaning "this variable is actually a
+metavariable."  This routine does nothing if the given input is not an
+OMNode of type variable or type symbol.
+
+(It is necessary to permit symbols to be metavariables because there are
+some positions in an OpenMath tree that can only be occupied by symbols.
+For instance, if we wished to express the pattern "forall x, P(x)" but with
+the forall symbol replaced by a metavariable, it would need to be a symbol
+in order for the expression to be a valid OpenMath object.)
+
+    exports.setMetavariable = setMetavariable = ( variable ) ->
+        if variable not instanceof OMNode or \
+           variable.type not in [ 'v', 'sy' ] then return
+        variable.setAttribute metavariableSymbol, trueValue.copy()
+
+To undo the above action, call the following function, which removes the
+attribute.
+
+    exports.clearMetavariable = clearMetavariable = ( metavariable ) ->
+        metavariable.removeAttribute metavariableSymbol
+
+To query whether a variable has been marked as a metaviariable, use the
+following routine, which tests for the presence of the attribute in
+question.
+
+    exports.isMetavariable = isMetavariable = ( variable ) ->
+        variable instanceof OMNode and variable.type in [ 'v', 'sy' ] and \
+            variable.getAttribute( metavariableSymbol )?.equals trueValue
+
+## Expression functions and expression function applications
+
+This module supports patterns that express the application of a function to
+a parameter, where the function maps OpenMath expressions to OpenMath
+expressions, as described in the paper cited at the top of this file.  We
+will represent a function with the following binding head symbol.
+
+    expressionFunction = OM.symbol 'EF', 'lurch'
+
+We express the application of such a function to an argument as an
+application of the following symbol.
+
+    expressionFunctionApplication = OM.symbol 'EFA', 'lurch'
+
+So for example, `P(x)` would be expressed as `OM.simple 'lurch.EFA(P,X)'`
+and the map from input `p` to output `h(x,p,p)` as `OM.simple
+'lurch.EF[p,h(x,p,p)]'`.
+
+We therefore construct a few convenience functions for testing whether an
+expression is of one of the types above, and for constructing expressions of
+those types.
+
+    exports.makeExpressionFunction =
+    makeExpressionFunction = ( variable, body ) =>
+        if variable.type isnt 'v' then throw 'When creating an expression
+            function, its parameter must be a variable'
+        OM.bin expressionFunction, variable, body
+    exports.isExpressionFunction =
+    isExpressionFunction = ( expression ) =>
+        expression.type is 'bi' and expression.variables.length is 1 and \
+            expression.symbol.equals expressionFunction
+    exports.makeExpressionFunctionApplication =
+    makeExpressionFunctionApplication = ( func, argument ) =>
+        OM.app expressionFunctionApplication, func, argument
+    exports.isExpressionFunctionApplication =
+    isExpressionFunctionApplication = ( expression ) =>
+        expression.type is 'a' and expression.children.length is 3 and \
+            expression.children[0].equals expressionFunctionApplication
+
+You can also apply expression functions to expressions (unsurprisingly, as
+that is their purpose).
+
+    exports.applyExpressionFunction =
+    applyExpressionFunction = ( func, expression ) ->
+        result = func.body.copy()
+        result.replaceFree func.variables[0], expression
+        result
+
+We also include a function that tests whether two expression functions are
+alpha equivalent.
+
+    exports.alphaEquivalent = alphaEquivalent = ( func1, func2 ) ->
+        index = 0
+        newVar = -> OM.var "v#{index}"
+        isNewVar = ( expr ) -> expr.equals newVar()
+        pair = OM.app func1, func2
+        while pair.hasDescendantSatisfying isNewVar then index++
+        apply1 = applyExpressionFunction func1, newVar()
+        apply2 = applyExpressionFunction func2, newVar()
+        isExpressionFunction( func1 ) and \
+        isExpressionFunction( func2 ) and apply1.equals apply2
+
+## Consistent patterns
+
+A list of patterns is consistent if every metavariable appearing in any of
+the patterns in the position of an expression function always appears as an
+expression function (or equivalently any metavariable appearing anywhere
+other than as the first child of an expression function application never
+appears anywhere as the first child of an expression function application).
+
+The motivation is that it would be inconsistent to demand that one pattern
+instantiate a metavariable as an expression function, but another pattern
+demand that the same metavariable be instantiated as a plain expression.
+
+    exports.consistentPatterns = consistentPatterns = ( patterns... ) ->
+        nonFunctionMetavariables = [ ]
+        functionMetavariables = [ ]
+        for pattern in patterns
+            for M in pattern.descendantsSatisfying isMetavariable
+                if isExpressionFunctionApplication( M.parent ) and \
+                        M.findInParent() is 'c1'
+                    if M.name in nonFunctionMetavariables then return no
+                    if M.name not in functionMetavariables
+                        functionMetavariables.push M.name
+                else
+                    if M.name in functionMetavariables then return no
+                    if M.name not in nonFunctionMetavariables
+                        nonFunctionMetavariables.push M.name
+        yes
+
+## Constraint class
+
+A constraint is a pair of OpenMath expressions, the first of which will be
+interpreted as a pattern, and the second as an expression.  Constraints can
+be used as part of a problem to solve, or as part of a solution.  When they
+are part of a solution, the pattern is always a lone metavariable.
+
+    exports.Constraint = Constraint = class
+
+Construct a constraint by providing the pattern and the expression.
+
+        constructor : ( @pattern, @expression ) ->
+
+They can be copied by copying each component.
+
+        copy : -> new Constraint @pattern.copy(), @expression.copy()
+
+Two are equal if their components are equal.
+
+        equals : ( other ) ->
+            @pattern.equals( other.pattern, no ) and \
+            @expression.equals( other.expression, no )
+
+## Constraint list class
+
+A constraint list is simply an array of constraints, with a few convenience
+functions added for adding, removing, and searching in a way unique to lists
+of constraints.  It can be used to express a problem as a list of
+constraints, or a solution as a list of metavariable-expression pairs.
+
+    exports.ConstraintList = ConstraintList = class
+
+Construct a constraint list by providing zero or more constraints to add to
+it initially.  Besides simply storing those constraints, this function also
+computes the first variable from the list `v0`, `v1`, `v2`, ... that does
+not appear in any of the constraints.  Call it `vn`.  Then later the
+`newVariable` member can be called in this object at any time to generate an
+infinite stream of new variables starting with `vn`.
+
+        constructor : ( @contents... ) ->
+            @nextNewVariableIndex = 0
+            checkVariable = ( variable ) =>
+                if /^v[0-9]+$/.test variable.name
+                    @nextNewVariableIndex = Math.max @nextNewVariableIndex,
+                        parseInt( variable.name[1..] ) + 1
+            variablesIn = ( expression ) ->
+                expression.descendantsSatisfying ( d ) -> d.type is 'v'
+            for constraint in @contents
+                for variable in variablesIn constraint.pattern
+                    checkVariable variable
+                for variable in variablesIn constraint.expression
+                    checkVariable variable
+
+Generating new variables, as documented in the previous function, is
+accomplished by this function.
+
+        nextNewVariable : -> OM.simple "v#{@nextNewVariableIndex++}"
+
+The length of the constraint list is just the length of its contents array.
+
+        length : -> @contents.length
+
+You can create a copy by just creating a copy of all the entries.  If this
+object has not had any constraints modified or removed since its creation,
+that simple kind of copy would naturally result in the correct value of
+`nextNewVariableIndex` in the copy, but of course this object may have had
+some constraints modified or removed since its creation, so we copy that
+datum over explicitly.
+
+        copy : ->
+            result = new ConstraintList ( c.copy() for c in @contents )...
+            result.nextNewVariableIndex = @nextNewVariableIndex
+            result
+
+The following function is mostly for internal use, in defining functions
+below.  It finds the first index at which the given predicate holds of the
+constraint at that index, or returns -1 if there is no such index.
+
+        indexAtWhich : ( predicate ) ->
+            for constraint, index in @contents
+                if predicate constraint then return index
+            -1
+
+This function adds constraints to the list, but each constraint is only
+added if it's not already on the list (using the `equals` member of the
+constraint class for comparison).
+
+        plus : ( constraints... ) ->
+            result = @copy()
+            for constraint in constraints
+                index = result.indexAtWhich ( c ) -> c.equals constraint, no
+                if index is -1 then result.contents.push constraint
+            result
+
+This function removes constraints from the list.  Any constraint passed that
+is not on the list is silently ignored.
+
+        minus : ( constraints... ) ->
+            result = @copy()
+            for constraint in constraints
+                index = result.indexAtWhich ( c ) -> c.equals constraint, no
+                if index > -1 then result.contents.splice index, 1
+            result
+
+This function returns the first constraint in the list satisfying the given
+predicate, or null if there is not one.
+
+        firstSatisfying : ( predicate ) ->
+            @contents[@indexAtWhich predicate] ? null
+
+This function returns a length-two array containing the first two
+constraints satisfying the given binary predicate, or null if there is not
+one.  In this case, "first" means by dictionary ordering the pair of the
+indices of the two constraints returned.  If there is no such pair, this
+returns null.
+
+        firstPairSatisfying : ( predicate ) ->
+            for constraint1, index1 in @contents
+                for constraint2, index2 in @contents
+                    if index1 isnt index2
+                        if predicate constraint1, constraint2
+                            return [ constraint1, constraint2 ]
+            null
+
+Some constraint lists are functions from the space of metavariables to the
+space of expressions.  To be such a function, the constraint list must
+contain only constraints whose left hand sides are metavariables, and none
+msut appear in more than one constraint.  This function determines whether
+that is true.
+
+        isFunction : ->
+            seenSoFar = [ ]
+            for constraint in @contents
+                if not isMetavariable constraint.pattern then return no
+                if constraint.pattern.name in seenSoFar then return no
+                seenSoFar.push constraint.pattern.name
+            yes
+
+A constraint list that is a function can be used as a lookup table.  This
+routine implements the lookup function.  It can accept a variable (an
+`OMNode` object) or just the name of one (a string) as argument.  This
+routine finds the first pair in the list for which that variable name is the
+left hand side, and returns the right hand side.  If `isFunction()` is true,
+then it will be the only such pair.  If ther is no such pair, this returns
+null.
+
+The input, if it is an OMNode, will have its metavariable flag set.  If you
+do not want your input changed, pass a copy.  The result will be the actual
+OMNode that is in the other half of the constraint pair.  If you plan to
+modify it, make a copy.
+
+        lookup : ( variable ) ->
+            if variable not instanceof OM then variable = OM.var variable
+            setMetavariable variable
+            for constraint in @contents
+                if constraint.pattern.equals variable, no
+                    return constraint.expression
+            null
+
+You can also apply a constraint list that is a function to a larger
+expression containing metavariables, to replace them all at once.  This
+member function does so, after first creating a copy of the expression, so
+as not to alter the original.
+
+        apply : ( expression ) ->
+            result = expression.copy()
+            metavariables = result.descendantsSatisfying isMetavariable
+            for metavariable in metavariables
+                if ( value = @lookup metavariable )?
+                    metavariable.replaceWith value
+            result
+
+Two constraint lists are equal if a pair in either is also in the other.
+
+        equals : ( other ) ->
+            for constraint in @contents
+                if not other.firstSatisfying( ( c ) -> c.equals constraint )
+                    return no
+            for constraint in other.contents
+                if not @firstSatisfying( ( c ) -> c.equals constraint )
+                    return no
+            yes
+
+## Differences and parent addresses
+
+The notion of an address is defined in [the OpenMath
+module](../src/openmath-duo.litcoffee).
+
+This function computes the set of addresses at which two expressions differ.
+It uses an internal recursive function that fills a list that's initially
+empty.
+
+    exports.findDifferencesBetween =
+    findDifferencesBetween = ( expression1, expression2 ) ->
+        differences = [ ]
+        recur = ( A, B ) ->
+            if A.type isnt B.type
+                return differences.push A.address expression1
+            if A.type is 'bi'
+                Ac = [ A.symbol, A.variables..., A.body ]
+                Bc = [ B.symbol, B.variables..., B.body ]
+            else
+                Ac = A.children
+                Bc = B.children
+            if Ac.length isnt Bc.length or \
+               ( Ac.length + Bc.length is 0 and not A.equals B, no )
+                differences.push A.address expression1
+            else
+                recur child, Bc[index] for child, index in Ac
+        recur expression1, expression2
+        differences
+
+Given a set of addresses, we can compute the set of parent addresses of
+those addresses.  This function does so, but using lists in place of sets.
+Note that the empty address has no parent, so if we ask what the set of
+parent addresses are of [ empty address ], we get null.
+
+    exports.parentAddresses =
+    parentAddresses = ( addresses ) ->
+        results = [ ]
+        for address in addresses
+            if address.length is 0 then continue
+            serialized = JSON.stringify address[...-1]
+            if serialized not in results then results.push serialized
+        if results.length is 0 then return null
+        JSON.parse address for address in results
+
+## Subexpressions
+
+The following function partitions the addresses of all subexpressions of
+the given expression into equivalence classes by equality of subexpressions
+at those addresses.  Each part in the partition is actually an object with
+two members, one begin the `subexpression`
+
+    exports.partitionedAddresses =
+    partitionedAddresses = ( expression ) ->
+        partition = []
+        recur = ( subexpression ) ->
+            found = no
+            for part in partition
+                if subexpression.equals part.subexpression, no
+                    part.addresses.push subexpression.address expression
+                    found = yes
+                    break
+            if not found then partition.push
+                subexpression : subexpression
+                addresses : [ subexpression.address expression ]
+            recur child for child in subexpression.children
+        recur expression
+        partition
+
+## Iterators
+
+For the purposes of this file, an iterator is a function that, when called
+with zero arguments, returns new values from each call, until it eventually
+returns null (which is a fixed point, and it will continue to return null
+for all subsequent calls).
+
+Given two expressions $e_1$ and $e_2$, compute their difference set, as
+defined in the paper cited at the top of this document, and call it $D$.
+Let $A$ be the set of ancestor sets to $D$ that are uniform on both $e_1$
+and $e_2$.  This iterator enumerates $A$.
+
+It relies on the fact that, in order for an address set to be uniform on any
+expression, the addresses in the set must all be to subtrees of the same
+height.  Thus the first step of the iteration is to shrink the addresses in
+a difference set until all subtrees have the same height.  Then we can
+enumerate $A$ by simply repeatedly computing parent addresses of the entire
+set.  This makes the enumeration linear.  Consequently, we need the
+following handy function.
+
+    exports.expressionDepth = expressionDepth = ( expression ) ->
+        children = [ expression.children..., expression.variables... ]
+        if expression.body then children.push expression.body
+        if expression.symbol then children.push expression.symbol
+        1 + Math.max 0, ( expressionDepth child for child in children )...
+
+Given a set $S$ of addresses into an expression $e$, with varying depths of
+subtrees $e[s]$ for $s\in S$, we will want to compute the set of ancestors
+of addresses in $S$ whose subexpressions in $e$ all have the same depth, the
+maximum depth of the $e[s]$ for $s\in S$.  This function does so.  Note that
+it never returns an empty array (if the input list was nonempty) because the
+address `[]` is an ancestor to every address, and so the set `[ [] ]` will
+always be a valid same-depth ancestor set to the input (though possibly not
+the minimum depth one).
+
+    exports.sameDepthAncestors =
+    sameDepthAncestors = ( expression, addresses ) ->
+
+Try to find a pair of addresses of different depths.
+
+        for address1, index1 in addresses
+            depth1 = expressionDepth expression.index address1
+            for address2, index2 in addresses
+                depth2 = expressionDepth expression.index address2
+                if depth1 is depth2 then continue
+
+Ensure the shallower is #1 and the deeper is #2, then deepen #1.
+
+                if depth1 > depth2
+                    [ address1, address2 ] = [ address2, address1 ]
+                    [ index1, index2 ] = [ index2, index1 ]
+                deeper = address1[...-1]
+
+Replace the old, shallower version with its deeper version, then recur.
+
+                improvement = addresses[..]
+                improvement[index1] = address1[...-1]
+                return sameDepthAncestors expression, improvement
+
+If there was no pair of addresses of different depths, then we just remove
+duplicates to ensure that this is a set, and we're done.
+
+        results = []
+        for address in addresses
+            serialized = JSON.stringify address
+            if serialized not in results then results.push serialized
+        JSON.parse serialized for serialized in results
+
+Now we can use those two functions to build the difference iterator
+specified at the start of this section.  Note that it assumes that the two
+expressions passed in are not equal, so that there exists a difference set.
+
+    exports.differenceIterator =
+    differenceIterator = ( expression1, expression2 ) ->
+        nextAddressSet = sameDepthAncestors expression1, \
+            findDifferencesBetween expression1, expression2
+        indexedSubexpressionsAreEqual = ( addresses ) ->
+            for address1 in addresses
+                for address2 in addresses
+                    if not expression1.index( address1 ).equals \
+                            expression1.index( address2 ), no then return no
+                    if not expression2.index( address1 ).equals \
+                            expression2.index( address2 ), no then return no
+            yes
+        ->
+            while nextAddressSet? and \
+                  not indexedSubexpressionsAreEqual nextAddressSet
+                pars = parentAddresses nextAddressSet
+                nextAddressSet =
+                    pars and sameDepthAncestors expression1, pars
+            result = nextAddressSet
+            if result isnt null
+                pars = parentAddresses nextAddressSet
+                nextAddressSet =
+                    pars and sameDepthAncestors expression1, pars
+            result
+
+Given an expression $e$, we consider the set of all subexpressions $U$ of
+$e$, and say that they are labeled $u_1,\ldots,u_n$.  For any $u_i$, let
+$A_{u_i}$ be the set of addresses (in the sense defined in [the OpenMath
+module](../src/openmath-duo.litcoffee)) to all instances of $u_i$ in $e$.
+For each $A_{u_i}$, we enumerate its nonempty subsets, and call them
+$S_{i,1},\ldots,S_{i,m_i}$.  This iterator returns the list
+$S_{1,1},S_{1,2},\ldots,S_{n,m_n}$, followed by the string `'done'`.
+
+    exports.subexpressionIterator =
+    subexpressionIterator = ( expression ) ->
+        partition = partitionedAddresses expression
+        state =
+            next : partition.shift()
+            rest : partition
+            subsetIndex : 1
+        iterator = ->
+            matchDebug '\t\tsubexpression iterator for',
+                expression.simpleEncode(), 'next:',
+                JSON.stringify( state.next.addresses ), 'rest:',
+                JSON.stringify( ( x.addresses for x in state.rest ) ),
+                'subsetIndex:', state.subsetIndex
+            if state.subsetIndex < 2 ** state.next.addresses.length
+                result = ( state.next.addresses[i] \
+                    for i in [0...state.next.addresses.length] \
+                    when 0 < ( state.subsetIndex & 2 ** i ) )
+                state.subsetIndex++
+                return result
+            if state.rest.length > 0
+                state.next = state.rest.shift()
+                state.subsetIndex = 1
+                return iterator()
+            return null
+        iterator
+
+The following function takes an iterator and an element, and yields a new
+iterator whose return list is the same as that of the given iterator, but
+prefixed with the new element (just once).
+
+    exports.prefixIterator = prefixIterator = ( element, iterator ) ->
+        firstCallHasHappened = no
+        ->
+            if firstCallHasHappened then return iterator()
+            firstCallHasHappened = yes
+            element
+
+The following function takes an iterator and an element, and yields a new
+iterator whose return list is the same as that of the given iterator, but
+suffixed with the new element (just once).
+
+    exports.suffixIterator = suffixIterator = ( iterator, element ) ->
+        suffixHasHappened = no
+        ->
+            result = iterator()
+            if result is null and not suffixHasHappened
+                result = element
+                suffixHasHappened = yes
+            result
+
+The following function takes an iterator and composes it with a function,
+returning a new iterator that returns a list each of whose values is the
+same as the old iterator would have returned, but first passed through the
+given function.
+
+    exports.composeIterator = composeIterator = ( iterator, func ) ->
+        -> if result = iterator() then func result else null
+
+The following function takes an iterator and a filter.  It yields a new
+iterator that yields a subsequence of what the given iterator yields,
+specifically exactly those results that pass the test of the filter.
+
+    exports.filterIterator = filterIterator = ( iterator, filter ) ->
+        ->
+            next = iterator()
+            while next and not filter next then next = iterator()
+            next
+
+The following function takes two iterators and concatenates them, returning
+a new iterator that returns first all the items from the first iterator (not
+including the terminating null sequence), followed by all the items from the
+second iterator (including the terminating null sequence).
+
+    exports.concatenateIterators = concatenateIterators =
+        ( first, second ) -> -> first() or second()
+
+## Matching
+
+The matching algorithm below makes use of the notion of replacing several
+subexpressions of a larger expression at once.  The following function
+accomplishes this.  It replaces every subexpression of the given expression
+at any one of the given addresses with a copy of the replacement expression.
+
+    exports.multiReplace =
+    multiReplace = ( expression, addresses, replacement ) ->
+        result = expression.copy()
+        for address in addresses
+            result.index( address )?.replaceWith replacement.copy()
+        result
+
+The matching algorithm implemented at the end of this file does not take
+restrictions fo bound/free variables into account.  Clients who care about
+that distinction should extract from the constraint set the bound/free
+restrictions using the following function, then test to see if a solution
+obeys them using the function after that.
+
+This first function extracts from a pattern a list of metavariable pairs
+(m1,m2).  Such a pair means the restriction that a solution s cannot have
+s(m1) appearing free in s(m2).  Pairs are represented as instances of the
+`Constraint` class, and lists of pairs as a `ConstraintList`.
+
+    exports.bindingConstraints1 = bindingConstraints1 = ( pattern ) ->
+        result = new ConstraintList()
+        isBinder = ( d ) -> d.type is 'bi'
+        for binding in pattern.descendantsSatisfying isBinder
+            for m in binding.descendantsSatisfying isMetavariable
+                if not m.isFree binding then continue
+                for v in binding.variables
+                    if not isMetavariable v then continue
+                    newConstraint = new Constraint v, m
+                    already = ( c ) -> c.equals newConstraint
+                    if not result.firstSatisfying already
+                        result.contents.push newConstraint
+        result
+
+This second function tests whether a given solution (expressed as a
+`ConstraintList` instance) obeys a set of binding constraints (expressed as
+another `ConstraintList` instance) computed by `bindingConstraints1`.  It
+returns a boolean.
+
+    exports.satisfiesBindingConstraints1 =
+    satisfiesBindingConstraints1 = ( solution, constraints ) ->
+        for constraint in constraints.contents
+            sv = solution.lookup constraint.pattern
+            sm = solution.lookup( constraint.expression ).copy()
+            if sm.occursFree sv then return no
+        yes
+
+This third function extracts from a pattern a list of pairs (P,x) such that
+the expression function application P(x) appeared in the pattern.  Such a
+pair means the restriction that a solution s must have s(x) free to have
+s(P) applied to it.  Pairs are represented as instances of the `Constraint`
+class, and lists of pairs as a `ConstraintList`.
+
+    exports.bindingConstraints2 = bindingConstraints2 = ( pattern ) ->
+        result = new ConstraintList()
+        for efa in pattern.descendantsSatisfying \
+                isExpressionFunctionApplication
+            if not isMetavariable efa.children[1] then continue
+            newConstraint = new Constraint efa.children[1..2]...
+            if not result.firstSatisfying( ( c ) -> c.equals newConstraint )
+                result.contents.push newConstraint
+        result
+
+This fourth function tests whether a given solution (expressed as a
+`ConstraintList` instance) obeys a set of binding constraints (expressed as
+another `ConstraintList` instance) computed by `bindingConstraints2`.  It
+returns a boolean.
+
+    exports.satisfiesBindingConstraints2 =
+    satisfiesBindingConstraints2 = ( solution, constraints ) ->
+        for constraint in constraints.contents
+            ef = solution.lookup constraint.pattern
+            if not ef?
+                matchDebug CLToString( solution ), CLToString( constraints )
+            arg = solution.apply constraint.expression
+            check = ( d ) -> d.equals ef.variables[0]
+            for v in ef.body.descendantsSatisfying check
+                if not arg.isFreeToReplace v, ef.body then return no
+        yes
+
+The following function, when iterated, will compute all valid solutions to
+a given constraint set.  It returns pairs as length-two arrays.  A return
+value of `[A,B]` is a solution `A` and the necessary data `B` to iterate the
+call.  Specifically, `B` will be a triple suitable for passing as the three
+arguments to another call to `nextMatch`, so that one could call
+`nextMatch B...` for example.  When `B` is null, there are no more
+solutions to be found.
+
+Clients should not pass a value to the third parameter, which is for
+internal use only, in recursion.  Clients may optionally pass a value for
+the second parameter, as a solution to extend, but this is not the norm.
+
+First, some debugging routines that are able to be turned on and off, for
+development purposes.
+
+    CToString = ( c ) ->
+        "(#{c.pattern.simpleEncode()},#{c.expression.simpleEncode()})"
+    CLToString = ( cl ) ->
+        if cl is null then return null
+        "{ #{( CToString(c) for c in cl.contents ).join ', '} }"
+    CLSetToString = ( cls ) ->
+        if cls is null then return null
+        '[\n' + ( "\t#{CLToString(cl)}" for cl in cls ).join( '\n' ) + '\n]'
+    matchDebugOn = no
+    exports.setMatchDebug = ( onoff ) -> matchDebugOn = onoff
+    matchDebug = ( args... ) -> if matchDebugOn then console.log args...
+
+Now, the matching algorithm.
+
+    exports.nextMatch =
+    nextMatch = ( constraints,
+                  solution = new ConstraintList(),
+                  iterator = null ) ->
+
+If this function was called with a single constraint in the first position,
+rather than a list of them, then convert it to the correct type.
+
+        if constraints instanceof Constraint
+            constraints = new ConstraintList constraints
+        if constraints not instanceof ConstraintList
+            throw 'Invalid first parameter, not a constraint list'
+        matchDebug '\nmatchDebug', CLToString( constraints ),
+            CLToString( solution ),
+            if iterator? then '  ...ITERATOR...' else ''
+
+If we have not been given an iterator, then proceed with normal matching.
+When we have an iterator, it means we must take a union over a series of
+matching problems; we'll handle that case at the end of this function, far
+below.
+
+        if not iterator?
+
+Base case:  If we have consumed all the constraints, then the solution we
+have constructed is the only result.
+
+            if constraints.length() is 0
+                matchDebug '\tbase case, returning:', CLToString solution
+                return [ solution, null ]
+
+Atomic case:  If there is a constraint whose left hand side is atomic and
+not a metavariable, then it must perfectly match the right hand side.
+
+            constraint = constraints.firstSatisfying ( c ) ->
+                c.pattern.children.length is 0 and \
+                c.pattern.variables.length is 0 and \
+                not isMetavariable c.pattern
+            if constraint?
+                return \
+                if constraint.pattern.equals constraint.expression, no
+                    matchDebug '\tatomic case, recur:', CToString constraint
+                    nextMatch constraints.minus( constraint ), solution,
+                        iterator
+                else
+                    matchDebug '\tatomic case, return null for',
+                        CToString constraint
+                    [ null, null ]
+
+Non-atomic case:  If there is a constraint whose left hand side is
+non-atomic and not an expression function application, then we try to break
+it down into sub-constraints, as long as the right hand side admits a
+corresponding decomposition.
+
+            pseudoChildren = ( expr ) ->
+                if expr.type is 'bi'
+                    [ expr.symbol, expr.variables..., expr.body ]
+                else
+                    expr.children
+            constraint = constraints.firstSatisfying ( c ) ->
+                pseudoChildren( c.pattern ).length > 0 and \
+                not isExpressionFunctionApplication c.pattern
+            if constraint?
+                LHS = constraint.pattern
+                RHS = constraint.expression
+                if LHS.type isnt RHS.type
+                    matchDebug '\tnon-atomic case, type fail:',
+                        CToString constraint
+                    return [ null, null ]
+                leftChildren = pseudoChildren LHS
+                rightChildren = pseudoChildren RHS
+                if leftChildren.length isnt rightChildren.length
+                    matchDebug '\tnon-atomic case, #children fail:',
+                        CToString constraint
+                    return [ null, null ]
+                constraints = constraints.minus( constraint ).plus \
+                    ( new Constraint( child, rightChildren[index] ) \
+                        for child, index in leftChildren )...
+                matchDebug '\tnon-atomic case, recur:', CToString constraint
+                return nextMatch constraints, solution, iterator
+
+We do not implement the inconsistent case from the paper here, assuming that
+it has been weeded out by the caller before this point, usually at the level
+of rule validation, using the `consistentPatterns` function implemented
+earlier in this file.
+
+Metavariable case:  If there is a constraint whose left hand side is a
+single metavariable, then we attempt to resolve it.  If that metavariable is
+already set in the solution, then the constraint under consideration must
+agree with it; this either results in continued processing or immediately
+returning null, depending on that agreement check.  If the metavariable is
+not already in the solution, then the constraint under consideration lets us
+add it.
+
+            constraint = constraints.firstSatisfying ( c ) ->
+                isMetavariable c.pattern
+            if constraint?
+                if alreadySetTo = solution.lookup constraint.pattern
+                    if not constraint.expression.equals alreadySetTo, no
+                        matchDebug '\tmetavariable case, mismatch:',
+                            CToString constraint
+                        return [ null, null ]
+                    else
+                        matchDebug '\tmetavariable case, already set:',
+                            CToString constraint
+                else
+                    matchDebug '\tmetavariable case, assigning:',
+                        CToString constraint
+                    solution = solution.plus constraint.copy()
+                return nextMatch constraints.minus( constraint ),
+                    solution, iterator
+
+First of two expression function application cases:  If there are two
+constraints whose left hand sides are both expression function applications,
+and both use the same metavariable for the expression function, but the two
+right hand sides are different, we can narrow down the meaning of the
+metavariable, and in each of some number of cases, compute the meaning of
+the arguments to the expression function applications.
+
+            pair = constraints.firstPairSatisfying ( c1, c2 ) ->
+                isExpressionFunctionApplication( c1.pattern ) and \
+                isExpressionFunctionApplication( c2.pattern ) and \
+                c1.pattern.children[1].equals(
+                    c2.pattern.children[1], no ) and \
+                not c1.expression.equals c2.expression, no
+            if pair?
+                [ c1, c2 ] = pair
+                smallerC = constraints.minus c1, c2
+                metavariable = c1.pattern.children[1]
+                t1 = c1.pattern.children[2]
+                t2 = c2.pattern.children[2]
+                e1 = c1.expression
+                e2 = c2.expression
+                makeMValue = ( subset ) ->
+                    v = constraints.nextNewVariable()
+                    makeExpressionFunction v, multiReplace e1, subset, v
+                iterator = differenceIterator e1, e2
+                iterator = filterIterator iterator, ( subset ) ->
+                    mValue = solution.lookup metavariable
+                    not mValue? or alphaEquivalent mValue, makeMValue subset
+                iterator = composeIterator iterator, ( subset ) ->
+                    maybeExtended = if solution.lookup metavariable
+                        solution.copy()
+                    else
+                        solution.plus new Constraint metavariable,
+                            makeMValue subset
+                    [ smallerC.plus(
+                        new Constraint( t1, e1.index subset[0] ),
+                        new Constraint( t2, e2.index subset[0] ) ),
+                      maybeExtended, null ]
+                matchDebug '\tefa case 1 of 2, iterating:',
+                    CToString( c1 ), CToString( c2 )
+                return nextMatch smallerC, solution, iterator
+
+Second of two expression function application cases:  If there are two
+constraints whose left hand sides are both expression function applications,
+and both use the same metavariable for the expression function, and the two
+right hand sides are equal, we can narrow down the meaning of the
+metavariable, and in each of some number of cases, compute the meaning of
+the arguments to the expression function applications.  (Note that because
+the constraint set is indeed a set, in this situation we know that the two
+parameters to the expression functions must be different.)
+
+            pair = constraints.firstPairSatisfying ( c1, c2 ) ->
+                isExpressionFunctionApplication( c1.pattern ) and \
+                isExpressionFunctionApplication( c2.pattern ) and \
+                c1.pattern.children[1].equals(
+                    c2.pattern.children[1], no ) and \
+                c1.expression.equals c2.expression, no
+            if pair?
+                [ c1, c2 ] = pair
+                smallerC = constraints.minus c1, c2
+                metavariable = c1.pattern.children[1]
+                t1 = c1.pattern.children[2]
+                t2 = c2.pattern.children[2]
+                e = c1.expression
+                makeMValue = ( subset ) ->
+                    v = constraints.nextNewVariable()
+                    makeExpressionFunction v, multiReplace e, subset, v
+                iterator = subexpressionIterator e
+                iterator = filterIterator iterator, ( subset ) ->
+                    mValue = solution.lookup metavariable
+                    not mValue? or alphaEquivalent mValue, makeMValue subset
+                iterator = suffixIterator iterator, [ ]
+                iterator = composeIterator iterator, ( subset ) ->
+                    newMValue = makeMValue subset
+                    if oldMValue = solution.lookup metavariable
+                        if not alphaEquivalent oldMValue, newMValue
+                            return null
+                        maybeExtended = solution.copy()
+                    else
+                        maybeExtended = solution.plus \
+                            new Constraint metavariable, newMValue
+                    newConstraints = smallerC
+                    if subset.length isnt 0
+                        newConstraints = newConstraints.plus \
+                            new Constraint( t1, e.index subset[0] ),
+                            new Constraint( t2, e.index subset[0] )
+                    [ newConstraints, maybeExtended, null ]
+                matchDebug '\tefa case 2 of 2, iterating:',
+                    CToString( c1 ), CToString( c2 )
+                return nextMatch smallerC, solution, iterator
+
+Only remaining case:  Take the first constraint, which we know must be an
+expression function application whose expression function is a metavariable
+that appears in no other constraint.  Create all possible instantiations for
+that metavariable as follows.
+
+            constraint = constraints.contents[0]
+            if not isExpressionFunctionApplication constraint.pattern
+                throw Error 'Invalid assumption in final case of matching'
+            smallerC = constraints.minus constraint
+            metavariable = constraint.pattern.children[1]
+            t = constraint.pattern.children[2]
+            e = constraint.expression
+            if mValue = solution.lookup metavariable
+                applied = applyExpressionFunction mValue, t
+                matchDebug '\tfinal case, applying known metavariable:',
+                    CToString constraint
+                return nextMatch smallerC.plus( new Constraint mValue, e ),
+                    solution, iterator
+            makeMValue = ( subset ) ->
+                v = constraints.nextNewVariable()
+                makeExpressionFunction v, multiReplace e, subset, v
+            iterator = subexpressionIterator e
+            iterator = filterIterator iterator, ( subset ) ->
+                mValue = solution.lookup metavariable
+                not mValue? or alphaEquivalent mValue, makeMValue subset
+            iterator = suffixIterator iterator, [ ]
+            iterator = composeIterator iterator, ( subset ) ->
+                matchDebug '\t\tnext subexpression, with subset',
+                    JSON.stringify( subset ), 'solution',
+                    CLToString( solution ), 'constraints',
+                    CLToString( smallerC ), 't', t.simpleEncode(), 'e'
+                    e.simpleEncode(), 'metavariable',
+                    metavariable.simpleEncode()
+                newMValue = makeMValue subset
+                if oldMValue = solution.lookup metavariable
+                    if not alphaEquivalent oldMValue, newMValue
+                        return null
+                    maybeExtended = solution.copy()
+                else
+                    maybeExtended = solution.plus \
+                        new Constraint metavariable, newMValue
+                newConstraints = smallerC
+                if subset.length isnt 0
+                    newConstraints = newConstraints.plus \
+                        new Constraint t, e.index subset[0]
+                [ newConstraints, maybeExtended, null ]
+            matchDebug '\tfinal case, iterating:', CToString constraint
+            return nextMatch smallerC, solution, iterator
+
+Now handle the case where this call was given an iterator, so we are
+essentially just executing a union operation over all calls of that
+iterator.
+
+        else
+            next = iterator()
+            if next is null
+                matchDebug '\titerator case, next is null, done!'
+                return [ null, null ]
+            [ nextConstraints, nextSolution, nextIterator ] = next
+            matchDebug '\titerator case, using iterator.next():',
+                CLToString( nextConstraints ), CLToString( nextSolution ),
+                nextIterator?, '\n--->'
+            [ nextResult, nextArguments ] =
+                nextMatch nextConstraints, nextSolution, nextIterator
+            if not nextResult?
+                matchDebug '\n<---\n' + \
+                    '\tafter iterator recursion, no result;
+                    keep iterating...'
+                return nextMatch constraints, solution, iterator
+            if not nextArguments?
+                matchDebug '\n<---\n\tafter iterator recursion, ' + \
+                    'got a unique solution:', CLToString nextResult
+                return [ nextResult, [ constraints, solution, iterator ] ]
+            matchDebug '\n<---\n\tafter iterator recursion, ' + \
+                'got a(nother?) solution:', CLToString( nextResult ),
+                'PLUS nextArguments', CLToString( nextArguments[0] ),
+                CLToString( nextArguments[1] ), nextArguments[2]?
+            nextArguments[2] = concatenateIterators \
+                nextArguments[2], iterator
+            return [ nextResult, nextArguments ]
+
+
+
+# Background Computations
+
+This module defines an API for enqueueing background computations on groups
+in webLurch.  It provides an efficient means for running those computations,
+no matter how numerous they might be, while keeping the UI responsive.
+
+Warning:  If you do background computation in your document, you may find
+the user saving the document and exiting the editor (e.g., closing the
+browser tab) while your background computations are occurring.  When such a
+file is later loaded by the user, it will be in whatever intermediate state
+it was left in by those pending background computations.  To solve this
+problem, you may wish to listen to the `beforeSave` and `afterLoad` events
+in the editor.  (See
+[this function](../app/loadsaveplugin.litcoffee#saving-documents) and
+[this function](../app/loadsaveplugin.litcoffee#loading-documents) for
+details.)  For example, you could mark a document as pending recomputation
+when you begin background processing, and unmark it when that processing
+completes; in an `afterLoad` handler, if the document is marked as pending
+recomputation, fully reprocess the document from scratch.
+
+## Global Background object
+
+The first object defined herein is the global `Background` object, which
+encapsulates all activity that will take place "in the background."  This
+means that such activity, will not begin immediately, but will be queued for
+later processing (possibly in a thread other than the main UI thread).  It
+is called `Background` because you should think of this as encapsulating the
+very notion of running a job in the background.
+
+    window.Background =
+
+The first public API this global object provides is a way to register script
+functions as jobs that can be run in the background.  This does not enqueue
+a task for running; it simply gives a name to a function that can later be
+used in the background.  Code cannot be run in the backgorund unless it has
+first been added to this global library of background-runnable functions,
+using this very API.
+
+The optional third parameter is a dictionary of name-function pairs that
+will be installed in the background function's namespace when it is used.
+If the background function uses a Web Worker, these will be sent as strings
+to the worker for recreation into functions (so their environments will not
+be preserved).  If the background function is executed in the main thread
+(in environments that don't support Web Workers), a `with` clause will be
+used to ensure that the functions are in scope.  In that case, environments
+are preserved.  So write your functions independent of environment.
+
+The optional fourth parameter is an array of scripts to import into the web
+worker.  In a Web Worker implementation, these will be run using
+`importScripts`.  In a non-Web Worker implementation, these will do nothing;
+you should ensure that these same scripts are already imported into the
+environment from which this function is being called.
+
+        functions : { }
+        registerFunction : ( name, func, globals = { }, scripts = [ ] ) ->
+            window.Background.functions[name] =
+                function : func
+                globals : globals
+                scripts : scripts
+
+The second public API this global object provides is the `addTask` function,
+which lets you add a task to the background processing queue, to be handled
+as soon as earlier-added tasks are complete and resources are available.
+
+The first parameter must be the name of a function that has been passed to
+`registerFunction`.  If the name has not been registered, this task will not
+be added to the queue.  The second parameter must be a list of group objects
+on which to perform the given computation.  The third parameter is the
+callback function that will be called with the result when the computation
+is complete.
+
+Keep in mind that the goal should be for the registered function (whose name
+is provided here in `funcName`) to do the vast majority of the work of the
+computation, and that `callback` should simply take that result and store it
+somewhere or report it to the user.  The `callback` will be executed in the
+UI thread, and thus must be lightweight.  The function whose name is
+`funcName` will be run in the background, and thus can have arbitrary
+complexity.
+
+        runningTasks : [ ]
+        waitingTasks : [ ]
+        addTask : ( funcName, inputGroups, callback ) ->
+            newTask =
+                name : funcName
+                inputs : inputGroups
+                callback : callback
+                id : "#{funcName},#{group.id() for group in inputGroups}"
+
+Before we add the function to the queue, we filter the current "waiting"
+queue so that any previous copy of this exact same computation (same
+function name and input group list) is removed.  (If there were such a one,
+it would mean that it had been enqueued before some change in the document,
+which necessitated recomputing the same values based on new data.  Thus we
+throw out the old computation and keep the new, later one, since it may sit
+chronologically among a list of waiting-to-run computations in a way in
+which order is important.)  We only need to seek one such copy, since we
+filter every time one is added, so there cannot be more than one.
+
+            for task, index in window.Background.waitingTasks
+                if task.id is newTask.id
+                    window.Background.waitingTasks.splice index, 1
+                    break
+
+Then repeat the same procedure with the currently running tasks, except also
+call `terminate()` in the running task before deleting it.
+
+            for task, index in window.Background.runningTasks
+                if task.id is newTask.id
+                    task.runner?.worker?.terminate?()
+                    window.Background.runningTasks.splice index, 1
+                    break
+
+Now we can enqueue the task and call `update()` to possibly begin processing
+it.
+
+            window.Background.waitingTasks.push newTask
+            window.Background.update()
+
+The update function just mentioned will verify that as many tasks as
+possible are running concurrently.  That number will be determined by [the
+code below](#ideal-amount-of-concurrency).  The update function, however, is
+implemented here.
+
+        available : { }
+        update : ->
+            B = window.Background
+            while B.runningTasks.length < B.concurrency()
+                if not ( toStart = B.waitingTasks.shift() )? then return
+
+If we have a `BackgroundFunction` object that's not running, and is of the
+appropriate type, let's re-use it.  Otherwise, we must create a new one.
+Either way, add it to the running tasks list if we were able to create an
+appropriate `BackgroundFunction` instance.
+
+                runner = B.available[toStart.name]?.pop()
+                if not runner?
+                    data = B.functions[toStart.name]
+                    if not data? then continue
+                    runner = new BackgroundFunction data.function,
+                        data.globals, data.scripts
+                toStart.runner = runner
+                B.runningTasks.push toStart
+
+From here onward, we will be creating some callbacks, and thus need to
+protect the variable `toStart` from changes in later loop iterations.
+
+                do ( toStart ) ->
+
+When the task completes, we will want to remove it from the list of running
+tasks and place `runner` on the `available` list for reuse.  Then we should
+make another call to this very update function, in case the end of this task
+makes possible the start of another task, within the limits of ideal
+concurrency.
+
+We define this cleanup function to do all that, so we can use
+it in two cases below.
+
+                    cleanup = ->
+                        index = B.runningTasks.indexOf toStart
+                        B.runningTasks.splice index, 1
+                        ( B.available[toStart.name] ?= [ ] ).push runner
+                        window.Background.update()
+
+Start the background process.  Call `cleanup` whether the task succeeds or
+has an error, but only call the callback if it succeeds.
+
+                    runner.call( toStart.inputs... ).sendTo ( result ) ->
+                        cleanup()
+                        toStart.callback? result
+                    .orElse cleanup
+
+## Ideal amount of concurrency
+
+Because the Background object will be used to run tasks in the background,
+it will need to know how many concurrent tasks it should attempt to run.
+The answer is one per available core on the client's machine.  The client's
+machine will have some number, n, of cores, one of which will be for the UI.
+Thus n-1 will be available for background tasks.  We need to know n.  The
+following function (defined in
+[this polyfill](https://github.com/oftn/core-estimator), which this project
+imports) computes that value for later use.
+
+    navigator.getHardwareConcurrency -> # no body
+
+We then write the following function to compute the number of background
+tasks we should attempt to run concurrently.  It returns n-1, as described
+above.  It rounds that value up to 1, however, in the event that the machine
+has only 1 core.  Also, if the number of cores could not be (or has not yet
+been) computed, it returns 1.
+
+    window.Background.concurrency = ->
+        Math.max 1, ( navigator.hardwareConcurrency ? 1 ) - 1
+
+## `BackgroundFunction` class
+
+We define the following class for encapsulating functions that are ready to
+be run in the background.
+
+    BackgroundFunction = class
+
+The constructor stores in the `@function` member the function that this
+object is able to run in the background.
+
+        constructor : ( @function, @globals, @scripts ) ->
+
+The promise object, which will be returned from the `call` member, permits
+chaining.  Thus all of its methods return the promise object itself.  There
+are only two methods, `sendTo`, for specifying the result callback, and
+`orElse`, for specifying the error callback.  Thus the use of the call
+member looks like `bgfunc.call( args... ).sendTo( resultHandler ).orElse(
+errorHandler )`.
+
+            @promise =
+                sendTo : ( callback ) =>
+                    @promise.resultCallback = callback
+                    if @promise.hasOwnProperty 'result'
+                        @promise.resultCallback @promise.result
+                    @promise
+                orElse : ( callback ) =>
+                    @promise.errorCallback = callback
+                    if @promise.hasOwnProperty 'error'
+                        @promise.errorCallback @promise.error
+                    @promise
+
+If Web Workers are supported in the current environment, we create one for
+this background function.  Otherwise, we do not, and we will have to fall
+back on a much simpler technique later.
+
+            if window.Worker
+                @worker = new window.Worker 'worker-solo.js'
+                @worker.addEventListener 'message', ( event ) =>
+                    @promise.result = event.data
+                    @promise?.resultCallback? event.data
+                , no
+                @worker.addEventListener 'error', ( event ) =>
+                    @promise.error = event
+                    @promise?.errorCallback? event
+                , no
+                @worker.postMessage setFunction : "#{@function}"
+                for own name, func of @globals
+                    @globals[name] = "#{func}"
+                @worker.postMessage install : @globals
+                @worker.postMessage import : @scripts
+
+Background functions need to be callable.  Calling them returns the promise
+object defined in the constructor, into which we can install callbacks for
+when the result is computed, or when an error occurs.
+
+        call : ( args... ) =>
+
+First, clear out any old data in the promise object from a previous call of
+this background function.
+
+            delete @promise.result
+            delete @promise.resultCallback
+            delete @promise.error
+            delete @promise.errorCallback
+
+Second, prepare all arguments (which must be Group objects) for use in the
+worker thread by serializing them.  If any of the groups on which we should
+run this function have been deleted since it was created, we quit and do
+nothing.
+
+            for group in arguments
+                if group.deleted then return
+            groups = ( group.toJSON() for group in args )
+
+Run the computation soon, but not now.  When it is run, store the result or
+error in the promise, and call the result or error handler, whichever is
+appropriate, assuming it has been defined by then.  If it hasn't been
+defined at that time, the result/error will be stored and set to the result
+or error callback the moment one is registered, using one of the two
+functions defined above, in the promise object.
+
+If Web Workers are supported, we use the one constructed in this object's
+constructor.  If not, we fall back on simply using a zero timer, the poor
+man's "background" processing.
+
+When Web Workers are used, we must first serialize each group passed to the
+web worker, because it cannot be passed as is, containing DOM objects.  So
+we do that in both cases, so that functions can be consistent, and not need
+to know whether they're running in a worker or not.
+
+            if @worker?
+                @worker.postMessage runOn : groups
+            else
+                setTimeout =>
+                    try
+                        `with ( this.globals ) {`
+                        @promise.result = @function groups...
+                        `}`
+                    catch e
+                        @promise.error = e
+                        @promise.errorCallback? @promise.error
+                        return
+                    @promise.resultCallback? @promise.result
+                , 0
+
+Return the promise object, for chaining.
+
+            @promise
+
+
+
+# Canvas Utilities
+
+This module defines several functions useful when working with the HTML5
+Canvas.
+
+## Curved arrows
+
+The following function draws an arrow along a cubic Bézier curve.  It
+requires the four control points, each as an (x,y) pair.  The arrowhead
+size can be adjusted with the final parameter, the altitude of the arrowhead
+triangle, measured in pixels
+
+    CanvasRenderingContext2D::bezierArrow =
+    ( x1, y1, x2, y2, x3, y3, x4, y4, size = 10 ) ->
+        unit = ( x, y ) ->
+            length = Math.sqrt( x*x + y*y ) or 1
+            x : x/length, y : y/length
+        @beginPath()
+        @moveTo x1, y1
+        @bezierCurveTo x2, y2, x3, y3, x4, y4
+        nearEnd =
+            x : @applyBezier x1, x2, x3, x4, 0.9
+            y : @applyBezier y1, y2, y3, y4, 0.9
+        nearEndVector = x : x4 - nearEnd.x, y : y4 - nearEnd.y
+        localY = unit nearEndVector.x, nearEndVector.y
+        localY.x *= size * 0.7
+        localY.y *= size
+        localX = x : localY.y, y : -localY.x
+        @moveTo x4-localX.x-localY.x, y4-localX.y-localY.y
+        @lineTo x4, y4
+        @lineTo x4+localX.x-localY.x, y4+localX.y-localY.y
+
+The following utility function is useful to the function above, as well as
+to other functions in the codebase.
+
+    CanvasRenderingContext2D::applyBezier = ( C1, C2, C3, C4, t ) ->
+        ( 1-t )**3*C1 + 3*( 1-t )**2*t*C2 + 3*( 1-t )*t**2*C3 + t**3*C4
+
+## Rounded rectangles
+
+The following function traces a rounded rectangle path in the context.  It
+sits entirely inside the rectangle from the upper-left point (x1,y1) to the
+lower-right point (x2,y2), and its corners are quarter circles with the
+given radius.
+
+It calls `beginPath()` and `closePath()` but does not stroke or fill the
+path.  You should do whichever (or both) of those you like.
+
+    CanvasRenderingContext2D::roundedRect = ( x1, y1, x2, y2, radius ) ->
+        @beginPath()
+        @moveTo x1 + radius, y1
+        @lineTo x2 - radius, y1
+        @arcTo x2, y1, x2, y1 + radius, radius
+        @lineTo x2, y2 - radius
+        @arcTo x2, y2, x2 - radius, y2, radius
+        @lineTo x1 + radius, y2
+        @arcTo x1, y2, x1, y2 - radius, radius
+        @lineTo x1, y1 + radius
+        @arcTo x1, y1, x1 + radius, y1, radius
+        @closePath()
+
+## Rounded zones
+
+The following function traces a rounded rectangle that extends from
+character in a word processor to another, which are on different lines, and
+thus the rectangle is stretched.  Rather than looking like a normal
+rectangle, the effect looks like the following illustration, with X
+indicating text and lines indicating the boundaries of the rounded zone.
+
+```
+  x x x x x x x x x x x x
+       /------------------+
+  x x x|x x x x x x x x x |
++------+                  |
+| x x x x x x x x x x x x |
+|          +--------------|
+| x x x x x|x x x x x x x
++----------/
+  x x x x x x x x x x x x
+```
+
+The corners marked with slashes are to be rounded, and the other corners are
+square.  The left and right edges are the edges of the canvas, minus the
+given values of `leftMargin` and `rightMargin`.  The y coordinates of the
+two interior horizontal lines are given by `upperLine` and `lowerLine`,
+respectively.
+
+It calls `beginPath()` and `closePath()` but does not stroke or fill the
+path.  You should do whichever (or both) of those you like.
+
+    CanvasRenderingContext2D::roundedZone = ( x1, y1, x2, y2,
+    upperLine, lowerLine, leftMargin, rightMargin, radius ) ->
+        @beginPath()
+        @moveTo x1 + radius, y1
+        @lineTo @canvas.width - rightMargin, y1
+        @lineTo @canvas.width - rightMargin, lowerLine
+        @lineTo x2, lowerLine
+        @lineTo x2, y2 - radius
+        @arcTo x2, y2, x2 - radius, y2, radius
+        @lineTo leftMargin, y2
+        @lineTo leftMargin, upperLine
+        @lineTo x1, upperLine
+        @lineTo x1, y1 + radius
+        @arcTo x1, y1, x1 + radius, y1, radius
+        @closePath()
+
+## Rectangle overlapping
+
+The following routine computes whether two rectangles collide.  The first is
+given by upper-left corner (x1,y1) and lower-right corner (x2,y2).  The
+second is given by upper-left corner (x3,y3) and lower-right corner (x4,y4).
+The routine returns true iff the interior of the rectangles intersect.
+(If they intersect only on their boundaries, false is returned.)
+
+    window.rectanglesCollide = ( x1, y1, x2, y2, x3, y3, x4, y4 ) ->
+        not ( x3 >= x2 or x4 <= x1 or y3 >= y2 or y4 <= y1 )
+
+## Rendering HTML to Images and/or Canvases
+
+This section provides several routines related to converting arbitrary HTML
+into image data in various forms (SVG, Blob, object URLs, base64 encoding)
+and for drawing such forms onto an HTML canvas.
+
+This first function converts arbitrary (strictly well-formed!) HTML into a
+Blob containing SVG XML for the given HTML.  This makes use of the
+document's body, it can only be called once page loading has completed.
+
+    window.svgBlobForHTML = ( html, style = 'font-size:12px' ) ->
+
+First, compute its dimensions using a temporary span in the document.
+
+        span = document.createElement 'span'
+        span.setAttribute 'style', style
+        span.innerHTML = html
+        document.body.appendChild span
+        span = $ span
+        width = span.width() + 2 # cushion for error
+        height = span.height() + 2 # cushion for error
+        span.remove()
+
+Then build an SVG and store it as blob data.  (See the next function in this
+file for how the blob is built.)
+
+        window.makeBlob "<svg xmlns='http://www.w3.org/2000/svg'
+            width='#{width}' height='#{height}'><foreignObject width='100%'
+            height='100%'><div xmlns='http://www.w3.org/1999/xhtml'
+            style='#{style}'>#{html}</div></foreignObject></svg>",
+            'image/svg+xml;charset=utf-8'
+
+The previous function makes use of the following cross-browser Blob-building
+utility gleaned from [this StackOverflow
+post](http://stackoverflow.com/questions/15293694/blob-constructor-browser-compatibility).
+
+    window.makeBlob = ( data, type ) ->
+        try
+            new Blob [ data ], type : type
+        catch e
+            # TypeError old chrome and FF
+            window.BlobBuilder = window.BlobBuilder ?
+                                 window.WebKitBlobBuilder ?
+                                 window.MozBlobBuilder ?
+                                 window.MSBlobBuilder
+            if e.name is 'TypeError' and window.BlobBuilder?
+                bb = new BlobBuilder()
+                bb.append data.buffer
+                bb.getBlob type
+            else if e.name is 'InvalidStateError'
+                # InvalidStateError (tested on FF13 WinXP)
+                new Blob [ data.buffer ], type : type
+
+Now we move on to a routine for rendering arbitrary HTML to a canvas, but
+there are some preliminaries we need to build first.
+
+Canvas rendering happens asynchronously.  If the routine returns false, then
+it did not render, but rather began preparing the HTML for rendering (by
+initiating the background rendering of the HTML to an image).  Those results
+will then be cached, so later calls to this routine will return true,
+indicating success (immediate rendering).
+
+To support this, we need a cache.  The following routines define the cache.
+
+    drawHTMLCache = order : [ ], maxSize : 100
+    cacheLookup = ( html, style ) ->
+        key = JSON.stringify [ html, style ]
+        if drawHTMLCache.hasOwnProperty key then drawHTMLCache[key] \
+            else null
+    addToCache = ( html, style, image ) ->
+        key = JSON.stringify [ html, style ]
+        drawHTMLCache[key] = image
+        markUsed html, style
+    markUsed = ( html, style ) ->
+        key = JSON.stringify [ html, style ]
+        if ( index = drawHTMLCache.order.indexOf key ) > -1
+            drawHTMLCache.order.splice index, 1
+        drawHTMLCache.order.unshift key
+        pruneCache()
+    pruneCache = ->
+        while drawHTMLCache.order.length > drawHTMLCache.maxSize
+            delete drawHTMLCache[drawHTMLCache.order.pop()]
+
+And now, the rendering routine, which is based on code taken from [this MDN
+article](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Drawing_DOM_objects_into_a_canvas).
+
+    CanvasRenderingContext2D::drawHTML =
+    ( html, x, y, style = 'font-size:12px' ) ->
+
+If the given HTML has already been rendered to an image that remains in the
+cache, just use that immediately and return success.
+
+        if image = cacheLookup html, style
+            @drawImage image, x, y
+            markUsed html, style
+            return yes
+
+Otherwise, begin rendering that HTML to an image, for later insertion into
+the cache, and return (temporary) failure.  Start by creating the image and
+assign its URL, so that when rendering completes asynchronously, we can
+store the results in the cache.
+
+        url = objectURLForBlob svgBlobForHTML html, style
+        image = new Image()
+        image.onload = ->
+            addToCache html, style, image
+            ( window.URL ? window.webkitURL ? window ).revokeObjectURL url
+        image.onerror = ( error ) ->
+            addToCache html, style, new Image()
+            console.log 'Failed to load SVG with this <foreignObject> div
+                content:', html
+        image.src = url
+        no
+
+The following routine queries the same cache to determine the width and
+height of a given piece of HTML that could be rendered to the canvas.  If
+the HTML is not in the cache, this returns null.  Otherwise, it returns an
+object with width and height attributes.
+
+    CanvasRenderingContext2D::measureHTML =
+    ( html, style = 'font-size:12px' ) ->
+        if image = cacheLookup html, style
+            markUsed html, style
+            width : image.width
+            height : image.height
+        else
+            @drawHTML html, 0, 0, style # forces caching
+            null
+
+The `drawHTML` function makes use of the following routine, which converts a
+Blob into an image URL using `createObjectURL`.
+
+    window.objectURLForBlob = ( blob ) ->
+        ( window.URL ? window.webkitURL ? window ).createObjectURL blob
+
+The following does the same thing, but creates a URL with the base-64
+encoding of the Blob in it.  This must be done asynchronously, but then the
+URL can be used anywhere, not just in this script environment.  The result
+is sent to the given callback.
+
+    window.base64URLForBlob = ( blob, callback ) ->
+        reader = new FileReader
+        reader.onload = ( event ) -> callback event.target.result
+        reader.readAsDataURL blob
+
+
+
+# Utility functions for working with the DOM
+
+This file defines all of its functions inside one enormous `installIn`
+function, which installs those methods into a particular `window` instance.
+This is so that it can be used in an iframe in addition to the main window.
+This file itself calls `installIn` on the main `window` instance, so you do
+not need to.  But if you also wish to use these functions within an iframe,
+you can call `installIn` on the `window` instance for that iframe.
+
+    window.installDOMUtilitiesIn = ( window ) ->
+
+## Address
+
+The address of a node `N` in an ancestor node `M` is an array `a` of
+non-negative integer indices such that
+`M.childNodes[a[0]].childNodes[a[1]]. ... .childNodes[a[a.length-1]] == N`.
+Think of it as the path one must walk through children to get from `M` down
+to `N`.  Special cases:
+ * If the array is of length 1, then `M == N.parentNode`.
+ * If the array is empty, `[]`, then `M == N`.
+ * If `M` is not an ancestor of `N`, then we say the address of `N`
+   within `M` is null (not an array at all).
+
+The following member function of the `Node` class adds the address function
+to that class.  Using the `M` and `N` from above, one would call it like
+`N.address M`.  [See below](#index) for its inverse function, `index`.
+
+It computes the address of any one DOM node within any other. If the
+parameter (the ancestor, called `M` above) is not supplied, then it defaults
+to the top-level Node above `N` (i.e., the furthest-up ancestor, with no
+`.parentNode`, which usually means it's the global variable `document`).
+
+        window.Node::address = ( ancestor = null ) ->
+
+The base case comes in two flavors. First, if the parameter is this node,
+then the correct result is the empty array.
+
+            if this is ancestor then return []
+
+Second, if we've reached the top level then we must consider the second
+parameter.  Were we restricted to a specific ancestor?  If so, we didn't
+find it, so return null.  If not, return the empty array, because we have
+reached the top level.
+
+            if not @parentNode
+                return if ancestor then null else []
+
+Otherwise, recur up the ancestor tree, and concatenate our own index in our
+parent with the array we compute there, if there is one.
+
+            recur = @parentNode.address ancestor
+            if recur is null then return null
+            recur.concat [ @indexInParent() ]
+
+You'll notice that the final line of code above depends on the
+as-yet-undefined helper function `indexInParent()`.  We therefore create
+that simple helper function now, which is also a useful member of the `Node`
+prototype.
+
+        window.Node::indexInParent = ->
+            if @parentNode
+                Array::slice.apply( @parentNode.childNodes ).indexOf this
+            else
+                -1
+
+## Index
+
+This function is an inverse for `address`, [defined above](#address).
+
+The node at index `I` in node `N` is the descendant `M` of `N` in the node
+hierarchy such that `M.address N` is `I`. In short, if `N` is any ancestor
+of `M`, then `N.index(M.address(N)) == M`.
+
+Keeping in mind that an address is simply an array of nonnegative integers,
+the implementation is simply repeated lookups in some `childNodes` arrays.
+It is therefore quite short, with most of the code going to type safety.
+
+        window.Node::index = ( address ) ->
+
+Require that the parameter be an array.
+
+            if address not instanceof Array
+                throw Error 'Node address function requires an array'
+
+If the array is empty, we've hit the base case of this recursion.
+
+            if address.length is 0 then return this
+
+Othwerise, recur on the child whose index is the first element of the given
+address.  There are two safety checks here.  First, we verify that the index
+we're about to look up is a number (otherwise things like `[0]` will be
+treated as zero, which is probably erroneous).  Second, the `?.` syntax
+below ensures that that index is valid, so that we do not attempt to call
+this function recursively on something other than a node.
+
+            if typeof address[0] isnt 'number' then return undefined
+            @childNodes[address[0]]?.index address[1..]
+
+## Serialization
+
+### From DOM Nodes to objects
+
+These methods are for serializing and unserializing DOM nodes to objects
+that are amenable to JSON processing.
+
+First, the function for converting a DOM Node to an object that can be
+serialized with `JSON.stringify`.  After this function is defined, one can
+take any node `N` and call `N.toJSON()`.
+
+        window.Node::toJSON = ( verbose = yes ) ->
+
+The `verbose` parameter uses human-readable object keys, and is the default.
+A more compact version can be obtained by setting that value to false.  The
+inverse function below can handle either format.  The shrinking of keys
+follows the following convention.
+ * tagName becomes t
+ * attributes becomes a
+ * children becomes c
+ * comment becomes m
+ * content becomes n
+
+Text nodes are simply returned as strings.
+
+            if this instanceof window.Text then return @textContent
+
+Comment nodes are returned as objects with a comment flag and a text content
+attribute.
+
+            if this instanceof window.Comment
+                return if verbose
+                    comment : yes, content : @textContent
+                else
+                    m : yes, n : @textContent
+
+All other types of nodes must be elements in order to be serialized by this
+routine.
+
+            if this not instanceof window.Element
+                throw Error "Cannot serialize this node: #{this}"
+
+A serialized Element is an object with up to three properties, tag name,
+attribute dictionary, and child nodes array.  We create that object, then
+add the attributes dictionary and children array if and only if they are
+nonempty.
+
+            result = tagName : @tagName
+            if @attributes.length
+                result.attributes = { }
+                for attribute in @attributes
+                    result.attributes[attribute.name] = attribute.value
+            if @childNodes.length
+                result.children =
+                    ( chi.toJSON verbose for chi in @childNodes )
+
+If verbosity is disabled, change all the object keys to one-letter
+abbreviations.
+
+            if not verbose
+                result.t = result.tagName ; delete result.tagName
+                result.a = result.attributes ; delete result.attributes
+                result.c = result.children ; delete result.children
+            result
+
+### From objects to DOM Nodes
+
+Next, the function for converting an object produced with `N.toJSON()` back
+into an actual DOM Node.  This function requires its one parameter to be one
+of two types, either a string (meaning that a text node should be returned)
+or an object with the three properties given above (tagName, attributes,
+children, meaning that an Element should be returned).  One calls it by
+writing `Node.toJSON object`.
+
+        window.Node.fromJSON = ( json ) ->
+
+Handle the easy case first:  strings yield text nodes.
+
+            if typeof json is 'string'
+                return window.document.createTextNode json
+
+Next, if we can find a comment flag in the object, then we create and return
+a comment.
+
+            if 'comment' of json and json.comment
+                return window.document.createComment json.content
+            if 'm' of json and json.m
+                return window.document.createComment json.n
+
+The only other possibility is that the object encodes an Element. So if we
+can't get a tag name from the object, we cannot proceed, and thus the input
+was invalid.
+
+            if not 'tagName' of json and not 't' of json
+                throw Error "Object has no t[agName]: #{this}"
+
+Create an element using the tag name, add any attributes from the given
+object, and recur on the child array if there is one.
+
+            result = window.document.createElement json.tagName or json.t
+            if attributes = json.attributes or json.a
+                for own key, value of attributes
+                    result.setAttribute key, value
+            if children = json.children or json.c
+                for child in children
+                    result.appendChild Node.fromJSON child
+            result
+
+## Next and previous leaves
+
+Although the DOM provides properties for the next and previous siblings of
+any node, it does not provide a method for finding the next or previous
+*leaf* nodes.  The following additions to the Node prototype do just that.
+
+One can call `N.nextLeaf()` to get the next leaf node in the document
+strictly after `N` (regardless of whether `N` itself is a leaf), or
+`N.nextLeaf M` to restrict the search to within the ancestor node `M`.  `M`
+defaults to the entire document.  `M` must be an ancestor of `N`, or this
+default is used.
+
+        window.Node::nextLeaf = ( container = null ) ->
+
+Walk up the DOM tree until we can find a previous sibling.  Do not step
+outside the bounds of the document or `container`.
+
+            walk = this
+            while walk and walk isnt container and not walk.nextSibling
+                walk = walk.parentNode
+
+If no next sibling could be found, quit now, returning null.
+
+            walk = walk?.nextSibling
+            if not walk then return null
+
+We have a next sibling, so return its first leaf node.
+
+            while walk.childNodes.length > 0 then walk = walk.childNodes[0]
+            walk
+
+The following routine is analogous to the previous one, but in the opposite
+direction (finding the previous leaf node, within the given `container`, if
+such a leaf node exists).  Its code is not documented because it is so
+similar to the previous routine, which is documented.
+
+        window.Node::previousLeaf = ( container = null ) ->
+            walk = this
+            while walk and walk isnt container and not walk.previousSibling
+                walk = walk.parentNode
+            walk = walk?.previousSibling
+            if not walk then return null
+            while walk.childNodes.length > 0
+                walk = walk.childNodes[walk.childNodes.length - 1]
+            walk
+
+## More convenient `remove` method
+
+Some browsers provide the `remove` method in the `Node` prototype, but some
+do not.  To make things standard, I create the following member in the
+`Node` prototype.  It guarantees that for any node `N`, the call
+`N.remove()` has the same effect as the (more verbose and opaque) call
+`N.parentNode.removeChild N`.
+
+        window.Node::remove = -> @parentNode?.removeChild this
+
+## Adding classes to and removing classes from elements
+
+It is handy to have methods that add and remove CSS classes on HTML element
+instances.
+
+First, for checking if one is there:
+
+        window.Element::hasClass = ( name ) ->
+            classes = ( @getAttribute 'class' )?.split /\s+/
+            classes and name in classes
+
+Next, for adding a class to an element:
+
+        window.Element::addClass = ( name ) ->
+            classes = ( ( @getAttribute 'class' )?.split /\s+/ ) or []
+            if name not in classes then classes.push name
+            @setAttribute 'class', classes.join ' '
+
+Last, for removing one:
+
+        window.Element::removeClass = ( name ) ->
+            classes = ( ( @getAttribute 'class' )?.split /\s+/ ) or []
+            classes = ( c for c in classes when c isnt name )
+            if classes.length > 0
+                @setAttribute 'class', classes.join ' '
+            else
+                @removeAttribute 'class'
+
+## Converting (x,y) coordinates to nodes
+
+The browser will convert an (x,y) coordinate to an element, but not to a
+text node within the element.  The following routine fills that gap.  Thanks
+to [this StackOverflow answer](http://stackoverflow.com/a/13789789/670492).
+
+        window.document.nodeFromPoint = ( x, y ) ->
+            elt = window.document.elementFromPoint x, y
+            for node in elt.childNodes
+                if node instanceof window.Text
+                    range = window.document.createRange()
+                    range.selectNode node
+                    for rect in range.getClientRects()
+                        if rect.left < x < rect.right and \
+                           rect.top < y < rect.bottom then return node
+            return elt
+
+## Order of DOM nodes
+
+To check whether DOM node A appears strictly before DOM node B in the
+document, use the following function.  Note that if node B is contained in
+node A, this returns false.
+
+        window.strictNodeOrder = ( A, B ) ->
+            cmp = A.compareDocumentPosition B
+            ( Node.DOCUMENT_POSITION_FOLLOWING & cmp ) and \
+                not ( Node.DOCUMENT_POSITION_CONTAINED_BY & cmp )
+
+To sort an array of document nodes, using a comparator that will return -1,
+0, or 1, indicating whether nodes are in order, the same, or out of order
+(respectively), use the following comparator function.
+
+        window.strictNodeComparator = ( groupA, groupB ) ->
+            if groupA is groupB then return 0
+            if strictNodeOrder groupA, groupB then -1 else 1
+
+## Installation into main window global namespace
+
+As mentioned above, we defined all of the functions in one big `installIn`
+function so that we can install them in an iframe in addition to the main
+window.  We now call `installIn` on the main `window` instance, so clients
+do not need to do so.
+
+    installDOMUtilitiesIn window
+
+
+
+# Parsing Module
+
+## Introduction
+
+This module implements the Earley Parser, an algorithm [given on Wikipedia
+here](https://en.wikipedia.org/wiki/Earley_parser).  Much of this code was
+translated from [the desktop version of Lurch](www.lurchmath.org).
+
+## Utilities
+
+The following lines ensure that this file works in Node.js, for testing.
+
+    if not exports? then exports = module?.exports ? window
+    if require? then require './utils'
+
+An Earley state is an object of the following form.  The `lhs` and `rhs`
+together are the rule currently being matched, `pos` is the current
+position in that production, a zero-based index through all the interstitial
+points in `rhs` (zero being before the whole thing, 1 after the first
+entry, etc.), `ori` the position in the input text at which the match
+began (called the origin), and `got` is the list of tokens parsed so far.
+```
+{
+    lhs : categoryname,
+    rhs : [ ... ],
+    pos : integerindex,
+    ori : integerindex,
+    got : [ ... ]
+}
+```
+A parsed token is either a plain string containing the terminal or an array
+whose first element is the category name and the rest of which are the
+terminals and nonterminals in its parsing.
+
+    getNext = ( state ) ->
+        if state.pos < state.rhs.length then state.rhs[state.pos] else null
+
+The following simple tool is used to copy state objects.  It is a shallow
+copy in all except the `got` array.
+
+    copyState = ( state ) ->
+        lhs : state.lhs
+        rhs : state.rhs
+        pos : state.pos
+        ori : state.ori
+        got : state.got[..]
+
+We will later need to compare two arrays of strings and/or regular
+expressions for equality.  This function does so.
+
+    equalArrays = ( array1, array2 ) ->
+        if array1.length isnt array2.length then return no
+        for entry1, index in array1
+            entry2 = array2[index]
+            if entry1 instanceof RegExp
+                if entry2 not instanceof RegExp or \
+                    entry1.source isnt entry2.source then return no
+            else
+                if entry1 isnt entry2 then return no
+        yes
+
+## Grammar class
+
+All of the functionality of this module is embedded in a class called
+`Grammar`, which lets you define new grammars and then run them on strings
+to parse those strings.  This section defines that class.
+
+As mentioned on the Wikipedia page linked to above, a grammar is a set of
+rules of the form `C -> A1 A2 ... An` where `C` is the name of a category
+and each `Ai` can be a category name or a terminal.
+
+The `Grammar` class defined below stores a grammar as an object whose keys
+are category names with values of the following form.
+```
+    [
+        [ 'catname', 'catname', /terminal/, /terminal/, ... ],
+        [ 'catname', /terminal/, 'catname', /terminal/, ... ],
+        ...
+    ],
+```
+Each row in the two-dimensional array represents the right-hand side of one
+rule in the grammar, whose left hand side is the category name under which
+the entire two-dimensional array is stored.
+
+The entries in the arrays can be strings (which signify the names of
+non-terminals) or regular expressions (which signify that they are
+terminals, which must match the regular expression).
+
+Now we begin the class.
+
+    exports.Grammar = class Grammar
+
+## Constructor
+
+Indicate which of the categories is the starting category by passing its
+name to a grammar when you construct one.
+
+        constructor : ( @START ) ->
+            @rules = { }
+            @defaults =
+                addCategories : yes
+                collapseBranches : no
+                showDebuggingOutput : no
+                expressionBuilder : null
+                tokenizer : null
+                comparator : JSON.equals
+                maxIterations : -1 # which means no maximum
+
+The default options for the parsing algorithm are initialized in the
+constructor above, but you can change them using the following routine.  The
+first parameter is the name of the option (from the list immediately above)
+and the second parameter is its new value.  The meaning of these options is
+documented [below](#earley-algorithm).
+
+        setOption : ( optionName, optionValue ) =>
+            @defaults[optionName] = optionValue
+
+Add a rule to the grammar by specifying the category name and the sequence
+of Ai that appear on the right hand side.  This creates/extends the
+two-dimensional array described above.
+
+You can pass more than one sequence by providing additional parameters, to
+add them all at once.  You can also provide a string instead of an array,
+and it will be converted into an array by splitting at spaces as if it were
+a string.  Regular expressions will be automatically wrapped in `^...$` for
+you, so that they are always tested against the entire string.
+
+        addRule : ( categoryName, sequences... ) =>
+            for sequence in sequences
+                if sequence instanceof RegExp
+                    sequence = [ sequence ]
+                if sequence not instanceof Array
+                    sequence = "#{sequence}".split ' '
+                for entry, index in sequence
+                    if entry instanceof RegExp
+                        sequence[index] = new RegExp "^#{entry.source}$"
+                ( @rules[categoryName] ?= [ ] ).push sequence
+
+## Earley Algorithm
+
+The following function is the workhorse of this module.  It assumes that the
+input is a string of a nonzero length.  Options is not a required parameter,
+but if it is present it should be an object with some subset of the
+following properties.  Any unspecified properties take the defaults given in
+the constructor for this class, unless you changed them with `setOption`,
+defined [above](#constructor).
+ * `addCategories : true` iff category names should be prepended to each
+   match sequence
+ * `collapseBranches : true` iff one-argument match sequences should be
+   collapsed, as in `[[[[a]]]] -> a`
+ * `showDebuggingOutput : true` iff lots of debugging spam should be dumped
+   to the console as the algorithm executes
+ * `expressionBuilder` can be set to a function that will be called each
+   time a production is completed.  It will receive as input the results of
+   that production (wrapped in an array if `collapseBranches` is true, with
+   the category name prepended if `addCategories` is true) and it can return
+   any object to replace that array in the final result.  Since this will be
+   called at every level of the hierarchy, you can use this to recursively
+   build expressions from the leaves upwards.  Because it will need to be
+   copyable, outputs are restricted to JSON data.
+ * `tokenizer` can be an instance of the `Tokenizer` class
+   [defined later in this module](#tokenizing), and if it is, it will be
+   applied to any string input received by the parser before the parser does
+   anything with it.  This way you can simply place the tokenizer inside the
+   parser and forget about it; it will be run automatically.
+ * `comparator` is used to compare two results before returning the full
+   list, so that duplicates can be removed.  This defaults to a JSON-based
+   comparison, but will therefore go into an infinite loop for circular
+   structures.  Feel free to provide a different one if the default does not
+   meet your needs.  To return duplicates, simply set this to `-> no`.
+ * `maxIterations` defaults to infinite, but can be specified as a positive
+   integer, and the parsing algorithm will not iterate its innermost loops
+   any more than this many times.  This can be useful if you have a
+   suspected infinite loop in a grammar, and want to debug it.
+
+This algorithm is documented to some degree, but it will make much more
+sense if you have read the Wikipedia page cited at the top of this file.
+
+        parse : ( input, options = { } ) =>
+            options.addCategories ?= @defaults.addCategories
+            options.collapseBranches ?= @defaults.collapseBranches
+            options.showDebuggingOutput ?= @defaults.showDebuggingOutput
+            options.expressionBuilder ?= @defaults.expressionBuilder
+            expressionBuilderFlag = { }
+            options.tokenizer ?= @defaults.tokenizer
+            options.comparator ?= @defaults.comparator
+            options.maxIterations ?= @defaults.maxIterations
+            debug = if options.showDebuggingOutput then \
+                -> console.log arguments... else ->
+            debug '\n\n'
+
+Run the tokenizer if there is one, and the input needs it.
+
+            if options.tokenizer? and typeof input is 'string'
+                input = options.tokenizer.tokenize input
+
+Initialize the set of states to the array `[ [], [], ..., [] ]`, one entry
+for each interstice between characters in `input`, including one for before
+the first character and one for after the last.
+
+            stateGrid = ( [] for i in [0..input.length] )
+
+Push all productions for the starting non-terminal onto the initial state
+set.
+
+            stateGrid[0].push
+                lhs : ''
+                rhs : [ @START ]
+                pos : 0
+                ori : 0
+                got : []
+
+Do the main nested loop which solves the whole problem.
+
+            numIterationsDone = 0
+            for stateSet, i in stateGrid
+                debug "processing stateSet #{i} in this stateGrid
+                    (with input #{input}):"
+                debug '----------------------'
+                for tmpi in [0...stateGrid.length]
+                    debug "|    state set #{tmpi}:"
+                    skipped = 0
+                    for tmpj in [0...stateGrid[tmpi].length]
+                        if stateGrid[tmpi].length < 15 or \
+                           stateGrid[tmpi][tmpj].pos > 0
+                            debug "|        entry #{tmpj}:
+                                #{debugState stateGrid[tmpi][tmpj]}"
+                        else
+                            skipped++
+                    if skipped > 0
+                        debug "|    (plus #{skipped} at pos 0 not shown)"
+                debug '----------------------'
+
+The following loop is written in this indirect way (not using `for`) because
+the contents of `stateSet` may be modified within the loop, so we need to be
+sure that we do not pre-compute its length, but allow it to grow.
+
+                j = 0
+                while j < stateSet.length
+                    state = stateSet[j]
+                    debug "entry #{j}:", debugState state
+
+There are three possibilities.
+ * The next state is a terminal,
+ * the next state is a production, or
+ * there is no next state.
+Each of these is handled by a separate sub-task of the Earley algorithm.
+
+                    next = getNext state
+                    debug 'next:', next
+                    if next is null
+
+This is the case in which there is no next state.  It is handled by running
+the "completer":  We just completed a nonterminal, so mark progress in
+whichever rules spawned it by copying them into the next column in
+`stateGrid`, with progress incremented one step.
+
+I make one extension to the Earley algorithm at this point to prevent a
+simple type of cyclicity.  For example, if there are production rules A -> B
+and B -> A, then upon completing an A, we will also complete a B, and then
+an A again, and so on ad infinitum.  Thus I create a function that, if the
+`addCategories` option is enabled, will prevent this simple type of infinite
+loop by preventing the second completion of the same array by any rule.
+
+                        # duplicateLabel = ( got ) ->
+                        #     if not options.addCategories then return no
+                        #     length = if options.expressionBuilder then 3 \
+                        #         else 2
+                        #     walk = got
+                        #     firstLabel = null
+                        #     while walk.length is length
+                        #         if firstLabel is null
+                        #             firstLabel = walk[length-2]
+                        #         else
+                        #             debug 'comparing', firstLabel, 'to',
+                        #                 walk[length-2]
+                        #             if walk[length-2] is firstLabel
+                        #                 return yes
+                        #         walk = walk[length-1]
+                        #     no
+
+Then we proceed with the code for the completer.
+
+                        debug 'considering if this completion matters to
+                            state set', state.ori
+                        for s, k in stateGrid[state.ori]
+                            if getNext( s ) is state.lhs
+                                s = copyState s
+                                s.pos++
+                                got = state.got[..]
+                                if options.addCategories
+                                    got.unshift state.lhs
+                                if options.expressionBuilder?
+                                    got.unshift expressionBuilderFlag
+                                if options.collapseBranches and \
+                                    got.length is 1 then got = got[0]
+                                # if duplicateLabel got
+                                #     debug 'duplicate label -- truncating
+                                #         search along that path'
+                                #     continue
+                                s.got.push got
+                                stateGrid[i].push s
+                                debug "completer added this to #{i}:",
+                                    debugState s
+                                if numIterationsDone++ > \
+                                   options.maxIterations > 0
+                                    throw 'Maximum number of iterations
+                                        reached.'
+                        j++
+                        continue
+                    if i >= input.length then j++ ; continue
+                    debug 'is it a terminal?', next instanceof RegExp
+                    if next instanceof RegExp
+
+This is the case in which the next state is a terminal.  It is handled by
+running the "scanner":  If the next terminal in `state` is the one we see
+coming next in the input string, then find every production at that
+terminal's origin that contained that terminal, and mark progress here.
+
+                        if next.test input[i]
+                            copy = copyState state
+                            copy.pos++
+                            copy.got.push input[i]
+                            stateGrid[i+1].push copy
+                            debug "scanner added this to #{i+1}:",
+                                debugState copy
+                        j++
+                        continue
+                    if not @rules.hasOwnProperty next
+                        throw "Unknown non-terminal in grammar rule:
+                            #{next}"
+
+This is the case in which the next state is a non-terminal, i.e., the lhs of
+one or more rules.  It is handled by running the "predictor:"  For every
+rule that starts with the non-terminal that's coming next, add that rule to
+the current state set so that it will be explored in future passes through
+the inner of the two main loops.
+
+                    rhss = @rules[next]
+                    debug "rhss: [#{rhss.join('],[')}]"
+                    for rhs, k in rhss
+                        found = no
+                        for s in stateSet
+                            if s.lhs is next and equalArrays( s.rhs, rhs ) \
+                                    and s.pos is 0
+                                found = yes
+                                break
+                        if not found
+                            stateSet.push
+                                lhs : next
+                                rhs : rhs
+                                pos : 0
+                                ori : i
+                                got : []
+                            debug 'adding this state:',
+                                debugState stateSet[stateSet.length-1]
+                    j++
+                    if numIterationsDone++ > options.maxIterations > 0
+                        throw 'Maximum number of iterations reached.'
+            debug "finished processing this stateGrid
+                (with input #{input}):"
+            debug '----------------------'
+            for tmpi in [0...stateGrid.length]
+                debug "|    state set #{tmpi}:"
+                skipped = 0
+                for tmpj in [0...stateGrid[tmpi].length]
+                    if stateGrid[tmpi].length < 15 or \
+                       stateGrid[tmpi][tmpj].pos > 0
+                        debug "|        entry #{tmpj}:
+                            #{debugState stateGrid[tmpi][tmpj]}"
+                    else
+                        skipped++
+                if skipped > 0
+                    debug "|    (plus #{skipped} at pos 0 not shown)"
+            debug '----------------------'
+
+The main loop is complete.  Any completed production in the final state set
+that's marked as a result (and thus coming from state 0 to boot) is a valid
+parsing and should be returned.  We find such productions with this loop:
+
+            results = [ ]
+            for stateSet in stateGrid[stateGrid.length-1]
+                if stateSet.lhs is '' and getNext( stateSet ) is null
+                    result = stateSet.got[0]
+
+When we find one, we have some checks to do before returning it.  First,
+recursively apply `expressionBuilder`, if the client asked us to.
+
+                    if options.expressionBuilder?
+                        recur = ( obj ) ->
+                            if obj not instanceof Array or \
+                               obj[0] isnt expressionBuilderFlag
+                                return obj
+                            args = ( recur o for o in obj[1..] )
+                            if args.length is 1 and options.collapseBranches
+                                args = args[0]
+
+If the expression builder function returns undefined for any subexpression
+of the whole, we treat that as an error (saying the expression cannot be
+built for whatever application-specific reason the builder function has) and
+we thus do not include that result in the list.
+
+                            if args.indexOf( undefined ) > -1
+                                return undefined
+                            options.expressionBuilder args
+                        result = recur result
+                        if not result? then continue
+
+Second, don't return any duplicates.  So check to see if we've already seen
+this result before we add it to the final list of results to return.
+
+                    found = no
+                    for previous in results
+                        if options.comparator previous, result
+                            found = yes
+                            break
+                    if not found then results.push result
+
+Now return the final result list.
+
+            results
+
+## Tokenizing
+
+We also provide a class for doing simple tokenization of strings into arrays
+of tokens, which can then be passed to a parser.  To use this class, create
+an instance, add some token types using the `addType` function documented
+below, then either call its `tokenize` function yourself on a string, or
+just set this tokenizer as the default tokenizer on a parser.
+
+    exports.Tokenizer = class Tokenizer
+        constructor : -> @tokenTypes = [ ]
+
+This function adds a token type to this object.  The first parameter is the
+regular expression used to match the tokens.  The second parameter can be
+either of three things:
+ * If it is a function, that function will be run on every instance of the
+   token that's found in any input being tokenized, and the output of the
+   function used in place of the token string in the return value from this
+   tokenizer.  But if the function returns null, the tokenizer will omit
+   that token from the output array.  This is useful for, say, removing
+   whitespace:  `addType( /\s/, -> null )`.  The function will actually
+   receive two parameters, the second being the regular expresison match
+   object, which can be useful if there were captured subexpressions.
+ * If it is a string, that string will be used as the output token instead
+   of the actual matched token.  All `%n` patterns in the output will be
+   simultaneously replaced with the captured expressions of the type's
+   regular expression (with zero being the entire match).  This is useful
+   for reformatting tokens by adding detail.  Example:
+   `addType( /-?[0-9]+/, 'Integer(%0)' )`
+ * The second parameter may be omitted, and it will be treated as the
+   identity function, as in the first bullet point above.
+
+        addType : ( regexp, formatter = ( x ) -> x ) =>
+            if regexp.source[0] isnt '^'
+                regexp = new RegExp "^(?:#{regexp.source})"
+            @tokenTypes.push
+                regexp : regexp
+                formatter : formatter
+
+Tokenizing is useful for grouping large, complex chunks of text into one
+piece before parsing, so that the parsing rules can be simpler and clearer.
+For example, a regular expression that groups double-quoted string literals
+into single tokens is `/"(?:[^\\"]|\\\\|\\")*"/`.  That's a much shorter bit
+of code to write than a complex set of parsing rules that accomplish the
+same purpose; it will also run more efficiently than those rules would.
+
+The following routine tokenizes the input, returning one of two things:
+ * an array of tokens, each of which was the output of the formatter
+   function/string provided to `addType()`, above, or
+ * null, because some portion of the input string did not match any of the
+   token types added with `addType()`.
+
+The routine simply tries every regular expression of every token type added
+with `addType()`, above, and when one succeeds, it pops that text off the
+input string, saving it to a results list after passing it through the
+corresponding formatter.  If at any point none of the regular expressions
+matches the beginning of the remaining input, null is returned.
+
+        tokenize : ( input ) =>
+            result = [ ]
+            while input.length > 0
+                original = input.length
+                for type in @tokenTypes
+                    if not match = type.regexp.exec input then continue
+                    input = input[match[0].length..]
+                    if type.formatter instanceof Function
+                        next = type.formatter match[0], match
+                        if next? then result.push next
+                    else
+                        format = "#{type.formatter}"
+                        token = ''
+                        while next = /\%([0-9]+)/.exec format
+                            token += format[...next.index] + match[next[1]]
+                            format = format[next.index+next[0].length..]
+                        result.push token + format
+                    break
+                if input.length is original then return null
+            result
+
+## Debugging
+
+The following debugging routines are used in some of the code above.
+
+    debugNestedArrays = ( ary ) ->
+        if ary instanceof Array
+            if '{}' is JSON.stringify ary[0] then ary = ary[1...]
+            '[' + ary.map( debugNestedArrays ).join( ',' ) + ']'
+        else
+            ary
+    debugState = ( state ) ->
+        "(#{state.lhs} -> #{state.pos}in[#{state.rhs}], #{state.ori}) got
+            #{debugNestedArrays state.got}"
+
 
 
 # Unification Module
@@ -1212,7 +3630,7 @@ match `f(2,3)`, for the structural difference in number of parameters.
 The following lines ensure that this file works in Node.js, for testing.
 
     if not exports? then exports = module?.exports ? window
-    if require? then { OM, OMNode } = require './openmath.duo'
+    if require? then { OM, OMNode } = require './openmath-duo'
 
 ## Metavariables
 
@@ -1906,1408 +4324,3 @@ returned.  The solution sets are extended at the entry named `E`.
                     body.index( addresses[i] ).replaceWith variable.copy()
             newsol.set E, Match.makeExpressionFunction variable, body
             newsol
-
-
-
-# Background Computations
-
-This module defines an API for enqueueing background computations on groups
-in webLurch.  It provides an efficient means for running those computations,
-no matter how numerous they might be, while keeping the UI responsive.
-
-Warning:  If you do background computation in your document, you may find
-the user saving the document and exiting the editor (e.g., closing the
-browser tab) while your background computations are occurring.  When such a
-file is later loaded by the user, it will be in whatever intermediate state
-it was left in by those pending background computations.  To solve this
-problem, you may wish to listen to the `beforeSave` and `afterLoad` events
-in the editor.  (See
-[this function](../app/loadsaveplugin.litcoffee#saving-documents) and
-[this function](../app/loadsaveplugin.litcoffee#loading-documents) for
-details.)  For example, you could mark a document as pending recomputation
-when you begin background processing, and unmark it when that processing
-completes; in an `afterLoad` handler, if the document is marked as pending
-recomputation, fully reprocess the document from scratch.
-
-## Global Background object
-
-The first object defined herein is the global `Background` object, which
-encapsulates all activity that will take place "in the background."  This
-means that such activity, will not begin immediately, but will be queued for
-later processing (possibly in a thread other than the main UI thread).  It
-is called `Background` because you should think of this as encapsulating the
-very notion of running a job in the background.
-
-    window.Background =
-
-The first public API this global object provides is a way to register script
-functions as jobs that can be run in the background.  This does not enqueue
-a task for running; it simply gives a name to a function that can later be
-used in the background.  Code cannot be run in the backgorund unless it has
-first been added to this global library of background-runnable functions,
-using this very API.
-
-The optional third parameter is a dictionary of name-function pairs that
-will be installed in the background function's namespace when it is used.
-If the background function uses a Web Worker, these will be sent as strings
-to the worker for recreation into functions (so their environments will not
-be preserved).  If the background function is executed in the main thread
-(in environments that don't support Web Workers), a `with` clause will be
-used to ensure that the functions are in scope.  In that case, environments
-are preserved.  So write your functions independent of environment.
-
-The optional fourth parameter is an array of scripts to import into the web
-worker.  In a Web Worker implementation, these will be run using
-`importScripts`.  In a non-Web Worker implementation, these will do nothing;
-you should ensure that these same scripts are already imported into the
-environment from which this function is being called.
-
-        functions : { }
-        registerFunction : ( name, func, globals = { }, scripts = [ ] ) ->
-            window.Background.functions[name] =
-                function : func
-                globals : globals
-                scripts : scripts
-
-The second public API this global object provides is the `addTask` function,
-which lets you add a task to the background processing queue, to be handled
-as soon as earlier-added tasks are complete and resources are available.
-
-The first parameter must be the name of a function that has been passed to
-`registerFunction`.  If the name has not been registered, this task will not
-be added to the queue.  The second parameter must be a list of group objects
-on which to perform the given computation.  The third parameter is the
-callback function that will be called with the result when the computation
-is complete.
-
-Keep in mind that the goal should be for the registered function (whose name
-is provided here in `funcName`) to do the vast majority of the work of the
-computation, and that `callback` should simply take that result and store it
-somewhere or report it to the user.  The `callback` will be executed in the
-UI thread, and thus must be lightweight.  The function whose name is
-`funcName` will be run in the background, and thus can have arbitrary
-complexity.
-
-        runningTasks : [ ]
-        waitingTasks : [ ]
-        addTask : ( funcName, inputGroups, callback ) ->
-            newTask =
-                name : funcName
-                inputs : inputGroups
-                callback : callback
-                id : "#{funcName},#{group.id() for group in inputGroups}"
-
-Before we add the function to the queue, we filter the current "waiting"
-queue so that any previous copy of this exact same computation (same
-function name and input group list) is removed.  (If there were such a one,
-it would mean that it had been enqueued before some change in the document,
-which necessitated recomputing the same values based on new data.  Thus we
-throw out the old computation and keep the new, later one, since it may sit
-chronologically among a list of waiting-to-run computations in a way in
-which order is important.)  We only need to seek one such copy, since we
-filter every time one is added, so there cannot be more than one.
-
-            for task, index in window.Background.waitingTasks
-                if task.id is newTask.id
-                    window.Background.waitingTasks.splice index, 1
-                    break
-
-Then repeat the same procedure with the currently running tasks, except also
-call `terminate()` in the running task before deleting it.
-
-            for task, index in window.Background.runningTasks
-                if task.id is newTask.id
-                    task.runner?.worker?.terminate?()
-                    window.Background.runningTasks.splice index, 1
-                    break
-
-Now we can enqueue the task and call `update()` to possibly begin processing
-it.
-
-            window.Background.waitingTasks.push newTask
-            window.Background.update()
-
-The update function just mentioned will verify that as many tasks as
-possible are running concurrently.  That number will be determined by [the
-code below](#ideal-amount-of-concurrency).  The update function, however, is
-implemented here.
-
-        available : { }
-        update : ->
-            B = window.Background
-            while B.runningTasks.length < B.concurrency()
-                if not ( toStart = B.waitingTasks.shift() )? then return
-
-If we have a `BackgroundFunction` object that's not running, and is of the
-appropriate type, let's re-use it.  Otherwise, we must create a new one.
-Either way, add it to the running tasks list if we were able to create an
-appropriate `BackgroundFunction` instance.
-
-                runner = B.available[toStart.name]?.pop()
-                if not runner?
-                    data = B.functions[toStart.name]
-                    if not data? then continue
-                    runner = new BackgroundFunction data.function,
-                        data.globals, data.scripts
-                toStart.runner = runner
-                B.runningTasks.push toStart
-
-From here onward, we will be creating some callbacks, and thus need to
-protect the variable `toStart` from changes in later loop iterations.
-
-                do ( toStart ) ->
-
-When the task completes, we will want to remove it from the list of running
-tasks and place `runner` on the `available` list for reuse.  Then we should
-make another call to this very update function, in case the end of this task
-makes possible the start of another task, within the limits of ideal
-concurrency.
-
-We define this cleanup function to do all that, so we can use
-it in two cases below.
-
-                    cleanup = ->
-                        index = B.runningTasks.indexOf toStart
-                        B.runningTasks.splice index, 1
-                        ( B.available[toStart.name] ?= [ ] ).push runner
-                        window.Background.update()
-
-Start the background process.  Call `cleanup` whether the task succeeds or
-has an error, but only call the callback if it succeeds.
-
-                    runner.call( toStart.inputs... ).sendTo ( result ) ->
-                        cleanup()
-                        toStart.callback? result
-                    .orElse cleanup
-
-## Ideal amount of concurrency
-
-Because the Background object will be used to run tasks in the background,
-it will need to know how many concurrent tasks it should attempt to run.
-The answer is one per available core on the client's machine.  The client's
-machine will have some number, n, of cores, one of which will be for the UI.
-Thus n-1 will be available for background tasks.  We need to know n.  The
-following function (defined in
-[this polyfill](https://github.com/oftn/core-estimator), which this project
-imports) computes that value for later use.
-
-    navigator.getHardwareConcurrency -> # no body
-
-We then write the following function to compute the number of background
-tasks we should attempt to run concurrently.  It returns n-1, as described
-above.  It rounds that value up to 1, however, in the event that the machine
-has only 1 core.  Also, if the number of cores could not be (or has not yet
-been) computed, it returns 1.
-
-    window.Background.concurrency = ->
-        Math.max 1, ( navigator.hardwareConcurrency ? 1 ) - 1
-
-## `BackgroundFunction` class
-
-We define the following class for encapsulating functions that are ready to
-be run in the background.  For now, it runs them in the main thread, but
-this abstraction is ready for later changes when we add support for Web
-Workers.
-
-    BackgroundFunction = class
-
-The constructor stores in the `@function` member the function that this
-object is able to run in the background.
-
-        constructor : ( @function, @globals, @scripts ) ->
-
-The promise object, which will be returned from the `call` member, permits
-chaining.  Thus all of its method return the promise object itself.  There
-are only two methods, `sendTo`, for specifying the result callback, and
-`orElse`, for specifying the error callback.  Thus the use of the call
-member looks like `bgfunc.call( args... ).sendTo( resultHandler ).orElse(
-errorHandler )`.
-
-            @promise =
-                sendTo : ( callback ) =>
-                    @promise.resultCallback = callback
-                    if @promise.hasOwnProperty 'result'
-                        @promise.resultCallback @promise.result
-                    @promise
-                orElse : ( callback ) =>
-                    @promise.errorCallback = callback
-                    if @promise.hasOwnProperty 'error'
-                        @promise.errorCallback @promise.error
-                    @promise
-
-If Web Workers are supported in the current environment, we create one for
-this background function.  Otherwise, we do not, and we will have to fall
-back on a much simpler technique later.
-
-            if window.Worker
-                @worker = new window.Worker 'worker-solo.js'
-                @worker.addEventListener 'message', ( event ) =>
-                    @promise.result = event.data
-                    @promise?.resultCallback? event.data
-                , no
-                @worker.addEventListener 'error', ( event ) =>
-                    @promise.error = event
-                    @promise?.errorCallback? event
-                , no
-                @worker.postMessage setFunction : "#{@function}"
-                for own name, func of @globals
-                    @globals[name] = "#{func}"
-                @worker.postMessage install : @globals
-                @worker.postMessage import : @scripts
-
-Background functions need to be callable.  Calling them returns the promise
-object defined in the constructor, into which we can install callbacks for
-when the result is computed, or when an error occurs.
-
-        call : ( args... ) =>
-
-First, clear out any old data in the promise object from a previous call of
-this background function.
-
-            delete @promise.result
-            delete @promise.resultCallback
-            delete @promise.error
-            delete @promise.errorCallback
-
-Second, prepare all arguments (which must be Group objects) for use in the
-worker thread by serializing them.  If any of the groups on which we should
-run this function have been deleted since it was created, we quit and do
-nothing.
-
-            for group in arguments
-                if group.deleted then return
-            groups = ( group.toJSON() for group in args )
-
-Run the computation soon, but not now.  When it is run, store the result or
-error in the promise, and call the result or error handler, whichever is
-appropriate, assuming it has been defined by then.  If it hasn't been
-defined at that time, the result/error will be stored and set to the result
-or error callback the moment one is registered, using one of the two
-functions defined above, in the promise object.
-
-If Web Workers are supported, we use the one constructed in this object's
-constructor.  If not, we fall back on simply using a zero timer, the poor
-man's "background" processing.
-
-When Web Workers are used, we must first serialize each group passed to the
-web worker, because it cannot be passed as is, containing DOM objects.  So
-we do that in both cases, so that functions can be consistent, and not need
-to know whether they're running in a worker or not.
-
-            if @worker?
-                @worker.postMessage runOn : groups
-            else
-                setTimeout =>
-                    try
-                        `with ( this.globals ) {`
-                        @promise.result = @function groups...
-                        `}`
-                    catch e
-                        @promise.error = e
-                        @promise.errorCallback? @promise.error
-                        return
-                    @promise.resultCallback? @promise.result
-                , 0
-
-Return the promise object, for chaining.
-
-            @promise
-
-
-
-# Canvas Utilities
-
-This module defines several functions useful when working with the HTML5
-Canvas.
-
-## Curved arrows
-
-The following function draws an arrow along a cubic Bézier curve.  It
-requires the four control points, each as an (x,y) pair.  The arrowhead
-size can be adjusted with the final parameter, the altitude of the arrowhead
-triangle, measured in pixels
-
-    CanvasRenderingContext2D::bezierArrow =
-    ( x1, y1, x2, y2, x3, y3, x4, y4, size = 10 ) ->
-        unit = ( x, y ) ->
-            length = Math.sqrt( x*x + y*y ) or 1
-            x : x/length, y : y/length
-        @beginPath()
-        @moveTo x1, y1
-        @bezierCurveTo x2, y2, x3, y3, x4, y4
-        nearEnd =
-            x : @applyBezier x1, x2, x3, x4, 0.9
-            y : @applyBezier y1, y2, y3, y4, 0.9
-        nearEndVector = x : x4 - nearEnd.x, y : y4 - nearEnd.y
-        localY = unit nearEndVector.x, nearEndVector.y
-        localY.x *= size * 0.7
-        localY.y *= size
-        localX = x : localY.y, y : -localY.x
-        @moveTo x4-localX.x-localY.x, y4-localX.y-localY.y
-        @lineTo x4, y4
-        @lineTo x4+localX.x-localY.x, y4+localX.y-localY.y
-
-The following utility function is useful to the function above, as well as
-to other functions in the codebase.
-
-    CanvasRenderingContext2D::applyBezier = ( C1, C2, C3, C4, t ) ->
-        Math.pow( 1-t, 3 )*C1 + 3*Math.pow( 1-t, 2 )*t*C2 + \
-        3*( 1-t )*Math.pow( t, 2 )*C3 + Math.pow( t, 3 )*C4
-
-## Rounded rectangles
-
-The following function traces a rounded rectangle path in the context.  It
-sits entirely inside the rectangle from the upper-left point (x1,y1) to the
-lower-right point (x2,y2), and its corners are quarter circles with the
-given radius.
-
-It calls `beginPath()` and `closePath()` but does not stroke or fill the
-path.  You should do whichever (or both) of those you like.
-
-    CanvasRenderingContext2D::roundedRect = ( x1, y1, x2, y2, radius ) ->
-        @beginPath()
-        @moveTo x1 + radius, y1
-        @lineTo x2 - radius, y1
-        @arcTo x2, y1, x2, y1 + radius, radius
-        @lineTo x2, y2 - radius
-        @arcTo x2, y2, x2 - radius, y2, radius
-        @lineTo x1 + radius, y2
-        @arcTo x1, y2, x1, y2 - radius, radius
-        @lineTo x1, y1 + radius
-        @arcTo x1, y1, x1 + radius, y1, radius
-        @closePath()
-
-## Rounded zones
-
-The following function traces a rounded rectangle that extends from
-character in a word processor to another, which are on different lines, and
-thus the rectangle is stretched.  Rather than looking like a normal
-rectangle, the effect looks like the following illustration, with X
-indicating text and lines indicating the boundaries of the rounded zone.
-
-```
-  x x x x x x x x x x x x
-       /------------------+
-  x x x|x x x x x x x x x |
-+------+                  |
-| x x x x x x x x x x x x |
-|          +--------------|
-| x x x x x|x x x x x x x
-+----------/
-  x x x x x x x x x x x x
-```
-
-The corners marked with slashes are to be rounded, and the other corners are
-square.  The left and right edges are the edges of the canvas, minus the
-given values of `leftMargin` and `rightMargin`.  The y coordinates of the
-two interior horizontal lines are given by `upperLine` and `lowerLine`,
-respectively.
-
-It calls `beginPath()` and `closePath()` but does not stroke or fill the
-path.  You should do whichever (or both) of those you like.
-
-    CanvasRenderingContext2D::roundedZone = ( x1, y1, x2, y2,
-    upperLine, lowerLine, leftMargin, rightMargin, radius ) ->
-        @beginPath()
-        @moveTo x1 + radius, y1
-        @lineTo @canvas.width - rightMargin, y1
-        @lineTo @canvas.width - rightMargin, lowerLine
-        @lineTo x2, lowerLine
-        @lineTo x2, y2 - radius
-        @arcTo x2, y2, x2 - radius, y2, radius
-        @lineTo leftMargin, y2
-        @lineTo leftMargin, upperLine
-        @lineTo x1, upperLine
-        @lineTo x1, y1 + radius
-        @arcTo x1, y1, x1 + radius, y1, radius
-        @closePath()
-
-## Rectangle overlapping
-
-The following routine computes whether two rectangles collide.  The first is
-given by upper-left corner (x1,y1) and lower-right corner (x2,y2).  The
-second is given by upper-left corner (x3,y3) and lower-right corner (x4,y4).
-The routine returns true iff the interior of the rectangles intersect.
-(If they intersect only on their boundaries, false is returned.)
-
-    window.rectanglesCollide = ( x1, y1, x2, y2, x3, y3, x4, y4 ) ->
-        not ( x3 >= x2 or x4 <= x1 or y3 >= y2 or y4 <= y1 )
-
-## Rendering HTML to Images and/or Canvases
-
-This section provides several routines related to converting arbitrary HTML
-into image data in various forms (SVG, Blob, object URLs, base64 encoding)
-and for drawing such forms onto an HTML canvas.
-
-This first function converts arbitrary (strictly well-formed!) HTML into a
-Blob containing SVG XML for the given HTML.  This makes use of the
-document's body, it can only be called once page loading has completed.
-
-    window.svgBlobForHTML = ( html, style = 'font-size:12px' ) ->
-
-First, compute its dimensions using a temporary span in the document.
-
-        span = document.createElement 'span'
-        span.setAttribute 'style', style
-        span.innerHTML = html
-        document.body.appendChild span
-        span = $ span
-        width = span.width() + 2 # cushion for error
-        height = span.height() + 2 # cushion for error
-        span.remove()
-
-Then build an SVG and store it as blob data.  (See the next function in this
-file for how the blob is built.)
-
-        window.makeBlob "<svg xmlns='http://www.w3.org/2000/svg'
-            width='#{width}' height='#{height}'><foreignObject width='100%'
-            height='100%'><div xmlns='http://www.w3.org/1999/xhtml'
-            style='#{style}'>#{html}</div></foreignObject></svg>",
-            'image/svg+xml;charset=utf-8'
-
-The previous function makes use of the following cross-browser Blob-building
-utility gleaned from [this StackOverflow
-post](http://stackoverflow.com/questions/15293694/blob-constructor-browser-compatibility).
-
-    window.makeBlob = ( data, type ) ->
-        try
-            new Blob [ data ], type : type
-        catch e
-            # TypeError old chrome and FF
-            window.BlobBuilder = window.BlobBuilder ?
-                                 window.WebKitBlobBuilder ?
-                                 window.MozBlobBuilder ?
-                                 window.MSBlobBuilder
-            if e.name is 'TypeError' and window.BlobBuilder?
-                bb = new BlobBuilder()
-                bb.append data.buffer
-                bb.getBlob type
-            else if e.name is 'InvalidStateError'
-                # InvalidStateError (tested on FF13 WinXP)
-                new Blob [ data.buffer ], type : type
-
-Now we move on to a routine for rendering arbitrary HTML to a canvas, but
-there are some preliminaries we need to build first.
-
-Canvas rendering happens asynchronously.  If the routine returns false, then
-it did not render, but rather began preparing the HTML for rendering (by
-initiating the background rendering of the HTML to an image).  Those results
-will then be cached, so later calls to this routine will return true,
-indicating success (immediate rendering).
-
-To support this, we need a cache.  The following routines define the cache.
-
-    drawHTMLCache = order : [ ], maxSize : 100
-    cacheLookup = ( html, style ) ->
-        key = JSON.stringify [ html, style ]
-        if drawHTMLCache.hasOwnProperty key then drawHTMLCache[key] \
-            else null
-    addToCache = ( html, style, image ) ->
-        key = JSON.stringify [ html, style ]
-        drawHTMLCache[key] = image
-        markUsed html, style
-    markUsed = ( html, style ) ->
-        key = JSON.stringify [ html, style ]
-        if ( index = drawHTMLCache.order.indexOf key ) > -1
-            drawHTMLCache.order.splice index, 1
-        drawHTMLCache.order.unshift key
-        pruneCache()
-    pruneCache = ->
-        while drawHTMLCache.order.length > drawHTMLCache.maxSize
-            delete drawHTMLCache[drawHTMLCache.order.pop()]
-
-And now, the rendering routine, which is based on code taken from [this MDN
-article](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Drawing_DOM_objects_into_a_canvas).
-
-    CanvasRenderingContext2D::drawHTML =
-    ( html, x, y, style = 'font-size:12px' ) ->
-
-If the given HTML has already been rendered to an image that remains in the
-cache, just use that immediately and return success.
-
-        if image = cacheLookup html, style
-            @drawImage image, x, y
-            markUsed html, style
-            return yes
-
-Otherwise, begin rendering that HTML to an image, for later insertion into
-the cache, and return (temporary) failure.  Start by creating the image and
-assign its URL, so that when rendering completes asynchronously, we can
-store the results in the cache.
-
-        url = objectURLForBlob svgBlobForHTML html, style
-        image = new Image()
-        image.onload = ->
-            addToCache html, style, image
-            ( window.URL ? window.webkitURL ? window ).revokeObjectURL url
-        image.onerror = ( error ) ->
-            addToCache html, style, new Image()
-            console.log 'Failed to load SVG with this <foreignObject> div
-                content:', html
-        image.src = url
-        no
-
-The following routine queries the same cache to determine the width and
-height of a given piece of HTML that could be rendered to the canvas.  If
-the HTML is not in the cache, this returns null.  Otherwise, it returns an
-object with width and height attributes.
-
-    CanvasRenderingContext2D::measureHTML =
-    ( html, style = 'font-size:12px' ) ->
-        if image = cacheLookup html, style
-            markUsed html, style
-            width : image.width
-            height : image.height
-        else
-            @drawHTML html, 0, 0, style # forces caching
-            null
-
-The `drawHTML` function makes use of the following routine, which converts a
-Blob into an image URL using `createObjectURL`.
-
-    window.objectURLForBlob = ( blob ) ->
-        ( window.URL ? window.webkitURL ? window ).createObjectURL blob
-
-The following does the same thing, but creates a URL with the base-64
-encoding of the Blob in it.  This must be done asynchronously, but then the
-URL can be used anywhere, not just in this script environment.  The result
-is sent to the given callback.
-
-    window.base64URLForBlob = ( blob, callback ) ->
-        reader = new FileReader
-        reader.onload = ( event ) -> callback event.target.result
-        reader.readAsDataURL blob
-
-
-
-# Utility functions for working with the DOM
-
-This file defines all of its functions inside one enormous `installIn`
-function, which installs those methods into a particular `window` instance.
-This is so that it can be used in an iframe in addition to the main window.
-This file itself calls `installIn` on the main `window` instance, so you do
-not need to.  But if you also wish to use these functions within an iframe,
-you can call `installIn` on the `window` instance for that iframe.
-
-    window.installDOMUtilitiesIn = ( window ) ->
-
-## Address
-
-The address of a node `N` in an ancestor node `M` is an array `a` of
-non-negative integer indices such that
-`M.childNodes[a[0]].childNodes[a[1]]. ... .childNodes[a[a.length-1]] == N`.
-Think of it as the path one must walk through children to get from `M` down
-to `N`.  Special cases:
- * If the array is of length 1, then `M == N.parentNode`.
- * If the array is empty, `[]`, then `M == N`.
- * If `M` is not an ancestor of `N`, then we say the address of `N`
-   within `M` is null (not an array at all).
-
-The following member function of the `Node` class adds the address function
-to that class.  Using the `M` and `N` from above, one would call it like
-`N.address M`.  [See below](#index) for its inverse function, `index`.
-
-It computes the address of any one DOM node within any other. If the
-parameter (the ancestor, called `M` above) is not supplied, then it defaults
-to the top-level Node above `N` (i.e., the furthest-up ancestor, with no
-`.parentNode`, which usually means it's the global variable `document`).
-
-        window.Node::address = ( ancestor = null ) ->
-
-The base case comes in two flavors. First, if the parameter is this node,
-then the correct result is the empty array.
-
-            if this is ancestor then return []
-
-Second, if we've reached the top level then we must consider the second
-parameter.  Were we restricted to a specific ancestor?  If so, we didn't
-find it, so return null.  If not, return the empty array, because we have
-reached the top level.
-
-            if not @parentNode
-                return if ancestor then null else []
-
-Otherwise, recur up the ancestor tree, and concatenate our own index in our
-parent with the array we compute there, if there is one.
-
-            recur = @parentNode.address ancestor
-            if recur is null then return null
-            recur.concat [ @indexInParent() ]
-
-You'll notice that the final line of code above depends on the
-as-yet-undefined helper function `indexInParent()`.  We therefore create
-that simple helper function now, which is also a useful member of the `Node`
-prototype.
-
-        window.Node::indexInParent = ->
-            if @parentNode
-                Array::slice.apply( @parentNode.childNodes ).indexOf this
-            else
-                -1
-
-## Index
-
-This function is an inverse for `address`, [defined above](#address).
-
-The node at index `I` in node `N` is the descendant `M` of `N` in the node
-hierarchy such that `M.address N` is `I`. In short, if `N` is any ancestor
-of `M`, then `N.index(M.address(N)) == M`.
-
-Keeping in mind that an address is simply an array of nonnegative integers,
-the implementation is simply repeated lookups in some `childNodes` arrays.
-It is therefore quite short, with most of the code going to type safety.
-
-        window.Node::index = ( address ) ->
-
-Require that the parameter be an array.
-
-            if address not instanceof Array
-                throw Error 'Node address function requires an array'
-
-If the array is empty, we've hit the base case of this recursion.
-
-            if address.length is 0 then return this
-
-Othwerise, recur on the child whose index is the first element of the given
-address.  There are two safety checks here.  First, we verify that the index
-we're about to look up is a number (otherwise things like `[0]` will be
-treated as zero, which is probably erroneous).  Second, the `?.` syntax
-below ensures that that index is valid, so that we do not attempt to call
-this function recursively on something other than a node.
-
-            if typeof address[0] isnt 'number' then return undefined
-            @childNodes[address[0]]?.index address[1..]
-
-## Serialization
-
-### From DOM Nodes to objects
-
-These methods are for serializing and unserializing DOM nodes to objects
-that are amenable to JSON processing.
-
-First, the function for converting a DOM Node to an object that can be
-serialized with `JSON.stringify`.  After this function is defined, one can
-take any node `N` and call `N.toJSON()`.
-
-        window.Node::toJSON = ( verbose = yes ) ->
-
-The `verbose` parameter uses human-readable object keys, and is the default.
-A more compact version can be obtained by setting that value to false.  The
-inverse function below can handle either format.  The shrinking of keys
-follows the following convention.
- * tagName becomes t
- * attributes becomes a
- * children becomes c
- * comment becomes m
- * content becomes n
-
-Text nodes are simply returned as strings.
-
-            if this instanceof window.Text then return @textContent
-
-Comment nodes are returned as objects with a comment flag and a text content
-attribute.
-
-            if this instanceof window.Comment
-                return if verbose
-                    comment : yes, content : @textContent
-                else
-                    m : yes, n : @textContent
-
-All other types of nodes must be elements in order to be serialized by this
-routine.
-
-            if this not instanceof window.Element
-                throw Error "Cannot serialize this node: #{this}"
-
-A serialized Element is an object with up to three properties, tag name,
-attribute dictionary, and child nodes array.  We create that object, then
-add the attributes dictionary and children array if and only if they are
-nonempty.
-
-            result = tagName : @tagName
-            if @attributes.length
-                result.attributes = { }
-                for attribute in @attributes
-                    result.attributes[attribute.name] = attribute.value
-            if @childNodes.length
-                result.children =
-                    ( chi.toJSON verbose for chi in @childNodes )
-
-If verbosity is disabled, change all the object keys to one-letter
-abbreviations.
-
-            if not verbose
-                result.t = result.tagName ; delete result.tagName
-                result.a = result.attributes ; delete result.attributes
-                result.c = result.children ; delete result.children
-            result
-
-### From objects to DOM Nodes
-
-Next, the function for converting an object produced with `N.toJSON()` back
-into an actual DOM Node.  This function requires its one parameter to be one
-of two types, either a string (meaning that a text node should be returned)
-or an object with the three properties given above (tagName, attributes,
-children, meaning that an Element should be returned).  One calls it by
-writing `Node.toJSON object`.
-
-        window.Node.fromJSON = ( json ) ->
-
-Handle the easy case first:  strings yield text nodes.
-
-            if typeof json is 'string'
-                return window.document.createTextNode json
-
-Next, if we can find a comment flag in the object, then we create and return
-a comment.
-
-            if 'comment' of json and json.comment
-                return window.document.createComment json.content
-            if 'm' of json and json.m
-                return window.document.createComment json.n
-
-The only other possibility is that the object encodes an Element. So if we
-can't get a tag name from the object, we cannot proceed, and thus the input
-was invalid.
-
-            if not 'tagName' of json and not 't' of json
-                throw Error "Object has no t[agName]: #{this}"
-
-Create an element using the tag name, add any attributes from the given
-object, and recur on the child array if there is one.
-
-            result = window.document.createElement json.tagName or json.t
-            if attributes = json.attributes or json.a
-                for own key, value of attributes
-                    result.setAttribute key, value
-            if children = json.children or json.c
-                for child in children
-                    result.appendChild Node.fromJSON child
-            result
-
-## Next and previous leaves
-
-Although the DOM provides properties for the next and previous siblings of
-any node, it does not provide a method for finding the next or previous
-*leaf* nodes.  The following additions to the Node prototype do just that.
-
-One can call `N.nextLeaf()` to get the next leaf node in the document
-strictly after `N` (regardless of whether `N` itself is a leaf), or
-`N.nextLeaf M` to restrict the search to within the ancestor node `M`.  `M`
-defaults to the entire document.  `M` must be an ancestor of `N`, or this
-default is used.
-
-        window.Node::nextLeaf = ( container = null ) ->
-
-Walk up the DOM tree until we can find a previous sibling.  Do not step
-outside the bounds of the document or `container`.
-
-            walk = this
-            while walk and walk isnt container and not walk.nextSibling
-                walk = walk.parentNode
-
-If no next sibling could be found, quit now, returning null.
-
-            walk = walk?.nextSibling
-            if not walk then return null
-
-We have a next sibling, so return its first leaf node.
-
-            while walk.childNodes.length > 0 then walk = walk.childNodes[0]
-            walk
-
-The following routine is analogous to the previous one, but in the opposite
-direction (finding the previous leaf node, within the given `container`, if
-such a leaf node exists).  Its code is not documented because it is so
-similar to the previous routine, which is documented.
-
-        window.Node::previousLeaf = ( container = null ) ->
-            walk = this
-            while walk and walk isnt container and not walk.previousSibling
-                walk = walk.parentNode
-            walk = walk?.previousSibling
-            if not walk then return null
-            while walk.childNodes.length > 0
-                walk = walk.childNodes[walk.childNodes.length - 1]
-            walk
-
-## More convenient `remove` method
-
-Some browsers provide the `remove` method in the `Node` prototype, but some
-do not.  To make things standard, I create the following member in the
-`Node` prototype.  It guarantees that for any node `N`, the call
-`N.remove()` has the same effect as the (more verbose and opaque) call
-`N.parentNode.removeChild N`.
-
-        window.Node::remove = -> @parentNode?.removeChild this
-
-## Adding classes to and removing classes from elements
-
-It is handy to have methods that add and remove CSS classes on HTML element
-instances.
-
-First, for checking if one is there:
-
-        window.Element::hasClass = ( name ) ->
-            classes = ( @getAttribute 'class' )?.split /\s+/
-            classes and name in classes
-
-Next, for adding a class to an element:
-
-        window.Element::addClass = ( name ) ->
-            classes = ( ( @getAttribute 'class' )?.split /\s+/ ) or []
-            if name not in classes then classes.push name
-            @setAttribute 'class', classes.join ' '
-
-Last, for removing one:
-
-        window.Element::removeClass = ( name ) ->
-            classes = ( ( @getAttribute 'class' )?.split /\s+/ ) or []
-            classes = ( c for c in classes when c isnt name )
-            if classes.length > 0
-                @setAttribute 'class', classes.join ' '
-            else
-                @removeAttribute 'class'
-
-## Converting (x,y) coordinates to nodes
-
-The browser will convert an (x,y) coordinate to an element, but not to a
-text node within the element.  The following routine fills that gap.  Thanks
-to [this StackOverflow answer](http://stackoverflow.com/a/13789789/670492).
-
-        window.document.nodeFromPoint = ( x, y ) ->
-            elt = window.document.elementFromPoint x, y
-            for node in elt.childNodes
-                if node instanceof window.Text
-                    range = window.document.createRange()
-                    range.selectNode node
-                    for rect in range.getClientRects()
-                        if rect.left < x < rect.right and \
-                           rect.top < y < rect.bottom then return node
-            return elt
-
-## Installation into main window global namespace
-
-As mentioned above, we defined all of the functions in one big `installIn`
-function so that we can install them in an iframe in addition to the main
-window.  We now call `installIn` on the main `window` instance, so clients
-do not need to do so.
-
-    installDOMUtilitiesIn window
-
-
-
-# Parsing Module
-
-## Introduction
-
-This module implements the Earley Parser, an algorithm [given on Wikipedia
-here](https://en.wikipedia.org/wiki/Earley_parser).  Much of this code was
-translated from [the desktop version of Lurch](www.lurchmath.org).
-
-## Utilities
-
-The following lines ensure that this file works in Node.js, for testing.
-
-    if not exports? then exports = module?.exports ? window
-    if require? then require './utils'
-
-An Earley state is an object of the following form.  The `lhs` and `rhs`
-together are the rule currently being matched, `pos` is the current
-position in that production, a zero-based index through all the interstitial
-points in `rhs` (zero being before the whole thing, 1 after the first
-entry, etc.), `ori` the position in the input text at which the match
-began (called the origin), and `got` is the list of tokens parsed so far.
-```
-{
-    lhs : categoryname,
-    rhs : [ ... ],
-    pos : integerindex,
-    ori : integerindex,
-    got : [ ... ]
-}
-```
-A parsed token is either a plain string containing the terminal or an array
-whose first element is the category name and the rest of which are the
-terminals and nonterminals in its parsing.
-
-    getNext = ( state ) ->
-        if state.pos < state.rhs.length then state.rhs[state.pos] else null
-
-The following simple tool is used to copy state objects.  It is a shallow
-copy in all except the `got` array.
-
-    copyState = ( state ) ->
-        lhs : state.lhs
-        rhs : state.rhs
-        pos : state.pos
-        ori : state.ori
-        got : state.got[..]
-
-We will later need to compare two arrays of strings and/or regular
-expressions for equality.  This function does so.
-
-    equalArrays = ( array1, array2 ) ->
-        if array1.length isnt array2.length then return no
-        for entry1, index in array1
-            entry2 = array2[index]
-            if entry1 instanceof RegExp
-                if entry2 not instanceof RegExp or \
-                    entry1.source isnt entry2.source then return no
-            else
-                if entry1 isnt entry2 then return no
-        yes
-
-## Grammar class
-
-All of the functionality of this module is embedded in a class called
-`Grammar`, which lets you define new grammars and then run them on strings
-to parse those strings.  This section defines that class.
-
-As mentioned on the Wikipedia page linked to above, a grammar is a set of
-rules of the form `C -> A1 A2 ... An` where `C` is the name of a category
-and each `Ai` can be a category name or a terminal.
-
-The `Grammar` class defined below stores a grammar as an object whose keys
-are category names with values of the following form.
-```
-    [
-        [ 'catname', 'catname', /terminal/, /terminal/, ... ],
-        [ 'catname', /terminal/, 'catname', /terminal/, ... ],
-        ...
-    ],
-```
-Each row in the two-dimensional array represents the right-hand side of one
-rule in the grammar, whose left hand side is the category name under which
-the entire two-dimensional array is stored.
-
-The entries in the arrays can be strings (which signify the names of
-non-terminals) or regular expressions (which signify that they are
-terminals, which must match the regular expression).
-
-Now we begin the class.
-
-    exports.Grammar = class Grammar
-
-## Constructor
-
-Indicate which of the categories is the starting category by passing its
-name to a grammar when you construct one.
-
-        constructor : ( @START ) ->
-            @rules = { }
-            @defaults =
-                addCategories : yes
-                collapseBranches : no
-                showDebuggingOutput : no
-                expressionBuilder : null
-                tokenizer : null
-                comparator : JSON.equals
-                maxIterations : -1 # which means no maximum
-
-The default options for the parsing algorithm are initialized in the
-constructor above, but you can change them using the following routine.  The
-first parameter is the name of the option (from the list immediately above)
-and the second parameter is its new value.  The meaning of these options is
-documented [below](#earley-algorithm).
-
-        setOption : ( optionName, optionValue ) =>
-            @defaults[optionName] = optionValue
-
-Add a rule to the grammar by specifying the category name and the sequence
-of Ai that appear on the right hand side.  This creates/extends the
-two-dimensional array described above.
-
-You can pass more than one sequence by providing additional parameters, to
-add them all at once.  You can also provide a string instead of an array,
-and it will be converted into an array by splitting at spaces as if it were
-a string.  Regular expressions will be automatically wrapped in `^...$` for
-you, so that they are always tested against the entire string.
-
-        addRule : ( categoryName, sequences... ) =>
-            for sequence in sequences
-                if sequence instanceof RegExp
-                    sequence = [ sequence ]
-                if sequence not instanceof Array
-                    sequence = "#{sequence}".split ' '
-                for entry, index in sequence
-                    if entry instanceof RegExp
-                        sequence[index] = new RegExp "^#{entry.source}$"
-                ( @rules[categoryName] ?= [ ] ).push sequence
-
-## Earley Algorithm
-
-The following function is the workhorse of this module.  It assumes that the
-input is a string of a nonzero length.  Options is not a required parameter,
-but if it is present it should be an object with some subset of the
-following properties.  Any unspecified properties take the defaults given in
-the constructor for this class, unless you changed them with `setOption`,
-defined [above](#constructor).
- * `addCategories : true` iff category names should be prepended to each
-   match sequence
- * `collapseBranches : true` iff one-argument match sequences should be
-   collapsed, as in `[[[[a]]]] -> a`
- * `showDebuggingOutput : true` iff lots of debugging spam should be dumped
-   to the console as the algorithm executes
- * `expressionBuilder` can be set to a function that will be called each
-   time a production is completed.  It will receive as input the results of
-   that production (wrapped in an array if `collapseBranches` is true, with
-   the category name prepended if `addCategories` is true) and it can return
-   any object to replace that array in the final result.  Since this will be
-   called at every level of the hierarchy, you can use this to recursively
-   build expressions from the leaves upwards.  Because it will need to be
-   copyable, outputs are restricted to JSON data.
- * `tokenizer` can be an instance of the `Tokenizer` class
-   [defined later in this module](#tokenizing), and if it is, it will be
-   applied to any string input received by the parser before the parser does
-   anything with it.  This way you can simply place the tokenizer inside the
-   parser and forget about it; it will be run automatically.
- * `comparator` is used to compare two results before returning the full
-   list, so that duplicates can be removed.  This defaults to a JSON-based
-   comparison, but will therefore go into an infinite loop for circular
-   structures.  Feel free to provide a different one if the default does not
-   meet your needs.  To return duplicates, simply set this to `-> no`.
- * `maxIterations` defaults to infinite, but can be specified as a positive
-   integer, and the parsing algorithm will not iterate its innermost loops
-   any more than this many times.  This can be useful if you have a
-   suspected infinite loop in a grammar, and want to debug it.
-
-This algorithm is documented to some degree, but it will make much more
-sense if you have read the Wikipedia page cited at the top of this file.
-
-        parse : ( input, options = { } ) =>
-            options.addCategories ?= @defaults.addCategories
-            options.collapseBranches ?= @defaults.collapseBranches
-            options.showDebuggingOutput ?= @defaults.showDebuggingOutput
-            options.expressionBuilder ?= @defaults.expressionBuilder
-            expressionBuilderFlag = { }
-            options.tokenizer ?= @defaults.tokenizer
-            options.comparator ?= @defaults.comparator
-            options.maxIterations ?= @defaults.maxIterations
-            debug = if options.showDebuggingOutput then \
-                -> console.log arguments... else ->
-            debug '\n\n'
-
-Run the tokenizer if there is one, and the input needs it.
-
-            if options.tokenizer? and typeof input is 'string'
-                input = options.tokenizer.tokenize input
-
-Initialize the set of states to the array `[ [], [], ..., [] ]`, one entry
-for each interstice between characters in `input`, including one for before
-the first character and one for after the last.
-
-            stateGrid = ( [] for i in [0..input.length] )
-
-Push all productions for the starting non-terminal onto the initial state
-set.
-
-            stateGrid[0].push
-                lhs : ''
-                rhs : [ @START ]
-                pos : 0
-                ori : 0
-                got : []
-
-Do the main nested loop which solves the whole problem.
-
-            numIterationsDone = 0
-            for stateSet, i in stateGrid
-                debug "processing stateSet #{i} in this stateGrid
-                    (with input #{input}):"
-                debug '----------------------'
-                for tmpi in [0...stateGrid.length]
-                    debug "|    state set #{tmpi}:"
-                    skipped = 0
-                    for tmpj in [0...stateGrid[tmpi].length]
-                        if stateGrid[tmpi].length < 15 or \
-                           stateGrid[tmpi][tmpj].pos > 0
-                            debug "|        entry #{tmpj}:
-                                #{debugState stateGrid[tmpi][tmpj]}"
-                        else
-                            skipped++
-                    if skipped > 0
-                        debug "|    (plus #{skipped} at pos 0 not shown)"
-                debug '----------------------'
-
-The following loop is written in this indirect way (not using `for`) because
-the contents of `stateSet` may be modified within the loop, so we need to be
-sure that we do not pre-compute its length, but allow it to grow.
-
-                j = 0
-                while j < stateSet.length
-                    state = stateSet[j]
-                    debug "entry #{j}:", debugState state
-
-There are three possibilities.
- * The next state is a terminal,
- * the next state is a production, or
- * there is no next state.
-Each of these is handled by a separate sub-task of the Earley algorithm.
-
-                    next = getNext state
-                    debug 'next:', next
-                    if next is null
-
-This is the case in which there is no next state.  It is handled by running
-the "completer":  We just completed a nonterminal, so mark progress in
-whichever rules spawned it by copying them into the next column in
-`stateGrid`, with progress incremented one step.
-
-I make one extension to the Earley algorithm at this point to prevent a
-simple type of cyclicity.  For example, if there are production rules A -> B
-and B -> A, then upon completing an A, we will also complete a B, and then
-an A again, and so on ad infinitum.  Thus I create a function that, if the
-`addCategories` option is enabled, will prevent this simple type of infinite
-loop by preventing the second completion of the same array by any rule.
-
-                        # duplicateLabel = ( got ) ->
-                        #     if not options.addCategories then return no
-                        #     length = if options.expressionBuilder then 3 \
-                        #         else 2
-                        #     walk = got
-                        #     firstLabel = null
-                        #     while walk.length is length
-                        #         if firstLabel is null
-                        #             firstLabel = walk[length-2]
-                        #         else
-                        #             debug 'comparing', firstLabel, 'to',
-                        #                 walk[length-2]
-                        #             if walk[length-2] is firstLabel
-                        #                 return yes
-                        #         walk = walk[length-1]
-                        #     no
-
-Then we proceed with the code for the completer.
-
-                        debug 'considering if this completion matters to
-                            state set', state.ori
-                        for s, k in stateGrid[state.ori]
-                            if getNext( s ) is state.lhs
-                                s = copyState s
-                                s.pos++
-                                got = state.got[..]
-                                if options.addCategories
-                                    got.unshift state.lhs
-                                if options.expressionBuilder?
-                                    got.unshift expressionBuilderFlag
-                                if options.collapseBranches and \
-                                    got.length is 1 then got = got[0]
-                                # if duplicateLabel got
-                                #     debug 'duplicate label -- truncating
-                                #         search along that path'
-                                #     continue
-                                s.got.push got
-                                stateGrid[i].push s
-                                debug "completer added this to #{i}:",
-                                    debugState s
-                                if numIterationsDone++ > \
-                                   options.maxIterations > 0
-                                    throw 'Maximum number of iterations
-                                        reached.'
-                        j++
-                        continue
-                    if i >= input.length then j++ ; continue
-                    debug 'is it a terminal?', next instanceof RegExp
-                    if next instanceof RegExp
-
-This is the case in which the next state is a terminal.  It is handled by
-running the "scanner":  If the next terminal in `state` is the one we see
-coming next in the input string, then find every production at that
-terminal's origin that contained that terminal, and mark progress here.
-
-                        if next.test input[i]
-                            copy = copyState state
-                            copy.pos++
-                            copy.got.push input[i]
-                            stateGrid[i+1].push copy
-                            debug "scanner added this to #{i+1}:",
-                                debugState copy
-                        j++
-                        continue
-                    if not @rules.hasOwnProperty next
-                        throw "Unknown non-terminal in grammar rule:
-                            #{next}"
-
-This is the case in which the next state is a non-terminal, i.e., the lhs of
-one or more rules.  It is handled by running the "predictor:"  For every
-rule that starts with the non-terminal that's coming next, add that rule to
-the current state set so that it will be explored in future passes through
-the inner of the two main loops.
-
-                    rhss = @rules[next]
-                    debug "rhss: [#{rhss.join('],[')}]"
-                    for rhs, k in rhss
-                        found = no
-                        for s in stateSet
-                            if s.lhs is next and equalArrays( s.rhs, rhs ) \
-                                    and s.pos is 0
-                                found = yes
-                                break
-                        if not found
-                            stateSet.push
-                                lhs : next
-                                rhs : rhs
-                                pos : 0
-                                ori : i
-                                got : []
-                            debug 'adding this state:',
-                                debugState stateSet[stateSet.length-1]
-                    j++
-                    if numIterationsDone++ > options.maxIterations > 0
-                        throw 'Maximum number of iterations reached.'
-            debug "finished processing this stateGrid
-                (with input #{input}):"
-            debug '----------------------'
-            for tmpi in [0...stateGrid.length]
-                debug "|    state set #{tmpi}:"
-                skipped = 0
-                for tmpj in [0...stateGrid[tmpi].length]
-                    if stateGrid[tmpi].length < 15 or \
-                       stateGrid[tmpi][tmpj].pos > 0
-                        debug "|        entry #{tmpj}:
-                            #{debugState stateGrid[tmpi][tmpj]}"
-                    else
-                        skipped++
-                if skipped > 0
-                    debug "|    (plus #{skipped} at pos 0 not shown)"
-            debug '----------------------'
-
-The main loop is complete.  Any completed production in the final state set
-that's marked as a result (and thus coming from state 0 to boot) is a valid
-parsing and should be returned.  We find such productions with this loop:
-
-            results = [ ]
-            for stateSet in stateGrid[stateGrid.length-1]
-                if stateSet.lhs is '' and getNext( stateSet ) is null
-                    result = stateSet.got[0]
-
-When we find one, we have some checks to do before returning it.  First,
-recursively apply `expressionBuilder`, if the client asked us to.
-
-                    if options.expressionBuilder?
-                        recur = ( obj ) ->
-                            if obj not instanceof Array or \
-                               obj[0] isnt expressionBuilderFlag
-                                return obj
-                            args = ( recur o for o in obj[1..] )
-                            if args.length is 1 and options.collapseBranches
-                                args = args[0]
-
-If the expression builder function returns undefined for any subexpression
-of the whole, we treat that as an error (saying the expression cannot be
-built for whatever application-specific reason the builder function has) and
-we thus do not include that result in the list.
-
-                            if args.indexOf( undefined ) > -1
-                                return undefined
-                            options.expressionBuilder args
-                        result = recur result
-                        if not result? then continue
-
-Second, don't return any duplicates.  So check to see if we've already seen
-this result before we add it to the final list of results to return.
-
-                    found = no
-                    for previous in results
-                        if options.comparator previous, result
-                            found = yes
-                            break
-                    if not found then results.push result
-
-Now return the final result list.
-
-            results
-
-## Tokenizing
-
-We also provide a class for doing simple tokenization of strings into arrays
-of tokens, which can then be passed to a parser.  To use this class, create
-an instance, add some token types using the `addType` function documented
-below, then either call its `tokenize` function yourself on a string, or
-just set this tokenizer as the default tokenizer on a parser.
-
-    exports.Tokenizer = class Tokenizer
-        constructor : -> @tokenTypes = [ ]
-
-This function adds a token type to this object.  The first parameter is the
-regular expression used to match the tokens.  The second parameter can be
-either of three things:
- * If it is a function, that function will be run on every instance of the
-   token that's found in any input being tokenized, and the output of the
-   function used in place of the token string in the return value from this
-   tokenizer.  But if the function returns null, the tokenizer will omit
-   that token from the output array.  This is useful for, say, removing
-   whitespace:  `addType( /\s/, -> null )`.  The function will actually
-   receive two parameters, the second being the regular expresison match
-   object, which can be useful if there were captured subexpressions.
- * If it is a string, that string will be used as the output token instead
-   of the actual matched token.  All `%n` patterns in the output will be
-   simultaneously replaced with the captured expressions of the type's
-   regular expression (with zero being the entire match).  This is useful
-   for reformatting tokens by adding detail.  Example:
-   `addType( /-?[0-9]+/, 'Integer(%0)' )`
- * The second parameter may be omitted, and it will be treated as the
-   identity function, as in the first bullet point above.
-
-        addType : ( regexp, formatter = ( x ) -> x ) =>
-            if regexp.source[0] isnt '^'
-                regexp = new RegExp "^(?:#{regexp.source})"
-            @tokenTypes.push
-                regexp : regexp
-                formatter : formatter
-
-Tokenizing is useful for grouping large, complex chunks of text into one
-piece before parsing, so that the parsing rules can be simpler and clearer.
-For example, a regular expression that groups double-quoted string literals
-into single tokens is `/"(?:[^\\"]|\\\\|\\")*"/`.  That's a much shorter bit
-of code to write than a complex set of parsing rules that accomplish the
-same purpose; it will also run more efficiently than those rules would.
-
-The following routine tokenizes the input, returning one of two things:
- * an array of tokens, each of which was the output of the formatter
-   function/string provided to `addType()`, above, or
- * null, because some portion of the input string did not match any of the
-   token types added with `addType()`.
-
-The routine simply tries every regular expression of every token type added
-with `addType()`, above, and when one succeeds, it pops that text off the
-input string, saving it to a results list after passing it through the
-corresponding formatter.  If at any point none of the regular expressions
-matches the beginning of the remaining input, null is returned.
-
-        tokenize : ( input ) =>
-            result = [ ]
-            while input.length > 0
-                original = input.length
-                for type in @tokenTypes
-                    if not match = type.regexp.exec input then continue
-                    input = input[match[0].length..]
-                    if type.formatter instanceof Function
-                        next = type.formatter match[0], match
-                        if next? then result.push next
-                    else
-                        format = "#{type.formatter}"
-                        token = ''
-                        while next = /\%([0-9]+)/.exec format
-                            token += format[...next.index] + match[next[1]]
-                            format = format[next.index+next[0].length..]
-                        result.push token + format
-                    break
-                if input.length is original then return null
-            result
-
-## Debugging
-
-The following debugging routines are used in some of the code above.
-
-    debugNestedArrays = ( ary ) ->
-        if ary instanceof Array
-            if '{}' is JSON.stringify ary[0] then ary = ary[1...]
-            '[' + ary.map( debugNestedArrays ).join( ',' ) + ']'
-        else
-            ary
-    debugState = ( state ) ->
-        "(#{state.lhs} -> #{state.pos}in[#{state.rhs}], #{state.ori}) got
-            #{debugNestedArrays state.got}"
