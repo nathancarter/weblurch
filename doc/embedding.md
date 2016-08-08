@@ -23,7 +23,7 @@ The author must do two things to embed Lurch in a blog/website:
  2. Create blocks (such as DIVs) with the class "lurch-embed" and place into
     them the content you care about.  You can do this by simply pasting HTML
     content copied directly from the Lurch app itself, or by writing
-    [Lurch shorthand](../src/main-app-import-export-solo.litcoffee#lurch-shorthand).
+    [Lurch shorthand](../app/main-app-import-export-solo.litcoffee#lurch-shorthand).
 ```html
 <div class='lurch-embed'>
     <p>Here is a Lurch document with two paragraphs, but no expressions.</p>
