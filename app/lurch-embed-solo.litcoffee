@@ -55,12 +55,18 @@ the [automation section](#automating-the-process), below.
 
 ## Automating the process
 
-For convenience, we invoke the above function on every element in the
-document with the class "lurch-embed".  Thus web page and blog authors do
-not need to call any script functions.  They just mark some elements with a
-specific class, and all is taken care of for them.
+For convenience, we create a function that calls the `makeLive` function on
+every element in the document with the class "lurch-embed".  Thus web page
+and blog authors can call that script function whenever they need to make
+all Lurch source blocks in the page live.
 
-    $ ->
+Also, we call that function as soon as the page is done loading, so that
+page and blog authors may not need to call any script functions (depending
+on the complexity of their page, and whether they are dynamically adding
+elements after loading).  They just mark some elements with a specific
+class, and all is taken care of for them.
+
+    $ window.LurchEmbed.makeAllLive = ->
         ( $ '.lurch-embed' ).each ( index, element ) ->
             element.setAttribute 'data-embed-index', index
             window.LurchEmbed.makeLive element
