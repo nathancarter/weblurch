@@ -1,0 +1,37 @@
+<html>
+    <head>
+        <title>Lurch Shorthand Test</title>
+        <script src='http://code.jquery.com/jquery-2.1.1.min.js'>
+        </script>
+        <script src='http://localhost:8000/app/lurch-embed-solo.min.js'>
+        </script>
+    </head>
+    <body>
+        <h1>First embedded Lurch document:</h1>
+        <div class='lurch-embed'>
+            <shorthand>
+                <p>Flarf <e>atomic expression</e>
+                    and more flarf.</p>
+                <ul>
+                    <li>Some expressions:</li>
+                    <li><e><e>non-atomic</e>
+                        <e>expression</e></e></li>
+                    <li><e n=5>numbered expression</e></li>
+                    <li><e>atomic expression with attributes
+                            <e at='key1'>value1</e>
+                            <e at='key2'><e>A</e><e>B</e></e>
+                        </e></li>
+                    <li><e to='5'>I connect to the numbered
+                        expression!</e></li>
+                </ul>
+            </shorthand>
+        </div>
+        <h1>Second embedded Lurch document:</h1>
+        <div class='lurch-embed'>
+            <shorthand>
+                Just some plain text, plus one connection:
+                <e to='1'>from here</e> ....... <e n='1'>to here!</e>
+            </shorthand>
+        </div>
+    </body>
+</html>
