@@ -53,20 +53,37 @@ form, except that all attributes of the encoded group are also encoded,
 using OpenMath attributions.  The keys are encoded as symbols using their
 own names, and "Lurch" as the content dictionary.
 
+    window.Group.prototype.listSymbol = OM.sym 'List', 'Lurch'
     window.Group.prototype.completeForm = ( includePremises = no ) ->
         result = @canonicalForm()
         prepare = { }
         for group in @attributeGroups includePremises
             key = group.get 'key'
             ( prepare[key] ?= [ ] ).push group
+        for key in @keys()
+            if decoded = OM.decodeIdentifier key
+                prepare[decoded] ?= [ ]
         for key, list of prepare
-            list = ( group.completeForm includePremises \
-                for group in list.sort strictNodeComparator )
-            result = OM.att result, OM.sym( key, 'Lurch' ),
-                if list.length is 1
-                    list[0]
+            if embedded = @get OM.encodeAsIdentifier key
+                list.push this
+            meanings = [ ]
+            strictGroupComparator = ( a, b ) ->
+                strictNodeComparator a.open, b.open
+            for group in list.sort strictGroupComparator
+                if group is this
+                    expression = OM.decode embedded.m
+                    if expression.type is 'a' and \
+                       expression.children[0].equals Group::listSymbol
+                        meanings = meanings.concat expression.children[1..]
+                    else
+                        meanings.push expression
                 else
-                    OM.app OM.sym( 'List', 'Lurch' ), list...
+                    meanings.push group.completeForm includePremises
+            result = OM.att result, OM.sym( key, 'Lurch' ),
+                if meanings.length is 1
+                    meanings[0]
+                else
+                    OM.app Group::listSymbol, meanings...
         result
 
 Now we add a member function to the group class for embedding in an
@@ -88,7 +105,7 @@ fields, the first ("m" for meaning) will be the complete form of the
 attribute to embed.
 
         internalKey = OM.encodeAsIdentifier key
-        internalValue = m : g.completeForm()
+        internalValue = m : g.completeForm().encode()
 
 The second ("v" for visual) will be its representation in HTML form, for
 later extraction back into the document if the user so chooses.  Before

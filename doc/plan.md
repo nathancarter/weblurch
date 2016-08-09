@@ -13,15 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Embedding a single attribute
-
- * Extend `completeForm` to take embedded attributes into account.
-    * If there are embedded and non-embedded attributes with the same key,
-      form list values the same way you would with multiple non-embedded
-      attributes with the same key.
-    * It will need to use `decodeIdentifier` to translate the group
-      attribute key into an expression attribute key.
-
 ## Unembedding a single attribute
 
  * Write a method that expands an embedded attribute back into the document.

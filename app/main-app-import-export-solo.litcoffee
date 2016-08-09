@@ -277,13 +277,14 @@ first.
                     m : group.completeForm().encode()
                     v : LZString.compress group.groupAsHTML no
                 if already = group.parent.get internalKey
-                    if already.m.children[0]?.equals OM.sym 'List', 'Lurch'
-                        already.m = OM.app already.m.children[0],
+                    expression = OM.decode already.m
+                    if expression.children[0]?.equals Group::listSymbol
+                        already.m = ( OM.app expression.children[0],
                             OM.decode( internalValue.m ),
-                            already.m.children[1]...
+                            expression.children[1]... ).encode()
                     else
-                        already.m = OM.app OM.sym( 'List', 'Lurch' ),
-                            already.m, OM.decode internalValue.m
+                        already.m = ( OM.app Group::listSymbol, expression,
+                            OM.decode internalValue.m ).encode()
                     already.v = internalValue.v + already.v
                     internalValue = already
                 group.parent.set internalKey, internalValue

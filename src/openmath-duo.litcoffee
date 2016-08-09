@@ -1154,6 +1154,7 @@ its inverse, which goes in the other direction).
         result
     OM.decodeIdentifier = ( ident ) ->
         result = ''
+        if ident[...3] isnt 'id_' then return result
         ident = ident[3...]
         while ident.length > 0
             result += String.fromCharCode parseInt ident[...4], 16
