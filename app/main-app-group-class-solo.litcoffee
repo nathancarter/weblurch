@@ -7,7 +7,7 @@ This file is one of several files that make up the main webLurch
 Application.  For more information on the app and the other files, see
 [the first source code file in this set](main-app-basics-solo.litcoffee).
 
-## Group class extensions
+## Canonical and complete form
 
 In this app, groups have a special attribute called "canonical form," which
 we want to be able to compute conveniently for all groups.  So we extend the
@@ -18,7 +18,7 @@ content of the group, which we encode as an OpenMath string.  The canonical
 form of a non-atomic group is just the array of children of the group, which
 we encode as an OpenMath application with the children in the same order.
 
-    window.Group.prototype.canonicalForm = ->
+    window.Group::canonicalForm = ->
         if @children.length is 0
             OM.str @contentAsText()
         else
@@ -28,7 +28,7 @@ Groups can also compute the list of attributes attached to them, returning
 it as an array.  We provide the following extension to the Group class to
 accomplish this.
 
-    window.Group.prototype.attributeGroups = ( includePremises = no ) ->
+    window.Group::attributeGroups = ( includePremises = no ) ->
         result = [ ]
         for connection in @connectionsIn()
             source = tinymce.activeEditor.Groups[connection[0]]
@@ -40,7 +40,7 @@ accomplish this.
 The following function is like the transitive closure of the previous; it
 gives all groups that directly or indirectly attribute this group.
 
-    window.Group.prototype.attributionAncestry = ( includePremises = no ) ->
+    window.Group::attributionAncestry = ( includePremises = no ) ->
         result = [ ]
         for group in @attributeGroups includePremises
             for otherGroup in [ group, group.attributionAncestry()... ]
@@ -53,8 +53,8 @@ form, except that all attributes of the encoded group are also encoded,
 using OpenMath attributions.  The keys are encoded as symbols using their
 own names, and "Lurch" as the content dictionary.
 
-    window.Group.prototype.listSymbol = OM.sym 'List', 'Lurch'
-    window.Group.prototype.completeForm = ( includePremises = no ) ->
+    window.Group::listSymbol = OM.sym 'List', 'Lurch'
+    window.Group::completeForm = ( includePremises = no ) ->
         result = @canonicalForm()
         prepare = { }
         for group in @attributeGroups includePremises
@@ -86,11 +86,13 @@ own names, and "Lurch" as the content dictionary.
                     OM.app Group::listSymbol, meanings...
         result
 
+## Embedding and unembedding attributes
+
 Now we add a member function to the group class for embedding in an
 expression an attribute expression, including its entire attribution
 ancestry.
 
-    window.Group.prototype.embedAttribute = ( key ) ->
+    window.Group::embedAttribute = ( key ) ->
 
 For now, we support only the case where there is exactly one attribute
 expression with the given key.

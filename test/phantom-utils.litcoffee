@@ -388,8 +388,8 @@ Second, we wrap the `addMatcherResult` function in `jasmine.Spec` with a
 "before" clause that looks up the data stored in the spec, and uses it (if
 present) to overwrite any existing error stack.
 
-    oldFn = jasmine.Spec.prototype.addMatcherResult
-    jasmine.Spec.prototype.addMatcherResult = ( result ) ->
+    oldFn = jasmine.Spec::addMatcherResult
+    jasmine.Spec::addMatcherResult = ( result ) ->
         if @overrideStack_ and result.passed_ is no
             result.trace.stack = @overrideStack_
         oldFn.apply this, [ result ]
