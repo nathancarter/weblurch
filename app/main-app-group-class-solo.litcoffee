@@ -115,9 +115,10 @@ computing that HTML representation, we disconnect the attribute from this
 group.
 
         groups[0].disconnect this
+        ( $ groups[0].open ).addClass 'mustreconnect'
         ancestry = groups[0].attributionAncestry()
         ancestry.sort strictNodeComparator
-        internalValue.v = LZString.compress \
+        internalValue.v = fauxCompress \
             ( g.groupAsHTML no for g in [ groups[0], ancestry... ] ).join ''
 
 Embed the data, then remove the attribute expression from the document.
@@ -125,7 +126,7 @@ Then delete every expression in the attribution ancestry iff it's not also
 attributing another node outside the attribution ancestry.  Do all of this
 in a single undo/redo transaction.
 
-        groups[0].plugin.editor.undoManager.transact =>
+        @plugin.editor.undoManager.transact =>
             this.set internalKey, internalValue
             groups[0].remove()
             ancestorIds = [
@@ -139,3 +140,88 @@ in a single undo/redo transaction.
                         hasConnectionToNonAncestor = yes
                         break
                 ancestor.remove() unless hasConnectionToNonAncestor
+
+The reverse process of the previous function is the following function, for
+moving an embedded attribute (or a list of them) back out into the document.
+
+The parameter here is the key for the attribute, as it was stored in the
+attribute expression before embedding.  The code for `embedAttribute` alters
+this key to make it a valid OpenMath identifier, but this parameter is the
+unaltered (original) key.  If there is no embedded attribute with that key,
+this function does nothing.
+
+    window.Group::unembedAttribute = ( key, useCurrentCursor = no ) ->
+        if not value = @get OM.encodeAsIdentifier key then return
+        html = fauxDecompress value.v
+        meaning = OM.decode value.m
+        numberToUnembed = if meaning.type is 'a' \
+           and meaning.children[0].equals Group::listSymbol
+            meaning.children.length - 1
+        else
+            1
+        @plugin.editor.undoManager.transact =>
+
+We only move the cursor if the second parameter says to do so.
+
+            if not useCurrentCursor
+                range = @rangeAfter()
+                range.collapse yes
+                @plugin.editor.selection.setRng range
+
+We add the "justPasted" flag to all groupers before pasting, so that
+`scanDocument` can correctly renumber them if needed, while keeping any
+connections intact.
+
+            grouperClassRE =
+                /class=('[^']*grouper[^']*'|"[^"]*grouper[^"]*")/
+            modifiedHTML = ''
+            while match = grouperClassRE.exec html
+                modifiedHTML += html.substr( 0, match.index ) +
+                                match[0].substr( 0, match[0].length - 1 ) +
+                                ' justPasted' +
+                                match[0].substr match[0].length - 1
+                html = html.substr match.index + match[0].length
+            modifiedHTML += html
+            @plugin.editor.insertContent modifiedHTML
+
+We then scan the document so that the newly inserted groups are registered,
+enabling us to call "connect" on them to make them attributes of the group
+out of which they were just unembedded.
+
+            @plugin.scanDocument()
+            $ @plugin.editor.getDoc()
+            .find '.grouper.mustreconnect'
+            .each ( index, grouper ) =>
+                @plugin.grouperToGroup( grouper ).connect this
+                ( $ grouper ).removeClass 'mustreconnect'
+
+## Compression
+
+The `LZString.compress` and `LZString.decompress` functions would be ideal
+for compression in this module, but unfortunately they have the following
+problem.  They occasionally create characters with codes above 55000, and in
+Chrome, characters in that range are not copied and pasted faithfully in
+HTML.  (It replaces them with the `&thinsp;` character, which has code
+65533, and thus corrupts the compressed data, so that it cannot be
+decompressed.)
+
+Consequently, we create very simple compression and decompression routines
+here.  These only remove the (usually large) `src` attributes from grouper
+`img` tags, and do no other compression.  In the future, we could extend
+these so that they perform `LZString.compress` and `decompress`, but we
+tweak the results to avoid the problematic character range.  That has not
+yet been done.
+
+    fauxCompress = ( string ) ->
+        grouperRE = /<img\s+([^>]*)\s+src=('[^']*'|"[^"]*")([^>]*)>/
+        while match = grouperRE.exec string
+            string = string.substr( 0, match.index ) +
+                     "<img #{match[1]} #{match[2]}>" +
+                     string.substr match.index + match[0].length
+        string
+
+The decompression routine does nothing, because when groupers are placed
+back into the document, their `src` attributes are automatically refreshed
+anyway.  So we have no need to attempt to put them back here.
+
+    fauxDecompress = ( string ) -> string

@@ -15,27 +15,6 @@ required order of completion.
 
 ## Unembedding a single attribute
 
- * Write a method that expands an embedded attribute back into the document.
-    * It should be a member of the Group class, called `unembedAttribute`.
-    * It accepts as parameter the key of the embedded attribute, in the form
-      it had before being run through `encodeAsIdentifier`.
-    * It applies `LZString.decompress` to its embedded HTML form to find the
-      HTML it should insert in the document.
-    * It discards the complete form in the same pair, since that is
-      computable from the expanded HTML form.
-    * It inserts it, by default, immediately after the group in which it's
-      embedded.  Note that it may be inserting more than one group.
-    * After inserting, it forms a connection from the newly inserted
-      expression to the expression in which it was (until recently)
-      embedded.
-    * It accepts an optional second parameter, a boolean, which defaults to
-      false, but if true, indicates that it should use the cursor position
-      as the point of insertion, rather than just putting it immediately
-      after teh group in which it's embedded.
-    * It must mark all groupers in the inserted HTML with the class
-      `justPasted`, to re-use the already-implemented process of renumbering
-      groups to preserve ID uniqueness, while keeping connections
-      consistent.
  * If group $A$ connects to group $B$ with key $k$, and nothing else
    connects to $B$ using $k$, and $A$ connects to nothing else, then:
     * Add to the context menu for $A$ an item for embedding it into $B$.
