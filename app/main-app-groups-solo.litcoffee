@@ -126,35 +126,67 @@ key they choose.
                                 group.set 'key', newKey
                 ]
 
-If group $A$ connects to group $B$ with key $k$, and nothing else connects
-to $B$ using $k$, and $A$ connects to nothing else, then add an item for
-embedding $A$ into $B$.
+If group $A$ connects to groups $B_1$ through $B_n$ with key $k$, and
+nothing else connects to any $B_i$ using $k$, then add an item for embedding
+$A$ into each $B_i$.
 
             connections = group.connectionsOut()
             key = group.get 'key'
-            if connections.length is 1 and key isnt 'premise'
-                target = tinymce.activeEditor.Groups[connections[0][1]]
-                onlyOneToEmbed = yes
-                for connection in target.connectionsIn()
-                    source = tinymce.activeEditor.Groups[connection[0]]
-                    if source.get( 'key' ) is key and source isnt group
-                        onlyOneToEmbed = no
+            if key isnt 'premise'
+
+Here we check whether all the $B_i$ have only $A$ attributing them using
+$k$.
+
+                targets = ( tinymce.activeEditor.Groups[connection[1]] \
+                    for connection in connections )
+                allHaveJustThisGroupAsAttributeForKey = yes
+                for target in targets
+                    if target.attributeGroupsForKey( key ).length > 1
+                        allHaveJustThisGroupAsAttributeForKey = no
                         break
-                if onlyOneToEmbed then result.push
+                if allHaveJustThisGroupAsAttributeForKey then result.push
                     text : 'Hide this attribute'
                     onclick : ->
+
+This is the action we will take, unless there are warnings that cause the
+user to cancel.
+
+                        doIt = ->
+                            tinymce.activeEditor.undoManager.transact ->
+                                for target, index in targets
+                                    last = index == targets.length - 1
+                                    target.embedAttribute key, last
+                                    if not last
+                                        group.connect targets[index+1]
+                        warnings = ''
+
+We create a warning if they are embedding the attribute in more than one
+expression, just to be sure they're aware of that.
+
+                        if targets.length > 1
+                            warnings += "You are hiding this attribute in
+                                #{targets.length} expressions.  "
+
+We create a warning if they will break premise connections by this
+embedding, again, just to be sure they're aware.
+
                         numPremises =
                             ( group.attributionAncestry yes ).length -
                             ( group.attributionAncestry no ).length
                         if numPremises > 0
+                            warnings += "There are #{numPremises} premise
+                                connections that will be broken if you
+                                hide that attribute.  "
+
+Either execute the action immediately, or if there are warnings, execute it
+if and only if the user chooses to continue despite the warnings.
+
+                        if warnings.length > 0
                             tinymce.activeEditor.Dialogs.confirm
-                                message : "There are #{numPremises} premise
-                                    connections that will be broken if you
-                                    hide that attribute.  Continue anyway?"
-                                okCallback : ->
-                                    target.embedAttribute key
+                                message : "#{warnings}Continue anyway?"
+                                okCallback : doIt
                         else
-                            target.embedAttribute key
+                            doIt()
 
 * If the attribution ancestry of $A$ contains any premise-type
   attributes, be sure to prompt the user that those connections will be

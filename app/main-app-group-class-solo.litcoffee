@@ -37,6 +37,13 @@ accomplish this.
                 result.push source
         result
 
+We can get the attributes that just have a specific key by simply filtering
+the results of the previous function.
+
+    window.Group::attributeGroupsForKey = ( key ) ->
+        ( group for group in @attributeGroups( yes ) \
+            when group.get( 'key' ) is key )
+
 The following function is like the transitive closure of the previous; it
 gives all groups that directly or indirectly attribute this group.
 
@@ -92,7 +99,12 @@ Now we add a member function to the group class for embedding in an
 expression an attribute expression, including its entire attribution
 ancestry.
 
-    window.Group::embedAttribute = ( key ) ->
+The second parameter can be set to false to tell the routine not to delete
+the group from the document after embedding.  This is primarily useful when
+embedding an attribute in many targets; you can embed it without deletion in
+the first $n-1$, and then delete it on the $n$th embedding.
+
+    window.Group::embedAttribute = ( key, andDelete = yes ) ->
 
 For now, we support only the case where there is exactly one attribute
 expression with the given key.
@@ -111,23 +123,30 @@ attribute to embed.
 
 The second ("v" for visual) will be its representation in HTML form, for
 later extraction back into the document if the user so chooses.  Before
-computing that HTML representation, we disconnect the attribute from this
-group.
+computing that HTML representation, we disconnect the attribute from all its
+targets.  Consequently, since we now begin modifying the document, we do all
+of this in a single undo/redo transaction.
 
-        groups[0].disconnect this
-        ( $ groups[0].open ).addClass 'mustreconnect'
-        ancestry = groups[0].attributionAncestry()
-        ancestry.sort strictNodeComparator
-        internalValue.v = fauxCompress \
-            ( g.groupAsHTML no for g in [ groups[0], ancestry... ] ).join ''
+        @plugin.editor.undoManager.transact =>
+            for connection in groups[0].connectionsOut()
+                target = tinymce.activeEditor.Groups[connection[1]]
+                groups[0].disconnect target
+            ( $ groups[0].open ).addClass 'mustreconnect'
+            ancestry = groups[0].attributionAncestry()
+            ancestry.sort strictNodeComparator
+            internalValue.v = fauxCompress ( g.groupAsHTML no \
+                for g in [ groups[0], ancestry... ] ).join ''
 
 Embed the data, then remove the attribute expression from the document.
 Then delete every expression in the attribution ancestry iff it's not also
-attributing another node outside the attribution ancestry.  Do all of this
-in a single undo/redo transaction.
+attributing another node outside the attribution ancestry.
 
-        @plugin.editor.undoManager.transact =>
             this.set internalKey, internalValue
+
+If they've asked us to delete the group from the document, do so here.  If
+not, stop at this point.
+
+            return unless andDelete
             groups[0].remove()
             ancestorIds = [
                 groups[0].id()

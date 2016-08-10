@@ -13,18 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Unembedding a single attribute
-
- * Add an optional parameter to `embedAttribute` in the Group class, a
-   boolean that defaults to true, of whether to delete the attribute group
-   from the document.
- * If group $A$ connects to groups $B_1$ through $B_n$ with key $k$, for
-   $n>1$, and nothing else connects to any of the $B_i$ using $k$, then:
-    * Embed $A$ into each $B_i$, setting the optional parameter of
-      `embedAttribute` to false in all calls but the final one, so that the
-      groups are only deleted once at the end of the loop.
-    * Wrap that loop in a single call to `undoManager.transact`.
-
 ## Embedding list attributes
 
  * Extend `embedAttribute` so that it no longer assumes that the key is
