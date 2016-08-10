@@ -188,9 +188,59 @@ if and only if the user chooses to continue despite the warnings.
                         else
                             doIt()
 
-* If the attribution ancestry of $A$ contains any premise-type
-  attributes, be sure to prompt the user that those connections will be
-  broken by this action, and see if they still wish to proceed.
+Alternatively, if $n=1$ (i.e., there is only one target group, $B_1$), but
+there are many groups $A_1$ through $A_k$ that attribute it, all with the
+same key, we can embed all of them in the one target, as follows.  We
+require that none of the $A_i$ also modifies any group other than $B_1$.
+
+                if targets.length is 1
+                    target = targets[0]
+                    sources = target.attributeGroupsForKey key
+                    anySourceModifiesAnotherGroup = no
+                    for source in sources
+                        if source.connectionsOut().length > 1
+                            anySourceModifiesAnotherGroup = yes
+                            break
+                    if not anySourceModifiesAnotherGroup then result.push
+                        text : 'Hide this attribute'
+                        onclick : ->
+
+This is the action we will take, unless the user chooses to cancel after
+seeing the warning(s).
+
+                            doIt = ->
+                                tinymce.activeEditor.undoManager.transact ->
+                                    for target, index in targets
+                                        last = index == targets.length - 1
+                                        target.embedAttribute key, last
+                                        if not last
+                                            group.connect targets[index+1]
+                            warnings = "You are about to hide not one
+                                attribute, but #{sources.length}, all of
+                                type #{key}.  "
+
+We create a warning if they will break premise connections by this
+embedding, again, just to be sure they're aware.
+
+                            numPremises = 0
+                            for source in sources
+                                numPremises += \
+                                ( source.attributionAncestry yes ).length -
+                                ( source.attributionAncestry no ).length
+                            if numPremises > 0
+                                warnings += "There are #{numPremises}
+                                    premise connections that will be broken
+                                    if you hide that attribute.  "
+
+Either execute the action immediately, or if there are warnings, execute it
+if and only if the user chooses to continue despite the warnings.
+
+                            if warnings.length > 0
+                                tinymce.activeEditor.Dialogs.confirm
+                                    message : "#{warnings}Continue anyway?"
+                                    okCallback : doIt
+                            else
+                                doIt()
 
             result
 

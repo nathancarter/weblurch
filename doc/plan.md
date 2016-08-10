@@ -13,24 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Embedding list attributes
-
- * Extend `embedAttribute` so that it no longer assumes that the key is
-   associated with at most one attribute group.  If there is more than one
-   attribute group with the given key, then:
-    * The v value to be embedded is the concatenated sequence of HTML for
-      each of the attribute groups' attribution ancestries, in the order
-      they appear in the document.
-    * The m value to be embedded is an OpenMath application of a special
-      "List" symbol to a list of the complete forms of the attribute groups,
-      in the order they appear in the document.
-    * All the groups should be embedded and deleted inside a call to
-      `undoManager.transact`.
- * If groups $A_1$ through $A_n$ connect to group $B$ with key $k$, for
-   $n>1$, and no $A_i$ connects to anything else, then proceed exactly as in
-   the case when $n=1$, because `embedAttribute` has been upgraded to handle
-   it.
-
 ## Attribute dialog
 
  * Provide a context menu item on any expression for seeing the attributes

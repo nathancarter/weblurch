@@ -111,7 +111,6 @@ expression with the given key.
 
         groups = ( g for g in @attributeGroups() \
             when g.get( 'key' ) is key )
-        if groups.length isnt 1 then return
 
 The key to use inside this group is the expression key, encoded so that it
 can function as an OpenMath identifier.  The value to use will have two
@@ -119,7 +118,12 @@ fields, the first ("m" for meaning) will be the complete form of the
 attribute to embed.
 
         internalKey = OM.encodeAsIdentifier key
-        internalValue = m : g.completeForm().encode()
+        internalValue = m : if groups.length is 1
+            groups[0].completeForm()
+        else
+            OM.app Group::listSymbol,
+                   ( g.completeForm() for g in groups )...
+        internalValue.m = internalValue.m.encode()
 
 The second ("v" for visual) will be its representation in HTML form, for
 later extraction back into the document if the user so chooses.  Before
@@ -128,14 +132,16 @@ targets.  Consequently, since we now begin modifying the document, we do all
 of this in a single undo/redo transaction.
 
         @plugin.editor.undoManager.transact =>
-            for connection in groups[0].connectionsOut()
-                target = tinymce.activeEditor.Groups[connection[1]]
-                groups[0].disconnect target
-            ( $ groups[0].open ).addClass 'mustreconnect'
-            ancestry = groups[0].attributionAncestry()
-            ancestry.sort strictNodeComparator
-            internalValue.v = fauxCompress ( g.groupAsHTML no \
-                for g in [ groups[0], ancestry... ] ).join ''
+            internalValue.v = ''
+            for group in groups
+                for connection in group.connectionsOut()
+                    target = tinymce.activeEditor.Groups[connection[1]]
+                    group.disconnect target
+                ( $ group.open ).addClass 'mustreconnect'
+                ancestry = group.attributionAncestry()
+                ancestry.sort strictNodeComparator
+                internalValue.v += fauxCompress ( g.groupAsHTML no \
+                    for g in [ group, ancestry... ] ).join ''
 
 Embed the data, then remove the attribute expression from the document.
 Then delete every expression in the attribution ancestry iff it's not also
@@ -147,18 +153,21 @@ If they've asked us to delete the group from the document, do so here.  If
 not, stop at this point.
 
             return unless andDelete
-            groups[0].remove()
-            ancestorIds = [
-                groups[0].id()
-                ( a.id() for a in ancestry )...
-            ]
-            for ancestor in ancestry
-                hasConnectionToNonAncestor = no
-                for connection in ancestor.connectionsOut()
-                    if connection[1] not in ancestorIds
-                        hasConnectionToNonAncestor = yes
-                        break
-                ancestor.remove() unless hasConnectionToNonAncestor
+            for group in groups
+                group.remove()
+                ancestry = group.attributionAncestry()
+                ancestry.sort strictNodeComparator
+                ancestorIds = [
+                    group.id()
+                    ( a.id() for a in ancestry )...
+                ]
+                for ancestor in ancestry
+                    hasConnectionToNonAncestor = no
+                    for connection in ancestor.connectionsOut()
+                        if connection[1] not in ancestorIds
+                            hasConnectionToNonAncestor = yes
+                            break
+                    ancestor.remove() unless hasConnectionToNonAncestor
 
 The reverse process of the previous function is the following function, for
 moving an embedded attribute (or a list of them) back out into the document.
