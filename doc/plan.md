@@ -15,14 +15,6 @@ required order of completion.
 
 ## Unembedding a single attribute
 
- * If group $A$ connects to group $B$ with key $k$, and nothing else
-   connects to $B$ using $k$, and $A$ connects to nothing else, then:
-    * Add to the context menu for $A$ an item for embedding it into $B$.
-    * Invoking the item should call `embedAttribute` on $B$ with the key of
-      $A$ as the parameter.
-    * If the attribution ancestry of $A$ contains any premise-type
-      attributes, be sure to prompt the user that those connections will be
-      broken by this action, and see if they still wish to proceed.
  * Add an optional parameter to `embedAttribute` in the Group class, a
    boolean that defaults to true, of whether to delete the attribute group
    from the document.

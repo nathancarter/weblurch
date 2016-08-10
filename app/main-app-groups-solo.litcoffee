@@ -125,6 +125,41 @@ key they choose.
                             tinymce.activeEditor.undoManager.transact ->
                                 group.set 'key', newKey
                 ]
+
+If group $A$ connects to group $B$ with key $k$, and nothing else connects
+to $B$ using $k$, and $A$ connects to nothing else, then add an item for
+embedding $A$ into $B$.
+
+            connections = group.connectionsOut()
+            key = group.get 'key'
+            if connections.length is 1 and key isnt 'premise'
+                target = tinymce.activeEditor.Groups[connections[0][1]]
+                onlyOneToEmbed = yes
+                for connection in target.connectionsIn()
+                    source = tinymce.activeEditor.Groups[connection[0]]
+                    if source.get( 'key' ) is key and source isnt group
+                        onlyOneToEmbed = no
+                        break
+                if onlyOneToEmbed then result.push
+                    text : 'Hide this attribute'
+                    onclick : ->
+                        numPremises =
+                            ( group.attributionAncestry yes ).length -
+                            ( group.attributionAncestry no ).length
+                        if numPremises > 0
+                            tinymce.activeEditor.Dialogs.confirm
+                                message : "There are #{numPremises} premise
+                                    connections that will be broken if you
+                                    hide that attribute.  Continue anyway?"
+                                okCallback : ->
+                                    target.embedAttribute key
+                        else
+                            target.embedAttribute key
+
+* If the attribution ancestry of $A$ contains any premise-type
+  attributes, be sure to prompt the user that those connections will be
+  broken by this action, and see if they still wish to proceed.
+
             result
 
     ]
