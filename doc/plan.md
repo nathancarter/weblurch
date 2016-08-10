@@ -15,12 +15,6 @@ required order of completion.
 
 ## Attribute dialog
 
- * Provide a context menu item on any expression for seeing the attributes
-   of that expression summarized in a dialog.
- * For expressions without attributes, it simply says there are none, and
-   the user's only available action is to close the dialog.
- * When there are attributes, they are listed alphabetically by key, with
-   values also listed, whether they are embedded or in-document values.
  * Next to any embedded attribute, provide a "Remove" button that deletes
    the attribute internally from the expression.  Ensure that this action is
    placed correctly on the undo/redo stack.

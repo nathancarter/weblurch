@@ -183,6 +183,7 @@ if and only if the user chooses to continue despite the warnings.
 
                         if warnings.length > 0
                             tinymce.activeEditor.Dialogs.confirm
+                                title : 'Warning'
                                 message : "#{warnings}Continue anyway?"
                                 okCallback : doIt
                         else
@@ -237,10 +238,18 @@ if and only if the user chooses to continue despite the warnings.
 
                             if warnings.length > 0
                                 tinymce.activeEditor.Dialogs.confirm
+                                    title : 'Warning'
                                     message : "#{warnings}Continue anyway?"
                                     okCallback : doIt
                             else
                                 doIt()
+
+Every expression has a context menu item for seeing its attributes
+summarized in a dialog.
+
+            result.push
+                text : 'Attributes...'
+                onclick : window.attributesActionForGroup group
 
             result
 
