@@ -193,7 +193,7 @@ there are many groups $A_1$ through $A_k$ that attribute it, all with the
 same key, we can embed all of them in the one target, as follows.  We
 require that none of the $A_i$ also modifies any group other than $B_1$.
 
-                if targets.length is 1
+                else if targets.length is 1
                     target = targets[0]
                     sources = target.attributeGroupsForKey key
                     anySourceModifiesAnotherGroup = no
