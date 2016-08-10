@@ -140,7 +140,7 @@ of this in a single undo/redo transaction.
                 ( $ group.open ).addClass 'mustreconnect'
                 ancestry = group.attributionAncestry()
                 ancestry.sort strictNodeComparator
-                internalValue.v += fauxCompress ( g.groupAsHTML no \
+                internalValue.v += compressWrapper ( g.groupAsHTML no \
                     for g in [ group, ancestry... ] ).join ''
 
 Embed the data, then remove the attribute expression from the document.
@@ -180,7 +180,7 @@ this function does nothing.
 
     window.Group::unembedAttribute = ( key, useCurrentCursor = no ) ->
         if not value = @get OM.encodeAsIdentifier key then return
-        html = fauxDecompress value.v
+        html = decompressWrapper value.v
         meaning = OM.decode value.m
         numberToUnembed = if meaning.type is 'a' \
            and meaning.children[0].equals Group::listSymbol
@@ -233,23 +233,41 @@ HTML.  (It replaces them with the `&thinsp;` character, which has code
 65533, and thus corrupts the compressed data, so that it cannot be
 decompressed.)
 
-Consequently, we create very simple compression and decompression routines
-here.  These only remove the (usually large) `src` attributes from grouper
-`img` tags, and do no other compression.  In the future, we could extend
-these so that they perform `LZString.compress` and `decompress`, but we
-tweak the results to avoid the problematic character range.  That has not
-yet been done.
+Consequently, we create wrappers around the LZString compression and
+decompression routines here.  These begin by removing the (usually large)
+`src` attributes from grouper `img` tags.  Then we perform
+`LZString.compress` and `decompress`, but modifying the results to avoid the
+problematic character range.
 
-    fauxCompress = ( string ) ->
+    maxCharCode = 50000
+    window.compressWrapper = ( string ) ->
         grouperRE = /<img\s+([^>]*)\s+src=('[^']*'|"[^"]*")([^>]*)>/
         while match = grouperRE.exec string
             string = string.substr( 0, match.index ) +
                      "<img #{match[1]} #{match[2]}>" +
                      string.substr match.index + match[0].length
-        string
+        string = LZString.compress string
+        result = ''
+        for i in [0...string.length]
+            if ( code = string.charCodeAt( i ) ) < maxCharCode
+                result += string[i]
+            else
+                result += String.fromCharCode( 50000 ) +
+                          String.fromCharCode( code - 50000 )
+        result
 
-The decompression routine does nothing, because when groupers are placed
-back into the document, their `src` attributes are automatically refreshed
-anyway.  So we have no need to attempt to put them back here.
+When groupers are placed back into the document, their `src` attributes are
+automatically refreshed anyway.  So we have no need to attempt to put them
+back here.  Instead, we just have to undo the charCode manipulation done by
+the compress wrapper.
 
-    fauxDecompress = ( string ) -> string
+    window.decompressWrapper = ( string ) ->
+        result = ''
+        while string.length > 0
+            if ( code = string.charCodeAt 0 ) < maxCharCode
+                result += string[0]
+                string = string.substr 1
+            else
+                result += String.fromCharCode code + string.charCodeAt 1
+                string = string.substr 2
+        LZString.decompress result
