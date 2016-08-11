@@ -236,7 +236,7 @@
   prepareHTML = function(html) {
     var script;
     script = function() {
-      var install;
+      var install, _ref;
       install = function(tagName, eventName) {
         var element, _i, _len, _ref, _results;
         _ref = document.getElementsByTagName(tagName);
@@ -254,7 +254,8 @@
       };
       install('a', 'click');
       install('input', 'click');
-      return install('input', 'input');
+      install('input', 'input');
+      return (_ref = document.getElementsByTagName('input')[0]) != null ? _ref.focus() : void 0;
     };
     return window.objectURLForBlob(window.makeBlob(html + ("<script>(" + script + ")()</script>"), 'text/html;charset=utf-8'));
   };

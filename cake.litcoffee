@@ -325,6 +325,9 @@ to gh-pages and merging in changes.
             description : 'Switching to gh-pages branch...'.green
             command : 'git checkout gh-pages'
         ,
+            description : 'Pausing a moment...'.green
+            command : 'sleep 2'
+        ,
             description : 'Merging in changes...'.green
             command : 'git merge master --no-commit'
         ,

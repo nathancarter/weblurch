@@ -441,6 +441,7 @@ a blob, so that it can be passed to the TinyMCE dialog-creation routines.
             install 'a', 'click'
             install 'input', 'click'
             install 'input', 'input'
+            document.getElementsByTagName( 'input' )[0]?.focus()
         window.objectURLForBlob window.makeBlob \
             html + "<script>(#{script})()</script>",
             'text/html;charset=utf-8'
