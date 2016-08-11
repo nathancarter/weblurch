@@ -168,6 +168,7 @@
               title: 'Enter new key',
               message: "Change \"" + key + "\" to what?",
               okCallback: function(newKey) {
+                var newInternals, oldInternals;
                 if (!/^[a-zA-Z0-9-_]+$/.test(newKey)) {
                   tinymce.activeEditor.Dialogs.alert({
                     title: 'Invalid key',
@@ -177,10 +178,12 @@
                   });
                   return;
                 }
-                if (group.attributeGroupsForKey(newKey).length > 0) {
+                oldInternals = group.get(OM.encodeAsIdentifier(key));
+                newInternals = group.get(OM.encodeAsIdentifier(newKey));
+                if (oldInternals && newInternals) {
                   tinymce.activeEditor.Dialogs.alert({
                     title: 'Invalid key',
-                    message: 'That key is already in use by a different attribute.',
+                    message: 'That key is already in use by a different hidden attribute.  You cannot rename one hidden attribute over another, because the order of combining their contents is ambiguous.  Reveal one or both attributes into the document first, to make the order clear.',
                     width: 300,
                     height: 200
                   });

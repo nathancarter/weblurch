@@ -77,6 +77,9 @@ itself, will show that key on its bubble tag.
 In the case where the tag shows the key, as in the code immediately above,
 the tag menu should let the user move the tag out onto the arrow instead.
 
+We also include the "change attribute action" defined
+[below](#auxiliary-functions).
+
         tagMenuItems : ( group ) ->
             result = [ ]
             if group.get( 'keyposition' ) is 'source'
@@ -85,6 +88,7 @@ the tag menu should let the user move the tag out onto the arrow instead.
                     onclick : ->
                         tinymce.activeEditor.undoManager.transact ->
                             group.set 'keyposition', 'arrow'
+                result.push changeAttributeAction group
             result
 
 However, when the attribute key is already shown on the arrow, the
@@ -99,35 +103,10 @@ expression should have a context menu item for moving it back.
                         tinymce.activeEditor.undoManager.transact ->
                             group.set 'keyposition', 'source'
 
-The context menu should also contain a submenu for changing the key to any
-of several common choices, or "Other..." which lets the user input any text
-key they choose.
+We also include the "change attribute action" defined
+[below](#auxiliary-functions).
 
-            result.push
-                text : 'Change attribute key to...'
-                menu : [
-                    text : 'Label'
-                    onclick : ->
-                        tinymce.activeEditor.undoManager.transact ->
-                            group.set 'key', 'label'
-                ,
-                    text : 'Reason'
-                    onclick : ->
-                        tinymce.activeEditor.undoManager.transact ->
-                            group.set 'key', 'reason'
-                ,
-                    text : 'Premise'
-                    onclick : ->
-                        tinymce.activeEditor.undoManager.transact ->
-                            group.set 'key', 'premise'
-                ,
-                    text : 'Other...'
-                    onclick : ->
-                        newKey = prompt 'Choose a new key:', group.get 'key'
-                        if newKey
-                            tinymce.activeEditor.undoManager.transact ->
-                                group.set 'key', newKey
-                ]
+            result.push changeAttributeAction group
 
 If group $A$ connects to groups $B_1$ through $B_n$ with key $k$, and
 nothing else connects to any $B_i$ using $k$, then add an item for embedding
@@ -257,3 +236,50 @@ summarized in a dialog.
             result
 
     ]
+
+## Auxiliary functions
+
+The following submenu will appear on both the tag menu and the context menu,
+so we create here a function that produces it, so that we can simply call
+the function twice, above.
+
+It allows the user to change the attribute key to any of several common
+choices, or "Other..." which lets the user input any text key they choose.
+
+    changeAttributeAction = ( group ) ->
+        text : 'Change attribute key to...'
+        menu : [
+            text : 'Label'
+            onclick : ->
+                tinymce.activeEditor.undoManager.transact ->
+                    group.set 'key', 'label'
+        ,
+            text : 'Reason'
+            onclick : ->
+                tinymce.activeEditor.undoManager.transact ->
+                    group.set 'key', 'reason'
+        ,
+            text : 'Premise'
+            onclick : ->
+                tinymce.activeEditor.undoManager.transact ->
+                    group.set 'key', 'premise'
+        ,
+            text : 'Other...'
+            onclick : ->
+                tinymce.activeEditor.Dialogs.prompt
+                    title : 'Enter new key'
+                    message : "Change \"#{group.get 'key'}\" to what?"
+                    okCallback : ( newKey ) ->
+                        if not /^[a-zA-Z0-9-_]+$/.test newKey
+                            tinymce.activeEditor.Dialogs.alert
+                                title : 'Invalid key'
+                                message : 'Keys can only contain Roman
+                                    letters, decimal digits, hyphens, and
+                                    underscores (no spaces or other
+                                    punctuation).'
+                                width : 300
+                                height : 200
+                            return
+                        tinymce.activeEditor.undoManager.transact ->
+                            group.set 'key', newKey
+        ]
