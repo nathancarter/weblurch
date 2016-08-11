@@ -236,24 +236,25 @@
   prepareHTML = function(html) {
     var script;
     script = function() {
-      var add, element, _i, _j, _len, _len1, _ref, _ref1, _results;
-      add = function(element) {
-        return element.addEventListener('click', function(event) {
-          return top.postMessage(event.target.getAttribute('id'), '*');
-        });
+      var install;
+      install = function(tagName, eventName) {
+        var element, _i, _len, _ref, _results;
+        _ref = document.getElementsByTagName(tagName);
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          element = _ref[_i];
+          _results.push(element.addEventListener(eventName, function(event) {
+            return top.postMessage({
+              value: event.currentTarget.value,
+              id: event.currentTarget.getAttribute('id')
+            }, '*');
+          }));
+        }
+        return _results;
       };
-      _ref = document.getElementsByTagName('a');
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        element = _ref[_i];
-        add(element);
-      }
-      _ref1 = document.getElementsByTagName('input');
-      _results = [];
-      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-        element = _ref1[_j];
-        _results.push(add(element));
-      }
-      return _results;
+      install('a', 'click');
+      install('input', 'click');
+      return install('input', 'input');
     };
     return window.objectURLForBlob(window.makeBlob(html + ("<script>(" + script + ")()</script>"), 'text/html;charset=utf-8'));
   };
@@ -323,6 +324,43 @@
     if (options.onclick) {
       return installClickListener(options.onclick);
     }
+  };
+
+  Dialogs.prompt = function(options) {
+    var lastValue, value, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    value = options.value ? " value='" + options.value + "'" : '';
+    options.message += "<p><input type='text' " + value + " id='promptInput' size=40/></p>";
+    lastValue = (_ref = options.value) != null ? _ref : '';
+    tinymce.activeEditor.windowManager.open({
+      title: (_ref1 = options.title) != null ? _ref1 : ' ',
+      url: prepareHTML(options.message),
+      width: (_ref2 = options.width) != null ? _ref2 : 300,
+      height: (_ref3 = options.height) != null ? _ref3 : 200,
+      buttons: [
+        {
+          type: 'button',
+          text: (_ref4 = options.Cancel) != null ? _ref4 : 'Cancel',
+          subtype: 'primary',
+          onclick: function(event) {
+            tinymce.activeEditor.windowManager.close();
+            return typeof options.cancelCallback === "function" ? options.cancelCallback(lastValue) : void 0;
+          }
+        }, {
+          type: 'button',
+          text: (_ref5 = options.OK) != null ? _ref5 : 'OK',
+          subtype: 'primary',
+          onclick: function(event) {
+            tinymce.activeEditor.windowManager.close();
+            return typeof options.okCallback === "function" ? options.okCallback(lastValue) : void 0;
+          }
+        }
+      ]
+    });
+    return installClickListener(function(data) {
+      if (data.id === 'promptInput') {
+        return lastValue = data.value;
+      }
+    });
   };
 
   tinymce.PluginManager.add('dialogs', function(editor, url) {
