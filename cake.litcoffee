@@ -325,17 +325,20 @@ to gh-pages and merging in changes.
             description : 'Switching to gh-pages branch...'.green
             command : 'git checkout gh-pages'
         ,
-            description : 'Pausing a moment...'.green
-            command : 'sleep 2'
-        ,
             description : 'Merging in changes...'.green
             command : 'git merge master --no-commit'
+        ,
+            description : 'Pausing a moment...'.green
+            command : 'sleep 2'
         ,
             description : 'Marking app files dirty...'.green
             command : 'touch app/*-solo.litcoffee'
         ,
             description : 'Marking setup file dirty...'.green
             command : 'touch app/setup.litcoffee'
+        ,
+            description : 'Pausing a moment...'.green
+            command : 'sleep 2'
         ,
             description : 'Marking src files dirty...'.green
             command : 'touch src/*.litcoffee'
