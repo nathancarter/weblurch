@@ -180,8 +180,12 @@ Add a Help menu.
                 editor.addMenuItem 'about',
                     text : 'About...'
                     context : 'help'
-                    onclick : -> alert 'webLurch\n\npre-alpha,
-                        not yet intended for general consumption!'
+                    onclick : -> editor.Dialogs.alert
+                        title : 'webLurch'
+                        message : '<center>
+                            <p>pre-alpha</p>
+                            <p>not yet intended for general consumption</p>
+                        </center>'
                 editor.addMenuItem 'website',
                     text : 'Lurch website'
                     context : 'help'

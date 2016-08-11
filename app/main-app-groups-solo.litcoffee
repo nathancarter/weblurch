@@ -36,8 +36,11 @@ more steps through connections) reach its second argument.
                     if reachable next, target then return yes
                 no
             if reachable to, from
-                alert 'Forming that connection would create a cycle,
-                    which is not permitted.'
+                from.plugin.editor.Dialogs.alert
+                    title : 'Cannot connect expressions'
+                    message : 'Forming that connection would create a cycle
+                        of connections among expressions, which is not
+                        permitted.'
             else
                 tinymce.activeEditor.undoManager.transact ->
                     from.connect to
