@@ -313,7 +313,11 @@ to gh-pages and merging in changes.
             that you can complete the process:
                 git checkout gh-pages
                 git merge master --no-commit
-                cake app submodules
+                touch app/*-solo.litcoffee
+                touch app/setup.litcoffee
+                touch src/*.litcoffee
+                cake app
+                cake submodules
                 git commit -a -m 'Updating gh-pages with latest app build'
                 git checkout master
             '''.yellow
@@ -323,6 +327,15 @@ to gh-pages and merging in changes.
         ,
             description : 'Merging in changes...'.green
             command : 'git merge master --no-commit'
+        ,
+            description : 'Marking app files dirty...'.green
+            command : 'touch app/*-solo.litcoffee'
+        ,
+            description : 'Marking setup file dirty...'.green
+            command : 'touch app/setup.litcoffee'
+        ,
+            description : 'Marking src files dirty...'.green
+            command : 'touch src/*.litcoffee'
         ], ->
             console.log 'Building app and submodules in gh-pages...'.green
             build.enqueue 'app', 'submodules', ->
