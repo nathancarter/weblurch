@@ -140,8 +140,10 @@ of this in a single undo/redo transaction.
                 ( $ group.open ).addClass 'mustreconnect'
                 ancestry = group.attributionAncestry()
                 ancestry.sort strictNodeComparator
-                internalValue.v += compressWrapper ( g.groupAsHTML no \
+                if internalValue.v.length > 0 then internalValue.v += '\n'
+                internalValue.v += ( g.groupAsHTML no \
                     for g in [ group, ancestry... ] ).join ''
+            internalValue.v = compressWrapper internalValue.v
 
 Embed the data, then remove the attribute expression from the document.
 Then delete every expression in the attribution ancestry iff it's not also
@@ -182,11 +184,24 @@ this function does nothing.
         if not value = @get OM.encodeAsIdentifier key then return
         html = decompressWrapper value.v
         meaning = OM.decode value.m
-        numberToUnembed = if meaning.type is 'a' \
-           and meaning.children[0].equals Group::listSymbol
-            meaning.children.length - 1
-        else
-            1
+
+We add the "justPasted" flag to all groupers before pasting, so that
+`scanDocument` can correctly renumber them if needed, while keeping any
+connections intact.
+
+        grouperClassRE =
+            /class=('[^']*grouper[^']*'|"[^"]*grouper[^"]*")/
+        modifiedHTML = ''
+        while match = grouperClassRE.exec html
+            modifiedHTML += html.substr( 0, match.index ) +
+                            match[0].substr( 0, match[0].length - 1 ) +
+                            ' justPasted' +
+                            match[0].substr match[0].length - 1
+            html = html.substr match.index + match[0].length
+        modifiedHTML += html
+
+Now begin the transaction that modifies the document.
+
         @plugin.editor.undoManager.transact =>
 
 We only move the cursor if the second parameter says to do so.
@@ -196,30 +211,19 @@ We only move the cursor if the second parameter says to do so.
                 range.collapse yes
                 @plugin.editor.selection.setRng range
 
-We add the "justPasted" flag to all groupers before pasting, so that
-`scanDocument` can correctly renumber them if needed, while keeping any
-connections intact.
+Insert the HTML for the embedded attribute(s).
 
-            grouperClassRE =
-                /class=('[^']*grouper[^']*'|"[^"]*grouper[^"]*")/
-            modifiedHTML = ''
-            while match = grouperClassRE.exec html
-                modifiedHTML += html.substr( 0, match.index ) +
-                                match[0].substr( 0, match[0].length - 1 ) +
-                                ' justPasted' +
-                                match[0].substr match[0].length - 1
-                html = html.substr match.index + match[0].length
-            modifiedHTML += html
             @plugin.editor.insertContent modifiedHTML
 
-We then scan the document so that the newly inserted groups are registered,
-enabling us to call "connect" on them to make them attributes of the group
-out of which they were just unembedded.
+Scan the document so that the newly inserted groups are registered, enabling
+us to call "connect" on them to make them attributes of the group out of
+which they were just unembedded.
 
             @plugin.scanDocument()
             $ @plugin.editor.getDoc()
             .find '.grouper.mustreconnect'
             .each ( index, grouper ) =>
+                console.log 'adjusting', index, grouper
                 @plugin.grouperToGroup( grouper ).connect this
                 ( $ grouper ).removeClass 'mustreconnect'
 
