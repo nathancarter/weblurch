@@ -83,7 +83,9 @@ on-click event of the link.
 
 This code, too, imitates that of `Group::completeForm`.
 
+            firstTime = yes
             for key, list of prepare
+                if not firstTime then addRule()
                 if embedded = group.get OM.encodeAsIdentifier key
                     list.push group
                 strictGroupComparator = ( a, b ) ->
@@ -126,7 +128,7 @@ This code, too, imitates that of `Group::completeForm`.
                                 [ 'remove external', attr.id() ], no,
                                 'Remove attribute' )
                         showKey = ''
-                addRule()
+                firstTime = no
             summary += '</table>'
             if Object.keys( prepare ).length is 0
                 summary += '<p>The expression has no attributes.</p>'
