@@ -163,7 +163,8 @@ slicker way to reload the dialog's content.
                         internalValue =
                             m : meaning.encode()
                             v : compressWrapper visuals
-                        group.set internalKey, internalValue
+                        group.plugin.editor.undoManager.transact ->
+                            group.set internalKey, internalValue
                         reload()
 
 They may have clicked "Remove" on an embedded attribute that's not part of
@@ -171,7 +172,8 @@ a list.  This case is easier; we simply remove the entire attribute and
 reload the dialog.
 
                     else if type is 'remove internal solo'
-                        group.clear OM.encodeAsIdentifier key
+                        group.plugin.editor.undoManager.transact ->
+                            group.clear OM.encodeAsIdentifier key
                         reload()
 
 They may have clicked "Remove" on a non-embedded attribute.  This case is
@@ -179,7 +181,9 @@ also easy; we simply disconnect the attribute from the attributed group.
 As usual, we then reload the dialog.
 
                     else if type is 'remove external'
-                        tinymce.activeEditor.Groups[key].disconnect group
+                        group.plugin.editor.undoManager.transact ->
+                            tinymce.activeEditor.Groups[key].disconnect \
+                                group
                         reload()
 
 If they clicked "Show" on any hidden attribute, we unembed it, then reload
