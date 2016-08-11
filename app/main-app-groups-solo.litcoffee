@@ -36,8 +36,11 @@ more steps through connections) reach its second argument.
                     if reachable next, target then return yes
                 no
             if reachable to, from
-                alert 'Forming that connection would create a cycle,
-                    which is not permitted.'
+                from.plugin.editor.Dialogs.alert
+                    title : 'Cannot connect expressions'
+                    message : 'Forming that connection would create a cycle
+                        of connections among expressions, which is not
+                        permitted.'
             else
                 tinymce.activeEditor.undoManager.transact ->
                     from.connect to
@@ -125,6 +128,132 @@ key they choose.
                             tinymce.activeEditor.undoManager.transact ->
                                 group.set 'key', newKey
                 ]
+
+If group $A$ connects to groups $B_1$ through $B_n$ with key $k$, and
+nothing else connects to any $B_i$ using $k$, then add an item for embedding
+$A$ into each $B_i$.
+
+            connections = group.connectionsOut()
+            key = group.get 'key'
+            if connections.length > 0 and key isnt 'premise'
+
+Here we check whether all the $B_i$ have only $A$ attributing them using
+$k$.
+
+                targets = ( tinymce.activeEditor.Groups[connection[1]] \
+                    for connection in connections )
+                allHaveJustThisGroupAsAttributeForKey = yes
+                for target in targets
+                    if target.attributeGroupsForKey( key ).length > 1
+                        allHaveJustThisGroupAsAttributeForKey = no
+                        break
+                if allHaveJustThisGroupAsAttributeForKey then result.push
+                    text : 'Hide this attribute'
+                    onclick : ->
+
+This is the action we will take, unless there are warnings that cause the
+user to cancel.
+
+                        doIt = ->
+                            tinymce.activeEditor.undoManager.transact ->
+                                for target, index in targets
+                                    last = index == targets.length - 1
+                                    target.embedAttribute key, last
+                                    if not last
+                                        group.connect targets[index+1]
+                        warnings = ''
+
+We create a warning if they are embedding the attribute in more than one
+expression, just to be sure they're aware of that.
+
+                        if targets.length > 1
+                            warnings += "You are hiding this attribute in
+                                #{targets.length} expressions.  "
+
+We create a warning if they will break premise connections by this
+embedding, again, just to be sure they're aware.
+
+                        numPremises =
+                            ( group.attributionAncestry yes ).length -
+                            ( group.attributionAncestry no ).length
+                        if numPremises > 0
+                            warnings += "There are #{numPremises} premise
+                                connections that will be broken if you
+                                hide that attribute.  "
+
+Either execute the action immediately, or if there are warnings, execute it
+if and only if the user chooses to continue despite the warnings.
+
+                        if warnings.length > 0
+                            tinymce.activeEditor.Dialogs.confirm
+                                title : 'Warning'
+                                message : "#{warnings}Continue anyway?"
+                                okCallback : doIt
+                        else
+                            doIt()
+
+Alternatively, if $n=1$ (i.e., there is only one target group, $B_1$), but
+there are many groups $A_1$ through $A_k$ that attribute it, all with the
+same key, we can embed all of them in the one target, as follows.  We
+require that none of the $A_i$ also modifies any group other than $B_1$.
+
+                else if targets.length is 1
+                    target = targets[0]
+                    sources = target.attributeGroupsForKey key
+                    anySourceModifiesAnotherGroup = no
+                    for source in sources
+                        if source.connectionsOut().length > 1
+                            anySourceModifiesAnotherGroup = yes
+                            break
+                    if not anySourceModifiesAnotherGroup then result.push
+                        text : 'Hide this attribute'
+                        onclick : ->
+
+This is the action we will take, unless the user chooses to cancel after
+seeing the warning(s).
+
+                            doIt = ->
+                                tinymce.activeEditor.undoManager.transact ->
+                                    for target, index in targets
+                                        last = index == targets.length - 1
+                                        target.embedAttribute key, last
+                                        if not last
+                                            group.connect targets[index+1]
+                            warnings = "You are about to hide not one
+                                attribute, but #{sources.length}, all of
+                                type #{key}.  "
+
+We create a warning if they will break premise connections by this
+embedding, again, just to be sure they're aware.
+
+                            numPremises = 0
+                            for source in sources
+                                numPremises += \
+                                ( source.attributionAncestry yes ).length -
+                                ( source.attributionAncestry no ).length
+                            if numPremises > 0
+                                warnings += "There are #{numPremises}
+                                    premise connections that will be broken
+                                    if you hide that attribute.  "
+
+Either execute the action immediately, or if there are warnings, execute it
+if and only if the user chooses to continue despite the warnings.
+
+                            if warnings.length > 0
+                                tinymce.activeEditor.Dialogs.confirm
+                                    title : 'Warning'
+                                    message : "#{warnings}Continue anyway?"
+                                    okCallback : doIt
+                            else
+                                doIt()
+
+Every expression has a context menu item for seeing its attributes
+summarized in a dialog.
+
+            result.push
+                text : 'Attributes...'
+                onclick : window.attributesActionForGroup group
+
             result
 
     ]

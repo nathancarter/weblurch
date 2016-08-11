@@ -40,6 +40,14 @@ Set the application name, to appear in page title.
 
     setAppName 'Lurch'
 
+Set the "About" text on the Help menu.
+
+    window.helpAboutText =
+        '<center>
+            <p>Pre-alpha</p>
+            <p>Not yet intended for general consumption</p>
+        </center>'
+
 Install the icon that appears to the left of the File menu.
 
     window.menuBarIcon =
@@ -61,9 +69,9 @@ this source file).
 
     window.useGroupConnectionsUI = yes
 
-Use the MediaWiki, Settings, Dialogs, and Dropbox plugins.
+Use the MediaWiki, Settings, and Dropbox plugins.
 
-    window.pluginsToLoad = [ 'mediawiki', 'settings', 'dialogs', 'dropbox' ]
+    window.pluginsToLoad = [ 'mediawiki', 'settings', 'dropbox' ]
 
 Later files in this sequence may want to add event handlers to be run after
 the editor is ready.  We currently have only one function that is run then,

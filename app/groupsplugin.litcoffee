@@ -143,7 +143,7 @@ the type exists in the plugin stored in `@plugin`.
 
 ## Group attributes
 
-We provide the following two simple methods for getting and setting
+We provide the following four simple methods for getting and setting
 arbitrary data within a group.  Clients should use these methods rather than
 write to fields in a group instance itself, because these (a) guarantee no
 collisions with existing properties/methods, and (b) mark that group (and
@@ -188,8 +188,9 @@ stack.
                 JSON.parse( @open.getAttribute "data-#{key}" )[0]
             catch e
                 undefined
+        keys: => Object.keys @open.dataset
         clear: ( key ) =>
-            if not /^[a-zA-Z0-9-]+$/.test key then return
+            if not /^[a-zA-Z0-9-_]+$/.test key then return
             if @open.getAttribute( "data-#{key}" )?
                 @open.removeAttribute "data-#{key}"
                 if @plugin?

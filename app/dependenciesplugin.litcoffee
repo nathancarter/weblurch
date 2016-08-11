@@ -373,12 +373,22 @@ in this plugin, and updating that user interface accordingly.
                     if file?
                         if path? then path += '/' else path = ''
                         @add "file://#{path}#{file}", ( result, error ) =>
-                            if error? then alert error else @installUI div
+                            if error?
+                                @editor.Dialogs.alert
+                                    title : 'Error adding dependency'
+                                    message : error
+                            else
+                                @installUI div
             elt( 'dependencyAddWiki' ).addEventListener 'click', =>
                 if url = prompt 'Enter the wiki page name of the dependency
                         to add.', 'Example Page Name'
                     @add "wiki://#{url}", ( result, error ) =>
-                        if error? then alert error else @installUI div
+                        if error?
+                            @editor.Dialogs.alert
+                                title : 'Error adding dependency'
+                                message : error
+                        else
+                            @installUI div
 
 # Installing the plugin
 
