@@ -135,7 +135,7 @@ $A$ into each $B_i$.
 
             connections = group.connectionsOut()
             key = group.get 'key'
-            if key isnt 'premise'
+            if connections.length > 0 and key isnt 'premise'
 
 Here we check whether all the $B_i$ have only $A$ attributing them using
 $k$.
