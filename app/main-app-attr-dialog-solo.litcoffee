@@ -80,6 +80,9 @@ on-click event of the link.
                         value='#{text}'/>"
             encodeTextInput = ( text, json ) ->
                 "<input type='text' id='#{encodeId json}' value='#{text}'/>"
+            nonLink = ( text, hover ) ->
+                "<span title='#{hover}'
+                       style='color: #aaaaaa;'>#{text}</span>"
 
 This code, too, imitates that of `Group::completeForm`.
 
@@ -101,7 +104,15 @@ This code, too, imitates that of `Group::completeForm`.
                                 Group::listSymbol
                             for meaning, index in expression.children[1..]
                                 addRow showKey,
-                                    canonicalFormToHTML( meaning ),
+                                    canonicalFormToHTML( meaning ) + ' ' +
+                                        ( if meaning.type is 'st' then \
+                                            encodeLink( '&#x1f589;',
+                                                [ 'edit from internal list',
+                                                  key, index ], no,
+                                                'Edit attribute' ) else \
+                                            nonLink( '&#x1f589;',
+                                                'Cannot edit --
+                                                 not atomic' ) ),
                                     'hidden ' + encodeLink( '&#x1f441;',
                                         [ 'show', key ], no,
                                         'Show attribute' ),
@@ -112,7 +123,13 @@ This code, too, imitates that of `Group::completeForm`.
                                 showKey = ''
                         else
                             addRow showKey,
-                                canonicalFormToHTML( expression ),
+                                canonicalFormToHTML( expression ) + ' ' +
+                                    ( if expression.type is 'st' then \
+                                        encodeLink( '&#x1f589;',
+                                            [ 'edit internal solo', key ],
+                                            no, 'Edit attribute' ) else \
+                                        nonLink( '&#x1f589;',
+                                            'Cannot edit -- not atomic' ) ),
                                 'hidden ' + encodeLink( '&#x1f441;',
                                     [ 'show', key ], no, 'Show attribute' ),
                                 encodeLink( '&#10007;',
@@ -120,8 +137,15 @@ This code, too, imitates that of `Group::completeForm`.
                                     'Remove attribute' )
                             showKey = ''
                     else
+                        meaning = attr.canonicalForm()
                         addRow showKey,
-                            canonicalFormToHTML( attr.canonicalForm() ),
+                            canonicalFormToHTML( meaning ) + ' ' +
+                                ( if meaning.type is 'st' then \
+                                    encodeLink( '&#x1f589;',
+                                        [ 'edit external', attr.id() ], no,
+                                        'Edit attribute' ) else \
+                                    nonLink( '&#x1f589;',
+                                        'Cannot edit -- not atomic' ) ),
                             'visible ' + encodeLink( '&#x1f441;',
                                 [ 'hide', key ], no, 'Hide attribute' ),
                             encodeLink( '&#10007;',
@@ -242,3 +266,83 @@ user why.
                                     group.clear encKey
                                     group.set encNew, tmp
                                     reload()
+
+They may have clicked "Edit" on an embedded attribute that's just one entry
+in an entire embedded list.  In that case, we need to decode the list (both
+its meaning and its visuals), and edit the specified entries.  We then put
+the data right back into the group from which we extracted it.
+
+                    if type is 'edit from internal list'
+                        tinymce.activeEditor.Dialogs.prompt
+                            title : 'Enter new value'
+                            message : "Provide the new content of the
+                                atomic expression."
+                            okCallback : ( newValue ) ->
+                                internalKey = OM.encodeAsIdentifier key
+                                internalValue = group.get internalKey
+                                meaning = OM.decode internalValue.m
+                                meaning.children[index+1].tree.v = newValue
+                                visuals = decompressWrapper internalValue.v
+                                visuals = visuals.split '\n'
+                                match = /^<([^>]*)>([^<]*)<(.*)$/.exec \
+                                    visuals[index]
+                                if not match then return
+                                newValue = newValue.replace /&/g, '&amp;'
+                                                   .replace /</g, '&lt;'
+                                                   .replace />/g, '&gt;'
+                                                   .replace /"/g, '&quot;'
+                                                   .replace /'/g, '&apos;'
+                                visuals[index] =
+                                    "<#{match[1]}>#{newValue}<#{match[3]}"
+                                visuals = visuals.join '\n'
+                                internalValue =
+                                    m : meaning.encode()
+                                    v : compressWrapper visuals
+                                group.plugin.editor.undoManager.transact ->
+                                    group.set internalKey, internalValue
+                                reload()
+
+They may have clicked "Edit" on an embedded attribute that's not part of
+a list.  This case is very similar to the previous, except it does not
+operate on just one entry in a list, but rather the entire expression.
+
+                    else if type is 'edit internal solo'
+                        tinymce.activeEditor.Dialogs.prompt
+                            title : 'Enter new value'
+                            message : "Provide the new content of the
+                                atomic expression."
+                            okCallback : ( newValue ) ->
+                                internalKey = OM.encodeAsIdentifier key
+                                internalValue = group.get internalKey
+                                meaning = OM.decode internalValue.m
+                                meaning.tree.v = newValue
+                                visuals = decompressWrapper internalValue.v
+                                match = /^<([^>]*)>([^<]*)<(.*)$/.exec \
+                                    visuals
+                                if not match then return
+                                newValue = newValue.replace /&/g, '&amp;'
+                                                   .replace /</g, '&lt;'
+                                                   .replace />/g, '&gt;'
+                                                   .replace /"/g, '&quot;'
+                                                   .replace /'/g, '&apos;'
+                                visuals =
+                                    "<#{match[1]}>#{newValue}<#{match[3]}"
+                                internalValue =
+                                    m : meaning.encode()
+                                    v : compressWrapper visuals
+                                group.plugin.editor.undoManager.transact ->
+                                    group.set internalKey, internalValue
+                                reload()
+
+They may have clicked "Edit" on a non-embedded attribute.  This case is also
+easy; we simply change the contents of the attribute group.  As usual, we
+then reload the dialog.
+
+                    else if type is 'edit external'
+                        tinymce.activeEditor.Dialogs.prompt
+                            title : 'Enter new value'
+                            message : "Provide the new content of the
+                                atomic expression."
+                            okCallback : ( newValue ) ->
+                                group.plugin[key].setContentAsText newValue
+                                reload()
