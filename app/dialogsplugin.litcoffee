@@ -41,20 +41,14 @@ a blob, so that it can be passed to the TinyMCE dialog-creation routines.
 
 The second installs in the top-level window a listener for the events
 posted from the interior of the dialog.  It then calls the given event
-handler with the ID of the element clicked.  It returns the handler
-installed, so that callers can pass it to the following function.
+handler with the ID of the element clicked.  It also makes sure that when
+the dialog is closed, this event handler will be uninstalled
 
     installClickListener = ( handler ) ->
         innerHandler = ( event ) -> handler event.data
         window.addEventListener 'message', innerHandler, no
-        innerHandler
-
-The third uninstalls such event handlers; be sure to call it when your
-dialog closes, passing in the same event handler returned by the call to
-the previous function.
-
-    uninstallClickListener = ( innerHandler ) ->
-        window.removeEventListener 'message', innerHandler
+        tinymce.activeEditor.windowManager.getWindows()[0].on 'close', ->
+            window.removeEventListener 'message', innerHandler
 
 ## Alert box
 
@@ -62,8 +56,6 @@ This function shows a simple alert box, with a callback when the user
 clicks OK.  The message can be text or HTML.
 
     Dialogs.alert = ( options ) ->
-        if options.onclick
-            handler = installClickListener options.onclick
         tinymce.activeEditor.windowManager.open
             title : options.title ? ' '
             url : prepareHTML options.message
@@ -76,8 +68,8 @@ clicks OK.  The message can be text or HTML.
                 onclick : ( event ) ->
                     tinymce.activeEditor.windowManager.close()
                     options.callback? event
-                    if options.onclick then uninstallClickListener handler
             ]
+        if options.onclick then installClickListener options.onclick
 
 ## Confirm dialog
 
@@ -88,8 +80,6 @@ options object with the 'OK' and 'Cancel' keys.
 
 
     Dialogs.confirm = ( options ) ->
-        if options.onclick
-            handler = installClickListener options.onclick
         tinymce.activeEditor.windowManager.open
             title : options.title ? ' '
             url : prepareHTML options.message
@@ -102,7 +92,6 @@ options object with the 'OK' and 'Cancel' keys.
                 onclick : ( event ) ->
                     tinymce.activeEditor.windowManager.close()
                     options.cancelCallback? event
-                    if options.onclick then uninstallClickListener handler
             ,
                 type : 'button'
                 text : options.OK ? 'OK'
@@ -110,8 +99,8 @@ options object with the 'OK' and 'Cancel' keys.
                 onclick : ( event ) ->
                     tinymce.activeEditor.windowManager.close()
                     options.okCallback? event
-                    if options.onclick then uninstallClickListener handler
             ]
+        if options.onclick then installClickListener options.onclick
 
 # Installing the plugin
 
