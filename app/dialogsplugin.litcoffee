@@ -34,8 +34,8 @@ a blob, so that it can be passed to the TinyMCE dialog-creation routines.
                 for element in document.getElementsByTagName tagName
                     element.addEventListener eventName, ( event ) ->
                         top.postMessage
-                            value : event.target.value
-                            id : event.target.getAttribute 'id'
+                            value : event.currentTarget.value
+                            id : event.currentTarget.getAttribute 'id'
                         , '*'
             install 'a', 'click'
             install 'input', 'click'
