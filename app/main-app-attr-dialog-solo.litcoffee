@@ -86,9 +86,7 @@ on-click event of the link.
 
 This code, too, imitates that of `Group::completeForm`.
 
-            firstTime = yes
             for key, list of prepare
-                if not firstTime then addRule()
                 if embedded = group.get OM.encodeAsIdentifier key
                     list.push group
                 strictGroupComparator = ( a, b ) ->
@@ -152,16 +150,21 @@ This code, too, imitates that of `Group::completeForm`.
                                 [ 'remove external', attr.id() ], no,
                                 'Remove attribute' )
                         showKey = ''
-                firstTime = no
+                addRule()
             summary += '</table>'
             if Object.keys( prepare ).length is 0
                 summary += '<p>The expression has no attributes.</p>'
+                addRule()
+            summary += '<center><p>' +
+                encodeLink( '<b>+</b>', [ 'add attribute' ], no,
+                    'Add new attribute' ) + '</p></center>'
 
 Show the dialog, and listen for any links that were clicked.
 
             tinymce.activeEditor.Dialogs.alert
                 title : 'Attributes'
                 message : summary
+                width : 600
                 onclick : ( data ) ->
                     try [ type, key, index ] = decodeId data.id
 
@@ -346,3 +349,26 @@ then reload the dialog.
                             okCallback : ( newValue ) ->
                                 group.plugin[key].setContentAsText newValue
                                 reload()
+
+If the user clicks "Add attribute," we choose a new key and atomic value,
+which the user can then edit thereafter.
+
+                    else if type is 'add attribute'
+                        index = 1
+                        key = -> OM.encodeAsIdentifier "attribute#{index}"
+                        index++ while group.get key()
+                        meaning = OM.string 'edit this'
+                        grouper = ( type ) ->
+                            result = grouperHTML 'expression', type, 0, no
+                            if type is 'open'
+                                result = result.replace 'grouper',
+                                    'grouper mustreconnect'
+                            result
+                        visuals = grouper( 'open' ) + meaning.value +
+                            grouper 'close'
+                        internalValue =
+                            m : meaning.encode()
+                            v : compressWrapper visuals
+                        group.plugin.editor.undoManager.transact ->
+                            group.set key(), internalValue
+                        reload()

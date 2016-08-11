@@ -13,12 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Attribute dialog
-
- * At the end of the dialog, provide a button to add a new key-value pair to
-   the attributes list.  It will always create an atomic value, which can
-   immediately be edited, either in key or in value.  Ensure that this action is one single action on the undo/redo stack.
-
 ## Code attributes
 
  * Add to the list of suggested key types on the group context menu "code."

@@ -221,6 +221,8 @@ which they were just unembedded.  Furthermore, ensure that the key of each
 is set to the key it had while embedded.  This is important because the key
 may have been edited while it was embedded, which was not reflected in the
 (zipped) HTML representation stored in the attributed expression.
+Furthermore, if the attribute was just created, it may not have a key
+position, so we supply a default.
 
             @plugin.scanDocument()
             $ @plugin.editor.getDoc()
@@ -229,6 +231,7 @@ may have been edited while it was embedded, which was not reflected in the
                 g = @plugin.grouperToGroup grouper
                 g.connect this
                 g.set 'key', key
+                g.set 'keyposition', 'arrow' unless g.get 'keyposition'
                 ( $ grouper ).removeClass 'mustreconnect'
 
 Now delete the embedding data from within the attributed expression.
