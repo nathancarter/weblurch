@@ -21,9 +21,9 @@ http://nathancarter.github.io/weblurch/app/openmath-example.html)
     setAppName 'OM-CD-Writer'
     addHelpMenuSourceCodeLink 'app/openmath-example-solo.litcoffee'
     window.helpAboutText =
-        'See the fully documented source code for this demo app at the
-        following URL:\n
-        \nhttps://github.com/nathancarter/weblurch/blob/master/app/openmath-example-solo.litcoffee'
+        '<p>See the fully documented <a target="top"
+        href="https://github.com/nathancarter/weblurch/blob/master/app/openmath-example-solo.litcoffee"
+        >source code for this demo app</a>.</p>'
 
 ## Define one group type
 

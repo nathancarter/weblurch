@@ -22,9 +22,9 @@ Add a source code link to the help menu, as in the simple example app.
 We also change the Help/About menu item to be specific to this demo app.
 
     window.helpAboutText =
-        'See the fully documented source code for this demo app at the
-        following URL:\n
-        \nhttps://github.com/nathancarter/weblurch/blob/master/app/complex-example-solo.litcoffee'
+        '<p>See the fully documented <a target="top"
+        href="https://github.com/nathancarter/weblurch/blob/master/app/complex-example-solo.litcoffee"
+        >source code for this demo app</a>.</p>'
 
 ## Define two group types
 

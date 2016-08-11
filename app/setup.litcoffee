@@ -101,7 +101,8 @@ that begins with a hyphen is a local plugin written as part of this project.
             plugins :
                 'advlist table charmap colorpicker image link importcss
                 paste print save searchreplace textcolor fullscreen
-                -loadsave -overlay -groups -equationeditor -dependencies ' \
+                -loadsave -overlay -groups -equationeditor -dependencies
+                -dialogs ' \
                 + ( "-#{p}" for p in window.pluginsToLoad ).join ' '
 
 The groups plugin requires that we add the following, to prevent resizing of
@@ -182,10 +183,7 @@ Add a Help menu.
                     context : 'help'
                     onclick : -> editor.Dialogs.alert
                         title : 'webLurch'
-                        message : '<center>
-                            <p>pre-alpha</p>
-                            <p>not yet intended for general consumption</p>
-                        </center>'
+                        message : helpAboutText ? ''
                 editor.addMenuItem 'website',
                     text : 'Lurch website'
                     context : 'help'
