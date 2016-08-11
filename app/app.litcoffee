@@ -373,12 +373,22 @@ in this plugin, and updating that user interface accordingly.
                     if file?
                         if path? then path += '/' else path = ''
                         @add "file://#{path}#{file}", ( result, error ) =>
-                            if error? then alert error else @installUI div
+                            if error?
+                                @editor.Dialogs.alert
+                                    title : 'Error adding dependency'
+                                    message : error
+                            else
+                                @installUI div
             elt( 'dependencyAddWiki' ).addEventListener 'click', =>
                 if url = prompt 'Enter the wiki page name of the dependency
                         to add.', 'Example Page Name'
                     @add "wiki://#{url}", ( result, error ) =>
-                        if error? then alert error else @installUI div
+                        if error?
+                            @editor.Dialogs.alert
+                                title : 'Error adding dependency'
+                                message : error
+                        else
+                            @installUI div
 
 # Installing the plugin
 
@@ -408,6 +418,39 @@ tinymce.activeEditor.Dialogs.alert( {
 
     Dialogs = { }
 
+## Generic function
+
+The following functions give every dialog in this plugin the ability to
+include buttons and links, together with an on-click handler
+`options.onclick`.
+
+The first extends any HTML code for the interior of a dialog with the
+necessary script for passing all events from links and buttons out to the
+parent window.  It also converts the resulting page into the object URL for
+a blob, so that it can be passed to the TinyMCE dialog-creation routines.
+
+    prepareHTML = ( html ) ->
+        script = ->
+            add = ( element ) ->
+                element.addEventListener 'click', ( event ) ->
+                    top.postMessage event.target.getAttribute( 'id' ), '*'
+            add element for element in document.getElementsByTagName 'a'
+            add element for element in document.getElementsByTagName 'input'
+        window.objectURLForBlob window.makeBlob \
+            html + "<script>(#{script})()</script>",
+            'text/html;charset=utf-8'
+
+The second installs in the top-level window a listener for the events
+posted from the interior of the dialog.  It then calls the given event
+handler with the ID of the element clicked.  It also makes sure that when
+the dialog is closed, this event handler will be uninstalled
+
+    installClickListener = ( handler ) ->
+        innerHandler = ( event ) -> handler event.data
+        window.addEventListener 'message', innerHandler, no
+        tinymce.activeEditor.windowManager.getWindows()[0].on 'close', ->
+            window.removeEventListener 'message', innerHandler
+
 ## Alert box
 
 This function shows a simple alert box, with a callback when the user
@@ -416,8 +459,7 @@ clicks OK.  The message can be text or HTML.
     Dialogs.alert = ( options ) ->
         tinymce.activeEditor.windowManager.open
             title : options.title ? ' '
-            url : window.objectURLForBlob window.makeBlob options.message,
-                'text/html;charset=utf-8'
+            url : prepareHTML options.message
             width : options.width ? 400
             height : options.height ? 300
             buttons : [
@@ -428,6 +470,7 @@ clicks OK.  The message can be text or HTML.
                     tinymce.activeEditor.windowManager.close()
                     options.callback? event
             ]
+        if options.onclick then installClickListener options.onclick
 
 ## Confirm dialog
 
@@ -436,11 +479,11 @@ and one for Cancel, named `okCallback` and `cancelCallback`, respectively.
 The user can rename the OK and Cancel buttons by specfying strings in the
 options object with the 'OK' and 'Cancel' keys.
 
+
     Dialogs.confirm = ( options ) ->
         tinymce.activeEditor.windowManager.open
             title : options.title ? ' '
-            url : window.objectURLForBlob window.makeBlob options.message,
-                'text/html;charset=utf-8'
+            url : prepareHTML options.message
             width : options.width ? 400
             height : options.height ? 300
             buttons : [
@@ -458,6 +501,7 @@ options object with the 'OK' and 'Cancel' keys.
                     tinymce.activeEditor.windowManager.close()
                     options.okCallback? event
             ]
+        if options.onclick then installClickListener options.onclick
 
 # Installing the plugin
 
@@ -765,7 +809,7 @@ the type exists in the plugin stored in `@plugin`.
 
 ## Group attributes
 
-We provide the following two simple methods for getting and setting
+We provide the following four simple methods for getting and setting
 arbitrary data within a group.  Clients should use these methods rather than
 write to fields in a group instance itself, because these (a) guarantee no
 collisions with existing properties/methods, and (b) mark that group (and
@@ -810,8 +854,9 @@ stack.
                 JSON.parse( @open.getAttribute "data-#{key}" )[0]
             catch e
                 undefined
+        keys: => Object.keys @open.dataset
         clear: ( key ) =>
-            if not /^[a-zA-Z0-9-]+$/.test key then return
+            if not /^[a-zA-Z0-9-_]+$/.test key then return
             if @open.getAttribute( "data-#{key}" )?
                 @open.removeAttribute "data-#{key}"
                 if @plugin?
@@ -3806,7 +3851,8 @@ that begins with a hyphen is a local plugin written as part of this project.
             plugins :
                 'advlist table charmap colorpicker image link importcss
                 paste print save searchreplace textcolor fullscreen
-                -loadsave -overlay -groups -equationeditor -dependencies ' \
+                -loadsave -overlay -groups -equationeditor -dependencies
+                -dialogs ' \
                 + ( "-#{p}" for p in window.pluginsToLoad ).join ' '
 
 The groups plugin requires that we add the following, to prevent resizing of
@@ -3885,7 +3931,9 @@ Add a Help menu.
                 editor.addMenuItem 'about',
                     text : 'About...'
                     context : 'help'
-                    onclick : -> alert window.helpAboutText
+                    onclick : -> editor.Dialogs.alert
+                        title : 'webLurch'
+                        message : helpAboutText ? ''
                 editor.addMenuItem 'website',
                     text : 'Lurch website'
                     context : 'help'
