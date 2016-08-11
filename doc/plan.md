@@ -15,23 +15,6 @@ required order of completion.
 
 ## Attribute dialog
 
- * Next to any embedded attribute, provide a "Remove" button that deletes
-   the attribute internally from the expression.  Ensure that this action is
-   placed correctly on the undo/redo stack.
- * Next to any non-embedded attribute, provide a "Remove" button that
-   deletes the connection from the source to the target.  Ensure that this
-   action is placed correctly on the undo/redo stack.
- * Next to any embedded attribute whose value is not a list, provide an
-   "Expand" button that places the in-document version of that attribute,
-   with the appropriate connection, immediately after the group in which it
-   is embedded.  This also removes the embedded version.  Ensure that this
-   action is one single action on the undo/redo stack.
- * Next to any embedded attribute whose value is a list, provide an "Expand"
-   button that places the in-document version of that attribute's elements,
-   in the order they appear in the list, with the appropriate connections,
-   immediately after the group in which it is embedded.  This also removes
-   the embedded version.  Ensure that this action is one single action on
-   the undo/redo stack.
  * For any hidden attribute whose value is atomic, show it as an editable
    text box.  When edits take place in that text box, immediately update the
    value of the hidden attribute in accordance with the edits.  Place each
