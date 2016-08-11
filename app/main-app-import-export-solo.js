@@ -133,7 +133,7 @@
   };
 
   translateShorthandIntoEditor = function(shorthand) {
-    var already, connections, div, doc, group, id, idToKey, idToN, internalKey, internalValue, n, nToId, nextId, recur, source, sourceId, target, targetNs, _i, _j, _len, _ref;
+    var already, connections, div, doc, expression, group, id, idToKey, idToN, internalKey, internalValue, n, nToId, nextId, recur, source, sourceId, target, targetNs, _i, _j, _len, _ref;
     doc = tinymce.activeEditor.getDoc();
     div = doc.createElement('div');
     div.innerHTML = shorthand;
@@ -198,10 +198,11 @@
           v: LZString.compress(group.groupAsHTML(false))
         };
         if (already = group.parent.get(internalKey)) {
-          if ((_ref = already.m.children[0]) != null ? _ref.equals(OM.sym('List', 'Lurch')) : void 0) {
-            already.m = OM.app.apply(OM, [already.m.children[0], OM.decode(internalValue.m)].concat(__slice.call(already.m.children[1])));
+          expression = OM.decode(already.m);
+          if ((_ref = expression.children[0]) != null ? _ref.equals(Group.prototype.listSymbol) : void 0) {
+            already.m = (OM.app.apply(OM, [expression.children[0], OM.decode(internalValue.m)].concat(__slice.call(expression.children[1])))).encode();
           } else {
-            already.m = OM.app(OM.sym('List', 'Lurch'), already.m, OM.decode(internalValue.m));
+            already.m = (OM.app(Group.prototype.listSymbol, expression, OM.decode(internalValue.m))).encode();
           }
           already.v = internalValue.v + already.v;
           internalValue = already;

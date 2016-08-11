@@ -1338,6 +1338,9 @@
   OM.decodeIdentifier = function(ident) {
     var result;
     result = '';
+    if (ident.slice(0, 3) !== 'id_') {
+      return result;
+    }
     ident = ident.slice(3);
     while (ident.length > 0) {
       result += String.fromCharCode(parseInt(ident.slice(0, 4), 16));

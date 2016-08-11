@@ -1298,6 +1298,32 @@
 
   OM.simple = OM.simpleDecode;
 
+  OM.encodeAsIdentifier = function(string) {
+    var charTo4Digits, i, result, _i, _ref1;
+    charTo4Digits = function(index) {
+      return ('000' + string.charCodeAt(index).toString(16)).slice(-4);
+    };
+    result = 'id_';
+    for (i = _i = 0, _ref1 = string.length; 0 <= _ref1 ? _i < _ref1 : _i > _ref1; i = 0 <= _ref1 ? ++_i : --_i) {
+      result += charTo4Digits(i);
+    }
+    return result;
+  };
+
+  OM.decodeIdentifier = function(ident) {
+    var result;
+    result = '';
+    if (ident.slice(0, 3) !== 'id_') {
+      return result;
+    }
+    ident = ident.slice(3);
+    while (ident.length > 0) {
+      result += String.fromCharCode(parseInt(ident.slice(0, 4), 16));
+      ident = ident.slice(4);
+    }
+    return result;
+  };
+
 }).call(this);
 
 //# sourceMappingURL=openmath-duo.js.map

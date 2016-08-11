@@ -11,7 +11,7 @@
   }
 
   if (typeof require !== "undefined" && require !== null) {
-    _ref1 = require('./openmath.duo'), OM = _ref1.OM, OMNode = _ref1.OMNode;
+    _ref1 = require('./openmath-duo'), OM = _ref1.OM, OMNode = _ref1.OMNode;
   }
 
   metavariableSymbol = OM.symbol('metavariable', 'lurch');

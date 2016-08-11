@@ -9,7 +9,7 @@
 
   addHelpMenuSourceCodeLink('app/lean-example-solo.litcoffee');
 
-  window.helpAboutText = 'See the fully documented source code for this demo app at the following URL:\n \nhttps://github.com/nathancarter/weblurch/blob/master/app/lean-example-solo.litcoffee';
+  window.helpAboutText = '<p>See the fully documented <a target="top" href="https://github.com/nathancarter/weblurch/blob/master/app/lean-example-solo.litcoffee" >source code for this demo app</a>.</p>';
 
   myTimer = null;
 
@@ -276,11 +276,15 @@
           }
           return _results;
         })(), _ref) >= 0) {
-          return from.disconnect(to);
+          return tinymce.activeEditor.undoManager.transact(function() {
+            return from.disconnect(to);
+          });
         } else if (pathExists(to.id(), from.id())) {
           return alert('That would create a cycle of arrows, which is not permitted.');
         } else {
-          return from.connect(to);
+          return tinymce.activeEditor.undoManager.transact(function() {
+            return from.connect(to);
+          });
         }
       },
       connections: function(group) {
@@ -509,9 +513,13 @@
         }
         return _results;
       })(), _ref) >= 0) {
-        return from.disconnect(to);
+        return tinymce.activeEditor.undoManager.transact(function() {
+          return from.disconnect(to);
+        });
       } else {
-        return from.connect(to);
+        return tinymce.activeEditor.undoManager.transact(function() {
+          return from.connect(to);
+        });
       }
     }
   });
@@ -590,11 +598,15 @@
         }
         return _results;
       })(), _ref) >= 0) {
-        return from.disconnect(to);
+        return tinymce.activeEditor.undoManager.transact(function() {
+          return from.disconnect(to);
+        });
       } else if (pathExists(to.id(), from.id())) {
         return alert('That would create a cycle of arrows, which is not permitted.');
       } else {
-        return from.connect(to);
+        return tinymce.activeEditor.undoManager.transact(function() {
+          return from.connect(to);
+        });
       }
     }
   });

@@ -31,7 +31,10 @@
           return false;
         };
         if (reachable(to, from)) {
-          return alert('Forming that connection would create a cycle, which is not permitted.');
+          return from.plugin.editor.Dialogs.alert({
+            title: 'Cannot connect expressions',
+            message: 'Forming that connection would create a cycle of connections among expressions, which is not permitted.'
+          });
         } else {
           return tinymce.activeEditor.undoManager.transact(function() {
             from.connect(to);
@@ -102,7 +105,7 @@
         return result;
       },
       contextMenuItems: function(group) {
-        var result;
+        var allHaveJustThisGroupAsAttributeForKey, anySourceModifiesAnotherGroup, connection, connections, key, result, source, sources, target, targets, _i, _j, _len, _len1;
         result = [];
         if (group.get('keyposition') === 'arrow') {
           result.push({
@@ -151,6 +154,127 @@
               }
             }
           ]
+        });
+        connections = group.connectionsOut();
+        key = group.get('key');
+        if (connections.length > 0 && key !== 'premise') {
+          targets = (function() {
+            var _i, _len, _results;
+            _results = [];
+            for (_i = 0, _len = connections.length; _i < _len; _i++) {
+              connection = connections[_i];
+              _results.push(tinymce.activeEditor.Groups[connection[1]]);
+            }
+            return _results;
+          })();
+          allHaveJustThisGroupAsAttributeForKey = true;
+          for (_i = 0, _len = targets.length; _i < _len; _i++) {
+            target = targets[_i];
+            if (target.attributeGroupsForKey(key).length > 1) {
+              allHaveJustThisGroupAsAttributeForKey = false;
+              break;
+            }
+          }
+          if (allHaveJustThisGroupAsAttributeForKey) {
+            result.push({
+              text: 'Hide this attribute',
+              onclick: function() {
+                var doIt, numPremises, warnings;
+                doIt = function() {
+                  return tinymce.activeEditor.undoManager.transact(function() {
+                    var index, last, _j, _len1, _results;
+                    _results = [];
+                    for (index = _j = 0, _len1 = targets.length; _j < _len1; index = ++_j) {
+                      target = targets[index];
+                      last = index === targets.length - 1;
+                      target.embedAttribute(key, last);
+                      if (!last) {
+                        _results.push(group.connect(targets[index + 1]));
+                      } else {
+                        _results.push(void 0);
+                      }
+                    }
+                    return _results;
+                  });
+                };
+                warnings = '';
+                if (targets.length > 1) {
+                  warnings += "You are hiding this attribute in " + targets.length + " expressions.  ";
+                }
+                numPremises = (group.attributionAncestry(true)).length - (group.attributionAncestry(false)).length;
+                if (numPremises > 0) {
+                  warnings += "There are " + numPremises + " premise connections that will be broken if you hide that attribute.  ";
+                }
+                if (warnings.length > 0) {
+                  return tinymce.activeEditor.Dialogs.confirm({
+                    title: 'Warning',
+                    message: "" + warnings + "Continue anyway?",
+                    okCallback: doIt
+                  });
+                } else {
+                  return doIt();
+                }
+              }
+            });
+          } else if (targets.length === 1) {
+            target = targets[0];
+            sources = target.attributeGroupsForKey(key);
+            anySourceModifiesAnotherGroup = false;
+            for (_j = 0, _len1 = sources.length; _j < _len1; _j++) {
+              source = sources[_j];
+              if (source.connectionsOut().length > 1) {
+                anySourceModifiesAnotherGroup = true;
+                break;
+              }
+            }
+            if (!anySourceModifiesAnotherGroup) {
+              result.push({
+                text: 'Hide this attribute',
+                onclick: function() {
+                  var doIt, numPremises, warnings, _k, _len2;
+                  doIt = function() {
+                    return tinymce.activeEditor.undoManager.transact(function() {
+                      var index, last, _k, _len2, _results;
+                      _results = [];
+                      for (index = _k = 0, _len2 = targets.length; _k < _len2; index = ++_k) {
+                        target = targets[index];
+                        last = index === targets.length - 1;
+                        target.embedAttribute(key, last);
+                        if (!last) {
+                          _results.push(group.connect(targets[index + 1]));
+                        } else {
+                          _results.push(void 0);
+                        }
+                      }
+                      return _results;
+                    });
+                  };
+                  warnings = "You are about to hide not one attribute, but " + sources.length + ", all of type " + key + ".  ";
+                  numPremises = 0;
+                  for (_k = 0, _len2 = sources.length; _k < _len2; _k++) {
+                    source = sources[_k];
+                    numPremises += (source.attributionAncestry(true)).length - (source.attributionAncestry(false)).length;
+                  }
+                  if (numPremises > 0) {
+                    warnings += "There are " + numPremises + " premise connections that will be broken if you hide that attribute.  ";
+                  }
+                  if (warnings.length > 0) {
+                    return tinymce.activeEditor.Dialogs.confirm({
+                      title: 'Warning',
+                      message: "" + warnings + "Continue anyway?",
+                      okCallback: doIt
+                    });
+                  } else {
+                    return doIt();
+                  }
+                }
+              });
+            }
+          }
+        }
+        result.push({
+          text: 'Attributes...',
+          onclick: window.attributesActionForGroup(group)
         });
         return result;
       }

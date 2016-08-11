@@ -2,6 +2,8 @@
 (function() {
   setAppName('Lurch');
 
+  window.helpAboutText = '<center> <p>Pre-alpha</p> <p>Not yet intended for general consumption</p> </center>';
+
   window.menuBarIcon = {
     src: 'icons/apple-touch-icon-76x76.png',
     width: '26px',
@@ -15,7 +17,7 @@
 
   window.useGroupConnectionsUI = true;
 
-  window.pluginsToLoad = ['mediawiki', 'settings', 'dialogs', 'dropbox'];
+  window.pluginsToLoad = ['mediawiki', 'settings', 'dropbox'];
 
   window.afterEditorReadyArray = [];
 
