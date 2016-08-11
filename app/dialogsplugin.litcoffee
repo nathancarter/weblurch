@@ -30,11 +30,16 @@ a blob, so that it can be passed to the TinyMCE dialog-creation routines.
 
     prepareHTML = ( html ) ->
         script = ->
-            add = ( element ) ->
-                element.addEventListener 'click', ( event ) ->
-                    top.postMessage event.target.getAttribute( 'id' ), '*'
-            add element for element in document.getElementsByTagName 'a'
-            add element for element in document.getElementsByTagName 'input'
+            install = ( tagName, eventName ) ->
+                for element in document.getElementsByTagName tagName
+                    element.addEventListener eventName, ( event ) ->
+                        top.postMessage
+                            value : event.currentTarget.value
+                            id : event.currentTarget.getAttribute 'id'
+                        , '*'
+            install 'a', 'click'
+            install 'input', 'click'
+            install 'input', 'input'
         window.objectURLForBlob window.makeBlob \
             html + "<script>(#{script})()</script>",
             'text/html;charset=utf-8'
@@ -101,6 +106,41 @@ options object with the 'OK' and 'Cancel' keys.
                     options.okCallback? event
             ]
         if options.onclick then installClickListener options.onclick
+
+## Prompt dialog
+
+This function is just like the prompt dialog in JavaScript, but it uses two
+callbacks instead of a return value.  They are named `okCallback` and
+`cancelCallback`, as in [the confirm dialog](#confirm-dialog), but they
+receive the text in the dialog's input as a parameter.
+
+    Dialogs.prompt = ( options ) ->
+        value = if options.value then " value='#{options.value}'" else ''
+        options.message +=
+            "<p><input type='text' #{value} id='promptInput' size=40/></p>"
+        lastValue = options.value ? ''
+        tinymce.activeEditor.windowManager.open
+            title : options.title ? ' '
+            url : prepareHTML options.message
+            width : options.width ? 300
+            height : options.height ? 200
+            buttons : [
+                type : 'button'
+                text : options.Cancel ? 'Cancel'
+                subtype : 'primary'
+                onclick : ( event ) ->
+                    tinymce.activeEditor.windowManager.close()
+                    options.cancelCallback? lastValue
+            ,
+                type : 'button'
+                text : options.OK ? 'OK'
+                subtype : 'primary'
+                onclick : ( event ) ->
+                    tinymce.activeEditor.windowManager.close()
+                    options.okCallback? lastValue
+            ]
+        installClickListener ( data ) ->
+            if data.id is 'promptInput' then lastValue = data.value
 
 # Installing the plugin
 
