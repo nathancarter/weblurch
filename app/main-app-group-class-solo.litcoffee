@@ -227,6 +227,10 @@ which they were just unembedded.
                 @plugin.grouperToGroup( grouper ).connect this
                 ( $ grouper ).removeClass 'mustreconnect'
 
+Now delete the embedding data from within the attributed expression.
+
+            @clear OM.encodeAsIdentifier key
+
 ## Compression
 
 The `LZString.compress` and `LZString.decompress` functions would be ideal

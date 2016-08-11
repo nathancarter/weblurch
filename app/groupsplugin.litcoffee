@@ -190,7 +190,7 @@ stack.
                 undefined
         keys: => Object.keys @open.dataset
         clear: ( key ) =>
-            if not /^[a-zA-Z0-9-]+$/.test key then return
+            if not /^[a-zA-Z0-9-_]+$/.test key then return
             if @open.getAttribute( "data-#{key}" )?
                 @open.removeAttribute "data-#{key}"
                 if @plugin?
