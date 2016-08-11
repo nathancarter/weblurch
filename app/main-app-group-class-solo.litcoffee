@@ -223,7 +223,6 @@ which they were just unembedded.
             $ @plugin.editor.getDoc()
             .find '.grouper.mustreconnect'
             .each ( index, grouper ) =>
-                console.log 'adjusting', index, grouper
                 @plugin.grouperToGroup( grouper ).connect this
                 ( $ grouper ).removeClass 'mustreconnect'
 
