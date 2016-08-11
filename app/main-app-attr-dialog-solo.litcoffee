@@ -46,10 +46,12 @@ Create a table listing all attributes, both external and internal.  The code
 here follows a similar pattern to that in `Group::completeForm`, defined in
 [another file](main-app-group-class-solo.litcoffee).
 
-            addRow = ( left, middle = '', right = '' ) ->
-                summary += "<tr><td width=40% align=left>#{left}</td>
-                                <td width=40% align=right>#{middle}</td>
-                                <td width=20% align=left>#{right}</td></tr>"
+            addRow = ( key, value = '', type = '', links = '' ) ->
+                summary += "<tr><td width=30% align=left>#{key}</td>
+                                <td width=30% align=right>#{value}</td>
+                                <td width=20% align=right>#{type}</td>
+                                <td width=20% align=left>#{links}</td></tr>"
+            addRule = -> summary += "<tr><td colspan=4><hr></td></tr>"
             prepare = { }
             for attribute in group.attributeGroups()
                 key = attribute.get 'key'
@@ -86,28 +88,33 @@ This code, too, imitates that of `Group::completeForm`.
                             for meaning, index in expression.children[1..]
                                 addRow showKey,
                                     canonicalFormToHTML( meaning ),
+                                    'hidden',
                                     encodeLink( 'Remove',
                                         [ 'remove from internal list',
                                             key, index ] ) + ' ' +
-                                    encodeLink 'Show', [ 'expand', key ]
+                                    encodeLink 'Show', [ 'show', key ]
                                 showKey = ''
                         else
                             addRow showKey,
                                 canonicalFormToHTML( expression ),
+                                'hidden',
                                 encodeLink( 'Remove',
                                     [ 'remove internal solo', key ] ) +
                                     ' ' +
-                                encodeLink 'Show', [ 'expand', key ]
+                                encodeLink 'Show', [ 'show', key ]
                             showKey = ''
                     else
                         addRow showKey,
                             canonicalFormToHTML( attr.canonicalForm() ),
-                            encodeLink 'Remove',
-                                [ 'remove external', attr.id() ]
+                            'shown',
+                            encodeLink( 'Remove',
+                                [ 'remove external', attr.id() ] ) + ' ' +
+                            encodeLink 'Hide', [ 'hide', key ]
                         showKey = ''
-            if Object.keys( prepare ).length is 0
-                addRow '<p>The expression has no attributes.</p>'
+                addRule()
             summary += '</table>'
+            if Object.keys( prepare ).length is 0
+                summary += '<p>The expression has no attributes.</p>'
 
 Show the dialog, and listen for any links that were clicked.
 
@@ -160,9 +167,16 @@ As usual, we then reload the dialog.
                         tinymce.activeEditor.Groups[key].disconnect group
                         reload()
 
-If they clicked "Expand" on any embedded attribute, we unembed it, then
-reload the dialog.
+If they clicked "Show" on any hidden attribute, we unembed it, then reload
+the dialog.
 
-                    else if type is 'expand'
+                    else if type is 'show'
                         group.unembedAttribute key
+                        reload()
+
+If they clicked "Hide" on any visible attribute, we embed it, then reload
+the dialog.
+
+                    else if type is 'hide'
+                        group.embedAttribute key
                         reload()
