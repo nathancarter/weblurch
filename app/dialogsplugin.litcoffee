@@ -62,7 +62,7 @@ This function shows a simple alert box, with a callback when the user
 clicks OK.  The message can be text or HTML.
 
     Dialogs.alert = ( options ) ->
-        tinymce.activeEditor.windowManager.open
+        dialog = tinymce.activeEditor.windowManager.open
             title : options.title ? ' '
             url : prepareHTML options.message
             width : options.width ? 400
@@ -72,7 +72,7 @@ clicks OK.  The message can be text or HTML.
                 text : 'OK'
                 subtype : 'primary'
                 onclick : ( event ) ->
-                    tinymce.activeEditor.windowManager.close()
+                    dialog.close()
                     options.callback? event
             ]
         if options.onclick then installClickListener options.onclick
@@ -86,7 +86,7 @@ options object with the 'OK' and 'Cancel' keys.
 
 
     Dialogs.confirm = ( options ) ->
-        tinymce.activeEditor.windowManager.open
+        dialog = tinymce.activeEditor.windowManager.open
             title : options.title ? ' '
             url : prepareHTML options.message
             width : options.width ? 400
@@ -96,14 +96,14 @@ options object with the 'OK' and 'Cancel' keys.
                 text : options.Cancel ? 'Cancel'
                 subtype : 'primary'
                 onclick : ( event ) ->
-                    tinymce.activeEditor.windowManager.close()
+                    dialog.close()
                     options.cancelCallback? event
             ,
                 type : 'button'
                 text : options.OK ? 'OK'
                 subtype : 'primary'
                 onclick : ( event ) ->
-                    tinymce.activeEditor.windowManager.close()
+                    dialog.close()
                     options.okCallback? event
             ]
         if options.onclick then installClickListener options.onclick
@@ -120,7 +120,7 @@ receive the text in the dialog's input as a parameter.
         options.message +=
             "<p><input type='text' #{value} id='promptInput' size=40/></p>"
         lastValue = options.value ? ''
-        tinymce.activeEditor.windowManager.open
+        dialog = tinymce.activeEditor.windowManager.open
             title : options.title ? ' '
             url : prepareHTML options.message
             width : options.width ? 300
@@ -130,18 +130,76 @@ receive the text in the dialog's input as a parameter.
                 text : options.Cancel ? 'Cancel'
                 subtype : 'primary'
                 onclick : ( event ) ->
-                    tinymce.activeEditor.windowManager.close()
+                    dialog.close()
                     options.cancelCallback? lastValue
             ,
                 type : 'button'
                 text : options.OK ? 'OK'
                 subtype : 'primary'
                 onclick : ( event ) ->
-                    tinymce.activeEditor.windowManager.close()
+                    dialog.close()
                     options.okCallback? lastValue
             ]
         installClickListener ( data ) ->
             if data.id is 'promptInput' then lastValue = data.value
+
+## Code editor dialog
+
+    Dialogs.codeEditor = ( options ) ->
+        setup = ( language ) ->
+            window.codeEditor = CodeMirror.fromTextArea \
+                document.getElementById( 'editor' ),
+                lineNumbers : yes
+                fullScreen : yes
+                autofocus : yes
+                theme : 'base16-light'
+                mode : language
+            handler = ( event ) ->
+                if event.data is 'getEditorContents'
+                    top.postMessage window.codeEditor.getValue(), '*'
+            window.addEventListener 'message', handler, no
+        html = "<html><head>
+            <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/codemirror.min.css'>
+            <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/theme/base16-light.min.css'>
+            <script src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/codemirror.min.js'></script>
+            <script src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/addon/display/fullscreen.min.js'></script>
+            <script src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/mode/javascript/javascript.min.js'></script>
+            </head>
+            <body style='margin: 0px;'>
+            <textarea id='editor'>#{options.value ? ''}</textarea>
+            <script>
+                (#{setup})(\"#{options.language ? 'javascript'}\")
+            </script>
+            </body></html>"
+        whichCallback = null
+        dialog = tinymce.activeEditor.windowManager.open
+            title : options.title ? 'Code editor'
+            url : window.objectURLForBlob window.makeBlob html,
+                'text/html;charset=utf-8'
+            width : options.width ? 700
+            height : options.height ? 500
+            buttons : [
+                type : 'button'
+                text : options.Cancel ? 'Discard'
+                subtype : 'primary'
+                onclick : ( event ) ->
+                    whichCallback = options.cancelCallback
+                    dialog.getContentWindow().postMessage \
+                        'getEditorContents', '*'
+            ,
+                type : 'button'
+                text : options.OK ? 'Save'
+                subtype : 'primary'
+                onclick : ( event ) ->
+                    whichCallback = options.okCallback
+                    dialog.getContentWindow().postMessage \
+                        'getEditorContents', '*'
+            ]
+        handler = ( event ) ->
+            dialog.close()
+            whichCallback? event.data
+        window.addEventListener 'message', handler, no
+        dialog.on 'close', -> window.removeEventListener 'message', handler
 
 # Installing the plugin
 

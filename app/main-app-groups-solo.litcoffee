@@ -82,7 +82,8 @@ We also include the "change attribute action" defined
 
         tagMenuItems : ( group ) ->
             result = [ ]
-            if group.get( 'keyposition' ) is 'source'
+            if group.connectionsOut().length > 0 and \
+               group.get( 'keyposition' ) is 'source'
                 result.push
                     text : "Move \"#{group.get 'key'}\" onto arrow"
                     onclick : ->
@@ -96,24 +97,25 @@ expression should have a context menu item for moving it back.
 
         contextMenuItems : ( group ) ->
             result = [ ]
-            if group.get( 'keyposition' ) is 'arrow'
-                result.push
-                    text : "Move \"#{group.get 'key'}\" onto attribute"
-                    onclick : ->
-                        tinymce.activeEditor.undoManager.transact ->
-                            group.set 'keyposition', 'source'
+            connections = group.connectionsOut()
+            key = group.get 'key'
+            if connections.length > 0
+                if group.get( 'keyposition' ) is 'arrow'
+                    result.push
+                        text : "Move \"#{group.get 'key'}\" onto attribute"
+                        onclick : ->
+                            tinymce.activeEditor.undoManager.transact ->
+                                group.set 'keyposition', 'source'
 
 We also include the "change attribute action" defined
 [below](#auxiliary-functions).
 
-            result.push changeAttributeAction group
+                result.push changeAttributeAction group
 
 If group $A$ connects to groups $B_1$ through $B_n$ with key $k$, and
 nothing else connects to any $B_i$ using $k$, then add an item for embedding
 $A$ into each $B_i$.
 
-            connections = group.connectionsOut()
-            key = group.get 'key'
             if connections.length > 0 and key isnt 'premise'
 
 Here we check whether all the $B_i$ have only $A$ attributing them using
@@ -233,6 +235,22 @@ summarized in a dialog.
                 text : 'Attributes...'
                 onclick : window.attributesActionForGroup group
 
+Atomic expressions with a "code" attribute can be edited as code.
+
+            if ( languages = group.lookupAttributes 'code' ).length > 0
+                last = languages[languages.length - 1]
+                if last instanceof Group then last = last.canonicalForm()
+                if last.type is 'st'
+                    result.push
+                        text : 'Edit as code...'
+                        onclick : ->
+                            group.plugin.editor.Dialogs.codeEditor
+                                value : group.contentAsCode()
+                                okCallback : ( newCode ) ->
+                                    group.plugin.editor.undoManager
+                                    .transact ->
+                                        group.setContentAsCode newCode
+
             result
 
     ]
@@ -247,22 +265,20 @@ It allows the user to change the attribute key to any of several common
 choices, or "Other..." which lets the user input any text key they choose.
 
     changeAttributeAction = ( group ) ->
+        setKey = ( value ) ->
+            tinymce.activeEditor.undoManager.transact ->
+                group.set 'key', value
+        menuItem = ( name ) ->
+            text : name, onclick : -> setKey name.toLowerCase()
         text : 'Change attribute key to...'
         menu : [
-            text : 'Label'
-            onclick : ->
-                tinymce.activeEditor.undoManager.transact ->
-                    group.set 'key', 'label'
+            menuItem 'Label'
         ,
-            text : 'Reason'
-            onclick : ->
-                tinymce.activeEditor.undoManager.transact ->
-                    group.set 'key', 'reason'
+            menuItem 'Reason'
         ,
-            text : 'Premise'
-            onclick : ->
-                tinymce.activeEditor.undoManager.transact ->
-                    group.set 'key', 'premise'
+            menuItem 'Premise'
+        ,
+            menuItem 'Code'
         ,
             text : 'Other...'
             onclick : ->
@@ -280,6 +296,5 @@ choices, or "Other..." which lets the user input any text key they choose.
                                 width : 300
                                 height : 200
                             return
-                        tinymce.activeEditor.undoManager.transact ->
-                            group.set 'key', newKey
+                        setKey newKey
         ]

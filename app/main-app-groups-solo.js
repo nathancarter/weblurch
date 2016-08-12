@@ -93,7 +93,7 @@
       tagMenuItems: function(group) {
         var result;
         result = [];
-        if (group.get('keyposition') === 'source') {
+        if (group.connectionsOut().length > 0 && group.get('keyposition') === 'source') {
           result.push({
             text: "Move \"" + (group.get('key')) + "\" onto arrow",
             onclick: function() {
@@ -107,21 +107,23 @@
         return result;
       },
       contextMenuItems: function(group) {
-        var allHaveJustThisGroupAsAttributeForKey, anySourceModifiesAnotherGroup, connection, connections, key, result, source, sources, target, targets, _i, _j, _len, _len1;
+        var allHaveJustThisGroupAsAttributeForKey, anySourceModifiesAnotherGroup, connection, connections, key, languages, last, result, source, sources, target, targets, _i, _j, _len, _len1;
         result = [];
-        if (group.get('keyposition') === 'arrow') {
-          result.push({
-            text: "Move \"" + (group.get('key')) + "\" onto attribute",
-            onclick: function() {
-              return tinymce.activeEditor.undoManager.transact(function() {
-                return group.set('keyposition', 'source');
-              });
-            }
-          });
-        }
-        result.push(changeAttributeAction(group));
         connections = group.connectionsOut();
         key = group.get('key');
+        if (connections.length > 0) {
+          if (group.get('keyposition') === 'arrow') {
+            result.push({
+              text: "Move \"" + (group.get('key')) + "\" onto attribute",
+              onclick: function() {
+                return tinymce.activeEditor.undoManager.transact(function() {
+                  return group.set('keyposition', 'source');
+                });
+              }
+            });
+          }
+          result.push(changeAttributeAction(group));
+        }
         if (connections.length > 0 && key !== 'premise') {
           targets = (function() {
             var _i, _len, _results;
@@ -241,37 +243,51 @@
           text: 'Attributes...',
           onclick: window.attributesActionForGroup(group)
         });
+        if ((languages = group.lookupAttributes('code')).length > 0) {
+          last = languages[languages.length - 1];
+          if (last instanceof Group) {
+            last = last.canonicalForm();
+          }
+          if (last.type === 'st') {
+            result.push({
+              text: 'Edit as code...',
+              onclick: function() {
+                return group.plugin.editor.Dialogs.codeEditor({
+                  value: group.contentAsCode(),
+                  okCallback: function(newCode) {
+                    return group.plugin.editor.undoManager.transact(function() {
+                      return group.setContentAsCode(newCode);
+                    });
+                  }
+                });
+              }
+            });
+          }
+        }
         return result;
       }
     }
   ];
 
   changeAttributeAction = function(group) {
+    var menuItem, setKey;
+    setKey = function(value) {
+      return tinymce.activeEditor.undoManager.transact(function() {
+        return group.set('key', value);
+      });
+    };
+    menuItem = function(name) {
+      return {
+        text: name,
+        onclick: function() {
+          return setKey(name.toLowerCase());
+        }
+      };
+    };
     return {
       text: 'Change attribute key to...',
       menu: [
-        {
-          text: 'Label',
-          onclick: function() {
-            return tinymce.activeEditor.undoManager.transact(function() {
-              return group.set('key', 'label');
-            });
-          }
-        }, {
-          text: 'Reason',
-          onclick: function() {
-            return tinymce.activeEditor.undoManager.transact(function() {
-              return group.set('key', 'reason');
-            });
-          }
-        }, {
-          text: 'Premise',
-          onclick: function() {
-            return tinymce.activeEditor.undoManager.transact(function() {
-              return group.set('key', 'premise');
-            });
-          }
-        }, {
+        menuItem('Label'), menuItem('Reason'), menuItem('Premise'), menuItem('Code'), {
           text: 'Other...',
           onclick: function() {
             return tinymce.activeEditor.Dialogs.prompt({
@@ -287,9 +303,7 @@
                   });
                   return;
                 }
-                return tinymce.activeEditor.undoManager.transact(function() {
-                  return group.set('key', newKey);
-                });
+                return setKey(newKey);
               }
             });
           }

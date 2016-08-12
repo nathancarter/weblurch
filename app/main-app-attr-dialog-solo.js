@@ -26,7 +26,7 @@
       return showDialog();
     };
     return showDialog = function() {
-      var addRow, addRule, attr, attribute, decodeId, decoded, embedded, encodeButton, encodeId, encodeLink, encodeTextInput, expression, index, key, list, meaning, nonLink, prepare, showKey, strictGroupComparator, summary, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3;
+      var addRow, addRule, attr, attribute, decodeId, decoded, embedded, encodeButton, encodeId, encodeLink, encodeTextInput, expression, index, key, lang, list, meaning, nonLink, prepare, showKey, strictGroupComparator, summary, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3;
       summary = "<p>Expression: " + (canonicalFormToHTML(group.canonicalForm())) + "</p> <table border=0 cellpadding=5 cellspacing=0 width=100%>";
       addRow = function(key, value, type, links) {
         if (value == null) {
@@ -100,11 +100,25 @@
               _ref3 = expression.children.slice(1);
               for (index = _l = 0, _len3 = _ref3.length; _l < _len3; index = ++_l) {
                 meaning = _ref3[index];
-                addRow(showKey, canonicalFormToHTML(meaning) + ' ' + (meaning.type === 'st' ? encodeLink('&#x1f589;', ['edit from internal list', key, index], false, 'Edit attribute') : nonLink('&#x1f589;', 'Cannot edit -- not atomic')), 'hidden ' + encodeLink('&#x1f441;', ['show', key], false, 'Show attribute'), encodeLink('&#10007;', ['remove from internal list', key, index], false, 'Remove attribute'));
+                lang = null;
+                if (meaning.type === 'st') {
+                  lang = meaning.getAttribute(OM.sym('code', 'Lurch'));
+                  if (lang && lang.type === 'a' && lang.children[0].equals(Group.prototype.listSymbol)) {
+                    lang = lang.children[lang.children.length - 1];
+                  }
+                }
+                addRow(showKey, canonicalFormToHTML(meaning) + ' ' + (lang ? encodeLink('&#x1f589;', ['edit code from internal list', key, index, lang.value], false, 'Edit as code') : meaning.type === 'st' ? encodeLink('&#x1f589;', ['edit from internal list', key, index], false, 'Edit attribute') : nonLink('&#x1f589;', 'Cannot edit -- not atomic')), 'hidden ' + encodeLink('&#x1f441;', ['show', key], false, 'Show attribute'), encodeLink('&#10007;', ['remove from internal list', key, index], false, 'Remove attribute'));
                 showKey = '';
               }
             } else {
-              addRow(showKey, canonicalFormToHTML(expression) + ' ' + (expression.type === 'st' ? encodeLink('&#x1f589;', ['edit internal solo', key], false, 'Edit attribute') : nonLink('&#x1f589;', 'Cannot edit -- not atomic')), 'hidden ' + encodeLink('&#x1f441;', ['show', key], false, 'Show attribute'), encodeLink('&#10007;', ['remove internal solo', key], false, 'Remove attribute'));
+              lang = null;
+              if (expression.type === 'st') {
+                lang = expression.getAttribute(OM.sym('code', 'Lurch'));
+                if (lang && lang.type === 'a' && lang.children[0].equals(Group.prototype.listSymbol)) {
+                  lang = lang.children[lang.children.length - 1];
+                }
+              }
+              addRow(showKey, canonicalFormToHTML(expression) + ' ' + (lang ? encodeLink('&#x1f589;', ['edit code internal solo', key, lang.value], false, 'Edit as code') : expression.type === 'st' ? encodeLink('&#x1f589;', ['edit internal solo', key], false, 'Edit attribute') : nonLink('&#x1f589;', 'Cannot edit -- not atomic')), 'hidden ' + encodeLink('&#x1f441;', ['show', key], false, 'Show attribute'), encodeLink('&#10007;', ['remove internal solo', key], false, 'Remove attribute'));
               showKey = '';
             }
           } else {
@@ -126,9 +140,9 @@
         message: summary,
         width: 600,
         onclick: function(data) {
-          var grouper, internalKey, internalValue, type, visuals, _ref4;
+          var grouper, internalKey, internalValue, language, match, type, visuals, _ref4;
           try {
-            _ref4 = decodeId(data.id), type = _ref4[0], key = _ref4[1], index = _ref4[2];
+            _ref4 = decodeId(data.id), type = _ref4[0], key = _ref4[1], index = _ref4[2], language = _ref4[3];
           } catch (_error) {}
           if (type === 'remove from internal list') {
             internalKey = OM.encodeAsIdentifier(key);
@@ -207,21 +221,20 @@
             });
           }
           if (type === 'edit from internal list') {
+            internalKey = OM.encodeAsIdentifier(key);
+            internalValue = group.get(internalKey);
+            meaning = OM.decode(internalValue.m);
+            visuals = decompressWrapper(internalValue.v);
+            visuals = visuals.split('\n');
+            match = /^<([^>]*)>((?:[^<]|<br>)*)<(.*)$/i.exec(visuals[index]);
+            if (!match) {
+              return;
+            }
             return tinymce.activeEditor.Dialogs.prompt({
               title: 'Enter new value',
               message: "Provide the new content of the atomic expression.",
               okCallback: function(newValue) {
-                var match;
-                internalKey = OM.encodeAsIdentifier(key);
-                internalValue = group.get(internalKey);
-                meaning = OM.decode(internalValue.m);
                 meaning.children[index + 1].tree.v = newValue;
-                visuals = decompressWrapper(internalValue.v);
-                visuals = visuals.split('\n');
-                match = /^<([^>]*)>([^<]*)<(.*)$/.exec(visuals[index]);
-                if (!match) {
-                  return;
-                }
                 newValue = newValue.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
                 visuals[index] = "<" + match[1] + ">" + newValue + "<" + match[3];
                 visuals = visuals.join('\n');
@@ -235,21 +248,74 @@
                 return reload();
               }
             });
+          } else if (type === 'edit code from internal list') {
+            internalKey = OM.encodeAsIdentifier(key);
+            internalValue = group.get(internalKey);
+            meaning = OM.decode(internalValue.m);
+            visuals = decompressWrapper(internalValue.v);
+            visuals = visuals.split('\n');
+            match = /^<([^>]*)>((?:[^<]|<br>)*)<(.*)$/i.exec(visuals[index]);
+            if (!match) {
+              return;
+            }
+            return tinymce.activeEditor.Dialogs.codeEditor({
+              value: meaning.value,
+              language: language,
+              okCallback: function(newCode) {
+                meaning.children[index + 1].tree.v = Group.codeToHTML(newCode);
+                newCode = newCode.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+                visuals[index] = "<" + match[1] + ">" + newCode + "<" + match[3];
+                visuals = visuals.join('\n');
+                internalValue = {
+                  m: meaning.encode(),
+                  v: compressWrapper(visuals)
+                };
+                group.plugin.editor.undoManager.transact(function() {
+                  return group.set(internalKey, internalValue);
+                });
+                return reload();
+              }
+            });
           } else if (type === 'edit internal solo') {
+            internalKey = OM.encodeAsIdentifier(key);
+            internalValue = group.get(internalKey);
+            meaning = OM.decode(internalValue.m);
+            visuals = decompressWrapper(internalValue.v);
+            match = /^<([^>]*)>((?:[^<]|<br>)*)<(.*)$/i.exec(visuals);
+            if (!match) {
+              return;
+            }
             return tinymce.activeEditor.Dialogs.prompt({
               title: 'Enter new value',
               message: "Provide the new content of the atomic expression.",
               okCallback: function(newValue) {
-                var match;
-                internalKey = OM.encodeAsIdentifier(key);
-                internalValue = group.get(internalKey);
-                meaning = OM.decode(internalValue.m);
                 meaning.tree.v = newValue;
-                visuals = decompressWrapper(internalValue.v);
-                match = /^<([^>]*)>([^<]*)<(.*)$/.exec(visuals);
-                if (!match) {
-                  return;
-                }
+                newValue = newValue.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+                visuals = "<" + match[1] + ">" + newValue + "<" + match[3];
+                internalValue = {
+                  m: meaning.encode(),
+                  v: compressWrapper(visuals)
+                };
+                group.plugin.editor.undoManager.transact(function() {
+                  return group.set(internalKey, internalValue);
+                });
+                return reload();
+              }
+            });
+          } else if (type === 'edit code internal solo') {
+            internalKey = OM.encodeAsIdentifier(key);
+            internalValue = group.get(internalKey);
+            meaning = OM.decode(internalValue.m);
+            visuals = decompressWrapper(internalValue.v);
+            match = /^<([^>]*)>((?:[^<]|<br>)*)<(.*)$/i.exec(visuals);
+            if (!match) {
+              return;
+            }
+            return tinymce.activeEditor.Dialogs.codeEditor({
+              value: meaning.value,
+              language: index,
+              okCallback: function(newValue) {
+                meaning.tree.v = Group.codeToHTML(newValue);
                 newValue = newValue.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
                 visuals = "<" + match[1] + ">" + newValue + "<" + match[3];
                 internalValue = {

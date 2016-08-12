@@ -272,8 +272,8 @@
   };
 
   Dialogs.alert = function(options) {
-    var _ref, _ref1, _ref2;
-    tinymce.activeEditor.windowManager.open({
+    var dialog, _ref, _ref1, _ref2;
+    dialog = tinymce.activeEditor.windowManager.open({
       title: (_ref = options.title) != null ? _ref : ' ',
       url: prepareHTML(options.message),
       width: (_ref1 = options.width) != null ? _ref1 : 400,
@@ -284,7 +284,7 @@
           text: 'OK',
           subtype: 'primary',
           onclick: function(event) {
-            tinymce.activeEditor.windowManager.close();
+            dialog.close();
             return typeof options.callback === "function" ? options.callback(event) : void 0;
           }
         }
@@ -296,8 +296,8 @@
   };
 
   Dialogs.confirm = function(options) {
-    var _ref, _ref1, _ref2, _ref3, _ref4;
-    tinymce.activeEditor.windowManager.open({
+    var dialog, _ref, _ref1, _ref2, _ref3, _ref4;
+    dialog = tinymce.activeEditor.windowManager.open({
       title: (_ref = options.title) != null ? _ref : ' ',
       url: prepareHTML(options.message),
       width: (_ref1 = options.width) != null ? _ref1 : 400,
@@ -308,7 +308,7 @@
           text: (_ref3 = options.Cancel) != null ? _ref3 : 'Cancel',
           subtype: 'primary',
           onclick: function(event) {
-            tinymce.activeEditor.windowManager.close();
+            dialog.close();
             return typeof options.cancelCallback === "function" ? options.cancelCallback(event) : void 0;
           }
         }, {
@@ -316,7 +316,7 @@
           text: (_ref4 = options.OK) != null ? _ref4 : 'OK',
           subtype: 'primary',
           onclick: function(event) {
-            tinymce.activeEditor.windowManager.close();
+            dialog.close();
             return typeof options.okCallback === "function" ? options.okCallback(event) : void 0;
           }
         }
@@ -328,11 +328,11 @@
   };
 
   Dialogs.prompt = function(options) {
-    var lastValue, value, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    var dialog, lastValue, value, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
     value = options.value ? " value='" + options.value + "'" : '';
     options.message += "<p><input type='text' " + value + " id='promptInput' size=40/></p>";
     lastValue = (_ref = options.value) != null ? _ref : '';
-    tinymce.activeEditor.windowManager.open({
+    dialog = tinymce.activeEditor.windowManager.open({
       title: (_ref1 = options.title) != null ? _ref1 : ' ',
       url: prepareHTML(options.message),
       width: (_ref2 = options.width) != null ? _ref2 : 300,
@@ -343,7 +343,7 @@
           text: (_ref4 = options.Cancel) != null ? _ref4 : 'Cancel',
           subtype: 'primary',
           onclick: function(event) {
-            tinymce.activeEditor.windowManager.close();
+            dialog.close();
             return typeof options.cancelCallback === "function" ? options.cancelCallback(lastValue) : void 0;
           }
         }, {
@@ -351,7 +351,7 @@
           text: (_ref5 = options.OK) != null ? _ref5 : 'OK',
           subtype: 'primary',
           onclick: function(event) {
-            tinymce.activeEditor.windowManager.close();
+            dialog.close();
             return typeof options.okCallback === "function" ? options.okCallback(lastValue) : void 0;
           }
         }
@@ -361,6 +361,61 @@
       if (data.id === 'promptInput') {
         return lastValue = data.value;
       }
+    });
+  };
+
+  Dialogs.codeEditor = function(options) {
+    var dialog, handler, html, setup, whichCallback, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
+    setup = function(language) {
+      var handler;
+      window.codeEditor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+        lineNumbers: true,
+        fullScreen: true,
+        autofocus: true,
+        theme: 'base16-light',
+        mode: language
+      });
+      handler = function(event) {
+        if (event.data === 'getEditorContents') {
+          return top.postMessage(window.codeEditor.getValue(), '*');
+        }
+      };
+      return window.addEventListener('message', handler, false);
+    };
+    html = "<html><head> <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/codemirror.min.css'> <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/theme/base16-light.min.css'> <script src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/codemirror.min.js'></script> <script src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/addon/display/fullscreen.min.js'></script> <script src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/mode/javascript/javascript.min.js'></script> </head> <body style='margin: 0px;'> <textarea id='editor'>" + ((_ref = options.value) != null ? _ref : '') + "</textarea> <script> (" + setup + ")(\"" + ((_ref1 = options.language) != null ? _ref1 : 'javascript') + "\") </script> </body></html>";
+    whichCallback = null;
+    dialog = tinymce.activeEditor.windowManager.open({
+      title: (_ref2 = options.title) != null ? _ref2 : 'Code editor',
+      url: window.objectURLForBlob(window.makeBlob(html, 'text/html;charset=utf-8')),
+      width: (_ref3 = options.width) != null ? _ref3 : 700,
+      height: (_ref4 = options.height) != null ? _ref4 : 500,
+      buttons: [
+        {
+          type: 'button',
+          text: (_ref5 = options.Cancel) != null ? _ref5 : 'Discard',
+          subtype: 'primary',
+          onclick: function(event) {
+            whichCallback = options.cancelCallback;
+            return dialog.getContentWindow().postMessage('getEditorContents', '*');
+          }
+        }, {
+          type: 'button',
+          text: (_ref6 = options.OK) != null ? _ref6 : 'Save',
+          subtype: 'primary',
+          onclick: function(event) {
+            whichCallback = options.okCallback;
+            return dialog.getContentWindow().postMessage('getEditorContents', '*');
+          }
+        }
+      ]
+    });
+    handler = function(event) {
+      dialog.close();
+      return typeof whichCallback === "function" ? whichCallback(event.data) : void 0;
+    };
+    window.addEventListener('message', handler, false);
+    return dialog.on('close', function() {
+      return window.removeEventListener('message', handler);
     });
   };
 

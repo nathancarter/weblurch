@@ -18,9 +18,14 @@ content of the group, which we encode as an OpenMath string.  The canonical
 form of a non-atomic group is just the array of children of the group, which
 we encode as an OpenMath application with the children in the same order.
 
+Rather than use `contentAsText()` here, we use `contentAsCode()`, because it
+pays attention to tabs and newlines, whereas `contentAsText()` simply
+reduces them all to spaces.  Thus `contentAsCode()` is more faithful to the
+appearance in the document, and preserves more of what the author expects.
+
     window.Group::canonicalForm = ->
         if @children.length is 0
-            OM.str @contentAsText()
+            OM.str @contentAsCode()
         else
             OM.app ( child.canonicalForm() for child in @children )...
 
@@ -91,6 +96,38 @@ own names, and "Lurch" as the content dictionary.
                     meanings[0]
                 else
                     OM.app Group::listSymbol, meanings...
+        result
+
+## Looking up attributes
+
+To find out the attributes a group has for a specific key, call the
+following function.  It returns an array of zero or more items.  The array
+will include at least the results of `attributeGroupsForKey`, but it will
+also include, at the appropriate place in the array (based on document
+ordering) any internal attributes with the same key.
+
+Internal attributes in the result array will be OpenMath objects, not Group
+instances; the caller will need to be able to handle both types of data.
+(For instance, the caller could simply call `canonicalForm` or
+`completeForm` on the Group instances to convert them all to OpenMath
+objects.)
+
+    window.Group::lookupAttributes = ( key ) ->
+        list = @attributeGroupsForKey key
+        if embedded = @get OM.encodeAsIdentifier key then list.push this
+        result = [ ]
+        strictGroupComparator = ( a, b ) ->
+            strictNodeComparator a.open, b.open
+        for group in list.sort strictGroupComparator
+            if group is this
+                expression = OM.decode embedded.m
+                if expression.type is 'a' and \
+                   expression.children[0].equals Group::listSymbol
+                    result = result.concat expression.children[1..]
+                else
+                    result.push expression
+            else
+                result.push group
         result
 
 ## Embedding and unembedding attributes
@@ -286,3 +323,50 @@ the compress wrapper.
                 result += String.fromCharCode code + string.charCodeAt 1
                 string = string.substr 2
         LZString.decompress result
+
+## Code attributes
+
+The following extension to the Group class reads the contents of a group,
+replaces all `&emsp;` characters with tabs, and all paragraph breaks or line
+breaks with `\n` characters.  Keep in mind that webLurch responds to the tab
+key by inserting an `&emsp;` character, so this is a sensible conversion.
+In reality, it is not only paragraph breaks that are counted as newlines,
+but any transition into or out of a block-level element.
+
+Note that sometimes TinyMCE stores an extra BR at the end of a paragraph.
+For this reason, we do not translate final BR tags inside a parent node as
+newlines.
+
+    window.Group::contentAsCode = ->
+        shouldBreak = ( node ) -> node.tagName in [ 'P', 'DIV' ]
+        recur = ( nodeOrList ) =>
+            if nodeOrList instanceof @plugin.editor.getWin().Text
+                return nodeOrList.textContent.replace /\u2003/g, '\t'
+            if nodeOrList.tagName is 'BR' then return '\n'
+            result = ''
+            for index in [0...nodeOrList.childNodes.length]
+                if index > 0 and \
+                   ( shouldBreak( nodeOrList.childNodes[index-1] ) or \
+                     shouldBreak( nodeOrList.childNodes[index] ) )
+                    result += '\n'
+                if index < nodeOrList.childNodes.length - 1 or \
+                   nodeOrList.childNodes[index].tagName isnt 'BR'
+                    result += recur nodeOrList.childNodes[index]
+            result
+        recur @contentAsFragment()
+
+The following is the inverse of the previous operation.  You can give it
+code using plain text (newlines and tabs) and it will replace the contents
+of the group with that same code, converted to use BR tags and `&emsp;`
+characters in place of tabs.
+
+    window.Group::setContentAsCode = ( code ) ->
+        @setContentAsText Group.codeToHTML code
+    window.Group.codeToHTML = ( code ) ->
+        code.replace /&/g, '&amp;'
+            .replace /</g, '&lt;'
+            .replace />/g, '&gt;'
+            .replace /"/g, '&quot;'
+            .replace /'/g, '&apos;'
+            .replace /\n/g, '<br>'
+            .replace /\t/g, '&emsp;'
