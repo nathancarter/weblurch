@@ -15,15 +15,6 @@ required order of completion.
 
 ## Code attributes
 
- * For atomic expressions that have an attribute with key "code," add to
-   their context menu an item "Edit as code."
-    * It should call the Dialogs plugin member for using a CodeMirror editor
-      on the `contentsAsCode()` of the expression.
-    * Use the value of the "code" attribute as the language you pass to the
-      dialog.
-    * If the user clicks OK, place the results back into the expression
-      using `setContentAsCode()`.
-    * Wrap it in a single undo/redo transaction.
  * In the attributes dialog, for any atomic value that has a code attribute,
    make its "Edit" button pop up the same code editor that would be used if
    the value were in the document and its "Edit as code" context menu item
