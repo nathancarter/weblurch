@@ -15,7 +15,6 @@ required order of completion.
 
 ## Code attributes
 
- * Add to the list of suggested key types on the group context menu "code."
  * For expressions that have an attribute with key "code," add to their
    context menu an item "Edit as code."  It should pop up a dialog
    containing a [CodeMirror](http://codemirror.net/) editor and the contents
