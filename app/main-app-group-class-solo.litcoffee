@@ -98,6 +98,38 @@ own names, and "Lurch" as the content dictionary.
                     OM.app Group::listSymbol, meanings...
         result
 
+## Looking up attributes
+
+To find out the attributes a group has for a specific key, call the
+following function.  It returns an array of zero or more items.  The array
+will include at least the results of `attributeGroupsForKey`, but it will
+also include, at the appropriate place in the array (based on document
+ordering) any internal attributes with the same key.
+
+Internal attributes in the result array will be OpenMath objects, not Group
+instances; the caller will need to be able to handle both types of data.
+(For instance, the caller could simply call `canonicalForm` or
+`completeForm` on the Group instances to convert them all to OpenMath
+objects.)
+
+    window.Group::lookupAttributes = ( key ) ->
+        list = @attributeGroupsForKey key
+        if embedded = @get OM.encodeAsIdentifier key then list.push this
+        result = [ ]
+        strictGroupComparator = ( a, b ) ->
+            strictNodeComparator a.open, b.open
+        for group in list.sort strictGroupComparator
+            if group is this
+                expression = OM.decode embedded.m
+                if expression.type is 'a' and \
+                   expression.children[0].equals Group::listSymbol
+                    result = result.concat expression.children[1..]
+                else
+                    result.push expression
+            else
+                result.push group
+        result
+
 ## Embedding and unembedding attributes
 
 Now we add a member function to the group class for embedding in an
