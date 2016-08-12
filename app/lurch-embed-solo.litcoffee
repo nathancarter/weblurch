@@ -41,11 +41,9 @@ the [automation section](#automating-the-process), below.
     window.LurchEmbed.makeLive =
     ( element, attributes = width : 800, height : 400, applicationURL = \
       window.LurchEmbed.defaultURL ) ->
-        filename = 'auto-load'
-        filename += index if index = element.getAttribute 'data-embed-index'
-        localStorage.setItem filename,
-            JSON.stringify [ { }, element.innerHTML ]
-        url = applicationURL + '?autoload=' + filename
+        number = element.getAttribute( 'data-embed-index' ) ? ''
+        encoded = encodeURIComponent element.innerHTML
+        url = "#{applicationURL}?document#{number}=#{encoded}"
         replacement = element.ownerDocument.createElement 'iframe'
         replacement.style.border = '1px solid black'
         for own key, value of attributes

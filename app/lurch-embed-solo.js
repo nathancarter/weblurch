@@ -7,7 +7,7 @@
   window.LurchEmbed.defaultURL = 'http://nathancarter.github.io/weblurch/app/app.html';
 
   window.LurchEmbed.makeLive = function(element, attributes, applicationURL) {
-    var filename, index, key, replacement, url, value;
+    var encoded, key, number, replacement, url, value, _ref;
     if (attributes == null) {
       attributes = {
         width: 800,
@@ -17,12 +17,9 @@
     if (applicationURL == null) {
       applicationURL = window.LurchEmbed.defaultURL;
     }
-    filename = 'auto-load';
-    if (index = element.getAttribute('data-embed-index')) {
-      filename += index;
-    }
-    localStorage.setItem(filename, JSON.stringify([{}, element.innerHTML]));
-    url = applicationURL + '?autoload=' + filename;
+    number = (_ref = element.getAttribute('data-embed-index')) != null ? _ref : '';
+    encoded = encodeURIComponent(element.innerHTML);
+    url = "" + applicationURL + "?document" + number + "=" + encoded;
     replacement = element.ownerDocument.createElement('iframe');
     replacement.style.border = '1px solid black';
     for (key in attributes) {

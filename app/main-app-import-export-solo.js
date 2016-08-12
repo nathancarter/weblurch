@@ -112,11 +112,11 @@
         }, 100);
       } catch (_error) {}
     }
-    if (match = /\?document=(.*)/.exec(window.location.search)) {
-      html = decodeURIComponent(match[1]);
+    if (match = /\?document([0-9]*)=(.*)/.exec(window.location.search)) {
+      html = decodeURIComponent(match[2]);
       _ref1 = extractMetadata(html), metadata = _ref1.metadata, document = _ref1.document;
-      localStorage.setItem('auto-load', JSON.stringify([metadata, document]));
-      return window.location.href = window.location.href.split('?')[0];
+      localStorage.setItem('auto-load' + match[1], JSON.stringify([metadata, document]));
+      return window.location.href = window.location.href.split('?')[0] + '?autoload=auto-load' + match[1];
     }
   });
 
