@@ -247,22 +247,20 @@ It allows the user to change the attribute key to any of several common
 choices, or "Other..." which lets the user input any text key they choose.
 
     changeAttributeAction = ( group ) ->
+        setKey = ( value ) ->
+            tinymce.activeEditor.undoManager.transact ->
+                group.set 'key', value
+        menuItem = ( name ) ->
+            text : name, onclick : -> setKey name.toLowerCase()
         text : 'Change attribute key to...'
         menu : [
-            text : 'Label'
-            onclick : ->
-                tinymce.activeEditor.undoManager.transact ->
-                    group.set 'key', 'label'
+            menuItem 'Label'
         ,
-            text : 'Reason'
-            onclick : ->
-                tinymce.activeEditor.undoManager.transact ->
-                    group.set 'key', 'reason'
+            menuItem 'Reason'
         ,
-            text : 'Premise'
-            onclick : ->
-                tinymce.activeEditor.undoManager.transact ->
-                    group.set 'key', 'premise'
+            menuItem 'Premise'
+        ,
+            menuItem 'Code'
         ,
             text : 'Other...'
             onclick : ->
@@ -280,6 +278,5 @@ choices, or "Other..." which lets the user input any text key they choose.
                                 width : 300
                                 height : 200
                             return
-                        tinymce.activeEditor.undoManager.transact ->
-                            group.set 'key', newKey
+                        setKey newKey
         ]
