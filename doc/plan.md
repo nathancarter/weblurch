@@ -15,9 +15,6 @@ required order of completion.
 
 ## Code attributes
 
- * Create an extension to the Group class that inverts `contentAsCode()`.
-   It should take a string with tabs and newlines, and convert it into line
-   breaks and `&emsp;` characters.  Call it `setContentAsCode()`.
  * Add to the list of suggested key types on the group context menu "code."
  * For expressions that have an attribute with key "code," add to their
    context menu an item "Edit as code."  It should pop up a dialog

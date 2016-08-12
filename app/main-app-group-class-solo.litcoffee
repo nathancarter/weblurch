@@ -317,3 +317,18 @@ newlines.
                     result += recur nodeOrList.childNodes[index]
             result
         recur @contentAsFragment()
+
+The following is the inverse of the previous operation.  You can give it
+code using plain text (newlines and tabs) and it will replace the contents
+of the group with that same code, converted to use BR tags and `&emsp;`
+characters in place of tabs.
+
+    window.Group::setContentAsCode = ( code ) ->
+        code = code.replace /&/g, '&amp;'
+                   .replace /</g, '&lt;'
+                   .replace />/g, '&gt;'
+                   .replace /"/g, '&quot;'
+                   .replace /'/g, '&apos;'
+                   .replace /\n/g, '<br>'
+                   .replace /\t/g, '&emsp;'
+        @setContentAsText code

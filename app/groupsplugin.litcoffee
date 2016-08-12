@@ -274,7 +274,8 @@ be redundant) using the following routine.
             result
 
 We can also set the contents of a group with the following function.  This
-function can only work if `@plugin` is a `Groups` class instance.
+function can only work if `@plugin` is a `Groups` class instance.  This
+actually accepts not only plain text, but HTML as well.
 
         setContentAsText: ( text ) =>
             if not inside = @innerRange() then return
