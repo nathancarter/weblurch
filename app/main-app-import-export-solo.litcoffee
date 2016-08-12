@@ -113,12 +113,13 @@ reloading the page without the query string, and then pulling the data from
                         tinymce.activeEditor.setContent document
                     editor.LoadSave.loadMetaData metadata
                 , 100
-        if match = /\?document=(.*)/.exec window.location.search
-            html = decodeURIComponent match[1]
+        if match = /\?document([0-9]*)=(.*)/.exec window.location.search
+            html = decodeURIComponent match[2]
             { metadata, document } = extractMetadata html
-            localStorage.setItem 'auto-load',
+            localStorage.setItem 'auto-load' + match[1],
                 JSON.stringify [ metadata, document ]
-            window.location.href = window.location.href.split( '?' )[0]
+            window.location.href = window.location.href.split( '?' )[0] +
+                '?autoload=auto-load' + match[1]
 
 ## GitHub check
 
