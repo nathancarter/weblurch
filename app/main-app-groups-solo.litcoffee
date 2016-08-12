@@ -82,7 +82,8 @@ We also include the "change attribute action" defined
 
         tagMenuItems : ( group ) ->
             result = [ ]
-            if group.get( 'keyposition' ) is 'source'
+            if group.connectionsOut().length > 0 and \
+               group.get( 'keyposition' ) is 'source'
                 result.push
                     text : "Move \"#{group.get 'key'}\" onto arrow"
                     onclick : ->
@@ -96,24 +97,25 @@ expression should have a context menu item for moving it back.
 
         contextMenuItems : ( group ) ->
             result = [ ]
-            if group.get( 'keyposition' ) is 'arrow'
-                result.push
-                    text : "Move \"#{group.get 'key'}\" onto attribute"
-                    onclick : ->
-                        tinymce.activeEditor.undoManager.transact ->
-                            group.set 'keyposition', 'source'
+            connections = group.connectionsOut()
+            key = group.get 'key'
+            if connections.length > 0
+                if group.get( 'keyposition' ) is 'arrow'
+                    result.push
+                        text : "Move \"#{group.get 'key'}\" onto attribute"
+                        onclick : ->
+                            tinymce.activeEditor.undoManager.transact ->
+                                group.set 'keyposition', 'source'
 
 We also include the "change attribute action" defined
 [below](#auxiliary-functions).
 
-            result.push changeAttributeAction group
+                result.push changeAttributeAction group
 
 If group $A$ connects to groups $B_1$ through $B_n$ with key $k$, and
 nothing else connects to any $B_i$ using $k$, then add an item for embedding
 $A$ into each $B_i$.
 
-            connections = group.connectionsOut()
-            key = group.get 'key'
             if connections.length > 0 and key isnt 'premise'
 
 Here we check whether all the $B_i$ have only $A$ attributing them using
