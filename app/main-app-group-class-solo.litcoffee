@@ -286,3 +286,34 @@ the compress wrapper.
                 result += String.fromCharCode code + string.charCodeAt 1
                 string = string.substr 2
         LZString.decompress result
+
+## Code attributes
+
+The following extension to the Group class reads the contents of a group,
+replaces all `&emsp;` characters with tabs, and all paragraph breaks or line
+breaks with `\n` characters.  Keep in mind that webLurch responds to the tab
+key by inserting an `&emsp;` character, so this is a sensible conversion.
+In reality, it is not only paragraph breaks that are counted as newlines,
+but any transition into or out of a block-level element.
+
+Note that sometimes TinyMCE stores an extra BR at the end of a paragraph.
+For this reason, we do not translate final BR tags inside a parent node as
+newlines.
+
+    window.Group::contentAsCode = ->
+        shouldBreak = ( node ) -> node.tagName in [ 'P', 'DIV' ]
+        recur = ( nodeOrList ) =>
+            if nodeOrList instanceof @plugin.editor.getWin().Text
+                return nodeOrList.textContent.replace /\u2003/g, '\t'
+            if nodeOrList.tagName is 'BR' then return '\n'
+            result = ''
+            for index in [0...nodeOrList.childNodes.length]
+                if index > 0 and \
+                   ( shouldBreak( nodeOrList.childNodes[index-1] ) or \
+                     shouldBreak( nodeOrList.childNodes[index] ) )
+                    result += '\n'
+                if index < nodeOrList.childNodes.length - 1 or \
+                   nodeOrList.childNodes[index].tagName isnt 'BR'
+                    result += recur nodeOrList.childNodes[index]
+            result
+        recur @contentAsFragment()

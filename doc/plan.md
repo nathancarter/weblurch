@@ -15,9 +15,6 @@ required order of completion.
 
 ## Code attributes
 
- * Create an extension to the Group class that reads the contents of a
-   group, replaces all `&emsp;` characters with tabs, and all paragraph
-   breaks or line breaks with `\n` characters.  Call it `contentAsCode()`.
  * Create an extension to the Group class that inverts `contentAsCode()`.
    It should take a string with tabs and newlines, and convert it into line
    breaks and `&emsp;` characters.  Call it `setContentAsCode()`.
