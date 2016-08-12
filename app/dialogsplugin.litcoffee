@@ -151,15 +151,19 @@ receive the text in the dialog's input as a parameter.
                 document.getElementById( 'editor' ),
                 lineNumbers : yes
                 fullScreen : yes
+                autofocus : yes
+                theme : 'base16-light'
                 mode : language
             handler = ( event ) ->
                 if event.data is 'getEditorContents'
                     top.postMessage window.codeEditor.getValue(), '*'
             window.addEventListener 'message', handler, no
         html = "<html><head>
-            <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/codemirror.css'>
-            <script src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/codemirror.js'></script>
-            <script src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/addon/display/fullscreen.js'></script>
+            <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/codemirror.min.css'>
+            <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/theme/base16-light.min.css'>
+            <script src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/codemirror.min.js'></script>
+            <script src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/addon/display/fullscreen.min.js'></script>
+            <script src='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/mode/javascript/javascript.min.js'></script>
             </head>
             <body style='margin: 0px;'>
             <textarea id='editor'>#{options.value ? ''}</textarea>
