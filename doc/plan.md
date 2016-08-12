@@ -15,15 +15,21 @@ required order of completion.
 
 ## Labels
 
- * Create a global array of all labeled expressions.
+ * Update the specification to state that hidden expressions cannot be the
+   targets of labels; only expressions *in the document* can.
+ * Update the specification to state that labels must be atomic expressions,
+   and that labels that are non-atomic do not actually have any effect.
+ * Create a global array that will later store all labeled expressions.
  * Create a function for initializing the array to empty, and do so whenever
-   a new document is created, or the app is launched, or a new document is
+   a new document is created, or the app is launched, or a document is
    loaded.
  * Create an `addPair` function for adding a label-expression pair to the
-   list.  It should store both the labeled group and the label attribute
-   attached to it.  Ensure that it never adds the same pair more than once
-   to the list.  (That is, this function is idempotent when called on the
-   same set of arguments a second time.)
+   list.  It should store both the labeled group and the label expression.
+   Do nothing if the label attribute is not atomic.  Ensure that it never
+   adds the same pair more than once to the list.  (That is, this function
+   is idempotent when called on the same set of arguments a second time.)
+ * Extend the `addPair` function so that pairs in the list are always
+   ordered by the position in the document of the labeled expression.
  * Create a function `addExpression` that inspects an expression and calls
    `addPair` zero or more times, once for each label the expression has,
    hidden or visible.
@@ -34,18 +40,20 @@ required order of completion.
    expression.
  * Whenever an expression is deleted from the document, call
    `deleteExpression` on it.  This includes when it is deleted in order to
-   be embedded as a hidden attribute in something else.
- * Update the specification to state that hidden expressions cannot be the
-   targets of labels; only expressions *in the document* can.
+   be embedded as a hidden attribute in something else.  (Althoug this will
+   remove from the list the pair containing the label and the expression
+   into which it was just embedded, we will fix that in the next item.)
  * Whenever a group's contents, attributes, or connections change, call
    `deleteExpression` on it, and then `addExpression` on it.  Also, if it is
    a label, call `addExpression` on each expression that it labels.
  * Add a function for looking up a label and receiving a set of pairs as the
-   result, those pairs whose label matches the given text.  They should be
-   returned in the order in which they appear in the document.
- * Add a function for looking up a label from a certain position in the
-   document.  This will call the previous function, then filter its results
-   to only those that apply at the point in the document in question.
+   result, those pairs whose label is an atomic expression whose content
+   matches the given text.  They should be returned in the order in which
+   they appear in the list, which is also the order in which they appear in
+   the document.
+ * Add an optional parameter to the lookup function, a position in the
+   document.  This will cause the function to filter its results to only
+   those that apply at the given point in the document.
 
 ## Validation
 
