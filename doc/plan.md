@@ -15,21 +15,26 @@ required order of completion.
 
 ## Code attributes
 
+ * Create an extension to the Group class that reads the contents of a
+   group, replaces all `&emsp;` characters with tabs, and all paragraph
+   breaks or line breaks with `\n` characters.  Call it `contentAsCode()`.
+ * Create an extension to the Group class that inverts `contentAsCode()`.
+   It should take a string with tabs and newlines, and convert it into line
+   breaks and `&emsp;` characters.  Call it `setContentAsCode()`.
  * Add to the list of suggested key types on the group context menu "code."
  * For expressions that have an attribute with key "code," add to their
    context menu an item "Edit as code."  It should pop up a dialog
    containing a [CodeMirror](http://codemirror.net/) editor and the contents
    of the expression as plain text.  Approved edits are propagated back into
-   the document, inside the expression.  Some work may need to be done to
-   preserve newlines and indentation.  Ensure that any such change is placed
-   correctly on the undo/redo stack.
- * In the attributes dialog, for any value that is code (i.e., it itself has
-   a code attribute), provide an "Edit" button next to it that pops up the
-   same code editor that would be used if the value were in the document and
-   its "Edit as code" context menu item were chosen.  The only difference is
-   that changes will be stored within a hidden attribute instead of in the
-   document, and thus care may need to be taken regarding the undo/redo
-   stack.
+   the document, using `setContentAsCode()`.  Be sure to wrap it in a single
+   undo/redo transaction.
+ * In the attributes dialog, for any atomic value that is code (i.e., it
+   itself has a code attribute), make its "Edit" button pop up the same code
+   editor that would be used if the value were in the document and its "Edit
+   as code" context menu item were chosen.  The only difference is that
+   changes will be either stored in the document (for visible attributes) or
+   in the target expression (for hidden attributes).  As usual, wrap it in a
+   single undo/redo transaction.
 
 ## Labels
 
