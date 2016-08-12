@@ -15,13 +15,6 @@ required order of completion.
 
 ## Code attributes
 
- * Import [CodeMirror](http://codemirror.net/) into
-   [the main app HTML page](app.html).
- * Create a member of [the Dialogs plugin](dialogsplugin.litcoffee) that
-   shows a dialog containing a CodeMirror instance, allowing you to pass it
-   the initial content and the language (for syntax highlighting), and it
-   calls an OK or Cancel callback with the final version, as the user
-   chooses.
  * For atomic expressions that have an attribute with key "code," add to
    their context menu an item "Edit as code."
     * It should call the Dialogs plugin member for using a CodeMirror editor
