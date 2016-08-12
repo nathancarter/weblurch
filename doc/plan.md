@@ -15,19 +15,32 @@ required order of completion.
 
 ## Code attributes
 
- * For expressions that have an attribute with key "code," add to their
-   context menu an item "Edit as code."  It should pop up a dialog
-   containing a [CodeMirror](http://codemirror.net/) editor and the contents
-   of the expression as plain text.  Approved edits are propagated back into
-   the document, using `setContentAsCode()`.  Be sure to wrap it in a single
-   undo/redo transaction.
- * In the attributes dialog, for any atomic value that is code (i.e., it
-   itself has a code attribute), make its "Edit" button pop up the same code
-   editor that would be used if the value were in the document and its "Edit
-   as code" context menu item were chosen.  The only difference is that
-   changes will be either stored in the document (for visible attributes) or
-   in the target expression (for hidden attributes).  As usual, wrap it in a
-   single undo/redo transaction.
+ * Import [CodeMirror](http://codemirror.net/) into
+   [the main app HTML page](app.html).
+ * Create a member of [the Dialogs plugin](dialogsplugin.litcoffee) that
+   shows a dialog containing a CodeMirror instance, allowing you to pass it
+   the initial content and the language (for syntax highlighting), and it
+   calls an OK or Cancel callback with the final version, as the user
+   chooses.
+ * For atomic expressions that have an attribute with key "code," add to
+   their context menu an item "Edit as code."
+    * It should call the Dialogs plugin member for using a CodeMirror editor
+      on the `contentsAsCode()` of the expression.
+    * Use the value of the "code" attribute as the language you pass to the
+      dialog.
+    * If the user clicks OK, place the results back into the expression
+      using `setContentAsCode()`.
+    * Wrap it in a single undo/redo transaction.
+ * In the attributes dialog, for any atomic value that has a code attribute,
+   make its "Edit" button pop up the same code editor that would be used if
+   the value were in the document and its "Edit as code" context menu item
+   were chosen.
+    * For visible attributes, store the results using `setContentAsCode()`
+      as usual.
+    * For hidden attributes, set their meaning with a simple change of the
+      OMSTR's value, but set their HTML code using `codeToHTML()` for the
+      internals of the group.
+    * Wrap it in a single undo/redo transaction.
 
 ## Labels
 

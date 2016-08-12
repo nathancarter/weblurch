@@ -18,9 +18,14 @@ content of the group, which we encode as an OpenMath string.  The canonical
 form of a non-atomic group is just the array of children of the group, which
 we encode as an OpenMath application with the children in the same order.
 
+Rather than use `contentAsText()` here, we use `contentAsCode()`, because it
+pays attention to tabs and newlines, whereas `contentAsText()` simply
+reduces them all to spaces.  Thus `contentAsCode()` is more faithful to the
+appearance in the document, and preserves more of what the author expects.
+
     window.Group::canonicalForm = ->
         if @children.length is 0
-            OM.str @contentAsText()
+            OM.str @contentAsCode()
         else
             OM.app ( child.canonicalForm() for child in @children )...
 
@@ -324,11 +329,12 @@ of the group with that same code, converted to use BR tags and `&emsp;`
 characters in place of tabs.
 
     window.Group::setContentAsCode = ( code ) ->
-        code = code.replace /&/g, '&amp;'
-                   .replace /</g, '&lt;'
-                   .replace />/g, '&gt;'
-                   .replace /"/g, '&quot;'
-                   .replace /'/g, '&apos;'
-                   .replace /\n/g, '<br>'
-                   .replace /\t/g, '&emsp;'
-        @setContentAsText code
+        @setContentAsText Group.codeToHTML code
+    window.Group.codeToHTML = ( code ) ->
+        code.replace /&/g, '&amp;'
+            .replace /</g, '&lt;'
+            .replace />/g, '&gt;'
+            .replace /"/g, '&quot;'
+            .replace /'/g, '&apos;'
+            .replace /\n/g, '<br>'
+            .replace /\t/g, '&emsp;'
