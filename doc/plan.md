@@ -13,19 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Code attributes
-
- * In the attributes dialog, for any atomic value that has a code attribute,
-   make its "Edit" button pop up the same code editor that would be used if
-   the value were in the document and its "Edit as code" context menu item
-   were chosen.
-    * For visible attributes, store the results using `setContentAsCode()`
-      as usual.
-    * For hidden attributes, set their meaning with a simple change of the
-      OMSTR's value, but set their HTML code using `codeToHTML()` for the
-      internals of the group.
-    * Wrap it in a single undo/redo transaction.
-
 ## Labels
 
  * Create a global array of all labeled expressions.

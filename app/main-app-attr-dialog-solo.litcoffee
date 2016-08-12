@@ -101,9 +101,24 @@ This code, too, imitates that of `Group::completeForm`.
                            expression.children[0].equals \
                                 Group::listSymbol
                             for meaning, index in expression.children[1..]
+                                lang = null
+                                if meaning.type is 'st'
+                                    lang = meaning.getAttribute \
+                                        OM.sym( 'code', 'Lurch' )
+                                    if lang and lang.type is 'a' and \
+                                       lang.children[0].equals \
+                                       Group::listSymbol
+                                        lang = lang.children[ \
+                                            lang.children.length - 1]
                                 addRow showKey,
                                     canonicalFormToHTML( meaning ) + ' ' +
-                                        ( if meaning.type is 'st' then \
+                                        ( if lang then \
+                                            encodeLink( '&#x1f589;',
+                                                [ 'edit code from internal
+                                                    list', key, index,
+                                                    lang.value ], no,
+                                                    'Edit as code' ) else \
+                                          if meaning.type is 'st' then \
                                             encodeLink( '&#x1f589;',
                                                 [ 'edit from internal list',
                                                   key, index ], no,
@@ -120,9 +135,23 @@ This code, too, imitates that of `Group::completeForm`.
                                         'Remove attribute' )
                                 showKey = ''
                         else
+                            lang = null
+                            if expression.type is 'st'
+                                lang = expression.getAttribute \
+                                    OM.sym( 'code', 'Lurch' )
+                                if lang and lang.type is 'a' and \
+                                   lang.children[0].equals \
+                                   Group::listSymbol
+                                    lang = lang.children[ \
+                                        lang.children.length - 1]
                             addRow showKey,
                                 canonicalFormToHTML( expression ) + ' ' +
-                                    ( if expression.type is 'st' then \
+                                    ( if lang then \
+                                        encodeLink( '&#x1f589;',
+                                            [ 'edit code internal solo',
+                                              key, lang.value ], no,
+                                            'Edit as code' ) else \
+                                      if expression.type is 'st' then \
                                         encodeLink( '&#x1f589;',
                                             [ 'edit internal solo', key ],
                                             no, 'Edit attribute' ) else \
@@ -166,7 +195,7 @@ Show the dialog, and listen for any links that were clicked.
                 message : summary
                 width : 600
                 onclick : ( data ) ->
-                    try [ type, key, index ] = decodeId data.id
+                    try [ type, key, index, language ] = decodeId data.id
 
 They may have clicked "Remove" on an embedded attribute that's just one
 entry in an entire embedded list.  In that case, we need to decode the list
@@ -286,20 +315,20 @@ its meaning and its visuals), and edit the specified entries.  We then put
 the data right back into the group from which we extracted it.
 
                     if type is 'edit from internal list'
+                        internalKey = OM.encodeAsIdentifier key
+                        internalValue = group.get internalKey
+                        meaning = OM.decode internalValue.m
+                        visuals = decompressWrapper internalValue.v
+                        visuals = visuals.split '\n'
+                        match = /^<([^>]*)>((?:[^<]|<br>)*)<(.*)$/i.exec \
+                            visuals[index]
+                        if not match then return
                         tinymce.activeEditor.Dialogs.prompt
                             title : 'Enter new value'
                             message : "Provide the new content of the
                                 atomic expression."
                             okCallback : ( newValue ) ->
-                                internalKey = OM.encodeAsIdentifier key
-                                internalValue = group.get internalKey
-                                meaning = OM.decode internalValue.m
                                 meaning.children[index+1].tree.v = newValue
-                                visuals = decompressWrapper internalValue.v
-                                visuals = visuals.split '\n'
-                                match = /^<([^>]*)>([^<]*)<(.*)$/.exec \
-                                    visuals[index]
-                                if not match then return
                                 newValue = newValue.replace /&/g, '&amp;'
                                                    .replace /</g, '&lt;'
                                                    .replace />/g, '&gt;'
@@ -315,24 +344,88 @@ the data right back into the group from which we extracted it.
                                     group.set internalKey, internalValue
                                 reload()
 
-They may have clicked "Edit" on an embedded attribute that's not part of
-a list.  This case is very similar to the previous, except it does not
-operate on just one entry in a list, but rather the entire expression.
+The same thing can happen if the hidden attribute is code.  In that case, we
+do the exact same thing as in the previous case, but with a code editor.
+
+                    else if type is 'edit code from internal list'
+                        internalKey = OM.encodeAsIdentifier key
+                        internalValue = group.get internalKey
+                        meaning = OM.decode internalValue.m
+                        visuals = decompressWrapper internalValue.v
+                        visuals = visuals.split '\n'
+                        match = /^<([^>]*)>((?:[^<]|<br>)*)<(.*)$/i.exec \
+                            visuals[index]
+                        if not match then return
+                        tinymce.activeEditor.Dialogs.codeEditor
+                            value : meaning.value
+                            language : language
+                            okCallback : ( newCode ) ->
+                                meaning.children[index+1].tree.v =
+                                    Group.codeToHTML newCode
+                                newCode = newCode.replace /&/g, '&amp;'
+                                                 .replace /</g, '&lt;'
+                                                 .replace />/g, '&gt;'
+                                                 .replace /"/g, '&quot;'
+                                                 .replace /'/g, '&apos;'
+                                visuals[index] =
+                                    "<#{match[1]}>#{newCode}<#{match[3]}"
+                                visuals = visuals.join '\n'
+                                internalValue =
+                                    m : meaning.encode()
+                                    v : compressWrapper visuals
+                                group.plugin.editor.undoManager.transact ->
+                                    group.set internalKey, internalValue
+                                reload()
+
+They may have clicked "Edit" on an embedded attribute that's not part of a
+list.  This case is very similar to editing an entry from a list, except it
+does not operate on just one entry in a list, but rather the entire
+expression.
 
                     else if type is 'edit internal solo'
+                        internalKey = OM.encodeAsIdentifier key
+                        internalValue = group.get internalKey
+                        meaning = OM.decode internalValue.m
+                        visuals = decompressWrapper internalValue.v
+                        match = /^<([^>]*)>((?:[^<]|<br>)*)<(.*)$/i.exec \
+                            visuals
+                        if not match then return
                         tinymce.activeEditor.Dialogs.prompt
                             title : 'Enter new value'
                             message : "Provide the new content of the
                                 atomic expression."
                             okCallback : ( newValue ) ->
-                                internalKey = OM.encodeAsIdentifier key
-                                internalValue = group.get internalKey
-                                meaning = OM.decode internalValue.m
                                 meaning.tree.v = newValue
-                                visuals = decompressWrapper internalValue.v
-                                match = /^<([^>]*)>([^<]*)<(.*)$/.exec \
-                                    visuals
-                                if not match then return
+                                newValue = newValue.replace /&/g, '&amp;'
+                                                   .replace /</g, '&lt;'
+                                                   .replace />/g, '&gt;'
+                                                   .replace /"/g, '&quot;'
+                                                   .replace /'/g, '&apos;'
+                                visuals =
+                                    "<#{match[1]}>#{newValue}<#{match[3]}"
+                                internalValue =
+                                    m : meaning.encode()
+                                    v : compressWrapper visuals
+                                group.plugin.editor.undoManager.transact ->
+                                    group.set internalKey, internalValue
+                                reload()
+
+The same thing can happen if the hidden attribute is code.  In that case, we
+do the exact same thing as in the previous case, but with a code editor.
+
+                    else if type is 'edit code internal solo'
+                        internalKey = OM.encodeAsIdentifier key
+                        internalValue = group.get internalKey
+                        meaning = OM.decode internalValue.m
+                        visuals = decompressWrapper internalValue.v
+                        match = /^<([^>]*)>((?:[^<]|<br>)*)<(.*)$/i.exec \
+                            visuals
+                        if not match then return
+                        tinymce.activeEditor.Dialogs.codeEditor
+                            value : meaning.value
+                            language : index
+                            okCallback : ( newValue ) ->
+                                meaning.tree.v = Group.codeToHTML newValue
                                 newValue = newValue.replace /&/g, '&amp;'
                                                    .replace /</g, '&lt;'
                                                    .replace />/g, '&gt;'
