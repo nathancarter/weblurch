@@ -154,9 +154,7 @@ receive the text in the dialog's input as a parameter.
                 mode : language
             handler = ( event ) ->
                 if event.data is 'getEditorContents'
-                    top.postMessage
-                        data : window.codeEditor.getValue()
-                    , '*'
+                    top.postMessage window.codeEditor.getValue(), '*'
             window.addEventListener 'message', handler, no
         html = "<html><head>
             <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/codemirror.css'>

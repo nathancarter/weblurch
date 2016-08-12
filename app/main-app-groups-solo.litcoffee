@@ -235,6 +235,22 @@ summarized in a dialog.
                 text : 'Attributes...'
                 onclick : window.attributesActionForGroup group
 
+Atomic expressions with a "code" attribute can be edited as code.
+
+            if ( languages = group.lookupAttributes 'code' ).length > 0
+                last = languages[languages.length - 1]
+                if last instanceof Group then last = last.canonicalForm()
+                if last.type is 'st'
+                    result.push
+                        text : 'Edit as code...'
+                        onclick : ->
+                            group.plugin.editor.Dialogs.codeEditor
+                                value : group.contentAsCode()
+                                okCallback : ( newCode ) ->
+                                    group.plugin.editor.undoManager
+                                    .transact ->
+                                        group.setContentAsCode newCode
+
             result
 
     ]
