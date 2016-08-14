@@ -48,7 +48,8 @@ the main project plan without these bug fixes or enhancements.
    necessary in the gh-pages branch, but in master it's redundant.  Fix.
  * Travis-CI build was segmentation faulting, though the tests run just fine
    locally for me.  Figure out why and get the Travis build working again,
-   then uncomment the Travis status indicator in [README.md](../README.md).
+   then uncomment the Travis status indicator in
+   [README.md](https://github.com/nathancarter/weblurch/blob/master/README.md).
  * In the Lean example app, `termGroupToCode` uses `contentsAsText`, which
    ignores paragraph breaks, as if they were not whitespace; this is
    problematic.  Use `contentAsCode` instead.

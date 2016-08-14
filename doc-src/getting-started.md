@@ -7,7 +7,7 @@ it, either to build on it, or to help improve it.
 
 ## Try the demos online
 
-You can [try out demo apps right now online](tutorial.md), but doing
+You can [try out demo apps right now online](example-apps.md), but doing
 development requires cloning and setting up this repository on your machine.
 Here's how.
 
