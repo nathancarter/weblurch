@@ -1,6 +1,10 @@
 
 # Getting Started
 
+This documentation is for developers who wish to learn about the *Lurch Web
+Platform,* and consider installing it on their local machine to begin using
+it, either to build on it, or to help improve it.
+
 ## Try the demos online
 
 You can [try out demo apps right now online](tutorial.md), but doing

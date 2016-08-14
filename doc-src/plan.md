@@ -106,11 +106,11 @@ required order of completion.
    parameters for a task not only groups in the document, but also groups in
    dependencies.
  * Implement the `saveMetaData` function used by [the Dependencies
-   plugin](../app/dependenciesplugin.litcoffee) to export the list of
+   plugin](https://github.com/nathancarter/weblurch/app/dependenciesplugin.litcoffee) to export the list of
    labeled, top-level expressions.
  * Implement a handler for `loadMetaData` that calls `import`, as documented
    in that plugin's ["Responsibilities"
-   section](../app/dependenciesplugin.litcoffee#responsibilities).
+   section](https://github.com/nathancarter/weblurch/app/dependenciesplugin.litcoffee#responsibilities).
  * Extend the global list of label-labeled pairs to support pairs from
    dependencies.  
  * Implement a handler for `dependenciesChanged` that does these things:
@@ -229,6 +229,7 @@ are auto-synced across collaborators.  This was an idea that Dana Ernst
 asked for long ago when he first heard about the webLurch project. Integrate
 that into webLurch, imitating the UX Ken describes from typical online
 collaboration apps such as Google Docs and Overleaf, as follows.
+
  * Just a note that none of the changes below impact the wiki import and
    export functionality; that stays as it is now.
  * Provide a section in the File > Application settings... dialog that will
@@ -365,6 +366,7 @@ Applications folder/Start menu, etc., and feels like an official app that
 they can alt-tab to, etc., but it’s the exact same web app, just wrapped in
 a thin desktop-app shell.  You can then add features to that as time
 permits.
+
  * When the user clicks "save," you can have the web app first query to see
    if it’s sitting in a desktop-app wrapper, and if so, don’t save to
    webstorage, but pop up the usual save box.

@@ -14,7 +14,7 @@ Let's see a first step towards reducing that problem.
 In the previous part of the tutorial, we saw that entire Lean commands can
 be embedded in a bubble, like so:
 
-<p align=center><img src='tut-1-ss-bubble.png'/></p>
+![](tut-1-ss-bubble.png)
 
 If you wish to hide the command, leaving only the mathematical content (in
 this case an expression in the language of dependent type theory),
@@ -23,7 +23,7 @@ context menu.  Specify the command there, and you may then remove it from
 the bubble.  It will appear on the bubble's tag, and function as if it were
 inside the bubble, at the beginning, as shown here.
 
-<p align=center><img src='tut-2-ss-term-command.png'/></p>
+![](tut-2-ss-term-command.png)
 
 ## So what?
 
@@ -32,7 +32,7 @@ inside the bubble, at the beginning, as shown here.
 Now Lean code can be more naturally worked into the surrounding prose, as
 shown in the example below.
 
-<p align=center><img src='tut-2-ss-term-command-prose.png'/></p>
+![](tut-2-ss-term-command-prose.png)
 
 (The square brackets have been hidden in this example, using the View menu.)
 

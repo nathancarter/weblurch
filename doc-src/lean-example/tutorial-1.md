@@ -2,7 +2,7 @@
 # Lean App Tutorial, Part 1
 
 The webLurch project is factored into two parts, as described
-[here](../README.md#a-development-platform).  The main app is built on a
+[here](../developer.md).  The main app is built on a
 foundation that can be re-used to make many different apps.
 One of the [example
 applications](http://nathancarter.github.io/weblurch/app/index.html)
@@ -20,7 +20,7 @@ first.
 The app documented here is a web-based word processor whose controls are
 self-explanatory, with some new features.
 
-<p align=center><img src='tut-1-ss-buttons.png' width='50%'/></p>
+![](tut-1-ss-buttons.png)
 
 [Try the web app live now.](http://nathancarter.github.io/weblurch/app/lean-example.html)
 
@@ -35,13 +35,13 @@ square brackets as a visual indicator of the special treatment the app will
 give that text.  When the user's cursor is inside such code, a bubble will
 be drawn around the code to make that fact visually obvious.
 
-<p align=center><img src='tut-1-ss-bubble.png'/></p>
+![](tut-1-ss-bubble.png)
 
 Users who do not wish to see the brackets (and rely
 instead only on the bubbles that appear when the cursor is inside the code)
 can toggle that feature using the View menu.
 
-<p align=center><img src='tut-1-ss-bubble-hidden.png'/></p>
+![](tut-1-ss-bubble-hidden.png)
 
 The other two bracket buttons, as well as the arrow button, will be covered
 in later parts of this tutorial.
@@ -60,7 +60,7 @@ color=red>&#10006;</font>, indicating whether the message was an error.  You
 can find details about the Lean output by hovering your mouse over the
 symbol in question, as shown below.
 
-<p align=center><img src='tut-1-ss-validation-detail.png'/></p>
+![](tut-1-ss-validation-detail.png)
 
 ## So what?
 

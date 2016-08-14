@@ -14,14 +14,14 @@ out of the names of theorems, and this tutorial page shows how.
 Recall the nicely organized theorem from [the previous tutorial
 page](tutorial-5.md).
 
-<p align=center><img src='tut-5-ss-theorem-bare.png' width=50%/></p>
+![](tut-5-ss-theorem-bare.png)
 
 The one complaint we had about it was that its statement had to contain the
 declarations of the variables `P` and `Q`, using the Lean syntax
 `simple {P Q : Prop}`.  To make our documents more readable, we would like
 something more like the following.
 
-<p align=center><img src='tut-6-ss-theorem-section.png' width=50%/></p>
+![](tut-6-ss-theorem-section.png)
 
 This can be accomplished very simply, as follows.
 
@@ -39,7 +39,7 @@ place other theorems inside the same body, of course).
 
 The bubble structure described above is shown here.
 
-<p align=center><img src='tut-6-ss-theorem-section-details.png' width=50%/></p>
+![](tut-6-ss-theorem-section-details.png)
 
 ## So what?
 

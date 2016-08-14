@@ -9,7 +9,7 @@ the main project plan without these bug fixes or enhancements.
 
 ## Bug fixes
 
-Load and save
+### Load and save
 
  * Not all edits cause the document to be marked dirty.  TinyMCE events are
    not firing correctly.  [Minimal working example created.](
@@ -32,7 +32,7 @@ Load and save
  * It's too easy to navigate away from the editor and lose your work.  Make
    a popup that asks if you really want to leave the page or not.
 
-Other
+### Other
 
  * When you open (or type) a file that's longer than the screen, you must
    open and close the JS console to force resizing, or it won't scroll
@@ -49,16 +49,19 @@ Other
  * Travis-CI build was segmentation faulting, though the tests run just fine
    locally for me.  Figure out why and get the Travis build working again,
    then uncomment the Travis status indicator in [README.md](../README.md).
+ * In the Lean example app, `termGroupToCode` uses `contentsAsText`, which
+   ignores paragraph breaks, as if they were not whitespace; this is
+   problematic.  Use `contentAsCode` instead.
 
 ## Enhancements
 
-MathQuill parsing
+### MathQuill parsing
 
  * Support adjacent atomics as factors in a product
  * Support chained equations
  * Add tests for things that should *not* parse, and verify that they do not
 
-HTML export/import
+### HTML export/import
 
 Currently the only ways to load/save Lurch documents are `localStorage` and
 the wiki.  Consequently, dependencies can only be specified in one of these
@@ -78,7 +81,7 @@ two ways.  Extend this to general HTML pages, as follows:
    To check the last modified date of arbitrary web pages, see
    [here.](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date)
 
-Dependencies
+### Dependencies
 
  * Right now circular dependency relationships never cause an infinite loop
    because dependency content is only embedded when a document is opened.
@@ -94,7 +97,7 @@ Dependencies
  * Extend the "Add URL dependency" event handler with a "please wait"
    indicator while the document is being fetched.
 
-Groups Plugin
+### Groups Plugin
 
  * Make a menu item for hiding/showing group decorations.
  * The `Group.set` function no longer takes any action if the new value is
@@ -116,7 +119,7 @@ Groups Plugin
    * `allContents()`, which returns an array of alternating strings and
      groups
 
-UI for Connections Between Groups
+### UI for Connections Between Groups
 
  * Add an option that when entering arrow-creation mode, ALL bubble outlines
    in the document are faintly drawn (not their tags), so that it's
@@ -148,7 +151,7 @@ UI for Connections Between Groups
    * Drawing bubbles in arrow-creation mode should include these labels
      somewhere nearby.
 
-Miscellaneous
+### Miscellaneous
 
  * Aiming the mouse at the close grouper, to bring up validation hover info,
    turns the mouse pointer into a text cursor (shaped like an I, rather than
@@ -169,8 +172,10 @@ Miscellaneous
  * Eventually, pull the LoadSave plugin out into its own repository on
    GitHub, so that anyone can easily get and use that TinyMCE plugin, and
    improve on its code.
+ * In the Lean example app:  How might we work Lean's `notation`
+   definitions in with MathQuill widgets in the document?
 
-Background processing
+### Background processing
 
  * Create a way to write a foreground function tht is a series of background
    steps as inner functions, and only the one for teh current state of the
@@ -192,7 +197,7 @@ P.addStep ( group ) -> ...
    start all at once, on the array of argument lists, so that only one
    message passing need occur.
 
-Enhancements to the XML Groups module and/or demo app
+### Enhancements to the XML Groups module and/or demo app
 
  * Make an option for whether to show tags even when the cursor is not in
    the bubble.  If so, make the open decoration of every bubble

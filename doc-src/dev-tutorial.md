@@ -1,33 +1,29 @@
 
 # Demo Apps and App Developer Tutorial
 
-Jump to a section:
- * [Introduction](#introduction)
- * [Demo apps](#demo-apps)
- * [Tutorial](#tutorial)
-
 ## Introduction
 
 ### What can I build with this platform?
 
-The webLurch [architecture](../README.md#a-development-platform) has three
+The webLurch [architecture](developer.md#a-development-platform) has three
 tiers, applications at the top, built on the *Lurch Web Platform*, which in
 turn is built on the WYSIWYG editor [TinyMCE](http://www.tinymce.com).
+
  * TinyMCE provides:
    * WYSIWYG editing of HTML content
-     <br><img src='tinymce-screenshot.png' width='50%' height='50%'>
+     <br>![](tinymce-screenshot.png)
    * Extendability through custom toolbars, menus, dialogs, etc.
  * The *Lurch Web Platform* builds on that foundation, and provides:
    * [Load/Save functionality into the browser's
-     LocalStorage](../app/loadsaveplugin.litcoffee)
-     <br><img src='save-commands.png' width='50%' height='50%'>
+     LocalStorage](https://github.com/nathancarter/weblurch/app/loadsaveplugin.litcoffee)
+     <br>![](save-commands.png)
    * A WYSIWYG math editing widget, [imported from
      here](https://github.com/foraker/tinymce_equation_editor)
-     <br><img src='equation-editor.png' width='50%' height='50%'>
+     <br>![](equation-editor.png)
    * __*Groups*__, the most important contribution of the *Lurch Web
      Platform*, [explained below](#what-are-groups).
    * Facilities for computing with groups, such as
-     [a background computation/parallelization toolkit](../src/background.litcoffee)
+     [a background computation/parallelization toolkit](https://github.com/nathancarter/weblurch/src/background.litcoffee)
 
 ### What are groups?
 
@@ -44,14 +40,14 @@ Examples:
  * One demo app lets users wrap bubbles around mathematical expressions to
    tell Lurch to pay attention to the expressions' meaning.  Lurch puts a
    tag above the bubble to let the user see what the content means to Lurch.
-   <br><img src='bubble-typeset-math.png' width='50%' height='50%'><br>
+   <br>![](bubble-typeset-math.png)
  * Another demo app lets users put bubbles around text to give it
    application-specific meaning.  The following screenshot is from an
    application for authoring OpenMath Content Dictionaries.
-   <br><img src='bubble-OM-CDReviewDate.png' width='50%' height='50%'>
+   <br>![](bubble-OM-CDReviewDate.png)
  * Complex nested group hierarchies are possible and very useful.  Desktop
    Lurch uses them constantly:
-   <br><img src='bubble-many.png'>
+   <br>![](bubble-many.png)
 
 [Read about about the importance of this user interface
 paradigm in a blog post about the desktop version of
@@ -118,13 +114,13 @@ needs of the application.  Examples:
  * In the simple app you have, there is only one group type, and it does
    almost nothing.  (It does write to the browser console, but that's
    hardly exciting.)
- * [The complex demo app](../app/complex-example-solo.litcoffee) defines two
+ * [The complex demo app](https://github.com/nathancarter/weblurch/app/complex-example-solo.litcoffee) defines two
    group types, one for wrapping and evaluating expressions of arithmetic
    and another for wrapping and doing simple computations on words.
- * In [the math demo app](.../app/math-example-solo.litcoffee) there is only
+ * In [the math demo app](https://github.com/nathancarter/weblurch/app/math-example-solo.litcoffee) there is only
    one group type, for parsing and evaluating mathematical expressions.
  * In [the OpenMath Content Dictionary demo
-   app](../app/openmath-example-solo.litcoffee) there is only one group
+   app](https://github.com/nathancarter/weblurch/app/openmath-example-solo.litcoffee) there is only one group
    type, but it can have any of over a dozen different purposes, editable
    using the context menu on each individual group.
 
@@ -146,7 +142,7 @@ window.groupTypes = [
 ```
 
 All of this is fully documented [in the original
-file](../app/simple-example-solo.litcoffee#define-one-group-type), so I do
+file](https://github.com/nathancarter/weblurch/app/simple-example-solo.litcoffee#define-one-group-type), so I do
 not repeat here what any of it means.  But note that this is simply the
 assignment to a global variable of an array of group type data.  You could
 extend it to add another group type as follows.
@@ -196,6 +192,7 @@ What else can your app do?  Here are many examples, each with a link to
 where you can read more information and see example code.
 
 __Report information about the group on the bubble's tag__
+
  * Every example app you've seen so far does this.  Simply search the
    source code repository for the `tagContents` function and look at the
    variety of implementations.
@@ -203,13 +200,15 @@ __Report information about the group on the bubble's tag__
    information about your group, such as its text content, or whether it
    has any groups inside of it.  The API for a Group object is [documented
    in the source code for the Groups
-   Plugin](../app/groupsplugin.litcoffee).
+   Plugin](https://github.com/nathancarter/weblurch/app/groupsplugin.litcoffee).
 
 __Customize a group's color__
+
  * Include among the key-value pairs in your group type definition a pair
    like `color : '#aacc00'`, or whatever HTML color you choose.
 
 __Store and retrieve custom data in a Group object__
+
  * In the API linked to immediately above, see the `set`, `get`, and
    `clear` functions in the `Group` class.  These store arbitrary JSON
    data under string keys in a group.
@@ -219,9 +218,10 @@ __Store and retrieve custom data in a Group object__
    some background process.
 
 __Find what groups are in the document__
+
  * For a complete answer, see the API for the `Groups` class (different
    from the `Group` class!) in [the Groups
-   Plugin](../app/groupsplugin.litcoffee).  Since that file is large, I
+   Plugin](https://github.com/nathancarter/weblurch/app/groupsplugin.litcoffee).  Since that file is large, I
    give highlights here.
  * Access the one, global `Groups` object using the code
    `tinymce.activeEditor.Groups`.  I call this object `Groups` hereafter.
@@ -239,48 +239,54 @@ __Find what groups are in the document__
    applies here.)
 
 __Pushing complex computations into the background__
+
  * The *Lurch Web Platform* provides functionality for moving arbitrary
    computations into one or more background threads, with parallelization
    managed efficiently for you.  This lengthy topic is covered in two
    files:
- * [The "complex example" demo app](../app/complex-example-solo.litcoffee)
+ * [The "complex example" demo app](https://github.com/nathancarter/weblurch/app/complex-example-solo.litcoffee)
    pushes some computations into the background, and you can follow its
    example code.
- * [The background module](../src/background.litcoffee) documents the full
+ * [The background module](https://github.com/nathancarter/weblurch/src/background.litcoffee) documents the full
    API that's being leveraged by that demo app.
 
 __Extending the menus that appear when users right-click a group or click
 its bubble tag__
+
  * Extending a group's context menu is done by providing a
    `contextMenuItems` function in the group type definition.  Search the
    repository for that phrase to see examples.  One appears in [the
    source code for the complex example demo
-   app](../app/complex-example-solo.litcoffee).
+   app](https://github.com/nathancarter/weblurch/app/complex-example-solo.litcoffee).
  * Extending a group's tag menu is done by providing a `tagMenuItems`
    function that behaves exactly the same way, but may choose to return a
    different list of menu items.
 
 __Adding new buttons to the editor toolbar__
+
  * This is done by assigning to the global object
    `window.groupToolbarButtons`.
  * [See an example
-   here.](../src/xml-groups-solo.litcoffee#define-one-toolbar-button)
+   here.](https://github.com/nathancarter/weblurch/src/xml-groups-solo.litcoffee#define-one-toolbar-button)
 
 __Adding new menu items to the editor's menus__
+
  * This is done by assigning to the global object
    `window.groupMenuItems`.
  * There is not an example of this at the moment, but it functions very
    similar to the previous bullet point, about toolbar buttons.  The
    implementation appears in
-   [the main setup code](../app/setup.litcoffee).
+   [the main setup code](https://github.com/nathancarter/weblurch/app/setup.litcoffee).
 
 __Showing dialog boxes__
+
  * [TinyMCE provides a few ways to show dialog boxes containing plain
    text](http://www.tinymce.com/wiki.php/api4:class.tinymce.WindowManager).
  * If your dialog box must contain more than just plain text, see
-   [the Dialogs plugin](../app/dialogsplugin.litcoffee).
+   [the Dialogs plugin](https://github.com/nathancarter/weblurch/app/dialogsplugin.litcoffee).
 
 __Adding decorations to group boundaries__
+
  * It is common to give feedback to the user about the content of a group
    in a more obvious way than the bubble tag (which is only visible when
    the user's cursor is in the group).  For instance, if there is an
@@ -288,8 +294,8 @@ __Adding decorations to group boundaries__
    flag it in an obvious way, as the <font color="red">&#10006;</font>
    does in the following example from
    [the OpenMath Content Dictionary Editor demo
-   app](../app/openmath-example-solo.litcoffee).
-   <br><img src='bubble-with-error.png'><br>
+   app](https://github.com/nathancarter/weblurch/app/openmath-example-solo.litcoffee).
+   <br>![](bubble-with-error.png)<br>
    This is a special case of "decorating" a group.  To add decorations to
    a group `G`, you have the following API.
  * `G.set 'openDecoration', 'any valid HTML here'` - sets the decoration

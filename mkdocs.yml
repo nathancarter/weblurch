@@ -1,0 +1,27 @@
+site_name: webLurch Documentation
+pages:
+- Home: index.md
+- Authors:
+    - Blog/website embedding: embedding.md
+- Developers:
+    - Introduction: developer.md
+    - Getting started: getting-started.md
+    - Tutorial: dev-tutorial.md
+    - Project plan: plan.md
+    - Bug fix/enhancement list: bugs-and-enhancements.md
+- Examples and Demos:
+    - Full list: example-apps.md
+    - Lean demo app:
+        - Tutorial Part 1: lean-example/tutorial-1.md
+        - Tutorial Part 2: lean-example/tutorial-2.md
+        - Tutorial Part 3: lean-example/tutorial-3.md
+        - Tutorial Part 4: lean-example/tutorial-4.md
+        - Tutorial Part 5: lean-example/tutorial-5.md
+        - Tutorial Part 6: lean-example/tutorial-6.md
+        - Tutorial Part 7: lean-example/tutorial-7.md
+        - Tutorial Part 8: lean-example/tutorial-8.md
+theme: yeti
+extra_javascript:
+- http://nathancarter.github.io/weblurch/app/lurch-embed-solo.min.js
+docs_dir: 'doc-src'
+site_dir: 'docs'

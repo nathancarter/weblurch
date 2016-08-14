@@ -25,7 +25,7 @@ Let's assume that we want to write a document embodying the Lean code
 inside a term bubble, but that requires our document to contain Lean
 syntax.  Here is an alternate way.
 
-<p align=center><img src='tut-4-ss-body-clean.png' width='50%'/></p>
+![](tut-4-ss-body-clean.png)
 
 This document has plenty of non-bubbled text that is irrelevant to the
 results of the "Run Lean" operation, which pays attention only to the
@@ -36,7 +36,7 @@ page](#benefits)).
 If we use the View menu to show the boundaries of the bubbles then the
 result looks like the following.
 
-<p align=center><img src='tut-4-ss-body-validated.png' width='50%'/></p>
+![](tut-4-ss-body-validated.png)
 
 Notice that the app can convert these broken-apart pieces into Lean code
 correctly, so that it validates.
@@ -45,14 +45,14 @@ The type is connected to the term in the manner introduced in [the previous
 part of this tutorial](tutorial-3.md).  But the body is also connected in
 the same way, as shown here.
 
-<p align=center><img src='tut-4-ss-body-structure.png' width='50%'/></p>
+![](tut-4-ss-body-structure.png)
 
 ## Creating the Structure
 
 To create a body group, use the blue bracket button in the toolbar below
 (third button of those labeled "Mark Lean code in your document").
 
-<p align=center><img src='tut-1-ss-buttons.png' width='50%'/></p>
+![](tut-1-ss-buttons.png)
 
 To connect a body to the term being defined (or the statement of a theorem,
 using the body as its proof), use the same technique as discussed in [the
@@ -78,7 +78,7 @@ comprehensive list.
    Thus for example, the structure shown below defines a function.  It could
    be used as the body of a definition.
 
-<p align=center><img src='tut-4-ss-body-as-function.png' width='50%'/></p>
+![](tut-4-ss-body-as-function.png)
 
 The second case is a generalization of the first, permitting explanatory
 text outside the inner bubble; the first case can be seen as shorthand for
@@ -90,12 +90,12 @@ is the 0-parameter version of the third case.
 This permits us to put a little exposition in our theorems and proofs, as
 shown in the following image.
 
-<p align=center><img src='tut-4-ss-theorem.png' width='50%'/></p>
+![](tut-4-ss-theorem.png)
 
 The structure that reveals itself when your cursor is inside the main term
 (the name and premises of the theorem) is as shown below.
 
-<p align=center><img src='tut-4-ss-theorem-arrows.png' width='50%'/></p>
+![](tut-4-ss-theorem-arrows.png)
 
 In these examples, I've placed a term bubble inside the body bubble, which
 shows that the meaning is the same.

@@ -17,15 +17,14 @@ for wrapping text in a "type" bubble.  While term bubbles are gray, type
 bubbles are green.  The toolbar button for marking text as a type is
 immediately to the right of that for marking text as a term.
 
-<p align=center><img src='tut-1-ss-buttons.png' width='50%'/></p>
+![](tut-1-ss-buttons.png)
 
 If you mark something as a type in your document, however, and click "Run
 Lean," it will say that the type is not attached to any term, and thus
 cannot be validated on its own.  (The gold starburst indicates a warning,
 as opposed to an outright error.)
 
-<p align=center><img src='tut-3-ss-unvalidated-type.png'
-width='50%'/></p>
+![](tut-3-ss-unvalidated-type.png)
 
 ## Connecting Types to Terms
 
@@ -33,7 +32,7 @@ To connect one bubble to another (such as a type to the term it modifies),
 use the connection button in the toolbar, labeled "Connect pieces of Lean
 code" in the image below.
 
-<p align=center><img src='tut-1-ss-buttons.png' width='50%'/></p>
+![](tut-1-ss-buttons.png)
 
 Follow this process:
 
@@ -46,8 +45,7 @@ also permits you to separate the type and the term in your text, and let the
 text flow as smoothly as you'd like around them.  The type can precede the
 term, or follow it.  Here is an example.
 
-<p align=center><img src='tut-3-ss-type-term-connection.png'
-width='50%'/></p>
+![](tut-3-ss-type-term-connection.png)
 
 To disconnect a type and a term, just perform the connection process again.
 It toggles the connection off.
@@ -59,8 +57,7 @@ type is treated as modifying the term.  If the term has a "check" command
 embedded in it, for instance, the check will include the type assertion, as
 shown here.
 
-<p align=center><img src='tut-3-ss-type-term-paragraph.png'
-width='50%'/></p>
+![](tut-3-ss-type-term-paragraph.png)
 
 ## So what?
 
@@ -77,8 +74,7 @@ takes their cursor out of the bubbles in question.  The image below shows
 the document with validation complete (so the green checks are present) but
 with bubble boundaries hidden (from the View menu).
 
-<p align=center><img src='tut-3-ss-type-term-invisible.png'
-width='50%'/></p>
+![](tut-3-ss-type-term-invisible.png)
 
 ### Missing pieces
 

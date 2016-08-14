@@ -16,7 +16,7 @@ Lean code can contain many Unicode characters that resemble mathematical
 notation, and thus make documents more attractive.  This appliction supports
 those characters, as shown in the image below.
 
-<p align=center><img src='tut-8-ss-characters.png' width=50%/></p>
+![](tut-8-ss-characters.png)
 
 The blackboard bold N stands for the natural numbers (formerly written nat)
 and the greek letter lambda stands for "fun" or "assume" in Lean.
@@ -58,7 +58,7 @@ mathematical and readable.
 ### Missing pieces
 
 This is the last page of the tutorial, but surely you can think of ways that
-this app could be improved.  Feel free to visit [the webLurch project GitHub
-site](https://github.com/nathancarter/weblurch) and see how to fork the
-project and contribute your own code.  Feel free also to contact one of the
-members of the development team, through GitHub, or just open an issue.
+this app could be improved.  Feel free to [clone the project and start
+developing with us!](../getting-started.md)  Or contact one of the members
+of the development team through [GitHub](https://github.com/nathancarter/weblurch).
+You can also open an issue there for bug reports or feature requests.
