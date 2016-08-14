@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+
+	<title>Tutorial - webLurch Documentation</title>
+
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <link href="../css/base.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="..">webLurch Documentation</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li >
+                    <a href="..">Home</a>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Authors <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li >
+    <a href="../embedding/">Blog/website embedding</a>
+</li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li class="dropdown active">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developers <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li >
+    <a href="../developer/">Introduction</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../getting-started/">Getting started</a>
+</li>
+
+                    
+                        
+<li class="active">
+    <a href="./">Tutorial</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../plan/">Project plan</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../bugs-and-enhancements/">Bug fix/enhancement list</a>
+</li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Examples and Demos <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li >
+    <a href="../example-apps/">Full list</a>
+</li>
+
+                    
+                        
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">Lean demo app</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../lean-example/tutorial-1/">Tutorial Part 1</a>
+</li>
+
+        
+            
+<li >
+    <a href="../lean-example/tutorial-2/">Tutorial Part 2</a>
+</li>
+
+        
+            
+<li >
+    <a href="../lean-example/tutorial-3/">Tutorial Part 3</a>
+</li>
+
+        
+            
+<li >
+    <a href="../lean-example/tutorial-4/">Tutorial Part 4</a>
+</li>
+
+        
+            
+<li >
+    <a href="../lean-example/tutorial-5/">Tutorial Part 5</a>
+</li>
+
+        
+            
+<li >
+    <a href="../lean-example/tutorial-6/">Tutorial Part 6</a>
+</li>
+
+        
+            
+<li >
+    <a href="../lean-example/tutorial-7/">Tutorial Part 7</a>
+</li>
+
+        
+            
+<li >
+    <a href="../lean-example/tutorial-8/">Tutorial Part 8</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                <li >
+                    <a rel="next" href="../getting-started/">
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="../plan/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#demo-apps-and-app-developer-tutorial">Demo Apps and App Developer Tutorial</a></li>
+        
+            <li><a href="#introduction">Introduction</a></li>
+        
+            <li><a href="#demo-apps">Demo Apps</a></li>
+        
+            <li><a href="#tutorial">Tutorial</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="demo-apps-and-app-developer-tutorial">Demo Apps and App Developer Tutorial</h1>
+<h2 id="introduction">Introduction</h2>
+<h3 id="what-can-i-build-with-this-platform">What can I build with this platform?</h3>
+<p>The webLurch <a href="../developer/#a-development-platform">architecture</a> has three
+tiers, applications at the top, built on the <em>Lurch Web Platform</em>, which in
+turn is built on the WYSIWYG editor <a href="http://www.tinymce.com">TinyMCE</a>.</p>
+<ul>
+<li>TinyMCE provides:</li>
+<li>WYSIWYG editing of HTML content
+     <br><img alt="" src="../tinymce-screenshot.png" /></li>
+<li>Extendability through custom toolbars, menus, dialogs, etc.</li>
+<li>The <em>Lurch Web Platform</em> builds on that foundation, and provides:</li>
+<li><a href="https://github.com/nathancarter/weblurch/app/loadsaveplugin.litcoffee">Load/Save functionality into the browser's
+     LocalStorage</a>
+     <br><img alt="" src="../save-commands.png" /></li>
+<li>A WYSIWYG math editing widget, <a href="https://github.com/foraker/tinymce_equation_editor">imported from
+     here</a>
+     <br><img alt="" src="../equation-editor.png" /></li>
+<li><strong><em>Groups</em></strong>, the most important contribution of the <em>Lurch Web
+     Platform</em>, <a href="#what-are-groups">explained below</a>.</li>
+<li>Facilities for computing with groups, such as
+     <a href="https://github.com/nathancarter/weblurch/src/background.litcoffee">a background computation/parallelization toolkit</a></li>
+</ul>
+<h3 id="what-are-groups">What are groups?</h3>
+<p>The crux of the user interface for the desktop version of Lurch is the
+ability for the user to mark portions of a document as <em>meaningful</em> with
+groups.</p>
+<p>Groups are represented on screen as "bubbles," as in the images below.  Thus
+the terms "group" and "bubble" are sometimes used interchangeably, but
+technically "group" is the term for the object in memory, and "bubble" its
+representation on screen.</p>
+<p>Examples:
+ * One demo app lets users wrap bubbles around mathematical expressions to
+   tell Lurch to pay attention to the expressions' meaning.  Lurch puts a
+   tag above the bubble to let the user see what the content means to Lurch.
+   <br><img alt="" src="../bubble-typeset-math.png" />
+ * Another demo app lets users put bubbles around text to give it
+   application-specific meaning.  The following screenshot is from an
+   application for authoring OpenMath Content Dictionaries.
+   <br><img alt="" src="../bubble-OM-CDReviewDate.png" />
+ * Complex nested group hierarchies are possible and very useful.  Desktop
+   Lurch uses them constantly:
+   <br><img alt="" src="../bubble-many.png" /></p>
+<p><a href="http://lurchmath.org/2013/04/12/what-have-we-built-so-far-part-1-of-2/">Read about about the importance of this user interface
+paradigm in a blog post about the desktop version of
+Lurch.</a></p>
+<h2 id="demo-apps">Demo Apps</h2>
+<p>The content of this section got large enough to deserve
+<a href="http://nathancarter.github.io/weblurch/app/index.html">its own page</a>.</p>
+<h2 id="tutorial">Tutorial</h2>
+<p>Build a <em>Lurch Web Application</em> as follows.
+ * <strong>Phase 1:</strong> Create a web page that imports the <em>Lurch Web Platform</em>.
+ * <strong>Phase 2:</strong> Write code that defines a set of group types.
+ * <strong>Phase 3:</strong> Optionally add new/custom behaviors to those types.</p>
+<p>This section gives step-by-step instructions for creating your own <em>Lurch
+Web Application.</em>  By the end of this section, you will have completed
+Phases 1 and 2 on the list, and will know where to go to explore Phase 3.</p>
+<h3 id="phase-1-a-first-app-and-a-very-simple-one">Phase 1: A first app (and a very simple one)</h3>
+<ol>
+<li>Get a copy of this repository set up on your local machine.
+    <a href="../getting-started/">See instructions here.</a>  You may be able to forge
+    ahead even if you've never tried to learn <a href="../www.coffeescript.org#literate">literate
+    CoffeeScript</a>, because the language is
+    extremely readable.  But you can learn its basics at that link before
+    proceeding if you prefer.</li>
+<li>Ensure that you can build and run the Simple Example app, as follows:<ul>
+<li>Compile the app and start a local web server by following the
+  repository setup instructions in the previous bullet point.</li>
+<li>Visit <code>http://localhost:8000/app/simple-example.html</code> to see the
+  simple example app in action.</li>
+</ul>
+</li>
+<li>Make a copy of that app to use as the basis for your own.<ul>
+<li>In the <code>app/</code> subfolder, make copies of the files
+  <code>simple-example.html</code> and <code>simple-example-solo.litcoffee</code>, naming them
+  something like <code>myapp.html</code> and <code>myapp-solo.litcoffee</code>.</li>
+<li>Re-run <code>cake app</code> from the terminal to compile your new <code>.litcoffee</code>
+  file.  (You will need to do this after each change to the source.)
+  This should create several files that start with <code>app/myapp-solo</code>.</li>
+<li>Change the last <code>&lt;script&gt;</code> tag in the <code>.html</code> file you just created so
+  that it imports <code>myapp-solo.min.js</code> file rather than
+  <code>simple-example-solo.min.js</code>.</li>
+<li>Visit <code>http://localhost:8000/app/myapp.html</code> to ensure that this
+  worked.  It should look exactly like the simple app you already saw.</li>
+</ul>
+</li>
+<li>Edit <code>myapp-solo.min.js</code>.<ul>
+<li>The file begins with a lot of documentation, and then the first line
+  of code is <code>setAppName 'ExampleApp'</code>.  Change the contents of the
+  string to your app's name.</li>
+<li>Rebuild using <code>cake app</code> and revisit the page to ensure that the app
+  name in the browser's tab has changed to your app's name.</li>
+</ul>
+</li>
+</ol>
+<p>You've created a (very simple) app!  And you know how to change your app's
+code, rebuild, and visit your updated app.  So what kinds of code changes
+are possible?  Let's see.</p>
+<h3 id="phase-2-changing-or-adding-group-types">Phase 2: Changing or adding group types</h3>
+<p>The individual bubbles you see in the document are the visual representation
+of what, under the hood, are called "groups."  Each app has a different set
+of group types that the user may insert in the document, depending on the
+needs of the application.  Examples:
+ * In the simple app you have, there is only one group type, and it does
+   almost nothing.  (It does write to the browser console, but that's
+   hardly exciting.)
+ * <a href="https://github.com/nathancarter/weblurch/app/complex-example-solo.litcoffee">The complex demo app</a> defines two
+   group types, one for wrapping and evaluating expressions of arithmetic
+   and another for wrapping and doing simple computations on words.
+ * In <a href="https://github.com/nathancarter/weblurch/app/math-example-solo.litcoffee">the math demo app</a> there is only
+   one group type, for parsing and evaluating mathematical expressions.
+ * In <a href="https://github.com/nathancarter/weblurch/app/openmath-example-solo.litcoffee">the OpenMath Content Dictionary demo
+   app</a> there is only one group
+   type, but it can have any of over a dozen different purposes, editable
+   using the context menu on each individual group.</p>
+<p>If we look at the code in your app that defines group types, stripping away
+all the documentation, it looks like the following.</p>
+<pre><code class="coffeescript">window.groupTypes = [
+    name : 'reporter'
+    text : 'Simple Event Reporter'
+    imageHTML : '[ ]'
+    openImageHTML : '['
+    closeImageHTML : ']'
+    tagContents : ( group ) -&gt;
+        &quot;#{group.contentAsText()?.length} characters&quot;
+    contentsChanged : ( group, firstTime ) -&gt;
+        console.log 'This group just changed:', group.contentAsText()
+]
+</code></pre>
+
+<p>All of this is fully documented <a href="https://github.com/nathancarter/weblurch/app/simple-example-solo.litcoffee#define-one-group-type">in the original
+file</a>, so I do
+not repeat here what any of it means.  But note that this is simply the
+assignment to a global variable of an array of group type data.  You could
+extend it to add another group type as follows.</p>
+<pre><code class="coffeescript">window.groupTypes = [
+    #
+    # This code is the same as before:
+    #
+    name : 'reporter'
+    text : 'Simple Event Reporter'
+    imageHTML : '[ ]'
+    openImageHTML : '['
+    closeImageHTML : ']'
+    tagContents : ( group ) -&gt;
+        &quot;#{group.contentAsText()?.length} characters&quot;
+    contentsChanged : ( group, firstTime ) -&gt;
+        console.log 'This group just changed:', group.contentAsText()
+    #
+    # Here begins the new code:
+    #
+,
+    name : 'myNewGroupType'
+    text : 'My New Group Type'
+    imageHTML : '{}'
+    openImageHTML : '{'
+    closeImageHTML : '}'
+    tagContents : ( group ) -&gt; 'every tag has this content'
+    # no event handler for changes to group contents
+]
+</code></pre>
+
+<p>Rebuilding your app and reloading it in the browser should then let you
+insert either of the two kinds of groups.  Each type should have its own
+button on the toolbar.</p>
+<p>By simply extending the list above, you can define any set of group types
+you see fit in your application.  Note that the open and close HTML can be
+arbitrary HTML, including (small) images and font colors and styles.</p>
+<p>The only question that remains is how to make your groups do something
+useful.</p>
+<h3 id="phase-3-adding-interactivity-to-your-groups">Phase 3: Adding interactivity to your groups</h3>
+<p>What else can your app do?  Here are many examples, each with a link to
+where you can read more information and see example code.</p>
+<p><strong>Report information about the group on the bubble's tag</strong></p>
+<ul>
+<li>Every example app you've seen so far does this.  Simply search the
+   source code repository for the <code>tagContents</code> function and look at the
+   variety of implementations.</li>
+<li>In computing the contents of the tag, you will want to be able to query
+   information about your group, such as its text content, or whether it
+   has any groups inside of it.  The API for a Group object is <a href="https://github.com/nathancarter/weblurch/app/groupsplugin.litcoffee">documented
+   in the source code for the Groups
+   Plugin</a>.</li>
+</ul>
+<p><strong>Customize a group's color</strong></p>
+<ul>
+<li>Include among the key-value pairs in your group type definition a pair
+   like <code>color : '#aacc00'</code>, or whatever HTML color you choose.</li>
+</ul>
+<p><strong>Store and retrieve custom data in a Group object</strong></p>
+<ul>
+<li>In the API linked to immediately above, see the <code>set</code>, <code>get</code>, and
+   <code>clear</code> functions in the <code>Group</code> class.  These store arbitrary JSON
+   data under string keys in a group.</li>
+<li>It is very common to do a computation and store its result in an
+   attribute of the group, the read that later when computing the contents
+   of the group's tag, thus giving the user feedback on the results of
+   some background process.</li>
+</ul>
+<p><strong>Find what groups are in the document</strong></p>
+<ul>
+<li>For a complete answer, see the API for the <code>Groups</code> class (different
+   from the <code>Group</code> class!) in <a href="https://github.com/nathancarter/weblurch/app/groupsplugin.litcoffee">the Groups
+   Plugin</a>.  Since that file is large, I
+   give highlights here.</li>
+<li>Access the one, global <code>Groups</code> object using the code
+   <code>tinymce.activeEditor.Groups</code>.  I call this object <code>Groups</code> hereafter.</li>
+<li>Get the array of all group IDs in your document (in the order their
+   open boundaries appear in the document) with <code>Groups.ids()</code>.</li>
+<li>Get the group object from its ID by indexing <code>Groups</code> as if it were an
+   array, as in <code>Groups[putIdHere]</code>.</li>
+<li>For any group <code>G</code>, get the group containing it with <code>G.parent</code>, which
+   will be null if the group is top-level in the document, or if it was
+   just created in the document (instants ago) and the editor has
+   therefore not yet had a chance to re-scan and assign parent/child
+   relationships.</li>
+<li>For any group <code>G</code>, get an ordered array of the groups it (immediately)
+   contains with <code>G.children</code>.  (Same caveat about just-created groups
+   applies here.)</li>
+</ul>
+<p><strong>Pushing complex computations into the background</strong></p>
+<ul>
+<li>The <em>Lurch Web Platform</em> provides functionality for moving arbitrary
+   computations into one or more background threads, with parallelization
+   managed efficiently for you.  This lengthy topic is covered in two
+   files:</li>
+<li><a href="https://github.com/nathancarter/weblurch/app/complex-example-solo.litcoffee">The "complex example" demo app</a>
+   pushes some computations into the background, and you can follow its
+   example code.</li>
+<li><a href="https://github.com/nathancarter/weblurch/src/background.litcoffee">The background module</a> documents the full
+   API that's being leveraged by that demo app.</li>
+</ul>
+<p><strong>Extending the menus that appear when users right-click a group or click
+its bubble tag</strong></p>
+<ul>
+<li>Extending a group's context menu is done by providing a
+   <code>contextMenuItems</code> function in the group type definition.  Search the
+   repository for that phrase to see examples.  One appears in <a href="https://github.com/nathancarter/weblurch/app/complex-example-solo.litcoffee">the
+   source code for the complex example demo
+   app</a>.</li>
+<li>Extending a group's tag menu is done by providing a <code>tagMenuItems</code>
+   function that behaves exactly the same way, but may choose to return a
+   different list of menu items.</li>
+</ul>
+<p><strong>Adding new buttons to the editor toolbar</strong></p>
+<ul>
+<li>This is done by assigning to the global object
+   <code>window.groupToolbarButtons</code>.</li>
+<li><a href="https://github.com/nathancarter/weblurch/src/xml-groups-solo.litcoffee#define-one-toolbar-button">See an example
+   here.</a></li>
+</ul>
+<p><strong>Adding new menu items to the editor's menus</strong></p>
+<ul>
+<li>This is done by assigning to the global object
+   <code>window.groupMenuItems</code>.</li>
+<li>There is not an example of this at the moment, but it functions very
+   similar to the previous bullet point, about toolbar buttons.  The
+   implementation appears in
+   <a href="https://github.com/nathancarter/weblurch/app/setup.litcoffee">the main setup code</a>.</li>
+</ul>
+<p><strong>Showing dialog boxes</strong></p>
+<ul>
+<li><a href="http://www.tinymce.com/wiki.php/api4:class.tinymce.WindowManager">TinyMCE provides a few ways to show dialog boxes containing plain
+   text</a>.</li>
+<li>If your dialog box must contain more than just plain text, see
+   <a href="https://github.com/nathancarter/weblurch/app/dialogsplugin.litcoffee">the Dialogs plugin</a>.</li>
+</ul>
+<p><strong>Adding decorations to group boundaries</strong></p>
+<ul>
+<li>It is common to give feedback to the user about the content of a group
+   in a more obvious way than the bubble tag (which is only visible when
+   the user's cursor is in the group).  For instance, if there is an
+   error in what the user has entered in a group, you might want to
+   flag it in an obvious way, as the <font color="red">&#10006;</font>
+   does in the following example from
+   <a href="https://github.com/nathancarter/weblurch/app/openmath-example-solo.litcoffee">the OpenMath Content Dictionary Editor demo
+   app</a>.
+   <br><img alt="" src="../bubble-with-error.png" /><br>
+   This is a special case of "decorating" a group.  To add decorations to
+   a group <code>G</code>, you have the following API.</li>
+<li><code>G.set 'openDecoration', 'any valid HTML here'</code> - sets the decoration
+   that will appear to the left of its open boundary marker (not used in
+   the image above)</li>
+<li><code>G.set 'closeDecoration', 'any valid HTML here'</code> - same as the previous
+   but for after the close boundary marker (as in the image above)</li>
+<li><code>G.clear 'openDecoration'</code> and <code>G.clear 'closeDecoration'</code> behave as
+   expected</li>
+<li>Note that there are many useful Unicode characters for visually giving
+   understandable feedback concisely.  Consider the following, each of
+   which can be made more informative by wrapping it in
+   <code>&lt;font color="red"&gt;...&lt;/font&gt;</code>, as in the image above,
+   or some other color suiting your application.</li>
+<li>X's<ul>
+<li>&amp;#10006; is &#10006;</li>
+<li>&amp;#10007; is &#10007;</li>
+<li>&amp;#10007; is &#10008;</li>
+</ul>
+</li>
+<li>Checks<ul>
+<li>&amp;#10003; is &#10003;</li>
+<li>&amp;#10004; is &#10004;</li>
+</ul>
+</li>
+<li>Stars<ul>
+<li>&amp;#10029; is &#10029;</li>
+<li>&amp;#10038; is &#10038;</li>
+<li>&amp;#10039; is &#10039;</li>
+<li>&amp;#10040; is &#10040;</li>
+<li>&amp;#10041; is &#10041;</li>
+</ul>
+</li>
+<li>Numbers<ul>
+<li>&amp;#10122; is &#10122;</li>
+<li>... in order through ...</li>
+<li>&amp;#10131; is &#10131;</li>
+</ul>
+</li>
+</ul>
+<h3 id="other-functionality">Other functionality</h3>
+<p>In this section I document other configuration possibilities beyond those
+mentioned above, things that didn't fit neatly into the above categories.</p>
+<p>To run any code after the editor has been set up, assign a function to the
+global variable <code>window.afterEditorReady</code>.  Your function should accept a
+single parameter, <code>editor</code>, which will be the editor object that was just
+initialized.  Your function will be called at the end of the TinyMCE editor
+"init" event.</p>
+<hr />
+<p>This tutorial was written by <a href="mailto:ncarter@bentley.edu">Nathan Carter</a>.
+Feel free to contact me with questions.  I would love to know how we can
+help get you started coding on the <em>Lurch Web Platform</em>.</p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            
+            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
+        </footer>
+
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script>
+        <script src="http://nathancarter.github.io/weblurch/app/lurch-embed-solo.min.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            From here you can search these documents. Enter
+                            your search terms below.
+                        </p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                            </div>
+                        </form>
+                        <div id="mkdocs-search-results"></div>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

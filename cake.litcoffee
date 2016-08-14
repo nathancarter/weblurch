@@ -25,7 +25,7 @@ If you want to build and test evertything, just run `cake all`. It simply
 invokes all the other tasks, defined below.
 
     build.task 'all', 'Build app and run tests', ->
-        build.enqueue 'app', 'submodules', 'test'
+        build.enqueue 'app', 'submodules', 'docs', 'test'
 
 ## Requirements
 
@@ -157,6 +157,17 @@ like this project does, because they are structured the same way.
             description : "Running #{submodule} build process...".green
             command : "cd #{submodule} && #{command} && cd .."
         build.runShellCommands commands, done
+
+## The `docs` build process
+
+We use [mkdocs](http://www.mkdocs.org), so this is a single shell command.
+
+    build.asyncTask 'docs', 'Run mkdocs to convert doc-src/ into docs/',
+    ( done ) ->
+        build.runShellCommands [
+            description : "Running mkdocs build...".green
+            command : "mkdocs build"
+        ], done
 
 ## The `test` build process
 
@@ -318,6 +329,7 @@ to gh-pages and merging in changes.
                 touch src/*.litcoffee
                 cake app
                 cake submodules
+                cake docs
                 git commit -a -m 'Updating gh-pages with latest app build'
                 git checkout master
             '''.yellow
@@ -344,7 +356,7 @@ to gh-pages and merging in changes.
             command : 'touch src/*.litcoffee'
         ], ->
             console.log 'Building app and submodules in gh-pages...'.green
-            build.enqueue 'app', 'submodules', ->
+            build.enqueue 'app', 'submodules', 'docs', ->
                 build.runShellCommands [
                     description : 'Committing changes... (which may fail if
                         there were no changes to the app itself; in that

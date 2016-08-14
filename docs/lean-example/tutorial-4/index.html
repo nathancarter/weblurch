@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+
+	<title>Tutorial Part 4 - webLurch Documentation</title>
+
+        <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../css/highlight.css">
+        <link href="../../css/base.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="../..">webLurch Documentation</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li >
+                    <a href="../..">Home</a>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Authors <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li >
+    <a href="../../embedding/">Blog/website embedding</a>
+</li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Developers <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li >
+    <a href="../../developer/">Introduction</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../../getting-started/">Getting started</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../../dev-tutorial/">Tutorial</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../../plan/">Project plan</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../../bugs-and-enhancements/">Bug fix/enhancement list</a>
+</li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li class="dropdown active">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Examples and Demos <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li >
+    <a href="../../example-apps/">Full list</a>
+</li>
+
+                    
+                        
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">Lean demo app</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../tutorial-1/">Tutorial Part 1</a>
+</li>
+
+        
+            
+<li >
+    <a href="../tutorial-2/">Tutorial Part 2</a>
+</li>
+
+        
+            
+<li >
+    <a href="../tutorial-3/">Tutorial Part 3</a>
+</li>
+
+        
+            
+<li class="active">
+    <a href="./">Tutorial Part 4</a>
+</li>
+
+        
+            
+<li >
+    <a href="../tutorial-5/">Tutorial Part 5</a>
+</li>
+
+        
+            
+<li >
+    <a href="../tutorial-6/">Tutorial Part 6</a>
+</li>
+
+        
+            
+<li >
+    <a href="../tutorial-7/">Tutorial Part 7</a>
+</li>
+
+        
+            
+<li >
+    <a href="../tutorial-8/">Tutorial Part 8</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                <li >
+                    <a rel="next" href="../tutorial-3/">
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="../tutorial-5/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#lean-app-tutorial-part-4">Lean App Tutorial, Part 4</a></li>
+        
+            <li><a href="#body-groups">Body Groups</a></li>
+        
+            <li><a href="#example-1-a-definition">Example 1: A Definition</a></li>
+        
+            <li><a href="#creating-the-structure">Creating the Structure</a></li>
+        
+            <li><a href="#what-goes-inside">What goes inside</a></li>
+        
+            <li><a href="#example-2-theorem-and-proof">Example 2: Theorem and Proof</a></li>
+        
+            <li><a href="#so-what">So what?</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="lean-app-tutorial-part-4">Lean App Tutorial, Part 4</h1>
+<p>This page assumes you've read Parts <a href="../tutorial-1/">1</a>, <a href="../tutorial-2/">2</a>,
+and <a href="../tutorial-3/">3</a>.</p>
+<p><a href="http://nathancarter.github.io/weblurch/app/lean-example.html">Try the web app live now.</a></p>
+<p>The end of <a href="../tutorial-3/">Part 3</a> pointed out that Lean definitions (and
+hence theorems and examples) cannot yet have their body split out from the
+rest of the code.  This tutorial page solves that problem.</p>
+<h2 id="body-groups">Body Groups</h2>
+<p>In Lean, theorems, defintions, and examples are all of the form
+<code>definition name : type := body</code>, where the word "definition" may instead be
+"theorem" or "example."  This is the next syntax we permit breaking out.  We
+call the final element of that structure the "body" and have a new bubble
+type for it in the app.</p>
+<h2 id="example-1-a-definition">Example 1: A Definition</h2>
+<p>Let's assume that we want to write a document embodying the Lean code
+<code>definition three : nat := 3</code>.  Certainly, we could simply put that code
+inside a term bubble, but that requires our document to contain Lean
+syntax.  Here is an alternate way.</p>
+<p><img alt="" src="../tut-4-ss-body-clean.png" /></p>
+<p>This document has plenty of non-bubbled text that is irrelevant to the
+results of the "Run Lean" operation, which pays attention only to the
+contents of the bubbles.  But that non-bubbled text is very helpful, for
+somewhat obvious reasons (also described <a href="#benefits">at the end of this
+page</a>).</p>
+<p>If we use the View menu to show the boundaries of the bubbles then the
+result looks like the following.</p>
+<p><img alt="" src="../tut-4-ss-body-validated.png" /></p>
+<p>Notice that the app can convert these broken-apart pieces into Lean code
+correctly, so that it validates.</p>
+<p>The type is connected to the term in the manner introduced in <a href="../tutorial-3/">the previous
+part of this tutorial</a>.  But the body is also connected in
+the same way, as shown here.</p>
+<p><img alt="" src="../tut-4-ss-body-structure.png" /></p>
+<h2 id="creating-the-structure">Creating the Structure</h2>
+<p>To create a body group, use the blue bracket button in the toolbar below
+(third button of those labeled "Mark Lean code in your document").</p>
+<p><img alt="" src="../tut-1-ss-buttons.png" /></p>
+<p>To connect a body to the term being defined (or the statement of a theorem,
+using the body as its proof), use the same technique as discussed in <a href="../tutorial-3/">the
+previous part of this tutorial</a>:</p>
+<ol>
+<li>Place your cursor inside the body bubble.</li>
+<li>Click the arrow button in the toolbar.</li>
+<li>Click inside the term for which that body is the definition or proof.</li>
+</ol>
+<h2 id="what-goes-inside">What goes inside</h2>
+<p>A body bubble's contents, if they are just plain text, are interpreted like
+the contents of a term bubble.  This is how the example above works.  But
+that is just the simplest of the ways you can use a body bubble.  Here is a
+comprehensive list.</p>
+<ul>
+<li>If a body bubble contains no other bubbles, then its text content is
+   interpreted as the Lean code for a term (as above).</li>
+<li>If a body bubble contains a single term bubble, then the body bubble's
+   meaning is the same as that of the single term bubble.</li>
+<li>If a body bubble contains n term bubbles, then the first n-1 are seen as
+   parameters and the final one is seen as the body of a lambda expression.
+   Thus for example, the structure shown below defines a function.  It could
+   be used as the body of a definition.</li>
+</ul>
+<p><img alt="" src="../tut-4-ss-body-as-function.png" /></p>
+<p>The second case is a generalization of the first, permitting explanatory
+text outside the inner bubble; the first case can be seen as shorthand for
+the second.  The third case is more general still, because the second case
+is the 0-parameter version of the third case.</p>
+<h2 id="example-2-theorem-and-proof">Example 2: Theorem and Proof</h2>
+<p>This permits us to put a little exposition in our theorems and proofs, as
+shown in the following image.</p>
+<p><img alt="" src="../tut-4-ss-theorem.png" /></p>
+<p>The structure that reveals itself when your cursor is inside the main term
+(the name and premises of the theorem) is as shown below.</p>
+<p><img alt="" src="../tut-4-ss-theorem-arrows.png" /></p>
+<p>In these examples, I've placed a term bubble inside the body bubble, which
+shows that the meaning is the same.</p>
+<h2 id="so-what">So what?</h2>
+<h3 id="benefits">Benefits</h3>
+<p>This lets us make more readable definitions and theorems, as shown above.
+The expository text between bubbles has two main benefits.  A human reader
+can understand the document without thinking through Lean syntax.  And the
+document author, when that writer is a student, can practice expressing
+mathematical proofs in a readable and understandable way, and have that
+exposition evaluated by an instructor.</p>
+<h3 id="missing-pieces">Missing pieces</h3>
+<p>The definition and proof shown above are both very short.  If they were
+longer, there would be very large, indivisible term bubbles in the document,
+which cannot contain prose comments.  Let's see how to fix that.</p>
+<p><a href="../tutorial-5/">Continue to Part 5.</a></p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            
+            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
+        </footer>
+
+        <script src="../../js/jquery-1.10.2.min.js"></script>
+        <script src="../../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../../js/highlight.pack.js"></script>
+        <script>var base_url = '../..';</script>
+        <script data-main="../../mkdocs/js/search.js" src="../../mkdocs/js/require.js"></script>
+        <script src="../../js/base.js"></script>
+        <script src="http://nathancarter.github.io/weblurch/app/lurch-embed-solo.min.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            From here you can search these documents. Enter
+                            your search terms below.
+                        </p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                            </div>
+                        </form>
+                        <div id="mkdocs-search-results"></div>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

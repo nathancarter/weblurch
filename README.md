@@ -20,84 +20,16 @@ that install netstat from a package manager before we can proceed.
       <p><i>This project is rewriting Lurch for the web.</i></p>
     </td>
     <td>
-      <img src='doc/desktop-lurch-icon.png' width='256' height='128'>
+      <img src='doc-src/desktop-lurch-icon.png' width='256' height='128'>
     </td>
-  </tr>
-</table>
-
-
-## A Development Platform
-
-The rewrite involves building many supporting tools that we call the *Lurch
-Web Platform.*
-
-Other developers can build math-enabled web apps on the same platform, which
-improves the platform and grows the community.
-
-We've made the architecture simple and the learning curve small.  [See the
-demo applications and tutorial to start developing.](doc/tutorial.md)
-
-## Architecture
-
-Read the following illustration from the bottom up.
-
-
-<table>
-  <tr>
-    <td>Applications:</td>
-    <td align=center><i>Lurch Proof Checker</i></td>
-    <td align=center><a href='./doc/tutorial.md'>Demo apps</a></td>
-    <td align=center>Your app</td>
-  </tr>
-  <tr>
-    <td>Platform:</td>
-    <td align=center colspan=3><i>Lurch Web Platform</i></td>
-  </tr>
-  <tr>
-    <td>Foundation:</td>
-    <td align=center colspan=3><a href='http://www.tinymce.com'>TinyMCE
-        editor</a></td>
   </tr>
 </table>
 
 ## Status
 
-[The *Lurch Web Platform* is ready to use.](doc/tutorial.md)  Enhancements
-are ongoing.
-
-The *Lurch Proof Checker* exists only as [a desktop
-app](http://www.lurchmath.org).  It is being redesigned for implementation
-on the *Lurch Web Platform*.
-
-## Development
-
-If you're interested in helping out with development of this project (e.g.,
-upstream commits if you use the platform), contact
-[Nathan Carter](mailto:ncarter@bentley.edu).
-
-### Repository details
-
-All source code is in [literate
-CoffeeScript](http://coffeescript.org/#literate).  This makes it highly
-readable, especially on GitHub, which renders it as MarkDown.  I have tried
-to be verbose in my comments, to help new readers.
-
-A brief tour of the repository:
- * `/` (root)
-   * `package.json` - used by [node.js](http://nodejs.org) to install
-     dependencies  (The app runs in a browser, not node.js.  This is just
-     for dev tools.)
-   * `cake.litcoffee` and `buildutils.litcoffee` define the build process.
- * `app/`
-   * Demo apps and the plugins that create them reside here.  You can try
-     them out live on the web; see
-     [the demo apps and tutorials page](doc/tutorial.md).
-   * Eventually, the *Lurch Proof Checker* will be rewritten for the web and
-     live in this folder.
- * `src/`
-   * Source code files used for building the platform.
-   * The build process compiles these into files in the `app` folder.
- * `test/`
-   * Unit tests.
-   * To run them, execute `cake test` in the main folder, after you've set
-     it up as per [the Getting Started page](doc/getting-started.md).
+ * If you're interested in using Lurch right now, try
+   [the desktop version](http://lurchmath.org).
+ * To see the status of this new version in detail, view [the full webLurch
+   documentation](http://nathancarter.github.io/weblurch/docs).
+ * To help with development, jump to [the developer
+   documentation](http://nathancarter.github.io/weblurch/docs/developer/index.html).
