@@ -277,6 +277,7 @@ first.
                 continue unless group = tinymce.activeEditor.Groups[id]
                 if not group.parent
                     group.set 'key', idToKey[id]
+                    group.set 'keyposition', 'arrow'
                     continue
                 internalKey = OM.encodeAsIdentifier idToKey[id]
                 internalValue =

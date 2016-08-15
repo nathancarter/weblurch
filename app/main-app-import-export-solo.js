@@ -194,6 +194,7 @@
         }
         if (!group.parent) {
           group.set('key', idToKey[id]);
+          group.set('keyposition', 'arrow');
           continue;
         }
         internalKey = OM.encodeAsIdentifier(idToKey[id]);
