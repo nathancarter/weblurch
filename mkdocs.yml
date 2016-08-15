@@ -2,6 +2,12 @@ site_name: webLurch Documentation
 pages:
 - Home: index.md
 - Authors:
+    - User guide:
+        - Introduction: user-guide/index.md
+        - Part 1, Basics of the editor: user-guide/part-1.md
+        - Part 2, Expressions and canonical form: user-guide/part-2.md
+        - Part 3, Connections and attributes: user-guide/part-3.md
+        - Part 4, Code attributes: user-guide/part-4.md
     - Blog/website embedding: embedding.md
 - Developers:
     - Introduction: developer.md
@@ -25,3 +31,4 @@ extra_javascript:
 - http://nathancarter.github.io/weblurch/app/lurch-embed-solo.min.js
 docs_dir: 'doc-src'
 site_dir: 'docs'
+dev_addr: 127.0.0.1:8888

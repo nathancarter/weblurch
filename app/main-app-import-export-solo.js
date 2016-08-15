@@ -192,6 +192,10 @@
         if (!(group = tinymce.activeEditor.Groups[id])) {
           continue;
         }
+        if (!group.parent) {
+          group.set('key', idToKey[id]);
+          continue;
+        }
         internalKey = OM.encodeAsIdentifier(idToKey[id]);
         internalValue = {
           m: group.completeForm().encode(),

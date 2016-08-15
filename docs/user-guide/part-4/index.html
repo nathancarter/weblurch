@@ -9,7 +9,7 @@
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
 
-	<title>Tutorial Part 7 - webLurch Documentation</title>
+	<title>Part 4, Code attributes - webLurch Documentation</title>
 
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
@@ -56,7 +56,7 @@
             
             
             
-                <li class="dropdown">
+                <li class="dropdown active">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">Authors <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
@@ -67,31 +67,31 @@
         
             
 <li >
-    <a href="../../user-guide/">Introduction</a>
+    <a href="../">Introduction</a>
 </li>
 
         
             
 <li >
-    <a href="../../user-guide/part-1/">Part 1, Basics of the editor</a>
+    <a href="../part-1/">Part 1, Basics of the editor</a>
 </li>
 
         
             
 <li >
-    <a href="../../user-guide/part-2/">Part 2, Expressions and canonical form</a>
+    <a href="../part-2/">Part 2, Expressions and canonical form</a>
 </li>
 
         
             
 <li >
-    <a href="../../user-guide/part-3/">Part 3, Connections and attributes</a>
+    <a href="../part-3/">Part 3, Connections and attributes</a>
 </li>
 
         
             
-<li >
-    <a href="../../user-guide/part-4/">Part 4, Code attributes</a>
+<li class="active">
+    <a href="./">Part 4, Code attributes</a>
 </li>
 
         
@@ -149,7 +149,7 @@
             
             
             
-                <li class="dropdown active">
+                <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">Examples and Demos <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
@@ -166,49 +166,49 @@
         
             
 <li >
-    <a href="../tutorial-1/">Tutorial Part 1</a>
+    <a href="../../lean-example/tutorial-1/">Tutorial Part 1</a>
 </li>
 
         
             
 <li >
-    <a href="../tutorial-2/">Tutorial Part 2</a>
+    <a href="../../lean-example/tutorial-2/">Tutorial Part 2</a>
 </li>
 
         
             
 <li >
-    <a href="../tutorial-3/">Tutorial Part 3</a>
+    <a href="../../lean-example/tutorial-3/">Tutorial Part 3</a>
 </li>
 
         
             
 <li >
-    <a href="../tutorial-4/">Tutorial Part 4</a>
+    <a href="../../lean-example/tutorial-4/">Tutorial Part 4</a>
 </li>
 
         
             
 <li >
-    <a href="../tutorial-5/">Tutorial Part 5</a>
+    <a href="../../lean-example/tutorial-5/">Tutorial Part 5</a>
 </li>
 
         
             
 <li >
-    <a href="../tutorial-6/">Tutorial Part 6</a>
-</li>
-
-        
-            
-<li class="active">
-    <a href="./">Tutorial Part 7</a>
+    <a href="../../lean-example/tutorial-6/">Tutorial Part 6</a>
 </li>
 
         
             
 <li >
-    <a href="../tutorial-8/">Tutorial Part 8</a>
+    <a href="../../lean-example/tutorial-7/">Tutorial Part 7</a>
+</li>
+
+        
+            
+<li >
+    <a href="../../lean-example/tutorial-8/">Tutorial Part 8</a>
 </li>
 
         
@@ -230,12 +230,12 @@
                     </a>
                 </li>
                 <li >
-                    <a rel="next" href="../tutorial-6/">
+                    <a rel="next" href="../part-3/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="../tutorial-8/">
+                    <a rel="prev" href="../../embedding/">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -249,57 +249,43 @@
             <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="main active"><a href="#lean-app-tutorial-part-7">Lean App Tutorial, Part 7</a></li>
+        <li class="main active"><a href="#part-4-code-attributes">Part 4, Code attributes</a></li>
         
-            <li><a href="#namespaces">Namespaces</a></li>
+            <li><a href="#creating-code-attributes">Creating code attributes</a></li>
         
-            <li><a href="#so-what">So what?</a></li>
+            <li><a href="#editing-code">Editing code</a></li>
         
     
     </ul>
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="lean-app-tutorial-part-7">Lean App Tutorial, Part 7</h1>
-<p>This page assumes you've read Parts <a href="../tutorial-1/">1</a>, <a href="../tutorial-2/">2</a>,
-<a href="../tutorial-3/">3</a>, <a href="../tutorial-4/">4</a>, <a href="../tutorial-5/">5</a>, and
-<a href="../tutorial-6/">6</a>.</p>
-<p><a href="http://nathancarter.github.io/weblurch/app/lean-example.html">Try the web app live now.</a></p>
-<p>The end of <a href="../tutorial-6/">Part 6</a> stated that you can use Lean namespaces
-just as easily as Lean sections.  This tutorial page covers how to do so.</p>
-<h2 id="namespaces">Namespaces</h2>
-<p>Recall the nicely organized theorem from <a href="../tutorial-6/">the previous tutorial
-page</a>.</p>
-<p><img alt="" src="../tut-6-ss-theorem-section-details.png" /></p>
-<p>We could do the same thing in a namespace rather than a section, if we
-wanted to.  (We might want to in order to avoid filling the global
-namespace with too many identifiers, or to organize our code, or to prevent
-a clash with an existing theorem name, etc.)</p>
-<p>It is a simple matter to change a section into a namespace, or vice versa.</p>
-<ol>
-<li>Right-click any text inside the Section bubble (but not inside any inner
-    bubble).</li>
-<li>From the context menu, choose "Make this a namespace..."</li>
-<li>Enter a valid Lean identifier in the box that appears.</li>
-<li>Click OK and the section will become a namespace.</li>
-</ol>
-<p>To rename the namespace, or convert it back to a section, follow the same
-procedure as above, but choosing the appropriate item from the context menu.
-They are named in the obvious way.</p>
-<p>If the bubble shown above were a namespace, we could then access its
-contents outside the namespace using dot notation, as in any Lean code.
-See the following example.</p>
-<p><img alt="" src="../tut-7-ss-namespace.png" /></p>
-<h2 id="so-what">So what?</h2>
-<h3 id="benefits">Benefits</h3>
-<p>You can now organize your Lean code into namespaces in this app, just as you
-could in Lean.  This is useful for the reasons stated above.</p>
-<h3 id="missing-pieces">Missing pieces</h3>
-<p>The final missing piece is that this app does not seem to use any of the
-attractive symbols Lean uses, such as the blackboard bold N for natural
-numbers, and so on.</p>
-<p>Let's see how to fix that in the final part of the tutorial.</p>
-<p><a href="../tutorial-8/">Continue to Part 8.</a></p></div>
+<h1 id="part-4-code-attributes">Part 4, Code attributes</h1>
+<p><font color='red'>Most authors do not need code attributes for any portion
+of their work. Unless you plan to write very unusual logical systems within
+Lurch, you can skip to the next part of the User Guide.</font></p>
+<h2 id="creating-code-attributes">Creating code attributes</h2>
+<p>To tell Lurch that an atomic expression contains computer code, give it an
+attribute with key "code" and whose value is the language in which the code
+is written.  The only language supported at present is JavaScript.</p>
+<p>Example:</p>
+<div class='lurch-embed'><shorthand>
+<p>The code <e n='1'>console.log( "Hello!" );</e>
+is valid <e at='code' to='1'>javascript</e>.</p>
+</shorthand></div>
+
+<h2 id="editing-code">Editing code</h2>
+<p>When you right-click an expression that has a code attribute, one of the
+choices on the context menu is "Edit as code."  Choosing it launches a code
+editor, and any changes you make can be saved or discarded.  Saving them
+updates the expression in the document with the new contents of the editor.</p>
+<p>Try it now in the example above.</p>
+<p>Suppose you were to mark an expression as code by attaching a code attribute
+to it, then used the expression itself as an attribute to yet another
+expression, and finally hid the code expression within that final
+expression.  If you examined the attributes summary dialog for that final
+expression, you would find an edit link next to the hidden code that would
+let you launch the same code-editing dialog directly from there.</p></div>
         </div>
 
         <footer class="col-md-12">
