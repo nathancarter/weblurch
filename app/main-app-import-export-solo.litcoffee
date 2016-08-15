@@ -190,6 +190,8 @@ Lurch Shorthand is defined as HTML plus the following new tags.
     * Translation behavior is undefined when a cyclic set of connections is
       described in this way.  It may result in an empty document, a
       different document, an invalid document, etc.; no guarantees are made.
+ * To form an external attribute, use both the `at='key'` and `to='target'`
+   forms together.
 
 The following function takes a string of Lurch Shorthand code and converts
 it to the corresponding raw HTML for use by the main webLurch application,
@@ -273,6 +275,9 @@ first.
         for id in [nextId..0]
             if id of idToKey
                 continue unless group = tinymce.activeEditor.Groups[id]
+                if not group.parent
+                    group.set 'key', idToKey[id]
+                    continue
                 internalKey = OM.encodeAsIdentifier idToKey[id]
                 internalValue =
                     m : group.completeForm().encode()
