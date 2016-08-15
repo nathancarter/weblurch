@@ -1,13 +1,16 @@
 
 # webLurch Documentation
 
-[Lurch is a mathematical word processor](http://lurchmath.org) that checks
-the reasoning in users' documents, even mathematical proofs.
+Lurch is a mathematical word processor that checks the reasoning in users'
+documents, even mathematical proofs.
 
-*This project is rewriting Lurch for the web.*
+ * *Current version:* [Desktop app for Windows, Mac,
+   and Linux](http://lurchmath.org)
+ * *In development:* Web version, hosted and document here on this site<br>
+   (You can
+   [try it live now](http://nathancarter.github.io/weblurch/app/app.html),
+   but it's still incomplete.)
 
 Use the menus at the top to find what you're looking for.
-
-A better landing page is coming soon.
 
 ![](desktop-lurch-icon.png)
