@@ -853,7 +853,11 @@ because editing an element messes up cursor bookmarks within that element.
 
 ## Hiding and showing "groupers"
 
-The word "grouper" refers to the objects that form the boundaries of a group, and thus define the group's extent.  Each is an image with specific classes that define its partner, type, visibility, etc.  The following method applies or removes the visibility flag to all groupers at once, thus toggling their visibility in the document.
+The word "grouper" refers to the objects that form the boundaries of a
+group, and thus define the group's extent.  Each is an image with specific
+classes that define its partner, type, visibility, etc.  The following
+method applies or removes the visibility flag to all groupers at once, thus
+toggling their visibility in the document.
 
         allGroupers: => @editor.getDoc().getElementsByClassName 'grouper'
         hideOrShowGroupers: =>
