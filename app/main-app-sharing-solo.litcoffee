@@ -44,7 +44,7 @@ Second, add the menu item.
                         <p>Copy this URL to your clipboard, and paste
                         wherever you like, such as email.</p>
                         <input type='text' size=50 id='firstURL'
-                         value='#{url}'/>
+                         value='#{url.replace /'/g, '&apos;'}'/>
                         <h3>Embedding HTML</h3>
                         <p>Copy this HTML to your clipboard, and paste into
                         any webpage or blog to embed a Lurch instance with

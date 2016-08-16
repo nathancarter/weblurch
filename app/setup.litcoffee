@@ -195,10 +195,10 @@ Add a Help menu.
                         title : 'webLurch'
                         message : helpAboutText ? ''
                 editor.addMenuItem 'website',
-                    text : 'Lurch website'
+                    text : 'Documentation'
                     context : 'help'
-                    onclick : -> window.open 'http://www.lurchmath.org',
-                        '_blank'
+                    onclick : -> window.open \
+                        'http://nathancarter.github.io/weblurch', '_blank'
 
 Add actions and toolbar buttons for all other menu items the client may have
 defined.

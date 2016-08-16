@@ -15,26 +15,6 @@ required order of completion.
 
 ## Labels
 
- * Update the specification to state that hidden expressions cannot be the
-   targets of labels; only expressions *in the document* can.
- * Update the specification to state that labels must be atomic expressions,
-   and that labels that are non-atomic do not actually have any effect.
- * Create a global array that will later store all labeled expressions.
- * Create a function for initializing the array to empty, and do so whenever
-   a new document is created, or the app is launched, or a document is
-   loaded.
- * Create an `addPair` function for adding a label-expression pair to the
-   list.  It should store both the labeled group and the label expression.
-   Do nothing if the label attribute is not atomic.  Ensure that it never
-   adds the same pair more than once to the list.  (That is, this function
-   is idempotent when called on the same set of arguments a second time.)
- * Extend the `addPair` function so that pairs in the list are always
-   ordered by the position in the document of the labeled expression.
- * Create a function `addExpression` that inspects an expression and calls
-   `addPair` zero or more times, once for each label the expression has,
-   hidden or visible.
- * Whenever a document is loaded, loop through all of its expressions and
-   call `addExpression` on each.
  * Create a `deleteExpression` function for deleting from the list any pair
    that mentions the expression, either as the label or as the labeled
    expression.

@@ -3575,10 +3575,10 @@
           }
         });
         editor.addMenuItem('website', {
-          text: 'Lurch website',
+          text: 'Documentation',
           context: 'help',
           onclick: function() {
-            return window.open('http://www.lurchmath.org', '_blank');
+            return window.open('http://nathancarter.github.io/weblurch', '_blank');
           }
         });
         _ref = window.groupMenuItems;

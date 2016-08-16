@@ -17,7 +17,8 @@ See the examples below.
 
 <div class='lurch-embed'><shorthand>
 <p>A connection has been created for you here:</p>
-<p>From this <e to='1'>source</e> to this <e n='1'>target</e>.</p>
+<p>From this <e to='1' at='label'>source</e>
+    to this <e n='1'>target</e>.</p>
 <p>Place your cursor in either expression to see the connection.</p>
 <p>Now try it yourself.  Form a connection here:</p>
 <p><e>Make this the source,</e> and <e>make this the target</e>.</p>
