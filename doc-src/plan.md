@@ -15,17 +15,6 @@ required order of completion.
 
 ## Validation
 
- * Write a function `saveValidation` that records validation results into an
-   expression.  If it receives `null` as the validation data, it removes any
-   validation data that formerly was in the expression.
- * Add to the list of suggested key types on the group context menu "rule."
- * Create a `validate` function that can be applied to any expression, and
-   takes a verbosity flag as well.
- * If the expression has no reason attributes, call `saveValidation` on the
-   step, with `null`.
- * If the expression has more than one reason attribute, the function
-   saves a validation result that explains that this is not permitted (at
-   most one reason per step).
  * If the expression's single reason attribute does not name an actual
    reason accessible from that point in the document, the function saves a
    validation result that explains the problem (incorrect reason citation).

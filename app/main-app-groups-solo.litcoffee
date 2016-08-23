@@ -278,6 +278,8 @@ choices, or "Other..." which lets the user input any text key they choose.
         ,
             menuItem 'Premise'
         ,
+            menuItem 'Rule'
+        ,
             menuItem 'Code'
         ,
             text : 'Other...'
