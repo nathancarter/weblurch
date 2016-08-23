@@ -15,17 +15,6 @@ required order of completion.
 
 ## Labels
 
- * Create a `deleteExpression` function for deleting from the list any pair
-   that mentions the expression, either as the label or as the labeled
-   expression.
- * Whenever an expression is deleted from the document, call
-   `deleteExpression` on it.  This includes when it is deleted in order to
-   be embedded as a hidden attribute in something else.  (Althoug this will
-   remove from the list the pair containing the label and the expression
-   into which it was just embedded, we will fix that in the next item.)
- * Whenever a group's contents, attributes, or connections change, call
-   `deleteExpression` on it, and then `addExpression` on it.  Also, if it is
-   a label, call `addExpression` on each expression that it labels.
  * Add a function for looking up a label and receiving a set of pairs as the
    result, those pairs whose label is an atomic expression whose content
    matches the given text.  They should be returned in the order in which

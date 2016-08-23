@@ -211,3 +211,69 @@ dependency, we know it is in complete form, and so we can just consider its
         else if expression instanceof OM
             internals = expression.getAttribute OM.sym labelKey, 'Lurch'
             if internals then addInternalLabels internals
+
+## Function for deleting entries from the list
+
+This function removes from the list any pair that mentions the given
+expression.  The parameter must be an expression visible in the document,
+not one in a dependency, or embedded/hidden in another expression.
+
+    deleteExpression = ( expression ) ->
+        labelPairs = ( pair for pair in labelPairs when \
+            pair.source isnt expression and pair.target isnt expression )
+
+## Handlers
+
+Install the `deleteExpression` function as the handler for any expression
+that gets deleted from the document.  While we're at it, tidy up by deleting
+any connections from this group to any other group still in the document.
+
+    window.afterEditorReadyArray.push ( editor ) ->
+        editor.Groups.groupTypes.expression.deleted = ( group ) ->
+            # for connection in group.connectionsOut()
+            #     group.disconnect editor.Groups[connection[1]]
+            # for connection in group.connectionsIn()
+            #     editor.Groups[connection[0]].disconnect group
+            deleteExpression group
+            # console.log 'deleted this group:', group
+            # logLabelPairs()
+
+We define a function that "refreshes" the information in the label pairs
+list for an in-document expression, by calling the `deleteExpression`
+function followed by the `addExpression` function.
+
+        refreshExpression = ( expression ) ->
+            # console.log 'refreshing:', expression?.contentAsText?()
+            deleteExpression expression
+            addExpression expression
+
+As the handler for any group's change event, refresh the expression.  If it
+is a label, refresh the expression it modifies.
+
+        refreshHandler = ( group, firstTime = no ) ->
+            if firstTime then return setTimeout refreshHandler, 0, group
+            refreshExpression group
+            if group.get( 'key' ) is 'label' and \
+               editor = group.plugin.editor
+                for connection in group.connectionsOut()
+                    refreshExpression editor.Groups[connection[1]]
+            # logLabelPairs()
+        editor.Groups.groupTypes.expression.contentsChanged = refreshHandler
+
+## Debugging
+
+The following function dumps the `labelPairs` array to the console in a
+somewhat readable way.  This is useful only for development and debugging.
+
+    logLabelPairs = ->
+        logGroup = ( group ) ->
+            if group instanceof Group
+                return "#{group.id()}:#{group.contentAsText()}"
+            if group instanceof OM then return group.simpleEncode()
+            group
+        console.log '----------- LABEL PAIRS ---------------'
+        for pair in labelPairs
+            console.log "#{logGroup pair.target}
+                         <--\"#{pair.label}\"--
+                         #{logGroup pair.source}"
+        console.log '---------------------------------------'
