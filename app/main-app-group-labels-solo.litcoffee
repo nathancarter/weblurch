@@ -260,6 +260,32 @@ is a label, refresh the expression it modifies.
             # logLabelPairs()
         editor.Groups.groupTypes.expression.contentsChanged = refreshHandler
 
+## Label lookup
+
+The following function looks up a label, given as a string.  It returns a
+set of pairs, those whose label is an atomic expression whose content
+matches the given text.  They are returned in the order in which they appear
+in the document.
+
+Note that a pair is not simply a two-element array, but is defined [at the
+top of this file](#global-list-of-labels).
+
+The optional parameter to the lookup function is an element in the document.
+If provided, this causes the result to be filtered, including only those
+that apply at point in the document where the given element sits.
+
+    window.lookupLabel = ( labelText, fromThisElement = null ) ->
+        accessible = ( pair ) ->
+            if not fromThisElement? then return yes
+            if pair.target instanceof OM then return yes
+            one = pair.target.open
+            two = if pair.source instanceof Group then \
+                pair.source.open else pair.target.open
+            strictNodeOrder( one, fromThisElement ) and \
+            strictNodeOrder( two, fromThisElement )
+        ( pair for pair in labelPairs \
+            when pair.label is labelText and accessible pair )
+
 ## Debugging
 
 The following function dumps the `labelPairs` array to the console in a

@@ -13,17 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Labels
-
- * Add a function for looking up a label and receiving a set of pairs as the
-   result, those pairs whose label is an atomic expression whose content
-   matches the given text.  They should be returned in the order in which
-   they appear in the list, which is also the order in which they appear in
-   the document.
- * Add an optional parameter to the lookup function, a position in the
-   document.  This will cause the function to filter its results to only
-   those that apply at the given point in the document.
-
 ## Validation
 
  * Extend the Background Computation module with a convenience function that
