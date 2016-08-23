@@ -67,7 +67,14 @@ own names, and "Lurch" as the content dictionary.
 
     window.Group::listSymbol = OM.sym 'List', 'Lurch'
     window.Group::completeForm = ( includePremises = no ) ->
+
+Start with canonical form.
+
         result = @canonicalForm()
+
+Find all attribute groups and store them in a dictionary.  For hidden
+attributes, ensure they show up as keys in the dictionary as well.
+
         prepare = { }
         for group in @attributeGroups includePremises
             key = group.get 'key'
@@ -75,13 +82,27 @@ own names, and "Lurch" as the content dictionary.
         for key in @keys()
             if decoded = OM.decodeIdentifier key
                 prepare[decoded] ?= [ ]
-        for key, list of prepare
+
+Now loop through the dictionary.
+
+        for own key, list of prepare
+
+If there are hidden attributes, include the group itself as an attribute of
+itself.
+
             if embedded = @get OM.encodeAsIdentifier key
                 list.push this
+
+Sort the list of attribute groups by the order they appear in the document.
+
             meanings = [ ]
             strictGroupComparator = ( a, b ) ->
                 strictNodeComparator a.open, b.open
             for group in list.sort strictGroupComparator
+
+Form the meaning list, either by extracting the embedded attribute value or
+looking up the external attribute value.
+
                 if group is this
                     expression = OM.decode embedded.m
                     if expression.type is 'a' and \
@@ -91,11 +112,27 @@ own names, and "Lurch" as the content dictionary.
                         meanings.push expression
                 else
                     meanings.push group.completeForm includePremises
+
+Store either the meanings list as a list expression, or the single meaning
+as a single expression, depending on the length of the meanings list.
+
             result = OM.att result, OM.sym( key, 'Lurch' ),
                 if meanings.length is 1
                     meanings[0]
                 else
                     OM.app Group::listSymbol, meanings...
+
+If the expression has validation data, we must convert that to an attribute,
+even though technically it is not one.  We do this here so as not to expose
+validation results as editable attributes to the user; we simply cram them
+into the complete form here before returning the result.
+
+Note that `@getValidation` is defined in
+[a separate file](main-app-group-validation-solo.litcoffee).
+
+            if validationData = @getValidation()
+                result = OM.att result, OM.sym( 'validation', 'Lurch' ),
+                    OM.str JSON.stringify validationData
         result
 
 ## Looking up attributes
