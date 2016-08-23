@@ -15,12 +15,6 @@ required order of completion.
 
 ## Validation
 
- * Extend the Background Computation module with a convenience function that
-   lets us skip the two-step process of `registerFunction`/`addTask`, and
-   just provide code to run and the groups on which to run it.  This can use
-   the code itself (or a hash thereof) as the name *and* code for the
-   function to register, and later to run.  Name this new function
-   `addCodeTask`.
  * Write a function `saveValidation` that records validation results into an
    expression.  If it receives `null` as the validation data, it removes any
    validation data that formerly was in the expression.

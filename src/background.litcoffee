@@ -117,6 +117,19 @@ it.
             window.Background.waitingTasks.push newTask
             window.Background.update()
 
+Sometimes we do not wish to register tasks with specific names in advance,
+but simply send code to the background.  Thus we provide the following
+convenience function, which takes all the parameters of `registerFunction`
+and `addTask` combined, except for the function name.  It registers a new
+task and immediately executes it on the arguments provided.  The name of the
+new task *is* the code; that is, the code to run is used twice, once as the
+task and once as its name.
+
+        addCodeTask : ( func, inputGroups, callback,
+                        globals = { }, scripts = [ ] ) ->
+            registerFunction "#{func}", func, globals, scripts
+            addTask "#{func}", inputGroups, callback
+
 The update function just mentioned will verify that as many tasks as
 possible are running concurrently.  That number will be determined by [the
 code below](#ideal-amount-of-concurrency).  The update function, however, is
