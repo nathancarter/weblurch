@@ -15,26 +15,6 @@ required order of completion.
 
 ## Validation
 
- * If the expression's single reason attribute does not name an actual
-   reason accessible from that point in the document, the function saves a
-   validation result that explains the problem (incorrect reason citation).
- * If the expressions cited by the reason attribute are not rule definitions
-   (none of them) then the function saves a validation result explaining
-   that exactly one rule must be cited as the reason for a step, but none
-   were.
- * If any of the cited rules are invalid, discard them from the list of
-   cited rules.  If none remain, the function returns a validation result
-   explaining that none of the cited rules were valid.  If more than one
-   remain, the function saves a validation result explaining that too many
-   rules were cited (at most one per step is allowed).
- * If the unique valid cited rule is not a piece of code, the function
-   saves a validation result explaining that Lurch doesn't (yet?) know the
-   type of rule cited.
- * If the unique valid cited rule is code in a language other than
-   JavaScript, the function saves a validation result explaining that Lurch
-   doesn't (yet?) know the language in which the rule is coded.
- * Otherwise, call `Background.addCodeTask` on the code and step in
-   question, with a callback that saves the result as the validation result.
  * Whenever an expression attributed by a reason changes, call `validate` on
    it.
  * Whenever a reason attribute changes, call `validate` on its target.
