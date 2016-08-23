@@ -230,10 +230,10 @@ any connections from this group to any other group still in the document.
 
     window.afterEditorReadyArray.push ( editor ) ->
         editor.Groups.groupTypes.expression.deleted = ( group ) ->
-            # for connection in group.connectionsOut()
-            #     group.disconnect editor.Groups[connection[1]]
-            # for connection in group.connectionsIn()
-            #     editor.Groups[connection[0]].disconnect group
+            for connection in group.connectionsOut()
+                group.disconnect editor.Groups[connection[1]]
+            for connection in group.connectionsIn()
+                editor.Groups[connection[0]].disconnect group
             deleteExpression group
             # console.log 'deleted this group:', group
             # logLabelPairs()
