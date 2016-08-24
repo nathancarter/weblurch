@@ -15,11 +15,47 @@ required order of completion.
 
 ## Validation
 
+ * Enhance the beginning of the `validate` function so that it tests if the
+   expression is a rule.  If so, it requires that it be in JavaScript.  If
+   so, mark it valid, stating that no syntax or semantics validation was
+   done on the code.  If not, mark it invalid, stating that only JavaScript
+   code rules are currently supported.
  * Whenever an expression attributed by a reason changes, call `validate` on
    it.
  * Whenever a reason attribute changes, call `validate` on its target.
  * Whenever a rule's content changes, call `validate` on all later
    expressions whose reason cites the rule that just changed.
+ * Override the default implementation of `Group::toJSON` with a new one
+   specific to the main Lurch app, which calls `Group::completeForm`
+   instead, followed by `encode()`.
+ * Import the OpenMath module into Web Workers launched for validation.
+ * Verify that this permits you to take a complete form and reconstitute it
+   into an OM object with `OM.decode`.
+ * Extend validation so that it creates a function wrapper around the given
+   code, so that the user doesn't need to write one.  It should name the
+   first argument `conclusion` and the remainder an array of `premises`.
+   It should also apply `OM.decode` to each.
+ * Create an example rule that uses the complete form of the expression in a
+   nontrivial way.  For instance, it may validate everything with a "happy"
+   attribute, or everything of the form `[[X][Y]]`.
+
+## Documentation
+
+ * Rename the pages in the User Guide to be "pages" instead of "parts."
+ * Create two "parts" within the User Guide, "Basics" and "Technicalities."
+ * Create an introductory page for each one explaining what it is and what
+   it covers.
+ * Move under the "Basics" section all the current lessons except for code
+   attributes.
+ * Move the code attributes page under "Technicalities."
+ * Edit the code page so it no longer says that the user can skip it because
+   it's only needed by technical users.
+ * Add a new Basics page that shows how to cite rules, but doesn't yet
+   actually include any active rule, nor does it validate anything.
+ * Add a new Technicalities page that shows how to write code-based rules,
+   or at least introduces the concept.  Note that on Chrome, you can use
+   `console.log` from a Web Worker, but you only get the first argument, and
+   only its `String()` version, not a pretty-printed version.
 
 ## Dependencies
 
@@ -32,13 +68,14 @@ required order of completion.
  * Implement a handler for `loadMetaData` that calls `import`, as documented
    in that plugin's ["Responsibilities"
    section](https://github.com/nathancarter/weblurch/app/dependenciesplugin.litcoffee#responsibilities).
- * Extend the global list of label-labeled pairs to support pairs from
-   dependencies.  
  * Implement a handler for `dependenciesChanged` that does these things:
-    * Recompute the label-labeled pairs in that global list that come from
+    * Call `addExpression` on all expressions imported from all
       dependencies.
     * Call `validate` again on any expression whose reason cites a rule in a
       dependency.
+ * Ensure that `dependenciesChanged` is called right after the document is
+   loaded, so that all dependency expressions are added to the label pairs
+   list on document load.
 
 ## Parsing test
 
