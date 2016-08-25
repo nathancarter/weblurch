@@ -32,7 +32,7 @@ handy way to "clear" validation data.
 First, handle the case for clearing out data rather than storing new data.
 
         if data is null
-            if @hasValidation()
+            if @wasValidated()
                 @plugin?.editor.undoManager.transact =>
                     @clear 'validation'
                     @clear 'closeDecoration'
