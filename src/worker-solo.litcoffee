@@ -18,15 +18,15 @@ We find the first "(...)" section of the string and lift out of it the
 arguments list for the function.  Then we find the largest "{...}" section
 of the string and lift out of it the function body.
 
-            argList = funcStr.substring funcStr.indexOf( '(' ) + 1,
-                                       funcStr.indexOf( ')' )
-            body = funcStr.substring funcStr.indexOf( '{' ) + 1,
-                                     funcStr.lastIndexOf( '}' )
+        argList = funcStr.substring funcStr.indexOf( '(' ) + 1,
+                                   funcStr.indexOf( ')' )
+        body = funcStr.substring funcStr.indexOf( '{' ) + 1,
+                                 funcStr.lastIndexOf( '}' )
 
 We then call the `Function` constructor on those strings and store the
 result.
 
-            new Function argList, body
+        new Function argList, body
 
 Ensure that this acts like a browser in the simple way that `window` means
 the global scope.
