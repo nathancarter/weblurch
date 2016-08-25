@@ -135,6 +135,12 @@ Note that `@getValidation` is defined in
                     OM.str JSON.stringify validationData
         result
 
+Now that `Group::completeForm` exists, let's use that to serialize groups
+for background processes, rather than the old, simple `toJSON` routine
+that's the default in the Groups plugin.
+
+    window.Group::toJSON = -> @completeForm().encode()
+
 ## Looking up attributes
 
 To find out the attributes a group has for a specific key, call the

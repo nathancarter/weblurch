@@ -13,22 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Validation
-
- * Override the default implementation of `Group::toJSON` with a new one
-   specific to the main Lurch app, which calls `Group::completeForm`
-   instead, followed by `encode()`.
- * Import the OpenMath module into Web Workers launched for validation.
- * Verify that this permits you to take a complete form and reconstitute it
-   into an OM object with `OM.decode`.
- * Extend validation so that it creates a function wrapper around the given
-   code, so that the user doesn't need to write one.  It should name the
-   first argument `conclusion` and the remainder an array of `premises`.
-   It should also apply `OM.decode` to each.
- * Create an example rule that uses the complete form of the expression in a
-   nontrivial way.  For instance, it may validate everything with a "happy"
-   attribute, or everything of the form `[[X][Y]]`.
-
 ## Documentation
 
  * Rename the pages in the User Guide to be "pages" instead of "parts."

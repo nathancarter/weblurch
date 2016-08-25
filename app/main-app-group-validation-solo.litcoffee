@@ -338,9 +338,20 @@ group to be validated, and returns a validation data object.  The group to
 be validated will be passed in serialized form, as documented
 [here](groupsplugin.litcoffee#group-serialization).
 
-        Background.addCodeTask rule.value, [ this ], ( result ) =>
+The final parameter passed to `addCodeTask` imports the OpenMath module so
+that serialied groups can be decoded on the other end.
+
+        wrappedCode = "function () {
+            var conclusion = OM.decode( arguments[0] );
+            var premises = [ ];
+            for ( var i = 1 ; i < arguments.length ; i++ )
+                premises.push( OM.decode( arguments[i] ) );
+            #{rule.value}
+        }"
+        Background.addCodeTask wrappedCode, [ this ], ( result ) =>
             @saveValidation result ?
                 result : 'invalid'
                 message : 'The code in the rule did not run successfully.'
                 verbose : 'The background process in which the code was to
                     be run returned no value, so the code has an error.'
+        , undefined, [ 'openmath-duo.min.js' ]
