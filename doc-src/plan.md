@@ -13,24 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Documentation
-
- * Rename the pages in the User Guide to be "pages" instead of "parts."
- * Create two "parts" within the User Guide, "Basics" and "Technicalities."
- * Create an introductory page for each one explaining what it is and what
-   it covers.
- * Move under the "Basics" section all the current lessons except for code
-   attributes.
- * Move the code attributes page under "Technicalities."
- * Edit the code page so it no longer says that the user can skip it because
-   it's only needed by technical users.
- * Add a new Basics page that shows how to cite rules, but doesn't yet
-   actually include any active rule, nor does it validate anything.
- * Add a new Technicalities page that shows how to write code-based rules,
-   or at least introduces the concept.  Note that on Chrome, you can use
-   `console.log` from a Web Worker, but you only get the first argument, and
-   only its `String()` version, not a pretty-printed version.
-
 ## Dependencies
 
  * Extend the Background Computation module so that it can accept as

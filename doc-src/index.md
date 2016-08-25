@@ -1,5 +1,5 @@
 
-# webLurch Documentation
+# <img src='desktop-lurch-icon.png' width=100 height=100> webLurch Documentation
 
 Lurch is a mathematical word processor that checks the reasoning in users'
 documents, even mathematical proofs.
@@ -13,4 +13,6 @@ documents, even mathematical proofs.
 
 Use the menus at the top to find what you're looking for.
 
-![](desktop-lurch-icon.png)
+Source on GitHub:
+
+<a href='https://github.com/nathancarter/weblurch'><img src='https://assets-cdn.github.com/images/modules/logos_page/GitHub-Mark.png' width=100 height=100></a>

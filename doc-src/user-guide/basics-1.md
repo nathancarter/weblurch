@@ -1,5 +1,5 @@
 
-# Part 1, Basics of the editor
+# Basics, Part 1: The editor
 
 The WYSIWYG word processor on which Lurch is built is
 [TinyMCE](http://www.tinymce.com).  It is extremely straightforward to use,

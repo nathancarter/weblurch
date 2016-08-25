@@ -8,8 +8,11 @@ through the most advanced uses of Lurch.
 
 It is a work in progress, documenting features as they are built.  Because
 the web version of Lurch is not yet complete, neither is this User Guide.
-They will grow together.  *Use the navigation menu at the top for Authors to
-access each part of the guide.*
+They will grow together.
+
+Use the navigation menu at the top for Authors to access each part of the
+guide, or just keep clicking the "Next" button at the top of the page to
+read through it sequentially.
 
 The guide very often includes embedded live examples, which you can edit and
 play with (and even save their contents in your browser or in your Dropbox).

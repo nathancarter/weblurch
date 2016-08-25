@@ -1,5 +1,5 @@
 
-# Part 2, Expressions and canonical form
+# Basics, Part 2: Expressions and canonical form
 
 ## What's an expression?
 

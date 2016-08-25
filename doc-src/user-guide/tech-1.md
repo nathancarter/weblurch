@@ -1,9 +1,5 @@
 
-# Part 4, Code attributes
-
-<font color='red'>Most authors do not need code attributes for any portion
-of their work. Unless you plan to write very unusual logical systems within
-Lurch, you can skip to the next part of the User Guide.</font>
+# Technicalities, Part 1: Code attributes
 
 ## Creating code attributes
 
