@@ -15,16 +15,6 @@ required order of completion.
 
 ## Validation
 
- * Enhance the beginning of the `validate` function so that it tests if the
-   expression is a rule.  If so, it requires that it be in JavaScript.  If
-   so, mark it valid, stating that no syntax or semantics validation was
-   done on the code.  If not, mark it invalid, stating that only JavaScript
-   code rules are currently supported.
- * Whenever an expression attributed by a reason changes, call `validate` on
-   it.
- * Whenever a reason attribute changes, call `validate` on its target.
- * Whenever a rule's content changes, call `validate` on all later
-   expressions whose reason cites the rule that just changed.
  * Override the default implementation of `Group::toJSON` with a new one
    specific to the main Lurch app, which calls `Group::completeForm`
    instead, followed by `encode()`.

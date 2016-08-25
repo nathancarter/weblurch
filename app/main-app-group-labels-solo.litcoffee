@@ -287,6 +287,12 @@ that apply at point in the document where the given element sits.
         ( pair for pair in labelPairs \
             when pair.label is labelText and accessible pair )
 
+The other direction of the same concept is to take an expression in the
+document and ask what its labels are.  The following function does so.
+
+    window.lookupLabelsFor = ( expression ) ->
+        ( pair.label for pair in labelPairs when pair.target is expression )
+
 ## Debugging
 
 The following function dumps the `labelPairs` array to the console in a
