@@ -13,73 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Labels
-
- * Create a `deleteExpression` function for deleting from the list any pair
-   that mentions the expression, either as the label or as the labeled
-   expression.
- * Whenever an expression is deleted from the document, call
-   `deleteExpression` on it.  This includes when it is deleted in order to
-   be embedded as a hidden attribute in something else.  (Althoug this will
-   remove from the list the pair containing the label and the expression
-   into which it was just embedded, we will fix that in the next item.)
- * Whenever a group's contents, attributes, or connections change, call
-   `deleteExpression` on it, and then `addExpression` on it.  Also, if it is
-   a label, call `addExpression` on each expression that it labels.
- * Add a function for looking up a label and receiving a set of pairs as the
-   result, those pairs whose label is an atomic expression whose content
-   matches the given text.  They should be returned in the order in which
-   they appear in the list, which is also the order in which they appear in
-   the document.
- * Add an optional parameter to the lookup function, a position in the
-   document.  This will cause the function to filter its results to only
-   those that apply at the given point in the document.
-
-## Validation
-
- * Extend the Background Computation module with a convenience function that
-   lets us skip the two-step process of `registerFunction`/`addTask`, and
-   just provide code to run and the groups on which to run it.  This can use
-   the code itself (or a hash thereof) as the name *and* code for the
-   function to register, and later to run.  Name this new function
-   `addCodeTask`.
- * Write a function `saveValidation` that records validation results into an
-   expression.  If it receives `null` as the validation data, it removes any
-   validation data that formerly was in the expression.
- * Add to the list of suggested key types on the group context menu "rule."
- * Create a `validate` function that can be applied to any expression, and
-   takes a verbosity flag as well.
- * If the expression has no reason attributes, call `saveValidation` on the
-   step, with `null`.
- * If the expression has more than one reason attribute, the function
-   saves a validation result that explains that this is not permitted (at
-   most one reason per step).
- * If the expression's single reason attribute does not name an actual
-   reason accessible from that point in the document, the function saves a
-   validation result that explains the problem (incorrect reason citation).
- * If the expressions cited by the reason attribute are not rule definitions
-   (none of them) then the function saves a validation result explaining
-   that exactly one rule must be cited as the reason for a step, but none
-   were.
- * If any of the cited rules are invalid, discard them from the list of
-   cited rules.  If none remain, the function returns a validation result
-   explaining that none of the cited rules were valid.  If more than one
-   remain, the function saves a validation result explaining that too many
-   rules were cited (at most one per step is allowed).
- * If the unique valid cited rule is not a piece of code, the function
-   saves a validation result explaining that Lurch doesn't (yet?) know the
-   type of rule cited.
- * If the unique valid cited rule is code in a language other than
-   JavaScript, the function saves a validation result explaining that Lurch
-   doesn't (yet?) know the language in which the rule is coded.
- * Otherwise, call `Background.addCodeTask` on the code and step in
-   question, with a callback that saves the result as the validation result.
- * Whenever an expression attributed by a reason changes, call `validate` on
-   it.
- * Whenever a reason attribute changes, call `validate` on its target.
- * Whenever a rule's content changes, call `validate` on all later
-   expressions whose reason cites the rule that just changed.
-
 ## Dependencies
 
  * Extend the Background Computation module so that it can accept as
@@ -91,13 +24,14 @@ required order of completion.
  * Implement a handler for `loadMetaData` that calls `import`, as documented
    in that plugin's ["Responsibilities"
    section](https://github.com/nathancarter/weblurch/app/dependenciesplugin.litcoffee#responsibilities).
- * Extend the global list of label-labeled pairs to support pairs from
-   dependencies.  
  * Implement a handler for `dependenciesChanged` that does these things:
-    * Recompute the label-labeled pairs in that global list that come from
+    * Call `addExpression` on all expressions imported from all
       dependencies.
     * Call `validate` again on any expression whose reason cites a rule in a
       dependency.
+ * Ensure that `dependenciesChanged` is called right after the document is
+   loaded, so that all dependency expressions are added to the label pairs
+   list on document load.
 
 ## Parsing test
 

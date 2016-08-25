@@ -117,6 +117,20 @@ it.
             window.Background.waitingTasks.push newTask
             window.Background.update()
 
+Sometimes we do not wish to register tasks with specific names in advance,
+but simply send code to the background.  Thus we provide the following
+convenience function, which takes all the parameters of `registerFunction`
+and `addTask` combined, except for the function name.  It registers a new
+task and immediately executes it on the arguments provided.  The name of the
+new task *is* the code; that is, the code to run is used twice, once as the
+task and once as its name.
+
+        addCodeTask : ( func, inputGroups, callback,
+                        globals = { }, scripts = [ ] ) ->
+            window.Background.registerFunction "#{func}", func, globals,
+                scripts
+            window.Background.addTask "#{func}", inputGroups, callback
+
 The update function just mentioned will verify that as many tasks as
 possible are running concurrently.  That number will be determined by [the
 code below](#ideal-amount-of-concurrency).  The update function, however, is
@@ -264,6 +278,12 @@ nothing.
 
             for group in arguments
                 if group.deleted then return
+
+When Web Workers are used, we must first serialize each group passed to the
+web worker, because it cannot be passed as is, containing DOM objects.  So
+we do that in both cases, so that functions can be consistent, and not need
+to know whether they're running in a worker or not.
+
             groups = ( group.toJSON() for group in args )
 
 Run the computation soon, but not now.  When it is run, store the result or
@@ -276,11 +296,6 @@ functions defined above, in the promise object.
 If Web Workers are supported, we use the one constructed in this object's
 constructor.  If not, we fall back on simply using a zero timer, the poor
 man's "background" processing.
-
-When Web Workers are used, we must first serialize each group passed to the
-web worker, because it cannot be passed as is, containing DOM objects.  So
-we do that in both cases, so that functions can be consistent, and not need
-to know whether they're running in a worker or not.
 
             if @worker?
                 @worker.postMessage runOn : groups

@@ -1794,27 +1794,31 @@ because it is no longer in the document anyway.
                 delete @[id]
             group?.type()?.deleted? group for group in deleted
 
-If any groups were just introduced to this document by pasting, we need to
-process their connections, because the groups themselves may have had to be
-given new ids (to preserve uniqueness within this document) and thus the ids
-in any of their connections need to be updated to stay internally consistent
-within the pasted content.
+If any groups were just introduced to this document by pasting (or by
+programmatic insertion), we need to process their connections, because the
+groups themselves may have had to be given new ids (to preserve uniqueness
+within this document) and thus the ids in any of their connections need to
+be updated to stay internally consistent within the new content.
 
-            justPasted =
-                @editor.getDoc().getElementsByClassName 'justPasted'
-            justPasted = ( justPasted[i] for i in [0...justPasted.length] )
-            for grouper in justPasted
-                if /^close/.test grouper.getAttribute 'id' then continue
-                group = @grouperToGroup grouper
-                connections = group.get 'connections'
-                if not connections then continue
+            updateConnections = ( group, inOutBoth = 'both' ) =>
+                return unless connections = group.get 'connections'
+                id = group.id()
                 for connection in connections
-                    if @idConversionMap.hasOwnProperty connection[0]
-                        connection[0] = @idConversionMap[connection[0]]
-                    if @idConversionMap.hasOwnProperty connection[1]
-                        connection[1] = @idConversionMap[connection[1]]
+                    if inOutBoth is 'both' or \
+                       ( connection[0] is id and inOutBoth is 'out' )
+                        if @idConversionMap.hasOwnProperty connection[1]
+                            connection[1] = @idConversionMap[connection[1]]
+                    if inOutBoth is 'both' or \
+                       ( connection[1] is id and inOutBoth is 'in' )
+                        if @idConversionMap.hasOwnProperty connection[0]
+                            connection[0] = @idConversionMap[connection[0]]
                 group.set 'connections', connections
-            ( $ justPasted ).removeClass 'justPasted'
+            for own originalId, newId of @idConversionMap
+                updateConnections @[newId]
+                for connection in newGroup.connectionsOut()
+                    updateConnections @[connection[1]], 'in'
+                for connection in newGroup.connectionsIn()
+                    updateConnections @[connection[0]], 'out'
 
 Invalidate the `ids()` cache
 ([defined below](#querying-the-group-hierarchy)) so that the next time that
@@ -2424,23 +2428,6 @@ which the document was modified.
                 return
             editor.Groups.scanDocument()
             editor.Groups.rangeChanged editor.selection.getRng()
-
-Copying and pasting content that contains groups can be very problematic,
-because each group is supposed to have a unique ID.  If we permit direct
-copying and pasting of content, it will duplicate the same group (with its
-ID intact) throughout the document.  Thus we must process the content we've
-pasted immediately after a paste, and possibly renumber any group IDs in
-that content.  This is done in `@scanDocument()`, but it needs to know which
-content was just pasted; we mark such content here.
-
-        editor.on 'PastePostProcess', ( event ) ->
-            recur = ( node, address ) ->
-                id = node?.getAttribute? 'id'
-                if match = /^(open|close)(\d+)$/.exec id
-                    ( $ node ).addClass 'justPasted'
-                for index in [0...node?.childNodes?.length ? 0]
-                    recur node.childNodes[index], "#{address}.#{index}"
-            recur event.node, ''
 
 Whenever the cursor moves, we should update whether the group-insertion
 buttons and menu items are enabled.

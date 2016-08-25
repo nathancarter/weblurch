@@ -2,7 +2,8 @@
 (function() {
   var maxCharCode,
     __slice = [].slice,
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+    __hasProp = {}.hasOwnProperty;
 
   window.Group.prototype.canonicalForm = function() {
     var child;
@@ -78,7 +79,7 @@
   window.Group.prototype.listSymbol = OM.sym('List', 'Lurch');
 
   window.Group.prototype.completeForm = function(includePremises) {
-    var decoded, embedded, expression, group, key, list, meanings, prepare, result, strictGroupComparator, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
+    var decoded, embedded, expression, group, key, list, meanings, prepare, result, strictGroupComparator, validationData, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
     if (includePremises == null) {
       includePremises = false;
     }
@@ -100,6 +101,7 @@
       }
     }
     for (key in prepare) {
+      if (!__hasProp.call(prepare, key)) continue;
       list = prepare[key];
       if (embedded = this.get(OM.encodeAsIdentifier(key))) {
         list.push(this);
@@ -123,8 +125,15 @@
         }
       }
       result = OM.att(result, OM.sym(key, 'Lurch'), meanings.length === 1 ? meanings[0] : OM.app.apply(OM, [Group.prototype.listSymbol].concat(__slice.call(meanings))));
+      if (validationData = this.getValidation()) {
+        result = OM.att(result, OM.sym('validation', 'Lurch'), OM.str(JSON.stringify(validationData)));
+      }
     }
     return result;
+  };
+
+  window.Group.prototype.toJSON = function() {
+    return this.completeForm().encode();
   };
 
   window.Group.prototype.lookupAttributes = function(key) {

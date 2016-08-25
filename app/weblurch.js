@@ -2399,6 +2399,16 @@
       window.Background.waitingTasks.push(newTask);
       return window.Background.update();
     },
+    addCodeTask: function(func, inputGroups, callback, globals, scripts) {
+      if (globals == null) {
+        globals = {};
+      }
+      if (scripts == null) {
+        scripts = [];
+      }
+      window.Background.registerFunction("" + func, func, globals, scripts);
+      return window.Background.addTask("" + func, inputGroups, callback);
+    },
     available: {},
     update: function() {
       var B, data, runner, toStart, _ref3;

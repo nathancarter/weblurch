@@ -287,7 +287,7 @@
     return {
       text: 'Change attribute key to...',
       menu: [
-        menuItem('Label'), menuItem('Reason'), menuItem('Premise'), menuItem('Code'), {
+        menuItem('Label'), menuItem('Reason'), menuItem('Premise'), menuItem('Rule'), menuItem('Code'), {
           text: 'Other...',
           onclick: function() {
             return tinymce.activeEditor.Dialogs.prompt({

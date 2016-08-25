@@ -72,27 +72,69 @@
 
         
             
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">Basics</a>
+    <ul class="dropdown-menu">
+        
+            
 <li >
-    <a href="../user-guide/part-1/">Part 1, Basics of the editor</a>
+    <a href="../user-guide/basics-intro/">Overview</a>
 </li>
 
         
             
 <li >
-    <a href="../user-guide/part-2/">Part 2, Expressions and canonical form</a>
+    <a href="../user-guide/basics-1/">Part 1, The editor</a>
 </li>
 
         
             
 <li >
-    <a href="../user-guide/part-3/">Part 3, Connections and attributes</a>
+    <a href="../user-guide/basics-2/">Part 2, Expressions and canonical form</a>
 </li>
 
         
             
 <li >
-    <a href="../user-guide/part-4/">Part 4, Code attributes</a>
+    <a href="../user-guide/basics-3/">Part 3, Connections and attributes</a>
 </li>
+
+        
+            
+<li >
+    <a href="../user-guide/basics-4/">Part 4, Steps and Reasons</a>
+</li>
+
+        
+    </ul>
+  </li>
+
+        
+            
+  <li class="dropdown-submenu">
+    <a tabindex="-1" href="">Technicalities</a>
+    <ul class="dropdown-menu">
+        
+            
+<li >
+    <a href="../user-guide/tech-intro/">Overview</a>
+</li>
+
+        
+            
+<li >
+    <a href="../user-guide/tech-1/">Part 1, Code attributes</a>
+</li>
+
+        
+            
+<li >
+    <a href="../user-guide/tech-2/">Part 2, Code-based rules</a>
+</li>
+
+        
+    </ul>
+  </li>
 
         
     </ul>
@@ -251,10 +293,6 @@
     
         <li class="main active"><a href="#project-plan">Project Plan</a></li>
         
-            <li><a href="#labels">Labels</a></li>
-        
-            <li><a href="#validation">Validation</a></li>
-        
             <li><a href="#dependencies">Dependencies</a></li>
         
             <li><a href="#parsing-test">Parsing test</a></li>
@@ -286,73 +324,6 @@ later items are more vague than the earlier ones.</p>
 of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.</p>
-<h2 id="labels">Labels</h2>
-<ul>
-<li>Create a <code>deleteExpression</code> function for deleting from the list any pair
-   that mentions the expression, either as the label or as the labeled
-   expression.</li>
-<li>Whenever an expression is deleted from the document, call
-   <code>deleteExpression</code> on it.  This includes when it is deleted in order to
-   be embedded as a hidden attribute in something else.  (Althoug this will
-   remove from the list the pair containing the label and the expression
-   into which it was just embedded, we will fix that in the next item.)</li>
-<li>Whenever a group's contents, attributes, or connections change, call
-   <code>deleteExpression</code> on it, and then <code>addExpression</code> on it.  Also, if it is
-   a label, call <code>addExpression</code> on each expression that it labels.</li>
-<li>Add a function for looking up a label and receiving a set of pairs as the
-   result, those pairs whose label is an atomic expression whose content
-   matches the given text.  They should be returned in the order in which
-   they appear in the list, which is also the order in which they appear in
-   the document.</li>
-<li>Add an optional parameter to the lookup function, a position in the
-   document.  This will cause the function to filter its results to only
-   those that apply at the given point in the document.</li>
-</ul>
-<h2 id="validation">Validation</h2>
-<ul>
-<li>Extend the Background Computation module with a convenience function that
-   lets us skip the two-step process of <code>registerFunction</code>/<code>addTask</code>, and
-   just provide code to run and the groups on which to run it.  This can use
-   the code itself (or a hash thereof) as the name <em>and</em> code for the
-   function to register, and later to run.  Name this new function
-   <code>addCodeTask</code>.</li>
-<li>Write a function <code>saveValidation</code> that records validation results into an
-   expression.  If it receives <code>null</code> as the validation data, it removes any
-   validation data that formerly was in the expression.</li>
-<li>Add to the list of suggested key types on the group context menu "rule."</li>
-<li>Create a <code>validate</code> function that can be applied to any expression, and
-   takes a verbosity flag as well.</li>
-<li>If the expression has no reason attributes, call <code>saveValidation</code> on the
-   step, with <code>null</code>.</li>
-<li>If the expression has more than one reason attribute, the function
-   saves a validation result that explains that this is not permitted (at
-   most one reason per step).</li>
-<li>If the expression's single reason attribute does not name an actual
-   reason accessible from that point in the document, the function saves a
-   validation result that explains the problem (incorrect reason citation).</li>
-<li>If the expressions cited by the reason attribute are not rule definitions
-   (none of them) then the function saves a validation result explaining
-   that exactly one rule must be cited as the reason for a step, but none
-   were.</li>
-<li>If any of the cited rules are invalid, discard them from the list of
-   cited rules.  If none remain, the function returns a validation result
-   explaining that none of the cited rules were valid.  If more than one
-   remain, the function saves a validation result explaining that too many
-   rules were cited (at most one per step is allowed).</li>
-<li>If the unique valid cited rule is not a piece of code, the function
-   saves a validation result explaining that Lurch doesn't (yet?) know the
-   type of rule cited.</li>
-<li>If the unique valid cited rule is code in a language other than
-   JavaScript, the function saves a validation result explaining that Lurch
-   doesn't (yet?) know the language in which the rule is coded.</li>
-<li>Otherwise, call <code>Background.addCodeTask</code> on the code and step in
-   question, with a callback that saves the result as the validation result.</li>
-<li>Whenever an expression attributed by a reason changes, call <code>validate</code> on
-   it.</li>
-<li>Whenever a reason attribute changes, call <code>validate</code> on its target.</li>
-<li>Whenever a rule's content changes, call <code>validate</code> on all later
-   expressions whose reason cites the rule that just changed.</li>
-</ul>
 <h2 id="dependencies">Dependencies</h2>
 <ul>
 <li>Extend the Background Computation module so that it can accept as
@@ -364,15 +335,16 @@ required order of completion.</p>
 <li>Implement a handler for <code>loadMetaData</code> that calls <code>import</code>, as documented
    in that plugin's <a href="https://github.com/nathancarter/weblurch/app/dependenciesplugin.litcoffee#responsibilities">"Responsibilities"
    section</a>.</li>
-<li>Extend the global list of label-labeled pairs to support pairs from
-   dependencies.  </li>
 <li>Implement a handler for <code>dependenciesChanged</code> that does these things:<ul>
-<li>Recompute the label-labeled pairs in that global list that come from
+<li>Call <code>addExpression</code> on all expressions imported from all
   dependencies.</li>
 <li>Call <code>validate</code> again on any expression whose reason cites a rule in a
   dependency.</li>
 </ul>
 </li>
+<li>Ensure that <code>dependenciesChanged</code> is called right after the document is
+   loaded, so that all dependency expressions are added to the label pairs
+   list on document load.</li>
 </ul>
 <h2 id="parsing-test">Parsing test</h2>
 <p>Rewrite the following section to more accurately reflect Section 24 of the

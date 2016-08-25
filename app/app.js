@@ -1435,7 +1435,7 @@
     isScanning = false;
 
     Groups.prototype.scanDocument = function() {
-      var a, after, becameFree, before, child, connection, connections, count, deleted, gpStack, group, groupData, grouper, groupers, i, id, index, info, justPasted, newGroup, usedIds, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _m, _n, _o, _ref, _ref1, _ref2, _ref3;
+      var a, after, becameFree, before, child, connection, count, deleted, gpStack, group, groupData, grouper, groupers, id, index, info, newGroup, newId, originalId, updateConnections, usedIds, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _m, _n, _o, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
       if (this.scanLocks > 0) {
         return;
       }
@@ -1562,43 +1562,54 @@
           }
         }
       }
-      justPasted = this.editor.getDoc().getElementsByClassName('justPasted');
-      justPasted = (function() {
-        var _n, _ref4, _results;
-        _results = [];
-        for (i = _n = 0, _ref4 = justPasted.length; 0 <= _ref4 ? _n < _ref4 : _n > _ref4; i = 0 <= _ref4 ? ++_n : --_n) {
-          _results.push(justPasted[i]);
-        }
-        return _results;
-      })();
-      for (_n = 0, _len5 = justPasted.length; _n < _len5; _n++) {
-        grouper = justPasted[_n];
-        if (/^close/.test(grouper.getAttribute('id'))) {
-          continue;
-        }
-        group = this.grouperToGroup(grouper);
-        connections = group.get('connections');
-        if (!connections) {
-          continue;
-        }
-        for (_o = 0, _len6 = connections.length; _o < _len6; _o++) {
-          connection = connections[_o];
-          if (this.idConversionMap.hasOwnProperty(connection[0])) {
-            connection[0] = this.idConversionMap[connection[0]];
+      updateConnections = (function(_this) {
+        return function(group, inOutBoth) {
+          var connection, connections, _len5, _n;
+          if (inOutBoth == null) {
+            inOutBoth = 'both';
           }
-          if (this.idConversionMap.hasOwnProperty(connection[1])) {
-            connection[1] = this.idConversionMap[connection[1]];
+          if (!(connections = group.get('connections'))) {
+            return;
           }
+          id = group.id();
+          for (_n = 0, _len5 = connections.length; _n < _len5; _n++) {
+            connection = connections[_n];
+            if (inOutBoth === 'both' || (connection[0] === id && inOutBoth === 'out')) {
+              if (_this.idConversionMap.hasOwnProperty(connection[1])) {
+                connection[1] = _this.idConversionMap[connection[1]];
+              }
+            }
+            if (inOutBoth === 'both' || (connection[1] === id && inOutBoth === 'in')) {
+              if (_this.idConversionMap.hasOwnProperty(connection[0])) {
+                connection[0] = _this.idConversionMap[connection[0]];
+              }
+            }
+          }
+          return group.set('connections', connections);
+        };
+      })(this);
+      _ref4 = this.idConversionMap;
+      for (originalId in _ref4) {
+        if (!__hasProp.call(_ref4, originalId)) continue;
+        newId = _ref4[originalId];
+        updateConnections(this[newId]);
+        _ref5 = newGroup.connectionsOut();
+        for (_n = 0, _len5 = _ref5.length; _n < _len5; _n++) {
+          connection = _ref5[_n];
+          updateConnections(this[connection[1]], 'in');
         }
-        group.set('connections', connections);
+        _ref6 = newGroup.connectionsIn();
+        for (_o = 0, _len6 = _ref6.length; _o < _len6; _o++) {
+          connection = _ref6[_o];
+          updateConnections(this[connection[0]], 'out');
+        }
       }
-      ($(justPasted)).removeClass('justPasted');
       delete this.idsCache;
       setTimeout((function(_this) {
         return function() {
-          var _ref4;
-          if ((_ref4 = _this.editor.Overlay) != null) {
-            _ref4.redrawContents();
+          var _ref7;
+          if ((_ref7 = _this.editor.Overlay) != null) {
+            _ref7.redrawContents();
           }
           return _this.updateButtonsAndMenuItems();
         };
@@ -2205,22 +2216,6 @@
       }
       editor.Groups.scanDocument();
       return editor.Groups.rangeChanged(editor.selection.getRng());
-    });
-    editor.on('PastePostProcess', function(event) {
-      var recur;
-      recur = function(node, address) {
-        var id, index, match, _j, _ref1, _ref2, _ref3, _results;
-        id = node != null ? typeof node.getAttribute === "function" ? node.getAttribute('id') : void 0 : void 0;
-        if (match = /^(open|close)(\d+)$/.exec(id)) {
-          ($(node)).addClass('justPasted');
-        }
-        _results = [];
-        for (index = _j = 0, _ref1 = (_ref2 = node != null ? (_ref3 = node.childNodes) != null ? _ref3.length : void 0 : void 0) != null ? _ref2 : 0; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; index = 0 <= _ref1 ? ++_j : --_j) {
-          _results.push(recur(node.childNodes[index], "" + address + "." + index));
-        }
-        return _results;
-      };
-      return recur(event.node, '');
     });
     editor.on('NodeChange', function(event) {
       return editor.Groups.updateButtonsAndMenuItems();

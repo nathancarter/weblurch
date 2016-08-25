@@ -1,5 +1,5 @@
 
-# Part 3, Connections and attributes
+# Basics, Part 3: Connections and attributes
 
 ## Attributes
 
