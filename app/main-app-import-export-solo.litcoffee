@@ -108,9 +108,9 @@ reloading the page without the query string, and then pulling the data from
                     shorthandRE = /^\s*<shorthand>(.*)<\/shorthand>\s*$/
                     document = document.replace /\n|\cJ/g, ' '
                     if m = shorthandRE.exec document
-                        translateShorthandIntoEditor document
+                        translateShorthandIntoEditor editor, document
                     else
-                        tinymce.activeEditor.setContent document
+                        editor.setContent document
                     editor.LoadSave.loadMetaData metadata
                 , 100
         if match = /\?document([0-9]*)=(.*)/.exec window.location.search
@@ -200,14 +200,14 @@ instances and connections among them.  It also clears the undo/redo stack,
 so that this action cannot be undone, as if the document were just opened
 from a file.
 
-    translateShorthandIntoEditor = ( shorthand ) ->
+    translateShorthandIntoEditor = ( editor, shorthand ) ->
 
 Create a temporary DIV in which to reconstruct the given HTML as DOM
 elements, then initialize several variables that will be populated by the
 recursive routine below, which will traverse that DIV's internal DOM
 hierarchy.
 
-        doc = tinymce.activeEditor.getDoc()
+        doc = editor.getDoc()
         div = doc.createElement 'div'
         div.innerHTML = shorthand
         nToId = { }
@@ -258,8 +258,8 @@ to update the data in the Groups package based on all the new content just
 inserted.  (We rely on that scanning in the functions we call in the Groups
 package immediately thereafter.)
 
-        tinymce.activeEditor.setContent recur div
-        tinymce.activeEditor.Groups.scanDocument()
+        editor.setContent recur div
+        editor.Groups.scanDocument()
 
 Find every group that was, in the original shorthand notation in the input,
 marked as an embedded attribute in its parent group.  Do the embedding,
@@ -274,7 +274,7 @@ first.
 
         for id in [nextId..0]
             if id of idToKey
-                continue unless group = tinymce.activeEditor.Groups[id]
+                continue unless group = editor.Groups[id]
                 if not group.parent
                     group.set 'key', idToKey[id]
                     group.set 'keyposition', 'arrow'
@@ -302,13 +302,13 @@ groups to connect themselves now, using the `connect` method of the Group
 class.
 
         for sourceId, targetNs of connections
-            continue unless source = tinymce.activeEditor.Groups[sourceId]
+            continue unless source = editor.Groups[sourceId]
             for n in targetNs
-                if target = tinymce.activeEditor.Groups[nToId[n]]
+                if target = editor.Groups[nToId[n]]
                     source.connect target
 
 Clear the editor's undo/redo stack, so that its current contents act as if
 they are a newly opened document.  (We do not want users to be able to undo
 any portion of the document setup procedure just executed.)
 
-        tinymce.activeEditor.undoManager.clear()
+        editor.undoManager.clear()
