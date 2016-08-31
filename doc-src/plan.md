@@ -19,10 +19,10 @@ required order of completion.
    parameters for a task not only groups in the document, but also groups in
    dependencies.
  * Implement the `saveMetaData` function used by [the Dependencies
-   plugin](https://github.com/nathancarter/weblurch/app/dependenciesplugin.litcoffee) to export the list of
-   labeled, top-level expressions.
+   plugin](https://github.com/nathancarter/weblurch/app/dependenciesplugin.litcoffee)
+   to export the list of labeled, top-level expressions.
  * Implement a handler for `loadMetaData` that calls `import`, as documented
-   in that plugin's ["Responsibilities"
+   in the Dependencies Plugin's ["Responsibilities"
    section](https://github.com/nathancarter/weblurch/app/dependenciesplugin.litcoffee#responsibilities).
  * Implement a handler for `dependenciesChanged` that does these things:
     * Call `addExpression` on all expressions imported from all
@@ -32,6 +32,12 @@ required order of completion.
  * Ensure that `dependenciesChanged` is called right after the document is
    loaded, so that all dependency expressions are added to the label pairs
    list on document load.
+ * Keep track of the number of background processes launched for validation
+   by incrementing a counter when one starts, and decrementing it when one
+   ends.
+ * If that counter is positive when `saveMetaData` is called, return an
+   error message and tell the user in an alert box, as described in the
+   Dependencies Plugin's ["Responsibilities" section](https://github.com/nathancarter/weblurch/app/dependenciesplugin.litcoffee#responsibilities).
 
 ## Parsing test
 
