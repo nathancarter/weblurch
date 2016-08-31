@@ -13,6 +13,31 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
+## Completing Validation
+
+ * Add an event to group types for when a click or double-click happens on a
+   grouper.  Call the event handler in the group type with three parameters,
+   the first the group object, the second a string "single" or "double"
+   (which kind of click), and the third a string "open" or "close" (which
+   grouper).
+ * In the main app, create a stub handler for this event that just tests to
+   be sure the event is coming through correctly.
+ * Add to the Dialogs plugin a function that takes a string and a callback
+   as parameters, creates a dialog displaying the string and no buttons,
+   and ends by calling the callback, passing it a function that closes the
+   dialog.  Call the function `waiting`.
+ * Test this by replacing the stub handler above with a function that calls
+   `waiting`, then after one second, calls the close handler.  This will
+   test to be sure `waiting` works.
+ * Factor `Group::validate` into two functions, one asynchronous function
+   that computes the validation data and passes it to a callback, the other
+   still called `Group::validate` that just calls the asynchronous one, then
+   stores its result using `saveValidation`.
+ * Finish the stub by making the delay not a dummy one-second delay, but a
+   call to the asynchronous validation computation routine.  When the
+   callback is called, close the waiting dialog, then display an alert that
+   shows the validation data, including result, message, and verbose.
+
 ## Dependencies
 
  * Extend the Background Computation module so that it can accept as
