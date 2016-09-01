@@ -59,10 +59,43 @@ required order of completion.
    list on document load.
  * Keep track of the number of background processes launched for validation
    by incrementing a counter when one starts, and decrementing it when one
-   ends.
+   ends.  Also increment the counter before the zero timer is started in the
+   `contentsChanged` handler in the validation module, and decrement it at
+   the end of the callback, so that a newly-loaded document is guaranteed
+   to be pending validation immediately.
  * If that counter is positive when `saveMetaData` is called, return an
    error message and tell the user in an alert box, as described in the
    Dependencies Plugin's ["Responsibilities" section](https://github.com/nathancarter/weblurch/app/dependenciesplugin.litcoffee#responsibilities).
+
+## Documenting Dependencies
+
+ * Write an asynchronous function `waitForMetaData` that calls
+   `saveMetaData` and passes the result to the callback, unless the result
+   is an error saying you must wait longer.  If it is, wait 250ms and
+   repeat.
+ * Make `translateShorthandIntoEditor` asynchronous, and have it pass to the
+   callback the document metadata; for now, it can be null always.
+ * Fix the call to `translateShorthandIntoEditor` to respect this
+   asynchronous nature, and to use the metadata given by the shorthand
+   rather than the pre-computed metadata iff the shorthand's metadata is
+   non-null.  This requires two different calls to `saveMetaData`, one in
+   the callback for `translateShorthandIntoEditor` and one synchronous, in
+   the other arm of the if.
+ * In `translateShorthandIntoEditor`, if there is a "dependency" element,
+   do not call the callback right away, but instead create an invisible
+   iframe and set its `src` to Lurch with a query string telling it to post
+   its exports data after document load, passing the contents of the
+   dependency element.  We will listen for that handler soon.
+ * Write a handler for query strings requesting posting of exports data,
+   near where you have handlers for auto-loadN; it will use
+   `waitForMetaData` to compute what to export and `postMessage` to post it.
+ * Finish `translateShorthandIntoEditor` by installing a `postMessage`
+   listener that, when invoked, uninstalls itself then calls the
+   as-yet-uncalled callback with the metadata posted from the invisible
+   iframe, then deletes that invisible iframe.
+ * Test by creating some lurch-embed divs that contain dependency tags that
+   define rules, followed by documents that use those rules.
+ * Use that feature to document dependencies in the User Guide.
 
 ## Parsing test
 
