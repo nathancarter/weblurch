@@ -15,13 +15,6 @@ required order of completion.
 
 ## Completing Validation
 
- * Add an event to group types for when a click or double-click happens on a
-   grouper.  Call the event handler in the group type with three parameters,
-   the first the group object, the second a string "single" or "double"
-   (which kind of click), and the third a string "open" or "close" (which
-   grouper).
- * In the main app, create a stub handler for this event that just tests to
-   be sure the event is coming through correctly.
  * Add to the Dialogs plugin a function that takes a string and a callback
    as parameters, creates a dialog displaying the string and no buttons,
    and ends by calling the callback, passing it a function that closes the
