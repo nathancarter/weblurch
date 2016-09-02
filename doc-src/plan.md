@@ -13,17 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Completing Validation
-
- * Factor `Group::validate` into two functions, one asynchronous function
-   that computes the validation data and passes it to a callback, the other
-   still called `Group::validate` that just calls the asynchronous one, then
-   stores its result using `saveValidation`.
- * Finish the stub by making the delay not a dummy one-second delay, but a
-   call to the asynchronous validation computation routine.  When the
-   callback is called, close the waiting dialog, then display an alert that
-   shows the validation data, including result, message, and verbose.
-
 ## Dependencies
 
  * Extend the Background Computation module so that it can accept as

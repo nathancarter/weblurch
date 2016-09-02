@@ -253,6 +253,28 @@ Atomic expressions with a "code" attribute can be edited as code.
 
             result
 
+Here is the handler for clicking on group boundaries ("groupers").
+
+        clicked : ( group, numClicks, whichGrouper ) ->
+            if numClicks is 'double' and whichGrouper is 'close'
+                tinymce.activeEditor.Dialogs.waiting
+                    title : 'Just sit tight'
+                    message : 'Waiting...'
+                    work : ( done ) ->
+                        group.computeValidationAsync ( result ) ->
+                            done()
+                            tinymce.activeEditor.Dialogs.alert
+                                title : 'Validation details'
+                                message : "<table>
+                                    <tr><td>Result:</td>
+                                        <td>#{result.result}</td></tr>
+                                    <tr><td>Explanation:</td>
+                                        <td>#{result.message}</td></tr>
+                                    <tr><td>Details:</td>
+                                        <td>#{result.verbose}</td></tr>
+                                    </table>"
+                        , yes
+
     ]
 
 ## Auxiliary functions

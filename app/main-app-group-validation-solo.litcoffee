@@ -52,7 +52,8 @@ Store the data and visuals in the group.
             @set 'validation', data
             @set 'closeDecoration',
                 "<font color='#{color}'>#{symbol}</font>"
-            @set 'closeHoverText', data.message
+            @set 'closeHoverText',
+                "#{data.message}\n(Double-click for details.)"
 
 We can also test whether any validation data has been stored, and fetch the
 validation data if so.
@@ -111,7 +112,11 @@ to speed up the process.  This function can be run a second time with the
 parameter set to true in those situations where the user specifically asks
 for greater detail.
 
-    window.Group::validate = ( verbose = no ) ->
+This workhorse function is called internally only.  The external API (a
+member of the Group class) is defined immediately after this function, and
+calls this one.
+
+    window.Group::computeValidationAsync = ( callback, verbose = no ) ->
         # console.log "VALIDATING: #{@contentAsText()} (id #{@id()})"
         reasons = @lookupAttributes 'reason'
         ruleLanguages = [ 'JavaScript' ]
@@ -132,7 +137,7 @@ validated based solely on their structure.
                 if verbose
                     validationData.verbose = 'Try removing all reason
                         attributes from the rule.'
-                return @saveValidation validationData
+                return callback validationData
 
 Second, it must be a code-based rule, because that's all that's currently
 supported.
@@ -149,7 +154,7 @@ supported.
                         language in which the code is written.  Supported
                         languages:</p>
                         <ul><li>#{ruleLanguages.join '</li><li>'}</li></ul>"
-                return @saveValidation validationData
+                return callback validationData
             for language, index in languages
                 languages[index] = if language instanceof OM
                     language.value
@@ -164,7 +169,7 @@ supported.
                     validationData.verbose = "Too many languages
                         specified for the rule.  Only one is permitted.
                         You specified: #{languages.join ','}."
-                return @saveValidation validationData
+                return callback validationData
 
 Finally, it must be in one of the supported languages for code-based rules.
 
@@ -181,11 +186,11 @@ Finally, it must be in one of the supported languages for code-based rules.
                         written in #{languages[0]}, and thus cannot be
                         used.</p>
                         <ul><li>#{ruleLanguages.join '</li><li>'}</li></ul>"
-                return @saveValidation validationData
+                return callback validationData
 
 If all of those checks pass, then a rule is valid.
 
-            return @saveValidation
+            return callback
                 result : 'valid'
                 message : 'This is a valid code-based rule.'
                 verbose : 'This is a valid code-based rule.'
@@ -196,7 +201,7 @@ case where the expression is a step of work, not a rule.
 If the expression has no reason attribute, we clear out any old validation,
 and are done.
 
-        if reasons.length is 0 then return @saveValidation null
+        if reasons.length is 0 then return callback null
 
 If the expression has more than one reason attribute, save a validation
 result that explains that this is not permitted (at most one reason per
@@ -216,7 +221,7 @@ step).
                     else
                         "<li>Visible: #{reason.contentAsText()}</li>"
                 validationData.verbose += '</ul>'
-            return @saveValidation validationData
+            return callback validationData
 
 If the (now known to be only existing) reason does not actually cite
 an accessible expression, then validation fails with the appropriate
@@ -231,7 +236,7 @@ message.
                 result : 'invalid'
                 message : "No rule called #{reasonText} is accessible here."
             if verbose then validationData.verbose = validationData.message
-            return @saveValidation validationData
+            return callback validationData
 
 Compute the complete form of each cited expression.
 
@@ -256,7 +261,7 @@ If none of them are rules, then validation fails with that as the reason.
                     #{labelPairs.length - numFromDependencies} expressions
                     in this document, accessible from the citation.  None of
                     those expressions is a rule."
-            return @saveValidation validationData
+            return callback validationData
 
 If any of the cited rules are invalid, discard them.
 
@@ -282,7 +287,7 @@ to the user.
                     #{rules.length} rules called \"#{reasonText},\" none of
                     them have been successfully validated.  Only a valid
                     rule can be used to justify an expression."
-            return @saveValidation validationData
+            return callback validationData
 
 If that leaves more than one rule left, then validation fails, and we must
 explain to the user that at most one valid rule can be cited.
@@ -296,7 +301,7 @@ explain to the user that at most one valid rule can be cited.
                     refers to #{validRules.length} valid rules.  Only one
                     valid rule can be used at a time to justify an
                     expression."
-            return @saveValidation validationData
+            return callback validationData
 
 If the unique valid cited rule is not a piece of code, the validation result
 must explain that Lurch doesn't (yet?) know the type of rule cited.
@@ -311,7 +316,7 @@ must explain that Lurch doesn't (yet?) know the type of rule cited.
                 validationData.verbose = "The current version of Lurch
                     supports only code-based rules.  The rule you cited is
                     not a piece of code, and thus cannot be used."
-            return @saveValidation validationData
+            return callback validationData
 
 If the language in which the rule is written isn't supported, then
 validation fails, and we explain that the language used isn't yet supported.
@@ -329,7 +334,7 @@ validation fails, and we explain that the language used isn't yet supported.
                     written in #{language.value}, and thus cannot be
                     used.</p>
                     <ul><li>#{ruleLanguages.join '</li><li>'}</li></ul>"
-            return @saveValidation validationData
+            return callback validationData
 
 Run the code in the background to validate the step of work.  Whatever the
 result, save it as the expression's validation result.  Note that the code
@@ -349,9 +354,16 @@ that serialied groups can be decoded on the other end.
             #{rule.value}
         }"
         Background.addCodeTask wrappedCode, [ this ], ( result ) =>
-            @saveValidation result ?
+            callback result ?
                 result : 'invalid'
                 message : 'The code in the rule did not run successfully.'
                 verbose : 'The background process in which the code was to
                     be run returned no value, so the code has an error.'
         , undefined, [ 'openmath-duo.min.js' ]
+
+Validating a group is then simply a matter of calling the asynchronous
+validation function on it, and using the `saveValidation` member of the
+group on the result.
+
+    window.Group::validate = ->
+        @computeValidationAsync ( result ) => @saveValidation result
