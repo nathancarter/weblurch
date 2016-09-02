@@ -15,13 +15,6 @@ required order of completion.
 
 ## Completing Validation
 
- * Add to the Dialogs plugin a function that takes a string and a callback
-   as parameters, creates a dialog displaying the string and no buttons,
-   and ends by calling the callback, passing it a function that closes the
-   dialog.  Call the function `waiting`.
- * Test this by replacing the stub handler above with a function that calls
-   `waiting`, then after one second, calls the close handler.  This will
-   test to be sure `waiting` works.
  * Factor `Group::validate` into two functions, one asynchronous function
    that computes the validation data and passes it to a callback, the other
    still called `Group::validate` that just calls the asynchronous one, then
