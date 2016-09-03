@@ -209,7 +209,7 @@ dependency, we know it is in complete form, and so we can just consider its
 "label" attribute, which will contain all its labels.
 
         else if expression instanceof OM
-            internals = expression.getAttribute OM.sym labelKey, 'Lurch'
+            internals = expression.getAttribute OM.sym 'label', 'Lurch'
             if internals then addInternalLabels internals
 
 ## Function for deleting entries from the list
