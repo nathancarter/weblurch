@@ -15,9 +15,6 @@ required order of completion.
 
 ## Dependencies
 
- * Extend the Background Computation module so that it can accept as
-   parameters for a task not only groups in the document, but also groups in
-   dependencies.
  * Implement the `saveMetaData` function used by [the Dependencies
    plugin](https://github.com/nathancarter/weblurch/app/dependenciesplugin.litcoffee)
    to export the list of labeled, top-level expressions.
