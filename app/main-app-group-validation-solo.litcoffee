@@ -152,6 +152,21 @@ revalidate it.
                     needsRevalidation.validate()
             , 0
 
+Let's also install a `dependencyLabelsUpdated` handler so that when a
+dependency is added/removed/updated, we revalidate any expression that cites
+a rule defined in a dependency.
+
+        editor.on 'dependencyLabelsUpdated', ( event ) ->
+            for id in editor.Groups.ids()
+                continue unless citer = editor.Groups[id]
+                for reason in citer.lookupAttributes 'reason'
+                    text = if reason instanceof OM
+                        reason.value
+                    else
+                        reason.contentAsText()
+                    if text in event.oldAndNewLabels
+                        citer.validate()
+
 ## The validation process
 
 The following function can be applied to any expression.  It runs validation

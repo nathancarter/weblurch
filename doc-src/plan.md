@@ -15,17 +15,6 @@ required order of completion.
 
 ## Dependencies
 
- * Implement the `saveMetaData` function used by [the Dependencies
-   plugin](https://github.com/nathancarter/weblurch/app/dependenciesplugin.litcoffee)
-   to export the list of labeled, top-level expressions.
- * Implement a handler for `loadMetaData` that calls `import`, as documented
-   in the Dependencies Plugin's ["Responsibilities"
-   section](https://github.com/nathancarter/weblurch/app/dependenciesplugin.litcoffee#responsibilities).
- * Implement a handler for `dependenciesChanged` that does these things:
-    * Call `addExpression` on all expressions imported from all
-      dependencies.
-    * Call `validate` again on any expression whose reason cites a rule in a
-      dependency.
  * Ensure that `dependenciesChanged` is called right after the document is
    loaded, so that all dependency expressions are added to the label pairs
    list on document load.

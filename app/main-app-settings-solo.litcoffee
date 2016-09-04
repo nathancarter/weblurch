@@ -103,12 +103,13 @@ a metadata object that gets embedded in the document itself.
             D.set 'wiki_title', elt( 'wiki_title' ).value
 
 Set up the load/save plugin with the functions needed for loading and saving
-document metadata.
+document metadata.  We export to dependencies all labeled, top-level
+expressions, a function defined in [the code dealing with
+labels](main-app-group-labels-solo.litcoffee#label-lookup).
 
         editor.LoadSave.saveMetaData = ->
-            # later, when this app knows what data it wants to export to
-            # documents that depend on it, do so here, with a line like
-            # D.metadata.exports = [ "some", "JSON", "here" ]
+            D.metadata.exports = ( group.completeForm().encode() \
+                for group in window.labeledTopLevelExpressions() )
             D.metadata.dependencies = editor.Dependencies.export()
             D.metadata
         editor.LoadSave.loadMetaData = ( object ) ->
