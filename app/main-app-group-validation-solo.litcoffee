@@ -61,7 +61,7 @@ validation data if so.
     window.Group::getValidation = -> @get 'validation'
     window.Group::wasValidated = -> @getValidation()?
 
-## Running validation
+## When to run validation
 
 Let's extend the current `contentsChanged` handler for expressions so that
 it runs validation if necessary.  We assume the existence of a `validate`
@@ -79,32 +79,80 @@ scanning has had a chance to complete.
 
             setTimeout ->
 
-Whenever a group changes, re-validate it.
+Whenever a group changes, it and anything it modifies must be revalidated.
+(The only exception to this is if it is a premise, we don't need to
+revalidate what it modifies, because each step in a chain of reasoning is
+considered independent in Lurch.)
 
-                group.validate()
+Furthermore, whenever a rule is revalidated, anything that cites it later in
+the document must also be revalidated.  Thus we will spread the need for
+revalidation outward from this group in two ways: by attribute arrows (other
+than premise arrows) and by citation.
 
-Whenever a reason attribute changes, re-validate each of its targets.
+We start by creating an array to hold all the things we will find that need
+revalidation.  We also create a function for adding an entry to the list.
+Naturally, it doesn't add anything twice.
 
-                if group.get( 'key' ) is 'reason'
-                    for connection in group.connectionsOut()
-                        editor.Groups[connection[1]]?.validate()
+                groupsToRevalidate = [ ]
+                addToRevalidateList = ( newGroup ) ->
+                    if newGroup not in groupsToRevalidate
+                        groupsToRevalidate.push newGroup
 
-Whenever a rule changes, re-validate everything that follows it and that
-cites it.
+Now we create a function that adds all expressions that cite a given rule to
+the list, for use when spreading revalidation according to citations, as
+described above.  You can call this on any expression, and it will just do
+nothing for non-rules.  If the second parameter is set to true, then *every*
+step of work after this rule will be marked for revalidation, not just those
+that cite *this* rule.
 
-                if group.lookupAttributes( 'rule' ).length > 0
-                    labels = window.lookupLabelsFor group
+                addCitersToRevalidateList =
+                ( ruleGroup, everything = no ) ->
+                    if ruleGroup.lookupAttributes( 'rule' ).length is 0
+                        return
                     allIds = editor.Groups.ids()
-                    return unless ( start = allIds.indexOf group.id() ) > -1
+                    if ( start = allIds.indexOf ruleGroup.id() ) is -1
+                        return
+                    namesForRule = window.lookupLabelsFor ruleGroup
                     for id in allIds[start...]
-                        continue unless otherGroup = editor.Groups[id]
-                        for reason in otherGroup.lookupAttributes 'reason'
+                        continue unless citer = editor.Groups[id]
+                        reasons = citer.lookupAttributes 'reason'
+                        if everything and reasons.length > 0
+                            return addToRevalidateList citer
+                        for reason in reasons
                             text = if reason instanceof OM
                                 reason.value
                             else
                                 reason.contentAsText()
-                            if text in labels then otherGroup.validate()
+                            if text in namesForRule
+                                addToRevalidateList citer
+
+We now create a recursive function that traverses the document according to
+the two spreading rules described above: attribution and citation.  The
+second parameter of the recursion is for internal use; it says how the
+recursion got to this point -- if it was by a step from a label, and the
+current expression is a rule, then rule names changed, meaning *everything*
+needs revalidating.
+
+                recursivelyMarkForRevalidation = ( fromHere, lastStep ) ->
+                    addToRevalidateList fromHere
+                    addCitersToRevalidateList fromHere, lastStep is 'label'
+                    key = fromHere.get 'key'
+                    if key and key isnt 'premise'
+                        for connection in fromHere.connectionsOut()
+                            recursivelyMarkForRevalidation \
+                                editor.Groups[connection[1]], key
+
+Now let's use all these preparatory functions to do something.
+
+Whenever a group changes, compute everything that must be revalidated, then
+revalidate it.
+
+                recursivelyMarkForRevalidation group
+                for needsRevalidation in groupsToRevalidate
+                    needsRevalidation.validate()
             , 0
+
+## The validation process
 
 The following function can be applied to any expression.  It runs validation
 and stores the result in the group.  The verbosity flag defaults to false,
