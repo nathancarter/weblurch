@@ -13,10 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Documenting Dependencies
-
- * Use that feature to document dependencies in the User Guide.
-
 ## Documenting Group Attribute Conventions
 
 Add the following principles to the source code documentation somewhere.

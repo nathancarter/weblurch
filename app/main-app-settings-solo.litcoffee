@@ -86,8 +86,8 @@ a metadata object that gets embedded in the document itself.
 
         D = editor.Settings.addCategory 'document'
         D.metadata = { }
-        D.get = ( key ) -> D.metadata[key]
-        D.set = ( key, value ) -> D.metadata[key] = value
+        D.get = ( key ) -> D.metadata?[key]
+        D.set = ( key, value ) -> ( D.metadata ?= { } )[key] = value
         D.setup = ( div ) ->
             div.innerHTML = [
                 editor.Settings.UI.heading 'Dependencies'

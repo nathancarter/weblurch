@@ -11,6 +11,7 @@ pages:
             - Part 3, Connections and attributes: user-guide/basics-3.md
             - Part 4, Steps and Reasons: user-guide/basics-4.md
             - Part 5, Rules in Dependencies: user-guide/basics-5.md
+            - Part 6, Connecting Dependencies: user-guide/basics-6.md
         - Technicalities:
             - Overview: user-guide/tech-intro.md
             - Part 1, Code attributes: user-guide/tech-1.md

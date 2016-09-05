@@ -271,7 +271,8 @@ Here is the handler for clicking on group boundaries ("groupers").
                                     <tr><td>Explanation:</td>
                                         <td>#{result.message}</td></tr>
                                     <tr><td>Details:</td>
-                                        <td>#{result.verbose}</td></tr>
+                                        <td>#{result.verbose ? \
+                                        '(none available)'}</td></tr>
                                     </table>"
                         , yes
 
