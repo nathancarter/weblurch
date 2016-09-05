@@ -13,21 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Dependencies
-
- * Ensure that `dependenciesChanged` is called right after the document is
-   loaded, so that all dependency expressions are added to the label pairs
-   list on document load.
- * Keep track of the number of background processes launched for validation
-   by incrementing a counter when one starts, and decrementing it when one
-   ends.  Also increment the counter before the zero timer is started in the
-   `contentsChanged` handler in the validation module, and decrement it at
-   the end of the callback, so that a newly-loaded document is guaranteed
-   to be pending validation immediately.
- * If that counter is positive when `saveMetaData` is called, return an
-   error message and tell the user in an alert box, as described in the
-   Dependencies Plugin's ["Responsibilities" section](https://github.com/nathancarter/weblurch/app/dependenciesplugin.litcoffee#responsibilities).
-
 ## Documenting Dependencies
 
  * Write an asynchronous function `waitForMetaData` that calls

@@ -429,4 +429,16 @@ validation function on it, and using the `saveValidation` member of the
 group on the result.
 
     window.Group::validate = ->
-        @computeValidationAsync ( result ) => @saveValidation result
+        @plugin.editor.LoadSave.validationsPending ?= { }
+        @plugin.editor.LoadSave.validationsPending[@id()] = yes
+        try
+            @computeValidationAsync ( result ) =>
+                try
+                    @saveValidation result
+                    delete @plugin.editor.LoadSave.validationsPending[@id()]
+                catch e
+                    delete @plugin.editor.LoadSave.validationsPending[@id()]
+                    throw e
+        catch e
+            delete @plugin.editor.LoadSave.validationsPending[@id()]
+            throw e

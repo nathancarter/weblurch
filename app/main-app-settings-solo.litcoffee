@@ -108,8 +108,23 @@ expressions, a function defined in [the code dealing with
 labels](main-app-group-labels-solo.litcoffee#label-lookup).
 
         editor.LoadSave.saveMetaData = ->
-            D.metadata.exports = ( group.completeForm().encode() \
-                for group in window.labeledTopLevelExpressions() )
+            n = Object.keys( editor.LoadSave.validationsPending ? { } )
+                .length
+            if n > 0
+                D.metadata.exports =
+                    error : "This document cannot export its dependencies,
+                        because at the time it was saved, #{n}
+                        #{if n > 1 then 'groups were' else 'group was'}
+                        still waiting for validation to finish running."
+                editor.Dialogs.alert
+                    title : 'Dependency information not saved'
+                    message : 'Because validation was not complete, the
+                        saved version of this document will not be usable by
+                        any dependency.  To fix this problem, allow
+                        validation to finish running, then save.'
+            else
+                D.metadata.exports = ( group.completeForm().encode() \
+                    for group in window.labeledTopLevelExpressions() )
             D.metadata.dependencies = editor.Dependencies.export()
             D.metadata
         editor.LoadSave.loadMetaData = ( object ) ->
