@@ -105,9 +105,13 @@ a metadata object that gets embedded in the document itself.
 Set up the load/save plugin with the functions needed for loading and saving
 document metadata.  We export to dependencies all labeled, top-level
 expressions, a function defined in [the code dealing with
-labels](main-app-group-labels-solo.litcoffee#label-lookup).
+labels](main-app-group-labels-solo.litcoffee#label-lookup).  The system
+never passes a parameter, so `interactive` defaults to yes.  If you pass a
+false value, then no alert dialog will be shown in the case when metadata
+cannot yet be computed.
 
-        editor.LoadSave.saveMetaData = ->
+        editor.LoadSave.saveMetaData = ( interactive = yes ) ->
+            D.metadata ?= { }
             n = Object.keys( editor.LoadSave.validationsPending ? { } )
                 .length
             if n > 0
@@ -116,12 +120,13 @@ labels](main-app-group-labels-solo.litcoffee#label-lookup).
                         because at the time it was saved, #{n}
                         #{if n > 1 then 'groups were' else 'group was'}
                         still waiting for validation to finish running."
-                editor.Dialogs.alert
-                    title : 'Dependency information not saved'
-                    message : 'Because validation was not complete, the
-                        saved version of this document will not be usable by
-                        any dependency.  To fix this problem, allow
-                        validation to finish running, then save.'
+                if interactive
+                    editor.Dialogs.alert
+                        title : 'Dependency information not saved'
+                        message : 'Because validation was not complete, the
+                            saved version of this document will not be
+                            usable by any dependency.  To fix this problem,
+                            allow validation to finish running, then save.'
             else
                 D.metadata.exports = ( group.completeForm().encode() \
                     for group in window.labeledTopLevelExpressions() )
@@ -130,3 +135,20 @@ labels](main-app-group-labels-solo.litcoffee#label-lookup).
         editor.LoadSave.loadMetaData = ( object ) ->
             D.metadata = object
             editor.Dependencies.import D.metadata?.dependencies ? [ ]
+
+When a document loads, we will want to ask about the data it exports to its
+dependencies.  This must be an asynchronous call, because sometimes
+validation will be ongoing, and thus we will need to wait for it to complete
+before there any data to export can be computed.  We therefore provide the
+following function, where the maximum wait time defaults to infinity, and is
+expressed in milliseconds.
+
+        editor.LoadSave.waitForMetaData = ( callback, maxWaitTime = 0 ) ->
+            startedWaiting = ( new Date ).getTime()
+            setTimeout check = ->
+                metadata = editor.LoadSave.saveMetaData no
+                if metadata? and not metadata.exports?.error? or \
+                   ( new Date ).getTime() - startedWaiting > maxWaitTime > 0
+                    return callback metadata
+                setTimeout check, 100
+            , 100

@@ -130,7 +130,7 @@ should do two things.
 The author of a Lurch Application must also have the application call this
 plugin's `import` function immediately after a document is loaded, on the
 dependency data stored in that document's metadata.  This can happen as part
-of the `loadMetadata` event, for example.
+of the `loadMetaData` event, for example.
 
 Whenever any dependency is added, removed, or updated, a
 `dependenciesChanged` event is fired in the editor, with no parameters.  Any
@@ -277,7 +277,12 @@ dates, so we check to see if updating is necessary
                             @[index].date = lastModified
                             @editor.fire 'dependenciesChanged'
 
-No other types of dependencies are supported (yet).
+No other types of dependencies are supported (yet), but we fire a change
+event in such cases (which includes virtual dependencies written in
+[Lurch shorthand](main-app-import-export-solo.litcoffee#lurch-shorthand)).
+
+            else
+                @editor.fire 'dependenciesChanged'
 
 ## Adding and removing dependencies
 

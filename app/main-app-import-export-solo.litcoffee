@@ -91,14 +91,24 @@ reloading the page without the query string, and then pulling the data from
 `localStorage`.
 
     window.afterEditorReadyArray.push ( editor ) ->
+        queryString = window.location.search
+        postAfter = null
+        if match = /^\?post-after-autoload=(.*)/.exec queryString
+            postAfter = ->
+                editor.LoadSave.waitForMetaData ( metadata ) ->
+                    window.parent.postMessage
+                        type : 'metadata loaded'
+                        metadata : metadata
+                    , '*'
+            queryString = "?autoload=#{match[1]}"
         editor.MediaWiki.setIndexPage '/wiki/index.php'
         editor.MediaWiki.setAPIPage '/wiki/api.php'
-        if match = /\?wikipage=(.*)/.exec window.location.search
+        if match = /\?wikipage=(.*)/.exec queryString
             editor.MediaWiki.importPage decodeURIComponent match[1],
                 ( document, metadata ) ->
                     if metadata? then editor.LoadSave.loadMetaData metadata
         autoLoadName = 'auto-load'
-        if match = /\?autoload=(.*)/.exec window.location.search
+        if match = /\?autoload=(.*)/.exec queryString
             autoLoadName = decodeURIComponent match[1]
         if toAutoLoad = localStorage.getItem autoLoadName
             try
@@ -108,12 +118,25 @@ reloading the page without the query string, and then pulling the data from
                     shorthandRE = /^\s*<shorthand>(.*)<\/shorthand>\s*$/
                     document = document.replace /\n|\cJ/g, ' '
                     if m = shorthandRE.exec document
-                        translateShorthandIntoEditor editor, document
+                        filename = "dependency-for-#{autoLoadName}"
+                        translateShorthandIntoEditor editor, document,
+                            ( replace ) ->
+                                if replace
+                                    metadata ?= { }
+                                    metadata.dependencies = [
+                                        address : filename
+                                        data : replace.exports
+                                        date : new Date
+                                    ]
+                                editor.LoadSave.loadMetaData metadata
+                                postAfter?()
+                        , filename
                     else
                         editor.setContent document
-                    editor.LoadSave.loadMetaData metadata
+                        editor.LoadSave.loadMetaData metadata
+                        postAfter?()
                 , 100
-        if match = /\?document([0-9]*)=(.*)/.exec window.location.search
+        if match = /\?document([0-9]*)=(.*)/.exec queryString
             html = decodeURIComponent match[2]
             { metadata, document } = extractMetadata html
             localStorage.setItem 'auto-load' + match[1],
@@ -200,7 +223,14 @@ instances and connections among them.  It also clears the undo/redo stack,
 so that this action cannot be undone, as if the document were just opened
 from a file.
 
-    translateShorthandIntoEditor = ( editor, shorthand ) ->
+If a callback is provided, this function asynchronously calls it with the
+metadata embedded in the shorthand, if there was any, or null if there was
+not.  In order to process dependency information in shorthand (which will
+make up the metadata) we must have a unique file into which we can save a
+dependency temporarily.  Pass that filename as the fourth parameter.
+
+    translateShorthandIntoEditor =
+    ( editor, shorthand, callback, filename ) ->
 
 Create a temporary DIV in which to reconstruct the given HTML as DOM
 elements, then initialize several variables that will be populated by the
@@ -215,6 +245,7 @@ hierarchy.
         connections = { }
         idToKey = { }
         nextId = 0
+        dependencyContent = null
 
 Recursively transform the DOM hierarchy inside the DIV (which was created
 from the shorthand HTML in the parameter) into HTML text that can be placed
@@ -232,6 +263,10 @@ than their children.  This will be important when we embed attributes, in
 code later in this same function.
 
         recur = ( element ) ->
+            if element.tagName is 'DEPENDENCY'
+                dependencyContent =
+                    "<shorthand>#{element.innerHTML}</shorthand>"
+                return ''
             if element.tagName is 'E' then thisId = nextId++
             translatedChildren =
                 ( recur child for child in element.childNodes )
@@ -312,3 +347,28 @@ they are a newly opened document.  (We do not want users to be able to undo
 any portion of the document setup procedure just executed.)
 
         editor.undoManager.clear()
+
+Now, if there is no dependency content, call the callback with null
+metadata.
+
+        if callback?
+            if dependencyContent is null then return callback null
+
+Otherwise, we must create a hidden Lurch app instance and load the
+dependency content into it so that we can then extract its exports data, for
+use in this app.
+
+            localStorage.setItem filename,
+                JSON.stringify [ null, dependencyContent ]
+            otherLurch = document.createElement 'iframe'
+            handler = ( message ) ->
+                if message.data.type is 'metadata loaded'
+                    window.removeEventListener 'message', handler
+                    callback message.data.metadata
+                    document.body.removeChild otherLurch
+            window.addEventListener 'message', handler, no
+            otherLurch.setAttribute 'src',
+                window.location.href.split( '?' )[0] +
+                '?post-after-autoload=' + filename
+            otherLurch.style.display = 'none'
+            document.body.appendChild otherLurch
