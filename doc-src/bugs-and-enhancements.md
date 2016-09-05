@@ -64,22 +64,21 @@ the main project plan without these bug fixes or enhancements.
 
 ### HTML export/import
 
-Currently the only ways to load/save Lurch documents are `localStorage` and
-the wiki.  Consequently, dependencies can only be specified in one of these
-two ways.  Extend this to general HTML pages, as follows:
-
  * Add an HTML export function that lets you download the contents of the
    editor (plus metadata at the front, just like when exporting to the wiki)
    for publishing on your own website, for example, or pasting into a blog
-   post.  Wrap it in a DIV with class "EmbeddedLurchDocument".
+   post.  Wrap it in a DIV with class "lurch-embed".
  * Expose that functionality to the user, on the File menu.
  * Add an HTML import function that lets you specify a URL, sends an XHR to
-   get the page at that URL, and extracts the full content of the Lurch DIV.
-   Be sure to extract the metadata as well, just as with a wiki import.
+   get the page at that URL, and finds all DIVs with class "lurch-embed".
+   Show the user a bit of the text from each and let the user choose which
+   to import.  Be sure to extract the metadata as well, just as with a wiki
+   import.
  * Expose that functionality to the user, on the File menu.
  * Extend dependencies so that they can be at arbitrary URLs, now, not just
-   on the wiki.  Use the HTML import function just created for this purpose.
-   To check the last modified date of arbitrary web pages, see
+   on the wiki.  Use the HTML import function just created for this purpose,
+   but stipulate that a dependency imports only the first "lurch-embed" DIV
+   on a page.  To check the last modified date of arbitrary web pages, see
    [here.](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date)
 
 ### Dependencies
@@ -96,7 +95,10 @@ two ways.  Extend this to general HTML pages, as follows:
    check for a loop by finding the same filename or wiki URL nested within
    itself in the dependency data of a document, and alert the user.
  * Extend the "Add URL dependency" event handler with a "please wait"
-   indicator while the document is being fetched.
+   indicator while the document is being fetched.  Use the `waiting` method
+   in the `Dialogs` plugin.
+ * There is not yet support for adding dependencies from files in your
+   Dropbox.  Add this feature.
 
 ### Groups Plugin
 
