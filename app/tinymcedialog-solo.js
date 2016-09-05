@@ -2,7 +2,7 @@
 (function() {
   window.onload = function() {
     var args;
-    args = top.tinymce.activeEditor.windowManager.getParams();
+    args = window.parent.tinymce.activeEditor.windowManager.getParams();
     if (args.fsName) {
       setFileSystemName(args.fsName);
     }
