@@ -201,6 +201,25 @@ receive the text in the dialog's input as a parameter.
         window.addEventListener 'message', handler, no
         dialog.on 'close', -> window.removeEventListener 'message', handler
 
+## Waiting dialog
+
+This function shows a dialog with no buttons you can use for closing it. You
+should pass as parameter an options object, just as with every other
+function in this plugin, but in this case it must contain a member called
+`work` that is a function that will do whatever work you want done while the
+dialog is shown.  That function will *receive* as its one parameter a
+function to call when the work is done, to close this dialog.
+
+    Dialogs.waiting = ( options ) ->
+        dialog = tinymce.activeEditor.windowManager.open
+            title : options.title ? ' '
+            url : prepareHTML options.message
+            width : options.width ? 300
+            height : options.height ? 100
+            buttons : [ ]
+        if options.onclick then installClickListener options.onclick
+        options.work -> dialog.close()
+
 # Installing the plugin
 
     tinymce.PluginManager.add 'dialogs', ( editor, url ) ->

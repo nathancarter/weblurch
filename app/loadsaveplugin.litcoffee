@@ -550,7 +550,7 @@ above.
             if newHandler?
                 ( @handlerBackups ?= { } )[internalName] ?= @[internalName]
                 @[internalName] = newHandler
-            else if @handlerBackups[internalName]?
+            else if @handlerBackups?[internalName]?
                 @[internalName] = @handlerBackups[internalName]
 
 # Global stuff

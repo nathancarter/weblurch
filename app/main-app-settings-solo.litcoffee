@@ -86,8 +86,8 @@ a metadata object that gets embedded in the document itself.
 
         D = editor.Settings.addCategory 'document'
         D.metadata = { }
-        D.get = ( key ) -> D.metadata[key]
-        D.set = ( key, value ) -> D.metadata[key] = value
+        D.get = ( key ) -> D.metadata?[key]
+        D.set = ( key, value ) -> ( D.metadata ?= { } )[key] = value
         D.setup = ( div ) ->
             div.innerHTML = [
                 editor.Settings.UI.heading 'Dependencies'
@@ -103,14 +103,52 @@ a metadata object that gets embedded in the document itself.
             D.set 'wiki_title', elt( 'wiki_title' ).value
 
 Set up the load/save plugin with the functions needed for loading and saving
-document metadata.
+document metadata.  We export to dependencies all labeled, top-level
+expressions, a function defined in [the code dealing with
+labels](main-app-group-labels-solo.litcoffee#label-lookup).  The system
+never passes a parameter, so `interactive` defaults to yes.  If you pass a
+false value, then no alert dialog will be shown in the case when metadata
+cannot yet be computed.
 
-        editor.LoadSave.saveMetaData = ->
-            # later, when this app knows what data it wants to export to
-            # documents that depend on it, do so here, with a line like
-            # D.metadata.exports = [ "some", "JSON", "here" ]
+        editor.LoadSave.saveMetaData = ( interactive = yes ) ->
+            D.metadata ?= { }
+            n = Object.keys( editor.LoadSave.validationsPending ? { } )
+                .length
+            if n > 0
+                D.metadata.exports =
+                    error : "This document cannot export its dependencies,
+                        because at the time it was saved, #{n}
+                        #{if n > 1 then 'groups were' else 'group was'}
+                        still waiting for validation to finish running."
+                if interactive
+                    editor.Dialogs.alert
+                        title : 'Dependency information not saved'
+                        message : 'Because validation was not complete, the
+                            saved version of this document will not be
+                            usable by any dependency.  To fix this problem,
+                            allow validation to finish running, then save.'
+            else
+                D.metadata.exports = ( group.completeForm().encode() \
+                    for group in window.labeledTopLevelExpressions() )
             D.metadata.dependencies = editor.Dependencies.export()
             D.metadata
         editor.LoadSave.loadMetaData = ( object ) ->
             D.metadata = object
             editor.Dependencies.import D.metadata?.dependencies ? [ ]
+
+When a document loads, we will want to ask about the data it exports to its
+dependencies.  This must be an asynchronous call, because sometimes
+validation will be ongoing, and thus we will need to wait for it to complete
+before there any data to export can be computed.  We therefore provide the
+following function, where the maximum wait time defaults to infinity, and is
+expressed in milliseconds.
+
+        editor.LoadSave.waitForMetaData = ( callback, maxWaitTime = 0 ) ->
+            startedWaiting = ( new Date ).getTime()
+            setTimeout check = ->
+                metadata = editor.LoadSave.saveMetaData no
+                if metadata? and not metadata.exports?.error? or \
+                   ( new Date ).getTime() - startedWaiting > maxWaitTime > 0
+                    return callback metadata
+                setTimeout check, 100
+            , 100

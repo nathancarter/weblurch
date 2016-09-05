@@ -80,12 +80,23 @@ complexity.
 
         runningTasks : [ ]
         waitingTasks : [ ]
-        addTask : ( funcName, inputGroups, callback ) ->
+        addTask : ( funcName, inputs, callback ) ->
+
+When storing this task, we give it an ID unique to it.  Since each input may
+be a `Group` instance or arbitrary static data amenable to JSON
+stringification we create the following function that forms a unique ID for
+each input.
+
+            inputToId = ( input ) ->
+                if input instanceof Group
+                    input.id()
+                else
+                    JSON.stringify input
             newTask =
                 name : funcName
-                inputs : inputGroups
+                inputs : inputs
                 callback : callback
-                id : "#{funcName},#{group.id() for group in inputGroups}"
+                id : "#{funcName},#{inputToId input for input in inputs}"
 
 Before we add the function to the queue, we filter the current "waiting"
 queue so that any previous copy of this exact same computation (same
@@ -125,11 +136,11 @@ task and immediately executes it on the arguments provided.  The name of the
 new task *is* the code; that is, the code to run is used twice, once as the
 task and once as its name.
 
-        addCodeTask : ( func, inputGroups, callback,
+        addCodeTask : ( func, inputs, callback,
                         globals = { }, scripts = [ ] ) ->
             window.Background.registerFunction "#{func}", func, globals,
                 scripts
-            window.Background.addTask "#{func}", inputGroups, callback
+            window.Background.addTask "#{func}", inputs, callback
 
 The update function just mentioned will verify that as many tasks as
 possible are running concurrently.  That number will be determined by [the
@@ -271,20 +282,21 @@ this background function.
             delete @promise.error
             delete @promise.errorCallback
 
-Second, prepare all arguments (which must be Group objects) for use in the
-worker thread by serializing them.  If any of the groups on which we should
-run this function have been deleted since it was created, we quit and do
-nothing.
+Second, prepare all arguments (which may be Group objects or static data
+amenable to JSON stringification) for use in the worker thread by
+serializing them.  If any of the groups on which we should run this function
+have been deleted since it was created, we quit and do nothing.
 
-            for group in arguments
-                if group.deleted then return
+            for input in args
+                if input instanceof Group and input.deleted then return
 
 When Web Workers are used, we must first serialize each group passed to the
 web worker, because it cannot be passed as is, containing DOM objects.  So
 we do that in both cases, so that functions can be consistent, and not need
 to know whether they're running in a worker or not.
 
-            groups = ( group.toJSON() for group in args )
+            inputs = for input in args
+                if input instanceof Group then input.toJSON() else input
 
 Run the computation soon, but not now.  When it is run, store the result or
 error in the promise, and call the result or error handler, whichever is
@@ -298,12 +310,12 @@ constructor.  If not, we fall back on simply using a zero timer, the poor
 man's "background" processing.
 
             if @worker?
-                @worker.postMessage runOn : groups
+                @worker.postMessage runOn : inputs
             else
                 setTimeout =>
                     try
                         `with ( this.globals ) {`
-                        @promise.result = @function groups...
+                        @promise.result = @function inputs...
                         `}`
                     catch e
                         @promise.error = e

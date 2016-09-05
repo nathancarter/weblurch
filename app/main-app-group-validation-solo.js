@@ -24,7 +24,7 @@
       return function() {
         _this.set('validation', data);
         _this.set('closeDecoration', "<font color='" + color + "'>" + symbol + "</font>");
-        return _this.set('closeHoverText', data.message);
+        return _this.set('closeHoverText', "" + data.message + "\n(Double-click for details.)");
       };
     })(this)) : void 0;
   };
@@ -40,56 +40,102 @@
   window.afterEditorReadyArray.push(function(editor) {
     var oldHandler;
     oldHandler = editor.Groups.groupTypes.expression.contentsChanged;
-    return editor.Groups.groupTypes.expression.contentsChanged = function(group, firstTime) {
+    editor.Groups.groupTypes.expression.contentsChanged = function(group, firstTime) {
       oldHandler(group, firstTime);
       return setTimeout(function() {
-        var allIds, connection, id, labels, otherGroup, reason, start, text, _i, _j, _len, _len1, _ref, _ref1, _ref2, _results;
-        group.validate();
-        if (group.get('key') === 'reason') {
-          _ref = group.connectionsOut();
-          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-            connection = _ref[_i];
-            if ((_ref1 = editor.Groups[connection[1]]) != null) {
-              _ref1.validate();
-            }
+        var addCitersToRevalidateList, addToRevalidateList, groupsToRevalidate, needsRevalidation, recursivelyMarkForRevalidation, _i, _len, _results;
+        groupsToRevalidate = [];
+        addToRevalidateList = function(newGroup) {
+          if (__indexOf.call(groupsToRevalidate, newGroup) < 0) {
+            return groupsToRevalidate.push(newGroup);
           }
-        }
-        if (group.lookupAttributes('rule').length > 0) {
-          labels = window.lookupLabelsFor(group);
-          allIds = editor.Groups.ids();
-          if (!((start = allIds.indexOf(group.id())) > -1)) {
+        };
+        addCitersToRevalidateList = function(ruleGroup, everything) {
+          var allIds, citer, id, namesForRule, reason, reasons, start, text, _i, _j, _len, _len1, _ref;
+          if (everything == null) {
+            everything = false;
+          }
+          if (ruleGroup.lookupAttributes('rule').length === 0) {
             return;
           }
-          _ref2 = allIds.slice(start);
-          _results = [];
-          for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-            id = _ref2[_j];
-            if (!(otherGroup = editor.Groups[id])) {
+          allIds = editor.Groups.ids();
+          if ((start = allIds.indexOf(ruleGroup.id())) === -1) {
+            return;
+          }
+          namesForRule = window.lookupLabelsFor(ruleGroup);
+          _ref = allIds.slice(start);
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            id = _ref[_i];
+            if (!(citer = editor.Groups[id])) {
               continue;
             }
-            _results.push((function() {
-              var _k, _len2, _ref3, _results1;
-              _ref3 = otherGroup.lookupAttributes('reason');
-              _results1 = [];
-              for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
-                reason = _ref3[_k];
-                text = reason instanceof OM ? reason.value : reason.contentAsText();
-                if (__indexOf.call(labels, text) >= 0) {
-                  _results1.push(otherGroup.validate());
-                } else {
-                  _results1.push(void 0);
-                }
+            reasons = citer.lookupAttributes('reason');
+            if (everything && reasons.length > 0) {
+              return addToRevalidateList(citer);
+            }
+            for (_j = 0, _len1 = reasons.length; _j < _len1; _j++) {
+              reason = reasons[_j];
+              text = reason instanceof OM ? reason.value : reason.contentAsText();
+              if (__indexOf.call(namesForRule, text) >= 0) {
+                addToRevalidateList(citer);
               }
-              return _results1;
-            })());
+            }
           }
-          return _results;
+        };
+        recursivelyMarkForRevalidation = function(fromHere, lastStep) {
+          var connection, key, _i, _len, _ref, _results;
+          addToRevalidateList(fromHere);
+          addCitersToRevalidateList(fromHere, lastStep === 'label');
+          key = fromHere.get('key');
+          if (key && key !== 'premise') {
+            _ref = fromHere.connectionsOut();
+            _results = [];
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              connection = _ref[_i];
+              _results.push(recursivelyMarkForRevalidation(editor.Groups[connection[1]], key));
+            }
+            return _results;
+          }
+        };
+        recursivelyMarkForRevalidation(group);
+        _results = [];
+        for (_i = 0, _len = groupsToRevalidate.length; _i < _len; _i++) {
+          needsRevalidation = groupsToRevalidate[_i];
+          _results.push(needsRevalidation.validate());
         }
+        return _results;
       }, 0);
     };
+    return editor.on('dependencyLabelsUpdated', function(event) {
+      var citer, id, reason, text, _i, _len, _ref, _results;
+      _ref = editor.Groups.ids();
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        id = _ref[_i];
+        if (!(citer = editor.Groups[id])) {
+          continue;
+        }
+        _results.push((function() {
+          var _j, _len1, _ref1, _results1;
+          _ref1 = citer.lookupAttributes('reason');
+          _results1 = [];
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            reason = _ref1[_j];
+            text = reason instanceof OM ? reason.value : reason.contentAsText();
+            if (__indexOf.call(event.oldAndNewLabels, text) >= 0) {
+              _results1.push(citer.validate());
+            } else {
+              _results1.push(void 0);
+            }
+          }
+          return _results1;
+        })());
+      }
+      return _results;
+    });
   });
 
-  window.Group.prototype.validate = function(verbose) {
+  window.Group.prototype.computeValidationAsync = function(callback, verbose) {
     var citedExpressions, expression, index, isValidRule, labelPairs, language, languages, numFromDependencies, pair, r, reason, reasonText, reasons, rule, ruleLanguages, rules, validRules, validationData, wrappedCode, _i, _j, _len, _len1, _ref, _ref1;
     if (verbose == null) {
       verbose = false;
@@ -105,7 +151,7 @@
         if (verbose) {
           validationData.verbose = 'Try removing all reason attributes from the rule.';
         }
-        return this.saveValidation(validationData);
+        return callback(validationData);
       }
       languages = this.lookupAttributes('code');
       if (languages.length === 0) {
@@ -116,7 +162,7 @@
         if (verbose) {
           validationData.verbose = "<p>Try adding an attribute with key \"code\" and value equal to the name of the language in which the code is written.  Supported languages:</p> <ul><li>" + (ruleLanguages.join('</li><li>')) + "</li></ul>";
         }
-        return this.saveValidation(validationData);
+        return callback(validationData);
       }
       for (index = _i = 0, _len = languages.length; _i < _len; index = ++_i) {
         language = languages[index];
@@ -130,7 +176,7 @@
         if (verbose) {
           validationData.verbose = "Too many languages specified for the rule.  Only one is permitted. You specified: " + (languages.join(',')) + ".";
         }
-        return this.saveValidation(validationData);
+        return callback(validationData);
       }
       if (_ref = languages[0].toLowerCase(), __indexOf.call((function() {
         var _j, _len1, _results;
@@ -148,16 +194,16 @@
         if (verbose) {
           validationData.verbose = "<p>The current version of Lurch supports only code-based rules written in one of the following languages.  The rule you cited is written in " + languages[0] + ", and thus cannot be used.</p> <ul><li>" + (ruleLanguages.join('</li><li>')) + "</li></ul>";
         }
-        return this.saveValidation(validationData);
+        return callback(validationData);
       }
-      return this.saveValidation({
+      return callback({
         result: 'valid',
         message: 'This is a valid code-based rule.',
         verbose: 'This is a valid code-based rule.'
       });
     }
     if (reasons.length === 0) {
-      return this.saveValidation(null);
+      return callback(null);
     }
     if (reasons.length > 1) {
       validationData = {
@@ -172,7 +218,7 @@
         }
         validationData.verbose += '</ul>';
       }
-      return this.saveValidation(validationData);
+      return callback(validationData);
     }
     reason = reasons[0];
     reasonText = reason instanceof OM ? reason.value : reason.contentAsText();
@@ -185,7 +231,7 @@
       if (verbose) {
         validationData.verbose = validationData.message;
       }
-      return this.saveValidation(validationData);
+      return callback(validationData);
     }
     citedExpressions = (function() {
       var _k, _len2, _results;
@@ -230,7 +276,7 @@
         })()).length;
         validationData.verbose = "The cited reason, \"" + reasonText + ",\" is the name of " + numFromDependencies + " expressions imported from other documents, and " + (labelPairs.length - numFromDependencies) + " expressions in this document, accessible from the citation.  None of those expressions is a rule.";
       }
-      return this.saveValidation(validationData);
+      return callback(validationData);
     }
     isValidRule = function(rule) {
       var ruleValidationData;
@@ -263,7 +309,7 @@
       if (verbose) {
         validationData.verbose = "Although there are " + rules.length + " rules called \"" + reasonText + ",\" none of them have been successfully validated.  Only a valid rule can be used to justify an expression.";
       }
-      return this.saveValidation(validationData);
+      return callback(validationData);
     }
     if (validRules.length > 1) {
       validationData = {
@@ -273,7 +319,7 @@
       if (verbose) {
         validationData.verbose = "The reason \"" + reasonText + "\" refers to " + validRules.length + " valid rules.  Only one valid rule can be used at a time to justify an expression.";
       }
-      return this.saveValidation(validationData);
+      return callback(validationData);
     }
     rule = validRules[0];
     language = rule.getAttribute(OM.sym('code', 'Lurch'));
@@ -285,7 +331,7 @@
       if (verbose) {
         validationData.verbose = "The current version of Lurch supports only code-based rules.  The rule you cited is not a piece of code, and thus cannot be used.";
       }
-      return this.saveValidation(validationData);
+      return callback(validationData);
     }
     if (_ref1 = language.value.toLowerCase(), __indexOf.call((function() {
       var _k, _len2, _results;
@@ -303,18 +349,45 @@
       if (verbose) {
         validationData.verbose = "<p>The current version of Lurch supports only code-based rules written in one of the following languages.  The rule you cited is written in " + language.value + ", and thus cannot be used.</p> <ul><li>" + (ruleLanguages.join('</li><li>')) + "</li></ul>";
       }
-      return this.saveValidation(validationData);
+      return callback(validationData);
     }
     wrappedCode = "function () { var conclusion = OM.decode( arguments[0] ); var premises = [ ]; for ( var i = 1 ; i < arguments.length ; i++ ) premises.push( OM.decode( arguments[i] ) ); " + rule.value + " }";
     return Background.addCodeTask(wrappedCode, [this], (function(_this) {
       return function(result) {
-        return _this.saveValidation(result != null ? result : {
+        return callback(result != null ? result : {
           result: 'invalid',
           message: 'The code in the rule did not run successfully.',
           verbose: 'The background process in which the code was to be run returned no value, so the code has an error.'
         });
       };
     })(this), void 0, ['openmath-duo.min.js']);
+  };
+
+  window.Group.prototype.validate = function() {
+    var e, _base;
+    if ((_base = this.plugin.editor.LoadSave).validationsPending == null) {
+      _base.validationsPending = {};
+    }
+    this.plugin.editor.LoadSave.validationsPending[this.id()] = true;
+    try {
+      return this.computeValidationAsync((function(_this) {
+        return function(result) {
+          var e;
+          try {
+            _this.saveValidation(result);
+            return delete _this.plugin.editor.LoadSave.validationsPending[_this.id()];
+          } catch (_error) {
+            e = _error;
+            delete _this.plugin.editor.LoadSave.validationsPending[_this.id()];
+            throw e;
+          }
+        };
+      })(this));
+    } catch (_error) {
+      e = _error;
+      delete this.plugin.editor.LoadSave.validationsPending[this.id()];
+      throw e;
+    }
   };
 
 }).call(this);

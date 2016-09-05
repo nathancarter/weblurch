@@ -52,10 +52,11 @@
     D = editor.Settings.addCategory('document');
     D.metadata = {};
     D.get = function(key) {
-      return D.metadata[key];
+      var _ref;
+      return (_ref = D.metadata) != null ? _ref[key] : void 0;
     };
     D.set = function(key, value) {
-      return D.metadata[key] = value;
+      return (D.metadata != null ? D.metadata : D.metadata = {})[key] = value;
     };
     D.setup = function(div) {
       var _ref;
@@ -69,14 +70,59 @@
       };
       return D.set('wiki_title', elt('wiki_title').value);
     };
-    editor.LoadSave.saveMetaData = function() {
+    editor.LoadSave.saveMetaData = function(interactive) {
+      var group, n, _ref;
+      if (interactive == null) {
+        interactive = true;
+      }
+      if (D.metadata == null) {
+        D.metadata = {};
+      }
+      n = Object.keys((_ref = editor.LoadSave.validationsPending) != null ? _ref : {}).length;
+      if (n > 0) {
+        D.metadata.exports = {
+          error: "This document cannot export its dependencies, because at the time it was saved, " + n + " " + (n > 1 ? 'groups were' : 'group was') + " still waiting for validation to finish running."
+        };
+        if (interactive) {
+          editor.Dialogs.alert({
+            title: 'Dependency information not saved',
+            message: 'Because validation was not complete, the saved version of this document will not be usable by any dependency.  To fix this problem, allow validation to finish running, then save.'
+          });
+        }
+      } else {
+        D.metadata.exports = (function() {
+          var _i, _len, _ref1, _results;
+          _ref1 = window.labeledTopLevelExpressions();
+          _results = [];
+          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+            group = _ref1[_i];
+            _results.push(group.completeForm().encode());
+          }
+          return _results;
+        })();
+      }
       D.metadata.dependencies = editor.Dependencies["export"]();
       return D.metadata;
     };
-    return editor.LoadSave.loadMetaData = function(object) {
+    editor.LoadSave.loadMetaData = function(object) {
       var _ref, _ref1;
       D.metadata = object;
       return editor.Dependencies["import"]((_ref = (_ref1 = D.metadata) != null ? _ref1.dependencies : void 0) != null ? _ref : []);
+    };
+    return editor.LoadSave.waitForMetaData = function(callback, maxWaitTime) {
+      var check, startedWaiting;
+      if (maxWaitTime == null) {
+        maxWaitTime = 0;
+      }
+      startedWaiting = (new Date).getTime();
+      return setTimeout(check = function() {
+        var metadata, _ref;
+        metadata = editor.LoadSave.saveMetaData(false);
+        if ((metadata != null) && (((_ref = metadata.exports) != null ? _ref.error : void 0) == null) || ((new Date).getTime() - startedWaiting > maxWaitTime && maxWaitTime > 0)) {
+          return callback(metadata);
+        }
+        return setTimeout(check, 100);
+      }, 100);
     };
   });
 

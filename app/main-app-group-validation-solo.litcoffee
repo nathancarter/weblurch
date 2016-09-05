@@ -52,7 +52,8 @@ Store the data and visuals in the group.
             @set 'validation', data
             @set 'closeDecoration',
                 "<font color='#{color}'>#{symbol}</font>"
-            @set 'closeHoverText', data.message
+            @set 'closeHoverText',
+                "#{data.message}\n(Double-click for details.)"
 
 We can also test whether any validation data has been stored, and fetch the
 validation data if so.
@@ -60,7 +61,7 @@ validation data if so.
     window.Group::getValidation = -> @get 'validation'
     window.Group::wasValidated = -> @getValidation()?
 
-## Running validation
+## When to run validation
 
 Let's extend the current `contentsChanged` handler for expressions so that
 it runs validation if necessary.  We assume the existence of a `validate`
@@ -78,32 +79,95 @@ scanning has had a chance to complete.
 
             setTimeout ->
 
-Whenever a group changes, re-validate it.
+Whenever a group changes, it and anything it modifies must be revalidated.
+(The only exception to this is if it is a premise, we don't need to
+revalidate what it modifies, because each step in a chain of reasoning is
+considered independent in Lurch.)
 
-                group.validate()
+Furthermore, whenever a rule is revalidated, anything that cites it later in
+the document must also be revalidated.  Thus we will spread the need for
+revalidation outward from this group in two ways: by attribute arrows (other
+than premise arrows) and by citation.
 
-Whenever a reason attribute changes, re-validate each of its targets.
+We start by creating an array to hold all the things we will find that need
+revalidation.  We also create a function for adding an entry to the list.
+Naturally, it doesn't add anything twice.
 
-                if group.get( 'key' ) is 'reason'
-                    for connection in group.connectionsOut()
-                        editor.Groups[connection[1]]?.validate()
+                groupsToRevalidate = [ ]
+                addToRevalidateList = ( newGroup ) ->
+                    if newGroup not in groupsToRevalidate
+                        groupsToRevalidate.push newGroup
 
-Whenever a rule changes, re-validate everything that follows it and that
-cites it.
+Now we create a function that adds all expressions that cite a given rule to
+the list, for use when spreading revalidation according to citations, as
+described above.  You can call this on any expression, and it will just do
+nothing for non-rules.  If the second parameter is set to true, then *every*
+step of work after this rule will be marked for revalidation, not just those
+that cite *this* rule.
 
-                if group.lookupAttributes( 'rule' ).length > 0
-                    labels = window.lookupLabelsFor group
+                addCitersToRevalidateList =
+                ( ruleGroup, everything = no ) ->
+                    if ruleGroup.lookupAttributes( 'rule' ).length is 0
+                        return
                     allIds = editor.Groups.ids()
-                    return unless ( start = allIds.indexOf group.id() ) > -1
+                    if ( start = allIds.indexOf ruleGroup.id() ) is -1
+                        return
+                    namesForRule = window.lookupLabelsFor ruleGroup
                     for id in allIds[start...]
-                        continue unless otherGroup = editor.Groups[id]
-                        for reason in otherGroup.lookupAttributes 'reason'
+                        continue unless citer = editor.Groups[id]
+                        reasons = citer.lookupAttributes 'reason'
+                        if everything and reasons.length > 0
+                            return addToRevalidateList citer
+                        for reason in reasons
                             text = if reason instanceof OM
                                 reason.value
                             else
                                 reason.contentAsText()
-                            if text in labels then otherGroup.validate()
+                            if text in namesForRule
+                                addToRevalidateList citer
+
+We now create a recursive function that traverses the document according to
+the two spreading rules described above: attribution and citation.  The
+second parameter of the recursion is for internal use; it says how the
+recursion got to this point -- if it was by a step from a label, and the
+current expression is a rule, then rule names changed, meaning *everything*
+needs revalidating.
+
+                recursivelyMarkForRevalidation = ( fromHere, lastStep ) ->
+                    addToRevalidateList fromHere
+                    addCitersToRevalidateList fromHere, lastStep is 'label'
+                    key = fromHere.get 'key'
+                    if key and key isnt 'premise'
+                        for connection in fromHere.connectionsOut()
+                            recursivelyMarkForRevalidation \
+                                editor.Groups[connection[1]], key
+
+Now let's use all these preparatory functions to do something.
+
+Whenever a group changes, compute everything that must be revalidated, then
+revalidate it.
+
+                recursivelyMarkForRevalidation group
+                for needsRevalidation in groupsToRevalidate
+                    needsRevalidation.validate()
             , 0
+
+Let's also install a `dependencyLabelsUpdated` handler so that when a
+dependency is added/removed/updated, we revalidate any expression that cites
+a rule defined in a dependency.
+
+        editor.on 'dependencyLabelsUpdated', ( event ) ->
+            for id in editor.Groups.ids()
+                continue unless citer = editor.Groups[id]
+                for reason in citer.lookupAttributes 'reason'
+                    text = if reason instanceof OM
+                        reason.value
+                    else
+                        reason.contentAsText()
+                    if text in event.oldAndNewLabels
+                        citer.validate()
+
+## The validation process
 
 The following function can be applied to any expression.  It runs validation
 and stores the result in the group.  The verbosity flag defaults to false,
@@ -111,7 +175,11 @@ to speed up the process.  This function can be run a second time with the
 parameter set to true in those situations where the user specifically asks
 for greater detail.
 
-    window.Group::validate = ( verbose = no ) ->
+This workhorse function is called internally only.  The external API (a
+member of the Group class) is defined immediately after this function, and
+calls this one.
+
+    window.Group::computeValidationAsync = ( callback, verbose = no ) ->
         # console.log "VALIDATING: #{@contentAsText()} (id #{@id()})"
         reasons = @lookupAttributes 'reason'
         ruleLanguages = [ 'JavaScript' ]
@@ -132,7 +200,7 @@ validated based solely on their structure.
                 if verbose
                     validationData.verbose = 'Try removing all reason
                         attributes from the rule.'
-                return @saveValidation validationData
+                return callback validationData
 
 Second, it must be a code-based rule, because that's all that's currently
 supported.
@@ -149,7 +217,7 @@ supported.
                         language in which the code is written.  Supported
                         languages:</p>
                         <ul><li>#{ruleLanguages.join '</li><li>'}</li></ul>"
-                return @saveValidation validationData
+                return callback validationData
             for language, index in languages
                 languages[index] = if language instanceof OM
                     language.value
@@ -164,7 +232,7 @@ supported.
                     validationData.verbose = "Too many languages
                         specified for the rule.  Only one is permitted.
                         You specified: #{languages.join ','}."
-                return @saveValidation validationData
+                return callback validationData
 
 Finally, it must be in one of the supported languages for code-based rules.
 
@@ -181,11 +249,11 @@ Finally, it must be in one of the supported languages for code-based rules.
                         written in #{languages[0]}, and thus cannot be
                         used.</p>
                         <ul><li>#{ruleLanguages.join '</li><li>'}</li></ul>"
-                return @saveValidation validationData
+                return callback validationData
 
 If all of those checks pass, then a rule is valid.
 
-            return @saveValidation
+            return callback
                 result : 'valid'
                 message : 'This is a valid code-based rule.'
                 verbose : 'This is a valid code-based rule.'
@@ -196,7 +264,7 @@ case where the expression is a step of work, not a rule.
 If the expression has no reason attribute, we clear out any old validation,
 and are done.
 
-        if reasons.length is 0 then return @saveValidation null
+        if reasons.length is 0 then return callback null
 
 If the expression has more than one reason attribute, save a validation
 result that explains that this is not permitted (at most one reason per
@@ -216,7 +284,7 @@ step).
                     else
                         "<li>Visible: #{reason.contentAsText()}</li>"
                 validationData.verbose += '</ul>'
-            return @saveValidation validationData
+            return callback validationData
 
 If the (now known to be only existing) reason does not actually cite
 an accessible expression, then validation fails with the appropriate
@@ -231,7 +299,7 @@ message.
                 result : 'invalid'
                 message : "No rule called #{reasonText} is accessible here."
             if verbose then validationData.verbose = validationData.message
-            return @saveValidation validationData
+            return callback validationData
 
 Compute the complete form of each cited expression.
 
@@ -256,7 +324,7 @@ If none of them are rules, then validation fails with that as the reason.
                     #{labelPairs.length - numFromDependencies} expressions
                     in this document, accessible from the citation.  None of
                     those expressions is a rule."
-            return @saveValidation validationData
+            return callback validationData
 
 If any of the cited rules are invalid, discard them.
 
@@ -282,7 +350,7 @@ to the user.
                     #{rules.length} rules called \"#{reasonText},\" none of
                     them have been successfully validated.  Only a valid
                     rule can be used to justify an expression."
-            return @saveValidation validationData
+            return callback validationData
 
 If that leaves more than one rule left, then validation fails, and we must
 explain to the user that at most one valid rule can be cited.
@@ -296,7 +364,7 @@ explain to the user that at most one valid rule can be cited.
                     refers to #{validRules.length} valid rules.  Only one
                     valid rule can be used at a time to justify an
                     expression."
-            return @saveValidation validationData
+            return callback validationData
 
 If the unique valid cited rule is not a piece of code, the validation result
 must explain that Lurch doesn't (yet?) know the type of rule cited.
@@ -311,7 +379,7 @@ must explain that Lurch doesn't (yet?) know the type of rule cited.
                 validationData.verbose = "The current version of Lurch
                     supports only code-based rules.  The rule you cited is
                     not a piece of code, and thus cannot be used."
-            return @saveValidation validationData
+            return callback validationData
 
 If the language in which the rule is written isn't supported, then
 validation fails, and we explain that the language used isn't yet supported.
@@ -329,7 +397,7 @@ validation fails, and we explain that the language used isn't yet supported.
                     written in #{language.value}, and thus cannot be
                     used.</p>
                     <ul><li>#{ruleLanguages.join '</li><li>'}</li></ul>"
-            return @saveValidation validationData
+            return callback validationData
 
 Run the code in the background to validate the step of work.  Whatever the
 result, save it as the expression's validation result.  Note that the code
@@ -349,9 +417,28 @@ that serialied groups can be decoded on the other end.
             #{rule.value}
         }"
         Background.addCodeTask wrappedCode, [ this ], ( result ) =>
-            @saveValidation result ?
+            callback result ?
                 result : 'invalid'
                 message : 'The code in the rule did not run successfully.'
                 verbose : 'The background process in which the code was to
                     be run returned no value, so the code has an error.'
         , undefined, [ 'openmath-duo.min.js' ]
+
+Validating a group is then simply a matter of calling the asynchronous
+validation function on it, and using the `saveValidation` member of the
+group on the result.
+
+    window.Group::validate = ->
+        @plugin.editor.LoadSave.validationsPending ?= { }
+        @plugin.editor.LoadSave.validationsPending[@id()] = yes
+        try
+            @computeValidationAsync ( result ) =>
+                try
+                    @saveValidation result
+                    delete @plugin.editor.LoadSave.validationsPending[@id()]
+                catch e
+                    delete @plugin.editor.LoadSave.validationsPending[@id()]
+                    throw e
+        catch e
+            delete @plugin.editor.LoadSave.validationsPending[@id()]
+            throw e

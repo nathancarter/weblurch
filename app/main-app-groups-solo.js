@@ -265,6 +265,24 @@
           }
         }
         return result;
+      },
+      clicked: function(group, numClicks, whichGrouper) {
+        if (numClicks === 'double' && whichGrouper === 'close') {
+          return tinymce.activeEditor.Dialogs.waiting({
+            title: 'Just sit tight',
+            message: 'Waiting...',
+            work: function(done) {
+              return group.computeValidationAsync(function(result) {
+                var _ref;
+                done();
+                return tinymce.activeEditor.Dialogs.alert({
+                  title: 'Validation details',
+                  message: "<table> <tr><td>Result:</td> <td>" + result.result + "</td></tr> <tr><td>Explanation:</td> <td>" + result.message + "</td></tr> <tr><td>Details:</td> <td>" + ((_ref = result.verbose) != null ? _ref : '(none available)') + "</td></tr> </table>"
+                });
+              }, true);
+            }
+          });
+        }
       }
     }
   ];

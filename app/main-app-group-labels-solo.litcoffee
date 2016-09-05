@@ -209,10 +209,10 @@ dependency, we know it is in complete form, and so we can just consider its
 "label" attribute, which will contain all its labels.
 
         else if expression instanceof OM
-            internals = expression.getAttribute OM.sym labelKey, 'Lurch'
+            internals = expression.getAttribute OM.sym 'label', 'Lurch'
             if internals then addInternalLabels internals
 
-## Function for deleting entries from the list
+## Functions for deleting entries from the list
 
 This function removes from the list any pair that mentions the given
 expression.  The parameter must be an expression visible in the document,
@@ -261,6 +261,34 @@ is a label, refresh the expression it modifies.
             # logLabelPairs()
         editor.Groups.groupTypes.expression.contentsChanged = refreshHandler
 
+If the dependencies list changed, delete all label pairs from dependencies
+and re-import all label data from dependencies.  We then fire an event that
+says we did so, which permits validation to notice and re-run.  The
+parameter passed to that event is a list of all labels (a string array) that
+were mentioned in dependencies either before or after the change.
+
+        editor.on 'dependenciesChanged', ->
+            originalLabels = [ ]
+            newLabelPairs = [ ]
+            for pair in labelPairs
+                if pair.target instanceof window.Group
+                    newLabelPairs.push pair.target
+                else
+                    originalLabels.push pair.label
+            labelPairs = newLabelPairs
+            recur = ( dependency ) ->
+                for expression in dependency.data
+                    addExpression OM.decode expression
+                for innerDep in dependency.dependencies ? [ ]
+                    recur innerDep
+            recur dependency for dependency in editor.Dependencies
+            # logLabelPairs()
+            newLabels = ( pair.label for pair in labelPairs \
+                when pair.target not instanceof Group and \
+                pair.label not in originalLabels )
+            editor.fire 'dependencyLabelsUpdated',
+                oldAndNewLabels : [ originalLabels..., newLabels... ]
+
 ## Label lookup
 
 The following function looks up a label, given as a string.  It returns a
@@ -292,6 +320,14 @@ document and ask what its labels are.  The following function does so.
 
     window.lookupLabelsFor = ( expression ) ->
         ( pair.label for pair in labelPairs when pair.target is expression )
+
+Finally, we export to dependencies all labeled, top-level expressions.  So
+we need a global function for fetching them.  This is it.
+
+    window.labeledTopLevelExpressions = ->
+        ( pair.target for pair in labelPairs \
+            when pair.target instanceof Group \
+            and not pair.target.parent? )
 
 ## Debugging
 

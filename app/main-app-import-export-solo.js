@@ -81,10 +81,23 @@
   };
 
   window.afterEditorReadyArray.push(function(editor) {
-    var autoLoadName, document, html, match, metadata, toAutoLoad, _ref, _ref1;
+    var autoLoadName, document, html, match, metadata, postAfter, queryString, toAutoLoad, _ref, _ref1;
+    queryString = window.location.search;
+    postAfter = null;
+    if (match = /^\?post-after-autoload=(.*)/.exec(queryString)) {
+      postAfter = function() {
+        return editor.LoadSave.waitForMetaData(function(metadata) {
+          return window.parent.postMessage({
+            type: 'metadata loaded',
+            metadata: metadata
+          }, '*');
+        });
+      };
+      queryString = "?autoload=" + match[1];
+    }
     editor.MediaWiki.setIndexPage('/wiki/index.php');
     editor.MediaWiki.setAPIPage('/wiki/api.php');
-    if (match = /\?wikipage=(.*)/.exec(window.location.search)) {
+    if (match = /\?wikipage=(.*)/.exec(queryString)) {
       editor.MediaWiki.importPage(decodeURIComponent(match[1], function(document, metadata) {
         if (metadata != null) {
           return editor.LoadSave.loadMetaData(metadata);
@@ -92,27 +105,44 @@
       }));
     }
     autoLoadName = 'auto-load';
-    if (match = /\?autoload=(.*)/.exec(window.location.search)) {
+    if (match = /\?autoload=(.*)/.exec(queryString)) {
       autoLoadName = decodeURIComponent(match[1]);
     }
     if (toAutoLoad = localStorage.getItem(autoLoadName)) {
       try {
         _ref = JSON.parse(toAutoLoad), metadata = _ref[0], document = _ref[1];
         setTimeout(function() {
-          var m, shorthandRE;
+          var filename, m, shorthandRE;
           localStorage.removeItem(autoLoadName);
           shorthandRE = /^\s*<shorthand>(.*)<\/shorthand>\s*$/;
           document = document.replace(/\n|\cJ/g, ' ');
           if (m = shorthandRE.exec(document)) {
-            translateShorthandIntoEditor(document);
+            filename = "dependency-for-" + autoLoadName;
+            return translateShorthandIntoEditor(editor, document, function(replace) {
+              if (replace) {
+                if (metadata == null) {
+                  metadata = {};
+                }
+                metadata.dependencies = [
+                  {
+                    address: filename,
+                    data: replace.exports,
+                    date: new Date
+                  }
+                ];
+              }
+              editor.LoadSave.loadMetaData(metadata);
+              return typeof postAfter === "function" ? postAfter() : void 0;
+            }, filename);
           } else {
-            tinymce.activeEditor.setContent(document);
+            editor.setContent(document);
+            editor.LoadSave.loadMetaData(metadata);
+            return typeof postAfter === "function" ? postAfter() : void 0;
           }
-          return editor.LoadSave.loadMetaData(metadata);
         }, 100);
       } catch (_error) {}
     }
-    if (match = /\?document([0-9]*)=(.*)/.exec(window.location.search)) {
+    if (match = /\?document([0-9]*)=(.*)/.exec(queryString)) {
       html = decodeURIComponent(match[2]);
       _ref1 = extractMetadata(html), metadata = _ref1.metadata, document = _ref1.document;
       localStorage.setItem('auto-load' + match[1], JSON.stringify([metadata, document]));
@@ -132,9 +162,9 @@
     return result;
   };
 
-  translateShorthandIntoEditor = function(shorthand) {
-    var already, connections, div, doc, expression, group, id, idToKey, idToN, internalKey, internalValue, n, nToId, nextId, recur, source, sourceId, target, targetNs, _i, _j, _len, _ref;
-    doc = tinymce.activeEditor.getDoc();
+  translateShorthandIntoEditor = function(editor, shorthand, callback, filename) {
+    var already, connections, dependencyContent, div, doc, expression, group, handler, id, idToKey, idToN, internalKey, internalValue, n, nToId, nextId, otherLurch, recur, source, sourceId, target, targetNs, _i, _j, _len, _ref;
+    doc = editor.getDoc();
     div = doc.createElement('div');
     div.innerHTML = shorthand;
     nToId = {};
@@ -142,8 +172,13 @@
     connections = {};
     idToKey = {};
     nextId = 0;
+    dependencyContent = null;
     recur = function(element) {
       var child, copy, i, n, thisId, translatedChildren, _ref;
+      if (element.tagName === 'DEPENDENCY') {
+        dependencyContent = "<shorthand>" + element.innerHTML + "</shorthand>";
+        return '';
+      }
       if (element.tagName === 'E') {
         thisId = nextId++;
       }
@@ -185,11 +220,11 @@
         return (_ref = copy.outerHTML) != null ? _ref : copy.textContent;
       }
     };
-    tinymce.activeEditor.setContent(recur(div));
-    tinymce.activeEditor.Groups.scanDocument();
+    editor.setContent(recur(div));
+    editor.Groups.scanDocument();
     for (id = _i = nextId; nextId <= 0 ? _i <= 0 : _i >= 0; id = nextId <= 0 ? ++_i : --_i) {
       if (id in idToKey) {
-        if (!(group = tinymce.activeEditor.Groups[id])) {
+        if (!(group = editor.Groups[id])) {
           continue;
         }
         if (!group.parent) {
@@ -218,17 +253,35 @@
     }
     for (sourceId in connections) {
       targetNs = connections[sourceId];
-      if (!(source = tinymce.activeEditor.Groups[sourceId])) {
+      if (!(source = editor.Groups[sourceId])) {
         continue;
       }
       for (_j = 0, _len = targetNs.length; _j < _len; _j++) {
         n = targetNs[_j];
-        if (target = tinymce.activeEditor.Groups[nToId[n]]) {
+        if (target = editor.Groups[nToId[n]]) {
           source.connect(target);
         }
       }
     }
-    return tinymce.activeEditor.undoManager.clear();
+    editor.undoManager.clear();
+    if (callback != null) {
+      if (dependencyContent === null) {
+        return callback(null);
+      }
+      localStorage.setItem(filename, JSON.stringify([null, dependencyContent]));
+      otherLurch = document.createElement('iframe');
+      handler = function(message) {
+        if (message.data.type === 'metadata loaded') {
+          window.removeEventListener('message', handler);
+          callback(message.data.metadata);
+          return document.body.removeChild(otherLurch);
+        }
+      };
+      window.addEventListener('message', handler, false);
+      otherLurch.setAttribute('src', window.location.href.split('?')[0] + '?post-after-autoload=' + filename);
+      otherLurch.style.display = 'none';
+      return document.body.appendChild(otherLurch);
+    }
   };
 
 }).call(this);

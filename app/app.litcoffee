@@ -130,7 +130,7 @@ should do two things.
 The author of a Lurch Application must also have the application call this
 plugin's `import` function immediately after a document is loaded, on the
 dependency data stored in that document's metadata.  This can happen as part
-of the `loadMetadata` event, for example.
+of the `loadMetaData` event, for example.
 
 Whenever any dependency is added, removed, or updated, a
 `dependenciesChanged` event is fired in the editor, with no parameters.  Any
@@ -277,7 +277,12 @@ dates, so we check to see if updating is necessary
                             @[index].date = lastModified
                             @editor.fire 'dependenciesChanged'
 
-No other types of dependencies are supported (yet).
+No other types of dependencies are supported (yet), but we fire a change
+event in such cases (which includes virtual dependencies written in
+[Lurch shorthand](main-app-import-export-solo.litcoffee#lurch-shorthand)).
+
+            else
+                @editor.fire 'dependenciesChanged'
 
 ## Adding and removing dependencies
 
@@ -601,6 +606,25 @@ receive the text in the dialog's input as a parameter.
             whichCallback? event.data
         window.addEventListener 'message', handler, no
         dialog.on 'close', -> window.removeEventListener 'message', handler
+
+## Waiting dialog
+
+This function shows a dialog with no buttons you can use for closing it. You
+should pass as parameter an options object, just as with every other
+function in this plugin, but in this case it must contain a member called
+`work` that is a function that will do whatever work you want done while the
+dialog is shown.  That function will *receive* as its one parameter a
+function to call when the work is done, to close this dialog.
+
+    Dialogs.waiting = ( options ) ->
+        dialog = tinymce.activeEditor.windowManager.open
+            title : options.title ? ' '
+            url : prepareHTML options.message
+            width : options.width ? 300
+            height : options.height ? 100
+            buttons : [ ]
+        if options.onclick then installClickListener options.onclick
+        options.work -> dialog.close()
 
 # Installing the plugin
 
@@ -2513,7 +2537,17 @@ First, the case for connection-making mode.
                     return no
                 return
 
-Now the case for clicking bubble tags.
+Next, the case for clicking a grouper.
+
+            doc = editor.getDoc()
+            el = doc.elementFromPoint x, y
+            if el and info = grouperInfo el
+                group = editor.Groups.grouperToGroup el
+                group.type()?.clicked? group, 'single',
+                    if el is group.open then 'open' else 'close'
+                return no
+
+Last, the case for clicking bubble tags.
 
             for tag in editor.Groups.bubbleTags
                 if tag.x1 < x < tag.x2 and tag.y1 < y < tag.y2
@@ -2533,8 +2567,16 @@ Now the case for clicking bubble tags.
                     event.preventDefault()
                     return no
 
-The previous function uses the `nodeUnderMouse()` routine, defined here.
-That same routine is also used in the mouse move handler defined below.
+Now we install a handler for double-clicking group boundaries ("groupers").
+
+        editor.on 'dblclick', ( event ) ->
+            doc = editor.getDoc()
+            el = doc.elementFromPoint event.clientX, event.clientY
+            if el and info = grouperInfo el
+                group = editor.Groups.grouperToGroup el
+                group.type()?.clicked? group, 'double',
+                    if el is group.open then 'open' else 'close'
+                return no
 
 The following functions install an event handler that highlights the
 innermost group under the mouse pointer at all times.
@@ -3162,7 +3204,7 @@ above.
             if newHandler?
                 ( @handlerBackups ?= { } )[internalName] ?= @[internalName]
                 @[internalName] = newHandler
-            else if @handlerBackups[internalName]?
+            else if @handlerBackups?[internalName]?
                 @[internalName] = @handlerBackups[internalName]
 
 # Global stuff

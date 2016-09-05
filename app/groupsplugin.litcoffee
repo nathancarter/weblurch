@@ -1748,7 +1748,17 @@ First, the case for connection-making mode.
                     return no
                 return
 
-Now the case for clicking bubble tags.
+Next, the case for clicking a grouper.
+
+            doc = editor.getDoc()
+            el = doc.elementFromPoint x, y
+            if el and info = grouperInfo el
+                group = editor.Groups.grouperToGroup el
+                group.type()?.clicked? group, 'single',
+                    if el is group.open then 'open' else 'close'
+                return no
+
+Last, the case for clicking bubble tags.
 
             for tag in editor.Groups.bubbleTags
                 if tag.x1 < x < tag.x2 and tag.y1 < y < tag.y2
@@ -1768,8 +1778,16 @@ Now the case for clicking bubble tags.
                     event.preventDefault()
                     return no
 
-The previous function uses the `nodeUnderMouse()` routine, defined here.
-That same routine is also used in the mouse move handler defined below.
+Now we install a handler for double-clicking group boundaries ("groupers").
+
+        editor.on 'dblclick', ( event ) ->
+            doc = editor.getDoc()
+            el = doc.elementFromPoint event.clientX, event.clientY
+            if el and info = grouperInfo el
+                group = editor.Groups.grouperToGroup el
+                group.type()?.clicked? group, 'double',
+                    if el is group.open then 'open' else 'close'
+                return no
 
 The following functions install an event handler that highlights the
 innermost group under the mouse pointer at all times.

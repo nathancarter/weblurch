@@ -2357,18 +2357,25 @@
     },
     runningTasks: [],
     waitingTasks: [],
-    addTask: function(funcName, inputGroups, callback) {
-      var group, index, newTask, task, _i, _j, _len, _len1, _ref3, _ref4, _ref5, _ref6;
+    addTask: function(funcName, inputs, callback) {
+      var index, input, inputToId, newTask, task, _i, _j, _len, _len1, _ref3, _ref4, _ref5, _ref6;
+      inputToId = function(input) {
+        if (input instanceof Group) {
+          return input.id();
+        } else {
+          return JSON.stringify(input);
+        }
+      };
       newTask = {
         name: funcName,
-        inputs: inputGroups,
+        inputs: inputs,
         callback: callback,
         id: "" + funcName + "," + ((function() {
           var _i, _len, _results;
           _results = [];
-          for (_i = 0, _len = inputGroups.length; _i < _len; _i++) {
-            group = inputGroups[_i];
-            _results.push(group.id());
+          for (_i = 0, _len = inputs.length; _i < _len; _i++) {
+            input = inputs[_i];
+            _results.push(inputToId(input));
           }
           return _results;
         })())
@@ -2399,7 +2406,7 @@
       window.Background.waitingTasks.push(newTask);
       return window.Background.update();
     },
-    addCodeTask: function(func, inputGroups, callback, globals, scripts) {
+    addCodeTask: function(func, inputs, callback, globals, scripts) {
       if (globals == null) {
         globals = {};
       }
@@ -2407,7 +2414,7 @@
         scripts = [];
       }
       window.Background.registerFunction("" + func, func, globals, scripts);
-      return window.Background.addTask("" + func, inputGroups, callback);
+      return window.Background.addTask("" + func, inputs, callback);
     },
     available: {},
     update: function() {
@@ -2514,30 +2521,34 @@
     }
 
     _Class.prototype.call = function() {
-      var args, group, groups, _i, _len;
+      var args, input, inputs, _i, _len;
       args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
       delete this.promise.result;
       delete this.promise.resultCallback;
       delete this.promise.error;
       delete this.promise.errorCallback;
-      for (_i = 0, _len = arguments.length; _i < _len; _i++) {
-        group = arguments[_i];
-        if (group.deleted) {
+      for (_i = 0, _len = args.length; _i < _len; _i++) {
+        input = args[_i];
+        if (input instanceof Group && input.deleted) {
           return;
         }
       }
-      groups = (function() {
+      inputs = (function() {
         var _j, _len1, _results;
         _results = [];
         for (_j = 0, _len1 = args.length; _j < _len1; _j++) {
-          group = args[_j];
-          _results.push(group.toJSON());
+          input = args[_j];
+          if (input instanceof Group) {
+            _results.push(input.toJSON());
+          } else {
+            _results.push(input);
+          }
         }
         return _results;
       })();
       if (this.worker != null) {
         this.worker.postMessage({
-          runOn: groups
+          runOn: inputs
         });
       } else {
         setTimeout((function(_this) {
@@ -2545,7 +2556,7 @@
             var e, _base, _base1;
             try {
               with ( this.globals ) {;
-              _this.promise.result = _this["function"].apply(_this, groups);
+              _this.promise.result = _this["function"].apply(_this, inputs);
               };
             } catch (_error) {
               e = _error;

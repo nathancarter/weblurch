@@ -93,6 +93,8 @@
             });
           };
         })(this));
+      } else {
+        return this.editor.fire('dependenciesChanged');
       }
     };
 
@@ -416,6 +418,23 @@
     window.addEventListener('message', handler, false);
     return dialog.on('close', function() {
       return window.removeEventListener('message', handler);
+    });
+  };
+
+  Dialogs.waiting = function(options) {
+    var dialog, _ref, _ref1, _ref2;
+    dialog = tinymce.activeEditor.windowManager.open({
+      title: (_ref = options.title) != null ? _ref : ' ',
+      url: prepareHTML(options.message),
+      width: (_ref1 = options.width) != null ? _ref1 : 300,
+      height: (_ref2 = options.height) != null ? _ref2 : 100,
+      buttons: []
+    });
+    if (options.onclick) {
+      installClickListener(options.onclick);
+    }
+    return options.work(function() {
+      return dialog.close();
     });
   };
 
@@ -2263,7 +2282,7 @@
       return menu.moveTo(x + pos.left, y + pos.top);
     });
     editor.on('mousedown', function(event) {
-      var currentGroup, group, left, menu, menuItems, pos, tag, x, y, _j, _len1, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8;
+      var currentGroup, doc, el, group, info, left, menu, menuItems, pos, tag, x, y, _j, _len1, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
       x = event.clientX;
       y = event.clientY;
       if ((_ref1 = editor.Groups.connectionsButton) != null ? _ref1.active() : void 0) {
@@ -2288,11 +2307,22 @@
         }
         return;
       }
-      _ref6 = editor.Groups.bubbleTags;
-      for (_j = 0, _len1 = _ref6.length; _j < _len1; _j++) {
-        tag = _ref6[_j];
+      doc = editor.getDoc();
+      el = doc.elementFromPoint(x, y);
+      if (el && (info = grouperInfo(el))) {
+        group = editor.Groups.grouperToGroup(el);
+        if ((_ref6 = group.type()) != null) {
+          if (typeof _ref6.clicked === "function") {
+            _ref6.clicked(group, 'single', el === group.open ? 'open' : 'close');
+          }
+        }
+        return false;
+      }
+      _ref7 = editor.Groups.bubbleTags;
+      for (_j = 0, _len1 = _ref7.length; _j < _len1; _j++) {
+        tag = _ref7[_j];
         if ((tag.x1 < x && x < tag.x2) && (tag.y1 < y && y < tag.y2)) {
-          menuItems = (_ref7 = tag.group) != null ? (_ref8 = _ref7.type()) != null ? _ref8.tagMenuItems(tag.group) : void 0 : void 0;
+          menuItems = (_ref8 = tag.group) != null ? (_ref9 = _ref8.type()) != null ? _ref9.tagMenuItems(tag.group) : void 0 : void 0;
           if (menuItems == null) {
             menuItems = [
               {
@@ -2315,6 +2345,20 @@
           event.preventDefault();
           return false;
         }
+      }
+    });
+    editor.on('dblclick', function(event) {
+      var doc, el, group, info, _ref1;
+      doc = editor.getDoc();
+      el = doc.elementFromPoint(event.clientX, event.clientY);
+      if (el && (info = grouperInfo(el))) {
+        group = editor.Groups.grouperToGroup(el);
+        if ((_ref1 = group.type()) != null) {
+          if (typeof _ref1.clicked === "function") {
+            _ref1.clicked(group, 'double', el === group.open ? 'open' : 'close');
+          }
+        }
+        return false;
       }
     });
     editor.on('mousemove', function(event) {
@@ -2946,13 +2990,13 @@
     };
 
     LoadSave.prototype.replaceInternalHandler = function(internalName, newHandler) {
-      var _base;
+      var _base, _ref;
       if (newHandler != null) {
         if ((_base = (this.handlerBackups != null ? this.handlerBackups : this.handlerBackups = {}))[internalName] == null) {
           _base[internalName] = this[internalName];
         }
         return this[internalName] = newHandler;
-      } else if (this.handlerBackups[internalName] != null) {
+      } else if (((_ref = this.handlerBackups) != null ? _ref[internalName] : void 0) != null) {
         return this[internalName] = this.handlerBackups[internalName];
       }
     };

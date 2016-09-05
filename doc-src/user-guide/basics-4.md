@@ -55,5 +55,6 @@ In order for a rule to be usable, it must exist either
     rules it wants to use.
 
 In later parts of the User Guide, we'll see how to define our own rules in
-our documents, and how to import other documents (as "dependencies") so that
-we can access the rules in them.
+our documents.  For now, let's see how to import rules another author wrote
+in another document.  That's the topic of
+[the next part in this tutorial](basics-5.md).
