@@ -13,7 +13,7 @@ the top-level window's active editor.  This code extracts those parameters,
 after the page has loaded, as follows.
 
     window.onload = ->
-        args = top.tinymce.activeEditor.windowManager.getParams()
+        args = window.parent.tinymce.activeEditor.windowManager.getParams()
 
 If the `fsName` parameter was passed, it is used as the filesystem name.
 
