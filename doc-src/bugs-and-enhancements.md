@@ -100,6 +100,18 @@ the main project plan without these bug fixes or enhancements.
  * There is not yet support for adding dependencies from files in your
    Dropbox.  Add this feature.
 
+## Cheat sheets
+
+The "Cheatsheets" menu item of the RStudio GUI is an excellent resource for
+many users.  It contains links to online PDFs of one- or two-sided
+printable, dense reference sheets for common topics in RStudio.  A similar
+cheatsheet (or set thereof) could be created about Lurch.  Consider these
+topics.
+
+ * The advanced users guide, condensed into a two-sided reference
+ * Understanding and dealing with validation messages
+ * A reference for each of the built-in libraries
+
 ### Groups Plugin
 
  * Make a menu item for hiding/showing group decorations.

@@ -16,7 +16,7 @@
   };
 
   tellPage = function(message) {
-    return window.top.postMessage(message, '*');
+    return window.parent.postMessage(message, '*');
   };
 
   fsToBrowse = new FileSystem('demo');
