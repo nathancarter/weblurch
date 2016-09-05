@@ -11,7 +11,7 @@
     if (attributes == null) {
       attributes = {
         width: 800,
-        height: 400
+        height: 600
       };
     }
     if (applicationURL == null) {
