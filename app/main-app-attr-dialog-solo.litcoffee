@@ -13,6 +13,77 @@ This module creates the functions related to the attributes dialog for an
 expression in the document.  That dialog is a large and complex piece of the
 UI, so it deserves to have its code grouped into a single file, this one.
 
+We take this opportunity to document some of the conventions used internally
+in storing group attributes.  There are several, and their interplay is a
+bit confusing, so it deserves some documentation.
+
+### Group Attributes
+
+In the Groups plugin, there are [functions for setting/getting attributes in
+a Group object](groupsplugin.litcoffee#group-attributes).  We will call
+these *group attributes* in this documentation.
+
+Example group attributes include connection data, bubble tag contents,
+grouper decoration formatting, and validation results, among others.
+
+ * These can be used by any script code to store any kind of attribute in a
+   group.
+ * Under the hood, these are stored as HTML data attributes on the open
+   grouper element.  For example, if you set "color" to "blue" then the open
+   grouper element has an attribute data-color="blue".
+ * Consequently, the key must contain only Roman letters, decimal digits,
+   hyphens, or underscores.  The keys are case-insensitive, because they are
+   HTML element attributes, which are case-insensitive.
+ * The values given when setting these attributes must be amenable to
+   `JSON.stringify`.  They are placed inside an array (as in `[ datum ]`)
+   before being stringified.
+ * **The group attribute mechanism introduced in the next section is built
+   upon this one, partially, as documented below.**
+
+### Expression Attributes
+
+Authors of Lurch documents do not think in terms of "groups," which are the
+underlying technology by which we implement "expressions."  Lurch
+documentation for authors speaks only in terms of expressions, not groups,
+because the only type of group in the main Lurch app is "expression."
+
+Document authors attach attributes to expressions by creating connections
+among expressions (shown in the app visually with arrows), and optionally
+embedding (or "hiding") such attributes within the target expression.
+(Also, hidden attributes can be created without being placed in the
+document first, but that is less relevant here.)
+
+We will call these *expression attributes.*  Example expression attributes
+include labels, reasons, premises, code flags, rule flags, among others.
+They behave differently than group attributes, in several ways.
+
+ * Document authors have no way of viewing or manipulating group
+   attributes; those are read and written only by the application code.
+ * Multiple expression attributes with the same key can be attached to the
+   same target, having different values, and thus forming a list.
+ * Visible expression attributes are not stored in the target group; they
+   exist in the document and thus do not impact the target group's internal
+   data at all.
+ * Hidden expression attributes are stored as group attributes, by encoding
+   the attribute key using the `OM.encodeAsIdentifier` function [documented
+   here](../src/openmath-duo.litcoffee#creating-valid-identifiers) and the
+   value using a combination of complete form, JSON, and LZString
+   compression.  **This is the primary relationship between the group and
+   expression attribute mechanisms.**
+ * The `OM.encodeAsIdentifier` function produces output of the form `id_X`,
+   where `X` is a sequence of decimal digits.  Thus developers accessing
+   group attributes should avoid using keys of that form, to prevent
+   collisions with hidden expression attributes (however unlikely).
+ * The complete form of a group includes both visible and hidden expression
+   attributes, and thus looks internally for keys of the form `id_X`,
+   decodes them, and notices the hidden attributes stored there.  Complete
+   forms do *not* include any group attributes besides those that are being
+   used to encode hidden expression attributes.
+ * The complete form of an expression encodes attribute keys as OpenMath
+   symbols whose name is the key itself, and whose content dictionary is the
+   single word "Lurch."  For this reason, we restrict expression attribute
+   keys to be valid OpenMath identifiers.
+
 ## Utilities
 
 The following routine converts any canonical form into a reasonable HTML
