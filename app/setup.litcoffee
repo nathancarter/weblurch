@@ -199,10 +199,8 @@ defined.
                     editor.addButton name, data
 
 Install our DOM utilities in the TinyMCE's iframe's window instance.
-Increase the default font size and maximize the editor to fill the page.
-This requires not only invoking the "mceFullScreen" command, but also then
-setting the height properties of many pieces of the DOM hierarchy (in a way
-that seems like it ought to be handled for us by the fullScreen plugin).
+Increase the default font size and maximize the editor to fill the page
+by invoking the "mceFullScreen" command.
 
                 editor.on 'init', ->
                     installDOMUtilitiesIn editor.getWin()
@@ -210,15 +208,6 @@ that seems like it ought to be handled for us by the fullScreen plugin).
                         editor.getBody().style[key] = value
                     setTimeout ->
                         editor.execCommand 'mceFullScreen'
-                        walk = editor.iframeElement
-                        while walk and walk isnt editor.container
-                            if walk is editor.iframeElement.parentNode
-                                walk.style.height = 'auto'
-                            else
-                                walk.style.height = '100%'
-                            walk = walk.parentNode
-                        for h in editor.getDoc().getElementsByTagName 'html'
-                            h.style.height = 'auto'
                     , 0
 
 The third-party plugin for math equations requires the following stylesheet.

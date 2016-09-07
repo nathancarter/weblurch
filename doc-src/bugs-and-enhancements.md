@@ -13,9 +13,9 @@ the main project plan without these bug fixes or enhancements.
 
  * Not all edits cause the document to be marked dirty.  TinyMCE events are
    not firing correctly.  [Minimal working example created.](
-   http://www.tinymce.com/develop/bugtracker_view.php?id=7511)
+   https://github.com/tinymce/tinymce/issues/2224)
    [Or see this related issue.](
-   http://www.tinymce.com/develop/bugtracker_view.php?id=7304)
+   https://github.com/tinymce/tinymce/issues/2028)
    Use the responses from that to get this
    problem fixed in Lurch, either by updating to a fixed version of TinyMCE
    or by installing a workaround here.  Although you've heard about the
@@ -34,11 +34,6 @@ the main project plan without these bug fixes or enhancements.
 
 ### Other
 
- * When you open (or type) a file that's longer than the screen, you must
-   open and close the JS console to force resizing, or it won't scroll
-   vertically.  Alternatively, you can resize the window.  Seems like the
-   resize event handler needs to be called immediately after the page
-   geometry is set up.
  * The Insert Menu covers the toolbar and will not disappear, even when an
    item is selected.  This seems like it is either a TinyMCE bug (and may go
    away if we update TinyMCE) or it is a bug in our use of TinyMCE.
