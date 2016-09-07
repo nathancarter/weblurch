@@ -34,9 +34,6 @@ the main project plan without these bug fixes or enhancements.
 
 ### Other
 
- * The Insert Menu covers the toolbar and will not disappear, even when an
-   item is selected.  This seems like it is either a TinyMCE bug (and may go
-   away if we update TinyMCE) or it is a bug in our use of TinyMCE.
  * Formats menu is currently empty.
  * Some of the `*-duo.litcoffee` files in `src/` in the master branch also
    have committed versions in `app/` that are merely copies.  This is
