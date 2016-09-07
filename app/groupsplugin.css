@@ -1,6 +1,7 @@
 
 img.grouper {
     margin-bottom : -0.35em;
+    cursor : default;
 }
 
 img.grouper.hide:not(.decorate) {
