@@ -19,8 +19,6 @@ Rewrite the following section to more accurately reflect Section 24 of the
 specification, then implement it as a module attached to the main Lurch
 application, a module that can easily be disabled if we need to redesign it.
 
- * Factor the `computeValidationAsync` function into two functions, one for
-   rule validation and the other for step validation.
  * Add two new attribute types to the context menu for attribute expressions
    in the document: "notation," "type," and "meaning."
  * Add a new validation category for anything that has a "notation",
