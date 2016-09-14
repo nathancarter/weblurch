@@ -9,6 +9,17 @@ the main project plan without these bug fixes or enhancements.
 
 ## Bug fixes
 
+### Validation
+
+ * Validation currently places itself on the undo/redo queue.  Instead, it
+   should make itself invisible (not undo-able).  When saving validation
+   results, temporarily replace the `add` method with an empty function,
+   and restore the original thereafter.  This could be done in place of the
+   calls to `transact` in the validation module.
+ * Test to see if validation is correctly re-run after an undo/redo
+   operation is performed.  That is, which expressions fire change events,
+   and are they the correct ones?
+
 ### Load and save
 
  * Not all edits cause the document to be marked dirty.  TinyMCE events are

@@ -297,3 +297,23 @@ draw the viewer's attention there.
             flash 3, 500, ( $ '.mce-menubtn' ).filter ( index, element ) ->
                 element.textContent.trim() is 'Help'
         , 1000
+
+The following tool is useful for debugging the undo/redo stack in a TinyMCE
+editor instance.
+
+    window.showUndoStack = ->
+        manager = tinymce.activeEditor.undoManager
+        console.log 'entry 0: document initial state'
+        for index in [1...manager.data.length]
+            previous = manager.data[index-1].content
+            current = manager.data[index].content
+            if previous is current
+                console.log "entry #{index}: same as #{index-1}"
+                continue
+            initial = final = 0
+            while previous[..initial] is current[..initial] then initial++
+            while previous[previous.length-final..] is \
+                  current[current.length-final..] then final++
+            console.log "entry #{index}: at #{initial}:
+                \n\torig: #{previous[initial..previous.length-final]}
+                \n\tnow:  #{current[initial..current.length-final]}"
