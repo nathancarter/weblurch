@@ -9,6 +9,11 @@ the main project plan without these bug fixes or enhancements.
 
 ## Bug fixes
 
+### Attributes dialog
+
+ * The links in the attributes dialog do not function on embedded Lurch
+   apps, only the full-page app.
+
 ### Validation
 
  * Validation currently places itself on the undo/redo queue.  Instead, it
