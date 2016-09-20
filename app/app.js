@@ -638,6 +638,7 @@
       this.previousSibling = __bind(this.previousSibling, this);
       this.indexInParent = __bind(this.indexInParent, this);
       this.groupAsHTML = __bind(this.groupAsHTML, this);
+      this.stillInEditor = __bind(this.stillInEditor, this);
       this.remove = __bind(this.remove, this);
       this.rangeAfter = __bind(this.rangeAfter, this);
       this.rangeBefore = __bind(this.rangeBefore, this);
@@ -934,6 +935,18 @@
           return ($([_this.open].concat(__slice.call(_this.contentNodes()), [_this.close]))).remove();
         };
       })(this));
+    };
+
+    Group.prototype.stillInEditor = function() {
+      var walk;
+      walk = this.open;
+      while ((this.plugin != null) && (walk != null)) {
+        if (walk === this.plugin.editor.getDoc()) {
+          return true;
+        }
+        walk = walk.parentNode;
+      }
+      return false;
     };
 
     Group.prototype.groupAsHTML = function(withSrcAttributes) {

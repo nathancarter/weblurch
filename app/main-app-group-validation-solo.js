@@ -4,30 +4,20 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   window.Group.prototype.saveValidation = function(data) {
-    var color, symbol, _ref, _ref1;
+    var color, symbol;
     if (data === null) {
       if (this.wasValidated()) {
-        if ((_ref = this.plugin) != null) {
-          _ref.editor.undoManager.transact((function(_this) {
-            return function() {
-              _this.clear('validation');
-              _this.clear('closeDecoration');
-              return _this.clear('closeHoverText');
-            };
-          })(this));
-        }
+        this.clear('validation');
+        this.clear('closeDecoration');
+        this.clear('closeHoverText');
       }
       return;
     }
     color = data.result === 'valid' ? 'green' : data.result === 'invalid' ? 'red' : 'gray';
     symbol = data.result === 'valid' ? '&#10003;' : data.result === 'invalid' ? '&#10006;' : '...';
-    return (_ref1 = this.plugin) != null ? _ref1.editor.undoManager.transact((function(_this) {
-      return function() {
-        _this.set('validation', data);
-        _this.set('closeDecoration', "<font color='" + color + "'>" + symbol + "</font>");
-        return _this.set('closeHoverText', "" + data.message + "\n(Double-click for details.)");
-      };
-    })(this)) : void 0;
+    this.set('validation', data);
+    this.set('closeDecoration', "<font color='" + color + "'>" + symbol + "</font>");
+    return this.set('closeHoverText', "" + data.message + "\n(Double-click for details.)");
   };
 
   window.Group.prototype.getValidation = function() {

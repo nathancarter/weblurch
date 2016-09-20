@@ -170,7 +170,7 @@
       _results = [];
       for (_i = 0, _len = labelPairs.length; _i < _len; _i++) {
         pair = labelPairs[_i];
-        if (pair.source !== expression && pair.target !== expression) {
+        if (pair.source !== expression && pair.target !== expression && (!(pair.target instanceof Group) || pair.target.stillInEditor())) {
           _results.push(pair);
         }
       }

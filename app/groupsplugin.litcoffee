@@ -17,11 +17,7 @@ it can access it.  It also requires [the overlay
 plugin](overlayplugin.litcoffee) to be loaded in the same editor.
 
 All changes made to the document by the user are tracked so that appropriate
-events can be called in this plugin to update group objects.  The one
-exception to this rule is that calls to the `setContents()` method of the
-editor's selection, made by a client, cannot be tracked.  Thus if you call
-such a method, you should call `groupChanged()` in any groups whose contents
-have changed based on your call to `setContents()`.
+events can be called in this plugin to update group objects.
 
 # Global functions
 
@@ -368,6 +364,20 @@ of one action for the purposes of undo/redo.
             @disconnect @plugin[cxn[1]] for cxn in @connectionsOut()
             @plugin.editor.undoManager.transact =>
                 ( $ [ @open, @contentNodes()..., @close ] ).remove()
+
+When a group has been removed from a document in a different way than the
+above function (such as replacing its entire content and boundaries with
+other text in the editor) the group object may persist in JavaScript memory,
+and we would like a way to detect whether a group is "stale" in such a way.
+The following function does so.  Note that it always returns false if the
+group does not have a plugin registered.
+
+        stillInEditor: =>
+            walk = @open
+            while @plugin? and walk?
+                if walk is @plugin.editor.getDoc() then return yes
+                walk = walk.parentNode
+            no
 
 Sometimes you want the HTML representation of the entire group.  The
 following method gives it to you, by imitating the code of `contentAsHTML`,
@@ -1647,6 +1657,11 @@ key or home/end/pgup/pgdn.
 In addition to rescanning the document, we also call the `rangeChanged`
 event of the Groups plugin, to update any groups that overlap the range in
 which the document was modified.
+
+Note that the `SetContent` event is what fires when the user invokes the
+undo or redo action, but the range is the entire document.  Thus this event
+handler automatically sends change events to *all* groups in the document
+whenever the user chooses undo or redo.
 
         editor.on 'change SetContent', ( event ) ->
             editor.Groups.scanDocument()
