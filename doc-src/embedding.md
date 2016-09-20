@@ -12,8 +12,10 @@ page or blog.
 
 ## How To
 
-The author must do two things to embed Lurch in a blog/website:
+The author must do three things to embed Lurch in a blog/website:
 
+ * Include [jQuery](https://code.jquery.com/) in the page, because the Lurch
+   embedding script in the following bullet point depends upon it.
  * Include this code at the top of your webpage, or in the scripts list for
    your blog:
 ```html
