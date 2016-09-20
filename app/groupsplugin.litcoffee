@@ -1644,6 +1644,11 @@ In addition to rescanning the document, we also call the `rangeChanged`
 event of the Groups plugin, to update any groups that overlap the range in
 which the document was modified.
 
+Note that the `SetContent` event is what fires when the user invokes the
+undo or redo action, but the range is the entire document.  Thus this event
+handler automatically sends change events to *all* groups in the document
+whenever the user chooses undo or redo.
+
         editor.on 'change SetContent', ( event ) ->
             editor.Groups.scanDocument()
             if event?.level?.bookmark

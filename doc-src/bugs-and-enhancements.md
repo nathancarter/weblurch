@@ -19,9 +19,6 @@ the main project plan without these bug fixes or enhancements.
    do this is to extend the TinyMCE `undoManager` object with a function
    that amends the previous snapshot, then use that after each change to
    validation data, instead of wrapping it in a transact call.
- * Test to see if validation is correctly re-run after an undo/redo
-   operation is performed.  That is, which expressions fire change events,
-   and are they the correct ones?
 
 ### Overall
 
