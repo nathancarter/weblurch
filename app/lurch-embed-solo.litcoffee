@@ -39,7 +39,7 @@ prevent collisions/overwriting.  That attribute is set by the function in
 the [automation section](#automating-the-process), below.
 
     window.LurchEmbed.makeLive =
-    ( element, attributes = width : 800, height : 400, applicationURL = \
+    ( element, attributes = width : 800, height : 600, applicationURL = \
       window.LurchEmbed.defaultURL ) ->
         number = element.getAttribute( 'data-embed-index' ) ? ''
         encoded = encodeURIComponent element.innerHTML
