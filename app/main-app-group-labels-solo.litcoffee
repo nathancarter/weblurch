@@ -218,9 +218,15 @@ This function removes from the list any pair that mentions the given
 expression.  The parameter must be an expression visible in the document,
 not one in a dependency, or embedded/hidden in another expression.
 
+It also deletes any label pairs whose target is no longer in the document.
+This can happen as large-scale edits and replacements delete groups.
+
     deleteExpression = ( expression ) ->
         labelPairs = ( pair for pair in labelPairs when \
-            pair.source isnt expression and pair.target isnt expression )
+            pair.source isnt expression and \
+            pair.target isnt expression and \
+            ( pair.target not instanceof Group or \
+              pair.target.stillInEditor() ) )
 
 ## Handlers
 

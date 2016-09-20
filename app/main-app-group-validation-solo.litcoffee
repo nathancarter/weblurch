@@ -20,12 +20,16 @@ The data must contain the following attributes.
  * `message` - a short string explaining why the validation results are what
    they are; may include HTML
 
-The operation is performed as a single undo/redo transaction.  If the group
-does not have access to the Groups plugin, the function does nothing.
+The operation is performed without reference to the editor's undo/redo
+manager, so that the undo/redo stack is not corrupted.  (For example, if the
+user were to undo some change they had made to the document, which resulted
+in revalidating some portions of it, those validation results, when saved in
+the document, should not count as an "edit," or the user would be able to
+use "redo" to move forward in the stack again.)
 
 If the parameter is null, then all validation data is removed from the group
-in a single undo/redo transaction, and no other action is taken.  This is a
-handy way to "clear" validation data.
+and no other action is taken.  This is a handy way to "clear" validation
+data.
 
     window.Group::saveValidation = ( data ) ->
 
@@ -33,10 +37,9 @@ First, handle the case for clearing out data rather than storing new data.
 
         if data is null
             if @wasValidated()
-                @plugin?.editor.undoManager.transact =>
-                    @clear 'validation'
-                    @clear 'closeDecoration'
-                    @clear 'closeHoverText'
+                @clear 'validation'
+                @clear 'closeDecoration'
+                @clear 'closeHoverText'
             return
 
 Prepare the visuals based on the data given.
@@ -48,12 +51,11 @@ Prepare the visuals based on the data given.
 
 Store the data and visuals in the group.
 
-        @plugin?.editor.undoManager.transact =>
-            @set 'validation', data
-            @set 'closeDecoration',
-                "<font color='#{color}'>#{symbol}</font>"
-            @set 'closeHoverText',
-                "#{data.message}\n(Double-click for details.)"
+        @set 'validation', data
+        @set 'closeDecoration',
+            "<font color='#{color}'>#{symbol}</font>"
+        @set 'closeHoverText',
+            "#{data.message}\n(Double-click for details.)"
 
 We can also test whether any validation data has been stored, and fetch the
 validation data if so.

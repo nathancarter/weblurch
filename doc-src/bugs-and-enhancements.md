@@ -9,17 +9,6 @@ the main project plan without these bug fixes or enhancements.
 
 ## Bug fixes
 
-### Validation
-
- * Validation currently places itself on the undo/redo queue.  Instead, it
-   should make itself invisible (not undo-able).  When saving validation
-   results, temporarily replace the `add` method with an empty function,
-   and restore the original thereafter.  This could be done in place of the
-   calls to `transact` in the validation module.  Probabaly the best way to
-   do this is to extend the TinyMCE `undoManager` object with a function
-   that amends the previous snapshot, then use that after each change to
-   validation data, instead of wrapping it in a transact call.
-
 ### Overall
 
  * Registering keyboard shortcuts with TinyMCE does not override the browser

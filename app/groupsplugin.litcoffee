@@ -365,6 +365,20 @@ of one action for the purposes of undo/redo.
             @plugin.editor.undoManager.transact =>
                 ( $ [ @open, @contentNodes()..., @close ] ).remove()
 
+When a group has been removed from a document in a different way than the
+above function (such as replacing its entire content and boundaries with
+other text in the editor) the group object may persist in JavaScript memory,
+and we would like a way to detect whether a group is "stale" in such a way.
+The following function does so.  Note that it always returns false if the
+group does not have a plugin registered.
+
+        stillInEditor: =>
+            walk = @open
+            while @plugin? and walk?
+                if walk is @plugin.editor.getDoc() then return yes
+                walk = walk.parentNode
+            no
+
 Sometimes you want the HTML representation of the entire group.  The
 following method gives it to you, by imitating the code of `contentAsHTML`,
 except using `outerRange` rather than `innerRange`.
