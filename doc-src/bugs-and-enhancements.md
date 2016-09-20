@@ -102,6 +102,12 @@ the main project plan without these bug fixes or enhancements.
 
 ### MathQuill parsing
 
+ * Before doing any MathQuill updates, import MathQuill 0.10, which has big
+   breaking API changes, and update all Lurch MathQuill calls to use the new
+   API.  [See here for migration
+   notes.](https://github.com/mathquill/mathquill/wiki/v0.9.x-%E2%86%92-v0.10.0-Migration-Guide)
+   Because that is a major change to many parts of Lurch, test thoroughly,
+   including parsing MathQuill content.
  * Support adjacent atomics as factors in a product
  * Support chained equations
  * Add tests for things that should *not* parse, and verify that they do not
