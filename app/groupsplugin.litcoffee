@@ -17,11 +17,7 @@ it can access it.  It also requires [the overlay
 plugin](overlayplugin.litcoffee) to be loaded in the same editor.
 
 All changes made to the document by the user are tracked so that appropriate
-events can be called in this plugin to update group objects.  The one
-exception to this rule is that calls to the `setContents()` method of the
-editor's selection, made by a client, cannot be tracked.  Thus if you call
-such a method, you should call `groupChanged()` in any groups whose contents
-have changed based on your call to `setContents()`.
+events can be called in this plugin to update group objects.
 
 # Global functions
 
