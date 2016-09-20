@@ -169,107 +169,147 @@ a rule defined in a dependency.
 
 ## The validation process
 
-The following function can be applied to any expression.  It runs validation
-and stores the result in the group.  The verbosity flag defaults to false,
-to speed up the process.  This function can be run a second time with the
-parameter set to true in those situations where the user specifically asks
-for greater detail.
+### Primary API
 
-This workhorse function is called internally only.  The external API (a
-member of the Group class) is defined immediately after this function, and
-calls this one.
+Validating a group is defined by the following function, which calls a big
+workhorse function `computeValidationAsync` on the group, then uses the
+`saveValidation` member of the group on the result.  The workhorse function
+is defined below.
+
+    window.Group::validate = ->
+        @plugin.editor.LoadSave.validationsPending ?= { }
+        @plugin.editor.LoadSave.validationsPending[@id()] = yes
+        try
+            @computeValidationAsync ( result ) =>
+                try
+                    @saveValidation result
+                    delete @plugin.editor.LoadSave.validationsPending[@id()]
+                catch e
+                    delete @plugin.editor.LoadSave.validationsPending[@id()]
+                    throw e
+        catch e
+            delete @plugin.editor.LoadSave.validationsPending[@id()]
+            throw e
+
+The following function can be applied to any expression.  It runs validation
+and passes the result to a callback.  The verbosity flag defaults to false,
+to speed up the process.  This function can be run a second time with the
+parameter set to true if the user specifically asks for greater detail.
+
+This workhorse function is called internally only.  The external API is a
+member of the Group class defined immediately above, and calls this one.
+This function detects which of several specific validation functions it
+should call, and dispatches the work to one of those functions, based on
+what kind of expression is to be validated.
 
     window.Group::computeValidationAsync = ( callback, verbose = no ) ->
         # console.log "VALIDATING: #{@contentAsText()} (id #{@id()})"
-        reasons = @lookupAttributes 'reason'
-        ruleLanguages = [ 'JavaScript' ]
 
 If the expression is a rule, it gets validated differently than if it is a
 step of work.  Rules have the following requirements:
 
+        if @lookupAttributes( 'rule' ).length > 0
+            return @computeRuleValidationAsync callback, verbose
+
+If the expression has no reason attribute, we clear out any old validation,
+and are done.  The expression does not need to be validated.
+
+        if ( @lookupAttributes 'reason' ).length is 0
+            return callback null
+
+Since it does have a reason attribute, we consider it a step of work, and
+dispatch the rest of the computation to that validation function.
+
+        @computeStepValidationAsync callback, verbose
+
+### Specialized validation routines
+
+Here follow the definitions of the specialized validation functions called
+from the dispatcher defined immediately above.
+
+This validation function validates rules:
+
+    ruleLanguages = [ 'JavaScript' ]
+    window.Group::computeRuleValidationAsync = ( callback, verbose ) ->
+
 First, you cannot attach a reason to a rule to support it.  Rules are
 validated based solely on their structure.
 
-        if @lookupAttributes( 'rule' ).length > 0
-            if reasons.length > 0
-                validationData =
-                    result : 'invalid'
-                    message : 'You may not attempt to justify a rule using a
-                        reason.  Rule validity is determined solely by the
-                        rule\'s structure.'
-                if verbose
-                    validationData.verbose = 'Try removing all reason
-                        attributes from the rule.'
-                return callback validationData
+        if ( @lookupAttributes 'reason' ).length > 0
+            validationData =
+                result : 'invalid'
+                message : 'You may not attempt to justify a rule using a
+                    reason.  Rule validity is determined solely by the
+                    rule\'s structure.'
+            if verbose
+                validationData.verbose = 'Try removing all reason
+                    attributes from the rule.'
+            return callback validationData
 
 Second, it must be a code-based rule, because that's all that's currently
 supported.
 
-            languages = @lookupAttributes 'code'
-            if languages.length is 0
-                validationData =
-                    result : 'invalid'
-                    message : 'Only code-based rules are supported at this
-                        time.  This rule does not have a code attribute.'
-                if verbose
-                    validationData.verbose = "<p>Try adding an attribute
-                        with key \"code\" and value equal to the name of the
-                        language in which the code is written.  Supported
-                        languages:</p>
-                        <ul><li>#{ruleLanguages.join '</li><li>'}</li></ul>"
-                return callback validationData
-            for language, index in languages
-                languages[index] = if language instanceof OM
-                    language.value
-                else
-                    language.canonicalForm().value
-            if languages.length > 1
-                validationData =
-                    result : 'invalid'
-                    message : 'This code-based rule has more than one
-                        language specified, which is ambiguous.'
-                if verbose
-                    validationData.verbose = "Too many languages
-                        specified for the rule.  Only one is permitted.
-                        You specified: #{languages.join ','}."
-                return callback validationData
+        languages = @lookupAttributes 'code'
+        if languages.length is 0
+            validationData =
+                result : 'invalid'
+                message : 'Only code-based rules are supported at this
+                    time.  This rule does not have a code attribute.'
+            if verbose
+                validationData.verbose = "<p>Try adding an attribute
+                    with key \"code\" and value equal to the name of the
+                    language in which the code is written.  Supported
+                    languages:</p>
+                    <ul><li>#{ruleLanguages.join '</li><li>'}</li></ul>"
+            return callback validationData
+        for language, index in languages
+            languages[index] = if language instanceof OM
+                language.value
+            else
+                language.canonicalForm().value
+        if languages.length > 1
+            validationData =
+                result : 'invalid'
+                message : 'This code-based rule has more than one
+                    language specified, which is ambiguous.'
+            if verbose
+                validationData.verbose = "Too many languages
+                    specified for the rule.  Only one is permitted.
+                    You specified: #{languages.join ','}."
+            return callback validationData
 
 Finally, it must be in one of the supported languages for code-based rules.
 
-            if languages[0].toLowerCase() not in \
-               ( r.toLowerCase() for r in ruleLanguages )
-                validationData =
-                    result : 'invalid'
-                    message : "Code rules must be written in
-                        #{ruleLanguages.join '/'}."
-                if verbose
-                    validationData.verbose = "<p>The current version of
-                        Lurch supports only code-based rules written in one
-                        of the following languages.  The rule you cited is
-                        written in #{languages[0]}, and thus cannot be
-                        used.</p>
-                        <ul><li>#{ruleLanguages.join '</li><li>'}</li></ul>"
-                return callback validationData
+        if languages[0].toLowerCase() not in \
+           ( r.toLowerCase() for r in ruleLanguages )
+            validationData =
+                result : 'invalid'
+                message : "Code rules must be written in
+                    #{ruleLanguages.join '/'}."
+            if verbose
+                validationData.verbose = "<p>The current version of
+                    Lurch supports only code-based rules written in one
+                    of the following languages.  The rule you cited is
+                    written in #{languages[0]}, and thus cannot be
+                    used.</p>
+                    <ul><li>#{ruleLanguages.join '</li><li>'}</li></ul>"
+            return callback validationData
 
 If all of those checks pass, then a rule is valid.
 
-            return callback
-                result : 'valid'
-                message : 'This is a valid code-based rule.'
-                verbose : 'This is a valid code-based rule.'
+        callback
+            result : 'valid'
+            message : 'This is a valid code-based rule.'
 
-With the rule case taken care of, the rest of this function considers the
-case where the expression is a step of work, not a rule.
+This validation function validates steps of work:
 
-If the expression has no reason attribute, we clear out any old validation,
-and are done.
-
-        if reasons.length is 0 then return callback null
+    window.Group::computeStepValidationAsync = ( callback, verbose ) ->
 
 If the expression has more than one reason attribute, save a validation
 result that explains that this is not permitted (at most one reason per
 step).
 
+        reasons = @lookupAttributes 'reason'
         if reasons.length > 1
             validationData =
                 result : 'invalid'
@@ -423,22 +463,3 @@ that serialied groups can be decoded on the other end.
                 verbose : 'The background process in which the code was to
                     be run returned no value, so the code has an error.'
         , undefined, [ 'openmath-duo.min.js' ]
-
-Validating a group is then simply a matter of calling the asynchronous
-validation function on it, and using the `saveValidation` member of the
-group on the result.
-
-    window.Group::validate = ->
-        @plugin.editor.LoadSave.validationsPending ?= { }
-        @plugin.editor.LoadSave.validationsPending[@id()] = yes
-        try
-            @computeValidationAsync ( result ) =>
-                try
-                    @saveValidation result
-                    delete @plugin.editor.LoadSave.validationsPending[@id()]
-                catch e
-                    delete @plugin.editor.LoadSave.validationsPending[@id()]
-                    throw e
-        catch e
-            delete @plugin.editor.LoadSave.validationsPending[@id()]
-            throw e

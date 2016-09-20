@@ -246,7 +246,7 @@
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           element = _ref[_i];
           _results.push(element.addEventListener(eventName, function(event) {
-            return top.postMessage({
+            return parent.postMessage({
               value: event.currentTarget.value,
               id: event.currentTarget.getAttribute('id')
             }, '*');
@@ -379,7 +379,7 @@
       });
       handler = function(event) {
         if (event.data === 'getEditorContents') {
-          return top.postMessage(window.codeEditor.getValue(), '*');
+          return parent.postMessage(window.codeEditor.getValue(), '*');
         }
       };
       return window.addEventListener('message', handler, false);
@@ -2616,6 +2616,7 @@
 
     LoadSave.prototype.clear = function() {
       this.editor.setContent('');
+      this.editor.undoManager.clear();
       this.setDocumentDirty(false);
       this.setFilename(null);
       return typeof this.loadMetaData === "function" ? this.loadMetaData({}) : void 0;
@@ -2793,6 +2794,7 @@
       tmp.cd(filepath);
       _ref = tmp.read(filename), content = _ref[0], metadata = _ref[1];
       this.editor.setContent(content);
+      this.editor.undoManager.clear();
       this.editor.focus();
       this.setFilepath(filepath);
       this.setFilename(filename);
@@ -3642,24 +3644,7 @@
             editor.getBody().style[key] = value;
           }
           setTimeout(function() {
-            var h, walk, _i, _len, _ref3, _results;
-            editor.execCommand('mceFullScreen');
-            walk = editor.iframeElement;
-            while (walk && walk !== editor.container) {
-              if (walk === editor.iframeElement.parentNode) {
-                walk.style.height = 'auto';
-              } else {
-                walk.style.height = '100%';
-              }
-              walk = walk.parentNode;
-            }
-            _ref3 = editor.getDoc().getElementsByTagName('html');
-            _results = [];
-            for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
-              h = _ref3[_i];
-              _results.push(h.style.height = 'auto');
-            }
-            return _results;
+            return editor.execCommand('mceFullScreen');
           }, 0);
           editor.dom.loadCSS('./eqed/mathquill.css');
           if (((_ref3 = window.menuBarIcon) != null ? _ref3.src : void 0) != null) {
@@ -3754,6 +3739,30 @@
         return element.textContent.trim() === 'Help';
       }));
     }, 1000);
+  };
+
+  window.showUndoStack = function() {
+    var current, final, index, initial, manager, previous, _i, _ref, _results;
+    manager = tinymce.activeEditor.undoManager;
+    console.log('entry 0: document initial state');
+    _results = [];
+    for (index = _i = 1, _ref = manager.data.length; 1 <= _ref ? _i < _ref : _i > _ref; index = 1 <= _ref ? ++_i : --_i) {
+      previous = manager.data[index - 1].content;
+      current = manager.data[index].content;
+      if (previous === current) {
+        console.log("entry " + index + ": same as " + (index - 1));
+        continue;
+      }
+      initial = final = 0;
+      while (previous.slice(0, +initial + 1 || 9e9) === current.slice(0, +initial + 1 || 9e9)) {
+        initial++;
+      }
+      while (previous.slice(previous.length - final) === current.slice(current.length - final)) {
+        final++;
+      }
+      _results.push(console.log("entry " + index + ": at " + initial + ": \n\torig: " + previous.slice(initial, +(previous.length - final) + 1 || 9e9) + " \n\tnow:  " + current.slice(initial, +(current.length - final) + 1 || 9e9)));
+    }
+    return _results;
   };
 
   maybeSetupTestRecorder = function() {

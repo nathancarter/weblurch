@@ -9,13 +9,60 @@ the main project plan without these bug fixes or enhancements.
 
 ## Bug fixes
 
+### Validation
+
+ * Validation currently places itself on the undo/redo queue.  Instead, it
+   should make itself invisible (not undo-able).  When saving validation
+   results, temporarily replace the `add` method with an empty function,
+   and restore the original thereafter.  This could be done in place of the
+   calls to `transact` in the validation module.  Probabaly the best way to
+   do this is to extend the TinyMCE `undoManager` object with a function
+   that amends the previous snapshot, then use that after each change to
+   validation data, instead of wrapping it in a transact call.
+ * Test to see if validation is correctly re-run after an undo/redo
+   operation is performed.  That is, which expressions fire change events,
+   and are they the correct ones?
+
+### Overall
+
+ * Registering keyboard shortcuts with TinyMCE does not override the browser
+   actions with the same shortcut.  For example, Cmd+N and Cmd+S trigger the
+   behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
+   menu.  See [my question about this on the TinyMCE forum,](
+   http://www.tinymce.com/forum/viewtopic.php?pid=116179) and the
+   StackOverflow page to which it links with information on how you might go
+   about building a workaround if one doesn't exist already.  In general, we
+   want a way to make sure all registered TinyMCE shortcuts take precedence
+   over the browser ones.
+ * Arrows representing connections between groups don't look good sometimes.
+   Improve the heuristics for drawing them as follows.
+    * The default path is (a) up from the source until it reaches a distance
+      of h above the target's top (for some fixed constant h), (b) turn
+      NE/NW toward the target with radius r, (c) horizontally toward the
+      target, (d) turn SE/SW toward the target with radius r, then (e) down
+      to the target with an arrowhead.
+    * One problem with that strategy is that if there is little or no
+      horizontal separation, then it is (close to) just one vertical line.
+      So if the horizontal separation is under 2r, make the following
+      change.  The end of the curve can still be a turn SW of radius r,
+      followed by a step down with an arrowhead.  But from the source until
+      that point should be a single Bézier curve that begins with velocity N
+      and ends with velocity W.
+    * The other problem with the strategy is if there are many targets in
+      the same row of text, then the lines on the way to those targets will
+      all overlap, and thus become indistinguishable.  To solve this, let h
+      be a function equal to $C + 0.03\Delta x$, where $C$ is some constant
+      and $\Delta x$ is the horizontal distance between source and target
+      bubbles.  The $0.03$ is an estimate that can be customized with
+      testing.
+
 ### Load and save
 
  * Not all edits cause the document to be marked dirty.  TinyMCE events are
    not firing correctly.  [Minimal working example created.](
-   http://www.tinymce.com/develop/bugtracker_view.php?id=7511)
+   https://github.com/tinymce/tinymce/issues/2224)
    [Or see this related issue.](
-   http://www.tinymce.com/develop/bugtracker_view.php?id=7304)
+   https://github.com/tinymce/tinymce/issues/2028)
    Use the responses from that to get this
    problem fixed in Lurch, either by updating to a fixed version of TinyMCE
    or by installing a workaround here.  Although you've heard about the
@@ -23,25 +70,11 @@ the main project plan without these bug fixes or enhancements.
    you may be able to correct this problem partially with those events.
    (We have updated to a newer version of TinyMCE, but not yet checked to
    see if this bug persists.)
- * Using the keyboard shortcut for New or Open on Mac triggers the Chrome
-   behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
-   menu.  See [my question about this on the TinyMCE forum,](
-   http://www.tinymce.com/forum/viewtopic.php?pid=116179) and the
-   StackOverflow page to which it links with information on how you might go
-   about building a workaround if one doesn't exist already.
  * It's too easy to navigate away from the editor and lose your work.  Make
    a popup that asks if you really want to leave the page or not.
 
 ### Other
 
- * When you open (or type) a file that's longer than the screen, you must
-   open and close the JS console to force resizing, or it won't scroll
-   vertically.  Alternatively, you can resize the window.  Seems like the
-   resize event handler needs to be called immediately after the page
-   geometry is set up.
- * The Insert Menu covers the toolbar and will not disappear, even when an
-   item is selected.  This seems like it is either a TinyMCE bug (and may go
-   away if we update TinyMCE) or it is a bug in our use of TinyMCE.
  * Formats menu is currently empty.
  * Some of the `*-duo.litcoffee` files in `src/` in the master branch also
    have committed versions in `app/` that are merely copies.  This is
@@ -56,8 +89,25 @@ the main project plan without these bug fixes or enhancements.
 
 ## Enhancements
 
+### Validation
+
+ * The boilerplate code at the end of `computeStepValidationAsync` in the
+   validation module is not as extensive (and thus as helpful) as it is in
+   the OverLeaf specification.  Specifically, you can declare variables for
+   `valid`, `message`, and `verbose`, and then package them into an object
+   at the end as part of the boilerplate.  Then users just need to assign to
+   those variables.
+ * Make validation icons go grey at the start of validation, and they'll be
+   replaced by non-gray ones when validation completes.
+
 ### MathQuill parsing
 
+ * Before doing any MathQuill updates, import MathQuill 0.10, which has big
+   breaking API changes, and update all Lurch MathQuill calls to use the new
+   API.  [See here for migration
+   notes.](https://github.com/mathquill/mathquill/wiki/v0.9.x-%E2%86%92-v0.10.0-Migration-Guide)
+   Because that is a major change to many parts of Lurch, test thoroughly,
+   including parsing MathQuill content.
  * Support adjacent atomics as factors in a product
  * Support chained equations
  * Add tests for things that should *not* parse, and verify that they do not
@@ -136,6 +186,11 @@ topics.
 
 ### UI for Connections Between Groups
 
+ * Add a keyboard shortcut for entering connection mode (that is, clicking
+   the connection button on the toolbar).  This should be in the groups
+   plugin.
+ * Add a keyboard shortcut for cycling through the built-in keys an
+   attribute expression can have.  This should be in the main Lurch app.
  * Add an option that when entering arrow-creation mode, ALL bubble outlines
    in the document are faintly drawn (not their tags), so that it's
    completely clear where a user wants to aim the mouse to hit a certain
@@ -168,10 +223,6 @@ topics.
 
 ### Miscellaneous
 
- * Aiming the mouse at the close grouper, to bring up validation hover info,
-   turns the mouse pointer into a text cursor (shaped like an I, rather than
-   an arrow), which can be confusing.  Make the mouse pointer over groupers
-   be a plain old ordinary arrow, like usual.
  * Move all plugin files into the `src/` folder, if possible.
  * See [this answer](http://stackoverflow.com/a/32120344/670492) to your
    StackOverflow question about higher resolution HTML canvas rendering on

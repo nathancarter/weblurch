@@ -163,6 +163,7 @@ document.
 
         clear: =>
             @editor.setContent ''
+            @editor.undoManager.clear()
             @setDocumentDirty no
             @setFilename null
             @loadMetaData? { }
@@ -345,6 +346,7 @@ of this plugin are set to be the parameters passed here.
             tmp.cd filepath
             [ content, metadata ] = tmp.read filename
             @editor.setContent content
+            @editor.undoManager.clear()
             @editor.focus()
             @setFilepath filepath
             @setFilename filename

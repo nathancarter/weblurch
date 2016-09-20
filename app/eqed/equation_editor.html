@@ -20,17 +20,17 @@
     </div>
   </div>
   <script type="text/javascript">
-    var params = top.tinymce.activeEditor.windowManager.getParams();
+    var params = parent.tinymce.activeEditor.windowManager.getParams();
     var existingLatex = params['existing_latex'];
 
     var equationEditor = new EquationEditor.EquationEditorView({
       $el: $('.equation-editor'),
       existingLatex: existingLatex,
-      restrictions: top.tinymce.equationEditorRestrictions
+      restrictions: parent.tinymce.equationEditorRestrictions
     }).render();
 
     params['latexInput'] = equationEditor.input();
-    top.tinymce.activeEditor.windowManager.setParams(params);
+    parent.tinymce.activeEditor.windowManager.setParams(params);
   </script>
 </body>
 </html>

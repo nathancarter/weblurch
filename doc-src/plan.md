@@ -13,106 +13,159 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
+## Enabling and disabling features
+
+Implement the following system satisfying the following requirements, for
+allowing users to enable/disable certain app features on a per-document
+basis.
+
+ * The app register a list of features (probably a short phrase naming each,
+   plus a one-to-two-sentence description of it, plus a default value for
+   enabled/disabled).
+ * The app can then query, at any time, the enabled/disabled status of any
+   feature in the currently open document.  At first, such a function should
+   just return the default value.
+ * The document settings dialog will then have a section for application
+   features, with checkboxes for enabling/disabling all registered features.
+   Such changes will be written to document metadata.
+ * Then you can upgrade the enable/disable query function to check the
+   document metadata first, and return the default value only if there is no
+   information in the document metadata about the feature.
+ * Look through the OverLeaf specification for places where various features
+   are mentioned as optional, and if any are currently implemented in the
+   app, add code that ignores/disables them in any document for which the
+   query function returns "disabled" for that feature.
+ * Ensure that there is an event that fires when document settings are
+   changed; if there is not one, create one.
+ * At any point where a change in settings will require some kind of
+   re-processing (e.g., the list of supported validation features was
+   changed) be sure that a handler for the event exists and works.
+
 ## Parsing test
 
 Rewrite the following section to more accurately reflect Section 24 of the
 specification, then implement it as a module attached to the main Lurch
 application, a module that can easily be disabled if we need to redesign it.
 
- * Create a group type called "category name" that can hold any text.  Its
-   tag will always contain the phrase "category name."
- * Create a group type called "category definition."
-   * It has an attribute called "definition type" that can be selected with
-     the bubble tag context menu, and is one of the following.
-     * Built-in types
-       * integers base 10
-       * real numbers base 10
-       * one letter a-z/A-Z
-       * (more can be added to this list later)
-     * Regular expression
-     * Symbol (containing, for example, the infinity symbol or π)
-     * Pattern (containing, for example, a non-atomic bubble, or a
-       MathQuill instance)
-   * Whichever of the above is chosen will be used as the bubble tag
-     contents.
-   * Choosing any of the options, if the bubble is empty, fills the bubble
-     with example content for that definition type.  For built-in types, it
-     fills the bubble with a human-readable description of the built-in.
- * Make "category name" groups able to connect by arrows to "category
-   definition" groups or "category name" groups, but only up to one target.
- * Create a group type called "name" that can hold any text.
-   * Permit it to connect to a "category definition" group, but only up to
-     one target.
-   * Permit "category type" groups to connect to "name" type groups also,
-     but still at most one target.
-   * Its tag will behave as follows.
-     * If it is not connected to a target, the tag says "name."
-     * If it has no category name connected to it, the tag says "operator
-       name."
-     * If it contains any commas or spaces, the tag says "variable names."
-     * Otherwise, it says "variable name."
- * Create a group type called "test" that can hold any text.  Its tag always
-   contains the phrase "test."
- * Create a method that computes, for any given "category definition" group,
-   a simple representation of what function should be called in a parser
-   object to extend it by adding that definition; the result should be JSON.
-   * A built-in category definition B modified by a category name N should
-     represent the grammar rule N -> B.
-   * A regular expression category definition R modified by a category name
-     N should represent the grammar rule N -> R.
-   * A symbol category definition S modified by a category name N should
-     represent the grammar rule N -> S.
-   * One category name N1 modified by another N2 should represent the
-     grammar rule N2 -> N1.  This is the first rule for which the right-hand
-     side is a non-terminal.
-   * A pattern category definition P modified by a category name N will
-     usually also have other things modifying it.  An optional operator name
-     (as a name bubble) can target P; call that bubble O.  Also there may be
-     bubble V1 through Vn targeting P, each of type name, specifying which
-     identifiers in P are to be seen as placeholders (not literals).  Each
-     such Vi should be modified by a category name Ni to give it a type (in
-     the sense of grammar non-terminals).  This entire structure should
-     represent the grammar rule N -> P', where P' is P with each Vi replaced
-     by Ni.  The bubble O will be used to construct an OpenMath symbol used
-     when constructing a parse tree, and which will be mentioned in the
-     bubble tag for expressions with this operator as their outermost.  Note
-     also that each Vi may contain one or more variables.
- * The `contentsChanged` handler for any given group in the document should
-   call that function in itself (if it's a category definition group) or (if
-   it's not) in any category definition group to which it's connected,
-   storing the result as an attribute of the group on which it was called.
+ * Add two new attribute types to the context menu for attribute expressions
+   in the document: "notation," "type," and "meaning."
+ * Add a new validation category for anything that has a "notation",
+   "meaning," or "type" arrow going in or out.  Call it notation validation.
+ * Start notation validation by verifying that the expression being
+   validated fits all of the following criteria.  If it does not, mark it
+   invalid.
+    * If you output type arrows, you output no other kind of arrows.
+      Reason: A type cannot also be a notation or meaning.
+    * If you output type arrows, you take no arrows in.
+      Reason: A type cannot be assigned any notation, type, or meaning.
+    * If you output a notation arrow, you output at most one.
+      Reason: We currently require notation to be in exactly one category.
+    * If you output a meaning arrow, you output at most one.
+      Reason: Notation must be unambiguous.
+    * If you output a meaning, you do not take in a type.
+      Reason: Only patterns can have meaning, and thus they are non-atomic
+      expressions.  Types are only for atomic expressions.
+    * If you take in a meaning, you take in no notation arrows.
+      Reason: Meanings cannot also be notational categories.
+    * If you take in a meaning, you take in no type arrows.
+      Reason: Meanings are not notations, and thus can't have notational
+      types.
+    * If you take in a notation, you take in no type arrows.
+      Reason: Notational categories aren't expressions, to be assigned
+      types.
+    * If you take in a type, you take in no other kind of arrows.
+      Reason: This means you're the notation for an atomic type, and cannot
+      be assigned a meaning, nor treated as a notational category.
+    * If you take in a meaning, you output no arrows.
+      Reason: Meanings are supposed to stand alone, not be a piece of
+      something else.
+    * If you take in a notation, you output no type arrow.
+      Reason: Notational categories can't also be types.
+    * If you take in a type arrow, you output neither type nor meaning
+      arrows.
+      Reason: Only atomic notations have types, and they canont be types or
+      meanings.
+ * Create a function that computes, for any given expression, whether it is
+   the "core" of a notation definition.  For a non-pattern, this is the
+   target of the type arrow.  For a pattern, this is the source of the
+   meaning arrow.
+ * Extend that function to return false if any expression in the connected
+   component of the attribution graph is not valid.
+ * Create a function that, for cores of notation definitions, computes a
+   JSON representation of how to modify a parser with that new rule.  Here's
+   how:
+     * For a structure of the form `[A]<--notation--[B]<--type--[C]`:
+        * If C is "built-in" then try to read B as integer/real/letter/etc.,
+          and use a built-in regular expression to create an atomic parsing
+          rule in category A.
+        * If C is "regular expression" or "regexp" or "re" then create an
+          atomic parsing rule using B's content as a regular expression in
+          category A.
+        * If C is "symbol" then create an atomic parsing rule using B as
+          static (not a regular expression) in category A.
+     * For a structure of the form `[A]<--notation--[B]`:
+       Create the parsing rule that B is a subcategory of A.
+     * For a structure of the form `[A]<--notation--[B]` with n other
+       structures of the form `[A1]--type-->[variables]-->[B]`, and
+       optionally a connection `[B]--meaning-->[M]`:
+       Create, in category A, a grammar rule that follows the pattern in B,
+       but with each variable replaced by its type (some Ai).  As the
+       head of the OpenMath expression that will be generated, use the
+       `OM.encodeAsIdentifier` version of the first label on the definition
+       core.  If there is no label, encode the definition itself (with the
+       types, not the variable names).
+       Also record in the same JSON data all labels of the core, and the
+       complete form of the meaning.  That complete form will include the
+       notational definition as an attribute, which should be removed.
  * Create a function that applies any such JSON record of a command to a
    parser object, thus modifying that parser appropriately.
- * Whenever any definition type group in the document has its JSON meaning
-   recomputed, loop through all category definition top-level groups in the
-   document, doing the following.
-   * Before the loop, create a parser P.
-   * Upon encountering a category definition group *after* the one that
-     changed, apply to it the function that extends P with the meaning of
-     that group.
-   * Upon encountering a test type group, run P on its contents and place
-     the resulting structure within the test type group.
- * Whenever any test type group in the document changes, do the same loop as
-   above, but the only test that should be recomputed is the one that
+ * Extend the `contentsChanged` handler for expressions so that, if they are
+   part of a notation/type/meaning component in the attribution graph, find
+   their core and call this function on it, saving the result internally,
+   much like validation does.
+ * Whenever any such parsing JSON data is recomputed and stored, loop
+   through all later expressions in the document, doing the following.
+   * Before the loop, create an empty parser P.
+   * Upon encountering an expression containing notation JSON data, apply to
+     it the function that extends P with that data.
+   * Upon encountering an expression with attribute test set to true, run P
+     on its contents and store the resulting structure as a group attribute
+     in the expression.  (If the expression doesn't parse, this may be
+     null.)
+ * Create three functions for storing meanings in parsing test expressions:
+    * The first reads two attributes, one storing the computed meaning and
+      one storing the official meaning (which, for now, no expression yet
+      has, but that's coming soon).  It then writes into the expression the
+      following data.
+       * If there is no official meaning stored, decorate the close grouper
+         with a question mark.  The hover message should show the canonical
+         form of the computed meaning, and mention that there is no official
+         meaning against which to compare it.
+       * If there is an official meaning and it matches the computed one,
+         decorate the close grouper with a green check (as in validation)
+         and the tooltip can report the one (correct) meaning in canonical
+         form.
+       * If there is an official meaning and it differs from the computed
+         one, decorate the close grouper with a red X (as in validation) and
+         the tooltip can report the two meanings in canonical forms.
+    * The second takes an official meaning as input, writes it to the
+      official meaning attribute of the expression, then calls the first
+      function to update validation.
+    * The third takes a parser and applies it to the text content of the
+      expression, then writes it to the computed meaning attribute of the
+      expression, then calls the first function to update validation.
+ * Update the loop that re-parses all test-type groups to use this new
+   function to store computed meanings in test expressions, so that their
+   visual validation results are also updated.
+ * Whenever any expression with type test set to true changes, do the same
+   loop, but the only test that should be recomputed is the one that
    changed.
- * Create a context menu item in test type groups that allows you to see, in
-   a popup window, the parsed structure stored in that group.
- * Add a context menu item in test type groups that allows you to mark a
-   test as currently passing.  This takes the currently parsed meaning of
-   that group and stores it under a second key, the meaning that *ought* to
-   be parsed by that group.  (For later comparison purposes, if input data
-   changes, to prevent regression.)
- * Add a context menu item for removing such marks.
- * When writing to a test type group's meaning attribute (or to the
-   attribute storing the meaning it ought to have), also mark it with a
-   suffix that looks like one of the following.
-   * If it has no data stored for what structure it ought to have, mark it
-     with a gray question mark.  Hovering the question mark should explain
-     this.
-   * If the "what ought to be parsed" data matches the data we just parsed
-     and are now storing, mark it with a green check box.  Hovering should,
-     again, explain this.
-   * Mark it with a red check box, and a corresponding hover explanation.
+ * Add a context menu item in expressions that have "test" set to true; it
+   should allow you to mark a test as currently passing.  This takes the
+   currently parsed meaning of that group and stores it as the official
+   meaning.  This should trigger a change event in the group, and thus
+   update its visual appearance.
+ * Add another context menu item for clearing out the offical meaning.
 
 ## Google Drive support
 
@@ -136,8 +189,8 @@ collaboration apps such as Google Docs and Overleaf, as follows.
    * Whenever the document is dirty, it has a warning message on the toolbar
      that says something like "Not saved" followed by a button that says
      "Enable cloud storage."
-   * The "Go online" button will open the document preferences dialog and
-     scroll down to/highlight the section about logging into Google Drive.
+   * That button will open the document preferences dialog and scroll down
+     to/highlight the section about logging into Google Drive.
    * File > Document properties... will let you change the name of the
      document which will simply be stored as document metadata; it will have
      no impact on filename, since there is no filename (yet).
@@ -210,10 +263,12 @@ pages.
 
 Is it possible for the entire Lurch app to exist inside MediaWiki, so that
 editing a wiki page was done using Lurch as the editor?  That would be
-excellent for many use cases.  Offline use would still necessitate the
-normal app, and this would be tricky to accomplish, because wiki integration
-of something that complex will be touchy, but it would be impressive and
-intuitive.
+excellent for many use cases.  Certainly, we can use the editor in an iframe
+but the question is about integrating with (replacing) MediaWiki's existing
+editing features.  You would still want to keep the normal full-page app
+available for those who don't want the trappings of the wiki.  But it would
+be very intuitive, because people are familiar with wikis, and can begin as
+readers, then move up to being writers.
 
 ### Desktop app
 
