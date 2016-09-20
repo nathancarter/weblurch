@@ -13,6 +13,34 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
+## Enabling and disabling features
+
+Implement the following system satisfying the following requirements, for
+allowing users to enable/disable certain app features on a per-document
+basis.
+
+ * The app register a list of features (probably a short phrase naming each,
+   plus a one-to-two-sentence description of it, plus a default value for
+   enabled/disabled).
+ * The app can then query, at any time, the enabled/disabled status of any
+   feature in the currently open document.  At first, such a function should
+   just return the default value.
+ * The document settings dialog will then have a section for application
+   features, with checkboxes for enabling/disabling all registered features.
+   Such changes will be written to document metadata.
+ * Then you can upgrade the enable/disable query function to check the
+   document metadata first, and return the default value only if there is no
+   information in the document metadata about the feature.
+ * Look through the OverLeaf specification for places where various features
+   are mentioned as optional, and if any are currently implemented in the
+   app, add code that ignores/disables them in any document for which the
+   query function returns "disabled" for that feature.
+ * Ensure that there is an event that fires when document settings are
+   changed; if there is not one, create one.
+ * At any point where a change in settings will require some kind of
+   re-processing (e.g., the list of supported validation features was
+   changed) be sure that a handler for the event exists and works.
+
 ## Parsing test
 
 Rewrite the following section to more accurately reflect Section 24 of the

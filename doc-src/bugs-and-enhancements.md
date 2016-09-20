@@ -20,10 +20,46 @@ the main project plan without these bug fixes or enhancements.
    should make itself invisible (not undo-able).  When saving validation
    results, temporarily replace the `add` method with an empty function,
    and restore the original thereafter.  This could be done in place of the
-   calls to `transact` in the validation module.
+   calls to `transact` in the validation module.  Probabaly the best way to
+   do this is to extend the TinyMCE `undoManager` object with a function
+   that amends the previous snapshot, then use that after each change to
+   validation data, instead of wrapping it in a transact call.
  * Test to see if validation is correctly re-run after an undo/redo
    operation is performed.  That is, which expressions fire change events,
    and are they the correct ones?
+
+### Overall
+
+ * Registering keyboard shortcuts with TinyMCE does not override the browser
+   actions with the same shortcut.  For example, Cmd+N and Cmd+S trigger the
+   behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
+   menu.  See [my question about this on the TinyMCE forum,](
+   http://www.tinymce.com/forum/viewtopic.php?pid=116179) and the
+   StackOverflow page to which it links with information on how you might go
+   about building a workaround if one doesn't exist already.  In general, we
+   want a way to make sure all registered TinyMCE shortcuts take precedence
+   over the browser ones.
+ * Arrows representing connections between groups don't look good sometimes.
+   Improve the heuristics for drawing them as follows.
+    * The default path is (a) up from the source until it reaches a distance
+      of h above the target's top (for some fixed constant h), (b) turn
+      NE/NW toward the target with radius r, (c) horizontally toward the
+      target, (d) turn SE/SW toward the target with radius r, then (e) down
+      to the target with an arrowhead.
+    * One problem with that strategy is that if there is little or no
+      horizontal separation, then it is (close to) just one vertical line.
+      So if the horizontal separation is under 2r, make the following
+      change.  The end of the curve can still be a turn SW of radius r,
+      followed by a step down with an arrowhead.  But from the source until
+      that point should be a single Bézier curve that begins with velocity N
+      and ends with velocity W.
+    * The other problem with the strategy is if there are many targets in
+      the same row of text, then the lines on the way to those targets will
+      all overlap, and thus become indistinguishable.  To solve this, let h
+      be a function equal to $C + 0.03\Delta x$, where $C$ is some constant
+      and $\Delta x$ is the horizontal distance between source and target
+      bubbles.  The $0.03$ is an estimate that can be customized with
+      testing.
 
 ### Load and save
 
@@ -39,12 +75,6 @@ the main project plan without these bug fixes or enhancements.
    you may be able to correct this problem partially with those events.
    (We have updated to a newer version of TinyMCE, but not yet checked to
    see if this bug persists.)
- * Using the keyboard shortcut for New or Open on Mac triggers the Chrome
-   behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
-   menu.  See [my question about this on the TinyMCE forum,](
-   http://www.tinymce.com/forum/viewtopic.php?pid=116179) and the
-   StackOverflow page to which it links with information on how you might go
-   about building a workaround if one doesn't exist already.
  * It's too easy to navigate away from the editor and lose your work.  Make
    a popup that asks if you really want to leave the page or not.
 
@@ -63,6 +93,17 @@ the main project plan without these bug fixes or enhancements.
    problematic.  Use `contentAsCode` instead.
 
 ## Enhancements
+
+### Validation
+
+ * The boilerplate code at the end of `computeStepValidationAsync` in the
+   validation module is not as extensive (and thus as helpful) as it is in
+   the OverLeaf specification.  Specifically, you can declare variables for
+   `valid`, `message`, and `verbose`, and then package them into an object
+   at the end as part of the boilerplate.  Then users just need to assign to
+   those variables.
+ * Make validation icons go grey at the start of validation, and they'll be
+   replaced by non-gray ones when validation completes.
 
 ### MathQuill parsing
 
@@ -144,6 +185,11 @@ topics.
 
 ### UI for Connections Between Groups
 
+ * Add a keyboard shortcut for entering connection mode (that is, clicking
+   the connection button on the toolbar).  This should be in the groups
+   plugin.
+ * Add a keyboard shortcut for cycling through the built-in keys an
+   attribute expression can have.  This should be in the main Lurch app.
  * Add an option that when entering arrow-creation mode, ALL bubble outlines
    in the document are faintly drawn (not their tags), so that it's
    completely clear where a user wants to aim the mouse to hit a certain
