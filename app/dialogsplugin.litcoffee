@@ -33,7 +33,7 @@ a blob, so that it can be passed to the TinyMCE dialog-creation routines.
             install = ( tagName, eventName ) ->
                 for element in document.getElementsByTagName tagName
                     element.addEventListener eventName, ( event ) ->
-                        top.postMessage
+                        parent.postMessage
                             value : event.currentTarget.value
                             id : event.currentTarget.getAttribute 'id'
                         , '*'
@@ -156,7 +156,7 @@ receive the text in the dialog's input as a parameter.
                 mode : language
             handler = ( event ) ->
                 if event.data is 'getEditorContents'
-                    top.postMessage window.codeEditor.getValue(), '*'
+                    parent.postMessage window.codeEditor.getValue(), '*'
             window.addEventListener 'message', handler, no
         html = "<html><head>
             <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.17.0/codemirror.min.css'>
