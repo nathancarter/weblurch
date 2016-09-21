@@ -100,7 +100,7 @@ that begins with a hyphen is a local plugin written as part of this project.
 
             plugins :
                 'advlist table charmap colorpicker image link importcss
-                paste print save searchreplace textcolor fullscreen
+                paste print searchreplace textcolor fullscreen
                 -loadsave -overlay -groups -equationeditor -dependencies
                 -dialogs ' \
                 + ( "-#{p}" for p in window.pluginsToLoad ).join ' '
@@ -175,6 +175,12 @@ In our case, there will be only one, but this is how TinyMCE installs setup
 functions, regardless.
 
             setup : ( editor ) ->
+
+See the [keyboard shortcuts workaround
+file](keyboard-shortcuts-workaround.litcoffee) for an explanation of the
+following line.
+
+                keyboardShortcutsWorkaround editor
 
 Add a Help menu.
 

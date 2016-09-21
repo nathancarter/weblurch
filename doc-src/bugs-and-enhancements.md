@@ -11,15 +11,6 @@ the main project plan without these bug fixes or enhancements.
 
 ### Overall
 
- * Registering keyboard shortcuts with TinyMCE does not override the browser
-   actions with the same shortcut.  For example, Cmd+N and Cmd+S trigger the
-   behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
-   menu.  See [my question about this on the TinyMCE forum,](
-   http://www.tinymce.com/forum/viewtopic.php?pid=116179) and the
-   StackOverflow page to which it links with information on how you might go
-   about building a workaround if one doesn't exist already.  In general, we
-   want a way to make sure all registered TinyMCE shortcuts take precedence
-   over the browser ones.
  * Arrows representing connections between groups don't look good sometimes.
    Improve the heuristics for drawing them as follows.
     * The default path is (a) up from the source until it reaches a distance
@@ -181,11 +172,11 @@ topics.
    in the document are faintly drawn (not their tags), so that it's
    completely clear where a user wants to aim the mouse to hit a certain
    bubble.
- * Add an option that show-groupers (Ctrl+1) mode is automatically enabled
-   when the user enters arrow-connection mode, and re-disabled (if it was
-   disabled in the first place) when exiting arrow-connection mode.  This is
-   like the previous feature, but more aggressive and techy.  (Do we still
-   need it now that we have the previous feature?)
+ * Add an option that show-groupers (Ctrl/Cmd+1) mode is automatically
+   enabled when the user enters arrow-connection mode, and re-disabled (if
+   it was disabled in the first place) when exiting arrow-connection mode.
+   This is like the previous feature, but more aggressive and techy.  (Do we
+   still need it now that we have the previous feature?)
  * On mobile, a tap highlights the innermost bubble under it, without
    creating the arrow yet, and shows OK/cancel buttons hovering nearby.  If
    the user tapped what he/she expected to tap, then he/she hits OK and it
