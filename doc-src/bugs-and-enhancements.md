@@ -50,7 +50,6 @@ the main project plan without these bug fixes or enhancements.
 
 ### Other
 
- * Formats menu is currently empty.
  * Some of the `*-duo.litcoffee` files in `src/` in the master branch also
    have committed versions in `app/` that are merely copies.  This is
    necessary in the gh-pages branch, but in master it's redundant.  Fix.

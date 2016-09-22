@@ -17,7 +17,8 @@ required order of completion.
 
 Implement the following system satisfying the following requirements, for
 allowing users to enable/disable certain app features on a per-document
-basis.
+basis.  The first optional feature is pattern-based rules, so this is not
+necessary to implement until then.
 
  * The app register a list of features (probably a short phrase naming each,
    plus a one-to-two-sentence description of it, plus a default value for
