@@ -45,8 +45,7 @@ the main project plan without these bug fixes or enhancements.
    or by installing a workaround here.  Although you've heard about the
    KeyUp and SetContent events that you're using in the Groups package, so
    you may be able to correct this problem partially with those events.
-   (We have updated to a newer version of TinyMCE, but not yet checked to
-   see if this bug persists.)
+   (Verified on 9/22/16 that these bugs are still unresolved.)
 
 ### Other
 
@@ -85,25 +84,6 @@ the main project plan without these bug fixes or enhancements.
  * Support adjacent atomics as factors in a product
  * Support chained equations
  * Add tests for things that should *not* parse, and verify that they do not
-
-### HTML export/import
-
- * Add an HTML export function that lets you download the contents of the
-   editor (plus metadata at the front, just like when exporting to the wiki)
-   for publishing on your own website, for example, or pasting into a blog
-   post.  Wrap it in a DIV with class "lurch-embed".
- * Expose that functionality to the user, on the File menu.
- * Add an HTML import function that lets you specify a URL, sends an XHR to
-   get the page at that URL, and finds all DIVs with class "lurch-embed".
-   Show the user a bit of the text from each and let the user choose which
-   to import.  Be sure to extract the metadata as well, just as with a wiki
-   import.
- * Expose that functionality to the user, on the File menu.
- * Extend dependencies so that they can be at arbitrary URLs, now, not just
-   on the wiki.  Use the HTML import function just created for this purpose,
-   but stipulate that a dependency imports only the first "lurch-embed" DIV
-   on a page.  To check the last modified date of arbitrary web pages, see
-   [here.](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date)
 
 ### Dependencies
 
