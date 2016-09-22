@@ -109,8 +109,8 @@ Not all of the following plugins are working yet, but most are.  A plugin
 that begins with a hyphen is a local plugin written as part of this project.
 
             plugins :
-                'advlist table charmap colorpicker image link importcss
-                paste print save searchreplace textcolor fullscreen
+                'advlist table charmap colorpicker image link
+                paste print searchreplace textcolor fullscreen
                 -loadsave -overlay -groups -equationeditor -dependencies
                 -dialogs ' \
                 + ( "-#{p}" for p in window.pluginsToLoad ).join ' '
@@ -127,12 +127,56 @@ We then install two toolbars, with separators indicated by pipes (`|`).
                     | undo redo | cut copy paste
                     | alignleft aligncenter alignright alignjustify
                     | bullist numlist outdent indent blockquote | table'
-                'fontselect styleselect | bold italic underline
-                    textcolor subscript superscript removeformat
+                'fontselect fontsizeselect styleselect
+                    | bold italic underline
+                      textcolor subscript superscript removeformat
                     | link unlink | charmap image
                     | spellchecker searchreplace | equationeditor | ' + \
                     groupTypeNames.join( ' ' ) + ' connect' + \
                     moreToolbarItems()
+            ]
+
+The following settings support some of the buttons on the toolbar just
+defined.  See
+[here](https://www.tinymce.com/docs/configure/content-formatting/) for
+documentation on how to edit this style data.
+
+            fontsize_formats : '8pt 10pt 12pt 14pt 18pt 24pt 36pt'
+            style_formats_merge : yes
+            style_formats : [
+                title: 'Grading'
+                items: [
+                    title : 'Red highlighter'
+                    inline  : 'span'
+                    styles :
+                        'border-radius' : '5px'
+                        padding : '2px 5px'
+                        margin : '0 2px'
+                        color : '#770000'
+                        'background-color' : '#ffaaaa'
+                ,
+                    title : 'Yellow highlighter'
+                    inline  : 'span'
+                    styles :
+                        'border-radius' : '5px'
+                        padding : '2px 5px'
+                        margin : '0 2px'
+                        color : '#777700'
+                        'background-color' : '#ffffaa'
+                ,
+                    title : 'Green highlighter'
+                    inline  : 'span'
+                    styles :
+                        'border-radius' : '5px'
+                        padding : '2px 5px'
+                        margin : '0 2px'
+                        color : '#007700'
+                        'background-color' : '#aaffaa'
+                ,
+                    title : 'No highlighting'
+                    inline : 'span'
+                    exact : yes
+                ]
             ]
 
 We then customize the menus' contents as follows.
@@ -185,6 +229,12 @@ In our case, there will be only one, but this is how TinyMCE installs setup
 functions, regardless.
 
             setup : ( editor ) ->
+
+See the [keyboard shortcuts workaround
+file](keyboard-shortcuts-workaround.litcoffee) for an explanation of the
+following line.
+
+                keyboardShortcutsWorkaround editor
 
 Add a Help menu.
 
@@ -252,6 +302,13 @@ HTML.
                         if event.keyCode is 9 # tab key
                             event.preventDefault()
                             editor.insertContent '&emsp;'
+
+Ensure users do not accidentally navigate away from their unsaved changes.
+
+                    window.addEventListener 'beforeunload', ( event ) ->
+                        if editor.LoadSave.documentDirty
+                            event.returnValue = 'You have unsaved changes.'
+                            return event.returnValue
 
 And if the app installed a global handler for editor post-setup, run that
 function now.

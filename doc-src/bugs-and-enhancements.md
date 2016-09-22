@@ -11,15 +11,6 @@ the main project plan without these bug fixes or enhancements.
 
 ### Overall
 
- * Registering keyboard shortcuts with TinyMCE does not override the browser
-   actions with the same shortcut.  For example, Cmd+N and Cmd+S trigger the
-   behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
-   menu.  See [my question about this on the TinyMCE forum,](
-   http://www.tinymce.com/forum/viewtopic.php?pid=116179) and the
-   StackOverflow page to which it links with information on how you might go
-   about building a workaround if one doesn't exist already.  In general, we
-   want a way to make sure all registered TinyMCE shortcuts take precedence
-   over the browser ones.
  * Arrows representing connections between groups don't look good sometimes.
    Improve the heuristics for drawing them as follows.
     * The default path is (a) up from the source until it reaches a distance
@@ -54,14 +45,10 @@ the main project plan without these bug fixes or enhancements.
    or by installing a workaround here.  Although you've heard about the
    KeyUp and SetContent events that you're using in the Groups package, so
    you may be able to correct this problem partially with those events.
-   (We have updated to a newer version of TinyMCE, but not yet checked to
-   see if this bug persists.)
- * It's too easy to navigate away from the editor and lose your work.  Make
-   a popup that asks if you really want to leave the page or not.
+   (Verified on 9/22/16 that these bugs are still unresolved.)
 
 ### Other
 
- * Formats menu is currently empty.
  * Some of the `*-duo.litcoffee` files in `src/` in the master branch also
    have committed versions in `app/` that are merely copies.  This is
    necessary in the gh-pages branch, but in master it's redundant.  Fix.
@@ -97,25 +84,6 @@ the main project plan without these bug fixes or enhancements.
  * Support adjacent atomics as factors in a product
  * Support chained equations
  * Add tests for things that should *not* parse, and verify that they do not
-
-### HTML export/import
-
- * Add an HTML export function that lets you download the contents of the
-   editor (plus metadata at the front, just like when exporting to the wiki)
-   for publishing on your own website, for example, or pasting into a blog
-   post.  Wrap it in a DIV with class "lurch-embed".
- * Expose that functionality to the user, on the File menu.
- * Add an HTML import function that lets you specify a URL, sends an XHR to
-   get the page at that URL, and finds all DIVs with class "lurch-embed".
-   Show the user a bit of the text from each and let the user choose which
-   to import.  Be sure to extract the metadata as well, just as with a wiki
-   import.
- * Expose that functionality to the user, on the File menu.
- * Extend dependencies so that they can be at arbitrary URLs, now, not just
-   on the wiki.  Use the HTML import function just created for this purpose,
-   but stipulate that a dependency imports only the first "lurch-embed" DIV
-   on a page.  To check the last modified date of arbitrary web pages, see
-   [here.](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date)
 
 ### Dependencies
 
@@ -181,11 +149,11 @@ topics.
    in the document are faintly drawn (not their tags), so that it's
    completely clear where a user wants to aim the mouse to hit a certain
    bubble.
- * Add an option that show-groupers (Ctrl+1) mode is automatically enabled
-   when the user enters arrow-connection mode, and re-disabled (if it was
-   disabled in the first place) when exiting arrow-connection mode.  This is
-   like the previous feature, but more aggressive and techy.  (Do we still
-   need it now that we have the previous feature?)
+ * Add an option that show-groupers (Ctrl/Cmd+1) mode is automatically
+   enabled when the user enters arrow-connection mode, and re-disabled (if
+   it was disabled in the first place) when exiting arrow-connection mode.
+   This is like the previous feature, but more aggressive and techy.  (Do we
+   still need it now that we have the previous feature?)
  * On mobile, a tap highlights the innermost bubble under it, without
    creating the arrow yet, and shows OK/cancel buttons hovering nearby.  If
    the user tapped what he/she expected to tap, then he/she hits OK and it

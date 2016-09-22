@@ -2668,6 +2668,84 @@ this behavior.
 
 
 
+# Workaround for Browser Keyboard Shortcut Conflicts
+
+Assigning keyboard shortcuts to menu items in TinyMCE will not override the
+shortcuts in the browser (such as Ctrl/Cmd+S for Save).  This is problematic
+for a word processing app like Lurch, in which users expect certain natural
+keyboard shortcuts like Ctrl/Cmd+S to have their usual semantics.
+
+The following function takes a TinyMCE editor instance as parameter and
+modifies it so that any menu item or toolbar button added to the editor with
+an associated keyboard shortcut will have a new handler installed that does
+override the browser shortcuts when possible.
+
+There are some browser shortcuts that cannot be overridden.  For instance,
+on Chrome, the Ctrl/Cmd+N and Ctrl/Cmd+Shift+N shortcuts for new window and
+new incognito window (respectively) cannot be overridden.  This limitation
+cannot be solved from within scripts, as far as I know.
+
+    keyboardShortcutsWorkaround = ( editor ) ->
+
+The array of shortcuts we will watch for on each keystroke.
+
+        shortcuts = [ ]
+
+Next, a function to turn TinyMCE keyboard shortcut descriptions like
+"Meta+S" or "Ctrl+Shift+K" into a more usable form.  The result is an object
+with modifier keys separated out as booleans, and a single non-modifier key
+stored separately.
+
+        createShortcutData = ( text ) ->
+            [ modifiers..., key ] =
+                text.toLowerCase().replace( /\s+/g, '' ).split '+'
+            altKey : 'alt' in modifiers
+            ctrlKey : 'ctrl' in modifiers
+            metaKey : 'meta' in modifiers
+            key : key
+
+The following function takes the name and settings object of a menu item or
+toolbar button from the editor and, if a keyboard shortcut is specified in
+the settings object, stores the relevant shortcut data in the aforementioned
+array, for later lookup.
+
+        maybeInstall = ( name, settings ) ->
+            if settings?.shortcut?
+                shortcuts.push
+                    keys : createShortcutData settings.shortcut
+                    action : settings.onclick ? -> editor.execCommand name
+
+We now override the editor's built-in `addMenuItem` and `addButton`
+functions to first install any necessary shortcuts, and then proceed with
+their original implementations.
+
+        editor.__addMenuItem = editor.addMenuItem
+        editor.addMenuItem = ( name, settings ) ->
+            maybeInstall name, settings
+            editor.__addMenuItem name, settings
+        editor.__addButton = editor.addButton
+        editor.addButton = ( name, settings ) ->
+            maybeInstall name, settings
+            editor.__addButton name, settings
+
+Now install an event listener on every keydown event in the editor.  If any
+of our stored shortcuts comes up, trigger its stored handler, then prevent
+any other handling of the event.
+
+        editor.on 'keydown', ( event ) ->
+            for shortcut in shortcuts
+                matches = yes
+                for own key, value of shortcut.keys
+                    if event[key] isnt value
+                        matches = no
+                        break
+                if matches
+                    event.preventDefault()
+                    shortcut.action()
+                    return
+
+
+
 # Load/Save Plugin for [TinyMCE](http://www.tinymce.com)
 
 This plugin will leverage [jsfs](https://github.com/nathancarter/jsfs) to
@@ -2763,26 +2841,26 @@ upon receipt.)
                 text : 'New'
                 icon : 'newdocument'
                 context : 'file'
-                shortcut : 'ctrl+N'
+                shortcut : 'meta+alt+N'
                 tooltip : 'New file'
                 onclick : => @tryToClear()
             control 'savefile',
                 text : 'Save'
                 icon : 'save'
                 context : 'file'
-                shortcut : 'ctrl+S'
+                shortcut : 'meta+S'
                 tooltip : 'Save file'
                 onclick : => @tryToSave()
             @editor.addMenuItem 'saveas',
                 text : 'Save as...'
                 context : 'file'
-                shortcut : 'ctrl+shift+S'
+                shortcut : 'meta+shift+S'
                 onclick : => @tryToSave null, ''
             control 'openfile',
                 text : 'Open...'
                 icon : 'browse'
                 context : 'file'
-                shortcut : 'ctrl+O'
+                shortcut : 'meta+O'
                 tooltip : 'Open file...'
                 onclick : => @handleOpen()
             @editor.addMenuItem 'managefiles',
@@ -3999,8 +4077,8 @@ Not all of the following plugins are working yet, but most are.  A plugin
 that begins with a hyphen is a local plugin written as part of this project.
 
             plugins :
-                'advlist table charmap colorpicker image link importcss
-                paste print save searchreplace textcolor fullscreen
+                'advlist table charmap colorpicker image link
+                paste print searchreplace textcolor fullscreen
                 -loadsave -overlay -groups -equationeditor -dependencies
                 -dialogs ' \
                 + ( "-#{p}" for p in window.pluginsToLoad ).join ' '
@@ -4017,12 +4095,56 @@ We then install two toolbars, with separators indicated by pipes (`|`).
                     | undo redo | cut copy paste
                     | alignleft aligncenter alignright alignjustify
                     | bullist numlist outdent indent blockquote | table'
-                'fontselect styleselect | bold italic underline
-                    textcolor subscript superscript removeformat
+                'fontselect fontsizeselect styleselect
+                    | bold italic underline
+                      textcolor subscript superscript removeformat
                     | link unlink | charmap image
                     | spellchecker searchreplace | equationeditor | ' + \
                     groupTypeNames.join( ' ' ) + ' connect' + \
                     moreToolbarItems()
+            ]
+
+The following settings support some of the buttons on the toolbar just
+defined.  See
+[here](https://www.tinymce.com/docs/configure/content-formatting/) for
+documentation on how to edit this style data.
+
+            fontsize_formats : '8pt 10pt 12pt 14pt 18pt 24pt 36pt'
+            style_formats_merge : yes
+            style_formats : [
+                title: 'Grading'
+                items: [
+                    title : 'Red highlighter'
+                    inline  : 'span'
+                    styles :
+                        'border-radius' : '5px'
+                        padding : '2px 5px'
+                        margin : '0 2px'
+                        color : '#770000'
+                        'background-color' : '#ffaaaa'
+                ,
+                    title : 'Yellow highlighter'
+                    inline  : 'span'
+                    styles :
+                        'border-radius' : '5px'
+                        padding : '2px 5px'
+                        margin : '0 2px'
+                        color : '#777700'
+                        'background-color' : '#ffffaa'
+                ,
+                    title : 'Green highlighter'
+                    inline  : 'span'
+                    styles :
+                        'border-radius' : '5px'
+                        padding : '2px 5px'
+                        margin : '0 2px'
+                        color : '#007700'
+                        'background-color' : '#aaffaa'
+                ,
+                    title : 'No highlighting'
+                    inline : 'span'
+                    exact : yes
+                ]
             ]
 
 We then customize the menus' contents as follows.
@@ -4075,6 +4197,12 @@ In our case, there will be only one, but this is how TinyMCE installs setup
 functions, regardless.
 
             setup : ( editor ) ->
+
+See the [keyboard shortcuts workaround
+file](keyboard-shortcuts-workaround.litcoffee) for an explanation of the
+following line.
+
+                keyboardShortcutsWorkaround editor
 
 Add a Help menu.
 
@@ -4142,6 +4270,13 @@ HTML.
                         if event.keyCode is 9 # tab key
                             event.preventDefault()
                             editor.insertContent '&emsp;'
+
+Ensure users do not accidentally navigate away from their unsaved changes.
+
+                    window.addEventListener 'beforeunload', ( event ) ->
+                        if editor.LoadSave.documentDirty
+                            event.returnValue = 'You have unsaved changes.'
+                            return event.returnValue
 
 And if the app installed a global handler for editor post-setup, run that
 function now.

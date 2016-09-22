@@ -20,7 +20,7 @@ where we will add them.
         closeImageHTML : '<font color="#996666">]</font>'
         tooltip : 'Make the selected text an expression'
         color : '#996666'
-        shortcut : 'Ctrl+['
+        shortcut : 'meta+['
         LaTeXshortcut : '\\['
 
 You can form a connection from any expression to any other, provided that no

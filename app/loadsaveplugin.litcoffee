@@ -94,26 +94,26 @@ upon receipt.)
                 text : 'New'
                 icon : 'newdocument'
                 context : 'file'
-                shortcut : 'ctrl+N'
+                shortcut : 'meta+alt+N'
                 tooltip : 'New file'
                 onclick : => @tryToClear()
             control 'savefile',
                 text : 'Save'
                 icon : 'save'
                 context : 'file'
-                shortcut : 'ctrl+S'
+                shortcut : 'meta+S'
                 tooltip : 'Save file'
                 onclick : => @tryToSave()
             @editor.addMenuItem 'saveas',
                 text : 'Save as...'
                 context : 'file'
-                shortcut : 'ctrl+shift+S'
+                shortcut : 'meta+shift+S'
                 onclick : => @tryToSave null, ''
             control 'openfile',
                 text : 'Open...'
                 icon : 'browse'
                 context : 'file'
-                shortcut : 'ctrl+O'
+                shortcut : 'meta+O'
                 tooltip : 'Open file...'
                 onclick : => @handleOpen()
             @editor.addMenuItem 'managefiles',

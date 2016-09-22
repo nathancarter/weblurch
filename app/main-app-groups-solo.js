@@ -12,7 +12,7 @@
       closeImageHTML: '<font color="#996666">]</font>',
       tooltip: 'Make the selected text an expression',
       color: '#996666',
-      shortcut: 'Ctrl+[',
+      shortcut: 'meta+[',
       LaTeXshortcut: '\\[',
       connectionRequest: function(from, to) {
         var reachable;
