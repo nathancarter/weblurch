@@ -47,8 +47,6 @@ the main project plan without these bug fixes or enhancements.
    you may be able to correct this problem partially with those events.
    (We have updated to a newer version of TinyMCE, but not yet checked to
    see if this bug persists.)
- * It's too easy to navigate away from the editor and lose your work.  Make
-   a popup that asks if you really want to leave the page or not.
 
 ### Other
 

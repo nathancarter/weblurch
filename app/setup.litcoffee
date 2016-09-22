@@ -249,6 +249,13 @@ HTML.
                             event.preventDefault()
                             editor.insertContent '&emsp;'
 
+Ensure users do not accidentally navigate away from their unsaved changes.
+
+                    window.addEventListener 'beforeunload', ( event ) ->
+                        if editor.LoadSave.documentDirty
+                            event.returnValue = 'You have unsaved changes.'
+                            return event.returnValue
+
 And if the app installed a global handler for editor post-setup, run that
 function now.
 
