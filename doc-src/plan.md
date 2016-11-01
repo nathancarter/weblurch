@@ -178,10 +178,6 @@ asked for long ago when he first heard about the webLurch project. Integrate
 that into webLurch, imitating the UX Ken describes from typical online
 collaboration apps such as Google Docs and Overleaf, as follows.
 
- * Extend the File > Document properties... dialog to let you change the
-   title of the document, which will simply be stored as document metadata;
-   it will have no impact on filename (yet).  New documents should have a
-   default title of "Untitled."
  * Add a File > Download action, which starts a download of the file as
    HTML.
  * Add a File > Upload action, which lets the user choose an HTML file to
