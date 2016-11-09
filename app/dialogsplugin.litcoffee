@@ -40,6 +40,16 @@ a blob, so that it can be passed to the TinyMCE dialog-creation routines.
             install 'a', 'click'
             install 'input', 'click'
             install 'input', 'input'
+            for element in document.getElementsByTagName 'input'
+                if 'file' is element.getAttribute 'type'
+                    element.addEventListener 'change', ->
+                        reader = new FileReader()
+                        reader.onload = ( event ) =>
+                            parent.postMessage
+                                value : event.target.result
+                                id : @getAttribute 'id'
+                            , '*'
+                        reader.readAsDataURL @files[0]
             document.getElementsByTagName( 'input' )[0]?.focus()
         window.objectURLForBlob window.makeBlob \
             html + "<script>(#{script})()</script>",
@@ -132,6 +142,43 @@ receive the text in the dialog's input as a parameter.
                 onclick : ( event ) ->
                     dialog.close()
                     options.cancelCallback? lastValue
+            ,
+                type : 'button'
+                text : options.OK ? 'OK'
+                subtype : 'primary'
+                onclick : ( event ) ->
+                    dialog.close()
+                    options.okCallback? lastValue
+            ]
+        installClickListener ( data ) ->
+            if data.id is 'promptInput' then lastValue = data.value
+
+## File upload dialog
+
+This function allows the user to choose a file from their local machine to
+upload.  They can do so with a "choose" button or by dragging the file into
+the dialog.  The dialog then calls its `okCallback` with the contents of the
+uploaded file, in the format of a data URL, or calls its `cancelCallback`
+with no parameter.
+
+    Dialogs.promptForFile = ( options ) ->
+        value = if options.value then " value='#{options.value}'" else ''
+        types = if options.types then " accept='#{options.types}'" else ''
+        options.message +=
+            "<p><input type='file' #{value} id='promptInput'/></p>"
+        lastValue = null
+        dialog = tinymce.activeEditor.windowManager.open
+            title : options.title ? ' '
+            url : prepareHTML options.message
+            width : options.width ? 400
+            height : options.height ? 100
+            buttons : [
+                type : 'button'
+                text : options.Cancel ? 'Cancel'
+                subtype : 'primary'
+                onclick : ( event ) ->
+                    dialog.close()
+                    options.cancelCallback?()
             ,
                 type : 'button'
                 text : options.OK ? 'OK'

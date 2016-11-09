@@ -178,12 +178,6 @@ asked for long ago when he first heard about the webLurch project. Integrate
 that into webLurch, imitating the UX Ken describes from typical online
 collaboration apps such as Google Docs and Overleaf, as follows.
 
- * Add a File > Download action, which starts a download of the file as
-   HTML.
- * Add a File > Upload action, which lets the user choose an HTML file to
-   upload, accepts the upload, strips any dangerous tags from it, then
-   executes File > New before pasting the HTML content directly into the
-   new, blank document.
  * Create a function that can update the UI when users log into or out of
    Google Drive.  At first, it will just hide/show the File > Save and
    File > Save as... actions on the menu and toolbars.

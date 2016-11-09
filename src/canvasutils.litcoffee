@@ -260,3 +260,18 @@ is sent to the given callback.
         reader = new FileReader
         reader.onload = ( event ) -> callback event.target.result
         reader.readAsDataURL blob
+
+As long as we're here, let's also create the inverse for this function,
+which takes a base64 URL and converts it into a Blob.  This one is
+synchronous.
+
+    window.blobForBase64URL = ( url ) ->
+        # For this code, thanks to:
+        # http://stackoverflow.com/a/12300351/670492
+        byteString = atob url.split( ',' )[1]
+        mimeString = url.split( ',' )[0].split( ':' )[1].split( ';' )[0]
+        ab = new ArrayBuffer byteString.length
+        ia = new Uint8Array ab
+        for i in [0...byteString.length]
+            ia[i] = byteString.charCodeAt i
+        window.makeBlob ab, mimeString
