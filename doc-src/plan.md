@@ -15,30 +15,6 @@ required order of completion.
 
 ## Experimenting with auto-bubbling
 
- * Create a class `ProtoGroup`.  Its constructor takes as input any Range in
-   the document, and the constructed object can answer basic questions about
-   itself as if it were a group.  Most importantly, it must be able to
-   answer the questions needed to draw itself, which are these:
-    * `G.type()` must return a group type, which therefore must be provided
-      at construction time.
-    * The group type returned by `G.type()` must be able to accept
-      `ProtoGroup` instances as parameters to its `tagContents` member, and
-      return sensible values for them.
-    * If you want it to be able to receive click events on its bubble tag,
-      then the group type returned by `G.type()` must be able to accept
-      `ProtoGroup` instances as parameters to its `tagMenuItems` member, and
-      return sensible values for them.
-    * `G.getScreenBoundaries()` can simply duplicate most of the code from
-      the actual `Group` class, except only adding the `getClientRects` for
-      the range, not any actual open/close groupers.
-    * `G.open` must be an HTML element from the document from which we can
-      extract font information for use in making the bubble tag.  This can
-      be computed at construction time by taking the first element in the
-      given range.
-   Test to be sure that `ProtoGroup` instances can be returned by the
-   `visibleGroups` function and will be drawn correctly.  Modify the old
-   test to return a `ProtoGroup` that highlights characters 5-10 of the
-   document.
  * Further test by creating a handler for any change in cursor position, or
    any change to document content, that finds the range for the 5 characters
    before the cursor, and returns those as a proto-group to be shown.

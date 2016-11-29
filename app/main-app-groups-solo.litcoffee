@@ -69,7 +69,9 @@ An expression used as an attribute, with the key stored in the attribute
 itself, will show that key on its bubble tag.
 
         tagContents : ( group ) ->
-            if group.get( 'keyposition' ) is 'source'
+            if group instanceof ProtoGroup
+                group.tagContents
+            else if group.get( 'keyposition' ) is 'source'
                 group.get 'key'
             else
                 null
@@ -82,7 +84,8 @@ We also include the "change attribute action" defined
 
         tagMenuItems : ( group ) ->
             result = [ ]
-            if group.connectionsOut().length > 0 and \
+            if group not instanceof ProtoGroup and \
+               group.connectionsOut().length > 0 and \
                group.get( 'keyposition' ) is 'source'
                 result.push
                     text : "Move \"#{group.get 'key'}\" onto arrow"
