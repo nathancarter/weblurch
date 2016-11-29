@@ -15,11 +15,6 @@ required order of completion.
 
 ## Experimenting with auto-bubbling
 
- * Extend the Groups Plugin with a handler called `visibleGroups`, which, if
-   it exists, will be called from line 1433 of
-   [that file](groupsplugin.litcoffee), to add more groups that should be
-   drawn at any given time.  Test by showing/hiding the first group in the
-   document every 1 second.
  * Create a class `ProtoGroup`.  Its constructor takes as input any Range in
    the document, and the constructed object can answer basic questions about
    itself as if it were a group.  Most importantly, it must be able to

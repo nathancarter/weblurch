@@ -1435,6 +1435,13 @@ groups in the hierarchy, from `group` on upwards.
                 pad += padStep
                 innermost = no
 
+If the plugin has been extended with a handler that supplies extra visible
+groups beyond those surrounding the cursor, find those groups and draw them
+now.
+
+            for extra in @visibleGroups?() ? []
+                drawGroup extra, yes, no, yes
+
 Now draw the tags on all the bubbles just drawn.  We proceed in reverse
 order, so that outer tags are drawn behind inner ones.  We also track the
 rectangles we've covered, and move any later ones upward so as not to
