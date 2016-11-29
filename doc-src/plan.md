@@ -13,6 +13,101 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
+## Experimenting with auto-bubbling
+
+ * Extend the Groups Plugin with a handler called `visibleGroups`, which, if
+   it exists, will be called from line 1433 of
+   [that file](groupsplugin.litcoffee), to add more groups that should be
+   drawn at any given time.  Test by showing/hiding the first group in the
+   document every 1 second.
+ * Create a class `ProtoGroup`.  Its constructor takes as input any Range in
+   the document, and the constructed object can answer basic questions about
+   itself as if it were a group.  Most importantly, it must be able to
+   answer the questions needed to draw itself, which are these:
+    * `G.type()` must return a group type, which therefore must be provided
+      at construction time.
+    * The group type returned by `G.type()` must be able to accept
+      `ProtoGroup` instances as parameters to its `tagContents` member, and
+      return sensible values for them.
+    * If you want it to be able to receive click events on its bubble tag,
+      then the group type returned by `G.type()` must be able to accept
+      `ProtoGroup` instances as parameters to its `tagMenuItems` member, and
+      return sensible values for them.
+    * `G.getScreenBoundaries()` can simply duplicate most of the code from
+      the actual `Group` class, except only adding the `getClientRects` for
+      the range, not any actual open/close groupers.
+    * `G.open` must be an HTML element from the document from which we can
+      extract font information for use in making the bubble tag.  This can
+      be computed at construction time by taking the first element in the
+      given range.
+   Test to be sure that `ProtoGroup` instances can be returned by the
+   `visibleGroups` function and will be drawn correctly.  Modify the old
+   test to return a `ProtoGroup` that highlights characters 5-10 of the
+   document.
+ * Further test by creating a handler for any change in cursor position, or
+   any change to document content, that finds the range for the 5 characters
+   before the cursor, and returns those as a proto-group to be shown.
+   Ensure that this correctly updates as you move your cursor throughout any
+   document, and edit it in any way.
+ * Create a function that can fetch the n characters before/after the
+   cursor.  Call it `charactersNearCursor`, and give it negative integer
+   inputs for characters to the left, and positive for the right.
+ * Create a function that takes as input a number `n` and returns an array
+   of strings, the first containing the `n` characters before the cursor,
+   the next containing the `n` characters 1 step to the right of that, and
+   so on, up to the last entry in the list containing the `n` characters to
+   the right of the cursor.  Call it `allSpansNearCursor`.
+ * Create a function that can fetch the n words before/after the cursor.
+   It should be called `wordsNearCursor`, and function otherwise just like
+   `charactersNearCursor`.
+ * Create a function just like `allSpansNearCursor`, but operating on words
+   instead.  Call it `allPhrasesNearCursor`.
+ * Create a function that takes as input a predicate `P`, a boolean
+   `useWords`, and a number `n`.  If `useWords` is true, then compute
+   `allPhrasesNearCursor(n)`; else compute `allSpansNearCursor(n)` instead.
+   Apply `P` to each element of the array, returning the first for which it
+   is true, together with the HTML `Range` object for the characters in
+   question.  If it is not true for any, consider suffixes of length `n`-1
+   for all entries of the array except the last, and check `P` on each.  If
+   it is not true for any, try `n`-2 for all but the last 2, and so on,
+   until `n` is 0, in which case we return false.  Call the function
+   `checkPredicateNearCursor(P,useWords,n)`.
+ * Create a function that takes as input a list of objects, each of which
+   contains the set of parameters for `checkPredicateNearCursor`: `P`,
+   `useWords`, and `n`.  Loop through the list and call
+   `checkPredicateNearCursor` on that entry's members, stopping when one
+   returns a non-false value.  Return that value, together with the index
+   into the input list that approved of it, or false if all fail.  Call this
+   function `checkPredicatesNearCursor` (note the plural).
+ * For every registered group type, if it has an `autoGroup` member, then
+   that member should contain `predicate`, `useWords`, and `length` members.
+   Every time a group is registered, create a list suitable for passing to
+   `checkPredicatesNearCursor`, containing exactly these data from all
+   registered group types that provide them.  Store that list in the Groups
+   plugin itself; call it `autoGroupData`.
+ * Every time the document changes or the cursor moves, call
+   `checkPredicatesNearCursor` on `autoGroupData`.  If a non-false result is
+   returned, use it to look up which element of `autoGroupData` is
+   responsible, and construct a `ProtoGroup` instance.  Store that instance
+   as a member of `autoGroupData`.  If false was returned, clear that member
+   from `autoGroupData` instead.  Create a `visibleGroups` handler that
+   returns an array of length 0 or 1, containing just the value of that
+   member from `autoGroupData`, iff it exists.  Test this to ensure that
+   proto-groups of the appropriate types are shown whenever the user's
+   cursor is near text that that group type approves of with its `autoGroup`
+   predicate.
+ * Update the `tagMenuItems` handlers for all groups with predicates, so
+   that they return an array containing just one item, which lets the user
+   approve of the `ProtoGroup`, thus forming a real group.  You can do this
+   by saving the current cursor selection, making the proto-group's range
+   the new selection, then calling `editor.Groups.groupCurrentSelection` on
+   the appropriate group type name, then restoring the saved cursor
+   position.
+ * Create a new action, with Cmd/Ctrl+Enter as its keyboard shortcut, that
+   runs the same approval function on the suggested group in `autoGroupData`
+   iff one exists.  Enable/disable that action when updating the value of
+   the suggested gropu in `autoGroupData`.
+
 ## Enabling and disabling features
 
 Implement the following system satisfying the following requirements, for
