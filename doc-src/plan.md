@@ -15,13 +15,6 @@ required order of completion.
 
 ## Experimenting with auto-bubbling
 
- * Create a function that can move the left or right edge of a Range object
-   one word to the left or the right.
- * Create a function that can create a Range containing the n words
-   before/after the cursor.  It should be called `wordsNearCursor`, and
-   function otherwise just like `charactersNearCursor`.
- * Create a function just like `allSpansNearCursor`, but operating on words
-   instead.  Call it `allPhrasesNearCursor`.
  * Create a function that takes as input a predicate `P`, a boolean
    `useWords`, and a number `n`.  If `useWords` is true, then compute
    `allPhrasesNearCursor(n)`; else compute `allSpansNearCursor(n)` instead.

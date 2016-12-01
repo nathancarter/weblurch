@@ -123,3 +123,19 @@ left edge of the current selection.
                 if i < length and \
                    not copy.extendByCharacters -( length - i ) then continue
                 copy
+
+The `allPhrasesNearCursor` function operates very similarly to the previous,
+but returns ranges containing the specified number of words, rather than a
+number of characters.
+
+        window.allPhrasesNearCursor = ( length ) ->
+            cursor = editor.selection.getRng().cloneRange()
+            cursor.collapse yes
+            cursor.includeWholeWords()
+            if cursor.toString().length > 0 then length--
+            for i in [0..length]
+                copy = cursor.cloneRange()
+                if i > 0 and not copy.extendByWords i then continue
+                if i < length and \
+                   not copy.extendByWords -( length - i ) then continue
+                copy

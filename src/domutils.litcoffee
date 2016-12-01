@@ -358,6 +358,11 @@ the number of characters, and if positive, it will extend the right end of
 the range to the right; if negative, it will extend the left end of the
 range to the left.
 
+If the requested extension is not possible, a false value is returned, and
+the object may or may not have been modified, and may or may not be useful.
+If the requested extension is possible, a true value is returned, and the
+object is guaranteed to have been correctly modified as requested.
+
         window.Range::extendByCharacters = ( howMany ) ->
             if howMany is 0
                 return yes
@@ -398,6 +403,87 @@ range to the left.
                     @setStart prev, prev.length
                     return @extendByCharacters remaining
             no
+
+The `extendByWords` function is analogous, but extends by a given number of
+words rather than a given number of characters.
+
+A word counts as any sequence of consecutive letters, and a letter counts as
+anything that can be modified with the `toUpperCase()` and `toLowerCase()`
+function of JavaScript strings. (This is not perfect, in that it does not
+pay attention to most non-alphabetic languages, but it is an easy shortcut,
+for now.)
+
+        isALetter = ( char ) -> char.toUpperCase() isnt char.toLowerCase()
+
+We will use that on these two simple Range utilities.
+
+        window.Range::firstCharacter = -> @toString().charAt 0
+        window.Range::lastCharacter = ->
+            @toString().charAt @toString().length - 1
+
+Return values for `extendByWords` are the same as for `extendByCharacters`.
+
+        window.Range::extendByWords = ( howMany ) ->
+            original = @cloneRange()
+            @includeWholeWords()
+            if howMany is 0
+                return yes
+            else if howMany > 0
+                if not @equals original
+                    return @extendByWords howMany - 1
+                seenALetter = no
+                while @toString().length is 0 or not seenALetter or \
+                      isALetter @lastCharacter()
+                    lastRange = @cloneRange()
+                    if not @extendByCharacters 1
+                        return seenALetter and howMany is 1
+                    if isALetter @lastCharacter() then seenALetter = yes
+                @setStart lastRange.startContainer, lastRange.startOffset
+                @setEnd lastRange.endContainer, lastRange.endOffset
+                return @extendByWords howMany - 1
+            else if howMany < 0
+                if not @equals original
+                    return @extendByWords howMany + 1
+                seenALetter = no
+                while @toString().length is 0 or not seenALetter or \
+                      isALetter @firstCharacter()
+                    lastRange = @cloneRange()
+                    if not @extendByCharacters -1
+                        return seenALetter and howMany is -1
+                    if isALetter @firstCharacter() then seenALetter = yes
+                @setStart lastRange.startContainer, lastRange.startOffset
+                @setEnd lastRange.endContainer, lastRange.endOffset
+                return @extendByWords howMany + 1
+            no
+
+Two ranges are the same if and only if they have the same start and end
+containers and same start and end offsets.
+
+        window.Range::equals = ( otherRange ) ->
+            @startContainer is otherRange.startContainer and \
+            @endContainer is otherRange.endContainer and \
+            @startOffset is otherRange.startOffset and \
+            @endOffset is otherRange.endOffset
+
+The following utility function is used by the previous.  It expands the
+Range object as little as possible to ensure that it contains an integer
+number of words (no word partially included).
+
+A range in the middle of a word will expand to include the word. A range
+next to a word will expand to include the word.  A range touching no letter
+on either side will not change.
+
+        window.Range::includeWholeWords = ->
+            while @toString().length is 0 or isALetter @firstCharacter()
+                lastRange = @cloneRange()
+                if not @extendByCharacters -1 then break
+            @setStart lastRange.startContainer, lastRange.startOffset
+            @setEnd lastRange.endContainer, lastRange.endOffset
+            while @toString().length is 0 or isALetter @lastCharacter()
+                lastRange = @cloneRange()
+                if not @extendByCharacters 1 then break
+            @setStart lastRange.startContainer, lastRange.startOffset
+            @setEnd lastRange.endContainer, lastRange.endOffset
 
 ## Installation into main window global namespace
 
