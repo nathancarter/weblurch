@@ -15,11 +15,6 @@ required order of completion.
 
 ## Experimenting with auto-bubbling
 
- * Create a function that takes as input a number `n` and returns an array
-   of Ranges, the first containing the `n` characters before the cursor,
-   the next containing the `n` characters 1 step to the right of that, and
-   so on, up to the last entry in the list containing the `n` characters to
-   the right of the cursor.  Call it `allSpansNearCursor`.
  * Create a function that can move the left or right edge of a Range object
    one word to the left or the right.
  * Create a function that can create a Range containing the n words

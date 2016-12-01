@@ -94,3 +94,32 @@ Return the results as an object.
 
             open : open
             close : close
+
+## Detecting content for use in proto-groups
+
+The functions in this section depend on the editor, so we install them only
+after the editor is known.
+
+    window.afterEditorReadyArray.push ( editor ) ->
+
+The app must watch the text near the cursor, so that it can use proto-groups
+to suggest groups that the user may wish to form, based on the content near
+the cursor.  The following functions enable this feature.
+
+The `allRangesNearCursor` function returns, as an array, the set of all
+Ranges in the document of the given length and containing the cursor.  They
+are returned in the same order in which they sit in the document.
+
+This function requires that the current selection is collapsed.  If it is
+not collapsed, this function starts instead from a collapsed range at the
+left edge of the current selection.
+
+        window.allRangesNearCursor = ( length ) ->
+            cursor = editor.selection.getRng().cloneRange()
+            cursor.collapse yes
+            for i in [0..length]
+                copy = cursor.cloneRange()
+                if i > 0 and not copy.extendByCharacters i then continue
+                if i < length and \
+                   not copy.extendByCharacters -( length - i ) then continue
+                copy
