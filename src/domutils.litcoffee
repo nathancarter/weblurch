@@ -228,6 +228,7 @@ outside the bounds of the document or `container`.
 
 If no next sibling could be found, quit now, returning null.
 
+            if walk is container then return null
             walk = walk?.nextSibling
             if not walk then return null
 
@@ -245,6 +246,7 @@ similar to the previous routine, which is documented.
             walk = this
             while walk and walk isnt container and not walk.previousSibling
                 walk = walk.parentNode
+            if walk is container then return null
             walk = walk?.previousSibling
             if not walk then return null
             while walk.childNodes.length > 0
@@ -258,12 +260,12 @@ previous nodes of type `Text`.
             if ( walk = @nextLeaf container ) instanceof window.Text
                 walk
             else
-                walk?.nextTextNode()
+                walk?.nextTextNode container
         window.Node::previousTextNode = ( container = null ) ->
             if ( walk = @previousLeaf container ) instanceof window.Text
                 walk
             else
-                walk?.previousTextNode()
+                walk?.previousTextNode container
 
 Related to the other methods above, we have the following two, which compute
 the first or last leaf inside a given ancestor.
@@ -357,38 +359,45 @@ the range to the right; if negative, it will extend the left end of the
 range to the left.
 
         window.Range::extendByCharacters = ( howMany ) ->
-            if howMany > 0
+            if howMany is 0
+                return yes
+            else if howMany > 0
                 if @endContainer not instanceof window.Text
                     if @endOffset > 0
                         next = @endContainer.childNodes[@endOffset - 1]
-                                            .nextTextNode()
+                                .nextTextNode window.document.body
                     else
                         next = @endContainer.firstLeafInside()
                         if next not instanceof window.Text
-                            next = next.nextTextNode()
-                    if next then @setEnd next, 0 else return
+                            next = next.nextTextNode window.document.body
+                    if next then @setEnd next, 0 else return no
                 distanceToEnd = @endContainer.length - @endOffset
                 if howMany <= distanceToEnd
-                    return @setEnd @endContainer, @endOffset + howMany
-                if next = @endContainer.nextTextNode()
+                    @setEnd @endContainer, @endOffset + howMany
+                    return yes
+                if next = @endContainer.nextTextNode window.document.body
                     @setEnd next, 0
-                    @extendByCharacters howMany - distanceToEnd
-            else
+                    return @extendByCharacters howMany - distanceToEnd
+            else if howMany < 0
                 if @startContainer not instanceof window.Text
                     if @startOffset > 0
                         prev = @startContainer.childNodes[@startOffset - 1]
-                                              .previousTextNode()
+                                .previousTextNode window.document.body
                     else
                         prev = @startContainer.lastLeafInside()
                         if prev not instanceof window.Text
-                            prev = prev.previousTextNode()
-                    if prev then @setStart prev, 0 else return
+                            prev =
+                                prev.previousTextNode window.document.body
+                    if prev then @setStart prev, 0 else return no
                 if -howMany <= @startOffset
-                    return @setStart @startContainer, @startOffset + howMany
-                if prev = @startContainer.previousTextNode()
+                    @setStart @startContainer, @startOffset + howMany
+                    return yes
+                if prev = @startContainer
+                           .previousTextNode window.document.body
                     remaining = howMany + @startOffset
                     @setStart prev, prev.length
-                    @extendByCharacters remaining
+                    return @extendByCharacters remaining
+            no
 
 ## Installation into main window global namespace
 
