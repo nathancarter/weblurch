@@ -15,22 +15,16 @@ required order of completion.
 
 ## Experimenting with auto-bubbling
 
- * Further test by creating a handler for any change in cursor position, or
-   any change to document content, that finds the range for the 5 characters
-   before the cursor, and returns those as a proto-group to be shown.
-   Ensure that this correctly updates as you move your cursor throughout any
-   document, and edit it in any way.
- * Create a function that can fetch the n characters before/after the
-   cursor.  Call it `charactersNearCursor`, and give it negative integer
-   inputs for characters to the left, and positive for the right.
  * Create a function that takes as input a number `n` and returns an array
-   of strings, the first containing the `n` characters before the cursor,
+   of Ranges, the first containing the `n` characters before the cursor,
    the next containing the `n` characters 1 step to the right of that, and
    so on, up to the last entry in the list containing the `n` characters to
    the right of the cursor.  Call it `allSpansNearCursor`.
- * Create a function that can fetch the n words before/after the cursor.
-   It should be called `wordsNearCursor`, and function otherwise just like
-   `charactersNearCursor`.
+ * Create a function that can move the left or right edge of a Range object
+   one word to the left or the right.
+ * Create a function that can create a Range containing the n words
+   before/after the cursor.  It should be called `wordsNearCursor`, and
+   function otherwise just like `charactersNearCursor`.
  * Create a function just like `allSpansNearCursor`, but operating on words
    instead.  Call it `allPhrasesNearCursor`.
  * Create a function that takes as input a predicate `P`, a boolean

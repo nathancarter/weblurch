@@ -251,6 +251,28 @@ similar to the previous routine, which is documented.
                 walk = walk.childNodes[walk.childNodes.length - 1]
             walk
 
+Related to the previous two methods are two for finding the next and
+previous nodes of type `Text`.
+
+        window.Node::nextTextNode = ( container = null ) ->
+            if ( walk = @nextLeaf container ) instanceof window.Text
+                walk
+            else
+                walk?.nextTextNode()
+        window.Node::previousTextNode = ( container = null ) ->
+            if ( walk = @previousLeaf container ) instanceof window.Text
+                walk
+            else
+                walk?.previousTextNode()
+
+Related to the other methods above, we have the following two, which compute
+the first or last leaf inside a given ancestor.
+
+        window.Node::firstLeafInside = ->
+            @childNodes?[0]?.firstLeafInside() or this
+        window.Node::lastLeafInside = ->
+            @childNodes?[@childNodes.length-1]?.lastLeafInside() or this
+
 ## More convenient `remove` method
 
 Some browsers provide the `remove` method in the `Node` prototype, but some
@@ -324,6 +346,49 @@ To sort an array of document nodes, using a comparator that will return -1,
         window.strictNodeComparator = ( groupA, groupB ) ->
             if groupA is groupB then return 0
             if strictNodeOrder groupA, groupB then -1 else 1
+
+## Extending ranges
+
+An HTML `Range` object indicates a certain section of a document.  We add to
+that class here the capability of extending a range to the left or to the
+right by a given number of characters (when possible).  Here, `howMany` is
+the number of characters, and if positive, it will extend the right end of
+the range to the right; if negative, it will extend the left end of the
+range to the left.
+
+        window.Range::extendByCharacters = ( howMany ) ->
+            if howMany > 0
+                if @endContainer not instanceof window.Text
+                    if @endOffset > 0
+                        next = @endContainer.childNodes[@endOffset - 1]
+                                            .nextTextNode()
+                    else
+                        next = @endContainer.firstLeafInside()
+                        if next not instanceof window.Text
+                            next = next.nextTextNode()
+                    if next then @setEnd next, 0 else return
+                distanceToEnd = @endContainer.length - @endOffset
+                if howMany <= distanceToEnd
+                    return @setEnd @endContainer, @endOffset + howMany
+                if next = @endContainer.nextTextNode()
+                    @setEnd next, 0
+                    @extendByCharacters howMany - distanceToEnd
+            else
+                if @startContainer not instanceof window.Text
+                    if @startOffset > 0
+                        prev = @startContainer.childNodes[@startOffset - 1]
+                                              .previousTextNode()
+                    else
+                        prev = @startContainer.lastLeafInside()
+                        if prev not instanceof window.Text
+                            prev = prev.previousTextNode()
+                    if prev then @setStart prev, 0 else return
+                if -howMany <= @startOffset
+                    return @setStart @startContainer, @startOffset + howMany
+                if prev = @startContainer.previousTextNode()
+                    remaining = howMany + @startOffset
+                    @setStart prev, prev.length
+                    @extendByCharacters remaining
 
 ## Installation into main window global namespace
 
