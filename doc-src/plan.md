@@ -15,20 +15,6 @@ required order of completion.
 
 ## Implementing auto-bubbling infrastructure
 
- * Install an event handler, called `scanForSuggestions`, in the
-   [main app](../app/main-app-groups-solo.litcoffee), that gets run whenever
-   the cursor position or document content changes.  For now, make it a stub
-   that dumps console spam just for testing.
- * Implement `scanForSuggestions` with some temporary, testing content.
-   Have it look for a reason name from among a small list of reasons, and/or
-   have it look for mathematical expressions as sequences of numbers and a
-   few simple math symbols (+, -, *, /, ., ^, parens).  When it detects
-   either of these, have it set the `suggestions` member of the expression
-   type to an array of `ProtoGroup` instances, 1 or more.  If it detects
-   none, have it remove that member
- * Install a `visibleGroups` handler that just returns the `suggestions`
-   member of the expression type (or an empty array if the member does not
-   exist).
  * Have the `tagMenuItems` function in the expression type notice
    `ProtoGroup` instances, and give them one menu item:  An action for
    promoting the suggestion to a real group.  For now, it can just dump

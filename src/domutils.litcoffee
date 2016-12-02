@@ -408,12 +408,9 @@ The `extendByWords` function is analogous, but extends by a given number of
 words rather than a given number of characters.
 
 A word counts as any sequence of consecutive letters, and a letter counts as
-anything that can be modified with the `toUpperCase()` and `toLowerCase()`
-function of JavaScript strings. (This is not perfect, in that it does not
-pay attention to most non-alphabetic languages, but it is an easy shortcut,
-for now.)
+anything that isn't whitespace.
 
-        isALetter = ( char ) -> char.toUpperCase() isnt char.toLowerCase()
+        isALetter = ( char ) -> not /\s/.test char
 
 We will use that on these two simple Range utilities.
 

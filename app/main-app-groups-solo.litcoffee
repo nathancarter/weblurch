@@ -301,6 +301,82 @@ Proto-groups must be drawn more lightly than actual groups.
 
     ]
 
+## Automatic grouping suggestions
+
+Automatic grouping is a feature in Lurch by which it notices meaningful text
+near the user's cursor, and suggests groups that the user may wish to form.
+The user can confirm it with mouse or keyboard actions.  We install here the
+functionality supporting this feature.
+
+    window.afterEditorReadyArray.push ( editor ) ->
+
+For now, we're using some dummy code here.  Pretend we're in a predicate
+logic context, and there is a small, finite list of reasons named here.  Of
+course, this will eventually be replaced with an implementation that fetches
+the list of rules defined at the user's cursor point, but for testing
+purposes, we're using this list, temporarily.
+
+        reasonNames = [ 'and+', 'and-', 'or+', 'or-', 'implies+',
+            'implies-', 'not+', 'not-', 'forall+', 'forall-', 'exists+',
+            'exists-', '=+', '=-' ]
+
+The following function scans a given range in the document to see if it
+contains exactly any of the reason names above, or something that looks like
+a sequence of characters that might form a simple mathematical expression.
+This, too, is temporary code that will eventually be replaced with actual
+parsing later.
+
+        scanRangeForSuggestions = ( range ) ->
+            text = range.toString()
+            for reasonName in reasonNames
+                if reasonName is text
+                    return new ProtoGroup range,
+                        editor.Groups.groupTypes.expression
+            if /^[0-9\.+*\/\^-]+$/.test text
+                return new ProtoGroup range,
+                    editor.Groups.groupTypes.expression
+            no
+
+The following function scans many ranges near the cursor, by passing them
+all to the previous function.  It returns the first suggested group that it
+detects.
+
+        scanForSuggestions = ->
+            range = editor.selection.getRng()
+            if not range.collapsed
+                return scanRangeForSuggestions range
+            word = range.cloneRange()
+            word.includeWholeWords()
+            if maybe = scanRangeForSuggestions word then return maybe
+            lengths = [ ]
+            for reasonName in reasonNames
+                if reasonName.length not in lengths
+                    lengths.push reasonName.length
+            lengths.sort ( a, b ) -> b - a
+            for length in lengths
+                for R in allRangesNearCursor length
+                    if maybe = scanRangeForSuggestions R then return maybe
+            no
+
+Whenever anything changes in the document or the cursor position, we run
+`scanForSuggestions` and store its results in a member of the expression
+type, for use below.
+
+        editor.on 'NodeChange KeyUp change setContent', ( event ) ->
+            editor.Groups.groupTypes.expression.suggestions =
+                if suggestion = scanForSuggestions()
+                    [ suggestion ]
+                else
+                    [ ]
+            editor.Overlay?.redrawContents()
+
+The `visibleGroups` handler is what shows suggested groups to the user.
+Here, it just reports anything stored by the handler installed immediately
+above.
+
+        editor.Groups.visibleGroups = ->
+            editor.Groups.groupTypes.expression.suggestions ? [ ]
+
 ## Auxiliary functions
 
 The following submenu will appear on both the tag menu and the context menu,
