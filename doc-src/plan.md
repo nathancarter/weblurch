@@ -13,53 +13,50 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Experimenting with auto-bubbling
+## Implementing auto-bubbling infrastructure
 
- * Create a function that takes as input a predicate `P`, a boolean
-   `useWords`, and a number `n`.  If `useWords` is true, then compute
-   `allPhrasesNearCursor(n)`; else compute `allSpansNearCursor(n)` instead.
-   Apply `P` to each element of the array, returning the first for which it
-   is true, together with the HTML `Range` object for the characters in
-   question.  If it is not true for any, consider suffixes of length `n`-1
-   for all entries of the array except the last, and check `P` on each.  If
-   it is not true for any, try `n`-2 for all but the last 2, and so on,
-   until `n` is 0, in which case we return false.  Call the function
-   `checkPredicateNearCursor(P,useWords,n)`.
- * Create a function that takes as input a list of objects, each of which
-   contains the set of parameters for `checkPredicateNearCursor`: `P`,
-   `useWords`, and `n`.  Loop through the list and call
-   `checkPredicateNearCursor` on that entry's members, stopping when one
-   returns a non-false value.  Return that value, together with the index
-   into the input list that approved of it, or false if all fail.  Call this
-   function `checkPredicatesNearCursor` (note the plural).
- * For every registered group type, if it has an `autoGroup` member, then
-   that member should contain `predicate`, `useWords`, and `length` members.
-   Every time a group is registered, create a list suitable for passing to
-   `checkPredicatesNearCursor`, containing exactly these data from all
-   registered group types that provide them.  Store that list in the Groups
-   plugin itself; call it `autoGroupData`.
- * Every time the document changes or the cursor moves, call
-   `checkPredicatesNearCursor` on `autoGroupData`.  If a non-false result is
-   returned, use it to look up which element of `autoGroupData` is
-   responsible, and construct a `ProtoGroup` instance.  Store that instance
-   as a member of `autoGroupData`.  If false was returned, clear that member
-   from `autoGroupData` instead.  Create a `visibleGroups` handler that
-   returns an array of length 0 or 1, containing just the value of that
-   member from `autoGroupData`, iff it exists.  Test this to ensure that
-   proto-groups of the appropriate types are shown whenever the user's
-   cursor is near text that that group type approves of with its `autoGroup`
-   predicate.
- * Update the `tagMenuItems` handlers for all groups with predicates, so
-   that they return an array containing just one item, which lets the user
-   approve of the `ProtoGroup`, thus forming a real group.  You can do this
-   by saving the current cursor selection, making the proto-group's range
-   the new selection, then calling `editor.Groups.groupCurrentSelection` on
-   the appropriate group type name, then restoring the saved cursor
-   position.
+ * Install an event handler, called `scanForSuggestions`, in the
+   [main app](../app/main-app-groups-solo.litcoffee), that gets run whenever
+   the cursor position or document content changes.  For now, make it a stub
+   that dumps console spam just for testing.
+ * Implement `scanForSuggestions` with some temporary, testing content.
+   Have it look for a reason name from among a small list of reasons, and/or
+   have it look for mathematical expressions as sequences of numbers and a
+   few simple math symbols (+, -, *, /, ., ^, parens).  When it detects
+   either of these, have it set the `suggestions` member of the expression
+   type to an array of `ProtoGroup` instances, 1 or more.  If it detects
+   none, have it remove that member
+ * Install a `visibleGroups` handler that just returns the `suggestions`
+   member of the expression type (or an empty array if the member does not
+   exist).
+ * Have the `tagMenuItems` function in the expression type notice
+   `ProtoGroup` instances, and give them one menu item:  An action for
+   promoting the suggestion to a real group.  For now, it can just dump
+   spam to the console for testing.
+ * Create a new member function in the `ProtoGroup` class, called `promote`,
+   which turns the proto-group into a real group, as follows.  Save the
+   current selection, make the proto-group's range the new selection, call
+   `editor.Groups.groupCurrentSelection` on the appropriate group type name,
+   then restore the saved selection.  Have the tag menu item for
+   proto-groups call this function.
+ * Update the suggestions feature so that it does not suggest `ProtoGroup`
+   instances that overlap any existing `Group` instance.
  * Create a new action, with Cmd/Ctrl+Enter as its keyboard shortcut, that
    runs the same approval function on the suggested group in `autoGroupData`
    iff one exists.  Enable/disable that action when updating the value of
-   the suggested gropu in `autoGroupData`.
+   the suggested group in `autoGroupData`.
+ * Every time a new expression is formed, record it in the `lastFormed`
+   member of the expression type.  Update the suggestions feature so that if
+   a reason is being suggested, and the last formed group was not a reason,
+   then a connection to that last formed group is also suggested.  (Note
+   that this will not automatically form the connection when promoting the
+   proto-group, yet.)
+ * Upgrade the `promote` routine in the `ProtoGroup` class so that it
+   respects all suggested connections stored in the `ProtoGroup` object.
+ * Update the suggestions feature so that if an expression is being
+   suggested, and the last formed group was a reason, then a connection from
+   that last formed group is also suggested.  Verify that such connections
+   are automatically formed when promoting the suggested proto-group.
 
 ## Enabling and disabling features
 
