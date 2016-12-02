@@ -54,6 +54,15 @@ an expression highlights both its attributes and those things for which it
 is an attribute.)
 
         connections : ( group ) ->
+            if group instanceof ProtoGroup
+                result = group.connections ? []
+                for connection in result
+                    if connection instanceof Array
+                        if 2 not in connection then connection[2] = ''
+                        connection[3] = ( context ) ->
+                            context.globalAlpha = 0.5
+                            context.setLineDash [ 2, 2 ]
+                return result
             outs = group.connectionsOut()
             ins = group.connectionsIn()
             for cxn in [ ins..., outs... ]
@@ -278,6 +287,17 @@ Here is the handler for clicking on group boundaries ("groupers").
                                         '(none available)'}</td></tr>
                                     </table>"
                         , yes
+
+Proto-groups must be drawn more lightly than actual groups.
+
+        setOutlineStyle : ( group, context ) ->
+            if group instanceof ProtoGroup
+                context.globalAlpha = 0.5
+                context.setLineDash [ 2, 2 ]
+        setFillStyle : ( group, context ) ->
+            if group instanceof ProtoGroup
+                context.globalAlpha = 0.15
+                context.setLineDash [ 2, 2 ]
 
     ]
 

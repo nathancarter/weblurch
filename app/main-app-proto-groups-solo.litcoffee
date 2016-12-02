@@ -24,10 +24,12 @@ proto-group be converted into a real group.  It also requires a group type,
 which must be one of the types registered in
 [the Groups Plugin](groupsplugin.litcoffee).
 
-Ensure that the type provided knows that its `tagContents` and
-`tagMenuItems` handlers may be handed proto-groups, and those functions need
-to be able to handle instance of this class as inputs, and give sensible
-outputs without errors.
+Ensure that the type provided knows that its `tagContents`, `tagMenuItems`,
+and `connections` handlers may be handed proto-groups, and those functions
+need to be able to handle instances of this class as inputs, and give
+sensible outputs without errors.  The `connections` handler may replace
+group indexes with proto-group instances in its return values, and they will
+be handled correctly by the Groups Plugin.
 
         constructor: ( @range, @groupType ) ->
 
