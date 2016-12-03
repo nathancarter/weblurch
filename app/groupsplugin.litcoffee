@@ -860,6 +860,7 @@ because editing an element messes up cursor bookmarks within that element.
                 @editor.selection.collapse yes
                 newGroup = @grouperToGroup close
                 newGroup.parent?.contentsChanged()
+            newGroup
 
 ## Hiding and showing "groupers"
 
@@ -1486,14 +1487,23 @@ loop.
             for tag in tagsToDraw
                 context.roundedRect tag.x1, tag.y1, tag.x2, tag.y2, radius
                 context.globalAlpha = 1.0
+                context.save()
                 context.fillStyle = '#ffffff'
+                tag.group?.type?().setFillStyle? tag.group, context
                 context.fill()
+                context.restore()
+                context.save()
                 context.lineWidth = 1.5
                 context.strokeStyle = tag.color
+                tag.group?.type?().setOutlineStyle? tag.group, context
                 context.stroke()
+                context.restore()
+                context.save()
                 context.globalAlpha = 0.7
                 context.fillStyle = tag.color
+                tag.group?.type?().setFillStyle? tag.group, context
                 context.fill()
+                context.restore()
                 context.fillStyle = '#000000'
                 context.globalAlpha = 1.0
                 if not context.drawHTML tag.content, tag.x1 + padStep, \

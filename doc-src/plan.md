@@ -15,16 +15,6 @@ required order of completion.
 
 ## Implementing auto-bubbling infrastructure
 
- * Have the `tagMenuItems` function in the expression type notice
-   `ProtoGroup` instances, and give them one menu item:  An action for
-   promoting the suggestion to a real group.  For now, it can just dump
-   spam to the console for testing.
- * Create a new member function in the `ProtoGroup` class, called `promote`,
-   which turns the proto-group into a real group, as follows.  Save the
-   current selection, make the proto-group's range the new selection, call
-   `editor.Groups.groupCurrentSelection` on the appropriate group type name,
-   then restore the saved selection.  Have the tag menu item for
-   proto-groups call this function.
  * Update the suggestions feature so that it does not suggest `ProtoGroup`
    instances that overlap any existing `Group` instance.
  * Create a new action, with Cmd/Ctrl+Enter as its keyboard shortcut, that

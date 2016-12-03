@@ -93,8 +93,11 @@ We also include the "change attribute action" defined
 
         tagMenuItems : ( group ) ->
             result = [ ]
-            if group not instanceof ProtoGroup and \
-               group.connectionsOut().length > 0 and \
+            if group instanceof ProtoGroup
+                result.push
+                    text : "Accept suggestion"
+                    onclick : -> group.promote()
+            else if group.connectionsOut().length > 0 and \
                group.get( 'keyposition' ) is 'source'
                 result.push
                     text : "Move \"#{group.get 'key'}\" onto arrow"
@@ -327,14 +330,15 @@ This, too, is temporary code that will eventually be replaced with actual
 parsing later.
 
         scanRangeForSuggestions = ( range ) ->
+            makeProtoGroup = ->
+                result = new ProtoGroup range,
+                    editor.Groups.groupTypes.expression
+                result.tagContents = 'Suggestion:'
+                result
             text = range.toString()
             for reasonName in reasonNames
-                if reasonName is text
-                    return new ProtoGroup range,
-                        editor.Groups.groupTypes.expression
-            if /^[0-9\.+*\/\^-]+$/.test text
-                return new ProtoGroup range,
-                    editor.Groups.groupTypes.expression
+                if reasonName is text then return makeProtoGroup()
+            if /^[0-9\.+*\/\^-]+$/.test text then return makeProtoGroup()
             no
 
 The following function scans many ranges near the cursor, by passing them

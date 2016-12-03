@@ -37,9 +37,9 @@ Its open grouper can be any old HTML element near the range provided,
 because this will only be used to set the font for the bubble tag, should it
 have one that needs to be drawn.
 
-            open = @range.startContainer
-            while open? and not open.tagName?
-                open = open.parentNode
+            @open = @range.startContainer
+            while @open? and not @open.tagName?
+                @open = @open.parentNode
 
 A proto-group can answer some basic questions about itself, including the
 following.
@@ -96,6 +96,20 @@ Return the results as an object.
 
             open : open
             close : close
+
+Proto-groups are able to promote themselves to real groups, using the
+following method.  It saves the current selection, makes the proto-group's
+range the new selection, calls `editor.Groups.groupCurrentSelection` on the
+appropriate group type name, then restore the saved selection.
+
+        promote: ->
+            editor = tinymce.activeEditor
+            editor.selection.setRng @range
+            if newGroup = editor.Groups.groupCurrentSelection @type().name
+                range = newGroup.outerRange()
+                range.collapse no
+                editor.selection.setRng range
+            editor.fire 'NodeChange'
 
 ## Detecting content for use in proto-groups
 
