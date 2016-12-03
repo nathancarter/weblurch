@@ -95,7 +95,8 @@ We also include the "change attribute action" defined
             result = [ ]
             if group instanceof ProtoGroup
                 result.push
-                    text : "Accept suggestion"
+                    text : 'Accept suggestion'
+                    shortcut : 'Meta+J'
                     onclick : -> group.promote()
             else if group.connectionsOut().length > 0 and \
                group.get( 'keyposition' ) is 'source'
@@ -299,7 +300,7 @@ Proto-groups must be drawn more lightly than actual groups.
                 context.setLineDash [ 2, 2 ]
         setFillStyle : ( group, context ) ->
             if group instanceof ProtoGroup
-                context.globalAlpha = 0.15
+                context.globalAlpha = 0.35
                 context.setLineDash [ 2, 2 ]
 
     ]
@@ -380,6 +381,12 @@ above.
 
         editor.Groups.visibleGroups = ->
             editor.Groups.groupTypes.expression.suggestions ? [ ]
+
+If there is a visible proto-group, then we provide a keyboard shortcut for
+accepting it.
+
+        editor.shortcuts.add 'Meta+J', '', ->
+            editor.Groups.groupTypes.expression.suggestions?[0]?.promote()
 
 ## Auxiliary functions
 

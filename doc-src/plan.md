@@ -17,10 +17,6 @@ required order of completion.
 
  * Update the suggestions feature so that it does not suggest `ProtoGroup`
    instances that overlap any existing `Group` instance.
- * Create a new action, with Cmd/Ctrl+Enter as its keyboard shortcut, that
-   runs the same approval function on the suggested group in `autoGroupData`
-   iff one exists.  Enable/disable that action when updating the value of
-   the suggested group in `autoGroupData`.
  * Every time a new expression is formed, record it in the `lastFormed`
    member of the expression type.  Update the suggestions feature so that if
    a reason is being suggested, and the last formed group was not a reason,
