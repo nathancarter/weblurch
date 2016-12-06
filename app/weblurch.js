@@ -2785,7 +2785,20 @@
     return reader.readAsDataURL(blob);
   };
 
+  window.blobForBase64URL = function(url) {
+    var ab, byteString, i, ia, mimeString, _i, _ref3;
+    byteString = atob(url.split(',')[1]);
+    mimeString = url.split(',')[0].split(':')[1].split(';')[0];
+    ab = new ArrayBuffer(byteString.length);
+    ia = new Uint8Array(ab);
+    for (i = _i = 0, _ref3 = byteString.length; 0 <= _ref3 ? _i < _ref3 : _i > _ref3; i = 0 <= _ref3 ? ++_i : --_i) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    return window.makeBlob(ab, mimeString);
+  };
+
   window.installDOMUtilitiesIn = function(window) {
+    var isALetter;
     window.Node.prototype.address = function(ancestor) {
       var recur;
       if (ancestor == null) {
@@ -2923,6 +2936,9 @@
       while (walk && walk !== container && !walk.nextSibling) {
         walk = walk.parentNode;
       }
+      if (walk === container) {
+        return null;
+      }
       walk = walk != null ? walk.nextSibling : void 0;
       if (!walk) {
         return null;
@@ -2941,6 +2957,9 @@
       while (walk && walk !== container && !walk.previousSibling) {
         walk = walk.parentNode;
       }
+      if (walk === container) {
+        return null;
+      }
       walk = walk != null ? walk.previousSibling : void 0;
       if (!walk) {
         return null;
@@ -2949,6 +2968,36 @@
         walk = walk.childNodes[walk.childNodes.length - 1];
       }
       return walk;
+    };
+    window.Node.prototype.nextTextNode = function(container) {
+      var walk;
+      if (container == null) {
+        container = null;
+      }
+      if ((walk = this.nextLeaf(container)) instanceof window.Text) {
+        return walk;
+      } else {
+        return walk != null ? walk.nextTextNode(container) : void 0;
+      }
+    };
+    window.Node.prototype.previousTextNode = function(container) {
+      var walk;
+      if (container == null) {
+        container = null;
+      }
+      if ((walk = this.previousLeaf(container)) instanceof window.Text) {
+        return walk;
+      } else {
+        return walk != null ? walk.previousTextNode(container) : void 0;
+      }
+    };
+    window.Node.prototype.firstLeafInside = function() {
+      var _ref3, _ref4;
+      return ((_ref3 = this.childNodes) != null ? (_ref4 = _ref3[0]) != null ? _ref4.firstLeafInside() : void 0 : void 0) || this;
+    };
+    window.Node.prototype.lastLeafInside = function() {
+      var _ref3, _ref4;
+      return ((_ref3 = this.childNodes) != null ? (_ref4 = _ref3[this.childNodes.length - 1]) != null ? _ref4.lastLeafInside() : void 0 : void 0) || this;
     };
     window.Node.prototype.remove = function() {
       var _ref3;
@@ -3012,7 +3061,7 @@
       cmp = A.compareDocumentPosition(B);
       return (Node.DOCUMENT_POSITION_FOLLOWING & cmp) && !(Node.DOCUMENT_POSITION_CONTAINED_BY & cmp);
     };
-    return window.strictNodeComparator = function(groupA, groupB) {
+    window.strictNodeComparator = function(groupA, groupB) {
       if (groupA === groupB) {
         return 0;
       }
@@ -3021,6 +3070,137 @@
       } else {
         return 1;
       }
+    };
+    window.Range.prototype.extendByCharacters = function(howMany) {
+      var distanceToEnd, next, prev, remaining;
+      if (howMany === 0) {
+        return true;
+      } else if (howMany > 0) {
+        if (!(this.endContainer instanceof window.Text)) {
+          if (this.endOffset > 0) {
+            next = this.endContainer.childNodes[this.endOffset - 1].nextTextNode(window.document.body);
+          } else {
+            next = this.endContainer.firstLeafInside();
+            if (!(next instanceof window.Text)) {
+              next = next.nextTextNode(window.document.body);
+            }
+          }
+          if (next) {
+            this.setEnd(next, 0);
+          } else {
+            return false;
+          }
+        }
+        distanceToEnd = this.endContainer.length - this.endOffset;
+        if (howMany <= distanceToEnd) {
+          this.setEnd(this.endContainer, this.endOffset + howMany);
+          return true;
+        }
+        if (next = this.endContainer.nextTextNode(window.document.body)) {
+          this.setEnd(next, 0);
+          return this.extendByCharacters(howMany - distanceToEnd);
+        }
+      } else if (howMany < 0) {
+        if (!(this.startContainer instanceof window.Text)) {
+          if (this.startOffset > 0) {
+            prev = this.startContainer.childNodes[this.startOffset - 1].previousTextNode(window.document.body);
+          } else {
+            prev = this.startContainer.lastLeafInside();
+            if (!(prev instanceof window.Text)) {
+              prev = prev.previousTextNode(window.document.body);
+            }
+          }
+          if (prev) {
+            this.setStart(prev, 0);
+          } else {
+            return false;
+          }
+        }
+        if (-howMany <= this.startOffset) {
+          this.setStart(this.startContainer, this.startOffset + howMany);
+          return true;
+        }
+        if (prev = this.startContainer.previousTextNode(window.document.body)) {
+          remaining = howMany + this.startOffset;
+          this.setStart(prev, prev.length);
+          return this.extendByCharacters(remaining);
+        }
+      }
+      return false;
+    };
+    isALetter = function(char) {
+      return !/\s/.test(char);
+    };
+    window.Range.prototype.firstCharacter = function() {
+      return this.toString().charAt(0);
+    };
+    window.Range.prototype.lastCharacter = function() {
+      return this.toString().charAt(this.toString().length - 1);
+    };
+    window.Range.prototype.extendByWords = function(howMany) {
+      var lastRange, original, seenALetter;
+      original = this.cloneRange();
+      this.includeWholeWords();
+      if (howMany === 0) {
+        return true;
+      } else if (howMany > 0) {
+        if (!this.equals(original)) {
+          return this.extendByWords(howMany - 1);
+        }
+        seenALetter = false;
+        while (this.toString().length === 0 || !seenALetter || isALetter(this.lastCharacter())) {
+          lastRange = this.cloneRange();
+          if (!this.extendByCharacters(1)) {
+            return seenALetter && howMany === 1;
+          }
+          if (isALetter(this.lastCharacter())) {
+            seenALetter = true;
+          }
+        }
+        this.setStart(lastRange.startContainer, lastRange.startOffset);
+        this.setEnd(lastRange.endContainer, lastRange.endOffset);
+        return this.extendByWords(howMany - 1);
+      } else if (howMany < 0) {
+        if (!this.equals(original)) {
+          return this.extendByWords(howMany + 1);
+        }
+        seenALetter = false;
+        while (this.toString().length === 0 || !seenALetter || isALetter(this.firstCharacter())) {
+          lastRange = this.cloneRange();
+          if (!this.extendByCharacters(-1)) {
+            return seenALetter && howMany === -1;
+          }
+          if (isALetter(this.firstCharacter())) {
+            seenALetter = true;
+          }
+        }
+        this.setStart(lastRange.startContainer, lastRange.startOffset);
+        this.setEnd(lastRange.endContainer, lastRange.endOffset);
+        return this.extendByWords(howMany + 1);
+      }
+      return false;
+    };
+    window.Range.prototype.equals = function(otherRange) {
+      return this.startContainer === otherRange.startContainer && this.endContainer === otherRange.endContainer && this.startOffset === otherRange.startOffset && this.endOffset === otherRange.endOffset;
+    };
+    return window.Range.prototype.includeWholeWords = function() {
+      var lastRange;
+      while (this.toString().length === 0 || isALetter(this.firstCharacter())) {
+        lastRange = this.cloneRange();
+        if (!this.extendByCharacters(-1)) {
+          break;
+        }
+      }
+      this.setStart(lastRange.startContainer, lastRange.startOffset);
+      this.setEnd(lastRange.endContainer, lastRange.endOffset);
+      while (this.toString().length === 0 || isALetter(this.lastCharacter())) {
+        lastRange = this.cloneRange();
+        if (!this.extendByCharacters(1)) {
+          break;
+        }
+      }
+      this.setStart(lastRange.startContainer, lastRange.startOffset);
+      return this.setEnd(lastRange.endContainer, lastRange.endOffset);
     };
   };
 

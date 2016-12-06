@@ -323,37 +323,46 @@ Plan</a> because these are things that are not part of the linear
 progression of the project, in the sense that further work can be done on
 the main project plan without these bug fixes or enhancements.</p>
 <h2 id="bug-fixes">Bug fixes</h2>
+<h3 id="overall">Overall</h3>
+<ul>
+<li>Arrows representing connections between groups don't look good sometimes.
+   Improve the heuristics for drawing them as follows.<ul>
+<li>The default path is (a) up from the source until it reaches a distance
+  of h above the target's top (for some fixed constant h), (b) turn
+  NE/NW toward the target with radius r, (c) horizontally toward the
+  target, (d) turn SE/SW toward the target with radius r, then (e) down
+  to the target with an arrowhead.</li>
+<li>One problem with that strategy is that if there is little or no
+  horizontal separation, then it is (close to) just one vertical line.
+  So if the horizontal separation is under 2r, make the following
+  change.  The end of the curve can still be a turn SW of radius r,
+  followed by a step down with an arrowhead.  But from the source until
+  that point should be a single Bézier curve that begins with velocity N
+  and ends with velocity W.</li>
+<li>The other problem with the strategy is if there are many targets in
+  the same row of text, then the lines on the way to those targets will
+  all overlap, and thus become indistinguishable.  To solve this, let h
+  be a function equal to $C + 0.03\Delta x$, where $C$ is some constant
+  and $\Delta x$ is the horizontal distance between source and target
+  bubbles.  The $0.03$ is an estimate that can be customized with
+  testing.</li>
+</ul>
+</li>
+</ul>
 <h3 id="load-and-save">Load and save</h3>
 <ul>
 <li>Not all edits cause the document to be marked dirty.  TinyMCE events are
-   not firing correctly.  <a href="http://www.tinymce.com/develop/bugtracker_view.php?id=7511">Minimal working example created.</a>
-   <a href="http://www.tinymce.com/develop/bugtracker_view.php?id=7304">Or see this related issue.</a>
+   not firing correctly.  <a href="https://github.com/tinymce/tinymce/issues/2224">Minimal working example created.</a>
+   <a href="https://github.com/tinymce/tinymce/issues/2028">Or see this related issue.</a>
    Use the responses from that to get this
    problem fixed in Lurch, either by updating to a fixed version of TinyMCE
    or by installing a workaround here.  Although you've heard about the
    KeyUp and SetContent events that you're using in the Groups package, so
    you may be able to correct this problem partially with those events.
-   (We have updated to a newer version of TinyMCE, but not yet checked to
-   see if this bug persists.)</li>
-<li>Using the keyboard shortcut for New or Open on Mac triggers the Chrome
-   behaviors on the Chrome File menu, not the TinyMCE behaviors on its File
-   menu.  See <a href="http://www.tinymce.com/forum/viewtopic.php?pid=116179">my question about this on the TinyMCE forum,</a> and the
-   StackOverflow page to which it links with information on how you might go
-   about building a workaround if one doesn't exist already.</li>
-<li>It's too easy to navigate away from the editor and lose your work.  Make
-   a popup that asks if you really want to leave the page or not.</li>
+   (Verified on 9/22/16 that these bugs are still unresolved.)</li>
 </ul>
 <h3 id="other">Other</h3>
 <ul>
-<li>When you open (or type) a file that's longer than the screen, you must
-   open and close the JS console to force resizing, or it won't scroll
-   vertically.  Alternatively, you can resize the window.  Seems like the
-   resize event handler needs to be called immediately after the page
-   geometry is set up.</li>
-<li>The Insert Menu covers the toolbar and will not disappear, even when an
-   item is selected.  This seems like it is either a TinyMCE bug (and may go
-   away if we update TinyMCE) or it is a bug in our use of TinyMCE.</li>
-<li>Formats menu is currently empty.</li>
 <li>Some of the <code>*-duo.litcoffee</code> files in <code>src/</code> in the master branch also
    have committed versions in <code>app/</code> that are merely copies.  This is
    necessary in the gh-pages branch, but in master it's redundant.  Fix.</li>
@@ -366,30 +375,28 @@ the main project plan without these bug fixes or enhancements.</p>
    problematic.  Use <code>contentAsCode</code> instead.</li>
 </ul>
 <h2 id="enhancements">Enhancements</h2>
+<h3 id="validation">Validation</h3>
+<ul>
+<li>The boilerplate code at the end of <code>computeStepValidationAsync</code> in the
+   validation module is not as extensive (and thus as helpful) as it is in
+   the OverLeaf specification.  Specifically, you can declare variables for
+   <code>valid</code>, <code>message</code>, and <code>verbose</code>, and then package them into an object
+   at the end as part of the boilerplate.  Then users just need to assign to
+   those variables.</li>
+<li>Make validation icons go grey at the start of validation, and they'll be
+   replaced by non-gray ones when validation completes.</li>
+</ul>
 <h3 id="mathquill-parsing">MathQuill parsing</h3>
 <ul>
+<li>Before doing any MathQuill updates, import MathQuill 0.10, which has big
+   breaking API changes, and update all Lurch MathQuill calls to use the new
+   API.  <a href="https://github.com/mathquill/mathquill/wiki/v0.9.x-%E2%86%92-v0.10.0-Migration-Guide">See here for migration
+   notes.</a>
+   Because that is a major change to many parts of Lurch, test thoroughly,
+   including parsing MathQuill content.</li>
 <li>Support adjacent atomics as factors in a product</li>
 <li>Support chained equations</li>
 <li>Add tests for things that should <em>not</em> parse, and verify that they do not</li>
-</ul>
-<h3 id="html-exportimport">HTML export/import</h3>
-<ul>
-<li>Add an HTML export function that lets you download the contents of the
-   editor (plus metadata at the front, just like when exporting to the wiki)
-   for publishing on your own website, for example, or pasting into a blog
-   post.  Wrap it in a DIV with class "lurch-embed".</li>
-<li>Expose that functionality to the user, on the File menu.</li>
-<li>Add an HTML import function that lets you specify a URL, sends an XHR to
-   get the page at that URL, and finds all DIVs with class "lurch-embed".
-   Show the user a bit of the text from each and let the user choose which
-   to import.  Be sure to extract the metadata as well, just as with a wiki
-   import.</li>
-<li>Expose that functionality to the user, on the File menu.</li>
-<li>Extend dependencies so that they can be at arbitrary URLs, now, not just
-   on the wiki.  Use the HTML import function just created for this purpose,
-   but stipulate that a dependency imports only the first "lurch-embed" DIV
-   on a page.  To check the last modified date of arbitrary web pages, see
-   <a href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Get_last_modified_date">here.</a></li>
 </ul>
 <h3 id="dependencies">Dependencies</h3>
 <ul>
@@ -445,15 +452,20 @@ topics.</p>
 </ul>
 <h3 id="ui-for-connections-between-groups">UI for Connections Between Groups</h3>
 <ul>
+<li>Add a keyboard shortcut for entering connection mode (that is, clicking
+   the connection button on the toolbar).  This should be in the groups
+   plugin.</li>
+<li>Add a keyboard shortcut for cycling through the built-in keys an
+   attribute expression can have.  This should be in the main Lurch app.</li>
 <li>Add an option that when entering arrow-creation mode, ALL bubble outlines
    in the document are faintly drawn (not their tags), so that it's
    completely clear where a user wants to aim the mouse to hit a certain
    bubble.</li>
-<li>Add an option that show-groupers (Ctrl+1) mode is automatically enabled
-   when the user enters arrow-connection mode, and re-disabled (if it was
-   disabled in the first place) when exiting arrow-connection mode.  This is
-   like the previous feature, but more aggressive and techy.  (Do we still
-   need it now that we have the previous feature?)</li>
+<li>Add an option that show-groupers (Ctrl/Cmd+1) mode is automatically
+   enabled when the user enters arrow-connection mode, and re-disabled (if
+   it was disabled in the first place) when exiting arrow-connection mode.
+   This is like the previous feature, but more aggressive and techy.  (Do we
+   still need it now that we have the previous feature?)</li>
 <li>On mobile, a tap highlights the innermost bubble under it, without
    creating the arrow yet, and shows OK/cancel buttons hovering nearby.  If
    the user tapped what he/she expected to tap, then he/she hits OK and it
@@ -477,10 +489,6 @@ topics.</p>
 </ul>
 <h3 id="miscellaneous">Miscellaneous</h3>
 <ul>
-<li>Aiming the mouse at the close grouper, to bring up validation hover info,
-   turns the mouse pointer into a text cursor (shaped like an I, rather than
-   an arrow), which can be confusing.  Make the mouse pointer over groupers
-   be a plain old ordinary arrow, like usual.</li>
 <li>Move all plugin files into the <code>src/</code> folder, if possible.</li>
 <li>See <a href="http://stackoverflow.com/a/32120344/670492">this answer</a> to your
    StackOverflow question about higher resolution HTML canvas rendering on

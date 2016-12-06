@@ -92,6 +92,12 @@ a metadata object that gets embedded in the document itself.
             div.innerHTML = [
                 editor.Settings.UI.heading 'Dependencies'
                 "<div id='dependenciesSection'></div>"
+                editor.Settings.UI.heading 'Google Drive'
+                editor.Settings.UI.info "(Google Drive integration not yet
+                    complete.<br>Check back later for progress on this
+                    feature.)"
+                editor.Settings.UI.text 'Save to Drive with this title',
+                    'doc_title', D.get( 'doc_title' ) ? 'Untitled'
                 editor.Settings.UI.heading 'Wiki Publishing'
                 editor.Settings.UI.text 'Publish to wiki under this title',
                     'wiki_title', D.get( 'wiki_title' ) ? ''

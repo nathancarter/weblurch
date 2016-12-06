@@ -54,6 +54,15 @@ an expression highlights both its attributes and those things for which it
 is an attribute.)
 
         connections : ( group ) ->
+            if group instanceof ProtoGroup
+                result = group.connections ? []
+                for connection in result
+                    if connection instanceof Array
+                        if 2 not in connection then connection[2] = ''
+                        connection[3] = ( context ) ->
+                            context.globalAlpha = 0.5
+                            context.setLineDash [ 2, 2 ]
+                return result
             outs = group.connectionsOut()
             ins = group.connectionsIn()
             for cxn in [ ins..., outs... ]
@@ -69,7 +78,9 @@ An expression used as an attribute, with the key stored in the attribute
 itself, will show that key on its bubble tag.
 
         tagContents : ( group ) ->
-            if group.get( 'keyposition' ) is 'source'
+            if group instanceof ProtoGroup
+                group.tagContents
+            else if group.get( 'keyposition' ) is 'source'
                 group.get 'key'
             else
                 null
@@ -82,7 +93,12 @@ We also include the "change attribute action" defined
 
         tagMenuItems : ( group ) ->
             result = [ ]
-            if group.connectionsOut().length > 0 and \
+            if group instanceof ProtoGroup
+                result.push
+                    text : 'Accept suggestion'
+                    shortcut : 'Meta+J'
+                    onclick : -> group.promote()
+            else if group.connectionsOut().length > 0 and \
                group.get( 'keyposition' ) is 'source'
                 result.push
                     text : "Move \"#{group.get 'key'}\" onto arrow"
@@ -276,7 +292,166 @@ Here is the handler for clicking on group boundaries ("groupers").
                                     </table>"
                         , yes
 
+Proto-groups must be drawn more lightly than actual groups.
+
+        setOutlineStyle : ( group, context ) ->
+            if group instanceof ProtoGroup
+                context.globalAlpha = 0.5
+                context.setLineDash [ 2, 2 ]
+        setFillStyle : ( group, context ) ->
+            if group instanceof ProtoGroup
+                context.globalAlpha = 0.35
+                context.setLineDash [ 2, 2 ]
+
     ]
+
+## Automatic grouping suggestions
+
+Automatic grouping is a feature in Lurch by which it notices meaningful text
+near the user's cursor, and suggests groups that the user may wish to form.
+The user can confirm it with mouse or keyboard actions.  We install here the
+functionality supporting this feature.
+
+    window.afterEditorReadyArray.push ( editor ) ->
+
+For now, we're using some dummy code here.  Pretend we're in a predicate
+logic context, and there is a small, finite list of reasons named here.  Of
+course, this will eventually be replaced with an implementation that fetches
+the list of rules defined at the user's cursor point, but for testing
+purposes, we're using this list, temporarily.
+
+        reasonNames = [ 'and+', 'and-', 'or+', 'or-', 'implies+',
+            'implies-', 'not+', 'not-', 'forall+', 'forall-', 'exists+',
+            'exists-', '=+', '=-' ]
+
+Also, pretend a mathematical expression is defined by the following simple
+regular expression.  Obviously this is not nearly a parser, but it's just
+temporary code for testing these features.
+
+        isAMathExpression = ( text ) ->
+            /^[ 0-9\.+*\/\^-]+$/.test( text ) and /[0-9]/.test( text )
+
+The following function scans a given range in the document to see if it
+contains exactly any of the reason names above, or something that looks like
+a sequence of characters that might form a simple mathematical expression.
+This, too, is temporary code that will eventually be replaced with actual
+parsing later.
+
+        scanRangeForSuggestions = ( range ) ->
+            if editor.Groups.groupsTouchingRange( range ).length > 0
+                return no
+            makeProtoGroup = ( isAReason, tag = 'Suggestion:' ) ->
+                result = new ProtoGroup range,
+                    editor.Groups.groupTypes.expression
+                result.tagContents =
+                    if isAReason then 'Reason?' else 'Expression?'
+                result.isAReason = isAReason
+                if partner = findGroupToConnect range, isAReason
+                    id = partner.id()
+                    if groupIsAReason partner
+                        result.connections = [ [ id, result, '' ], id ]
+                    else
+                        result.connections = [ [ result, id, '' ], id ]
+                result
+            text = range.toString()
+            for reasonName in reasonNames
+                if reasonName is text then return makeProtoGroup yes
+            if isAMathExpression text then return makeProtoGroup no
+            no
+
+The previous function makes use of the following two utilities.  The first
+finds a nearby group in the document that is probably the statement or
+reason that corresponds to the newly suggested group, so that we can
+establish any connections that may need to be made.  It takes the range of
+the suggestion as input, along with whether the suggestion is a reason.
+
+        findGroupToConnect = ( range, isAReason ) ->
+
+A function for checking if a candidate group exists, has an ID, still sits
+in the document, and remains unconnected.
+
+            basicChecksPass = ( group ) ->
+                group?.id()? and not group.deleted and \
+                group.connectionsIn().length is 0 and \
+                group.connectionsOut().length is 0
+
+And one for checking if a group is the right type (a reason to go with our
+statement, or the other way around).
+
+            hasRightType = ( group ) -> isAReason isnt groupIsAReason group
+
+If the user recently approved a group that passes the above checks, we use
+that one.
+
+            last = ProtoGroup.lastPromoted?.promotedTo
+            return last if basicChecksPass( last ) and hasRightType last
+
+Otherwise, look for anything nearby that remains unconnected.  Start by
+finding the group to the left of the range.
+
+            index = editor.Groups.grouperIndexOfRangeEndpoint range, yes
+            if index > -1
+                all = editor.Groups.allGroupers()
+                candidate = editor.Groups.grouperToGroup all[index]
+                if basicChecksPass( candidate ) and hasRightType candidate
+                    return candidate
+                candidate = editor.Groups.grouperToGroup all[index + 1]
+                if basicChecksPass( candidate ) and hasRightType candidate
+                    return candidate
+
+Otherwise, give up.
+
+            null
+
+The second utility function detects whether any group is a reason or not.
+
+        groupIsAReason = ( group ) -> group.get( 'key' ) is 'reason'
+
+The following function scans many ranges near the cursor, by passing them
+all to the previous function.  It returns the first suggested group that it
+detects.
+
+        scanForSuggestions = ->
+            range = editor.selection.getRng()
+            if not range.collapsed
+                return scanRangeForSuggestions range
+            word = range.cloneRange()
+            word.includeWholeWords()
+            if maybe = scanRangeForSuggestions word then return maybe
+            lengths = [ ]
+            for reasonName in reasonNames
+                if reasonName.length not in lengths
+                    lengths.push reasonName.length
+            lengths.sort ( a, b ) -> b - a
+            for length in lengths
+                for R in allRangesNearCursor length
+                    if maybe = scanRangeForSuggestions R then return maybe
+            no
+
+Whenever anything changes in the document or the cursor position, we run
+`scanForSuggestions` and store its results in a member of the expression
+type, for use below.
+
+        editor.on 'NodeChange KeyUp change setContent', ( event ) ->
+            editor.Groups.groupTypes.expression.suggestions =
+                if suggestion = scanForSuggestions()
+                    [ suggestion ]
+                else
+                    [ ]
+            editor.Overlay?.redrawContents()
+
+The `visibleGroups` handler is what shows suggested groups to the user.
+Here, it just reports anything stored by the handler installed immediately
+above.
+
+        editor.Groups.visibleGroups = ->
+            editor.Groups.groupTypes.expression.suggestions ? [ ]
+
+If there is a visible proto-group, then we provide a keyboard shortcut for
+accepting it.
+
+        editor.shortcuts.add 'Meta+J', '', ->
+            editor.Groups.groupTypes.expression.suggestions?[0]?.promote()
 
 ## Auxiliary functions
 

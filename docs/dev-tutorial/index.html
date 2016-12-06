@@ -347,18 +347,20 @@ groups.</p>
 the terms "group" and "bubble" are sometimes used interchangeably, but
 technically "group" is the term for the object in memory, and "bubble" its
 representation on screen.</p>
-<p>Examples:
- * One demo app lets users wrap bubbles around mathematical expressions to
+<p>Examples:</p>
+<ul>
+<li>One demo app lets users wrap bubbles around mathematical expressions to
    tell Lurch to pay attention to the expressions' meaning.  Lurch puts a
    tag above the bubble to let the user see what the content means to Lurch.
-   <br><img alt="" src="../bubble-typeset-math.png" />
- * Another demo app lets users put bubbles around text to give it
+   <br><img alt="" src="../bubble-typeset-math.png" /></li>
+<li>Another demo app lets users put bubbles around text to give it
    application-specific meaning.  The following screenshot is from an
    application for authoring OpenMath Content Dictionaries.
-   <br><img alt="" src="../bubble-OM-CDReviewDate.png" />
- * Complex nested group hierarchies are possible and very useful.  Desktop
+   <br><img alt="" src="../bubble-OM-CDReviewDate.png" /></li>
+<li>Complex nested group hierarchies are possible and very useful.  Desktop
    Lurch uses them constantly:
-   <br><img alt="" src="../bubble-many.png" /></p>
+   <br><img alt="" src="../bubble-many.png" /></li>
+</ul>
 <p><a href="http://lurchmath.org/2013/04/12/what-have-we-built-so-far-part-1-of-2/">Read about about the importance of this user interface
 paradigm in a blog post about the desktop version of
 Lurch.</a></p>
@@ -366,10 +368,12 @@ Lurch.</a></p>
 <p>The content of this section got large enough to deserve
 <a href="http://nathancarter.github.io/weblurch/app/index.html">its own page</a>.</p>
 <h2 id="tutorial">Tutorial</h2>
-<p>Build a <em>Lurch Web Application</em> as follows.
- * <strong>Phase 1:</strong> Create a web page that imports the <em>Lurch Web Platform</em>.
- * <strong>Phase 2:</strong> Write code that defines a set of group types.
- * <strong>Phase 3:</strong> Optionally add new/custom behaviors to those types.</p>
+<p>Build a <em>Lurch Web Application</em> as follows.</p>
+<ul>
+<li><strong>Phase 1:</strong> Create a web page that imports the <em>Lurch Web Platform</em>.</li>
+<li><strong>Phase 2:</strong> Write code that defines a set of group types.</li>
+<li><strong>Phase 3:</strong> Optionally add new/custom behaviors to those types.</li>
+</ul>
 <p>This section gives step-by-step instructions for creating your own <em>Lurch
 Web Application.</em>  By the end of this section, you will have completed
 Phases 1 and 2 on the list, and will know where to go to explore Phase 3.</p>
@@ -418,19 +422,21 @@ are possible?  Let's see.</p>
 <p>The individual bubbles you see in the document are the visual representation
 of what, under the hood, are called "groups."  Each app has a different set
 of group types that the user may insert in the document, depending on the
-needs of the application.  Examples:
- * In the simple app you have, there is only one group type, and it does
+needs of the application.  Examples:</p>
+<ul>
+<li>In the simple app you have, there is only one group type, and it does
    almost nothing.  (It does write to the browser console, but that's
-   hardly exciting.)
- * <a href="https://github.com/nathancarter/weblurch/app/complex-example-solo.litcoffee">The complex demo app</a> defines two
+   hardly exciting.)</li>
+<li><a href="https://github.com/nathancarter/weblurch/app/complex-example-solo.litcoffee">The complex demo app</a> defines two
    group types, one for wrapping and evaluating expressions of arithmetic
-   and another for wrapping and doing simple computations on words.
- * In <a href="https://github.com/nathancarter/weblurch/app/math-example-solo.litcoffee">the math demo app</a> there is only
-   one group type, for parsing and evaluating mathematical expressions.
- * In <a href="https://github.com/nathancarter/weblurch/app/openmath-example-solo.litcoffee">the OpenMath Content Dictionary demo
+   and another for wrapping and doing simple computations on words.</li>
+<li>In <a href="https://github.com/nathancarter/weblurch/app/math-example-solo.litcoffee">the math demo app</a> there is only
+   one group type, for parsing and evaluating mathematical expressions.</li>
+<li>In <a href="https://github.com/nathancarter/weblurch/app/openmath-example-solo.litcoffee">the OpenMath Content Dictionary demo
    app</a> there is only one group
    type, but it can have any of over a dozen different purposes, editable
-   using the context menu on each individual group.</p>
+   using the context menu on each individual group.</li>
+</ul>
 <p>If we look at the code in your app that defines group types, stripping away
 all the documentation, it looks like the following.</p>
 <pre><code class="coffeescript">window.groupTypes = [

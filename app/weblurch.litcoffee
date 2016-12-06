@@ -2785,6 +2785,21 @@ is sent to the given callback.
         reader.onload = ( event ) -> callback event.target.result
         reader.readAsDataURL blob
 
+As long as we're here, let's also create the inverse for this function,
+which takes a base64 URL and converts it into a Blob.  This one is
+synchronous.
+
+    window.blobForBase64URL = ( url ) ->
+        # For this code, thanks to:
+        # http://stackoverflow.com/a/12300351/670492
+        byteString = atob url.split( ',' )[1]
+        mimeString = url.split( ',' )[0].split( ':' )[1].split( ';' )[0]
+        ab = new ArrayBuffer byteString.length
+        ia = new Uint8Array ab
+        for i in [0...byteString.length]
+            ia[i] = byteString.charCodeAt i
+        window.makeBlob ab, mimeString
+
 
 
 # Utility functions for working with the DOM
@@ -3016,6 +3031,7 @@ outside the bounds of the document or `container`.
 
 If no next sibling could be found, quit now, returning null.
 
+            if walk is container then return null
             walk = walk?.nextSibling
             if not walk then return null
 
@@ -3033,11 +3049,34 @@ similar to the previous routine, which is documented.
             walk = this
             while walk and walk isnt container and not walk.previousSibling
                 walk = walk.parentNode
+            if walk is container then return null
             walk = walk?.previousSibling
             if not walk then return null
             while walk.childNodes.length > 0
                 walk = walk.childNodes[walk.childNodes.length - 1]
             walk
+
+Related to the previous two methods are two for finding the next and
+previous nodes of type `Text`.
+
+        window.Node::nextTextNode = ( container = null ) ->
+            if ( walk = @nextLeaf container ) instanceof window.Text
+                walk
+            else
+                walk?.nextTextNode container
+        window.Node::previousTextNode = ( container = null ) ->
+            if ( walk = @previousLeaf container ) instanceof window.Text
+                walk
+            else
+                walk?.previousTextNode container
+
+Related to the other methods above, we have the following two, which compute
+the first or last leaf inside a given ancestor.
+
+        window.Node::firstLeafInside = ->
+            @childNodes?[0]?.firstLeafInside() or this
+        window.Node::lastLeafInside = ->
+            @childNodes?[@childNodes.length-1]?.lastLeafInside() or this
 
 ## More convenient `remove` method
 
@@ -3112,6 +3151,139 @@ To sort an array of document nodes, using a comparator that will return -1,
         window.strictNodeComparator = ( groupA, groupB ) ->
             if groupA is groupB then return 0
             if strictNodeOrder groupA, groupB then -1 else 1
+
+## Extending ranges
+
+An HTML `Range` object indicates a certain section of a document.  We add to
+that class here the capability of extending a range to the left or to the
+right by a given number of characters (when possible).  Here, `howMany` is
+the number of characters, and if positive, it will extend the right end of
+the range to the right; if negative, it will extend the left end of the
+range to the left.
+
+If the requested extension is not possible, a false value is returned, and
+the object may or may not have been modified, and may or may not be useful.
+If the requested extension is possible, a true value is returned, and the
+object is guaranteed to have been correctly modified as requested.
+
+        window.Range::extendByCharacters = ( howMany ) ->
+            if howMany is 0
+                return yes
+            else if howMany > 0
+                if @endContainer not instanceof window.Text
+                    if @endOffset > 0
+                        next = @endContainer.childNodes[@endOffset - 1]
+                                .nextTextNode window.document.body
+                    else
+                        next = @endContainer.firstLeafInside()
+                        if next not instanceof window.Text
+                            next = next.nextTextNode window.document.body
+                    if next then @setEnd next, 0 else return no
+                distanceToEnd = @endContainer.length - @endOffset
+                if howMany <= distanceToEnd
+                    @setEnd @endContainer, @endOffset + howMany
+                    return yes
+                if next = @endContainer.nextTextNode window.document.body
+                    @setEnd next, 0
+                    return @extendByCharacters howMany - distanceToEnd
+            else if howMany < 0
+                if @startContainer not instanceof window.Text
+                    if @startOffset > 0
+                        prev = @startContainer.childNodes[@startOffset - 1]
+                                .previousTextNode window.document.body
+                    else
+                        prev = @startContainer.lastLeafInside()
+                        if prev not instanceof window.Text
+                            prev =
+                                prev.previousTextNode window.document.body
+                    if prev then @setStart prev, 0 else return no
+                if -howMany <= @startOffset
+                    @setStart @startContainer, @startOffset + howMany
+                    return yes
+                if prev = @startContainer
+                           .previousTextNode window.document.body
+                    remaining = howMany + @startOffset
+                    @setStart prev, prev.length
+                    return @extendByCharacters remaining
+            no
+
+The `extendByWords` function is analogous, but extends by a given number of
+words rather than a given number of characters.
+
+A word counts as any sequence of consecutive letters, and a letter counts as
+anything that isn't whitespace.
+
+        isALetter = ( char ) -> not /\s/.test char
+
+We will use that on these two simple Range utilities.
+
+        window.Range::firstCharacter = -> @toString().charAt 0
+        window.Range::lastCharacter = ->
+            @toString().charAt @toString().length - 1
+
+Return values for `extendByWords` are the same as for `extendByCharacters`.
+
+        window.Range::extendByWords = ( howMany ) ->
+            original = @cloneRange()
+            @includeWholeWords()
+            if howMany is 0
+                return yes
+            else if howMany > 0
+                if not @equals original
+                    return @extendByWords howMany - 1
+                seenALetter = no
+                while @toString().length is 0 or not seenALetter or \
+                      isALetter @lastCharacter()
+                    lastRange = @cloneRange()
+                    if not @extendByCharacters 1
+                        return seenALetter and howMany is 1
+                    if isALetter @lastCharacter() then seenALetter = yes
+                @setStart lastRange.startContainer, lastRange.startOffset
+                @setEnd lastRange.endContainer, lastRange.endOffset
+                return @extendByWords howMany - 1
+            else if howMany < 0
+                if not @equals original
+                    return @extendByWords howMany + 1
+                seenALetter = no
+                while @toString().length is 0 or not seenALetter or \
+                      isALetter @firstCharacter()
+                    lastRange = @cloneRange()
+                    if not @extendByCharacters -1
+                        return seenALetter and howMany is -1
+                    if isALetter @firstCharacter() then seenALetter = yes
+                @setStart lastRange.startContainer, lastRange.startOffset
+                @setEnd lastRange.endContainer, lastRange.endOffset
+                return @extendByWords howMany + 1
+            no
+
+Two ranges are the same if and only if they have the same start and end
+containers and same start and end offsets.
+
+        window.Range::equals = ( otherRange ) ->
+            @startContainer is otherRange.startContainer and \
+            @endContainer is otherRange.endContainer and \
+            @startOffset is otherRange.startOffset and \
+            @endOffset is otherRange.endOffset
+
+The following utility function is used by the previous.  It expands the
+Range object as little as possible to ensure that it contains an integer
+number of words (no word partially included).
+
+A range in the middle of a word will expand to include the word. A range
+next to a word will expand to include the word.  A range touching no letter
+on either side will not change.
+
+        window.Range::includeWholeWords = ->
+            while @toString().length is 0 or isALetter @firstCharacter()
+                lastRange = @cloneRange()
+                if not @extendByCharacters -1 then break
+            @setStart lastRange.startContainer, lastRange.startOffset
+            @setEnd lastRange.endContainer, lastRange.endOffset
+            while @toString().length is 0 or isALetter @lastCharacter()
+                lastRange = @cloneRange()
+                if not @extendByCharacters 1 then break
+            @setStart lastRange.startContainer, lastRange.startOffset
+            @setEnd lastRange.endContainer, lastRange.endOffset
 
 ## Installation into main window global namespace
 

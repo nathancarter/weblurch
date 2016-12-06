@@ -860,6 +860,7 @@ because editing an element messes up cursor bookmarks within that element.
                 @editor.selection.collapse yes
                 newGroup = @grouperToGroup close
                 newGroup.parent?.contentsChanged()
+            newGroup
 
 ## Hiding and showing "groupers"
 
@@ -1416,12 +1417,18 @@ rounded rectangle that experienced something like word wrapping.
                     context.roundedZone x1, y1, x2, y2, open.bottom,
                         close.top, leftMar, rightMar, radius
                 if drawOutline
+                    context.save()
                     context.globalAlpha = 1.0
                     context.lineWidth = 1.5
+                    type?.setOutlineStyle? group, context
                     context.stroke()
+                    context.restore()
                 if drawInterior
+                    context.save()
                     context.globalAlpha = 0.3
+                    type?.setFillStyle? group, context
                     context.fill()
+                    context.restore()
                 yes # success
 
 That concludes the group-drawing function.  Let's now call it on all the
@@ -1434,6 +1441,13 @@ groups in the hierarchy, from `group` on upwards.
                 walk = walk.parent
                 pad += padStep
                 innermost = no
+
+If the plugin has been extended with a handler that supplies extra visible
+groups beyond those surrounding the cursor, find those groups and draw them
+now.
+
+            for extra in @visibleGroups?() ? []
+                drawGroup extra, yes, no, yes
 
 Now draw the tags on all the bubbles just drawn.  We proceed in reverse
 order, so that outer tags are drawn behind inner ones.  We also track the
@@ -1473,14 +1487,23 @@ loop.
             for tag in tagsToDraw
                 context.roundedRect tag.x1, tag.y1, tag.x2, tag.y2, radius
                 context.globalAlpha = 1.0
+                context.save()
                 context.fillStyle = '#ffffff'
+                tag.group?.type?().setFillStyle? tag.group, context
                 context.fill()
+                context.restore()
+                context.save()
                 context.lineWidth = 1.5
                 context.strokeStyle = tag.color
+                tag.group?.type?().setOutlineStyle? tag.group, context
                 context.stroke()
+                context.restore()
+                context.save()
                 context.globalAlpha = 0.7
                 context.fillStyle = tag.color
+                tag.group?.type?().setFillStyle? tag.group, context
                 context.fill()
+                context.restore()
                 context.fillStyle = '#000000'
                 context.globalAlpha = 1.0
                 if not context.drawHTML tag.content, tag.x1 + padStep, \
@@ -1548,9 +1571,9 @@ index into the list of connections that are to be drawn.
             drawArrow = ( index, outOf, from, to, label, setStyle ) =>
                 context.save()
                 context.strokeStyle = from.type()?.color or '#444444'
-                setStyle? context
                 context.globalAlpha = 1.0
                 context.lineWidth = 2
+                setStyle? context
                 fromBox = from.getScreenBoundaries()
                 toBox = to.getScreenBoundaries()
                 if not fromBox or not toBox then return
@@ -1578,7 +1601,7 @@ index into the list of connections that are to be drawn.
                     centerY = context.applyBezier startY,
                         startY + how.startDir * gap,
                         endY - how.endDir * gap, endY, 0.5
-                    style = createFontStyleString group.open
+                    style = createFontStyleString from.open
                     if not size = context.measureHTML label, style
                         setTimeout ( => @editor.Overlay?.redrawContents() ),
                             10
@@ -1602,19 +1625,29 @@ index into the list of connections that are to be drawn.
                 context.restore()
 
 Second, draw all connections from the innermost group containing the cursor,
-if there are any.
+if there are any, plus connections from any groups registered as visible
+through the `visibleGroups` handler.  The connections arrays are permitted
+to contain group indices or actual groups; the former will be converted to
+the latter if needed.
 
-            if group
-                connections = group.type().connections? group
-                numArrays = ( c for c in connections \
-                    when c instanceof Array ).length
-                for connection in connections ? [ ]
-                    if connection not instanceof Array
-                        drawGroup @[connection], yes, no, no
-                for connection, index in connections ? [ ]
-                    if connection instanceof Array
-                        drawArrow index, numArrays, @[connection[0]],
-                            @[connection[1]], connection[2..]...
+            for g in [ group, ( @visibleGroups?() ? [] )... ]
+                if g
+                    connections = g.type().connections? g
+                    numArrays = ( c for c in connections \
+                        when c instanceof Array ).length
+                    for connection in connections ? [ ]
+                        if connection not instanceof Array
+                            if typeof( connection ) is 'number'
+                                connection = @[connection]
+                            drawGroup connection, yes, no, no
+                    for connection, index in connections ? [ ]
+                        if connection instanceof Array
+                            from = if typeof( connection[0] ) is 'number' \
+                                then @[connection[0]] else connection[0]
+                            to = if typeof( connection[1] ) is 'number' \
+                                then @[connection[1]] else connection[1]
+                            drawArrow index, numArrays, from, to,
+                                connection[2..]...
 
 # Installing the plugin
 

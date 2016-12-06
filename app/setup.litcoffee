@@ -112,7 +112,7 @@ that begins with a hyphen is a local plugin written as part of this project.
                 'advlist table charmap colorpicker image link
                 paste print searchreplace textcolor fullscreen
                 -loadsave -overlay -groups -equationeditor -dependencies
-                -dialogs ' \
+                -dialogs -downloadupload ' \
                 + ( "-#{p}" for p in window.pluginsToLoad ).join ' '
 
 The groups plugin requires that we add the following, to prevent resizing of
@@ -184,7 +184,8 @@ We then customize the menus' contents as follows.
             menu :
                 file :
                     title : 'File'
-                    items : 'newfile openfile | savefile saveas
+                    items : 'newfile openfile
+                           | savefile saveas download upload
                            | managefiles | print' + moreMenuItems 'file'
                 edit :
                     title : 'Edit'

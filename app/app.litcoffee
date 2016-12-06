@@ -446,6 +446,16 @@ a blob, so that it can be passed to the TinyMCE dialog-creation routines.
             install 'a', 'click'
             install 'input', 'click'
             install 'input', 'input'
+            for element in document.getElementsByTagName 'input'
+                if 'file' is element.getAttribute 'type'
+                    element.addEventListener 'change', ->
+                        reader = new FileReader()
+                        reader.onload = ( event ) =>
+                            parent.postMessage
+                                value : event.target.result
+                                id : @getAttribute 'id'
+                            , '*'
+                        reader.readAsDataURL @files[0]
             document.getElementsByTagName( 'input' )[0]?.focus()
         window.objectURLForBlob window.makeBlob \
             html + "<script>(#{script})()</script>",
@@ -549,6 +559,43 @@ receive the text in the dialog's input as a parameter.
         installClickListener ( data ) ->
             if data.id is 'promptInput' then lastValue = data.value
 
+## File upload dialog
+
+This function allows the user to choose a file from their local machine to
+upload.  They can do so with a "choose" button or by dragging the file into
+the dialog.  The dialog then calls its `okCallback` with the contents of the
+uploaded file, in the format of a data URL, or calls its `cancelCallback`
+with no parameter.
+
+    Dialogs.promptForFile = ( options ) ->
+        value = if options.value then " value='#{options.value}'" else ''
+        types = if options.types then " accept='#{options.types}'" else ''
+        options.message +=
+            "<p><input type='file' #{value} id='promptInput'/></p>"
+        lastValue = null
+        dialog = tinymce.activeEditor.windowManager.open
+            title : options.title ? ' '
+            url : prepareHTML options.message
+            width : options.width ? 400
+            height : options.height ? 100
+            buttons : [
+                type : 'button'
+                text : options.Cancel ? 'Cancel'
+                subtype : 'primary'
+                onclick : ( event ) ->
+                    dialog.close()
+                    options.cancelCallback?()
+            ,
+                type : 'button'
+                text : options.OK ? 'OK'
+                subtype : 'primary'
+                onclick : ( event ) ->
+                    dialog.close()
+                    options.okCallback? lastValue
+            ]
+        installClickListener ( data ) ->
+            if data.id is 'promptInput' then lastValue = data.value
+
 ## Code editor dialog
 
     Dialogs.codeEditor = ( options ) ->
@@ -630,6 +677,140 @@ function to call when the work is done, to close this dialog.
 
     tinymce.PluginManager.add 'dialogs', ( editor, url ) ->
         editor.Dialogs = Dialogs
+
+
+
+# Download/Upload Plugin for [TinyMCE](http://www.tinymce.com)
+
+This plugin lets users download the contents of their current document as
+HTML, or upload any HTML file as new contents to overwrite the current
+document.  It assumes that TinyMCE has been loaded into the global
+namespace, so that it can access it.
+
+If you have the [Load/Save Plugin](loadsaveplugin.litcoffee) also enabled in
+the same TinyMCE editor instance, it will make use of that plugin in
+several ways.
+
+ * to ensure that editor contents are saved, if desired, before overwriting
+   them with new, uploaded content
+ * to determine the filename used for the download, when available
+ * to embed metadata in the content before downloading, and extract metadata
+   after uploading
+
+# `DownloadUpload` class
+
+We begin by defining a class that will contain all the information needed
+regarding downloading and uploading HTML content.  An instance of this class
+will be stored as a member in the TinyMCE editor object.
+
+This convention is adopted for all TinyMCE plugins in the Lurch project;
+each will come with a class, and an instance of that class will be stored as
+a member of the editor object when the plugin is installed in that editor.
+The presence of that member indicates that the plugin has been installed,
+and provides access to the full range of functionality that the plugin
+grants to that editor.
+
+    class DownloadUpload
+
+## Constructor
+
+At construction time, we install in the editor the download and upload
+actions that can be added to the File menu and/or toolbar.
+
+        constructor: ( @editor ) ->
+            control = ( name, data ) =>
+                buttonData =
+                    icon : data.icon
+                    shortcut : data.shortcut
+                    onclick : data.onclick
+                    tooltip : data.tooltip
+                key = if data.icon? then 'icon' else 'text'
+                buttonData[key] = data[key]
+                @editor.addButton name, buttonData
+                @editor.addMenuItem name, data
+            control 'download',
+                text : 'Download'
+                icon : 'arrowdown2'
+                context : 'file'
+                tooltip : 'Download this document'
+                onclick : => @downloadDocument()
+            control 'upload',
+                text : 'Upload'
+                icon : 'arrowup2'
+                context : 'file'
+                tooltip : 'Upload new document'
+                onclick : => @uploadDocument()
+
+## Event handlers
+
+The following functions handle the two events that this class provides, the
+download event and the upload event.
+
+The download event constructs a blob, fills it with the contents of the
+editor as HTML data, and starts a download.  The only unique step in this
+process is that we attempt to get a filename from the
+[Load/Save Plugin](loadsaveplugin.litcoffee), if one is available.  If not,
+we use "untitled.html."
+
+        downloadDocument: ->
+            html = embedMetadata @editor.getContent(),
+                @editor.Settings.document.metadata
+            blob = new Blob [ html ], type : 'text/html'
+            link = document.createElement 'a'
+            link.setAttribute 'href', URL.createObjectURL blob
+            link.setAttribute 'download',
+                editor.LoadSave.filename or 'untitled.html'
+            link.click()
+            URL.revokeObjectURL link.getAttribute 'href'
+
+The upload event first checks to be sure that the contents of the editor are
+saved, or the user does not mind overwriting them.  This code imitates the
+File > New handler in the [Load/Save Plugin](loadsaveplugin.litcoffee).
+This function calls the `letUserUpload` function to do the actual uploading;
+that function is defined further below in this file.
+
+        uploadDocument: ->
+            return @letUserUpload() unless editor.LoadSave.documentDirty
+            @editor.windowManager.open {
+                title : 'Save first?'
+                buttons : [
+                    text : 'Save'
+                    onclick : =>
+                        editor.LoadSave.tryToSave ( success ) =>
+                            if success then @letUserUpload()
+                        @editor.windowManager.close()
+                ,
+                    text : 'Discard'
+                    onclick : =>
+                        @editor.windowManager.close()
+                        @letUserUpload()
+                ,
+                    text : 'Cancel'
+                    onclick : => @editor.windowManager.close()
+                ]
+            }
+
+The following function handles the case where the user has agreed to save or
+discard the current contents of the editor, so they're ready to upload a new
+file to overwrite it.  We present here the user interface for doing so, and
+handle the upload process.
+
+        letUserUpload: ->
+            @editor.Dialogs.promptForFile
+                title : 'Choose file'
+                message : 'Choose an HTML file to upload into the editor.'
+                okCallback : ( fileAsDataURL ) =>
+                    html = atob fileAsDataURL.split( ',' )[1]
+                    { metadata, document } = extractMetadata html
+                    @editor.setContent document
+                    if metadata?
+                        @editor.Settings.document.metadata = metadata
+                    @editor.focus()
+
+# Installing the plugin
+
+    tinymce.PluginManager.add 'downloadupload', ( editor, url ) ->
+        editor.DownloadUpload = new DownloadUpload editor
 
 
 
@@ -1649,6 +1830,7 @@ because editing an element messes up cursor bookmarks within that element.
                 @editor.selection.collapse yes
                 newGroup = @grouperToGroup close
                 newGroup.parent?.contentsChanged()
+            newGroup
 
 ## Hiding and showing "groupers"
 
@@ -2205,12 +2387,18 @@ rounded rectangle that experienced something like word wrapping.
                     context.roundedZone x1, y1, x2, y2, open.bottom,
                         close.top, leftMar, rightMar, radius
                 if drawOutline
+                    context.save()
                     context.globalAlpha = 1.0
                     context.lineWidth = 1.5
+                    type?.setOutlineStyle? group, context
                     context.stroke()
+                    context.restore()
                 if drawInterior
+                    context.save()
                     context.globalAlpha = 0.3
+                    type?.setFillStyle? group, context
                     context.fill()
+                    context.restore()
                 yes # success
 
 That concludes the group-drawing function.  Let's now call it on all the
@@ -2223,6 +2411,13 @@ groups in the hierarchy, from `group` on upwards.
                 walk = walk.parent
                 pad += padStep
                 innermost = no
+
+If the plugin has been extended with a handler that supplies extra visible
+groups beyond those surrounding the cursor, find those groups and draw them
+now.
+
+            for extra in @visibleGroups?() ? []
+                drawGroup extra, yes, no, yes
 
 Now draw the tags on all the bubbles just drawn.  We proceed in reverse
 order, so that outer tags are drawn behind inner ones.  We also track the
@@ -2262,14 +2457,23 @@ loop.
             for tag in tagsToDraw
                 context.roundedRect tag.x1, tag.y1, tag.x2, tag.y2, radius
                 context.globalAlpha = 1.0
+                context.save()
                 context.fillStyle = '#ffffff'
+                tag.group?.type?().setFillStyle? tag.group, context
                 context.fill()
+                context.restore()
+                context.save()
                 context.lineWidth = 1.5
                 context.strokeStyle = tag.color
+                tag.group?.type?().setOutlineStyle? tag.group, context
                 context.stroke()
+                context.restore()
+                context.save()
                 context.globalAlpha = 0.7
                 context.fillStyle = tag.color
+                tag.group?.type?().setFillStyle? tag.group, context
                 context.fill()
+                context.restore()
                 context.fillStyle = '#000000'
                 context.globalAlpha = 1.0
                 if not context.drawHTML tag.content, tag.x1 + padStep, \
@@ -2337,9 +2541,9 @@ index into the list of connections that are to be drawn.
             drawArrow = ( index, outOf, from, to, label, setStyle ) =>
                 context.save()
                 context.strokeStyle = from.type()?.color or '#444444'
-                setStyle? context
                 context.globalAlpha = 1.0
                 context.lineWidth = 2
+                setStyle? context
                 fromBox = from.getScreenBoundaries()
                 toBox = to.getScreenBoundaries()
                 if not fromBox or not toBox then return
@@ -2367,7 +2571,7 @@ index into the list of connections that are to be drawn.
                     centerY = context.applyBezier startY,
                         startY + how.startDir * gap,
                         endY - how.endDir * gap, endY, 0.5
-                    style = createFontStyleString group.open
+                    style = createFontStyleString from.open
                     if not size = context.measureHTML label, style
                         setTimeout ( => @editor.Overlay?.redrawContents() ),
                             10
@@ -2391,19 +2595,29 @@ index into the list of connections that are to be drawn.
                 context.restore()
 
 Second, draw all connections from the innermost group containing the cursor,
-if there are any.
+if there are any, plus connections from any groups registered as visible
+through the `visibleGroups` handler.  The connections arrays are permitted
+to contain group indices or actual groups; the former will be converted to
+the latter if needed.
 
-            if group
-                connections = group.type().connections? group
-                numArrays = ( c for c in connections \
-                    when c instanceof Array ).length
-                for connection in connections ? [ ]
-                    if connection not instanceof Array
-                        drawGroup @[connection], yes, no, no
-                for connection, index in connections ? [ ]
-                    if connection instanceof Array
-                        drawArrow index, numArrays, @[connection[0]],
-                            @[connection[1]], connection[2..]...
+            for g in [ group, ( @visibleGroups?() ? [] )... ]
+                if g
+                    connections = g.type().connections? g
+                    numArrays = ( c for c in connections \
+                        when c instanceof Array ).length
+                    for connection in connections ? [ ]
+                        if connection not instanceof Array
+                            if typeof( connection ) is 'number'
+                                connection = @[connection]
+                            drawGroup connection, yes, no, no
+                    for connection, index in connections ? [ ]
+                        if connection instanceof Array
+                            from = if typeof( connection[0] ) is 'number' \
+                                then @[connection[0]] else connection[0]
+                            to = if typeof( connection[1] ) is 'number' \
+                                then @[connection[1]] else connection[1]
+                            drawArrow index, numArrays, from, to,
+                                connection[2..]...
 
 # Installing the plugin
 
@@ -4080,7 +4294,7 @@ that begins with a hyphen is a local plugin written as part of this project.
                 'advlist table charmap colorpicker image link
                 paste print searchreplace textcolor fullscreen
                 -loadsave -overlay -groups -equationeditor -dependencies
-                -dialogs ' \
+                -dialogs -downloadupload ' \
                 + ( "-#{p}" for p in window.pluginsToLoad ).join ' '
 
 The groups plugin requires that we add the following, to prevent resizing of
@@ -4152,7 +4366,8 @@ We then customize the menus' contents as follows.
             menu :
                 file :
                     title : 'File'
-                    items : 'newfile openfile | savefile saveas
+                    items : 'newfile openfile
+                           | savefile saveas download upload
                            | managefiles | print' + moreMenuItems 'file'
                 edit :
                     title : 'Edit'

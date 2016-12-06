@@ -59,8 +59,8 @@
       return (D.metadata != null ? D.metadata : D.metadata = {})[key] = value;
     };
     D.setup = function(div) {
-      var _ref;
-      div.innerHTML = [editor.Settings.UI.heading('Dependencies'), "<div id='dependenciesSection'></div>", editor.Settings.UI.heading('Wiki Publishing'), editor.Settings.UI.text('Publish to wiki under this title', 'wiki_title', (_ref = D.get('wiki_title')) != null ? _ref : '')].join('\n');
+      var _ref, _ref1;
+      div.innerHTML = [editor.Settings.UI.heading('Dependencies'), "<div id='dependenciesSection'></div>", editor.Settings.UI.heading('Google Drive'), editor.Settings.UI.info("(Google Drive integration not yet complete.<br>Check back later for progress on this feature.)"), editor.Settings.UI.text('Save to Drive with this title', 'doc_title', (_ref = D.get('doc_title')) != null ? _ref : 'Untitled'), editor.Settings.UI.heading('Wiki Publishing'), editor.Settings.UI.text('Publish to wiki under this title', 'wiki_title', (_ref1 = D.get('wiki_title')) != null ? _ref1 : '')].join('\n');
       return editor.Dependencies.installUI(div.ownerDocument.getElementById('dependenciesSection'));
     };
     D.teardown = function(div) {

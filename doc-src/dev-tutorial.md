@@ -37,6 +37,7 @@ technically "group" is the term for the object in memory, and "bubble" its
 representation on screen.
 
 Examples:
+
  * One demo app lets users wrap bubbles around mathematical expressions to
    tell Lurch to pay attention to the expressions' meaning.  Lurch puts a
    tag above the bubble to let the user see what the content means to Lurch.
@@ -61,6 +62,7 @@ The content of this section got large enough to deserve
 ## Tutorial
 
 Build a *Lurch Web Application* as follows.
+
  * __Phase 1:__ Create a web page that imports the *Lurch Web Platform*.
  * __Phase 2:__ Write code that defines a set of group types.
  * __Phase 3:__ Optionally add new/custom behaviors to those types.
@@ -111,6 +113,7 @@ The individual bubbles you see in the document are the visual representation
 of what, under the hood, are called "groups."  Each app has a different set
 of group types that the user may insert in the document, depending on the
 needs of the application.  Examples:
+
  * In the simple app you have, there is only one group type, and it does
    almost nothing.  (It does write to the browser console, but that's
    hardly exciting.)

@@ -178,29 +178,24 @@ asked for long ago when he first heard about the webLurch project. Integrate
 that into webLurch, imitating the UX Ken describes from typical online
 collaboration apps such as Google Docs and Overleaf, as follows.
 
- * Just a note that none of the changes below impact the wiki import and
-   export functionality; that stays as it is now.
+ * Create a function that can update the UI when users log into or out of
+   Google Drive.  At first, it will just hide/show the File > Save and
+   File > Save as... actions on the menu and toolbars.
+ * Add an HTML element to the toolbar in which we can place text about the
+   document's dirty state, and controls for enabling cloud storage.
+ * Place a button in that element that says "Enable cloud storage" and make
+   the button visible iff the user has not authenticated to Google Drive.
+   Implement the click handler later, as described below.
+ * Create a function that can specify any message to appear to the left of
+   that button (whether the button is visible or not).
+ * For now, whenever a new document is created, call that function with a
+   warning message saying "Not saved".
  * Provide a section in the File > Application settings... dialog that will
-   be for Google Drive authentication, but you don't have to put the Google
-   login functionality there yet.  Include full explanatory text about how
-   cloud saving works with webLurch (as described below).
- * File > Save and File > Save as... actions should be removed entirely.
- * Before adding Google Drive integration, change the items on the File menu
-   to behave as follows.
-   * Whenever the document is dirty, it has a warning message on the toolbar
-     that says something like "Not saved" followed by a button that says
-     "Enable cloud storage."
-   * That button will open the document preferences dialog and scroll down
-     to/highlight the section about logging into Google Drive.
-   * File > Document properties... will let you change the name of the
-     document which will simply be stored as document metadata; it will have
-     no impact on filename, since there is no filename (yet).
-   * Corresponding changes take place in the toolbar.
-   * Add File > Download, which starts a download of the file as HTML.
-   * Add File > Upload, which lets the user choose an HTML file to upload,
-     accepts the upload, strips any dangerous tags from it, then does the
-     same thing as File > New, above, before pasting the HTML content
-     directly into the new, blank document.
+   be for Google Drive authentication.  You will add the Google login
+   functionality there later, as well as explanatory text about how cloud
+   saving works.
+ * Implement the click handler for the "Enable cloud storage" button to open
+   the application settings dialog and scroll to the Google Drive section.
  * Add to the application settings section about Google Drive the actual
    login/auth button.  Once a user has logged in, the button becomes a
    disconnect-from-my-Drive button (de-auth).  See the tutorial on how to
@@ -208,30 +203,44 @@ collaboration apps such as Google Docs and Overleaf, as follows.
    https://developers.google.com/google-apps/realtime/realtime-quickstart),
    and especially the JavaScript tools they've developed for your use
    [here](https://github.com/googledrive/realtime-utils/blob/master/realtime-client-utils.js).
- * When a user gives such authorization, the following changes take place:
-   * The currently-open file in the app should then be moved into Google
-     Drive as a new document.  Attempt to preserve document title, if one
-     was set in document properties.  If Drive requires unique titles, you
-     may need to append a number.
-   * Change File > New so that it does this same procedure of moving the
-     (newly created) document into Drive, with a default title such as
-     "Untitled Document."
-   * The toolbar will no longer say "Not saved," but will say either
-     "Saved to Drive" or "Syncing..." (if in progress).
-   * File > Open looks in your Google Drive for Lurch files to open, and
-     presents you a flat list.  If possible, sort it by most recently used.
-   * File > Manage files... gets replaced by File > Open my Google Drive.
-     All file management will take place through Google's UI, not mine.
- * If a user de-authorizes webLurch from their Google Drive, then all
-   entries on the File menu should revert to their original behavior.
- * Get this to work across multiple instances of the Lurch app in different
-   tabs as follows.
-   * Store in Local Storage the fact that the user has given a Drive login
-     and succeeded, when that login takes place.
-   * Have the app poll that setting every second or two, and if it sees that
-     it has changed from no to yes (due to the user's logging into Drive in
-     another tab of the app), then re-run the silent Google login attempt
-     routine to complete the login in that tab as well.  (I think?)
+ * Add a handler function for when a user enables or disables cloud storage.
+   At first, the only result will be the hiding/showing of the "Enable Cloud
+   Storage" button.
+ * Extend the Google login/out handler so that logging in moves the current
+   file into Google Drive as a new document.  Attempt to preserve document
+   title, if one was set in document properties.  If Drive requires unique
+   titles, you may need to append a number.
+ * When the file is moved into Drive, update the toolbar message to say
+   "Saved to Drive."
+ * Extend File > New so that, if the user is already logged into Drive, the
+   new file is placed into Drive, with its default "Untitled" title.  Also
+   change the toolbar message to "Saved to Drive."
+ * When the user makes changes to their document, queue up a syncing event
+   for maybe 2 seconds in the future; if one was already queued, cancel it.
+   Immediately change the toolbar message to "Syncing..."
+ * When the syncing event fires, save the file to Google Drive, then change
+   the toolbar message to "Saved to Drive" again.
+ * Extend File > Open so that, if the user is logged into Google Drive, it
+   replaces its old functionality with a dialog that lists all Lurch files
+   in the Drive, as a flat list sorted by most recently used.  Picking one
+   opens the file.
+ * Create a new action, File > Open my Google Drive, that does just that, in
+   another tab.  This will be used for file management.  We need to create
+   no UI for it; Google has done so.
+ * Extend the function that can update the UI when users log into or out of
+   Google Drive as follows:  Have File > Open my Google Drive hidden by
+   default, but shown when you log into Drive.  Hide it again if you log
+   out.
+ * We want Google Drive logins in one browser tab containing the Lurch app
+   to impact any other browser tabs containing the Lurch app.  So have the
+   app check the application settings every second or two, and if it sees
+   that the user has changed their Google Drive settings (stored in Local
+   Storage, due to the user's logging into Drive in another tab of the app),
+   then re-run the silent Google login attempt routine to complete the login
+   in the new tab as well.  (At least, this seems like it would work.
+   Investigate.)
+ * Add to the application settings dialog, in the Google Drive
+   authentication section, a description of how cloud storage works.
 
 ## Offline support
 
