@@ -324,6 +324,13 @@ purposes, we're using this list, temporarily.
             'implies-', 'not+', 'not-', 'forall+', 'forall-', 'exists+',
             'exists-', '=+', '=-' ]
 
+Also, pretend a mathematical expression is defined by the following simple
+regular expression.  Obviously this is not nearly a parser, but it's just
+temporary code for testing these features.
+
+        isAMathExpression = ( text ) ->
+            /^[ 0-9\.+*\/\^-]+$/.test( text ) and /[0-9]/.test( text )
+
 The following function scans a given range in the document to see if it
 contains exactly any of the reason names above, or something that looks like
 a sequence of characters that might form a simple mathematical expression.
@@ -333,24 +340,72 @@ parsing later.
         scanRangeForSuggestions = ( range ) ->
             if editor.Groups.groupsTouchingRange( range ).length > 0
                 return no
-            makeProtoGroup = ( isAReason ) ->
+            makeProtoGroup = ( isAReason, tag = 'Suggestion:' ) ->
                 result = new ProtoGroup range,
                     editor.Groups.groupTypes.expression
-                result.tagContents = 'Suggestion:'
+                result.tagContents =
+                    if isAReason then 'Reason?' else 'Expression?'
                 result.isAReason = isAReason
-                if ( id = ProtoGroup.lastPromoted?.promotedTo?.id() )?
-                    if ProtoGroup.lastPromoted.isAReason
-                        if not result.isAReason
-                            result.connections = [ [ id, result ], id ]
+                if partner = findGroupToConnect range, isAReason
+                    id = partner.id()
+                    if groupIsAReason partner
+                        result.connections = [ [ id, result, '' ], id ]
                     else
-                        if result.isAReason
-                            result.connections = [ [ result, id ], id ]
+                        result.connections = [ [ result, id, '' ], id ]
                 result
             text = range.toString()
             for reasonName in reasonNames
                 if reasonName is text then return makeProtoGroup yes
-            if /^[0-9\.+*\/\^-]+$/.test text then return makeProtoGroup no
+            if isAMathExpression text then return makeProtoGroup no
             no
+
+The previous function makes use of the following two utilities.  The first
+finds a nearby group in the document that is probably the statement or
+reason that corresponds to the newly suggested group, so that we can
+establish any connections that may need to be made.  It takes the range of
+the suggestion as input, along with whether the suggestion is a reason.
+
+        findGroupToConnect = ( range, isAReason ) ->
+
+A function for checking if a candidate group exists, has an ID, still sits
+in the document, and remains unconnected.
+
+            basicChecksPass = ( group ) ->
+                group?.id()? and not group.deleted and \
+                group.connectionsIn().length is 0 and \
+                group.connectionsOut().length is 0
+
+And one for checking if a group is the right type (a reason to go with our
+statement, or the other way around).
+
+            hasRightType = ( group ) -> isAReason isnt groupIsAReason group
+
+If the user recently approved a group that passes the above checks, we use
+that one.
+
+            last = ProtoGroup.lastPromoted?.promotedTo
+            return last if basicChecksPass( last ) and hasRightType last
+
+Otherwise, look for anything nearby that remains unconnected.  Start by
+finding the group to the left of the range.
+
+            index = editor.Groups.grouperIndexOfRangeEndpoint range, yes
+            if index > -1
+                all = editor.Groups.allGroupers()
+                candidate = editor.Groups.grouperToGroup all[index]
+                if basicChecksPass( candidate ) and hasRightType candidate
+                    return candidate
+                candidate = editor.Groups.grouperToGroup all[index + 1]
+                if basicChecksPass( candidate ) and hasRightType candidate
+                    return candidate
+
+Otherwise, give up.
+
+            null
+
+The second utility function detects whether any group is a reason or not.
+
+        groupIsAReason = ( group ) -> group.get( 'key' ) is 'reason'
 
 The following function scans many ranges near the cursor, by passing them
 all to the previous function.  It returns the first suggested group that it
