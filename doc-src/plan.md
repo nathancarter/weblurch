@@ -13,23 +13,6 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
-## Implementing auto-bubbling infrastructure
-
- * Update the suggestions feature so that it does not suggest `ProtoGroup`
-   instances that overlap any existing `Group` instance.
- * Every time a new expression is formed, record it in the `lastFormed`
-   member of the expression type.  Update the suggestions feature so that if
-   a reason is being suggested, and the last formed group was not a reason,
-   then a connection to that last formed group is also suggested.  (Note
-   that this will not automatically form the connection when promoting the
-   proto-group, yet.)
- * Upgrade the `promote` routine in the `ProtoGroup` class so that it
-   respects all suggested connections stored in the `ProtoGroup` object.
- * Update the suggestions feature so that if an expression is being
-   suggested, and the last formed group was a reason, then a connection from
-   that last formed group is also suggested.  Verify that such connections
-   are automatically formed when promoting the suggested proto-group.
-
 ## Enabling and disabling features
 
 Implement the following system satisfying the following requirements, for

@@ -331,15 +331,25 @@ This, too, is temporary code that will eventually be replaced with actual
 parsing later.
 
         scanRangeForSuggestions = ( range ) ->
-            makeProtoGroup = ->
+            if editor.Groups.groupsTouchingRange( range ).length > 0
+                return no
+            makeProtoGroup = ( isAReason ) ->
                 result = new ProtoGroup range,
                     editor.Groups.groupTypes.expression
                 result.tagContents = 'Suggestion:'
+                result.isAReason = isAReason
+                if ( id = ProtoGroup.lastPromoted?.promotedTo?.id() )?
+                    if ProtoGroup.lastPromoted.isAReason
+                        if not result.isAReason
+                            result.connections = [ [ id, result ], id ]
+                    else
+                        if result.isAReason
+                            result.connections = [ [ result, id ], id ]
                 result
             text = range.toString()
             for reasonName in reasonNames
-                if reasonName is text then return makeProtoGroup()
-            if /^[0-9\.+*\/\^-]+$/.test text then return makeProtoGroup()
+                if reasonName is text then return makeProtoGroup yes
+            if /^[0-9\.+*\/\^-]+$/.test text then return makeProtoGroup no
             no
 
 The following function scans many ranges near the cursor, by passing them

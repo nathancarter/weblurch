@@ -106,10 +106,32 @@ appropriate group type name, then restore the saved selection.
             editor = tinymce.activeEditor
             editor.selection.setRng @range
             if newGroup = editor.Groups.groupCurrentSelection @type().name
+                if @isAReason
+                    newGroup.set 'key', 'reason'
+                    newGroup.set 'keyposition', 'source'
+                for connection in @connections ? [ ]
+                    if connection instanceof Array
+                        [ from, to ] = connection
+                        if from is this
+                            from = newGroup
+                        else if from not instanceof Group
+                            from = editor.Groups[from]
+                        if to is this
+                            to = newGroup
+                        else if to not instanceof Group
+                            to = editor.Groups[to]
+                        from?.connect? to, connection[2] ? ''
+                @promotedTo = newGroup
+                @constructor.lastPromoted = this
                 range = newGroup.outerRange()
                 range.collapse no
                 editor.selection.setRng range
             editor.fire 'NodeChange'
+
+We also keep track of the last promoted proto-group in the following class
+member.
+
+        @lastPromoted: null
 
 ## Detecting content for use in proto-groups
 
