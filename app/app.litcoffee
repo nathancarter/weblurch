@@ -4395,7 +4395,7 @@ We then customize the menus' contents as follows.
                            | cell row column' + moreMenuItems 'table'
                 help :
                     title : 'Help'
-                    items : 'about website' + moreMenuItems 'help'
+                    items : 'about tour website' + moreMenuItems 'help'
 
 Then we customize the context menu.
 
@@ -4427,6 +4427,41 @@ Add a Help menu.
                     onclick : -> editor.Dialogs.alert
                         title : 'webLurch'
                         message : helpAboutText ? ''
+                editor.addMenuItem 'tour',
+                    text : 'Take a tour'
+                    context : 'help'
+                    onclick : ->
+                        findMenu = ( name ) ->
+                            same = ( x, y ) ->
+                                x.trim().toLowerCase() is \
+                                y.trim().toLowerCase()
+                            menuHeaders = document.getElementsByClassName \
+                                'mce-menubtn'
+                            for element in menuHeaders
+                                if same element.textContent, name
+                                    return element
+                            null
+                        findToolButton = ( name ) ->
+                            document.getElementsByClassName(
+                                "mce-i-#{name}" )[0]
+                        tour = new Tour
+                            storage : no
+                            steps : [
+                                element : findMenu 'edit'
+                                title : 'Edit menu'
+                                content : 'This tour is just an example for
+                                     now.  Obviously you already knew where
+                                     the edit menu was.'
+                            ,
+                                element : findToolButton 'table'
+                                title : 'Table maker'
+                                content : 'Yes, you can make tables, too!
+                                    Okay, that\'s enough of a fake tour.
+                                    We\'ll add a real tour to the
+                                    application later.'
+                            ]
+                        tour.init()
+                        tour.start()
                 editor.addMenuItem 'website',
                     text : 'Documentation'
                     context : 'help'

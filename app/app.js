@@ -3958,7 +3958,7 @@
         },
         help: {
           title: 'Help',
-          items: 'about website' + moreMenuItems('help')
+          items: 'about tour website' + moreMenuItems('help')
         }
       },
       contextmenu: 'link image inserttable | cell row column deletetable' + moreMenuItems('contextmenu'),
@@ -3974,6 +3974,46 @@
               title: 'webLurch',
               message: typeof helpAboutText !== "undefined" && helpAboutText !== null ? helpAboutText : ''
             });
+          }
+        });
+        editor.addMenuItem('tour', {
+          text: 'Take a tour',
+          context: 'help',
+          onclick: function() {
+            var findMenu, findToolButton, tour;
+            findMenu = function(name) {
+              var element, menuHeaders, same, _i, _len;
+              same = function(x, y) {
+                return x.trim().toLowerCase() === y.trim().toLowerCase();
+              };
+              menuHeaders = document.getElementsByClassName('mce-menubtn');
+              for (_i = 0, _len = menuHeaders.length; _i < _len; _i++) {
+                element = menuHeaders[_i];
+                if (same(element.textContent, name)) {
+                  return element;
+                }
+              }
+              return null;
+            };
+            findToolButton = function(name) {
+              return document.getElementsByClassName("mce-i-" + name)[0];
+            };
+            tour = new Tour({
+              storage: false,
+              steps: [
+                {
+                  element: findMenu('edit'),
+                  title: 'Edit menu',
+                  content: 'This tour is just an example for now.  Obviously you already knew where the edit menu was.'
+                }, {
+                  element: findToolButton('table'),
+                  title: 'Table maker',
+                  content: 'Yes, you can make tables, too! Okay, that\'s enough of a fake tour. We\'ll add a real tour to the application later.'
+                }
+              ]
+            });
+            tour.init();
+            return tour.start();
           }
         });
         editor.addMenuItem('website', {
