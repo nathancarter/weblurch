@@ -253,6 +253,22 @@ to be "yes" to that question.
 
 ## Ideas from various sources
 
+### Outsourcing the file dialog
+
+The `jsfs` file dialogs I made myself, and thus must also maintain.  They are
+not beautiful.  Instead, you could use the
+[jquery.filebrowser](https://github.com/jcubic/jquery.filebrowser) plugin.
+Furthermore, it's already generalized to allow you to swap out back ends.  So
+you could not only update jsfs with this, but also easily make it support
+Google Drive or Dropbox with minimal changes.  Create plans to do so.
+
+### Parsing speed improvements
+
+If parsing with the current package becomes a performance bottleneck,
+note that there are several improvements available, some already implemented
+in JavaScript.  See
+[here](https://en.wikipedia.org/wiki/Earley_parser#JavaScript).
+
 ### All images consistently base64
 
 [This GitHub comment](
