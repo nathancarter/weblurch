@@ -37,6 +37,14 @@ TinyMCE, and they will be added to the list loaded by default.
 
     window.pluginsToLoad ?= [ ]
 
+By default, we always make the editor full screen, and a child of the
+document body.  But the client can change that by changing the following
+values.  The `editorContainer` can be an `HTMLElement` or a function that
+evaluates to one.
+
+    window.fullScreenEditor = yes
+    window.editorContainer = document.body
+
 We also provide a variable in which apps can specify an icon to appear on
 the menu bar, at the very left.  It defaults to an empty object, but can be
 overridden, in the same way as `window.groupTypes`, above.  If you override
@@ -66,7 +74,9 @@ Create a `<textarea>` to be used as the editor.
 
         editor = document.createElement 'textarea'
         editor.setAttribute 'id', 'editor'
-        document.body.appendChild editor
+        if typeof window.editorContainer is 'function'
+            window.editorContainer = window.editorContainer()
+        window.editorContainer.appendChild editor
 
 If the query string is telling us to switch the app into test-recording
 mode, then do so.  This uses the main function defined in
@@ -101,10 +111,11 @@ that begins with a hyphen is a local plugin written as part of this project.
 
             plugins :
                 'advlist table charmap colorpicker image link
-                paste print searchreplace textcolor fullscreen
+                paste print searchreplace textcolor
                 -loadsave -overlay -groups -equationeditor -dependencies
                 -dialogs -downloadupload ' \
-                + ( "-#{p}" for p in window.pluginsToLoad ).join ' '
+                + ( "-#{p}" for p in window.pluginsToLoad ).join( ' ' ) \
+                + ( if window.fullScreenEditor then ' fullscreen' else '' )
 
 The groups plugin requires that we add the following, to prevent resizing of
 group boundary images.
