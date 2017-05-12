@@ -86,6 +86,7 @@ buttons, and context menu items as given below.
         tinymce.init
             selector : '#editor'
             auto_focus : 'editor'
+            branding : no
 
 These enable the use of the browser's built-in spell-checking facilities, so
 that no server-side callback needs to be done for spellchecking.
