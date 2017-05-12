@@ -237,7 +237,10 @@ object with "value" and "message" attributes.
                     value : Math.exp 1
                     message : 'The actual value of e has been rounded.'
             when 'sy' then switch node.simpleEncode()
-                when 'units.degrees' then value : Math.PI/180
+                when 'units.degrees'
+                    value : Math.PI/180
+                    message : 'Converting to degrees used an
+                        approximation of π.'
                 when 'units.percent' then value : 0.01
                 when 'units.dollars'
                     value : 1

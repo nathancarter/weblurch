@@ -208,7 +208,7 @@ what kind of expression is to be validated.
         # console.log "VALIDATING: #{@contentAsText()} (id #{@id()})"
 
 If the expression is a rule, it gets validated differently than if it is a
-step of work.  Rules have the following requirements:
+step of work.  We thus dispatch to the rule-specific validation function.
 
         if @lookupAttributes( 'rule' ).length > 0
             return @computeRuleValidationAsync callback, verbose
@@ -277,7 +277,9 @@ supported.
             if verbose
                 validationData.verbose = "Too many languages
                     specified for the rule.  Only one is permitted.
-                    You specified: #{languages.join ','}."
+                    You specified: #{languages.join ','}.  Try removing any
+                    language attributes that are incorrect or unnecessary,
+                    until you have only one remaining, the correct one."
             return callback validationData
 
 Finally, it must be in one of the supported languages for code-based rules.
@@ -294,7 +296,10 @@ Finally, it must be in one of the supported languages for code-based rules.
                     of the following languages.  The rule you cited is
                     written in #{languages[0]}, and thus cannot be
                     used.</p>
-                    <ul><li>#{ruleLanguages.join '</li><li>'}</li></ul>"
+                    <ul><li>#{ruleLanguages.join '</li><li>'}</li></ul>
+                    You will need to rewrite your rule in one of the
+                    supported languages, and then change its language
+                    attribute accordingly."
             return callback validationData
 
 If all of those checks pass, then a rule is valid.
