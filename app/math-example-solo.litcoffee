@@ -88,7 +88,7 @@ can inspect to learn about the semantics of the group contents.
                         when 'limit1.limit' then 'limit'
                     when 'b' then 'lambda closure'
 
-We then store the resutls of that computation in an attribute of the group,
+We then store the results of that computation in an attribute of the group,
 so that it's easy to look up later, when we need to place it in the bubble
 tag.
 
@@ -109,7 +109,7 @@ Clicking the tag or the context menu brings up the same menu, defined in
 
 ## Utility functions used by the code above
 
-The `inspect` functio` tries to interpret the contents of the group as
+The `inspect` function tries to interpret the contents of the group as
 containing a single [MathQuill](http://mathquill.com/) instance.  (The LWP
 comes with the built-in ability to insert MathQuill instances into documents
 as WYSIWYG math expression editors.)  It returns one of two things.  If it

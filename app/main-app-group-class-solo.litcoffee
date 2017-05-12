@@ -149,11 +149,11 @@ will include at least the results of `attributeGroupsForKey`, but it will
 also include, at the appropriate place in the array (based on document
 ordering) any internal attributes with the same key.
 
-Internal attributes in the result array will be OpenMath objects, not Group
-instances; the caller will need to be able to handle both types of data.
-(For instance, the caller could simply call `canonicalForm` or
-`completeForm` on the Group instances to convert them all to OpenMath
-objects.)
+Internal attributes in the result array will be OpenMath objects, while
+external attributes will be Group instances; the caller will need to be able
+to handle both types of data.  For instance, the caller could simply call
+`canonicalForm` or `completeForm` on the Group instances to convert them all
+to OpenMath objects.
 
     window.Group::lookupAttributes = ( key ) ->
         list = @attributeGroupsForKey key
