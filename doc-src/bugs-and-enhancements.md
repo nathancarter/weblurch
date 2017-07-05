@@ -46,6 +46,8 @@ the main project plan without these bug fixes or enhancements.
    KeyUp and SetContent events that you're using in the Groups package, so
    you may be able to correct this problem partially with those events.
    (Verified on 9/22/16 that these bugs are still unresolved.)
+   The bug just mentioned has since been closed, and suggests that it may
+   have been fixed in TinyMCE 4.x; check to see.
 
 ### Other
 

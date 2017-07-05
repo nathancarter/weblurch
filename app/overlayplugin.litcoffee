@@ -50,7 +50,7 @@ initializes the list of drawing handlers to empty.
 
             @drawHandlers = []
             @editor.on 'NodeChange', @redrawContents
-            ( $ window ).resize @redrawContents
+            ( $ @editor.getContentAreaContainer() ).resize @redrawContent
 
 This function installs an event handler that, each time something in the
 document changes, repositions the canvas, clears it, and runs all drawing
