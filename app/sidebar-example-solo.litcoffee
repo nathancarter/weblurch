@@ -192,9 +192,57 @@ We store translators in this global variable.
 
 Register a new translator using the following function.
 
-    window.registerTranslator = ( name, language, output, translator ) ->
-        key = "#{name} -> #{language} #{output}"
-        codeFormTranslators[key] = translator
+    window.registerTranslator = ( form, language, output, translator ) ->
+        codeFormTranslators[form] ?= { }
+        codeFormTranslators[form][output] ?= { }
+        codeFormTranslators[form][output][language] ?= translator
+
+Perform translation with the following function.  The parameters are named
+just as in the explanation at the top of this section.  So, for example, you
+might call `runTranslation G, 'en', 'explanation'` or
+`runTranslation G, 'javascript', 'code'`.
+
+    runTranslation = ( group, language, output ) ->
+        recur = ( g ) -> runTranslation g, language, output
+
+Verify that there exists a translator of the type requested.
+
+        formName = group.get 'tagName'
+        if not codeFormTranslators.hasOwnProperty formName
+            return "Translation error: Form #{formName} has no translators
+                registered"
+        if not codeFormTranslators[formName].hasOwnProperty output
+            return "Translation error: Form #{formName} has no translators
+                of type #{output} registered"
+        if not codeFormTranslators[formName][output].hasOwnProperty language
+            return "Translation error: Form #{formName} has no #{language}
+                translators of type #{output} registered"
+        translator = codeFormTranslators[formName][output][language]
+
+For string translators, iteratively replace `__A__`-type patterns with the
+results of recursive calls on child groups.
+
+        if typeof translator is 'string'
+            letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            numArgs = 0
+            while -1 < translator.indexOf "__#{letters[numArgs]}__"
+                numArgs++
+            if group.children.length isnt numArgs
+                return "Translation error: Form #{formName} requires
+                    #{numArgs} parts, but contains only
+                    #{group.children.length}"
+            for child, index in group.children
+                pattern = "__#{letters[index]}__"
+                childText = recur child
+                return childText if /^Translation error/.test childText
+                translator = translator.replace RegExp( pattern, 'g' ),
+                    childText
+            translator
+
+Otherwise the translator is a function that can be run on its own.
+
+        else
+            translator group, recur
 
 ## Event handlers
 
@@ -257,10 +305,12 @@ one for detecting whether a group has problems.
         group.set 'valid', yes
         group.clear 'closeDecoration'
         group.clear 'closeHoverText'
+        window.createSidebarContent()
     markGroupWrong = ( group, reason ) ->
         group.set 'valid', no
         group.set 'closeDecoration', '<font color="red">&#10006;</font>'
         group.set 'closeHoverText', reason
+        window.createSidebarContent()
     isGroupRight = ( group ) -> group.get 'valid'
 
 This function validates the given group, and stores the results in the
@@ -316,10 +366,6 @@ There were no problems, so clear any indication of invalidity.
 
         markGroupRight group
 
-And update the sidebar.
-
-        window.createSidebarContent()
-
 ## GUI modifications and setup
 
     window.fullScreenEditor = no
@@ -359,11 +405,13 @@ second DIV defined in [sidebar-example.html], and resize them appropriately.
         for group in tinymce.activeEditor.Groups.topLevel
             entry = document.createElement 'div'
             entry.style.padding = '1em'
-            entry.style.border = 'solid 1px black'
+            entry.style.borderBottom = 'dotted 1px black'
             entry.innerHTML = window.createSidebarEntryHTML group
             sidebar.appendChild entry
 
     window.createSidebarEntryHTML = ( group ) ->
-        # stub
-        "Sidebar entry for group #{group.id()}:
-            #{group.contentAsHTML()}"
+        code = runTranslation group, 'javascript', 'code'
+        result = "// #{group.contentAsText()}"
+        if not /^Translation error/.test code
+            result += "\n#{code}"
+        "<pre>#{result}</pre>"

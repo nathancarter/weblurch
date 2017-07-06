@@ -33,3 +33,12 @@ their validation functions, plus translation routines for various languages.
                     - sign.'
         registerCodeForm 'Store a value', [ 'Variable', 'Number' ]
     ]
+
+## Registering JavaScript translation
+
+    registerTranslator 'Variable', 'javascript', 'code', ( group ) ->
+        group.contentAsText().trim()
+    registerTranslator 'Number', 'javascript', 'code', ( group ) ->
+        group.contentAsText().trim()
+    registerTranslator 'Store a value', 'javascript', 'code',
+        '__A__ = __B__;'
