@@ -38,10 +38,14 @@ stored separately.
 The following function takes the name and settings object of a menu item or
 toolbar button from the editor and, if a keyboard shortcut is specified in
 the settings object, stores the relevant shortcut data in the aforementioned
-array, for later lookup.
+array, for later lookup.  Do nothing for Cut, Copy, or Paste, however,
+because it is important to leave the native keyboard shortcut handlers of
+the platform active for those actions, since some browsers prevent the app
+from accessing the clipboard.
 
         maybeInstall = ( name, settings ) ->
-            if settings?.shortcut?
+            if settings?.shortcut? and \
+               name not in [ 'cut', 'copy', 'paste' ]
                 shortcuts.push
                     keys : createShortcutData settings.shortcut
                     action : settings.onclick ? -> editor.execCommand name
