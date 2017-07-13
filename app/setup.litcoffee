@@ -40,10 +40,11 @@ TinyMCE, and they will be added to the list loaded by default.
 By default, we always make the editor full screen, and a child of the
 document body.  But the client can change that by changing the following
 values.  The `editorContainer` can be an `HTMLElement` or a function that
-evaluates to one.
+evaluates to one.  We can't access the document body yet, so we set it to
+null, which will be replaced by the body below, once it exists.
 
     window.fullScreenEditor = yes
-    window.editorContainer = document.body
+    window.editorContainer = null
 
 We also provide a variable in which apps can specify an icon to appear on
 the menu bar, at the very left.  It defaults to an empty object, but can be
@@ -74,6 +75,7 @@ Create a `<textarea>` to be used as the editor.
 
         editor = document.createElement 'textarea'
         editor.setAttribute 'id', 'editor'
+        window.editorContainer ?= document.body
         if typeof window.editorContainer is 'function'
             window.editorContainer = window.editorContainer()
         window.editorContainer.appendChild editor
