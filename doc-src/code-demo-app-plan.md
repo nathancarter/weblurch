@@ -41,11 +41,6 @@ generated from the document's meaning. The code for this demo app is
  * The toolbar in the left pane will have a button for showing and hiding
    the right pane.
 
-## Executing code
-
- * Run JavaScript online using [this method of posting code to
-   JSFiddle](http://jsfiddle.net/zalun/sthmj/?utm_source=website&utm_medium=embed&utm_campaign=sthmj).
-
 ## Refactoring forms
 
  * On the context menu for groups will be an item "Rephrase..."

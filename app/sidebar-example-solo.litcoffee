@@ -399,15 +399,32 @@ second DIV defined in [sidebar-example.html], and resize them appropriately.
 
 ## Filling the sidebar with content
 
+The main function that does so, iterating through all top-level groups in
+the document, and calling an auxiliary function below on each.  For some
+languages, it adds extra functionality.
+
     window.createSidebarContent = ->
         sidebar = document.getElementById 'sidebar'
         sidebar.innerHTML = ''
+        sidebar.innerHTML += '''
+            <div style="border-bottom: solid 1px black;">
+                <p align=center><a href='#'
+                      onclick='openInJSFiddle( lastSidebarContent );'
+                      >Open in a new JSFiddle</a></p>
+            </div>
+            '''
+        window.lastSidebarContent = ''
         for group in tinymce.activeEditor.Groups.topLevel
             entry = document.createElement 'div'
             entry.style.padding = '1em'
             entry.style.borderBottom = 'dotted 1px black'
             entry.innerHTML = window.createSidebarEntryHTML group
             sidebar.appendChild entry
+            lastSidebarContent += entry.textContent + '\n'
+
+The above function uses the following to create each entry, based on one
+given top-level group.  It should encode the entirety of that top-level
+group, and return it as HTML to be placed inside a DIV.
 
     window.createSidebarEntryHTML = ( group ) ->
         code = runTranslation group, 'javascript', 'code'
@@ -415,3 +432,56 @@ second DIV defined in [sidebar-example.html], and resize them appropriately.
         if not /^Translation error/.test code
             result += "\n#{code}"
         "<pre>#{result}</pre>"
+
+The following function can open any given JavaScript code in a new JSFiddle.
+
+    window.openInJSFiddle = ( jsCode ) ->
+        nbsp = String.fromCharCode 160
+        jsCode = jsCode.replace RegExp( nbsp, 'g' ), ' '
+        form = document.createElement 'form'
+        form.setAttribute 'method', 'post'
+        form.setAttribute 'action',
+            'http://jsfiddle.net/api/post/mootools/1.2/dependencies/more/'
+        form.setAttribute 'target', '_blank'
+        form.style.display = 'none'
+        form.appendChild makeSelect 'panel_html', 0 : 'HTML'
+        form.appendChild makeTextarea 'html'
+        form.appendChild makeSelect 'panel_js',
+            0 : 'JavaScript'
+            1 : 'CoffeeScript'
+            2 : 'JavaScript 1.7'
+        form.appendChild makeTextarea 'js', jsCode
+        form.appendChild makeSelect 'panel_css', 0 : 'CSS', 1 : 'SCSS'
+        form.appendChild makeTextarea 'css'
+        form.appendChild makeText 'title', 'Fiddle Title Here'
+        form.appendChild makeTextarea 'description',
+            'Fiddle Description Here'
+        form.appendChild makeTextarea 'resources'
+        form.appendChild makeText 'dtd', 'html 4'
+        form.appendChild makeText 'wrap', 'l'
+        document.body.appendChild form
+        form.submit()
+        document.body.removeChild form
+
+That function uses the following utilities.
+
+    makeSelect = ( name, options ) ->
+        result = document.createElement 'select'
+        result.setAttribute 'name', name
+        for own value, representation of options
+            option = document.createElement 'option'
+            option.setAttribute 'value', value
+            option.innerHTML = representation
+            result.appendChild option
+        result
+    makeTextarea = ( name, content ) ->
+        result = document.createElement 'textarea'
+        result.setAttribute 'name', name
+        result.innerHTML = content or ''
+        result
+    makeText = ( name, value ) ->
+        result = document.createElement 'input'
+        result.setAttribute 'type', 'text'
+        result.setAttribute 'name', name
+        result.setAttribute 'value', value
+        result
