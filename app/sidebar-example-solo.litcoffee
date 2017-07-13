@@ -242,7 +242,10 @@ results of recursive calls on child groups.
 Otherwise the translator is a function that can be run on its own.
 
         else
-            translator group, recur
+            try
+                translator group, recur
+            catch e
+                console.log 'User-defined translator error:', e
 
 ## Event handlers
 
@@ -311,6 +314,12 @@ one for detecting whether a group has problems.
         group.set 'closeDecoration', '<font color="red">&#10006;</font>'
         group.set 'closeHoverText', reason
         window.createSidebarContent()
+    markGroupWith = ( group, validationData ) ->
+        group.set 'validationResult', validationData
+        if validationData.result is 'valid'
+            markGroupRight group
+        else
+            markGroupWrong group, validationData.message
     isGroupRight = ( group ) -> group.get 'valid'
 
 This function validates the given group, and stores the results in the
@@ -330,14 +339,17 @@ If this group does not have a tag name, we cannot even tell if it belongs
 here or not, and it cannot be converted to source code.  That is a problem.
 
         if not ( groupTag = group.get 'tagName' )?
-            markGroupWrong group, "Each group must have a tag, but this one
-                does not.  Add a tag using the context menu."
-            return
+            return markGroupWith group,
+                result : 'invalid'
+                message : "Each group must have a tag, but this one does
+                    not.  Add a tag using the context menu."
 
 If the group does have a tag name, run the validation routine for that code
 form, and add any problems it reports to our list of problems.  We convert
 array validators into functions that check inner groups against that array
-as a function signature.
+as a function signature.  Each entry in the signature must be a string
+containing either a single type or a slash-separated list of types (e.g.,
+"A/B/C") to indicate multiple options.
 
         validator = formsAndCategories[groupTag].validator
         if validator instanceof Array
@@ -346,25 +358,29 @@ as a function signature.
                 message : 'All inner groups have the correct types.'
             args = group.children
             if validator.length isnt args.length
-                markGroupWrong group, "This form needs #{validator.length}
-                    parts: #{validator.join ', '}."
-                return
+                return markGroupWith group,
+                    result : 'invalid'
+                    message : "This form needs #{validator.length} parts:
+                        #{validator.join ', '}."
             for arg, index in args
                 argType = arg.get 'tagName'
-                if argType isnt validator[index]
-                    markGroupWrong group, "Part #{index+1} must be of type
-                        #{validator[index]}, but it is of type #{argType}
-                        instead."
-                    return
+                options = validator[index].split '/'
+                if argType not in options
+                    return markGroupWith group,
+                        result : 'invalid'
+                        message : "Part #{index+1} must be of type
+                            #{validator[index]}, but it is of type
+                            #{argType} instead."
+
+Or if they gave us a validator function, run it.
+
         else
             validation = validator group, verbose
-            if validation.result isnt 'valid'
-                markGroupWrong group, validation.message
-                return
 
-There were no problems, so clear any indication of invalidity.
+And store the result, valid or invalid, which automatically updates the
+visual feedback.
 
-        markGroupRight group
+        markGroupWith group, validation
 
 ## GUI modifications and setup
 
@@ -428,10 +444,22 @@ group, and return it as HTML to be placed inside a DIV.
 
     window.createSidebarEntryHTML = ( group ) ->
         code = runTranslation group, 'javascript', 'code'
-        result = "// #{group.contentAsText()}"
+        result = "// #{niceText group.contentNodes()...}"
         if not /^Translation error/.test code
             result += "\n#{code}"
+        else
+            result += "\n// #{code}"
         "<pre>#{result}</pre>"
+    niceText = ( nodes... ) ->
+        result = ''
+        for node in nodes
+            if node?.nodeType is 3 # HTML Text node
+                result += node.textContent
+            else if ( $ node ).hasClass 'mathquill-rendered-math'
+                result += node.childNodes[0].textContent
+            else
+                result += niceText node.childNodes...
+        result
 
 The following function can open any given JavaScript code in a new JSFiddle.
 
