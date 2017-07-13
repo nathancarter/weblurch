@@ -14,6 +14,12 @@ generated from the document's meaning. The code for this demo app is
 ## Broader set of examples
 
  * Add many code forms, together with translators into JavaScript.
+    * Text data
+    * Mathematical operation
+    * Generate a random integer
+    * Display the value of a variable
+    * Ask the user to input a variable
+    * Make a decision
  * Add two other programming language, Python and R.
  * Add a drop-down element at the top of the right pane for choosing the
    programming language in which the contents of the pane will be expressed.
