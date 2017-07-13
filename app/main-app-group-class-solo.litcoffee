@@ -383,7 +383,7 @@ newlines.
     window.Group::contentAsCode = ->
         shouldBreak = ( node ) -> node.tagName in [ 'P', 'DIV' ]
         recur = ( nodeOrList ) =>
-            if nodeOrList instanceof @plugin.editor.getWin().Text
+            if nodeOrList?.nodeType is 3 # HTML Text node
                 return nodeOrList.textContent.replace /\u2003/g, '\t'
             if nodeOrList.tagName is 'BR' then return '\n'
             result = ''

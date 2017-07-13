@@ -704,7 +704,7 @@ replaced by Lean-related symbols.
                 return
             range = editor.selection.getRng()
             if range.startContainer is range.endContainer and \
-               range.startContainer instanceof editor.getWin().Text
+               range.startContainer?.nodeType is 3 # HTML Text node
                 allText = range.startContainer.textContent
                 lastCharacter = allText[range.startOffset-1]
                 if lastCharacter isnt ' ' and lastCharacter isnt '\\' and \

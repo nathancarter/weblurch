@@ -1190,7 +1190,7 @@ an HTML Range object that has the same start and end nodes and offsets, such
 as one that has been collapsed.
 
         groupAboveCursor: ( cursor ) =>
-            if cursor.startContainer instanceof @editor.getWin().Text
+            if cursor.startContainer?.nodeType is 3 # HTML text node
                 return @groupAboveNode cursor.startContainer
             if cursor.startContainer.childNodes.length > cursor.startOffset
                 elementAfter =
@@ -1276,7 +1276,7 @@ parent chain of groups above the closest node to the selection.
 
             if firstInRange > lastInRange
                 node = range.startContainer
-                if node instanceof @editor.getWin().Element and \
+                if node.nodeType is 1 and \ # Element, not Text, etc.
                    range.startOffset < node.childNodes.length
                     node = node.childNodes[range.startOffset]
                 group = @groupAboveNode node
@@ -1880,7 +1880,7 @@ this behavior.
                 return
             range = editor.selection.getRng()
             if range.startContainer is range.endContainer and \
-               range.startContainer instanceof editor.getWin().Text
+               range.startContainer?.nodeType is 3 # HTML Text node
                 allText = range.startContainer.textContent
                 lastCharacter = allText[range.startOffset-1]
                 if lastCharacter isnt ' ' and lastCharacter isnt '\\' and \
