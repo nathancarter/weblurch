@@ -124,30 +124,28 @@ error.
         nodes = $ group.contentNodes()
         selector = '.mathquill-rendered-math'
         nodes = nodes.find( selector ).add nodes.filter selector
-        newTag = null
         if nodes.length is 0 then return 'add math using the f(x) button'
         if nodes.length > 1 then return 'more than one math expression'
-        node = nodes.get 0
         try
-            toParse = window.mathQuillToMeaning node
+            toParse = window.mathQuillToMeaning nodes.get 0
         catch e
             return "Error converting math expression to text: #{e?.message}"
         try
             parsed = mathQuillParser.parse( toParse )?[0]
         catch e
             return "Error parsing math expression as text: #{e?.message}"
-        if parsed instanceof window.OMNode then return parsed
+        if parsed instanceof OMNode then return parsed
         "Could not parse this mathematical text: #{toParse?.join? ' '} --
             Error: #{parsed}"
 
 The following function provides the contents of either the tag menu or the
 context menu for a group; both are the same.  They contain two menu items.
  1. The first shows the full OpenMath structure of a group's meaning, as
-    XML.  It uses the `toXML` function
-    [defined below](#converting-mathematical-expressions-to-xml).
+    XML.  It uses the `toXML` function defined at the end of
+    [the OpenMath module](../src/openmath-duo.litcoffee).
  1. The second is for evaluating the group's contents, as a mathematical
-    expression.  It uses the `compute` function,
-    [defined below](#evaluating-mathematical-expression-numerically).
+    expression.  It uses the `evaluate` function defined at the end of
+    [the OpenMath module](../src/openmath-duo.litcoffee).
 
 
     menu = ( group ) -> [
@@ -157,154 +155,18 @@ context menu for a group; both are the same.  They contain two menu items.
                 alert "Could not understand the bubble contents:\n #{info}"
             else
                 try
-                    alert ( toXML info ) ? "Some part of that expression is
-                        not supported in this demo for conversion to XML."
+                    alert info.toXML() ? "This demo could not convert some
+                        part of that expression to XML."
                 catch e then alert e.message ? e
     ,
         text : 'Evaluate this'
         onclick : ->
             if ( info = inspect group ) not instanceof OMNode
-                info = "Could not understand the bubble contents:\n #{info}"
+                info = "Could not understand the bubble contents:\n#{info}"
             else
-                result = compute info
+                result = info.evaluate()
                 info = "#{result.value}"
                 if result.message?
                     info += "\n\nNote:\n#{result.message}"
             alert info
     ]
-
-### Converting mathematical expressions to XML
-
-This is an incomplete implementation of the XML encoding for OpenMath trees.
-It is piecemeal, spotty, and only partially tested, but is here just for the
-purposes of this demo application.
-
-    toXML = ( node ) ->
-        indent = ( text ) -> "  #{text.replace RegExp( '\n', 'g' ), '\n  '}"
-        switch node.type
-            when 'i' then "<OMI>#{node.value}</OMI>"
-            when 'sy' then "<OMS cd=\"#{node.cd}\" name=\"#{node.name}\"/>"
-            when 'v' then "<OMV name=\"#{node.name}\"/>"
-            when 'f' then "<OMF dec=\"#{node.value}\"/>"
-            when 'st'
-                text = node.value.replace /\&/g, '&amp;'
-                .replace /</g, '&lt;'
-                "<OMSTR>#{text}</OMSTR>"
-            when 'a'
-                inside = ( indent toXML c for c in node.children ).join '\n'
-                "<OMA>\n#{inside}\n</OMA>"
-            when 'bi'
-                head = indent toXML node.symbol
-                vars = ( toXML v for v in node.variables ).join ''
-                vars = indent "<OMBVAR>#{vars}</OMBVAR>"
-                body = indent toXML node.body
-                "<OMBIND>\n#{head}\n#{vars}\n#{body}\n</OMBIND>"
-            else
-                throw "Cannot convert this to XML: #{node.simpleEncode()}"
-
-### Evaluating mathematical expressions numerically
-
-The following is a very limited routine that evaluates mathematical
-expressions numerically when possible, and returns an explanation of why it
-could not evaluate them in cases where it could not.  The result is an
-object with "value" and "message" attributes.
-
-    compute = ( node ) ->
-        call = ( func, indices... ) ->
-            message = undefined
-            args = [ ]
-            for index in indices
-                arg = compute node.children[index]
-                if not arg.value? then return arg
-                if arg.message?
-                    if not message? then message = '' else message += '\n'
-                    message += arg.message
-                args.push arg.value
-            try
-                value = func args...
-            catch e
-                if not message? then message = '' else message += '\n'
-                message += e.message
-            value : value
-            message : message
-        result = switch node.type
-            when 'i', 'f', 'st', 'ba' then value : node.value
-            when 'v' then switch node.name
-                when 'π'
-                    value : Math.PI
-                    message : 'The actual value of π has been rounded.'
-                when 'e'
-                    value : Math.exp 1
-                    message : 'The actual value of e has been rounded.'
-            when 'sy' then switch node.simpleEncode()
-                when 'units.degrees'
-                    value : Math.PI/180
-                    message : 'Converting to degrees used an
-                        approximation of π.'
-                when 'units.percent' then value : 0.01
-                when 'units.dollars'
-                    value : 1
-                    message : 'Dollar units were dropped'
-            when 'a' then switch node.children[0].simpleEncode()
-                when 'arith1.plus' then call ( ( a, b ) -> a + b ), 1, 2
-                when 'arith1.minus' then call ( ( a, b ) -> a - b ), 1, 2
-                when 'arith1.times' then call ( ( a, b ) -> a * b ), 1, 2
-                when 'arith1.divide' then call ( ( a, b ) -> a / b ), 1, 2
-                when 'arith1.power' then call Math.pow, 1, 2
-                when 'arith1.root'
-                    call ( ( a, b ) -> Math.pow b, 1/a ), 1, 2
-                when 'arith1.abs' then call Math.abs, 1
-                when 'arith1.unary_minus' then call ( ( a ) -> -a ), 1
-                when 'relation1.eq' then call ( ( a, b ) -> a is b ), 1, 2
-                when 'relation1.approx'
-                    tmp = call ( ( a, b ) -> Math.abs( a - b ) < 0.01 ),
-                        1, 2
-                    if ( tmp.message ?= '' ).length then tmp.message += '\n'
-                    tmp.message += 'Values were rounded to two decimal
-                        places for approximate comparison.'
-                    tmp
-                when 'relation1.neq'
-                    call ( ( a, b ) -> a isnt b ), 1, 2
-                when 'relation1.lt' then call ( ( a, b ) -> a < b ), 1, 2
-                when 'relation1.gt' then call ( ( a, b ) -> a > b ), 1, 2
-                when 'relation1.le' then call ( ( a, b ) -> a <= b ), 1, 2
-                when 'relation1.ge' then call ( ( a, b ) -> a >= b ), 1, 2
-                when 'logic1.not' then call ( ( a ) -> not a ), 1
-                when 'transc1.sin' then call Math.sin, 1
-                when 'transc1.cos' then call Math.cos, 1
-                when 'transc1.tan' then call Math.tan, 1
-                when 'transc1.cot' then call ( ( a ) -> 1/Math.tan(a) ), 1
-                when 'transc1.sec' then call ( ( a ) -> 1/Math.cos(a) ), 1
-                when 'transc1.csc' then call ( ( a ) -> 1/Math.sin(a) ), 1
-                when 'transc1.arcsin' then call Math.asin, 1
-                when 'transc1.arccos' then call Math.acos, 1
-                when 'transc1.arctan' then call Math.atan, 1
-                when 'transc1.arccot'
-                    call ( ( a ) -> Math.atan 1/a ), 1
-                when 'transc1.arcsec'
-                    call ( ( a ) -> Math.acos 1/a ), 1
-                when 'transc1.arccsc'
-                    call ( ( a ) -> Math.asin 1/a ), 1
-                when 'transc1.ln' then call Math.log, 1
-                when 'transc1.log' then call ( base, arg ) ->
-                    Math.log( arg ) / Math.log( base )
-                , 1, 2
-                when 'integer1.factorial'
-                    call ( a ) ->
-                        if a <= 1 then return 1
-                        if a >= 20 then return Infinity
-                        result = 1
-                        result *= i for i in [1..a|0]
-                        result
-                    , 1
-                # Maybe later I will come back and implement these, but this
-                # is just a demo app, so there is no need to get fancy.
-                # when 'arith1.sum'
-                # when 'calculus1.int'
-                # when 'calculus1.defint'
-                # when 'limit1.limit'
-        result ?= value : undefined
-        if typeof result.value is 'undefined'
-            result.message = "Could not evaluate #{node.simpleEncode()}"
-        # console.log "#{node.simpleEncode()} --> #{JSON.stringify result}"
-        result
