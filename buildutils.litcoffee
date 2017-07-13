@@ -297,6 +297,7 @@ error if there was one.
         ,
             description : "\tMinifying #{base}.js..."
             command : "#{uglify} -c -m -v false #{base}.js
+                       -b beautify=false,ascii-only=true
                        --in-source-map #{base}.js.map -o #{base}.min.js
                        --source-map #{base}.min.js.map"
             cwd : path
