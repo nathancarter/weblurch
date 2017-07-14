@@ -273,7 +273,90 @@ Handler for both the context menu and the tag menu of a group.
             text : 'Change this to...'
             menu : codeFormHierarchy ( formName ) ->
                 group.set 'tagName', formName
+        ,
+            text : 'Explain this...'
+            onclick : ->
+                explanation = ''
+                for language in allNaturalLanguages()
+                    explanation +=
+                        "<h2>Language: #{language}</h2>\n" + \
+                        groupToExplanation group, language
+                tinymce.activeEditor.Dialogs.alert
+                    title : 'Explanation of one structure'
+                    message : addMathQuillCSS explanation
+                    width : 600
+                    height : 450
+        ,
+            text : 'Explain all...'
+            onclick : ->
+                explanation = ''
+                for language in allNaturalLanguages()
+                    explanation += "<h2>Language: #{language}</h2>\n"
+                    for group in tinymce.activeEditor.Groups.topLevel
+                        if explanation isnt '' then explanation += '<hr>'
+                        explanation += groupToExplanation group, language
+                tinymce.activeEditor.Dialogs.alert
+                    title : 'Explanation of all structures'
+                    message : addMathQuillCSS explanation
+                    width : 600
+                    height : 450
         ]
+
+Utilities used by the functions above:
+
+Get all languages that appear in any registered "explanation" form, which
+should therefore be natural languages (such as English) as opposed to
+programming languages (such as Python).
+
+    allNaturalLanguages = ->
+        languages = [ ]
+        for own formName, data of codeFormTranslators
+            for own language of data['explanation']
+                if language not in languages then languages.push language
+        languages
+
+Convert a group in the document into its HTML representation, including the
+inner and outer groupers.
+
+    groupToHTML = ( group ) ->
+        type = group.type()
+        result = ''
+        range = if group.children.length is 0
+            group.innerRange()
+        else
+            group.children[0].rangeBefore()
+        for child in group.children
+            result += rangeToHTML( range ) + groupToHTML child
+            range = child.rangeAfter()
+        result += rangeToHTML range
+        type.openImageHTML + result + type.closeImageHTML
+    rangeToHTML = ( range ) ->
+        if not fragment = range?.cloneContents() then return null
+        tmp = range.startContainer.ownerDocument.createElement 'div'
+        tmp.appendChild fragment
+        html = tmp.innerHTML
+        whiteSpaceBefore = if /^\s/.test html then ' ' else ''
+        whiteSpaceAfter = if /\s+$/.test html then ' ' else ''
+        result = tinymce.activeEditor.serializer.serialize tmp,
+            { get : yes, format : 'html', selection : yes, getInner : yes }
+        whiteSpaceBefore + result + whiteSpaceAfter
+    addMathQuillCSS = ( html ) ->
+        currentPath = window.location.href.split( '/' )[...-1].join '/'
+        css = "#{currentPath}/eqed/mathquill.css"
+        "<html>
+            <head><link rel='stylesheet' href='#{css}'></head>
+            <body>#{html}</body>
+        </html>"
+
+Convert a group in the document into an explanation of it in the given
+natural language.
+
+    groupToExplanation = ( group, language ) ->
+        "<h4>Structure:</h4>\n
+        <p style='margin-left: 2em;'>#{groupToHTML group}</p>\n
+        <h4>Explanation:</h4>\n
+        <p style='margin-left: 2em;'
+            >#{runTranslation group, language, 'explanation'}</p>\n"
 
 ## Define one group type
 

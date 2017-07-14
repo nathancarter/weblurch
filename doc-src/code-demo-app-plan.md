@@ -13,10 +13,10 @@ generated from the document's meaning. The code for this demo app is
 
 ## Explaining forms
 
- * On the context menu for groups will be an item "Explain this..."
- * Clicking it will open a modal dialog in which the user can scroll
-   through the output of all the explanation translators that apply to the
-   code form represented by the group, to learn from them.
+ * Choosing any code form from one of the hierarchical toolbar dropdowns,
+   while the cursor is zero-width (no selection) inserts boilerplate code
+   at the at the cursor point.  Otherwise, just wrap the selection in the
+   chosen code form, as you do now.
 
 ## Right pane niceties
 

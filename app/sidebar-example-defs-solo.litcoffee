@@ -75,6 +75,47 @@ their validation functions, plus translation routines for various languages.
         ]
     ]
 
+## Registering English translation
+
+    registerTranslator 'Variable', 'en', 'explanation', ( group ) ->
+        "the value of the variable #{group.contentAsText().trim()}"
+    registerTranslator 'Number', 'en', 'explanation', ( group ) ->
+        "the number #{group.contentAsText().trim()}"
+    registerTranslator 'Text', 'en', 'explanation', ( group ) ->
+        escaped = group.contentAsText().replace /&/g, '&amp;'
+        .replace /</g, '&lt;'
+        .replace />/g, '&gt;'
+        .replace /"/g, '&quot;'
+        .replace /'/g, '&apos;'
+        "the text <b>#{escaped}</b>"
+    registerTranslator 'Mathematical expression', 'en', 'explanation',
+    ( group ) ->
+        "the result of #{group.contentAsHTML()}"
+        # openmath = window.OMNode.decode \
+        #     group.get( 'validationResult' ).openmath
+        # if openmath not instanceof window.OMNode
+        #     "(missing mathematical expression -- #{openmath} )"
+        # else
+        #     openmath.toen()
+    registerTranslator 'Store a value', 'en', 'explanation',
+        'Let the variable __A__ stand for __B__.'
+    registerTranslator 'Pick a random integer', 'en', 'explanation',
+        'a random integer between __A__ and __B__ (inclusive)'
+    registerTranslator 'Display a value', 'en', 'explanation',
+        'Display __A__ to the user.'
+    registerTranslator 'Request a value from the user', 'en', 'explanation',
+        'Prompt the user for the value of __A__, providing __B__ as the
+         default value, if the interface supports that.'
+    registerTranslator 'Make a decision', 'en', 'explanation',
+        'If __A__ is true, then do this:
+         <ul><li>__B__</li></ul>
+         Otherwise, do this:
+         <ul><li>__C__</li></ul>'
+    registerTranslator 'For each integer in a range', 'en', 'explanation',
+        'While __A__ counts from __B__ to __C__ (inclusive), do:
+         <ul><li>__D__</li></ul>'
+    registerTranslator 'COMMENT', 'en', 'explanation', 'Note: __A__'
+
 ## Registering JavaScript translation
 
     registerTranslator 'Variable', 'javascript', 'code', ( group ) ->
