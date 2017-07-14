@@ -517,7 +517,7 @@ languages, it adds extra functionality.
                     <option value='r'>R</option>
                 </select></p>
                 <p id='runJSLink'><a href='#'
-                    onclick='eval( lastSidebarContent );'
+                    onclick='runGeneratedJavaScript();'
                     >Run this code</a></p>
             </div>
             '''
@@ -543,6 +543,11 @@ languages, it adds extra functionality.
     window.updateSidebarContent = ->
         lastLanguageChoice = ( $ '#languagePicker' ).val()
         createSidebarContent()
+    window.runGeneratedJavaScript = ->
+        try
+            eval lastSidebarContent
+        catch e
+            alert "Error when running code:\n\n#{e.message}"
 
 The above function uses the following to create each entry, based on one
 given top-level group.  It should encode the entirety of that top-level
