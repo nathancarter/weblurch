@@ -1,4 +1,4 @@
-
+python
 # Definitions for the Sidebar Example App
 
 The main file for the app is located [here](sidebar-example-solo.litcoffee).
@@ -8,7 +8,7 @@ their validation functions, plus translation routines for various languages.
 
 ## Registering basic code forms and categories
 
-    registerCategory 'Coding Basics', [
+    registerCategory 'Data', [
         registerCodeForm 'Variable', ( group, verbose ) ->
             variableRE = /^[a-zA-Z_][a-zA-Z_0-9]*$/
             if variableRE.test group.contentAsText()
@@ -41,6 +41,12 @@ their validation functions, plus translation routines for various languages.
             else
                 result : 'valid'
                 message : 'This is valid text.'
+    ]
+    registerCategory 'Simple actions', [
+        registerCodeForm 'Store a value',
+            [ 'Variable', 'Number/Text/Mathematical expression' ]
+        registerCodeForm 'Pick a random integer',
+            [ 'Number/Variable', 'Number/Variable' ]
         registerCodeForm 'Mathematical expression', ( group, verbose ) ->
             meaning = mathQuillToOpenMath group
             if meaning not instanceof window.OMNode
@@ -48,8 +54,25 @@ their validation functions, plus translation routines for various languages.
             result : 'valid'
             message : 'This is a valid mathematical expression'
             openmath : meaning.encode()
-        registerCodeForm 'Store a value',
-            [ 'Variable', 'Number/Text/Mathematical expression' ]
+    ]
+    registerCategory 'Input/Output', [
+        registerCodeForm 'Display a value',
+            [ 'Number/Variable/Text/Mathematical expression' ]
+        registerCodeForm 'Request a value from the user',
+            [ 'Variable/Text', 'Variable/Text' ]
+    ]
+    registerCategory 'Control flow', [
+        registerCodeForm 'Make a decision', [
+            'Variable/Mathematical expression'
+            'Store a value/Display a value/Request a value from the user'
+            'Store a value/Display a value/Request a value from the user'
+        ]
+        registerCodeForm 'For each integer in a range', [
+            'Variable'
+            'Number/Variable'
+            'Number/Variable'
+            'Store a value/Display a value/Make a decision'
+        ]
     ]
 
 ## Registering JavaScript translation
@@ -74,6 +97,94 @@ their validation functions, plus translation routines for various languages.
             openmath.toJavaScript()
     registerTranslator 'Store a value', 'javascript', 'code',
         '__A__ = __B__;'
+    registerTranslator 'Pick a random integer', 'javascript', 'code',
+        '( Math.random() * ( __B__ - ( __A__ ) ) + __A__ ) | 0'
+    registerTranslator 'Display a value', 'javascript', 'code',
+        'alert( __A__ );'
+    registerTranslator 'Request a value from the user', 'javascript',
+        'code', 'prompt( __A__, __B__ )'
+    registerTranslator 'Make a decision', 'javascript', 'code',
+        'if ( __A__ ) {\n  __B__\n} else {\n  __C__\n}'
+    registerTranslator 'For each integer in a range', 'javascript', 'code',
+        'for ( var __A__ = __B__ ; __A__ < __C__ ; __A__++ ) {\n  __D__\n}'
+    registerTranslator 'COMMENT', 'javascript', 'code', '// __A__'
+
+## Registering Python translation
+
+These translations assume the code begins with `import math` and
+`import random`.
+
+    registerTranslator 'Variable', 'python', 'code', ( group ) ->
+        group.contentAsText().trim()
+    registerTranslator 'Number', 'python', 'code', ( group ) ->
+        group.contentAsText().trim()
+    registerTranslator 'Text', 'python', 'code', ( group ) ->
+        escaped = group.contentAsText()
+            .replace /\\/g, '\\\\'
+            .replace /"/g, '\\"'
+            .replace /\n/g, '\\n'
+        "\"#{escaped}\""
+    registerTranslator 'Mathematical expression', 'python', 'code',
+    ( group ) ->
+        openmath = window.OMNode.decode \
+            group.get( 'validationResult' ).openmath
+        if openmath not instanceof window.OMNode
+            'None'
+        else
+            openmath.toPython()
+    registerTranslator 'Store a value', 'python', 'code',
+        '__A__ = __B__'
+    registerTranslator 'Pick a random integer', 'python', 'code',
+        'random.randint( __B__, __A__ )'
+    registerTranslator 'Display a value', 'python', 'code',
+        'print __A__'
+    registerTranslator 'Request a value from the user', 'python',
+        'code', 'raw_input( __A__ )'
+    registerTranslator 'Make a decision', 'python', 'code',
+        'if __A__:\n  __B__\nelse:\n  __C__'
+    registerTranslator 'For each integer in a range', 'python', 'code',
+        'for __A__ in range( __B__, __C__ + 1 ):\n  __D__'
+    registerTranslator 'COMMENT', 'python', 'code', '# __A__'
+
+## Registering R translation
+
+    registerTranslator 'Variable', 'r', 'code', ( group ) ->
+        group.contentAsText().trim()
+    registerTranslator 'Number', 'r', 'code', ( group ) ->
+        group.contentAsText().trim()
+    registerTranslator 'Text', 'r', 'code', ( group ) ->
+        escaped = group.contentAsText()
+            .replace /\\/g, '\\\\'
+            .replace /"/g, '\\"'
+            .replace /\n/g, '\\n'
+        "\"#{escaped}\""
+    registerTranslator 'Mathematical expression', 'r', 'code',
+    ( group ) ->
+        openmath = window.OMNode.decode \
+            group.get( 'validationResult' ).openmath
+        if openmath not instanceof window.OMNode
+            'NULL'
+        else
+            openmath.toR()
+    registerTranslator 'Store a value', 'r', 'code',
+        '__A__ <- __B__'
+    registerTranslator 'Pick a random integer', 'r', 'code',
+        'sample( (__A__):(__B__), 1 )'
+    registerTranslator 'Display a value', 'r', 'code',
+        'print( __A__ )'
+    registerTranslator 'Request a value from the user', 'r', 'code',
+        'readline( __A__ )'
+    registerTranslator 'Make a decision', 'r', 'code',
+        'if ( __A__ ) {\n  __B__\n} else {\n  __C__\n}'
+    registerTranslator 'For each integer in a range', 'r', 'code',
+        'for ( __A__ in (__B__):(__C__) ) {\n  __D__\n}'
+    registerTranslator 'COMMENT', 'r', 'code', '# __A__'
+
+## Utilities used in the functions above
+
+Functions for converting OpenMath data structures into code that computes
+them, in various languages.
+
     OM::toJavaScript = ->
         special = ( func ) =>
             func ( child.toJavaScript() for child in @children[1...] )...
@@ -137,8 +248,125 @@ their validation functions, plus translation routines for various languages.
                 # when 'calculus1.defint'
                 # when 'limit1.limit'
         result ? "undefined /* Could not evaluate #{@simpleEncode()} */"
-
-## Utilities used above
+    OM::toPython = ->
+        special = ( func ) =>
+            func ( child.toJavaScript() for child in @children[1...] )...
+        infix = ( op ) => special ( code... ) -> code.join op
+        prefix = ( op ) => special ( code... ) -> "#{op}(#{code.join ','})"
+        result = switch @type
+            when 'i', 'f', 'st', 'ba' then "#{@value}"
+            when 'v' then switch @name
+                when '\u03c0' then 'math.pi' # pi
+                when 'e' then 'math.exp(1)'
+                else @name
+            when 'sy' then switch @simpleEncode()
+                when 'units.degrees' then '(math.pi/180)'
+                when 'units.percent' then '0.01'
+                when 'units.dollars' then '1'
+            when 'a' then switch @children[0].simpleEncode()
+                when 'arith1.plus' then infix '+'
+                when 'arith1.minus' then infix '-'
+                when 'arith1.times' then infix '*'
+                when 'arith1.divide' then infix '/'
+                when 'arith1.power' then infix '**'
+                when 'arith1.root'
+                    special ( a, b ) -> "#{b}**(1/(#{a}))"
+                when 'arith1.abs' then prefix 'math.fabs'
+                when 'arith1.unary_minus' then prefix '-'
+                when 'relation1.eq' then infix '=='
+                when 'relation1.approx'
+                    special ( a, b ) -> "(math.fabs((#{a})-(#{b}))<0.01)"
+                when 'relation1.neq' then infix '!='
+                when 'relation1.lt' then infix '<'
+                when 'relation1.gt' then infix '>'
+                when 'relation1.le' then infix '<='
+                when 'relation1.ge' then infix '>='
+                when 'logic1.not' then prefix 'not'
+                when 'transc1.sin' then prefix 'math.sin'
+                when 'transc1.cos' then prefix 'math.cos'
+                when 'transc1.tan' then prefix 'math.tan'
+                when 'transc1.cot'
+                    special ( x ) -> "(1/math.tan(#{x}))"
+                when 'transc1.sec'
+                    special ( x ) -> "(1/math.cos(#{x}))"
+                when 'transc1.csc'
+                    special ( x ) -> "(1/math.sin(#{x}))"
+                when 'transc1.arcsin' then prefix 'math.asin'
+                when 'transc1.arccos' then prefix 'math.acos'
+                when 'transc1.arctan' then prefix 'math.atan'
+                when 'transc1.arccot'
+                    special ( x ) -> "math.atan(1/(#{x}))"
+                when 'transc1.arcsec'
+                    special ( x ) -> "math.acos(1/(#{x}))"
+                when 'transc1.arccsc'
+                    special ( x ) -> "math.asin(1/(#{x}))"
+                when 'transc1.ln', 'transc1.log' then prefix 'math.log'
+                # Maybe later I will come back and implement these, but this
+                # is just a demo app, so there is no need to get fancy.
+                # when 'integer1.factorial'
+                # when 'arith1.sum'
+                # when 'calculus1.int'
+                # when 'calculus1.defint'
+                # when 'limit1.limit'
+        result ? 'None'
+    OM::toR = ->
+        special = ( func ) =>
+            func ( child.toJavaScript() for child in @children[1...] )...
+        infix = ( op ) => special ( code... ) -> code.join op
+        prefix = ( op ) => special ( code... ) -> "#{op}(#{code.join ','})"
+        result = switch @type
+            when 'i', 'f', 'st', 'ba' then "#{@value}"
+            when 'v' then switch @name
+                when '\u03c0' then 'pi' # pi
+                when 'e' then 'exp(1)'
+                else @name
+            when 'sy' then switch @simpleEncode()
+                when 'units.degrees' then '(pi/180)'
+                when 'units.percent' then '0.01'
+                when 'units.dollars' then '1'
+            when 'a' then switch @children[0].simpleEncode()
+                when 'arith1.plus' then infix '+'
+                when 'arith1.minus' then infix '-'
+                when 'arith1.times' then infix '*'
+                when 'arith1.divide' then infix '/'
+                when 'arith1.power' then infix '^'
+                when 'arith1.root'
+                    special ( a, b ) -> "(#{b})^(1/(#{a}))"
+                when 'arith1.abs' then prefix 'abs'
+                when 'arith1.unary_minus' then prefix '-'
+                when 'relation1.eq' then infix '=='
+                when 'relation1.approx'
+                    special ( a, b ) -> "(abs((#{a})-(#{b}))<0.01)"
+                when 'relation1.neq' then infix '!='
+                when 'relation1.lt' then infix '<'
+                when 'relation1.gt' then infix '>'
+                when 'relation1.le' then infix '<='
+                when 'relation1.ge' then infix '>='
+                when 'logic1.not' then prefix '!'
+                when 'transc1.sin' then prefix 'sin'
+                when 'transc1.cos' then prefix 'cos'
+                when 'transc1.tan' then prefix 'tan'
+                when 'transc1.cot'
+                    special ( x ) -> "(1/tan(#{x}))"
+                when 'transc1.sec'
+                    special ( x ) -> "(1/cos(#{x}))"
+                when 'transc1.csc'
+                    special ( x ) -> "(1/sin(#{x}))"
+                when 'transc1.arcsin' then prefix 'asin'
+                when 'transc1.arccos' then prefix 'acos'
+                when 'transc1.arctan' then prefix 'atan'
+                when 'transc1.arccot' then special ( x ) -> "atan(1/(#{x}))"
+                when 'transc1.arcsec' then special ( x ) -> "acos(1/(#{x}))"
+                when 'transc1.arccsc' then special ( x ) -> "asin(1/(#{x}))"
+                when 'transc1.ln', 'transc1.log' then prefix 'log'
+                # Maybe later I will come back and implement these, but this
+                # is just a demo app, so there is no need to get fancy.
+                # when 'integer1.factorial'
+                # when 'arith1.sum'
+                # when 'calculus1.int'
+                # when 'calculus1.defint'
+                # when 'limit1.limit'
+        result ? 'NULL'
 
 A function for discerning the OpenMath meaning of a group in the document.
 Either a string is returned (as an error) or an OMNode instance, as the

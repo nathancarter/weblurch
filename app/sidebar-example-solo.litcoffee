@@ -412,6 +412,7 @@ second DIV defined in [sidebar-example.html], and resize them appropriately.
             onDrag : handleResize
         ( $ window ).resize handleResize
         handleResize()
+        window.createSidebarContent()
 
 ## Filling the sidebar with content
 
@@ -423,12 +424,30 @@ languages, it adds extra functionality.
         sidebar = document.getElementById 'sidebar'
         sidebar.innerHTML = ''
         sidebar.innerHTML += '''
-            <div style="border-bottom: solid 1px black;">
-                <p align=center><a href='#'
-                      onclick='openInJSFiddle( lastSidebarContent );'
-                      >Open in a new JSFiddle</a></p>
+            <div style="border-bottom: solid 1px black;
+                        text-align: center;">
+                <p>Choose a language:
+                <select onchange='updateSidebarContent();'
+                        id='languagePicker'>
+                    <option value='javascript'>JavaScript</option>
+                    <option value='python'>Python</option>
+                    <option value='r'>R</option>
+                </select></p>
+                <p id='runJSLink'><a href='#'
+                    onclick='eval( lastSidebarContent );'
+                    >Run this code</a></p>
             </div>
             '''
+        ( $ '#languagePicker' ).val lastLanguageChoice
+        ( $ '#runJSLink' ).get( 0 ).style.display = \
+            if lastLanguageChoice is 'javascript' then 'block' else 'none'
+        # sidebar.innerHTML += '''
+        #     <div style="border-bottom: solid 1px black;">
+        #         <p align=center><a href='#'
+        #               onclick='openInJSFiddle( lastSidebarContent );'
+        #               >Open in a new JSFiddle</a></p>
+        #     </div>
+        #     '''
         window.lastSidebarContent = ''
         for group in tinymce.activeEditor.Groups.topLevel
             entry = document.createElement 'div'
@@ -437,18 +456,23 @@ languages, it adds extra functionality.
             entry.innerHTML = window.createSidebarEntryHTML group
             sidebar.appendChild entry
             lastSidebarContent += entry.textContent + '\n'
+    lastLanguageChoice = 'javascript'
+    window.updateSidebarContent = ->
+        lastLanguageChoice = ( $ '#languagePicker' ).val()
+        createSidebarContent()
 
 The above function uses the following to create each entry, based on one
 given top-level group.  It should encode the entirety of that top-level
 group, and return it as HTML to be placed inside a DIV.
 
     window.createSidebarEntryHTML = ( group ) ->
-        code = runTranslation group, 'javascript', 'code'
-        result = "// #{niceText group.contentNodes()...}"
-        if not /^Translation error/.test code
-            result += "\n#{code}"
+        code = runTranslation group, lastLanguageChoice, 'code'
+        comment = codeFormTranslators['COMMENT']['code'][lastLanguageChoice]
+        result = comment.replace '__A__', niceText group.contentNodes()...
+        result += '\n' + if not /^Translation error/.test code
+            code
         else
-            result += "\n// #{code}"
+            comment.replace '__A__', code
         "<pre>#{result}</pre>"
     niceText = ( nodes... ) ->
         result = ''

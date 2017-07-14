@@ -11,19 +11,6 @@ which will be the standard webLurch UI, and the right of which will be code
 generated from the document's meaning. The code for this demo app is
 [here](../app/sidebar-example-solo.litcoffee).
 
-## Broader set of examples
-
- * Add many code forms, together with translators into JavaScript.
-    * Generate a random integer
-    * Display the value of a variable
-    * Ask the user to input a variable
-    * Make a decision
- * Add two other programming language, Python and R.
- * Add a drop-down element at the top of the right pane for choosing the
-   programming language in which the contents of the pane will be expressed.
-   Changing that language will cause the contents of the right pane to be
-   regenerated.
-
 ## Explaining forms
 
  * On the context menu for groups will be an item "Explain this..."
@@ -33,6 +20,8 @@ generated from the document's meaning. The code for this demo app is
 
 ## Right pane niceties
 
+ * Add a link for copying all the code to the clipboard.  (Perhaps this
+   would pop it up in a text dialog for you to copy yourself.)
  * Each entry in the sidebar will be syntax highlighted using
    [highlight.js](https://highlightjs.org/).
  * Clicking anywhere in the code changes the selection in the left pane to
