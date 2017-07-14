@@ -11,13 +11,6 @@ which will be the standard webLurch UI, and the right of which will be code
 generated from the document's meaning. The code for this demo app is
 [here](../app/sidebar-example-solo.litcoffee).
 
-## Explaining forms
-
- * Choosing any code form from one of the hierarchical toolbar dropdowns,
-   while the cursor is zero-width (no selection) inserts boilerplate code
-   at the at the cursor point.  Otherwise, just wrap the selection in the
-   chosen code form, as you do now.
-
 ## Right pane niceties
 
  * Add a link for copying all the code to the clipboard.  (Perhaps this

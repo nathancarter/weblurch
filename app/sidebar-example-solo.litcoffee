@@ -77,11 +77,38 @@ that type based on the user's current selection.
                 -> makeFormAction name
             else
                 ->
-                    # only partially implemented --- must later come back
-                    # and make this more sophisticated
                     editor = tinymce.activeEditor
-                    group = editor.Groups.groupCurrentSelection 'codexp'
-                    group.set 'tagName', name
+                    boilerplate = codeFormTranslators[name]['example']['en']
+                    if not boilerplate? or \
+                       not editor?.selection?.getRng()?.collapsed
+                        group = editor.Groups.groupCurrentSelection 'codexp'
+                        group.set 'tagName', name
+                        return
+                    idStack = [ ]
+                    idToTag = { }
+                    html = ''
+                    while nextTag = /<(\/?)([^>]+)>/.exec boilerplate
+                        html += boilerplate[...nextTag.index]
+                        if codeFormTranslators.hasOwnProperty nextTag[2]
+                            if nextTag[1] is ''
+                                openClose = 'open'
+                                idStack.push id = editor.Groups.nextFreeId()
+                            else
+                                openClose = 'close'
+                                id = idStack.pop()
+                            idToTag[id] = nextTag[2]
+                            html += grouperHTML 'codexp', openClose, id, no,
+                                editor.Groups.groupTypes \
+                                .codexp["#{openClose}Image"]
+                        else
+                            html += nextTag[0]
+                        after = nextTag.index + nextTag[0].length
+                        boilerplate = boilerplate[after...]
+                    html += boilerplate
+                    editor.insertContent html
+                    for own id, tagName of idToTag
+                        editor.Groups[id].set 'tagName', tagName
+                    ( $ editor.getDoc() ).find( '.math' ).mathquill()
         categoryToMenuItem = ( name ) ->
             if name in categoriesProcessed
                 text : name

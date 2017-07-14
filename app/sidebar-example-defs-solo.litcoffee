@@ -75,6 +75,46 @@ their validation functions, plus translation routines for various languages.
         ]
     ]
 
+## Registering English boilerplate
+
+    registerTranslator 'Variable', 'en', 'example',
+        'the variable <Variable>x</Variable>'
+    registerTranslator 'Number', 'en', 'example',
+        'the number <Number>5</Number>'
+    registerTranslator 'Text', 'en', 'example',
+        'the text <Text>Hello, World!</Text>'
+    registerTranslator 'Mathematical expression', 'en', 'example',
+        'the result of <Mathematical
+         expression><span class="math">x^2+y^2</span></Mathematical
+         expression>'
+    registerTranslator 'Store a value', 'en', 'example',
+        '<Store a value>Let the variable <Variable>x</Variable>
+         have the value <Number>3</Number>.</Store a value>'
+    registerTranslator 'Pick a random integer', 'en', 'example',
+        '<Pick a random integer>a random integer between <Number>1</Number>
+         and <Number>10</Number> (inclusive)</Pick a random integer>'
+    registerTranslator 'Display a value', 'en', 'example',
+        '<Display a value>Display the value of <Variable>x</Variable> to the
+         user.</Display a value>'
+    registerTranslator 'Request a value from the user', 'en', 'example',
+        '<Request a value from the user>Prompt the user for the value of the
+         variable <Variable>N</Variable>, by saying <Text>What\'s your
+         name?</Text> and providing the default value of <Text>John</Text>
+         (if the interface supports default
+         values).</Request a value from the user>'
+    registerTranslator 'Make a decision', 'en', 'example',
+        '<Make a decision>Check to see if <Variable>P</Variable> is true.
+         <br>If so, do this: <Store a value>Let <Variable>x</Variable> be
+         the number <Number>100</Number>.</Store a value>
+         <br>If not, do this: <Store a value>Let <Variable>y</Variable> be
+         the text <Text>Hello</Text>.</Store a value></Make a decision>'
+    registerTranslator 'For each integer in a range', 'en', 'example',
+        '<For each integer in a range>Let <Variable>i</Variable> count from
+         <Number>1</Number> to <Number>5</Number>, and each step of the
+         way, <Display a value>show the user the value of <Mathematical
+         expression><span class="math">\\frac{i^2}{2}</span></Mathematical
+         expression></Display a value>.</For each integer in a range>'
+
 ## Registering English translation
 
     registerTranslator 'Variable', 'en', 'explanation', ( group ) ->
@@ -91,12 +131,6 @@ their validation functions, plus translation routines for various languages.
     registerTranslator 'Mathematical expression', 'en', 'explanation',
     ( group ) ->
         "the result of #{group.contentAsHTML()}"
-        # openmath = window.OMNode.decode \
-        #     group.get( 'validationResult' ).openmath
-        # if openmath not instanceof window.OMNode
-        #     "(missing mathematical expression -- #{openmath} )"
-        # else
-        #     openmath.toen()
     registerTranslator 'Store a value', 'en', 'explanation',
         'Let the variable __A__ stand for __B__.'
     registerTranslator 'Pick a random integer', 'en', 'explanation',
@@ -147,7 +181,7 @@ their validation functions, plus translation routines for various languages.
     registerTranslator 'Make a decision', 'javascript', 'code',
         'if ( __A__ ) {\n  __B__\n} else {\n  __C__\n}'
     registerTranslator 'For each integer in a range', 'javascript', 'code',
-        'for ( var __A__ = __B__ ; __A__ < __C__ ; __A__++ ) {\n  __D__\n}'
+        'for ( var __A__ = __B__ ; __A__ <= __C__ ; __A__++ ) {\n  __D__\n}'
     registerTranslator 'COMMENT', 'javascript', 'code', '// __A__'
 
 ## Registering Python translation
