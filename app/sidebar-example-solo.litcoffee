@@ -108,7 +108,11 @@ that type based on the user's current selection.
                     editor.insertContent html
                     for own id, tagName of idToTag
                         editor.Groups[id].set 'tagName', tagName
-                    ( $ editor.getDoc() ).find( '.math' ).mathquill()
+                    ( $ editor.getDoc() ).find( '.math' )
+                    .each ( i, block ) ->
+                        block.setAttribute 'contenteditable', 'false'
+                        ( $ block ).addClass 'rendered-latex'
+                        ( $ block ).mathquill()
         categoryToMenuItem = ( name ) ->
             if name in categoriesProcessed
                 text : name
@@ -546,6 +550,8 @@ languages, it adds extra functionality.
                 <p id='runJSLink'><a href='#'
                     onclick='runGeneratedJavaScript();'
                     >Run this code</a></p>
+                <p><a href='#' onclick='copyGeneratedCode();'
+                    >Copy this code</a></p>
             </div>
             '''
         ( $ '#languagePicker' ).val lastLanguageChoice
@@ -561,11 +567,17 @@ languages, it adds extra functionality.
         window.lastSidebarContent = ''
         for group in tinymce.activeEditor.Groups.topLevel
             entry = document.createElement 'div'
+            entry.setAttribute 'id', "codeForGroup#{group.id()}"
+            ( $ entry ).click group.id(), ( event ) ->
+                group = tinymce.activeEditor.Groups[event.data]
+                tinymce.activeEditor.selection.setRng group.innerRange()
             entry.style.padding = '1em'
             entry.style.borderBottom = 'dotted 1px black'
             entry.innerHTML = window.createSidebarEntryHTML group
             sidebar.appendChild entry
             lastSidebarContent += entry.textContent + '\n'
+        ( $ sidebar ).find( 'pre' ).each ( i, block ) ->
+            hljs.highlightBlock block
     lastLanguageChoice = 'javascript'
     window.updateSidebarContent = ->
         lastLanguageChoice = ( $ '#languagePicker' ).val()
@@ -575,6 +587,21 @@ languages, it adds extra functionality.
             eval lastSidebarContent
         catch e
             alert "Error when running code:\n\n#{e.message}"
+    window.copyGeneratedCode = ->
+        tinymce.activeEditor.Dialogs.alert
+            title : 'Copy the code, then close'
+            width : 600
+            message : """
+                <textarea id='codeToCopy'
+                          style='width: 100%; height: 100%;
+                                 font-family: monospace;'
+                    >#{lastSidebarContent}</textarea>
+                <script>
+                    var T = document.getElementById( 'codeToCopy' );
+                    T.select();
+                    T.focus();
+                </script>
+                """
 
 The above function uses the following to create each entry, based on one
 given top-level group.  It should encode the entirety of that top-level
@@ -588,7 +615,7 @@ group, and return it as HTML to be placed inside a DIV.
             code
         else
             comment.replace '__A__', code
-        "<pre>#{result}</pre>"
+        "<pre class='javascript'>#{result}</pre>"
     niceText = ( nodes... ) ->
         result = ''
         for node in nodes
@@ -599,6 +626,14 @@ group, and return it as HTML to be placed inside a DIV.
             else
                 result += niceText node.childNodes...
         result
+    setInterval ->
+        range = tinymce.activeEditor.selection.getRng()
+        ( $ sidebar ).find( 'div' ).css 'background-color', '#fff'
+        if group = tinymce.activeEditor.Groups.groupAboveSelection range
+            while group.parent then group = group.parent
+            ( $ "\#codeForGroup#{group.id()}" ).css 'background-color',
+                '#eee'
+    , 100
 
 The following function can open any given JavaScript code in a new JSFiddle.
 
