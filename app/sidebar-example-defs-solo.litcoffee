@@ -325,7 +325,7 @@ them, in various languages.
         result ? "undefined /* Could not evaluate #{@simpleEncode()} */"
     OM::toPython = ->
         special = ( func ) =>
-            func ( child.toJavaScript() for child in @children[1...] )...
+            func ( child.toPython() for child in @children[1...] )...
         infix = ( op ) => special ( code... ) -> code.join op
         prefix = ( op ) => special ( code... ) -> "#{op}(#{code.join ','})"
         result = switch @type
@@ -386,7 +386,7 @@ them, in various languages.
         result ? 'None'
     OM::toR = ->
         special = ( func ) =>
-            func ( child.toJavaScript() for child in @children[1...] )...
+            func ( child.toR() for child in @children[1...] )...
         infix = ( op ) => special ( code... ) -> code.join op
         prefix = ( op ) => special ( code... ) -> "#{op}(#{code.join ','})"
         result = switch @type
