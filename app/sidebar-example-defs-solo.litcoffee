@@ -132,7 +132,7 @@ their validation functions, plus translation routines for various languages.
     ( group ) ->
         "the result of #{group.contentAsHTML()}"
     registerTranslator 'Store a value', 'en', 'explanation',
-        'Let the variable __A__ stand for __B__.'
+        'Let __A__ be __B__.'
     registerTranslator 'Pick a random integer', 'en', 'explanation',
         'a random integer between __A__ and __B__ (inclusive)'
     registerTranslator 'Display a value', 'en', 'explanation',
