@@ -455,7 +455,7 @@ Return the list of problems found.
 ## Forming XML
 
 The following function converts the given group (or the whole document if
-none is given into an XML representation using the data in `tagData`).
+none is given) into an XML representation using the data in `tagData`.
 
     window.convertToXML = ( group ) ->
         if group?

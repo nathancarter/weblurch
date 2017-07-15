@@ -705,14 +705,14 @@
 
   window.afterEditorReady = function(editor) {
     return editor.on('KeyUp', function(event) {
-      var allAfter, allBefore, allText, lastCharacter, modifiers, movements, newCursorPos, range, replaceWith, startFrom, toReplace, _ref, _ref1;
+      var allAfter, allBefore, allText, lastCharacter, modifiers, movements, newCursorPos, range, replaceWith, startFrom, toReplace, _ref, _ref1, _ref2;
       movements = [33, 34, 35, 36, 37, 38, 39, 40];
       modifiers = [16, 17, 18, 91];
       if ((_ref = event.keyCode, __indexOf.call(movements, _ref) >= 0) || (_ref1 = event.keyCode, __indexOf.call(modifiers, _ref1) >= 0)) {
         return;
       }
       range = editor.selection.getRng();
-      if (range.startContainer === range.endContainer && range.startContainer instanceof editor.getWin().Text) {
+      if (range.startContainer === range.endContainer && ((_ref2 = range.startContainer) != null ? _ref2.nodeType : void 0) === 3) {
         allText = range.startContainer.textContent;
         lastCharacter = allText[range.startOffset - 1];
         if (lastCharacter !== ' ' && lastCharacter !== '\\' && lastCharacter !== String.fromCharCode(160)) {

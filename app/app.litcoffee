@@ -417,7 +417,7 @@ following.
 tinymce.activeEditor.Dialogs.alert( {
     title : 'Alert!'
     message : 'Content of the alert box here.',
-    callback : function ( event ) { console.log( event );
+    callback : function ( event ) { console.log( event ); }
 } );
 ```
 
@@ -2160,7 +2160,7 @@ an HTML Range object that has the same start and end nodes and offsets, such
 as one that has been collapsed.
 
         groupAboveCursor: ( cursor ) =>
-            if cursor.startContainer instanceof @editor.getWin().Text
+            if cursor.startContainer?.nodeType is 3 # HTML text node
                 return @groupAboveNode cursor.startContainer
             if cursor.startContainer.childNodes.length > cursor.startOffset
                 elementAfter =
@@ -2246,7 +2246,7 @@ parent chain of groups above the closest node to the selection.
 
             if firstInRange > lastInRange
                 node = range.startContainer
-                if node instanceof @editor.getWin().Element and \
+                if node.nodeType is 1 and \ # Element, not Text, etc.
                    range.startOffset < node.childNodes.length
                     node = node.childNodes[range.startOffset]
                 group = @groupAboveNode node
@@ -2850,7 +2850,7 @@ this behavior.
                 return
             range = editor.selection.getRng()
             if range.startContainer is range.endContainer and \
-               range.startContainer instanceof editor.getWin().Text
+               range.startContainer?.nodeType is 3 # HTML Text node
                 allText = range.startContainer.textContent
                 lastCharacter = allText[range.startOffset-1]
                 if lastCharacter isnt ' ' and lastCharacter isnt '\\' and \
@@ -2921,10 +2921,14 @@ stored separately.
 The following function takes the name and settings object of a menu item or
 toolbar button from the editor and, if a keyboard shortcut is specified in
 the settings object, stores the relevant shortcut data in the aforementioned
-array, for later lookup.
+array, for later lookup.  Do nothing for Cut, Copy, or Paste, however,
+because it is important to leave the native keyboard shortcut handlers of
+the platform active for those actions, since some browsers prevent the app
+from accessing the clipboard.
 
         maybeInstall = ( name, settings ) ->
-            if settings?.shortcut?
+            if settings?.shortcut? and \
+               name not in [ 'cut', 'copy', 'paste' ]
                 shortcuts.push
                     keys : createShortcutData settings.shortcut
                     action : settings.onclick ? -> editor.execCommand name
@@ -3888,7 +3892,7 @@ initializes the list of drawing handlers to empty.
 
             @drawHandlers = []
             @editor.on 'NodeChange', @redrawContents
-            ( $ window ).resize @redrawContents
+            ( $ @editor.getContentAreaContainer() ).resize @redrawContent
 
 This function installs an event handler that, each time something in the
 document changes, repositions the canvas, clears it, and runs all drawing
@@ -4222,6 +4226,15 @@ TinyMCE, and they will be added to the list loaded by default.
 
     window.pluginsToLoad ?= [ ]
 
+By default, we always make the editor full screen, and a child of the
+document body.  But the client can change that by changing the following
+values.  The `editorContainer` can be an `HTMLElement` or a function that
+evaluates to one.  We can't access the document body yet, so we set it to
+null, which will be replaced by the body below, once it exists.
+
+    window.fullScreenEditor = yes
+    window.editorContainer = null
+
 We also provide a variable in which apps can specify an icon to appear on
 the menu bar, at the very left.  It defaults to an empty object, but can be
 overridden, in the same way as `window.groupTypes`, above.  If you override
@@ -4258,7 +4271,10 @@ Create a `<textarea>` to be used as the editor.
 
         editor = document.createElement 'textarea'
         editor.setAttribute 'id', 'editor'
-        document.body.appendChild editor
+        window.editorContainer ?= document.body
+        if typeof window.editorContainer is 'function'
+            window.editorContainer = window.editorContainer()
+        window.editorContainer.appendChild editor
 
 If the query string is telling us to switch the app into test-recording
 mode, then do so.  This uses the main function defined in
@@ -4278,6 +4294,7 @@ buttons, and context menu items as given below.
         tinymce.init
             selector : '#editor'
             auto_focus : 'editor'
+            branding : no
 
 These enable the use of the browser's built-in spell-checking facilities, so
 that no server-side callback needs to be done for spellchecking.
@@ -4292,10 +4309,11 @@ that begins with a hyphen is a local plugin written as part of this project.
 
             plugins :
                 'advlist table charmap colorpicker image link
-                paste print searchreplace textcolor fullscreen
+                paste print searchreplace textcolor
                 -loadsave -overlay -groups -equationeditor -dependencies
                 -dialogs -downloadupload ' \
-                + ( "-#{p}" for p in window.pluginsToLoad ).join ' '
+                + ( "-#{p}" for p in window.pluginsToLoad ).join( ' ' ) \
+                + ( if window.fullScreenEditor then ' fullscreen' else '' )
 
 The groups plugin requires that we add the following, to prevent resizing of
 group boundary images.

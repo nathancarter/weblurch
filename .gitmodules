@@ -4,3 +4,6 @@
 [submodule "app/core-estimator"]
 	path = app/core-estimator
 	url = https://github.com/oftn/core-estimator.git
+[submodule "app/jquery-splitter"]
+	path = app/jquery-splitter
+	url = https://github.com/jcubic/jquery.splitter.git

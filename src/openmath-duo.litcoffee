@@ -1160,3 +1160,154 @@ its inverse, which goes in the other direction).
             result += String.fromCharCode parseInt ident[...4], 16
             ident = ident[4...]
         result
+
+## Ancillary utilities
+
+The functions defined in this section are experimental and incomplete.  They
+are untested, and are just simple implementations present here primarly for
+their value to our demo apps.  Complete and tested implementations may come
+later, if these functions become more important.
+
+### Converting mathematical expressions to XML
+
+This is an incomplete implementation of the XML encoding for OpenMath trees.
+It is piecemeal, spotty, and only partially tested, and even those tests
+were done manually and/or within a demo application, not automated.
+
+    OM::toXML = ->
+        indent = ( text ) -> "  #{text.replace RegExp( '\n', 'g' ), '\n  '}"
+        switch @type
+            when 'i' then "<OMI>#{@value}</OMI>"
+            when 'sy' then "<OMS cd=\"#{@cd}\" name=\"#{@name}\"/>"
+            when 'v' then "<OMV name=\"#{@name}\"/>"
+            when 'f' then "<OMF dec=\"#{@value}\"/>"
+            when 'st'
+                text = @value.replace /\&/g, '&amp;'
+                .replace /</g, '&lt;'
+                "<OMSTR>#{text}</OMSTR>"
+            when 'a'
+                inside = ( indent c.toXML() for c in @children ).join '\n'
+                "<OMA>\n#{inside}\n</OMA>"
+            when 'bi'
+                head = indent @symbol.toXML()
+                vars = ( v.toXML() for v in @variables ).join ''
+                vars = indent "<OMBVAR>#{vars}</OMBVAR>"
+                body = indent @body.toXML()
+                "<OMBIND>\n#{head}\n#{vars}\n#{body}\n</OMBIND>"
+            else
+                throw "Cannot convert this to XML: #{@simpleEncode()}"
+
+### Evaluating mathematical expressions numerically
+
+The following is a very limited routine that evaluates mathematical
+expressions numerically when possible, and returns an explanation of why it
+could not evaluate them in cases where it could not.  The result is an
+object with `value` and `message` attributes.
+
+The `value` attribute is intended to be the result, but may be undefined if
+an error takes place during evaluation (such as division by zero, or many
+other possible mathematical mistakes).  In such cases, the `message`
+attribute will explain what went wrong.  It may be a newline-separated list
+of problems.  Even when the `value` exists, the `message` attribute may be
+nonempty, containing warnings such as when using decimal approximations to
+real numbers.
+
+    OM::evaluate = ->
+        call = ( func, indices... ) =>
+            message = undefined
+            args = [ ]
+            for index in indices
+                arg = @children[index].evaluate()
+                if not arg.value? then return arg
+                if arg.message?
+                    if not message? then message = '' else message += '\n'
+                    message += arg.message
+                args.push arg.value
+            try
+                value = func args...
+            catch e
+                if not message? then message = '' else message += '\n'
+                message += e.message
+            value : value
+            message : message
+        result = switch @type
+            when 'i', 'f', 'st', 'ba' then value : @value
+            when 'v' then switch @name
+                when '\u03c0' # pi
+                    value : Math.PI
+                    message : 'The actual value of \u03c0 has been rounded.'
+                when 'e'
+                    value : Math.exp 1
+                    message : 'The actual value of e has been rounded.'
+            when 'sy' then switch @simpleEncode()
+                when 'units.degrees'
+                    value : Math.PI/180
+                    message : 'Converting to degrees used an
+                        approximation of \u03c0.' # that is, pi
+                when 'units.percent' then value : 0.01
+                when 'units.dollars'
+                    value : 1
+                    message : 'Dollar units were dropped'
+            when 'a' then switch @children[0].simpleEncode()
+                when 'arith1.plus' then call ( ( a, b ) -> a + b ), 1, 2
+                when 'arith1.minus' then call ( ( a, b ) -> a - b ), 1, 2
+                when 'arith1.times' then call ( ( a, b ) -> a * b ), 1, 2
+                when 'arith1.divide' then call ( ( a, b ) -> a / b ), 1, 2
+                when 'arith1.power' then call Math.pow, 1, 2
+                when 'arith1.root'
+                    call ( ( a, b ) -> Math.pow b, 1/a ), 1, 2
+                when 'arith1.abs' then call Math.abs, 1
+                when 'arith1.unary_minus' then call ( ( a ) -> -a ), 1
+                when 'relation1.eq' then call ( ( a, b ) -> a is b ), 1, 2
+                when 'relation1.approx'
+                    tmp = call ( ( a, b ) -> Math.abs( a - b ) < 0.01 ),
+                        1, 2
+                    if ( tmp.message ?= '' ).length then tmp.message += '\n'
+                    tmp.message += 'Values were rounded to two decimal
+                        places for approximate comparison.'
+                    tmp
+                when 'relation1.neq'
+                    call ( ( a, b ) -> a isnt b ), 1, 2
+                when 'relation1.lt' then call ( ( a, b ) -> a < b ), 1, 2
+                when 'relation1.gt' then call ( ( a, b ) -> a > b ), 1, 2
+                when 'relation1.le' then call ( ( a, b ) -> a <= b ), 1, 2
+                when 'relation1.ge' then call ( ( a, b ) -> a >= b ), 1, 2
+                when 'logic1.not' then call ( ( a ) -> not a ), 1
+                when 'transc1.sin' then call Math.sin, 1
+                when 'transc1.cos' then call Math.cos, 1
+                when 'transc1.tan' then call Math.tan, 1
+                when 'transc1.cot' then call ( ( a ) -> 1/Math.tan(a) ), 1
+                when 'transc1.sec' then call ( ( a ) -> 1/Math.cos(a) ), 1
+                when 'transc1.csc' then call ( ( a ) -> 1/Math.sin(a) ), 1
+                when 'transc1.arcsin' then call Math.asin, 1
+                when 'transc1.arccos' then call Math.acos, 1
+                when 'transc1.arctan' then call Math.atan, 1
+                when 'transc1.arccot'
+                    call ( ( a ) -> Math.atan 1/a ), 1
+                when 'transc1.arcsec'
+                    call ( ( a ) -> Math.acos 1/a ), 1
+                when 'transc1.arccsc'
+                    call ( ( a ) -> Math.asin 1/a ), 1
+                when 'transc1.ln' then call Math.log, 1
+                when 'transc1.log' then call ( base, arg ) ->
+                    Math.log( arg ) / Math.log( base )
+                , 1, 2
+                when 'integer1.factorial'
+                    call ( a ) ->
+                        if a <= 1 then return 1
+                        if a >= 20 then return Infinity
+                        result = 1
+                        result *= i for i in [1..a|0]
+                        result
+                    , 1
+                # Maybe later I will come back and implement these, but this
+                # is just a demo app, so there is no need to get fancy.
+                # when 'arith1.sum'
+                # when 'calculus1.int'
+                # when 'calculus1.defint'
+                # when 'limit1.limit'
+        result ?= value : undefined
+        if typeof result.value is 'undefined'
+            result.message = "Could not evaluate #{@simpleEncode()}"
+        # console.log "#{node.simpleEncode()} --> #{JSON.stringify result}"
+        result

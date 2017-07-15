@@ -1324,6 +1324,275 @@
     return result;
   };
 
+  OM.prototype.toXML = function() {
+    var body, c, head, indent, inside, text, v, vars;
+    indent = function(text) {
+      return "  " + (text.replace(RegExp('\n', 'g'), '\n  '));
+    };
+    switch (this.type) {
+      case 'i':
+        return "<OMI>" + this.value + "</OMI>";
+      case 'sy':
+        return "<OMS cd=\"" + this.cd + "\" name=\"" + this.name + "\"/>";
+      case 'v':
+        return "<OMV name=\"" + this.name + "\"/>";
+      case 'f':
+        return "<OMF dec=\"" + this.value + "\"/>";
+      case 'st':
+        text = this.value.replace(/\&/g, '&amp;').replace(/</g, '&lt;');
+        return "<OMSTR>" + text + "</OMSTR>";
+      case 'a':
+        inside = ((function() {
+          var _i, _len, _ref1, _results;
+          _ref1 = this.children;
+          _results = [];
+          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+            c = _ref1[_i];
+            _results.push(indent(c.toXML()));
+          }
+          return _results;
+        }).call(this)).join('\n');
+        return "<OMA>\n" + inside + "\n</OMA>";
+      case 'bi':
+        head = indent(this.symbol.toXML());
+        vars = ((function() {
+          var _i, _len, _ref1, _results;
+          _ref1 = this.variables;
+          _results = [];
+          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+            v = _ref1[_i];
+            _results.push(v.toXML());
+          }
+          return _results;
+        }).call(this)).join('');
+        vars = indent("<OMBVAR>" + vars + "</OMBVAR>");
+        body = indent(this.body.toXML());
+        return "<OMBIND>\n" + head + "\n" + vars + "\n" + body + "\n</OMBIND>";
+      default:
+        throw "Cannot convert this to XML: " + (this.simpleEncode());
+    }
+  };
+
+  OM.prototype.evaluate = function() {
+    var call, result, tmp;
+    call = (function(_this) {
+      return function() {
+        var arg, args, e, func, index, indices, message, value, _i, _len;
+        func = arguments[0], indices = 2 <= arguments.length ? __slice.call(arguments, 1) : [];
+        message = void 0;
+        args = [];
+        for (_i = 0, _len = indices.length; _i < _len; _i++) {
+          index = indices[_i];
+          arg = _this.children[index].evaluate();
+          if (arg.value == null) {
+            return arg;
+          }
+          if (arg.message != null) {
+            if (message == null) {
+              message = '';
+            } else {
+              message += '\n';
+            }
+            message += arg.message;
+          }
+          args.push(arg.value);
+        }
+        try {
+          value = func.apply(null, args);
+        } catch (_error) {
+          e = _error;
+          if (message == null) {
+            message = '';
+          } else {
+            message += '\n';
+          }
+          message += e.message;
+        }
+        return {
+          value: value,
+          message: message
+        };
+      };
+    })(this);
+    result = (function() {
+      switch (this.type) {
+        case 'i':
+        case 'f':
+        case 'st':
+        case 'ba':
+          return {
+            value: this.value
+          };
+        case 'v':
+          switch (this.name) {
+            case '\u03c0':
+              return {
+                value: Math.PI,
+                message: 'The actual value of \u03c0 has been rounded.'
+              };
+            case 'e':
+              return {
+                value: Math.exp(1),
+                message: 'The actual value of e has been rounded.'
+              };
+          }
+          break;
+        case 'sy':
+          switch (this.simpleEncode()) {
+            case 'units.degrees':
+              return {
+                value: Math.PI / 180,
+                message: 'Converting to degrees used an approximation of \u03c0.'
+              };
+            case 'units.percent':
+              return {
+                value: 0.01
+              };
+            case 'units.dollars':
+              return {
+                value: 1,
+                message: 'Dollar units were dropped'
+              };
+          }
+          break;
+        case 'a':
+          switch (this.children[0].simpleEncode()) {
+            case 'arith1.plus':
+              return call((function(a, b) {
+                return a + b;
+              }), 1, 2);
+            case 'arith1.minus':
+              return call((function(a, b) {
+                return a - b;
+              }), 1, 2);
+            case 'arith1.times':
+              return call((function(a, b) {
+                return a * b;
+              }), 1, 2);
+            case 'arith1.divide':
+              return call((function(a, b) {
+                return a / b;
+              }), 1, 2);
+            case 'arith1.power':
+              return call(Math.pow, 1, 2);
+            case 'arith1.root':
+              return call((function(a, b) {
+                return Math.pow(b, 1 / a);
+              }), 1, 2);
+            case 'arith1.abs':
+              return call(Math.abs, 1);
+            case 'arith1.unary_minus':
+              return call((function(a) {
+                return -a;
+              }), 1);
+            case 'relation1.eq':
+              return call((function(a, b) {
+                return a === b;
+              }), 1, 2);
+            case 'relation1.approx':
+              tmp = call((function(a, b) {
+                return Math.abs(a - b) < 0.01;
+              }), 1, 2);
+              if ((tmp.message != null ? tmp.message : tmp.message = '').length) {
+                tmp.message += '\n';
+              }
+              tmp.message += 'Values were rounded to two decimal places for approximate comparison.';
+              return tmp;
+            case 'relation1.neq':
+              return call((function(a, b) {
+                return a !== b;
+              }), 1, 2);
+            case 'relation1.lt':
+              return call((function(a, b) {
+                return a < b;
+              }), 1, 2);
+            case 'relation1.gt':
+              return call((function(a, b) {
+                return a > b;
+              }), 1, 2);
+            case 'relation1.le':
+              return call((function(a, b) {
+                return a <= b;
+              }), 1, 2);
+            case 'relation1.ge':
+              return call((function(a, b) {
+                return a >= b;
+              }), 1, 2);
+            case 'logic1.not':
+              return call((function(a) {
+                return !a;
+              }), 1);
+            case 'transc1.sin':
+              return call(Math.sin, 1);
+            case 'transc1.cos':
+              return call(Math.cos, 1);
+            case 'transc1.tan':
+              return call(Math.tan, 1);
+            case 'transc1.cot':
+              return call((function(a) {
+                return 1 / Math.tan(a);
+              }), 1);
+            case 'transc1.sec':
+              return call((function(a) {
+                return 1 / Math.cos(a);
+              }), 1);
+            case 'transc1.csc':
+              return call((function(a) {
+                return 1 / Math.sin(a);
+              }), 1);
+            case 'transc1.arcsin':
+              return call(Math.asin, 1);
+            case 'transc1.arccos':
+              return call(Math.acos, 1);
+            case 'transc1.arctan':
+              return call(Math.atan, 1);
+            case 'transc1.arccot':
+              return call((function(a) {
+                return Math.atan(1 / a);
+              }), 1);
+            case 'transc1.arcsec':
+              return call((function(a) {
+                return Math.acos(1 / a);
+              }), 1);
+            case 'transc1.arccsc':
+              return call((function(a) {
+                return Math.asin(1 / a);
+              }), 1);
+            case 'transc1.ln':
+              return call(Math.log, 1);
+            case 'transc1.log':
+              return call(function(base, arg) {
+                return Math.log(arg) / Math.log(base);
+              }, 1, 2);
+            case 'integer1.factorial':
+              return call(function(a) {
+                var i, _i, _ref1;
+                if (a <= 1) {
+                  return 1;
+                }
+                if (a >= 20) {
+                  return Infinity;
+                }
+                result = 1;
+                for (i = _i = 1, _ref1 = a | 0; 1 <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = 1 <= _ref1 ? ++_i : --_i) {
+                  result *= i;
+                }
+                return result;
+              }, 1);
+          }
+      }
+    }).call(this);
+    if (result == null) {
+      result = {
+        value: void 0
+      };
+    }
+    if (typeof result.value === 'undefined') {
+      result.message = "Could not evaluate " + (this.simpleEncode());
+    }
+    return result;
+  };
+
 }).call(this);
 
 //# sourceMappingURL=openmath-duo.js.map

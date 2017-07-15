@@ -1957,8 +1957,8 @@
     };
 
     Groups.prototype.groupAboveCursor = function(cursor) {
-      var elementAfter, elementBefore, itsGroup;
-      if (cursor.startContainer instanceof this.editor.getWin().Text) {
+      var elementAfter, elementBefore, itsGroup, _ref;
+      if (((_ref = cursor.startContainer) != null ? _ref.nodeType : void 0) === 3) {
         return this.groupAboveNode(cursor.startContainer);
       }
       if (cursor.startContainer.childNodes.length > cursor.startOffset) {
@@ -2028,7 +2028,7 @@
       lastInRange = this.grouperIndexOfRangeEndpoint(range, false, all);
       if (firstInRange > lastInRange) {
         node = range.startContainer;
-        if (node instanceof this.editor.getWin().Element && range.startOffset < node.childNodes.length) {
+        if (node.nodeType === 1 && range.startOffset < node.childNodes.length) {
           node = node.childNodes[range.startOffset];
         }
         group = this.groupAboveNode(node);
@@ -2654,14 +2654,14 @@
       return null;
     };
     return editor.on('KeyUp', function(event) {
-      var allAfter, allBefore, allText, lastCharacter, modifiers, movements, newCursorPos, range, shortcut, typeData, typeName, _ref1, _ref2, _ref3, _results;
+      var allAfter, allBefore, allText, lastCharacter, modifiers, movements, newCursorPos, range, shortcut, typeData, typeName, _ref1, _ref2, _ref3, _ref4, _results;
       movements = [33, 34, 35, 36, 37, 38, 39, 40];
       modifiers = [16, 17, 18, 91];
       if ((_ref1 = event.keyCode, __indexOf.call(movements, _ref1) >= 0) || (_ref2 = event.keyCode, __indexOf.call(modifiers, _ref2) >= 0)) {
         return;
       }
       range = editor.selection.getRng();
-      if (range.startContainer === range.endContainer && range.startContainer instanceof editor.getWin().Text) {
+      if (range.startContainer === range.endContainer && ((_ref3 = range.startContainer) != null ? _ref3.nodeType : void 0) === 3) {
         allText = range.startContainer.textContent;
         lastCharacter = allText[range.startOffset - 1];
         if (lastCharacter !== ' ' && lastCharacter !== '\\' && lastCharacter !== String.fromCharCode(160)) {
@@ -2669,10 +2669,10 @@
         }
         allBefore = allText.substr(0, range.startOffset - 1);
         allAfter = allText.substring(range.startOffset - 1);
-        _ref3 = editor.Groups.groupTypes;
+        _ref4 = editor.Groups.groupTypes;
         _results = [];
-        for (typeName in _ref3) {
-          typeData = _ref3[typeName];
+        for (typeName in _ref4) {
+          typeData = _ref4[typeName];
           if (shortcut = typeData.LaTeXshortcut) {
             if (allBefore.slice(-shortcut.length) === shortcut) {
               newCursorPos = range.startOffset - shortcut.length - 1;
@@ -2717,7 +2717,7 @@
     };
     maybeInstall = function(name, settings) {
       var _ref;
-      if ((settings != null ? settings.shortcut : void 0) != null) {
+      if (((settings != null ? settings.shortcut : void 0) != null) && (name !== 'cut' && name !== 'copy' && name !== 'paste')) {
         return shortcuts.push({
           keys: createShortcutData(settings.shortcut),
           action: (_ref = settings.onclick) != null ? _ref : function() {
@@ -3610,7 +3610,7 @@
       })(this));
       this.drawHandlers = [];
       this.editor.on('NodeChange', this.redrawContents);
-      ($(window)).resize(this.redrawContents);
+      ($(this.editor.getContentAreaContainer())).resize(this.redrawContent);
     }
 
     Overlay.prototype.redrawContents = function(event) {
@@ -3838,6 +3838,10 @@
     window.pluginsToLoad = [];
   }
 
+  window.fullScreenEditor = true;
+
+  window.editorContainer = null;
+
   if (window.menuBarIcon == null) {
     window.menuBarIcon = {};
   }
@@ -3857,7 +3861,13 @@
     var groupTypeNames, p, type;
     editor = document.createElement('textarea');
     editor.setAttribute('id', 'editor');
-    document.body.appendChild(editor);
+    if (window.editorContainer == null) {
+      window.editorContainer = document.body;
+    }
+    if (typeof window.editorContainer === 'function') {
+      window.editorContainer = window.editorContainer();
+    }
+    window.editorContainer.appendChild(editor);
     maybeSetupTestRecorder();
     groupTypeNames = (function() {
       var _i, _len, _results;
@@ -3871,11 +3881,12 @@
     return tinymce.init({
       selector: '#editor',
       auto_focus: 'editor',
+      branding: false,
       browser_spellcheck: true,
       gecko_spellcheck: true,
       statusbar: false,
       paste_data_images: true,
-      plugins: 'advlist table charmap colorpicker image link paste print searchreplace textcolor fullscreen -loadsave -overlay -groups -equationeditor -dependencies -dialogs -downloadupload ' + ((function() {
+      plugins: 'advlist table charmap colorpicker image link paste print searchreplace textcolor -loadsave -overlay -groups -equationeditor -dependencies -dialogs -downloadupload ' + ((function() {
         var _i, _len, _ref, _results;
         _ref = window.pluginsToLoad;
         _results = [];
@@ -3884,7 +3895,7 @@
           _results.push("-" + p);
         }
         return _results;
-      })()).join(' '),
+      })()).join(' ') + (window.fullScreenEditor ? ' fullscreen' : ''),
       object_resizing: ':not(img.grouper)',
       toolbar: ['newfile openfile savefile managefiles | print | undo redo | cut copy paste | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent blockquote | table', 'fontselect fontsizeselect styleselect | bold italic underline textcolor subscript superscript removeformat | link unlink | charmap image | spellchecker searchreplace | equationeditor | ' + groupTypeNames.join(' ') + ' connect' + moreToolbarItems()],
       fontsize_formats: '8pt 10pt 12pt 14pt 18pt 24pt 36pt',

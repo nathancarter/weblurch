@@ -11,7 +11,7 @@ following.
 tinymce.activeEditor.Dialogs.alert( {
     title : 'Alert!'
     message : 'Content of the alert box here.',
-    callback : function ( event ) { console.log( event );
+    callback : function ( event ) { console.log( event ); }
 } );
 ```
 

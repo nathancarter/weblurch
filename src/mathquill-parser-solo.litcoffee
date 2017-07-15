@@ -29,7 +29,9 @@ That's why this function appears in this file, because it prepares MathQuill
 nodes for the parser defined below.
 
     window.mathQuillToMeaning = exports.mathQuillToMeaning = ( node ) ->
-        if node instanceof Text then return node.textContent
+        if node.nodeType is 3 # text node, regardless of parent window
+            if node.textContent.trim() is '' then return [ ]
+            return node.textContent
         result = [ ]
         for child in node.childNodes
             if ( $ child ).hasClass( 'selectable' ) or \
@@ -76,10 +78,10 @@ Rules for numbers:
     G.addRule 'nonnegint', 'digit'
     G.addRule 'nonnegint', [ 'digit', 'nonnegint' ]
     G.addRule 'integer', 'nonnegint'
-    G.addRule 'integer', [ /-/, 'nonnegint' ]
+    G.addRule 'integer', [ /\u2212|-/, 'nonnegint' ]
     G.addRule 'float', [ 'integer', /\./, 'nonnegint' ]
     G.addRule 'float', [ 'integer', /\./ ]
-    G.addRule 'infinity', [ /∞/ ]
+    G.addRule 'infinity', [ /\u221e/ ]
 
 Rule for variables:
 
@@ -98,12 +100,14 @@ Rules for the operations of arithmetic:
     G.addRule 'factor', [ 'atomic', /sup/, 'atomic' ]
     G.addRule 'factor', [ 'factor', /[%]/ ]
     G.addRule 'factor', [ /\$/, 'factor' ]
-    G.addRule 'factor', [ 'factor', /sup/, /[∘]/ ]
+    G.addRule 'factor', [ 'factor', /sup/, /\u2218/ ] # degree symbol
     G.addRule 'prodquo', 'factor'
-    G.addRule 'prodquo', [ 'prodquo', /[÷×·]/, 'factor' ]
-    G.addRule 'prodquo', [ /-/, 'prodquo' ]
+    G.addRule 'prodquo', [ 'prodquo', /[\u00f7\u00d7\u00b7]/, 'factor' ]
+    # the above three are divide, times, and cdot
+    G.addRule 'prodquo', [ /\u2212|-/, 'prodquo' ]
     G.addRule 'sumdiff', 'prodquo'
-    G.addRule 'sumdiff', [ 'sumdiff', /[+±−-]/, 'prodquo' ]
+    G.addRule 'sumdiff', [ 'sumdiff', /[+\u00b1\u2212-]/, 'prodquo' ]
+    # the escapes above are for the \pm symbol and the alternate - sign
 
 Rules for logarithms:
 
@@ -121,7 +125,7 @@ Rules for factorial:
 Rules for the operations of set theory (still incomplete):
 
     G.addRule 'setdiff', 'variable'
-    G.addRule 'setdiff', [ 'setdiff', /[∼]/, 'variable' ]
+    G.addRule 'setdiff', [ 'setdiff', /[\u223c]/, 'variable' ]
 
 Rules for subscripts, which count as function application (so that "x sub i"
 still contains i as a free variable):
@@ -135,7 +139,7 @@ and thus as if they were atomics:
     G.addRule 'fraction',
         [ /fraction/, /\(/, 'atomic', 'atomic', /\)/ ]
     G.addRule 'atomic', 'fraction'
-    G.addRule 'root', [ /√/, 'atomic' ]
+    G.addRule 'root', [ /\u221a/, 'atomic' ]
     G.addRule 'root', [ /nthroot/, 'atomic', /√/, 'atomic' ]
     G.addRule 'atomic', 'root'
     G.addRule 'decoration', [ /overline/, 'atomic' ]
@@ -144,18 +148,19 @@ and thus as if they were atomics:
     G.addRule 'trigfunc', [ /sin|cos|tan|cot|sec|csc/ ]
     G.addRule 'trigapp', [ 'trigfunc', 'prodquo' ]
     G.addRule 'trigapp',
-        [ 'trigfunc', /sup/, /\(/, /-|−/, /1/, /\)/, 'prodquo' ]
+        [ 'trigfunc', /sup/, /\(/, /-|\u2212/, /1/, /\)/, 'prodquo' ]
     G.addRule 'atomic', 'trigapp'
 
 Rules for limits and summations:
 
     G.addRule 'limit', [ /lim/, /sub/,
-        /\(/, 'variable', /[→]/, 'expression', /\)/, 'prodquo' ]
+        /\(/, 'variable', /[\u2192]/, 'expression', /\)/, 'prodquo' ]
+        # 2192 is a right arrow
     G.addRule 'takesleftcoeff', 'limit'
-    G.addRule 'sum', [ /[Σ]/,
+    G.addRule 'sum', [ /[\u03a3]/, # summation sign
         /sub/, /\(/, 'variable', /[=]/, 'expression', /\)/,
         /sup/, 'atomic', 'prodquo' ]
-    G.addRule 'sum', [ /[Σ]/, /sup/, 'atomic',
+    G.addRule 'sum', [ /[\u03a3]/, /sup/, 'atomic', # summation sign
         /sub/, /\(/, 'variable', /[=]/, 'expression', /\)/,
         'prodquo' ]
     G.addRule 'takesleftcoeff', 'sum'
@@ -165,11 +170,11 @@ Rules for differential and integral calculus:
     G.addRule 'differential', [ /d/, 'atomic' ]
     G.addRule 'difffrac',
         [ /fraction/, /\(/, /d/, /\(/, /d/, 'variable', /\)/, /\)/ ]
-    G.addRule 'indefint', [ /[∫]/, 'prodquo' ]
+    G.addRule 'indefint', [ /[\u222b]/, 'prodquo' ] # integral sign
     G.addRule 'defint',
-        [ /[∫]/, /sub/, 'atomic', /sup/, 'atomic', 'prodquo' ]
+        [ /[\u222b]/, /sub/, 'atomic', /sup/, 'atomic', 'prodquo' ] # again
     G.addRule 'defint',
-        [ /[∫]/, /sup/, 'atomic', /sub/, 'atomic', 'prodquo' ]
+        [ /[\u222b]/, /sup/, 'atomic', /sub/, 'atomic', 'prodquo' ] # again
     G.addRule 'factor', 'differential'
     G.addRule 'factor', 'difffrac'
     G.addRule 'takesleftcoeff', 'indefint'
@@ -183,8 +188,10 @@ the possibility for ambiguity.  The same is true of summations and
 integrals.
 
     G.addRule 'sumdiff', 'takesleftcoeff'
-    G.addRule 'sumdiff', [ 'factor', /[÷×·]/, 'takesleftcoeff' ]
-    G.addRule 'sumdiff', [ 'prodquo', /[+±−-]/, 'takesleftcoeff' ]
+    G.addRule 'sumdiff',
+        [ 'factor', /[\u00f7\u00d7\u00b7]/, 'takesleftcoeff' ]
+    G.addRule 'sumdiff',
+        [ 'prodquo', /[+\u00b1\u2212-]/, 'takesleftcoeff' ]
 
 So far we've only defined rules for forming mathematical nouns, so we wrap
 the highest-level non-terminal defined so far, sumdiff, in the label "noun."
@@ -194,10 +201,12 @@ the highest-level non-terminal defined so far, sumdiff, in the label "noun."
 
 Rules for forming sentences from nouns, by placing relations between them:
 
-    G.addRule 'atomicsentence', [ 'noun', /[=≠≈≃≤≥<>]/, 'noun' ]
-    G.addRule 'atomicsentence', [ /[¬]/, 'atomicsentence' ]
+    G.addRule 'atomicsentence',
+        [ 'noun', /[=\u2260\u2248\u2243\u2264\u2265<>]/, 'noun' ]
+        # =, \ne, \approx, \cong, \le, \ge, <, >
+    G.addRule 'atomicsentence', [ /[\u00ac]/, 'atomicsentence' ]
     G.addRule 'sentence', 'atomicsentence'
-    G.addRule 'sentence', [ /[∴]/, 'sentence' ]
+    G.addRule 'sentence', [ /[\u2234]/, 'sentence' ] # therefore symbol
 
 Rules for groupers:
 
@@ -218,39 +227,39 @@ to use this grammar to express mathematical nouns or complete sentences:
 A function that recursively assembles OpenMath nodes from the hierarchy of
 arrays created by the parser:
 
+    symbols =
+        '+' : OM.symbol 'plus', 'arith1'
+        '-' : OM.symbol 'minus', 'arith1'
+        '\u2212' : OM.symbol 'minus', 'arith1'
+        '\u00b1' : OM.symbol 'plusminus', 'multiops'
+        '\u00d7' : OM.symbol 'times', 'arith1'
+        '\u00b7' : OM.symbol 'times', 'arith1'
+        '\u00f7' : OM.symbol 'divide', 'arith1'
+        '^' : OM.symbol 'power', 'arith1'
+        '\u221e' : OM.symbol 'infinity', 'nums1'
+        '\u221a' : OM.symbol 'root', 'arith1'
+        '\u223c' : OM.symbol 'set1', 'setdiff' # alternate form of ~
+        '=' : OM.symbol 'eq', 'relation1'
+        '<' : OM.symbol 'lt', 'relation1'
+        '>' : OM.symbol 'gt', 'relation1'
+        '\u2260' : OM.symbol 'neq', 'relation1'
+        '\u2248' : OM.symbol 'approx', 'relation1'
+        '\u2264' : OM.symbol 'le', 'relation1'
+        '\u2265' : OM.symbol 'ge', 'relation1'
+        '\u2243' : OM.symbol 'modulo_relation', 'integer2'
+        '\u00ac' : OM.symbol 'not', 'logic1'
+        '\u2218' : OM.symbol 'degrees', 'units'
+        '$' : OM.symbol 'dollars', 'units'
+        '%' : OM.symbol 'percent', 'units'
+        '\u222b' : OM.symbol 'int', 'calculus1'
+        'def\u222b' : OM.symbol 'defint', 'calculus1'
+        'ln' : OM.symbol 'ln', 'transc1'
+        'log' : OM.symbol 'log', 'transc1'
+        'unary-' : OM.symbol 'unary_minus', 'arith1'
+        'overarc' : OM.symbol 'overarc', 'decoration'
+        'overline' : OM.symbol 'overline', 'decoration'
+        'd' : OM.symbol 'd', 'diff'
     G.setOption 'expressionBuilder', ( expr ) ->
-        symbols =
-            '+' : OM.symbol 'plus', 'arith1'
-            '-' : OM.symbol 'minus', 'arith1' # yes these are two
-            '−' : OM.symbol 'minus', 'arith1' # different characters!
-            '±' : OM.symbol 'plusminus', 'multiops'
-            '×' : OM.symbol 'times', 'arith1'
-            '·' : OM.symbol 'times', 'arith1'
-            '÷' : OM.symbol 'divide', 'arith1'
-            '^' : OM.symbol 'power', 'arith1'
-            '∞' : OM.symbol 'infinity', 'nums1'
-            '√' : OM.symbol 'root', 'arith1'
-            '∼' : OM.symbol 'set1', 'setdiff'
-            '=' : OM.symbol 'eq', 'relation1'
-            '<' : OM.symbol 'lt', 'relation1'
-            '>' : OM.symbol 'gt', 'relation1'
-            '≠' : OM.symbol 'neq', 'relation1'
-            '≈' : OM.symbol 'approx', 'relation1'
-            '≤' : OM.symbol 'le', 'relation1'
-            '≥' : OM.symbol 'ge', 'relation1'
-            '≃' : OM.symbol 'modulo_relation', 'integer2'
-            '¬' : OM.symbol 'not', 'logic1'
-            '∘' : OM.symbol 'degrees', 'units'
-            '$' : OM.symbol 'dollars', 'units'
-            '%' : OM.symbol 'percent', 'units'
-            '∫' : OM.symbol 'int', 'calculus1'
-            'def∫' : OM.symbol 'defint', 'calculus1'
-            'ln' : OM.symbol 'ln', 'transc1'
-            'log' : OM.symbol 'log', 'transc1'
-            'unary-' : OM.symbol 'unary_minus', 'arith1'
-            'overarc' : OM.symbol 'overarc', 'decoration'
-            'overline' : OM.symbol 'overline', 'decoration'
-            'd' : OM.symbol 'd', 'diff'
         build = ( args... ) ->
             args = for a in args
                 if typeof a is 'number' then a = expr[a]
@@ -279,20 +288,20 @@ arrays created by the parser:
             when 'factor'
                 switch expr.length
                     when 4
-                        if expr[3] is '∘'
-                            build '×', 1, symbols['∘']
+                        if expr[3] is '\u2218' # degrees
+                            build '\u00d7', 1, symbols['\u2218'] # degrees
                         else
                             build '^', 1, 3
                     when 3
                         if expr[2] is '%'
-                            build '×', 1, symbols['%']
+                            build '\u00d7', 1, symbols['%']
                         else
-                            build '×', 2, symbols['$']
-            when 'fraction' then build '÷', 3, 4
+                            build '\u00d7', 2, symbols['$']
+            when 'fraction' then build '\u00f7', 3, 4
             when 'root'
                 switch expr.length
-                    when 3 then build '√', 2, OM.integer 2
-                    when 5 then build '√', 4, 2
+                    when 3 then build '\u221a', 2, OM.integer 2
+                    when 5 then build '\u221a', 4, 2
             when 'ln' then build 'ln', 2
             when 'log'
                 switch expr.length
@@ -306,7 +315,7 @@ arrays created by the parser:
                     when 4 then build 2, 1, 3
                     when 3 then build 1, 2
             when 'decoration' then build 1, 2
-            when 'sentence' then if expr[1] is '∴' then expr[2]
+            when 'sentence' then if expr[1] is '\u2234' then expr[2]
             when 'interval'
                 left = if expr[1] is '(' then 'o' else 'c'
                 right = if expr[5] is ')' then 'o' else 'c'
@@ -337,12 +346,12 @@ arrays created by the parser:
                     OM.binding( OM.symbol( 'lambda', 'fns1' ),
                         expr[varname], expr[10] )
             when 'differential' then build 'd', 2
-            when 'difffrac' then build '÷', 'd', build 'd', 6
-            when 'indefint' then build '∫', 2
+            when 'difffrac' then build '\u00f7', 'd', build 'd', 6
+            when 'indefint' then build '\u222b', 2
             when 'defint'
                 [ a, b ] = if expr[2] is 'sup' then [ 5, 3 ] \
                     else [ 3, 5 ]
-                build 'def∫', a, b, 6
+                build 'def\u222b', a, b, 6
         if not result? then result = expr[1]
         # if result instanceof OMNode then result = result.tree
         if G.expressionBuilderDebug

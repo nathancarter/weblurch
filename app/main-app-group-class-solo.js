@@ -356,7 +356,7 @@
     recur = (function(_this) {
       return function(nodeOrList) {
         var index, result, _i, _ref;
-        if (nodeOrList instanceof _this.plugin.editor.getWin().Text) {
+        if ((nodeOrList != null ? nodeOrList.nodeType : void 0) === 3) {
           return nodeOrList.textContent.replace(/\u2003/g, '\t');
         }
         if (nodeOrList.tagName === 'BR') {

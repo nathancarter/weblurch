@@ -574,6 +574,18 @@ question</a>.
 That question links to a tutorial on app manifests, if the answer turns out
 to be "yes" to that question.</p>
 <h2 id="ideas-from-various-sources">Ideas from various sources</h2>
+<h3 id="outsourcing-the-file-dialog">Outsourcing the file dialog</h3>
+<p>The <code>jsfs</code> file dialogs I made myself, and thus must also maintain.  They are
+not beautiful.  Instead, you could use the
+<a href="https://github.com/jcubic/jquery.filebrowser">jquery.filebrowser</a> plugin.
+Furthermore, it's already generalized to allow you to swap out back ends.  So
+you could not only update jsfs with this, but also easily make it support
+Google Drive or Dropbox with minimal changes.  Create plans to do so.</p>
+<h3 id="parsing-speed-improvements">Parsing speed improvements</h3>
+<p>If parsing with the current package becomes a performance bottleneck,
+note that there are several improvements available, some already implemented
+in JavaScript.  See
+<a href="https://en.wikipedia.org/wiki/Earley_parser#JavaScript">here</a>.</p>
 <h3 id="all-images-consistently-base64">All images consistently base64</h3>
 <p><a href="https://github.com/buddyexpress/bdesk_photo/issues/2#issuecomment-166245603">This GitHub comment</a>
 might be useful for ensuring that even images pasted into a document get

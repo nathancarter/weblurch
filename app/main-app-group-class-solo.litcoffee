@@ -149,11 +149,11 @@ will include at least the results of `attributeGroupsForKey`, but it will
 also include, at the appropriate place in the array (based on document
 ordering) any internal attributes with the same key.
 
-Internal attributes in the result array will be OpenMath objects, not Group
-instances; the caller will need to be able to handle both types of data.
-(For instance, the caller could simply call `canonicalForm` or
-`completeForm` on the Group instances to convert them all to OpenMath
-objects.)
+Internal attributes in the result array will be OpenMath objects, while
+external attributes will be Group instances; the caller will need to be able
+to handle both types of data.  For instance, the caller could simply call
+`canonicalForm` or `completeForm` on the Group instances to convert them all
+to OpenMath objects.
 
     window.Group::lookupAttributes = ( key ) ->
         list = @attributeGroupsForKey key
@@ -383,7 +383,7 @@ newlines.
     window.Group::contentAsCode = ->
         shouldBreak = ( node ) -> node.tagName in [ 'P', 'DIV' ]
         recur = ( nodeOrList ) =>
-            if nodeOrList instanceof @plugin.editor.getWin().Text
+            if nodeOrList?.nodeType is 3 # HTML Text node
                 return nodeOrList.textContent.replace /\u2003/g, '\t'
             if nodeOrList.tagName is 'BR' then return '\n'
             result = ''

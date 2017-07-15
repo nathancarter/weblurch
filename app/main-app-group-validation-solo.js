@@ -201,7 +201,7 @@
         message: 'This code-based rule has more than one language specified, which is ambiguous.'
       };
       if (verbose) {
-        validationData.verbose = "Too many languages specified for the rule.  Only one is permitted. You specified: " + (languages.join(',')) + ".";
+        validationData.verbose = "Too many languages specified for the rule.  Only one is permitted. You specified: " + (languages.join(',')) + ".  Try removing any language attributes that are incorrect or unnecessary, until you have only one remaining, the correct one.";
       }
       return callback(validationData);
     }
@@ -219,7 +219,7 @@
         message: "Code rules must be written in " + (ruleLanguages.join('/')) + "."
       };
       if (verbose) {
-        validationData.verbose = "<p>The current version of Lurch supports only code-based rules written in one of the following languages.  The rule you cited is written in " + languages[0] + ", and thus cannot be used.</p> <ul><li>" + (ruleLanguages.join('</li><li>')) + "</li></ul>";
+        validationData.verbose = "<p>The current version of Lurch supports only code-based rules written in one of the following languages.  The rule you cited is written in " + languages[0] + ", and thus cannot be used.</p> <ul><li>" + (ruleLanguages.join('</li><li>')) + "</li></ul> You will need to rewrite your rule in one of the supported languages, and then change its language attribute accordingly.";
       }
       return callback(validationData);
     }
