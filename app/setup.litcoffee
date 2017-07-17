@@ -88,9 +88,12 @@ unless the query string contains the code that invokes test-recording mode.
         maybeSetupTestRecorder()
 
 We need the list of group types names so that we can include them in the
-toolbar and menu initializations below.
+toolbar and menu initializations below.  If a group does not wish to be on
+the toolbar, it will set its `onToolbar` option to false, which we respect
+here.
 
-        groupTypeNames = ( type.name for type in groupTypes )
+        groupTypeNames = ( type.name for type in groupTypes \
+            when type.onToolbar ? yes )
 
 Install a TinyMCE instance in that text area, with specific plugins, toolbar
 buttons, and context menu items as given below.

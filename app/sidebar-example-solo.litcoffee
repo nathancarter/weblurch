@@ -402,6 +402,7 @@ Basic appearance attributes for the group:
         imageHTML : '<font color="#6666cc">[ ]</font>'
         openImageHTML : '<font color="#6666cc">[</font>'
         closeImageHTML : '<font color="#6666cc">]</font>'
+        onToolbar : no
 
 Install event handlers, most of which are defined in code further below.
 
