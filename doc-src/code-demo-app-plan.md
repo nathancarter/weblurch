@@ -27,10 +27,6 @@ generated from the document's meaning. The code for this demo app is
 
 ## Low priority
 
- * Create an option for disabling the automatic creation of the grouping
-   toolbar button, and use it for this app.
- * The toolbar in the left pane will have a button for showing and hiding
-   the right pane.
  * Insert much more text documenting the sidebar demo app.
  * If there is a selection when the user attempts to insert a group, and it
    contains text only with zero or more entire groups among the text, but

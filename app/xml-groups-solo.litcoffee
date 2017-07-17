@@ -177,11 +177,22 @@ Create a menu item for seeing the XML code representing the given group.
             text : "View XML representation"
             onclick : ->
                 xml = window.convertToXML group
-                .replace /&/g, '&amp;'
-                .replace /</g, '&lt;'
+                    .replace /&/g, '&amp;'
+                    .replace /</g, '&lt;'
                 tinymce.activeEditor.Dialogs.alert
                     title : 'XML Representation'
-                    message : "<pre>#{xml}</pre>"
+                    width : 600
+                    message : """
+                        <html>
+                            <head>
+                                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+                                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+                            </head>
+                            <body>
+                                <pre><code class='xml'>#{xml}</code></pre>
+                                <script>hljs.initHighlightingOnLoad();</script>
+                            </body>
+                        </html>"""
 
 Create a submenu for changing the tag of this group.
 
@@ -225,8 +236,25 @@ document in a new tab.
                         allowedChildrenProblems editor.Groups.topLevel,
                             allowed, 'document'
                 doExport = ->
-                    xml = encodeURIComponent window.convertToXML()
-                    window.open "data:application/xml,#{xml}", '_blank'
+                    xml = window.convertToXML()
+                        .replace /&/g, '&amp;'
+                        .replace /</g, '&lt;'
+                        .replace />/g, '&gt;'
+                    tinymce.activeEditor.Dialogs.alert
+                        title : 'XML Representation'
+                        width : 800
+                        height : 600
+                        message : """
+                            <html>
+                                <head>
+                                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+                                    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+                                </head>
+                                <body>
+                                    <pre><code class='xml'>#{xml}</code></pre>
+                                    <script>hljs.initHighlightingOnLoad();</script>
+                                </body>
+                            </html>"""
                 if problems.length is 0 then return doExport()
                 tinymce.activeEditor.Dialogs.confirm
                     title : 'Problems with your document'
@@ -464,6 +492,26 @@ none is given) into an XML representation using the data in `tagData`.
         else
             children = tinymce.activeEditor.Groups.topLevel
             tag = window.topLevelTagName()
+        shouldBreak = ( node ) -> node.tagName in [ 'P', 'DIV' ]
+        withBreaksAndTabs = ( nodeOrList ) =>
+            if nodeOrList.cloneContents?
+                tmp = document.createElement 'div'
+                tmp.appendChild nodeOrList.cloneContents()
+                console.log tmp
+                nodeOrList = tmp
+            if nodeOrList?.nodeType is 3 # HTML Text node
+                return nodeOrList.textContent.replace /\u2003/g, '  '
+            if nodeOrList.tagName is 'BR' then return '\n'
+            result = ''
+            for index in [0...nodeOrList.childNodes.length]
+                if index > 0 and \
+                   ( shouldBreak( nodeOrList.childNodes[index-1] ) or \
+                     shouldBreak( nodeOrList.childNodes[index] ) )
+                    result += '\n'
+                if index < nodeOrList.childNodes.length - 1 or \
+                   nodeOrList.childNodes[index].tagName isnt 'BR'
+                    result += withBreaksAndTabs nodeOrList.childNodes[index]
+            result
         wrapper = window.getTagData( tag, 'includeText' )
         wrap = ( text ) ->
             if not wrapper then return ''
@@ -478,19 +526,21 @@ none is given) into an XML representation using the data in `tagData`.
             range = children[0].rangeBefore()
             inner = ''
             if not /^\s*$/.test range.toString()
-                inner += wrap tinymce.DOM.encode rangeToHTML range
+                inner += wrap withBreaksAndTabs range
             for child in children
                 if inner[inner.length-1] isnt '\n' then inner += '\n'
                 inner += "#{window.convertToXML child}\n"
                 range = child.rangeAfter()
                 if not /^\s*$/.test range.toString()
-                    inner += wrap tinymce.DOM.encode rangeToHTML range
+                    inner += wrap withBreaksAndTabs range
             "<#{tag}>\n#{indent inner}\n</#{tag}>"
         else
             text = if window.getTagData tag, 'rawXML'
-                ( if group? then group.contentAsText() else \
-                    tinymce.activeEditor.getContent format : 'text' )
-                .replace /\xA0/g, '\n'
+                if group?
+                    withBreaksAndTabs group.contentAsFragment()
+                else
+                    tinymce.activeEditor.getContent( format : 'text' ) \
+                        .replace /\xA0/g, '\n'
             else
                 tinymce.DOM.encode \
                     if group? then group.contentAsHTML() else \
@@ -500,17 +550,3 @@ none is given) into an XML representation using the data in `tagData`.
         if alterXML = window.getTagData tag, 'alterXML'
             result = alterXML result, group
         result
-
-The previous function makes use of the following utility function.  It
-converts a range to HTML by first passing it through a document fragment.
-
-    rangeToHTML = ( range ) ->
-        if not fragment = range?.cloneContents() then return null
-        tmp = range.startContainer.ownerDocument.createElement 'div'
-        tmp.appendChild fragment
-        html = tmp.innerHTML
-        whiteSpaceBefore = if /^\s/.test html then ' ' else ''
-        whiteSpaceAfter = if /\s+$/.test html then ' ' else ''
-        result = tinymce.activeEditor.serializer.serialize tmp,
-            { get : yes, format : 'html', selection : yes, getInner : yes }
-        whiteSpaceBefore + result + whiteSpaceAfter

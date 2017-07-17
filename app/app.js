@@ -3870,11 +3870,13 @@
     window.editorContainer.appendChild(editor);
     maybeSetupTestRecorder();
     groupTypeNames = (function() {
-      var _i, _len, _results;
+      var _i, _len, _ref, _results;
       _results = [];
       for (_i = 0, _len = groupTypes.length; _i < _len; _i++) {
         type = groupTypes[_i];
-        _results.push(type.name);
+        if ((_ref = type.onToolbar) != null ? _ref : true) {
+          _results.push(type.name);
+        }
       }
       return _results;
     })();
