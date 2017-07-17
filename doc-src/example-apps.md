@@ -70,12 +70,27 @@ entire category of apps for editing hierarchically structured meanings.
  * [Launch the app](http://nathancarter.github.io/weblurch/app/openmath-example.html)
  * [View source code](https://github.com/nathancarter/weblurch/blob/master/app/openmath-example-solo.litcoffee)
 
+### Code Editor
+
+Developers learning the Lurch web platform should start with [the Intro
+apps](#intro-apps) above, then try "Demo" apps.
+
+This app lets users insert boilerplate code from a simple programming
+language (with only one kind of if and one kind of loop, and a few other
+statements) using groups and text within them as comments.  Thus the user
+"codes" in their own native language, and the app translates it into one of
+a few sample languages in a sidebar.  JavaScript code can then be executed
+if the user desires.
+
+ * [Launch the app](http://nathancarter.github.io/weblurch/app/sidebar-example.html)
+ * [View source code file 1](https://github.com/nathancarter/weblurch/blob/master/app/sidebar-example-solo.litcoffee) and [file 2](https://github.com/nathancarter/weblurch/blob/master/app/sidebar-example-defs-solo.litcoffee)
+
 ### Lean UI
 
 Developers learning the Lurch web platform should start with [the Intro
 apps](#intro-apps) above, then try "Demo" apps.
 
-This is the most complex demo; try one of the other two to start.
+This is the most complex demo; try one of the others to start.
 
 It lets users interact with the theorem prover
 [Lean](https://leanprover.github.io) in a word-processing environment with
