@@ -138,6 +138,19 @@ toolbar.
         for menu in codeFormHierarchy()
             menu.type = 'menubutton'
             window.groupToolbarButtons["category#{count++}"] = menu
+        window.groupToolbarButtons.toggleSidebar =
+            text : 'Toggle code view'
+            onclick : ->
+                sidebar = document.getElementById 'sidebar'
+                splitbar = window.splitter.find( '.vsplitter' ).get 0
+                if sidebar.style.display is 'none'
+                    sidebar.style.display = 'block'
+                    splitbar.style.display = 'block'
+                    splitter.position splitter.position()
+                else
+                    sidebar.style.display = 'none'
+                    splitbar.style.display = 'none'
+                    window.editorContainer.style.width = '100%'
 
 A code form may come with an optional validator.  This can be a function to
 be run to validate the group, or if none is provided then all instances pass
@@ -283,8 +296,6 @@ Otherwise the translator is a function that can be run on its own.
 Handler for when users edit the contents of a group.
 
     window.groupContentsChanged = ( group, firstTime ) ->
-        # if firstTime and not group.get 'tagName'
-        #     setTimeout ( -> group.set 'tagName', 'example' ), 0
         window.validate group
 
 Handler for when users remove a group.
@@ -520,7 +531,7 @@ Install a resize handler.
 Create the splitter, which will notice that the editor is adjacent to a
 second DIV defined in [sidebar-example.html], and resize them appropriately.
 
-        splitter = ( $ mainContainer ).split
+        window.splitter = ( $ mainContainer ).split
             orientation : 'vertical'
             limit : 100
             position : '75%'
