@@ -66,11 +66,15 @@ through cyclic data.
 
 The parameter is optional.  If provided, it is a function mapping form names
 to actions that should be taken when those forms are chosen.  If omitted,
-it goes through a complex process to determine how best to insert a form of
-that type based on the user's current selection.
+it creates actions that insert boilerplate code at the cursor point, or if
+there is a selection, then wrap the selection in the given group type.
 
     codeFormHierarchy = ( makeFormAction ) ->
         categoriesProcessed = [ ]
+
+First, we define a function that can convert any code form to a menu (or
+toolbar) item.
+
         formToMenuItem = ( name ) ->
             text : name
             onclick : if makeFormAction?
@@ -79,11 +83,30 @@ that type based on the user's current selection.
                 ->
                     editor = tinymce.activeEditor
                     boilerplate = codeFormTranslators[name]['example']['en']
+
+If the user has highlighed some document content, or if there is no
+boilerplate code available to insert, then just wrap the current selection
+(or the cursor) in an empty group of the given type.
+
                     if not boilerplate? or \
                        not editor?.selection?.getRng()?.collapsed
                         group = editor.Groups.groupCurrentSelection 'codexp'
                         group.set 'tagName', name
                         return
+
+The following code inserts boilerplate content for the chosen code form.  It
+expects HTML text, plus tags of the form `<X>...</X>` for any code form name
+`X` (even if it is multiple words, unlike in normal XML).  For example, if
+you have a form called "First name" you can create groups of that type with
+pseudo-HTML code of the form `<First name>Jane</First name>`.
+
+You can also use `<math>LaTeX code here</math>` to insert MathQuill
+instances containing the given LaTeX mathematics.
+
+The following loop simply finds tags of that form and replaces them with
+tags for open and close groupers, keeping a stack of types and IDs so that
+it generates correct code.
+
                     idStack = [ ]
                     idToTag = { }
                     html = ''
@@ -108,11 +131,21 @@ that type based on the user's current selection.
                     editor.insertContent html
                     for own id, tagName of idToTag
                         editor.Groups[id].set 'tagName', tagName
+
+This final section of code creates MathQuill instances.
+
                     ( $ editor.getDoc() ).find( '.math' )
                     .each ( i, block ) ->
                         block.setAttribute 'contenteditable', 'false'
                         ( $ block ).addClass 'rendered-latex'
                         ( $ block ).mathquill()
+
+That completes the function that converts any code form to a menu (or
+toolbar) item.
+
+Second, we define a function that converts any category to a menu (or
+toolbar) item.
+
         categoryToMenuItem = ( name ) ->
             if name in categoriesProcessed
                 text : name
@@ -122,15 +155,25 @@ that type based on the user's current selection.
                 text : name
                 menu : for item in formsAndCategories[name].contents
                     toMenuItem item
+
+The following function dispatches to either the function or category
+method given above, based on the type of its input.
+
         toMenuItem = ( name ) ->
             if formsAndCategories[name].type is 'form'
                 formToMenuItem name
             else
                 categoryToMenuItem name
+
+Finally, the actual work:  Apply that general function to every top-level
+category in the hierarchy of code forms, returning the resulting list of
+menu/toolbar items.
+
         toMenuItem category for category in topLevelCategories()
 
-And finally the function that adds that set of top-level menus to the app
-toolbar.
+Now we provide a function that adds that set of top-level menus to the app
+toolbar.  It calls the previous function to convert the form hierarchy into
+a menu/toolbar hierarchy, then adds it to the toolbar.
 
     addFormsAndCategoriesToToolbar = ->
         window.groupToolbarButtons = { }
@@ -138,6 +181,10 @@ toolbar.
         for menu in codeFormHierarchy()
             menu.type = 'menubutton'
             window.groupToolbarButtons["category#{count++}"] = menu
+
+It also adds one new toolbar item, for toggling the visibility of the code
+sidebar.
+
         window.groupToolbarButtons.toggleSidebar =
             text : 'Toggle code view'
             onclick : ->
@@ -308,14 +355,24 @@ Handler for when users remove a group.
             if group.plugin?.topLevel[0]
                 window.validate group.plugin.topLevel[0]
 
-Handler for both the context menu and the tag menu of a group.
+Handler for both the context menu and the tag menu of a group.  It creates
+three different items for such menus, each documented separately below.
 
     menuItems = ( group ) ->
         [
+
+First, a menu item for changing the type of the selected group to any other
+form type.
+
             text : 'Change this to...'
             menu : codeFormHierarchy ( formName ) ->
                 group.set 'tagName', formName
         ,
+
+Second, a menu item that asks the app to explain the meaning of the code
+form selected.  This pops up a modal dialog displaying in HTML form all the
+various explanations of the code form on which this was invoked.
+
             text : 'Explain this...'
             onclick : ->
                 explanation = ''
@@ -329,6 +386,11 @@ Handler for both the context menu and the tag menu of a group.
                     width : 600
                     height : 450
         ,
+
+Third, a menu item that functions just like the previous, but it explains
+all top-level code forms in the entire document, in order.  This provides an
+interpretation of all the meaning in the document.
+
             text : 'Explain all...'
             onclick : ->
                 explanation = ''
@@ -357,36 +419,18 @@ programming languages (such as Python).
                 if language not in languages then languages.push language
         languages
 
-Convert a group in the document into its HTML representation, including the
-inner and outer groupers.
+The following function wraps given HTML in tags that import two necessary
+CSS files for appropriate viewing of document content.  The first is the
+MathQuill CSS for viewing typeset equations.  The second is the CSS for the
+Groups plugin, for viewing open and close groupers.
 
-    groupToHTML = ( group ) ->
-        type = group.type()
-        result = ''
-        range = if group.children.length is 0
-            group.innerRange()
-        else
-            group.children[0].rangeBefore()
-        for child in group.children
-            result += rangeToHTML( range ) + groupToHTML child
-            range = child.rangeAfter()
-        result += rangeToHTML range
-        type.openImageHTML + result + type.closeImageHTML
-    rangeToHTML = ( range ) ->
-        if not fragment = range?.cloneContents() then return null
-        tmp = range.startContainer.ownerDocument.createElement 'div'
-        tmp.appendChild fragment
-        html = tmp.innerHTML
-        whiteSpaceBefore = if /^\s/.test html then ' ' else ''
-        whiteSpaceAfter = if /\s+$/.test html then ' ' else ''
-        result = tinymce.activeEditor.serializer.serialize tmp,
-            { get : yes, format : 'html', selection : yes, getInner : yes }
-        whiteSpaceBefore + result + whiteSpaceAfter
     addMathQuillCSS = ( html ) ->
         currentPath = window.location.href.split( '/' )[...-1].join '/'
-        css = "#{currentPath}/eqed/mathquill.css"
         "<html>
-            <head><link rel='stylesheet' href='#{css}'></head>
+            <head><link rel='stylesheet'
+                        href='#{currentPath}/eqed/mathquill.css'></head>
+            <head><link rel='stylesheet'
+                        href='#{currentPath}/groupsplugin.css'></head>
             <body>#{html}</body>
         </html>"
 
@@ -395,7 +439,7 @@ natural language.
 
     groupToExplanation = ( group, language ) ->
         "<h4>Structure:</h4>\n
-        <p style='margin-left: 2em;'>#{groupToHTML group}</p>\n
+        <p style='margin-left: 2em;'>#{group.groupAsHTML()}</p>\n
         <h4>Explanation:</h4>\n
         <p style='margin-left: 2em;'
             >#{runTranslation group, language, 'explanation'}</p>\n"
@@ -548,8 +592,12 @@ languages, it adds extra functionality.
 
     window.createSidebarContent = ->
         sidebar = document.getElementById 'sidebar'
-        sidebar.innerHTML = ''
-        sidebar.innerHTML += '''
+
+The heading of the sidebar contains a selector for the output (programming)
+language, and links to click to either run the code (if and only if it is
+JavaScript) or to copy the code to the clipboard.
+
+        sidebar.innerHTML = '''
             <div style="border-bottom: solid 1px black;
                         text-align: center;">
                 <p>Choose a language:
@@ -569,13 +617,13 @@ languages, it adds extra functionality.
         ( $ '#languagePicker' ).val lastLanguageChoice
         ( $ '#runJSLink' ).get( 0 ).style.display = \
             if lastLanguageChoice is 'javascript' then 'block' else 'none'
-        # sidebar.innerHTML += '''
-        #     <div style="border-bottom: solid 1px black;">
-        #         <p align=center><a href='#'
-        #               onclick='openInJSFiddle( lastSidebarContent );'
-        #               >Open in a new JSFiddle</a></p>
-        #     </div>
-        #     '''
+
+We now regenerate the content of the sidebar by looping through the
+top-level groups in the document, calling `createSidebarEntryHTML` on each,
+and wrapping it in a DIV with an appropriate ID and click handler.  The
+click handler makes it so that clicking one of the generated-code DIVs
+highlights the corresponding structure in the user's document.
+
         window.lastSidebarContent = ''
         for group in tinymce.activeEditor.Groups.topLevel
             entry = document.createElement 'div'
@@ -590,15 +638,30 @@ languages, it adds extra functionality.
             lastSidebarContent += entry.textContent + '\n'
         ( $ sidebar ).find( 'pre' ).each ( i, block ) ->
             hljs.highlightBlock block
+
+The default output language is JavaScript, but whenever the user changes it,
+we will regenerate all the contents of the sidebar based on their choice.
+
     lastLanguageChoice = 'javascript'
     window.updateSidebarContent = ->
         lastLanguageChoice = ( $ '#languagePicker' ).val()
         createSidebarContent()
+
+When the user clicks the "Run" button, it is safe to simply call the
+notorious JavaScript `eval` in this case, because this demo app never
+speaks to a server side, and thus any harm the user wanted to do via code
+injection attacks could simply be done from their browser's console anyway.
+
     window.runGeneratedJavaScript = ->
         try
             eval lastSidebarContent
         catch e
             alert "Error when running code:\n\n#{e.message}"
+
+When the user clicks the "Copy" button, we place the code into a modal
+dialog and select it, so that the user can easily press Ctrl+C and then
+close the window.
+
     window.copyGeneratedCode = ->
         tinymce.activeEditor.Dialogs.alert
             title : 'Copy the code, then close'
@@ -628,6 +691,12 @@ group, and return it as HTML to be placed inside a DIV.
         else
             comment.replace '__A__', code
         "<pre class='javascript'>#{result}</pre>"
+
+The following utility function takes a list of HTML nodes (usually called on
+the content nodes of some group) and converts them to plain text, with
+special handling of MathQuill instances, converting them to their LaTeX form
+(surrounded by dollar signs).
+
     niceText = ( nodes... ) ->
         result = ''
         for node in nodes
@@ -638,6 +707,11 @@ group, and return it as HTML to be placed inside a DIV.
             else
                 result += niceText node.childNodes...
         result
+
+Every 0.1 seconds, highlight the DIV in the sidebar that corresponds to the
+current cursor location, if there is such a DIV.  If there isn't, highlight
+none of them.
+
     setInterval ->
         range = tinymce.activeEditor.selection.getRng()
         ( $ sidebar ).find( 'div' ).css 'background-color', '#fff'
@@ -647,7 +721,12 @@ group, and return it as HTML to be placed inside a DIV.
                 '#eee'
     , 100
 
-The following function can open any given JavaScript code in a new JSFiddle.
+The following function used to be able to open any given JavaScript code in
+a new JSFiddle.  It is modeled after code by the creator of JSFiddle,
+[located here](http://jsfiddle.net/zalun/sthmj/?utm_source=website&utm_medium=embed&utm_campaign=sthmj),
+but that code seems to no longer function (even on that fiddle), and so this
+code is not currently used in this app.  I leave it here for reference, in
+case that fiddle gets fixed, then this can be updated to use it.
 
     window.openInJSFiddle = ( jsCode ) ->
         nbsp = String.fromCharCode 160
@@ -677,7 +756,9 @@ The following function can open any given JavaScript code in a new JSFiddle.
         form.submit()
         document.body.removeChild form
 
-That function uses the following utilities.
+The previous function uses the following utilities.
+
+Create an HTML "select" element with the given value-to-text mapping.
 
     makeSelect = ( name, options ) ->
         result = document.createElement 'select'
@@ -688,11 +769,17 @@ That function uses the following utilities.
             option.innerHTML = representation
             result.appendChild option
         result
+
+Create an HTML text area with the given content.
+
     makeTextarea = ( name, content ) ->
         result = document.createElement 'textarea'
         result.setAttribute 'name', name
         result.innerHTML = content or ''
         result
+
+Create an HTML text input with the given content.
+
     makeText = ( name, value ) ->
         result = document.createElement 'input'
         result.setAttribute 'type', 'text'
