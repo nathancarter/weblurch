@@ -27,7 +27,6 @@ generated from the document's meaning. The code for this demo app is
 
 ## Low priority
 
- * Insert much more text documenting the sidebar demo app.
  * If there is a selection when the user attempts to insert a group, and it
    contains text only with zero or more entire groups among the text, but
    no partial groups, and the selection is not exactly equal to the content
