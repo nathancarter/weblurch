@@ -1,4 +1,4 @@
-python
+
 # Definitions for the Sidebar Example App
 
 The main file for the app is located [here](sidebar-example-solo.litcoffee).
@@ -464,6 +464,5 @@ related.
         catch e
             return "Error interpreting math expression: #{e?.message}"
         if parsed instanceof window.OMNode then return parsed
-        console.log nodes.get( 0 ), toParse, parsed
         "Could not parse this mathematical text:
             #{toParse?.join? ' '} -- Error: #{parsed}"
