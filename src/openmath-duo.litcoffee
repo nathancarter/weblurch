@@ -1231,7 +1231,8 @@ real numbers.
             value : value
             message : message
         result = switch @type
-            when 'i', 'f', 'st', 'ba' then value : @value
+            when 'i', 'f' then value : new Number @value
+            when 'st', 'ba' then value : @value
             when 'v' then switch @name
                 when '\u03c0' # pi
                     value : Math.PI

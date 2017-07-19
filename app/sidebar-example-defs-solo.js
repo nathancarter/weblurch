@@ -702,7 +702,6 @@
     if (parsed instanceof window.OMNode) {
       return parsed;
     }
-    console.log(nodes.get(0), toParse, parsed);
     return "Could not parse this mathematical text: " + (toParse != null ? typeof toParse.join === "function" ? toParse.join(' ') : void 0 : void 0) + " -- Error: " + parsed;
   };
 

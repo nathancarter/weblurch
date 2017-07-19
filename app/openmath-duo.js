@@ -1418,6 +1418,9 @@
       switch (this.type) {
         case 'i':
         case 'f':
+          return {
+            value: new Number(this.value)
+          };
         case 'st':
         case 'ba':
           return {
