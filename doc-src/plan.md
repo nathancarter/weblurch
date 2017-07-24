@@ -13,6 +13,27 @@ of the linear progression of the project.  They can be addressed whenever it
 becomes convenient or useful; this document lists things in a more-or-less
 required order of completion.
 
+## Tidying up this repository
+
+ * Get the MediaWiki changes that are on our development server stored in
+   this repository, for completeness.
+ * Move away from gh-pages, and start using a subfolder of the repository as
+   the built app folder instead.  This should simultaneously get rid of the
+   problem of having some files duplicated in the `src/` and `app/` folders,
+   because that will actually become intentional.
+ * Switch to an actual build process, such as Grunt or Webpack, rather than
+   using my own ad-hoc thing in a cakefile.
+ * Do not use jsfs as a submodule; rather, use GitHub as a simple CDN from
+   which you import jsfs without recopying it into this repository.
+ * How many of our other tools can be factored out into separate
+   repositories also?  These are good candidates:
+    * OpenMath module (no dependencies)
+    * Parsing module (no dependencies)
+    * Matching module (one dependency, the OpenMath module)
+    * OpenMath demo app (importing the LWP rather than being imported by it)
+    * Lean UI demo app (same)
+    * Code/Sidebar demo app (same)
+
 ## Enabling and disabling features
 
 Implement the following system satisfying the following requirements, for
