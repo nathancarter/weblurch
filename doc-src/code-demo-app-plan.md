@@ -11,6 +11,11 @@ which will be the standard webLurch UI, and the right of which will be code
 generated from the document's meaning. The code for this demo app is
 [here](../app/sidebar-example-solo.litcoffee).
 
+## Suggestions
+
+This is not yet planned, but the "suggestions" feature that exists in the
+main app would make a nice showcase feature in this app as well.
+
 ## Refactoring forms
 
  * On the context menu for groups will be an item "Rephrase..."
