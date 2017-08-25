@@ -25,10 +25,10 @@ Reasons for the move:
 The organization account has been created, Nathan is an owner, and Ken has
 been invited as a member.  Tasks to do to complete the space include these:
 
- - [] Create a project with name `lurchmath.github.io` owned by the
+ - [x] Create a project with name `lurchmath.github.io` owned by the
    organization, following the directions
    [on this page](https://pages.github.com/).
- - [] Ensure both collaborators have ownership of/access to this project.
+ - [x] Ensure both collaborators have ownership of/access to this project.
  - [] For consistency with the existing repo, let's use
    [MkDocs](http://www.mkdocs.org) to create that site.  Follow the
    directions [here](http://www.mkdocs.org/#getting-started) to get started.
