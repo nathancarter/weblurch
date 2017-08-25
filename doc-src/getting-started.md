@@ -13,7 +13,7 @@ Here's how.
 
 ## Setting up a local repository
 
-Install [node.js](http://nodejs.org), which governs our building and tesitng
+Install [node.js](http://nodejs.org), which governs our building and testing
 process.  (The apps run in a browser.)
 
 Then execute the commands below from a \*nix prompt.

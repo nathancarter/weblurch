@@ -33,6 +33,15 @@ required order of completion.
     * OpenMath demo app (importing the LWP rather than being imported by it)
     * Lean UI demo app (same)
     * Code/Sidebar demo app (same)
+ * Update the unit test scripts so that all tests are passing, including on
+   the Travis CI end.
+
+## JSON editor demo app
+
+This is low priority, but another demo app you could create would be a JSON
+editor.  It would be a lot like the OMCD editor, except produce JSON instead
+of XML.  It would also have multiple types of atomic data, and use
+connections for key-value pairs in mappings.
 
 ## Enabling and disabling features
 
