@@ -25,7 +25,6 @@ Reasons for the move:
 The organization account has been created, Nathan is an owner, and Ken has
 been invited as a member.  Tasks to do to complete the space include these:
 
- * Get Ken accepted as a member and promote him to co-owner.
  * Create a project with name `lurchmath.github.io` owned by the
    organization, following the directions
    [on this page](https://pages.github.com/).
