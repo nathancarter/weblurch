@@ -53,26 +53,26 @@ first subproject to factor out into its own repository.  As you do the
 following steps, record somewhere the proper way to do each one, so that you
 can repeat this process for other subprojects more easily hereafter.
 
- * [ ] Create a new project in the Lurch Math organization for the OpenMath
+ * [x] Create a new project in the Lurch Math organization for the OpenMath
    JavaScript library and clone it to your local machine.
- * [ ] Copy the [source](../src/openmath-duo.litcoffee) and
+ * [x] Copy the [source](../src/openmath-duo.litcoffee) and
    [test](../test/openmath-spec.litcoffee) files to the new repository, in
    its root folder.  Rename them to `openmath.litcoffee` and
    `spec.litcoffee`, respectively.  Commit.
- * [ ] Create a `package.json` file that imports the Jasmine test tool.
+ * [x] Create a `package.json` file that imports the Jasmine test tool.
    Ensure that you can run Jasmine on the spec file and that the tests
    pass; modify any paths necessary to make this happen.  Commit.
- * [ ] Install Gulp and create a
+ * [x] Install Gulp and create a
    [Gulpfile](https://github.com/gulpjs/gulp/blob/master/docs/getting-started.md) that does nothing.  Commit.
- * [ ] Extend the Gulpfile to compile a JavaScript version of the OpenMath
+ * [x] Extend the Gulpfile to compile a JavaScript version of the OpenMath
    module.  Add the `.js` file to the repo and commit.
- * [ ] Extend the Gulpfile to also compile a minified version, with source
+ * [x] Extend the Gulpfile to also compile a minified version, with source
    maps.  Add these files to the repository and commit again.
- * [ ] Extend the Gulpfile with a `tests` task that runs the Jasmine
+ * [x] Extend the Gulpfile with a `tests` task that runs the Jasmine
    command on your behalf.  Commit.
- * [ ] Register the project with TravisCI so that the tests are run on every
+ * [x] Register the project with TravisCI so that the tests are run on every
    push to the repository.
- * [ ] Create a `README.md` in the repository root that explains the
+ * [x] Create a `README.md` in the repository root that explains the
    project and includes the TravisCI test status image.  It should refer
    the user to the GitHub links to the raw compiled and minified scripts,
    so that GitHub can be used as a makeshift CDN.
