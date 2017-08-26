@@ -32,10 +32,9 @@ been invited as a member.  Tasks to do to complete the space include these:
  - [ ] For consistency with the existing repo, let's use
    [MkDocs](http://www.mkdocs.org) to create that site.  Follow the
    directions [here](http://www.mkdocs.org/#getting-started) to get started.
-   You probably want to add a redirection page from the root folder to the
-   `site/` folder, or configure GitHub to go there without a redirection
-   page needed (better option if possible).  For now, make a placeholder
-   website we can extend later.
+   Add a redirection page from the root folder to the `site/` folder (just
+   one HTML META tag in `index.html`).  For now, make a placeholder website
+   we can extend later.
  - [ ] Create a `README.md` in that project that simply points the reader to
    the website.
 
@@ -138,8 +137,9 @@ mechanism; solve this problem.
    `docs/` subfolder that compiles to a `site/` subfolder.  For now, it
    should be 99% blank, just a placeholder for where future documentation
    will go.  Commit.
- * Ensure that GitHub is set up to redirect visitors to the project web
-   space to that placeholder documentation subfolder.
+ * Ensure that GitHub is set up to use the root of the project as the web
+   site, and create an `index.html` that is a one-line redirecting META tag
+   into the `site/` folder, as we did earlier.
  * Extend the Gulpfile with a `docs` task that runs the `mkdocs` command on
    your behalf.  Commit.
 
