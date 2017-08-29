@@ -76,11 +76,11 @@ can repeat this process for other subprojects more easily hereafter.
    project and includes the TravisCI test status image.  It should refer
    the user to the GitHub links to the raw compiled and minified scripts,
    so that GitHub can be used as a makeshift CDN.
- * [ ] Add documentation for this subproject using
+ * [x] Add documentation for this subproject using
    [MkDocs](http://www.mkdocs.org), as you did for the new Lurch Math
    organization.  Follow the directions
    [here](http://www.mkdocs.org/#getting-started) to get started.  Commit.
- * [ ] Extend the Gulpfile with a `docs` task that runs the `mkdocs`
+ * [x] Extend the Gulpfile with a `docs` task that runs the `mkdocs`
    command on your behalf.  Commit.
  * [ ] Remove the OpenMath code from the existing webLurch repository,
    instead importing it using the makeshift CDN mentioned above.  Change all
