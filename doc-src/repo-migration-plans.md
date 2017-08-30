@@ -141,7 +141,7 @@ mechanism; solve this problem.
  * [ ] Ensure that GitHub is set up to use the root of the project as the
    web site, and create an `index.html` that is a one-line redirecting META
    tag into the `site/` folder, as we did earlier.
- * [ ] Extend the Gulpfile with a `docs` task that runs the `mkdocs`
+ * [ ] Create a Gulpfile with a `docs` task that runs the `mkdocs`
    command on your behalf.  Commit.
 
 ## Moving large chunks of code that will get used later
