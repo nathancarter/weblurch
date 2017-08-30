@@ -8,7 +8,10 @@ of this source code repository for a copy.
 The following lines ensure that this file works in Node.js, for testing.
 
     if not exports? then exports = module?.exports ? window
-    if require? then { OM, OMNode } = require './openmath-duo'
+    # if require? then { OM, OMNode } = require './openmath-duo'
+    # The above change is temporary, during repository reorganization.
+    # It breaks the test suite for now, but will be fixed as part of the
+    # Repository reorganisation.
 
 ## Metavariables
 

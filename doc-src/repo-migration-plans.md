@@ -82,7 +82,7 @@ can repeat this process for other subprojects more easily hereafter.
    [here](http://www.mkdocs.org/#getting-started) to get started.  Commit.
  * [x] Extend the Gulpfile with a `docs` task that runs the `mkdocs`
    command on your behalf.  Commit.
- * [ ] Remove the OpenMath code from the existing webLurch repository,
+ * [x] Remove the OpenMath code from the existing webLurch repository,
    instead importing it using the makeshift CDN mentioned above.  Change all
    references to it in the documentation to mention the newly-factored-out
    repository in the new organization.  Verify that all uses of that module
