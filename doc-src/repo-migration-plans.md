@@ -141,8 +141,6 @@ mechanism; solve this problem.
  * [ ] Ensure that GitHub is set up to use the root of the project as the
    web site, and create an `index.html` that is a one-line redirecting META
    tag into the `site/` folder, as we did earlier.
- * [ ] Switch GitHub from using the `gh-pages` branch to using the main
-   folder of the master branch instead.
  * [ ] Extend the Gulpfile with a `docs` task that runs the `mkdocs`
    command on your behalf.  Commit.
 
