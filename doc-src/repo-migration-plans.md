@@ -95,7 +95,7 @@ it well so that you can do it more smoothly the second time (and the third,
 and so on), do that process to factor out each of the following subprojects
 from the main, existing webLurch repository.
 
- * [ ] The Parsing module
+ * [x] The Parsing module
  * [ ] The Matching module
 
 ## The `jsfs` subproject
@@ -302,3 +302,9 @@ Repeat the above process for the remaining demo applications:
    of the unit tests that require PhantomJS (probably `domutils`).  Commit.
  * [ ] Extend the Gulp tests task iteratively with new unit tests that
    require PhantomJS, fixing errors as you proceed, committing after each.
+
+## Further work
+
+Is it possible to make the Lurch Web Platform completely importable through
+a CDN, with one JavaScript file, one CSS file, and some configuration code?
+That would be the ideal goal for the end user.

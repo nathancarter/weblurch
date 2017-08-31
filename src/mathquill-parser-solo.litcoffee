@@ -1,8 +1,9 @@
 
 # MathQuill Parser
 
-This file depends upon [the parsing module](parsing-duo.litcoffee), and uses
-it to define a parser for the types of expressions that come out of the
+This file depends upon [the parsing
+module](https://www.npmjs.com/package/earley-parser), and uses it to define
+a parser for the types of expressions that come out of the
 [MathQuill](www.mathquill.com) plugin ([stored here](../app/eqed)).  More
 details are given below.
 
@@ -10,8 +11,8 @@ The following lines ensure that this file works in Node.js, for testing.
 
     if not exports? then exports = module?.exports ? window
     if require?
-        { OM, OMNode } = require './openmath-duo'
-        { Grammar } = require './parsing-duo'
+        { OM, OMNode } = require 'openmath-js'
+        { Grammar } = require 'earley-parser'
     else
         Grammar = window.Grammar
         OM = window.OM
