@@ -96,7 +96,7 @@ and so on), do that process to factor out each of the following subprojects
 from the main, existing webLurch repository.
 
  * [x] The Parsing module
- * [ ] The Matching module
+ * [x] The Matching module
 
 ## The `jsfs` subproject
 
