@@ -126,19 +126,19 @@ mechanism; solve this problem.
 
 ## Starting a new main repository
 
- * [ ] Create a new project in the Lurch Math organization for receiving the
+ * [x] Create a new project in the Lurch Math organization for receiving the
    main repository, as we slowly transfer pieces over, cleaning cruft as we
    go.  Call it `Lurch`.  Ensure both collaborators have permissions.
- * [ ] Transfer the `README.md` from the old repository (with any needed
+ * [x] Transfer the `README.md` from the old repository (with any needed
    images and updated links) to the new one.  Commit.
- * [ ] Start documentation for this project using
+ * [x] Start documentation for this project using
    [MkDocs](http://www.mkdocs.org), as you did in previous projects.
    Follow the directions
    [here](http://www.mkdocs.org/#getting-started) to get started.  Use a
    `docs/` subfolder that compiles to a `site/` subfolder.  For now, it
    should be 99% blank, just a placeholder for where future documentation
    will go.  Commit.
- * [ ] Ensure that GitHub is set up to use the root of the project as the
+ * [x] Ensure that GitHub is set up to use the root of the project as the
    web site, and create an `index.html` that is a one-line redirecting META
    tag into the `site/` folder, as we did earlier.
  * [ ] Create a Gulpfile with a `docs` task that runs the `mkdocs`
