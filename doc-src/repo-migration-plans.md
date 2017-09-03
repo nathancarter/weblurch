@@ -100,13 +100,18 @@ from the main, existing webLurch repository.
 
 ## The `jsfs` subproject
 
-Investigate how [the `jsfs` project](https://github.com/nathancarter/jsfs)
-could be used in the main webLurch repository through links to the raw
-script files on GitHub (makeshift CDN) rather than by importing it as a
-submodule.  In other words, `jsfs` is already factored out as a separate
-project, but is imported using the clunky `git submodules` mechanism, rather
-than the much cleaner (and more loosely coupled) `<script src='...'>`
-mechanism; solve this problem.
+Investigate the removal of `jsfs` entirely, replacing it with
+[Kloudless](https://github.com/Kloudless/file-explorer/).  This will require
+learning how to use Kloudless, but it comes with many advantages.
+
+ * Immediate support for a wide array of cloud storage solutions
+ * Ability to get rid of a large submodule that I must maintain
+ * Significantly improved UI
+
+Note that Kloudless [does claim to support the File &gt; Save functionality
+I need](https://github.com/Kloudless/file-explorer/issues/61) (not just
+File &gt; Save as...).  Follow that link for details on how it's supported
+in their API.
 
 ## Obviating some files in the repository
 
@@ -118,11 +123,19 @@ mechanism; solve this problem.
    code.  This should get rid of both the `filedialog.html` file and the
    `tinymcedialog-solo.litcoffee` file, which is very short and is imported
    by only `filedialog.html`.
- * [ ] Because our only targeted browser is Chrome, which now supports
+ * [x] Because our only targeted browser is Chrome, which now supports
    `navigator.hardwardConcurrency` natively, you can drop the
    `core-estimator` files in the repository, and update any code to use the
    native version instead (if any updates are even needed).  Be sure to
    stop importing the removed polyfill.
+ * [ ] Get rid of the `jquery-splitter/` folder and submodule.  Instead,
+   use the following CDN URLs:
+   https://cdn.jsdelivr.net/gh/jcubic/jquery.splitter@0.24/js/jquery.splitter.min.js
+   and
+   https://cdn.jsdelivr.net/gh/jcubic/jquery.splitter@0.24/css/jquery.splitter.min.css
+ * [ ] Get rid of the LZString JS library from our repository.  Instead,
+   use the following CDN URL:
+   https://cdn.jsdelivr.net/gh/pieroxy/lz-string@1.3.3/libs/release/lz-string-1.3.3-min.js
 
 ## Starting a new main repository
 
@@ -193,9 +206,8 @@ mechanism; solve this problem.
    mention that these files are not yet used for anything, and are just
    part of an ongoing migration process.
     * `eqed/` folder
-    * `input-method.js`
-    * `jquery-splitter/` folder
-    * `lz-string-1.3.3.js`
+    * `input-method.js` (Which is online here, if you want to import it from
+      GitHub raw, like a fake CDN: https://leanprover.github.io/tutorial/js/input-method.js)
     * `icons/` folder
     * `images/` folder
  * [ ] Create a `unit-tests` subfolder in the new repository and move into
