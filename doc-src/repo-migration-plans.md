@@ -98,31 +98,54 @@ from the main, existing webLurch repository.
  * [x] The Parsing module
  * [x] The Matching module
 
-## The `jsfs` subproject
+## Supporting Cloud Storage
 
-Investigate the removal of `jsfs` entirely, replacing it with
-[Kloudless](https://github.com/Kloudless/file-explorer/).  This will require
-learning how to use Kloudless, but it comes with many advantages.
+Now that the [cloud storage
+module](https://github.com/lurchmath/cloud-storage) has been built and
+tested, it should replace both the LocalStorage and baby Dropbox support in
+webLurch at present.  Here's a to-do list for accomplishing that.
 
- * Immediate support for a wide array of cloud storage solutions
- * Ability to get rid of a large submodule that I must maintain
- * Significantly improved UI
-
-Note that Kloudless [does claim to support the File &gt; Save functionality
-I need](https://github.com/Kloudless/file-explorer/issues/61) (not just
-File &gt; Save as...).  Follow that link for details on how it's supported
-in their API.
+ * [ ] Update the cloud storage module to show how to import its files with
+   [jsDelivr](http://www.jsdeliver.net) in the README.
+ * [ ] Have all the apps that use the Load/Save Plugin import the cloud
+   storage module from that CDN, before importing [app.js](../app/app.js),
+   and ensure that nothing gets broken in the process.  The module won't be
+   used yet, just imported for later.
+ * [ ] Make a copy of [the Load/Save
+   Plugin](../app/loadsaveplugin.litcoffee) and call it the Cloud Storage
+   Plugin instead, renaming it in both filename and script code.
+ * [ ] Ensure that the Cloud Storage Plugin is part of the build process and
+   is included in the app and installed in the editor object.
+ * [ ] Go through the code of the new Cloud Storage Plugin and make all the
+   changes necessary to get it to use the cloud storage module.
+ * [ ] Test and debug all of those changes by making calls to the Cloud
+   Storage Plugin from the browser console.
+ * [ ] Update the application so that the Load/Save Plugin is referenced
+   nowhere, but instead all calls are now made to the new Cloud Storage
+   Plugin.  Test to ensure that the applications function correctly.
+ * [ ] Remove the Load/Save Plugin from the repository, the build process,
+   and thus the apps.  Test to ensure that the applications still function.
+ * [ ] Remove the `jsfs` submodule, all its code, and all references to it
+   from the apps.  Ensure that the applications still function.
+ * [ ] Remove [the old file dialog
+   source](../app/filedialog/filedialog.html).  Ensure that the
+   applications still function.
+ * [ ] Get rid of the LZString JS library from our repository.  Ensure that
+   the applications still function.
+ * [ ] Remove all references to the Dropbox Plugin from the code of the
+   application (and any demo applications that use it).  Test to ensure that
+   the applications function correctly.
+ * [ ] Remove the Dropbox Plugin from the repository, the build process, and
+   thus the apps.  Test to ensure that the applications still function.
+ * [ ] Add a new submenu to the File menu that lets the user choose among
+   storage options.  At first, just give two options, Dropbox and
+   LocalStorage, just like the two options in the cloud storage module's
+   test page.  The items on that submenu should be checkable items, so that
+   it's obvious which storage system is already chosen.  Use LocalStorage by
+   default, but remember the user's choice across runs of the application.
 
 ## Obviating some files in the repository
 
- * [ ] In the [Load/Save Plugin](../app/loadsaveplugin.litcoffee), assume
-   the existence of the
-   [Canvas Utilities Module](../src/canvasutils.litcoffee), and thus delete
-   the tiny, simple file `../app/filedialog/filedialog.html`, instead
-   creating an internal object URL with `objectURLForBlob` directly in the
-   code.  This should get rid of both the `filedialog.html` file and the
-   `tinymcedialog-solo.litcoffee` file, which is very short and is imported
-   by only `filedialog.html`.
  * [x] Because our only targeted browser is Chrome, which now supports
    `navigator.hardwardConcurrency` natively, you can drop the
    `core-estimator` files in the repository, and update any code to use the
@@ -133,9 +156,6 @@ in their API.
    https://cdn.jsdelivr.net/gh/jcubic/jquery.splitter@0.24/js/jquery.splitter.min.js
    and
    https://cdn.jsdelivr.net/gh/jcubic/jquery.splitter@0.24/css/jquery.splitter.min.css
- * [ ] Get rid of the LZString JS library from our repository.  Instead,
-   use the following CDN URL:
-   https://cdn.jsdelivr.net/gh/pieroxy/lz-string@1.3.3/libs/release/lz-string-1.3.3-min.js
 
 ## Starting a new main repository
 
