@@ -118,7 +118,7 @@ that begins with a hyphen is a local plugin written as part of this project.
                 'advlist table charmap colorpicker image link
                 paste print searchreplace textcolor
                 -loadsave -overlay -groups -equationeditor -dependencies
-                -dialogs -downloadupload ' \
+                -dialogs -downloadupload -cloudstorage ' \
                 + ( "-#{p}" for p in window.pluginsToLoad ).join( ' ' ) \
                 + ( if window.fullScreenEditor then ' fullscreen' else '' )
 

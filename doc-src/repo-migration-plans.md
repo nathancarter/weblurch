@@ -111,10 +111,10 @@ webLurch at present.  Here's a to-do list for accomplishing that.
    before importing [app.js](../app/app.js), and ensure that nothing gets
    broken in the process.  The module won't be used yet, just imported for
    later.
- * [ ] Make a copy of [the Load/Save
+ * [x] Make a copy of [the Load/Save
    Plugin](../app/loadsaveplugin.litcoffee) and call it the Cloud Storage
    Plugin instead, renaming it in both filename and script code.
- * [ ] Ensure that the Cloud Storage Plugin is part of the build process and
+ * [x] Ensure that the Cloud Storage Plugin is part of the build process and
    is included in the app and installed in the editor object.
  * [ ] Go through the code of the new Cloud Storage Plugin and make all the
    changes necessary to get it to use the cloud storage module.  Preserve
