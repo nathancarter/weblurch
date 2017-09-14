@@ -1,9 +1,7 @@
 
 # Tests of the OpenMath module
 
-Here we import the module we're about to test, plus a utilities module for
-comparing JSON structures.  (That module is tested [in a separate
-file](utils-spec.litcoffee).)
+Here we import the module we're about to test.
 
     { OM, OMNode } = require '../src/openmath-duo'
 
