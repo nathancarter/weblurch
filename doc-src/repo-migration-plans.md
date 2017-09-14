@@ -107,7 +107,7 @@ webLurch at present.  Here's a to-do list for accomplishing that.
 
  * [x] Update the cloud storage module to show how to import its files with
    [jsDelivr](http://www.jsdeliver.net) in the README.
- * [ ] Have all the apps import the cloud storage module from that CDN,
+ * [x] Have all the apps import the cloud storage module from that CDN,
    before importing [app.js](../app/app.js), and ensure that nothing gets
    broken in the process.  The module won't be used yet, just imported for
    later.
