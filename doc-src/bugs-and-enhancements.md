@@ -191,9 +191,6 @@ topics.
    the few missing tests.
  * If you ever need to export PDFs of Lurch documents, consider
    [jsPDF](https://github.com/MrRio/jsPDF).
- * Eventually, pull the LoadSave plugin out into its own repository on
-   GitHub, so that anyone can easily get and use that TinyMCE plugin, and
-   improve on its code.
  * In the Lean example app:  How might we work Lean's `notation`
    definitions in with MathQuill widgets in the document?
 

@@ -105,26 +105,36 @@ module](https://github.com/lurchmath/cloud-storage) has been built and
 tested, it should replace both the LocalStorage and baby Dropbox support in
 webLurch at present.  Here's a to-do list for accomplishing that.
 
- * [ ] Update the cloud storage module to show how to import its files with
+ * [x] Update the cloud storage module to show how to import its files with
    [jsDelivr](http://www.jsdeliver.net) in the README.
- * [ ] Have all the apps that use the Load/Save Plugin import the cloud
-   storage module from that CDN, before importing [app.js](../app/app.js),
-   and ensure that nothing gets broken in the process.  The module won't be
-   used yet, just imported for later.
+ * [ ] Have all the apps import the cloud storage module from that CDN,
+   before importing [app.js](../app/app.js), and ensure that nothing gets
+   broken in the process.  The module won't be used yet, just imported for
+   later.
  * [ ] Make a copy of [the Load/Save
    Plugin](../app/loadsaveplugin.litcoffee) and call it the Cloud Storage
    Plugin instead, renaming it in both filename and script code.
  * [ ] Ensure that the Cloud Storage Plugin is part of the build process and
    is included in the app and installed in the editor object.
  * [ ] Go through the code of the new Cloud Storage Plugin and make all the
-   changes necessary to get it to use the cloud storage module.
+   changes necessary to get it to use the cloud storage module.  Preserve
+   as many function and property names as possible, because some are
+   accessed from other modules in the codebase (e.g., see the Dependencies
+   and Download/Upload Plugins).
  * [ ] Test and debug all of those changes by making calls to the Cloud
    Storage Plugin from the browser console.
  * [ ] Update the application so that the Load/Save Plugin is referenced
    nowhere, but instead all calls are now made to the new Cloud Storage
-   Plugin.  Test to ensure that the applications function correctly.
+   Plugin.  Test to ensure that the applications function correctly.  Note
+   that we must still support importing dependencies from at least the wiki
+   and LocalStorage.  Later we can add support for importing them from
+   cloud storage as well.  This may require updating the cloud-storage API
+   to expose `readFile()` to clients, or something like it (where the client
+   provides the path, and the module gives the object with a `get()`
+   member).
  * [ ] Remove the Load/Save Plugin from the repository, the build process,
    and thus the apps.  Test to ensure that the applications still function.
+   Also remove its corresponding test suite.
  * [ ] Remove the `jsfs` submodule, all its code, and all references to it
    from the apps.  Ensure that the applications still function.
  * [ ] Remove [the old file dialog
@@ -143,6 +153,8 @@ webLurch at present.  Here's a to-do list for accomplishing that.
    test page.  The items on that submenu should be checkable items, so that
    it's obvious which storage system is already chosen.  Use LocalStorage by
    default, but remember the user's choice across runs of the application.
+ * [ ] Update the developer documentation to no longer mention the Load/Save
+   Plugin, but to document the Cloud Storage Plugin instead.
 
 ## Obviating some files in the repository
 
@@ -279,6 +291,8 @@ repeat the process with other example apps.
    the root directory of the master branch.
  * [ ] Verify that the simple example app loads correctly on GitHub and
    functions.  Make any changes needed to make this happen, and commit.
+ * [ ] Update all links in that project's documentation and/or user
+   interface to point to its new home online.
 
 Repeat the above process for the remaining demo applications:
 
