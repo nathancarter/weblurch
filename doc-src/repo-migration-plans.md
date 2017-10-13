@@ -116,25 +116,15 @@ webLurch at present.  Here's a to-do list for accomplishing that.
    Plugin instead, renaming it in both filename and script code.
  * [x] Ensure that the Cloud Storage Plugin is part of the build process and
    is included in the app and installed in the editor object.
- * [ ] Go through the code of the new Cloud Storage Plugin and make all the
-   changes necessary to get it to use the cloud storage module.  Preserve
-   as many function and property names as possible, because some are
-   accessed from other modules in the codebase (e.g., see the Dependencies
-   and Download/Upload Plugins).
- * [ ] Test and debug all of those changes by making calls to the Cloud
-   Storage Plugin from the browser console.
- * [ ] Update the application so that the Load/Save Plugin is referenced
-   nowhere, but instead all calls are now made to the new Cloud Storage
-   Plugin.  Test to ensure that the applications function correctly.  Note
-   that we must still support importing dependencies from at least the wiki
-   and LocalStorage.  Later we can add support for importing them from
-   cloud storage as well.  This may require updating the cloud-storage API
-   to expose `readFile()` to clients, or something like it (where the client
-   provides the path, and the module gives the object with a `get()`
-   member).
- * [ ] Remove the Load/Save Plugin from the repository, the build process,
-   and thus the apps.  Test to ensure that the applications still function.
-   Also remove its corresponding test suite.
+ * [ ] Figure out a way to get the cloud storage tools to function
+   exclusively from cloud.  This may involve using GitHub web serving, since
+   jsdelivr won't serve HTML pages as HTML pages.  If this can't be done,
+   at least move the tools into a subfolder of the app folder, and enhance
+   their API so that they can support living in a subfolder.  Then extend
+   the build process to always fetch the latest versions.  (Or add that as a
+   task to be done once grunt is adopted.)
+ * [ ] Rather than use the `jsfs` submodule from the Load/Save Plugin, use
+   the cloud storage tools, with the LocalStorage back-end.
  * [ ] Remove the `jsfs` submodule, all its code, and all references to it
    from the apps.  Ensure that the applications still function.
  * [ ] Remove [the old file dialog
@@ -142,19 +132,14 @@ webLurch at present.  Here's a to-do list for accomplishing that.
    applications still function.
  * [ ] Get rid of the LZString JS library from our repository.  Ensure that
    the applications still function.
- * [ ] Remove all references to the Dropbox Plugin from the code of the
-   application (and any demo applications that use it).  Test to ensure that
-   the applications function correctly.
- * [ ] Remove the Dropbox Plugin from the repository, the build process, and
-   thus the apps.  Test to ensure that the applications still function.
- * [ ] Add a new submenu to the File menu that lets the user choose among
-   storage options.  At first, just give two options, Dropbox and
-   LocalStorage, just like the two options in the cloud storage module's
-   test page.  The items on that submenu should be checkable items, so that
-   it's obvious which storage system is already chosen.  Use LocalStorage by
-   default, but remember the user's choice across runs of the application.
- * [ ] Update the developer documentation to no longer mention the Load/Save
-   Plugin, but to document the Cloud Storage Plugin instead.
+ * [ ] Update the Dropbox Plugin with these features:
+    * When open dialog loads, show a "loading..." message until it is
+      populated.
+    * When any dialog closes, show a "loading..." or "saving..." dialog
+      until the process completes.
+    * Do not show a success dialog at the end of load/save; just hide the
+      "loading..."/"saving..." dialog, or a failure message if there was
+      one.
 
 ## Obviating some files in the repository
 

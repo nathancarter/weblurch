@@ -526,10 +526,10 @@ implementation of `replaceInternalHandler`, see further below.)
             @replaceInternalHandler 'tryToOpen', handler
 
 The second allows you to install your own handler in place of the built-in
-`tryToSave` handler.  It accepts two arguments, a path and filename, which
-may be null/undefined/empty strings if "Save as..." was invoked.  It should
-either save to the file specified (if one was specified), or present the
-user with a UI for choosing where to save (if none was specified) before
+`tryToSave` handler.  It accepts two arguments, a callback and filename,
+which should behave as documented in the `tryToSave` function, above.  It
+should either save to the file specified (if one was specified), or present
+the user with a UI for choosing where to save (if none was specified) before
 obeying the request to save.  If called with no arguments, this function
 installs the original handler again.
 
