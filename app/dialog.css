@@ -1,0 +1,35 @@
+
+/*
+ * This file styles the contents of the iframes used as Open/Save dialog
+ * boxes, by cloud-storage.js.  This is extremely minimal for now, and
+ * should be made much nicer later.
+ */
+
+/*
+ * Remove internal margins of the dialog.
+ */
+body {
+    margin: 0;
+}
+
+/*
+ * Move the buttons container to the bottom of the dialog, align the buttons
+ * to the right, shade it a bit, and ensure it is as wide as the dialog.
+ */
+#buttonsFooter {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: right;
+    background-color: #eee;
+}
+
+/*
+ * This applies to the last-clicked file/folder in the dialog.  It gives it
+ * a slightly shaded background, so the user can see which file/folder has
+ * been selected, and thus will be sent back to the application if the user
+ * clicks the Open/Save button.
+ */
+.selectedItem {
+    background-color: #eee;
+}
