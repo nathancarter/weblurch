@@ -21,3 +21,4 @@ test/test-results.md
 nps-jn-test
 .atom-build.json
 lean/*
+experiments/
