@@ -203,12 +203,12 @@ webLurch at present.  Here's a to-do list for accomplishing that.
  * [x] Ensure that GitHub is set up to use the root of the project as the
    web site, and create an `index.html` that is a one-line redirecting META
    tag into the `site/` folder, as we did earlier.
- * [ ] Create a Gulpfile with a `docs` task that runs the `mkdocs`
+ * [x] Create a Gulpfile with a `docs` task that runs the `mkdocs`
    command on your behalf.  Commit.
 
 ## Moving large chunks of code that will get used later
 
- * [ ] Create a `source/modules` subfolder in the new repository and move
+ * [x] Create a `source/modules` subfolder in the new repository and move
    into it all remaining code in the `src/` folder of the old repository.
    Commit, but mention that these files are not yet used for anything, and
    are just part of an ongoing migration process.
@@ -281,7 +281,10 @@ webLurch at present.  Here's a to-do list for accomplishing that.
    `source/` folders into a single compiled and minified JavaScript file
    that represents the Lurch Web Platform.  Implement that build process in
    Gulp as the `lwp` task, and ensure that the files it builds are named
-   `lurch-web-platform.*` and are placed in the `site/` folder.
+   `lurch-web-platform.*` and are placed in the `site/` folder.  Note that
+   the Background module should probably be factored out as a solo file
+   instead, because it's used by only the Complex Example file and the
+   (about to be significantly changed) main app.
  * [ ] Test that this has succeeded by temporarily moving into the new repo
    the compiled versions of `simple-example*.*` from the old repo's `app/`
    folder, and verifying that the example still runs.  Do not keep these
