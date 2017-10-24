@@ -402,13 +402,19 @@ later, if the user clicks "Save."
 
                 @setLastFileObject chosenFile
 
+We must delay the actions below by a moment, in case the filesystem is an
+immediate one, which will load files too quickly for the UI to keep up.
+
+                delay = ( func ) -> ( args... ) ->
+                    setTimeout ( -> func args... ), 0
+
 The first argument to the `get` function is the success callback from the
 load operation.
 
                 @editor.Dialogs.waiting
                     title : 'Loading file'
                     message : 'Please wait...'
-                    work : ( done ) =>
+                    work : delay ( done ) =>
                         chosenFile.get ( contents ) =>
 
 The success handler just hands things off to the `loadIntoEditor` function.
