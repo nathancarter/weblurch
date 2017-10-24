@@ -28,10 +28,11 @@ Now add a few actions to take after the editor has been initialized.
 Initialize the settings plugin for global app settings.
 
         A = editor.Settings.addCategory 'application'
-        if not A.get 'filesystem' then A.set 'filesystem', 'dropbox'
+        if not A.get 'filesystem'
+            A.set 'filesystem', editor.Storage.getBackend()
         A.setup = ( div ) ->
             fs = A.get 'filesystem'
-            div.innerHTML = [
+            entries = [
                 editor.Settings.UI.heading 'Wiki Login'
                 editor.Settings.UI.info 'Entering a username and password
                     here does NOT create an account on the wiki.  You must
@@ -44,37 +45,26 @@ Initialize the settings plugin for global app settings.
                 editor.Settings.UI.password 'Password',
                     'wiki_password', A.get( 'wiki_password' ) ? ''
                 editor.Settings.UI.heading 'Open/Save Filesystem'
-                editor.Settings.UI.radioButton \
-                    'Dropbox (cloud storage, requires account)',
-                    'filesystem', fs is 'dropbox', 'filesystem_dropbox'
-                editor.Settings.UI.radioButton \
-                    'Local Storage (kept permanently, in browser only)',
-                    'filesystem', fs is 'local storage',
-                    'filesystem_local_storage'
-            ].join '\n'
+            ]
+            for storageOption in editor.Storage.availableBackends()
+                id = "filesystem_#{storageOption.replace /\s/g, '_'}"
+                entries.push editor.Settings.UI.radioButton \
+                    storageOption, 'filesystem', fs is storageOption, id
+            div.innerHTML = entries.join '\n'
         A.teardown = ( div ) ->
             elt = ( id ) -> div.ownerDocument.getElementById id
             A.set 'wiki_username', elt( 'wiki_username' ).value
             A.set 'wiki_password', elt( 'wiki_password' ).value
-            A.setFilesystem if elt( 'filesystem_dropbox' ).checked then \
-                'dropbox' else 'local storage'
+            for storageOption in editor.Storage.availableBackends()
+                id = "filesystem_#{storageOption.replace /\s/g, '_'}"
+                if elt( id ).checked then A.setFilesystem storageOption
 
 Install in `A` a special handler for setting the filesytem, which updates UI
 controls to respect that setting.
 
         A.setFilesystem = ( name ) ->
             A.set 'filesystem', name
-            if name is 'dropbox'
-                editor.LoadSave.installOpenHandler \
-                    editor.Dropbox.openHandler
-                editor.LoadSave.installSaveHandler \
-                    editor.Dropbox.saveHandler
-                editor.LoadSave.installManageFilesHandler \
-                    editor.Dropbox.manageFilesHandler
-            else
-                editor.LoadSave.installOpenHandler()
-                editor.LoadSave.installSaveHandler()
-                editor.LoadSave.installManageFilesHandler()
+            editor.Storage.setBackend name
 
 Initialize the UI to whatever the user's current filesystem setting is.
 
@@ -108,7 +98,7 @@ a metadata object that gets embedded in the document itself.
             elt = ( id ) -> div.ownerDocument.getElementById id
             D.set 'wiki_title', elt( 'wiki_title' ).value
 
-Set up the load/save plugin with the functions needed for loading and saving
+Set up the Storage plugin with the functions needed for loading and saving
 document metadata.  We export to dependencies all labeled, top-level
 expressions, a function defined in [the code dealing with
 labels](main-app-group-labels-solo.litcoffee#label-lookup).  The system
@@ -116,9 +106,9 @@ never passes a parameter, so `interactive` defaults to yes.  If you pass a
 false value, then no alert dialog will be shown in the case when metadata
 cannot yet be computed.
 
-        editor.LoadSave.saveMetaData = ( interactive = yes ) ->
+        editor.Storage.saveMetaData = ( interactive = yes ) ->
             D.metadata ?= { }
-            n = Object.keys( editor.LoadSave.validationsPending ? { } )
+            n = Object.keys( editor.Storage.validationsPending ? { } )
                 .length
             if n > 0
                 D.metadata.exports =
@@ -138,7 +128,7 @@ cannot yet be computed.
                     for group in window.labeledTopLevelExpressions() )
             D.metadata.dependencies = editor.Dependencies.export()
             D.metadata
-        editor.LoadSave.loadMetaData = ( object ) ->
+        editor.Storage.loadMetaData = ( object ) ->
             D.metadata = object
             editor.Dependencies.import D.metadata?.dependencies ? [ ]
 
@@ -149,10 +139,10 @@ before there any data to export can be computed.  We therefore provide the
 following function, where the maximum wait time defaults to infinity, and is
 expressed in milliseconds.
 
-        editor.LoadSave.waitForMetaData = ( callback, maxWaitTime = 0 ) ->
+        editor.Storage.waitForMetaData = ( callback, maxWaitTime = 0 ) ->
             startedWaiting = ( new Date ).getTime()
             setTimeout check = ->
-                metadata = editor.LoadSave.saveMetaData no
+                metadata = editor.Storage.saveMetaData no
                 if metadata? and not metadata.exports?.error? or \
                    ( new Date ).getTime() - startedWaiting > maxWaitTime > 0
                     return callback metadata

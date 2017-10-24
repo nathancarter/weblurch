@@ -72,7 +72,7 @@ to it as well:
                         message : "<p>Error when logging into the wiki:</p>
                             <p>#{error}</p>"
                     return
-                content = tinymce.activeEditor.MediaWiki.embedMetadata \
+                content = tinymce.activeEditor.Storage.embedMetadata \
                     tinymce.activeEditor.getContent(),
                     tinymce.activeEditor.Settings.document.metadata
                 tinymce.activeEditor.MediaWiki.exportPage pageName,
@@ -95,7 +95,7 @@ reloading the page without the query string, and then pulling the data from
         postAfter = null
         if match = /^\?post-after-autoload=(.*)/.exec queryString
             postAfter = ->
-                editor.LoadSave.waitForMetaData ( metadata ) ->
+                editor.Storage.waitForMetaData ( metadata ) ->
                     window.parent.postMessage
                         type : 'metadata loaded'
                         metadata : metadata
@@ -106,7 +106,7 @@ reloading the page without the query string, and then pulling the data from
         if match = /\?wikipage=(.*)/.exec queryString
             editor.MediaWiki.importPage decodeURIComponent match[1],
                 ( document, metadata ) ->
-                    if metadata? then editor.LoadSave.loadMetaData metadata
+                    if metadata? then editor.Storage.loadMetaData metadata
         autoLoadName = 'auto-load'
         if match = /\?autoload=(.*)/.exec queryString
             autoLoadName = decodeURIComponent match[1]
@@ -128,17 +128,17 @@ reloading the page without the query string, and then pulling the data from
                                         data : replace.exports
                                         date : new Date
                                     ]
-                                editor.LoadSave.loadMetaData metadata
+                                editor.Storage.loadMetaData metadata
                                 postAfter?()
                         , filename
                     else
                         editor.setContent document
-                        editor.LoadSave.loadMetaData metadata
+                        editor.Storage.loadMetaData metadata
                         postAfter?()
                 , 100
         if match = /\?document([0-9]*)=(.*)/.exec queryString
             html = decodeURIComponent match[2]
-            { metadata, document } = extractMetadata html
+            { metadata, document } = editor.Storage.extractMetadata html
             localStorage.setItem 'auto-load' + match[1],
                 JSON.stringify [ metadata, document ]
             window.location.href = window.location.href.split( '?' )[0] +

@@ -26,8 +26,9 @@ Second, add the menu item.
         context : 'file'
         onclick : ->
             page = window.location.href.split( '?' )[0]
-            content = embedMetadata tinymce.activeEditor.getContent(),
-                tinymce.activeEditor.LoadSave.saveMetaData()
+            editor = tinymce.activeEditor
+            content = editor.Storage.embedMetadata editor.getContent(),
+                editor.Storage.saveMetaData()
             url = page + '?document=' + encodeURIComponent content
             showURL = ( url ) ->
                 embed = "<iframe src='#{url}' width=800
@@ -37,7 +38,7 @@ Second, add the menu item.
                     .replace /"/g, '&quot;'
                     .replace /</g, '&lt;'
                     .replace />/g, '&gt;'
-                tinymce.activeEditor.Dialogs.alert
+                editor.Dialogs.alert
                     title : 'Permanent Sharing Links'
                     message : "
                         <h3>Sharing URL</h3>

@@ -28,26 +28,6 @@ Do so with the following functions.
     setAPIPage = ( URL ) -> editor.APIURL = URL
     getAPIPage = -> editor.APIURL
 
-## Embedding metadata
-
-Here are two functions for embedding metadata into/extracting metadata from
-the HTML content of a document.  These are useful before export to/after
-import from the wiki.
-
-    window.embedMetadata = embedMetadata =
-    ( documentHTML, metadataObject = { } ) ->
-        encoding = encodeURIComponent JSON.stringify metadataObject
-        "<span id='metadata' style='display: none;'
-         >#{encoding}</span>#{documentHTML}"
-    window.extractMetadata = extractMetadata = ( html ) ->
-        re = /^<span[^>]+id=.metadata.[^>]*>([^<]*)<\/span>/
-        if match = re.exec html
-            metadata : JSON.parse decodeURIComponent match[1]
-            document : html[match[0].length..]
-        else
-            metadata : null
-            document : html
-
 ## Extracting wiki pages
 
 The following (necessarily asynchronous) function accesses the wiki, fetches
@@ -112,7 +92,7 @@ true or false, indicating success or failure.
                         <p>#{error.split( '\n' )[0]}</p>"
                 console.log error
                 callback? false # failure
-            { metadata, document } = extractMetadata content
+            { metadata, document } = editor.Storage.extractMetadata content
             if not metadata?
                 editor.Dialogs.alert
                     title : 'Not a Lurch document'
@@ -134,7 +114,7 @@ null on any failure, and the metadata as JSON on success.
     getPageMetadata = ( pageName, callback ) ->
         editor.MediaWiki.getPageContent pageName, ( content, error ) ->
             callback? if error then null else \
-                extractMetadata( content ).metadata
+                editor.Storage.extractMetadata( content ).metadata
 
 The following function accesses the wiki, logs in using the given username
 and password, and sends the results to the given callback.  The "token"
@@ -284,6 +264,4 @@ into the editor, in a namespace called `MediaWiki`.
             getPageTimestamp : getPageTimestamp
             importPage : importPage
             exportPage : exportPage
-            embedMetadata : embedMetadata
-            extractMetadata : extractMetadata
             getPageMetadata : getPageMetadata

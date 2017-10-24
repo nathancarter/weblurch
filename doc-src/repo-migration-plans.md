@@ -116,23 +116,62 @@ webLurch at present.  Here's a to-do list for accomplishing that.
    Plugin instead, renaming it in both filename and script code.
  * [x] Ensure that the Cloud Storage Plugin is part of the build process and
    is included in the app and installed in the editor object.
- * [ ] Figure out a way to get the cloud storage tools to function
+ * [x] Figure out a way to get the cloud storage tools to function
    exclusively from cloud.  This may involve using GitHub web serving, since
    jsdelivr won't serve HTML pages as HTML pages.  If this can't be done,
    at least move the tools into a subfolder of the app folder, and enhance
    their API so that they can support living in a subfolder.  Then extend
    the build process to always fetch the latest versions.  (Or add that as a
    task to be done once grunt is adopted.)
- * [ ] Rather than use the `jsfs` submodule from the Load/Save Plugin, use
-   the cloud storage tools, with the LocalStorage back-end.
- * [ ] Remove the `jsfs` submodule, all its code, and all references to it
-   from the apps.  Ensure that the applications still function.
+ * [x] Replace the LoadSave plugin and the Dropbox plugin with a single
+   Storage plugin, as follows.
+    * [x] Rename the DropboxPlugin to the StoragePlugin
+    * [x] Translate the following code from LoadSave to Storage:
+       * [x] All code in the constructor section, except Manage Files item
+       * [x] Add to the constructor the creation of both back ends
+       * [x] All code in the setters section
+       * [x] Add a member that reports all available back ends
+       * [x] Add a member that lets users get/set which back end is active
+       * [x] All code in the new documents section
+       * [x] All code in the saving documents section except `save`
+       * [x] Replace `tryToSave` with the handler Dropbox would install
+       * [x] Create the "loading documents" section in the Storage plugin
+       * [x] Convert the old `@load` member to one that takes the
+         `[content,metadata]` array as input and loads it into the editor
+       * [x] Create a new function for loading a named file from
+         LocalStorage, returning `[content,metadata]`; no editor updating
+    * [x] Ensure the Storage plugin exposes a `filename` member; this
+      should be easy to do whenever you update `lastFileObject`
+    * [x] Update `DependenciesPlugin.getFileMetadata` to call the new
+      Storage plugin function that loads files from LocalStorage
+    * [x] Update `setup.litcoffee` to say `storage` instead of
+      `cloudstorage`
+    * [x] Ensure that the install procedure for the StoragePlugin calls
+      it `storage` and not `dropbox`
+    * [x] Remove from `setup.litcoffee` the `loadsave` plugin
+    * [x] Replace every instance of `LoadSave` with `Storage` throughout
+    * [x] Remove the LoadSave plugin entirely from the application.
+    * [x] Update the wiki plugin because you've implemented `embedMetadata`
+      and `extractMetadata` in the Storage plugin now, so they aren't
+      globally defined, and don't need to be redefined in the wiki plugin.
+      Also, everyone who calls them should do so through the Storage plugin.
+ * [x] In [main-app-settings.litcoffee](main-app-settings.litcoffee), change
+   the `setFilesystem` function so that any chosen filesystem calls the new
+   API function in the Storage plugin, telling it to change to that
+   filesystem.  Ensure that the right options are provided as radio buttons,
+   up around line 47.  Test to be sure that all filesystems now work.
+ * [ ] Ensure that no reference to the `jsfs` submodule remains in the
+   application.
+ * [ ] Update any other demo apps to remove all references to the `jsfs`
+   submodule.
+ * [ ] Remove the `jsfs` submodule from the repository.  Ensure that the
+   applications still function.
  * [ ] Remove [the old file dialog
    source](../app/filedialog/filedialog.html).  Ensure that the
    applications still function.
  * [ ] Get rid of the LZString JS library from our repository.  Ensure that
    the applications still function.
- * [ ] Update the Dropbox Plugin with these features:
+ * [ ] Update the Cloud Storage plugin with these features:
     * When open dialog loads, show a "loading..." message until it is
       populated.
     * When any dialog closes, show a "loading..." or "saving..." dialog

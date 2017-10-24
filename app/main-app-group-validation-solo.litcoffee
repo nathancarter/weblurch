@@ -179,18 +179,18 @@ workhorse function `computeValidationAsync` on the group, then uses the
 is defined below.
 
     window.Group::validate = ->
-        @plugin.editor.LoadSave.validationsPending ?= { }
-        @plugin.editor.LoadSave.validationsPending[@id()] = yes
+        @plugin.editor.Storage.validationsPending ?= { }
+        @plugin.editor.Storage.validationsPending[@id()] = yes
         try
             @computeValidationAsync ( result ) =>
                 try
                     @saveValidation result
-                    delete @plugin.editor.LoadSave.validationsPending[@id()]
+                    delete @plugin.editor.Storage.validationsPending[@id()]
                 catch e
-                    delete @plugin.editor.LoadSave.validationsPending[@id()]
+                    delete @plugin.editor.Storage.validationsPending[@id()]
                     throw e
         catch e
-            delete @plugin.editor.LoadSave.validationsPending[@id()]
+            delete @plugin.editor.Storage.validationsPending[@id()]
             throw e
 
 The following function can be applied to any expression.  It runs validation

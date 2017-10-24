@@ -10,14 +10,12 @@ the user saving the document and exiting the editor (e.g., closing the
 browser tab) while your background computations are occurring.  When such a
 file is later loaded by the user, it will be in whatever intermediate state
 it was left in by those pending background computations.  To solve this
-problem, you may wish to listen to the `beforeSave` and `afterLoad` events
-in the editor.  (See
-[this function](../app/loadsaveplugin.litcoffee#saving-documents) and
-[this function](../app/loadsaveplugin.litcoffee#loading-documents) for
-details.)  For example, you could mark a document as pending recomputation
-when you begin background processing, and unmark it when that processing
-completes; in an `afterLoad` handler, if the document is marked as pending
-recomputation, fully reprocess the document from scratch.
+problem, you may wish to implement the `saveMetadata` and `loadMetadata`
+functions in the [Storage plugin](../app/storageplugin.litcoffee).  For
+example, while background processing is running, you might have the
+`saveMetadata` member include that fact in the metadata, so that when it is
+reloaded later, the appliaction knows to re-process its contents, rather
+than trust that they are up-to-date.
 
 ## Global Background object
 

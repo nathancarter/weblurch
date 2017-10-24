@@ -117,8 +117,8 @@ that begins with a hyphen is a local plugin written as part of this project.
             plugins :
                 'advlist table charmap colorpicker image link
                 paste print searchreplace textcolor
-                -loadsave -overlay -groups -equationeditor -dependencies
-                -dialogs -downloadupload -cloudstorage ' \
+                -storage -overlay -groups -equationeditor -dependencies
+                -dialogs -downloadupload ' \
                 + ( "-#{p}" for p in window.pluginsToLoad ).join( ' ' ) \
                 + ( if window.fullScreenEditor then ' fullscreen' else '' )
 
@@ -349,7 +349,7 @@ HTML.
 Ensure users do not accidentally navigate away from their unsaved changes.
 
                     window.addEventListener 'beforeunload', ( event ) ->
-                        if editor.LoadSave.documentDirty
+                        if editor.Storage.documentDirty
                             event.returnValue = 'You have unsaved changes.'
                             return event.returnValue
 
@@ -357,6 +357,11 @@ And if the app installed a global handler for editor post-setup, run that
 function now.
 
                     window.afterEditorReady? editor
+
+Ensure the storage plugin loads its default filesystem from settings.
+
+                    editor.Storage.setBackend \
+                        editor.Settings.application.get 'filesystem'
 
 The following utility functions are used to help build lists of menu and
 toolbar items in the setup data above.

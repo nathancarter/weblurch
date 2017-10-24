@@ -122,8 +122,8 @@ list, we also re-popuplate it, by calling `addExpression` (defined below)
 on all visible expressions.
 
     window.afterEditorReadyArray.push ( editor ) ->
-        oldLoadMetaDataHandler = editor.LoadSave.loadMetaData
-        editor.LoadSave.loadMetaData = ( object ) ->
+        oldLoadMetaDataHandler = editor.Storage.loadMetaData
+        editor.Storage.loadMetaData = ( object ) ->
             clearLabelPairs()
             for grouper in editor.Groups.allGroupers()
                 group = editor.Groups.grouperToGroup grouper

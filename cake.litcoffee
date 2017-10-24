@@ -107,7 +107,9 @@ folder rather than the source folder.  The exceptions to this rule are:
             when f.indexOf( srcout ) is -1 and
                  f.indexOf( appout ) is -1 and
                  f[-15..] isnt '-solo.litcoffee' and
-                 f[-14..] isnt '-duo.litcoffee' )
+                 f[-14..] isnt '-duo.litcoffee' and
+                 f[-15..] isnt 'setup.litcoffee' )
+        all = all.concat build.dir appdir, /setup\.litcoffee$/
         build.concatFiles all, '\n\n', p.resolve appdir, appout
 
 Run the compile process defined in [the build utilities

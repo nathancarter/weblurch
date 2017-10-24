@@ -14,8 +14,7 @@ turn is built on the WYSIWYG editor [TinyMCE](http://www.tinymce.com).
      <br>![](tinymce-screenshot.png)
    * Extendability through custom toolbars, menus, dialogs, etc.
  * The *Lurch Web Platform* builds on that foundation, and provides:
-   * [Load/Save functionality into the browser's
-     LocalStorage](https://github.com/nathancarter/weblurch/app/loadsaveplugin.litcoffee)
+   * [In-cloud and in-browser storage](https://github.com/nathancarter/weblurch/app/storageplugin.litcoffee)
      <br>![](save-commands.png)
    * A WYSIWYG math editing widget, [imported from
      here](https://github.com/foraker/tinymce_equation_editor)

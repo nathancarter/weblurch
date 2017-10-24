@@ -104,7 +104,7 @@ points.
 
 The author of a Lurch Application (see [tutorial](../doc/tutorial.md)) must
 implement a `saveMetadata` function (as documented
-[here](loadsaveplugin.litcoffee#constructor)) to store the appropriate
+[here](storageplugin.litcoffee#constructor)) to store the appropriate
 `exports` data in the document's metadata upon each save.  It should also
 store the document's `dependencies` data, which can be obtained by calling
 `export` in this plugin.
@@ -177,16 +177,16 @@ are inserted as members of the corresponding editor by means of the code
 
 This function takes a path into a `jsfs` filesystem and extracts the
 metadata from the file, returning it.  It assumes that the filesystem into
-which it should look is the same one used by [the Load/Save
-Plugin](loadsaveplugin.litcoffee), and fetches the name of the filesystem
+which it should look is the same one used by [the Storage
+Plugin](storageplugin.litcoffee), and fetches the name of the filesystem
 from there.
 
-        getFileMetadata: ( filepath, filename ) ->
+        getFileMetadata: ( filepath, filename, success, failure ) ->
             if filename is null then return
             if filepath is null then filepath = '.'
-            tmp = new FileSystem @editor.LoadSave.fileSystem
-            tmp.cd filepath
-            tmp.read( filename )[1]
+            fullpath = filepath.concat [ filename ]
+            @editor.Storage.directRead 'browser storage', fullpath,
+                success, failure
 
 ## Importing, exporting, and updating
 
@@ -252,11 +252,14 @@ last modified dates, so we always update file dependencies.
                 splitPoint = dependency.address.lastIndexOf '/'
                 filename = dependency.address[splitPoint...]
                 filepath = dependency.address[7...splitPoint]
-                newData = @getFileMetadata( filepath, filename ).exports
-                if JSON.stringify( newData ) isnt JSON.stringify @[index]
-                    @[index].data = newData
-                    @[index].date = new Date
-                    @editor.fire 'dependenciesChanged'
+                @getFileMetadata filepath, filename, ( result ) =>
+                    newData = result.exports
+                    oldData = @[index]
+                    if JSON.stringify( newData ) isnt JSON.stringify oldData
+                        @[index].data = newData
+                        @[index].date = new Date
+                        @editor.fire 'dependenciesChanged'
+                , ( error ) => # pass
 
 A `wiki://`-type dependency is in the wiki.  It does have last modified
 dates, so we check to see if updating is necessary
@@ -306,13 +309,16 @@ was successfully added.
                 filename = address[splitPoint...]
                 filepath = address[7...splitPoint]
                 try
-                    newData = @getFileMetadata( filepath, filename ).exports
-                    @[@length++] =
-                        address : address
-                        data : newData
-                        date : new Date
-                    callback? newData, null
-                    @editor.fire 'dependenciesChanged'
+                    @getFileMetadata filepath, filename, ( result ) =>
+                        newData = result.exports
+                        @[@length++] =
+                            address : address
+                            data : newData
+                            date : new Date
+                        callback? newData, null
+                        @editor.fire 'dependenciesChanged'
+                    , ( error ) =>
+                        callback? null, error
                 catch e
                     callback? null, e
             else if address[...7] is 'wiki://'
@@ -347,11 +353,11 @@ like `splice` does for JavaScript arrays, and then fires a
 
 ## Presenting a UI
 
-The following method fills a DIV (probably in a pop-up dialog) with the
-necessary user interface elements necessary for viewing and editing the
-dependencies stored in this plugin.  It also installs event handlers for the
-buttons it creates, so that they will respond to clicks by calling methods
-in this plugin, and updating that user interface accordingly.
+The following method fills a DIV (probably in a pop-up dialog) with the user
+interface elements necessary for viewing and editing the dependencies stored
+in this plugin.  It also installs event handlers for the buttons it creates,
+so that they will respond to clicks by calling methods in this plugin, and
+updating that user interface accordingly.
 
         installUI: ( div ) ->
             parts = [ ]
@@ -374,7 +380,7 @@ in this plugin, and updating that user interface accordingly.
                 elt( "dependencyRemove#{index}" ).addEventListener 'click',
                     do ( index ) => => @remove index ; @installUI div
             elt( 'dependencyAddFile' ).addEventListener 'click', =>
-                @editor.LoadSave.tryToOpen ( path, file ) =>
+                @editor.Storage.tryToOpen ( path, file ) =>
                     if file?
                         if path? then path += '/' else path = ''
                         @add "file://#{path}#{file}", ( result, error ) =>

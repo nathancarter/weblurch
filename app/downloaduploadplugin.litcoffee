@@ -6,7 +6,7 @@ HTML, or upload any HTML file as new contents to overwrite the current
 document.  It assumes that TinyMCE has been loaded into the global
 namespace, so that it can access it.
 
-If you have the [Load/Save Plugin](loadsaveplugin.litcoffee) also enabled in
+If you have the [Storage Plugin](storageplugin.litcoffee) also enabled in
 the same TinyMCE editor instance, it will make use of that plugin in
 several ways.
 
@@ -68,34 +68,34 @@ download event and the upload event.
 The download event constructs a blob, fills it with the contents of the
 editor as HTML data, and starts a download.  The only unique step in this
 process is that we attempt to get a filename from the
-[Load/Save Plugin](loadsaveplugin.litcoffee), if one is available.  If not,
+[Storage Plugin](storageplugin.litcoffee), if one is available.  If not,
 we use "untitled.html."
 
         downloadDocument: ->
-            html = embedMetadata @editor.getContent(),
+            html = @editor.Storage.embedMetadata @editor.getContent(),
                 @editor.Settings.document.metadata
             blob = new Blob [ html ], type : 'text/html'
             link = document.createElement 'a'
             link.setAttribute 'href', URL.createObjectURL blob
             link.setAttribute 'download',
-                editor.LoadSave.filename or 'untitled.html'
+                editor.Storage.filename or 'untitled.html'
             link.click()
             URL.revokeObjectURL link.getAttribute 'href'
 
 The upload event first checks to be sure that the contents of the editor are
 saved, or the user does not mind overwriting them.  This code imitates the
-File > New handler in the [Load/Save Plugin](loadsaveplugin.litcoffee).
+File > New handler in the [Storage Plugin](storageplugin.litcoffee).
 This function calls the `letUserUpload` function to do the actual uploading;
 that function is defined further below in this file.
 
         uploadDocument: ->
-            return @letUserUpload() unless editor.LoadSave.documentDirty
+            return @letUserUpload() unless editor.Storage.documentDirty
             @editor.windowManager.open {
                 title : 'Save first?'
                 buttons : [
                     text : 'Save'
                     onclick : =>
-                        editor.LoadSave.tryToSave ( success ) =>
+                        editor.Storage.tryToSave ( success ) =>
                             if success then @letUserUpload()
                         @editor.windowManager.close()
                 ,
@@ -120,7 +120,8 @@ handle the upload process.
                 message : 'Choose an HTML file to upload into the editor.'
                 okCallback : ( fileAsDataURL ) =>
                     html = atob fileAsDataURL.split( ',' )[1]
-                    { metadata, document } = extractMetadata html
+                    { metadata, document } =
+                        @editor.Storage.extractMetadata html
                     @editor.setContent document
                     if metadata?
                         @editor.Settings.document.metadata = metadata
