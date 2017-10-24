@@ -171,7 +171,7 @@ webLurch at present.  Here's a to-do list for accomplishing that.
    applications still function.
  * [x] Get rid of the LZString JS library from our repository.  Ensure that
    the applications still function.
- * [ ] Make the functionality improvements listed in the cloud storage repo.
+ * [x] Make the functionality improvements listed in the cloud storage repo.
 
 ## Obviating some files in the repository
 
