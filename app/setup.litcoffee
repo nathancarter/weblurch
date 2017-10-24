@@ -360,8 +360,8 @@ function now.
 
 Ensure the storage plugin loads its default filesystem from settings.
 
-                    editor.Storage.setBackend \
-                        editor.Settings.application.get 'filesystem'
+                    fs = editor.Settings?.application?.get 'filesystem'
+                    editor.Storage.setBackend fs ? 'browser storage'
 
 The following utility functions are used to help build lists of menu and
 toolbar items in the setup data above.

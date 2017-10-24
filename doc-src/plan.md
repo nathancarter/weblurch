@@ -23,13 +23,8 @@ required order of completion.
    because that will actually become intentional.
  * Switch to an actual build process, such as Grunt or Webpack, rather than
    using my own ad-hoc thing in a cakefile.
- * Do not use jsfs as a submodule; rather, use GitHub as a simple CDN from
-   which you import jsfs without recopying it into this repository.
- * How many of our other tools can be factored out into separate
-   repositories also?  These are good candidates:
-    * OpenMath module (no dependencies)
-    * Parsing module (no dependencies)
-    * Matching module (one dependency, the OpenMath module)
+ * How many apps can be factored out into separate repositories?  These are
+   good candidates:
     * OpenMath demo app (importing the LWP rather than being imported by it)
     * Lean UI demo app (same)
     * Code/Sidebar demo app (same)
@@ -282,15 +277,6 @@ That question links to a tutorial on app manifests, if the answer turns out
 to be "yes" to that question.
 
 ## Ideas from various sources
-
-### Outsourcing the file dialog
-
-The `jsfs` file dialogs I made myself, and thus must also maintain.  They are
-not beautiful.  Instead, you could use the
-[jquery.filebrowser](https://github.com/jcubic/jquery.filebrowser) plugin.
-Furthermore, it's already generalized to allow you to swap out back ends.  So
-you could not only update jsfs with this, but also easily make it support
-Google Drive or Dropbox with minimal changes.  Create plans to do so.
 
 ### Parsing speed improvements
 

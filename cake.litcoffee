@@ -25,7 +25,7 @@ If you want to build and test evertything, just run `cake all`. It simply
 invokes all the other tasks, defined below.
 
     build.task 'all', 'Build app and run tests', ->
-        build.enqueue 'app', 'submodules', 'docs', 'test'
+        build.enqueue 'app', 'docs', 'test'
 
 ## Requirements
 
@@ -58,14 +58,6 @@ These constants define how the functions below perform.
     repdir = p.resolve testdir, 'reports'
     jasmine = p.resolve __dirname, 'node_modules', 'jasmine-node', 'lib',
         'jasmine-node', 'cli.js'
-    submodules =
-        jsfs : "npm install
-             && ./node_modules/.bin/cake all
-             && cp demo/*.js demo/*.map demo/*.litcoffee demo/close.png
-                   demo/copy.png demo/delete.png demo/folder.png
-                   demo/move.png demo/text-file.png demo/up-arrow.png
-                   node_modules/lz-string/libs/lz-string-1.3.3.js
-                   #{fddir}"
 
 ## The `app` build process
 
@@ -144,21 +136,6 @@ it as the last callback, below.
                 build.copyFile \
                     'node_modules/lz-string/libs/lz-string-1.3.3.js',
                     "#{appdir}/lz-string-1.3.3.js", buildNext
-
-## The `submodules` build process
-
-Although there is currently only one submodule, this task is ready in the
-event that there will be more later.  It enters each of their subfolders and
-runs any necessary build process on those submodules.  For instance, the
-`jsfs` submodule requires compiling and minifying CoffeeScript code just
-like this project does, because they are structured the same way.
-
-    build.asyncTask 'submodules', 'Build any git submodule projects',
-    ( done ) ->
-        commands = for own submodule, command of submodules
-            description : "Running #{submodule} build process...".green
-            command : "cd #{submodule} && #{command} && cd .."
-        build.runShellCommands commands, done
 
 ## The `docs` build process
 
@@ -330,7 +307,6 @@ to gh-pages and merging in changes.
                 touch app/setup.litcoffee
                 touch src/*.litcoffee
                 cake app
-                cake submodules
                 cake docs
                 git commit -a -m 'Updating gh-pages with latest app build'
                 git checkout master
@@ -357,8 +333,8 @@ to gh-pages and merging in changes.
             description : 'Marking src files dirty...'.green
             command : 'touch src/*.litcoffee'
         ], ->
-            console.log 'Building app and submodules in gh-pages...'.green
-            build.enqueue 'app', 'submodules', 'docs', ->
+            console.log 'Building app in gh-pages...'.green
+            build.enqueue 'app', 'docs', ->
                 build.runShellCommands [
                     description : 'Committing changes... (which may fail if
                         there were no changes to the app itself; in that

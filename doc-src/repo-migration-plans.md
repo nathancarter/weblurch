@@ -160,25 +160,18 @@ webLurch at present.  Here's a to-do list for accomplishing that.
    API function in the Storage plugin, telling it to change to that
    filesystem.  Ensure that the right options are provided as radio buttons,
    up around line 47.  Test to be sure that all filesystems now work.
- * [ ] Ensure that no reference to the `jsfs` submodule remains in the
+ * [x] Ensure that no reference to the `jsfs` submodule remains in the
    application.
- * [ ] Update any other demo apps to remove all references to the `jsfs`
+ * [x] Update any other demo apps to remove all references to the `jsfs`
    submodule.
- * [ ] Remove the `jsfs` submodule from the repository.  Ensure that the
+ * [x] Remove the `jsfs` submodule from the repository.  Ensure that the
    applications still function.
- * [ ] Remove [the old file dialog
+ * [x] Remove [the old file dialog
    source](../app/filedialog/filedialog.html).  Ensure that the
    applications still function.
- * [ ] Get rid of the LZString JS library from our repository.  Ensure that
+ * [x] Get rid of the LZString JS library from our repository.  Ensure that
    the applications still function.
- * [ ] Update the Cloud Storage plugin with these features:
-    * When open dialog loads, show a "loading..." message until it is
-      populated.
-    * When any dialog closes, show a "loading..." or "saving..." dialog
-      until the process completes.
-    * Do not show a success dialog at the end of load/save; just hide the
-      "loading..."/"saving..." dialog, or a failure message if there was
-      one.
+ * [ ] Make the functionality improvements listed in the cloud storage repo.
 
 ## Obviating some files in the repository
 

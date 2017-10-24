@@ -175,9 +175,9 @@ are inserted as members of the corresponding editor by means of the code
         constructor: ( @editor ) ->
             @length = 0
 
-This function takes a path into a `jsfs` filesystem and extracts the
+This function takes a path into an in-browser filesystem and extracts the
 metadata from the file, returning it.  It assumes that the filesystem into
-which it should look is the same one used by [the Storage
+which it should look is the local one provided by [the Storage
 Plugin](storageplugin.litcoffee), and fetches the name of the filesystem
 from there.
 
@@ -245,8 +245,9 @@ Ensure that the parameter makes sense.
             return unless index >= 0 and index < @length
             dependency = @[index]
 
-A `file://`-type dependency is in the `jsfs` filesystem.  It does not have
-last modified dates, so we always update file dependencies.
+A `file://`-type dependency is in the in-browser filesystem provided by the
+Storage plugin.  It does not have last modified dates, so we always update
+file dependencies.
 
             if dependency.address[...7] is 'file://'
                 splitPoint = dependency.address.lastIndexOf '/'

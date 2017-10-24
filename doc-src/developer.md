@@ -75,5 +75,3 @@ Repository overview:
  * `docs/` folder
     * Exists only in `gh-pages` branch
     * Compiled version of `doc-src/` folder, for hosting on GitHub Pages
- * `jsfs/` folder
-    * [This submodule](https://github.com/nathancarter/jsfs)
