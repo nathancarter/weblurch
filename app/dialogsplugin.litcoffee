@@ -257,6 +257,20 @@ function in this plugin, but in this case it must contain a member called
 dialog is shown.  That function will *receive* as its one parameter a
 function to call when the work is done, to close this dialog.
 
+Example use:
+```javascript
+tinymce.activeEditor.Dialogs.waiting( {
+    title : 'Loading file'
+    message : 'Please wait...',
+    work : function ( done ) {
+        doLengthyAsynchronousTask( param1, param2, function ( result ) {
+            saveMyResult( result );
+            done();
+        } );
+    }
+} );
+```
+
     Dialogs.waiting = ( options ) ->
         dialog = tinymce.activeEditor.windowManager.open
             title : options.title ? ' '
