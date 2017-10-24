@@ -180,7 +180,7 @@ webLurch at present.  Here's a to-do list for accomplishing that.
    `core-estimator` files in the repository, and update any code to use the
    native version instead (if any updates are even needed).  Be sure to
    stop importing the removed polyfill.
- * [ ] Get rid of the `jquery-splitter/` folder and submodule.  Instead,
+ * [x] Get rid of the `jquery-splitter/` folder and submodule.  Instead,
    use the following CDN URLs:
    https://cdn.jsdelivr.net/gh/jcubic/jquery.splitter@0.24/js/jquery.splitter.min.js
    and
