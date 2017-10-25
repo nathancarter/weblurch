@@ -44,11 +44,7 @@ These constants define how the functions below perform.
     p = require 'path'
     title = 'webLurch'
     srcdir = p.resolve __dirname, 'src'
-    srcorder = [
-        'utils.litcoffee'
-        'openmath-duo.litcoffee'
-        'matching-duo.litcoffee'
-    ]
+    srcorder = [ 'utils.litcoffee' ]
     appdir = p.resolve __dirname, 'app'
     fddir = p.resolve appdir, 'filedialog'
     srcout = 'weblurch.litcoffee'
