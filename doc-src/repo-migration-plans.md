@@ -212,67 +212,67 @@ webLurch at present.  Here's a to-do list for accomplishing that.
    into it all remaining code in the `src/` folder of the old repository.
    Commit, but mention that these files are not yet used for anything, and
    are just part of an ongoing migration process.
- * [ ] Create a `source/plugins` subfolder in the new repository and move
+ * [x] Create a `source/plugins` subfolder in the new repository and move
    into it all files matching `app/*plugin.litcoffee` from the old
    repository.  Also move any files that those plugins require, such as
    `.css` files.  Commit, but mention that these files are not yet used for
    anything, and are just part of an ongoing migration process.
- * [ ] Move the following important source files from the old repo into
+ * [x] Move the following important source files from the old repo into
    `source/` in the new repo.  Commit, again mentioning this is part of an
    ongoing migration.
-    * `keyboard-shortcuts-workaround.litcoffee`
-    * `mathquill-parser-solo.litcoffee`
-    * `setup.litcoffee`
-    * `testrecorder-solo.litcoffee`
-    * `testrecorder.html`
-    * `testrecorder.litcoffee`
-    * `lurch-embed-solo.litcoffee`
- * [ ] Create a `source/experimental` subfolder in the new repository and
+    * [x] `keyboard-shortcuts-workaround.litcoffee`
+    * [x] `mathquill-parser-solo.litcoffee`
+    * [x] `setup.litcoffee`
+    * [x] `testrecorder-solo.litcoffee`
+    * [x] `testrecorder.html`
+    * [x] `testrecorder.litcoffee`
+    * [x] `lurch-embed-solo.litcoffee`
+ * [x] Create a `source/experimental` subfolder in the new repository and
    move into it the following files from the old repository.  Commit, but
    mention that these files are not yet used for anything, and are just
    part of an ongoing migration process.
-    * `cp-test-solo.litcoffee`
-    * `cp-test.html`
-    * `lpf-test-solo.litcoffee`
-    * `lpf-test.html`
- * [ ] Create a `source/main-app` subfolder in the new repository and move
+    * [x] `cp-test-solo.litcoffee`
+    * [x] `cp-test.html`
+    * [x] `lpf-test-solo.litcoffee`
+    * [x] `lpf-test.html`
+ * [x] Create a `source/main-app` subfolder in the new repository and move
    into it the following files from the old repository.  Commit, but
    mention that these files are not yet used for anything, and are just
    part of an ongoing migration process.
-    * `main-app-attr-dialog-solo.litcoffee` (dropping the `main-app-`)
-    * `main-app-basics-solo.` (dropping the `main-app-`)
-    * `main-app-group-class-solo.` (dropping the `main-app-`)
-    * `main-app-group-labels-solo.` (dropping the `main-app-`)
-    * `main-app-group-validation-solo.` (dropping the `main-app-`)
-    * `main-app-groups-solo.` (dropping the `main-app-`)
-    * `main-app-import-export-solo.` (dropping the `main-app-`)
-    * `main-app-proto-groups-solo.` (dropping the `main-app-`)
-    * `main-app-settings-solo.` (dropping the `main-app-`)
-    * `main-app-sharing-solo.` (dropping the `main-app-`)
-    * `app.html`
- * [ ] Create a `source/assets` subfolder in the new repository and move
+    * [x] `main-app-attr-dialog-solo.litcoffee` (dropping the `main-app-`)
+    * [x] `main-app-basics-solo.` (dropping the `main-app-`)
+    * [x] `main-app-group-class-solo.` (dropping the `main-app-`)
+    * [x] `main-app-group-labels-solo.` (dropping the `main-app-`)
+    * [x] `main-app-group-validation-solo.` (dropping the `main-app-`)
+    * [x] `main-app-groups-solo.` (dropping the `main-app-`)
+    * [x] `main-app-import-export-solo.` (dropping the `main-app-`)
+    * [x] `main-app-proto-groups-solo.` (dropping the `main-app-`)
+    * [x] `main-app-settings-solo.` (dropping the `main-app-`)
+    * [x] `main-app-sharing-solo.` (dropping the `main-app-`)
+    * [x] `app.html`
+ * [x] Create a `source/assets` subfolder in the new repository and move
    into it the following files from the old repository.  Commit, but
    mention that these files are not yet used for anything, and are just
    part of an ongoing migration process.
-    * `eqed/` folder
-    * `input-method.js` (Which is online here, if you want to import it from
-      GitHub raw, like a fake CDN: https://leanprover.github.io/tutorial/js/input-method.js)
-    * `icons/` folder
-    * `images/` folder
- * [ ] Create a `unit-tests` subfolder in the new repository and move into
+    * [x] `eqed/` folder
+    * [x] `input-method.js` (Which is online here, if you want to import it
+      from GitHub raw, like a fake CDN: https://leanprover.github.io/tutorial/js/input-method.js)
+    * [x] `icons/` folder
+    * [x] `images/` folder
+ * [x] Create a `unit-tests` subfolder in the new repository and move into
    it the following files from the old repository.  Commit, but mention that
    these files are not yet used for anything, and are just part of an
    ongoing migration process.
-    * `app-test-utils.litcoffee
-    * `domutils-spec.litcoffee`
-    * `groupsplugin-change-spec.litcoffee`
-    * `groupsplugin-spec.litcoffee`
-    * `loadsaveplugin-spec.litcoffee`
-    * `overlayplugin-spec.litcoffee`
-    * `phantom-utils.litcoffee`
-    * `tinymce-basics-spec.litcoffee`
-    * `utils-spec.litcoffee`
-    * `embedding/` folder
+    * [x] `app-test-utils.litcoffee`
+    * [x] `domutils-spec.litcoffee`
+    * [x] `groupsplugin-change-spec.litcoffee`
+    * [x] `groupsplugin-spec.litcoffee`
+    * [x] `loadsaveplugin-spec.litcoffee`
+    * [x] `overlayplugin-spec.litcoffee`
+    * [x] `phantom-utils.litcoffee`
+    * [x] `tinymce-basics-spec.litcoffee`
+    * [x] `utils-spec.litcoffee`
+    * [x] `embedding/` folder
 
 ## Beginning to use the migrated code
 
