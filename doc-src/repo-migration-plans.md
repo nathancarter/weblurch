@@ -276,15 +276,31 @@ webLurch at present.  Here's a to-do list for accomplishing that.
 
 ## Beginning to use the migrated code
 
- * [ ] Examine the code in the old `cake.litcoffee` file to determine how to
-   compile the code from the new `source/modules/`, `source/plugins/`, and
-   `source/` folders into a single compiled and minified JavaScript file
-   that represents the Lurch Web Platform.  Implement that build process in
-   Gulp as the `lwp` task, and ensure that the files it builds are named
-   `lurch-web-platform.*` and are placed in the `site/` folder.  Note that
-   the Background module should probably be factored out as a solo file
-   instead, because it's used by only the Complex Example file and the
-   (about to be significantly changed) main app.
+ * [x] Rename files that end with `-solo` to not have that suffix.
+ * [x] Create a `release/` folder within the new repository.
+ * [x] Implement a gulp task called `lwp-build` that
+   concatenates all the following into a single file, in this order, then
+   compiles it with minification and source maps into
+   `release/lurch-web-platform.*`:
+    * `source/modules/utils.litcoffee`
+    * `source/modules/domutils.litcoffee`
+    * `source/modules/canvasutils.litcoffee`
+    * `source/plugins/*.litcoffee`
+    * `source/auxiliary/keyboard-shortcuts-workaround.litcoffee`
+    * `source/auxiliary/testrecorder.litcoffee`
+    * `source/auxiliary/setup.litcoffee`
+ * [x] Implement a gulp task called `build-auxiliary-js-files` that
+   compiles each of the following files, with minification and source maps,
+   into the `release/` folder.
+    * `source/auxiliary/lurch-embed.litcoffee`
+    * `source/auxiliary/mathquill-parser.litcoffee`
+    * `source/auxiliary/testrecorder.litcoffee`
+    * `source/auxiliary/background.litcoffee`
+    * `source/auxiliary/worker.litcoffee`
+ * [x] Implement a gulp task called `build-experiments` that compiles (with
+   minification and source maps) `source/experiments/*.litcoffee` into the
+   same (experiments) folder.
+ * [x] Implement a default gulp task that runs all the previous ones.
  * [ ] Test that this has succeeded by temporarily moving into the new repo
    the compiled versions of `simple-example*.*` from the old repo's `app/`
    folder, and verifying that the example still runs.  Do not keep these
