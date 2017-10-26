@@ -301,7 +301,7 @@ webLurch at present.  Here's a to-do list for accomplishing that.
    minification and source maps) `source/experiments/*.litcoffee` into the
    same (experiments) folder.
  * [x] Implement a default gulp task that runs all the previous ones.
- * [ ] Test that this has succeeded by temporarily moving into the new repo
+ * [x] Test that this has succeeded by temporarily moving into the new repo
    the compiled versions of `simple-example*.*` from the old repo's `app/`
    folder, and verifying that the example still runs.  Do not keep these
    files in the new repo; move them out and *then* commit the changes.  (But
@@ -309,34 +309,59 @@ webLurch at present.  Here's a to-do list for accomplishing that.
 
 ## Creating demo apps as separate projects
 
-As you do the following steps, keep track of exactly what you do to help you
-repeat the process with other example apps.
+Consider each of the following example applications.
 
- * [ ] Create a new project in the Lurch Math organization's GitHub space,
-   named "Simple Example using the Lurch Web Platform"
-   (`lwp-simple-example`).
- * [ ] Move into it the `simple-example*.*` files from the old repository's
-   `app/` folder (or, preferably, the modified versions you created when
-   testing the `lwp` build from the previous stage, above).  Commit.
- * [ ] Create a `README.md` that explains the repository briefly, and
-   redirects readers into the main file's literate source code for more
-   details.  Commit.
- * [ ] Create a build process that compiles and minifies the source code and
-   places all the resulting files in the same root folder.  Commit.
- * [ ] Ensure GitHub is set up so that it uses as the project's web content
-   the root directory of the master branch.
- * [ ] Verify that the simple example app loads correctly on GitHub and
-   functions.  Make any changes needed to make this happen, and commit.
- * [ ] Update all links in that project's documentation and/or user
-   interface to point to its new home online.
-
-Repeat the above process for the remaining demo applications:
-
+ * [x] `simple-example*.*`
  * [ ] `complex-example*.*`
  * [ ] `math-example*.*`
  * [ ] `openmath-example*.*`
  * [ ] `lean-example*.*`
  * [ ] `sidebar-example*.*`
+
+For each of them, do all of the following steps.
+
+ * Create a new project to house the example.
+    * mkdir lwp-example-<name>
+    * cd lwp-example-<name>
+    * git init
+    * On https://github.com/lurchmath, click New.
+    * Give the repo the name `lwp-example-<name>`.
+    * Description: <Some kinda> example built on the Lurch Web Platform.
+    * Don't initialize with a README; just Create repository.
+    * git remote add origin https://github.com/lurchmath/lwp-example-<name>.git
+ * Move files in.
+    * cp ../../weblurch/app/<name>-example*.* .
+    * Rename the HTML file to index.html.
+    * Rename the other files to `lwp-example-<name>.*`.
+    * git add --all
+    * git commit -m 'Importing files from old webLurch repo (with renaming)'
+    * git push -u origin master
+    * Update index.html, mimicking lwp-example-simple/index.html, which
+      is a very different style than it was.
+    * Test with a local web server, and get it working.
+    * Open that new repo in GitHub desktop.
+    * Commit.
+ * Add a README.
+    * It should explain the repository briefly.
+    * It should direct readers into the literate source for details.
+    * Commit.
+ * Create a build process.
+    * It should compile and minify the source code all in the root dir.
+    * Commit and push.
+ * Web space:
+    * Visit https://github.com/lurchmath/lwp-example-<name>.
+    * Click Settings, scroll down to GitHub Pages.
+    * Choose Master branch, click Save.
+    * Verify that the application works when you visit
+      https://lurchmath.github.io/lwp-example-<name>
+    * Add to the README a link to the functioning app at that URL.
+    * Commit and push.
+ * Update source code.
+    * Update links in `addHelpMenuSourceCodeLink` and `helpAboutText`.
+    * Update links in any of the Markdown documentation.
+    * Read the literate comments and fix anything else out-of-date.
+    * Be sure there is a link to the main project repo:
+      https://github.com/lurchmath/lurch
 
 ## Handling experimental content
 
@@ -368,6 +393,9 @@ Repeat the above process for the remaining demo applications:
    explanations to be accurate and up-to-date after all the recent migration
    changes.  Test often as you write, using the Gulp task that builds the
    documentation.  Commit.
+ * [ ] Update `setup.litcoffee`, in which I formerly commented out the
+   section linking to the developer tutorial from the Help menu.  Now you
+   can add that link back in, to the new developer tutorial.
 
 ## Migrating unit tests
 
