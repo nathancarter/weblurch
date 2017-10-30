@@ -369,25 +369,27 @@ For each of them, do all of the following steps.
 
 ## Handling experimental content
 
- * [ ] Create a Gulp build process called `experimental` that compiles and
+ * [x] Create a Gulp build process called `experimental` that compiles and
    minifies all the code in the `source/experimental/` folder in the new
-   repository, and copies all the results into a `site/experimental/`
-   directory, having first deleted everything in that folder.
- * [ ] Ensure that the HTML files in that directory correctly import the
+   repository, leaving it in that folder so it doesn't accidentally get
+   committed to the repository.
+ * [x] Ensure that the HTML files in that directory correctly import the
    Lurch Web Platform from the parent directory (`site/`).
- * [ ] Ensure that the experimental HTML apps in that folder still function
+ * [x] Ensure that the experimental HTML apps in that folder still function
    (or at least function as well as they do in the old repo).  Commit.
 
 ## Miscellaneous
 
- * [ ] Update `lurch-embed.litcoffee` to function in the new space.
- * [ ] Since you've changed the `Api-User-Agent` of the MediaWiki Plugin
+ * [x] Update `lurch-embed.litcoffee` to function in the new space.
+ * [x] Since you've changed the `Api-User-Agent` of the MediaWiki Plugin
    from "webLurch Application" to "Lurch Application," check to see if your
    MediaWiki modifications on the other end are sensitive to that, and if
    so, update them.
- * [ ] Add a README to the `main-app` folder, explaining that it is a
+ * [x] Add a README to the `main-app` folder, explaining that it is a
    half-built app that works well so far, but we're not yet making it live
    in this new repo because we're redesigning it and a lot may change.
+ * [x] Add to the new repository a record of all changes performed on
+   MediaWiki to get it working with Lurch.
 
 ## Migrating unit tests
 
