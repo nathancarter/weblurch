@@ -385,6 +385,80 @@ For each of them, do all of the following steps.
    from "webLurch Application" to "Lurch Application," check to see if your
    MediaWiki modifications on the other end are sensitive to that, and if
    so, update them.
+ * [ ] Add a README to the `main-app` folder, explaining that it is a
+   half-built app that works well so far, but we're not yet making it live
+   in this new repo because we're redesigning it and a lot may change.
+
+## Migrating unit tests
+
+ * [ ] Make a Gulp task called `tests` that initially does nothing.  Commit,
+   but mention that obviously this is not yet complete.
+ * [ ] Extend that Gulp task so that it runs any unit tests that do not yet
+   need [PhantomJS](http://phantomjs.org/).  Ensure that they run (not
+   necessarily passing yet) and then commit.
+ * [ ] If needed, fix any errors detected by the newly running unit tests,
+   and commit.
+
+## Migrating documentation
+
+ * [ ] Copy all the content from the old repo's `doc-src/` folder into the
+   new repo's `docs/` folder.  Do not commit.
+ * [ ] Transfer the contents of the `mkdocs.yml` file into this new
+   repository.  Do not commit.
+ * [ ] Move off to the side all files that teach how to use the main Lurch
+   app, because that has not yet been transferred/updated/designed in this
+   new context.  Ensure they are removed from `mkdocs.yml`.  Do not commit.
+ * [ ] Create a gulp build process that runs mkdocs.  Ensure that it works,
+   even though the docs aren't yet updated.  Commit.
+ * [ ] Proofread each page in the new site, updating any links or
+   explanations to be accurate and up-to-date after all the recent migration
+   changes.  This should include explaining what's going on with the main
+   app, in its limbo state.  Test often as you write, using the Gulp task
+   that builds the documentation.  Commit.
+ * [ ] Update `setup.litcoffee`, in which I formerly commented out the
+   section linking to the developer tutorial from the Help menu.  Now you
+   can add that link back in, to the new developer tutorial.
+ * [ ] Update the README in the `lwp-example-lean` repository to reference
+   the full Lean tutorial documentation.  While you're at it, check to see
+   if that app actually uses the equation editor at all.  If not, remove
+   the `eqed/` subfolder from that repository, as well as the scripts
+   imported from it, just to simplify things.
+
+## Preparing various repos to be used in WebWorkers
+
+ * [ ] Extend the first-order matching package with a function that checks
+   to see if the script is being run in a WebWorker.  Just check for the
+   presence of the global `WorkerGlobalScope` object.  If it is, then
+   install a message listener that exposes the entire matching API to the
+   parent window.  Recall the functions for doing so,
+   [described here](https://www.codeday.top/2017/09/02/37957.html).
+ * [ ] Extend the tests in that module to ensure that the in-worker version
+   works just fine when accessed by message-passing.  You can get a
+   WebWorker shim for node.js
+   [here](https://www.npmjs.com/package/webworker-threads).  To do async
+   testing in Jasmine, see the documentation on that feature
+   [here](https://jasmine.github.io/2.0/introduction.html#section-Asynchronous_Support).
+ * [ ] Commit and push those changes.
+ * [ ] Extend the documentation in the mkdocs site in that repo so that it
+   mentions the WebWorker support, showing how to use it, and linking to the
+   relevant portions of the source code and testing spec.  Commit, push.
+ * [ ] Update the minor version number and re-publish to npm.
+ * [ ] Extend the Earley Parsing package with a function that checks to see
+   if the script is being run in a WebWorker.  Just check for the presence
+   of the global `WorkerGlobalScope` object.  If it is, then install a
+   message listener that exposes the entire parsing API to the parent
+   window.  Recall the functions for doing so,
+   [described here](https://www.codeday.top/2017/09/02/37957.html).
+ * [ ] Extend the tests in that module to ensure that the in-worker version
+   works just fine when accessed by message-passing.  You can get a
+   WebWorker shim for node.js
+   [here](https://www.npmjs.com/package/webworker-threads).  To do async
+   testing in Jasmine, see the documentation on that feature
+ * [ ] Commit and push those changes.
+ * [ ] Extend the documentation in the mkdocs site in that repo so that it
+   mentions the WebWorker support, showing how to use it, and linking to the
+   relevant portions of the source code and testing spec.  Commit, push.
+ * [ ] Update the minor version number and re-publish to npm.
 
 ## Warning
 
@@ -403,32 +477,8 @@ make sense, or at least know better how to do them correctly.
  * [ ] Ensure that the HTML app in that folder still functions, just as it
    does in the old repo.  Commit.
 
-## Migrating documentation
+## Adding in-browser testing
 
- * [ ] Copy all the content from the old repo's `doc-src/` folder into the
-   new repo's `docs/` folder.  Do not commit.
- * [ ] Proofread each page in that new folder, updating any links or
-   explanations to be accurate and up-to-date after all the recent migration
-   changes.  Test often as you write, using the Gulp task that builds the
-   documentation.  Commit.
- * [ ] Update `setup.litcoffee`, in which I formerly commented out the
-   section linking to the developer tutorial from the Help menu.  Now you
-   can add that link back in, to the new developer tutorial.
- * [ ] Update the README in the `lwp-example-lean` repository to reference
-   the full Lean tutorial documentation.  While you're at it, check to see
-   if that app actually uses the equation editor at all.  If not, remove
-   the `eqed/` subfolder from that repository, as well as the scripts
-   imported from it, just to simplify things.
-
-## Migrating unit tests
-
- * [ ] Make a Gulp task called `tests` that initially does nothing.  Commit,
-   but mention that obviously this is not yet complete.
- * [ ] Extend that Gulp task so that it runs any unit tests that do not yet
-   need [PhantomJS](http://phantomjs.org/).  Ensure that they run (not
-   necessarily passing yet) and then commit.
- * [ ] If needed, fix any errors detected by the newly running unit tests,
-   and commit.
  * [ ] Add PhantomJS to the `package.json` file of the new repository,
    following the lead of how this was first done in the old repository.
  * [ ] Extend the Gulp tests task so that it successfully runs the simplest
