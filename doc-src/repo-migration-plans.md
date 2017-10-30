@@ -393,34 +393,32 @@ For each of them, do all of the following steps.
 
 ## Migrating unit tests
 
- * [ ] Make a Gulp task called `tests` that initially does nothing.  Commit,
+ * [x] Make a Gulp task called `tests` that initially does nothing.  Commit,
    but mention that obviously this is not yet complete.
- * [ ] Extend that Gulp task so that it runs any unit tests that do not yet
+ * [x] Extend that Gulp task so that it runs any unit tests that do not yet
    need [PhantomJS](http://phantomjs.org/).  Ensure that they run (not
    necessarily passing yet) and then commit.
- * [ ] If needed, fix any errors detected by the newly running unit tests,
-   and commit.
 
 ## Migrating documentation
 
- * [ ] Copy all the content from the old repo's `doc-src/` folder into the
+ * [x] Copy all the content from the old repo's `doc-src/` folder into the
    new repo's `docs/` folder.  Do not commit.
- * [ ] Transfer the contents of the `mkdocs.yml` file into this new
+ * [x] Transfer the contents of the `mkdocs.yml` file into this new
    repository.  Do not commit.
- * [ ] Move off to the side all files that teach how to use the main Lurch
+ * [x] Move off to the side all files that teach how to use the main Lurch
    app, because that has not yet been transferred/updated/designed in this
    new context.  Ensure they are removed from `mkdocs.yml`.  Do not commit.
- * [ ] Create a gulp build process that runs mkdocs.  Ensure that it works,
+ * [x] Create a gulp build process that runs mkdocs.  Ensure that it works,
    even though the docs aren't yet updated.  Commit.
- * [ ] Proofread each page in the new site, updating any links or
+ * [x] Proofread each page in the new site, updating any links or
    explanations to be accurate and up-to-date after all the recent migration
    changes.  This should include explaining what's going on with the main
    app, in its limbo state.  Test often as you write, using the Gulp task
    that builds the documentation.  Commit.
- * [ ] Update `setup.litcoffee`, in which I formerly commented out the
+ * [x] Update `setup.litcoffee`, in which I formerly commented out the
    section linking to the developer tutorial from the Help menu.  Now you
    can add that link back in, to the new developer tutorial.
- * [ ] Update the README in the `lwp-example-lean` repository to reference
+ * [x] Update the README in the `lwp-example-lean` repository to reference
    the full Lean tutorial documentation.  While you're at it, check to see
    if that app actually uses the equation editor at all.  If not, remove
    the `eqed/` subfolder from that repository, as well as the scripts
@@ -478,6 +476,12 @@ make sense, or at least know better how to do them correctly.
    Lurch Web Platform from the parent directory (`site/`).
  * [ ] Ensure that the HTML app in that folder still functions, just as it
    does in the old repo.  Commit.
+ * [ ] Once there is a main app, update the `lurch-embed` script to point to
+   the release version of the main app.  Then update the `mkdocs.yml` file
+   to import that updated embed script.
+ * [ ] Once there is a main app, update the old unit tests to load the main
+   page of that app and test themselves against it.  Add those unit tests to
+   the gulp test process.
 
 ## Adding in-browser testing
 
