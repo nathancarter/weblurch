@@ -464,32 +464,34 @@ For each of them, do all of the following steps.
    window.  Recall the functions for doing so,
    [described here](https://www.codeday.top/2017/09/02/37957.html).
    Here's a potential API:
-    * [ ] `newParser(name)` creates a new parser keyed by the given name,
+    * [x] `newParser(name)` creates a new parser keyed by the given name,
       with no tokenizer or expression builder, overwriting any old one with
       the same name.
-    * [ ] `addRule(name,cat,seqs...)` adds one or more rules to the named
+    * [x] `addRule(name,cat,seqs...)` adds one or more rules to the named
       parser, with the LHS of each being the given category and the RHSs
       being `seqs[0]`, `seqs[1]`, and so on.  The RHSs can be regular
       expressions, arrays, or space-delimited strings
-    * [ ] `parse(name,text)` runs the named parser on the given text,
+    * [x] `parse(name,text)` runs the named parser on the given text,
       sending back an array of valid parsings, which may be empty.
-    * [ ] `addType(name,regexp)` adds a token type to the tokenizer for the
+    * [x] `addType(name,regexp)` adds a token type to the tokenizer for the
       parser.  Note that the parser does not, by default, have a tokenizer,
       and thus the first time this is called it will need to create one, and
       either call `setOption('tokenizer',T)` in the parser to make it the
       default tokenizer (later accessed through `P.defaults.tokenizer`) or
       pass it in the options of every call to `parse()`.
-    * [ ] `deleteParser(name)` erases the named parser from memory
- * [ ] Extend the tests in that module to ensure that the in-worker version
+    * [x] `deleteParser(name)` erases the named parser from memory
+ * [x] Extend the tests in that module to ensure that the in-worker version
    works just fine when accessed by message-passing.  You can get a
    WebWorker shim for node.js
    [here](https://www.npmjs.com/package/webworker-threads).  To do async
    testing in Jasmine, see the documentation on that feature
- * [ ] Commit and push those changes.
- * [ ] Extend the documentation in the mkdocs site in that repo so that it
+ * [x] Extend it with support for transformation functions in the tokenizer,
+   so that you can remove whitespace with `-> null`.
+ * [x] Commit and push those changes.
+ * [x] Extend the documentation in the mkdocs site in that repo so that it
    mentions the WebWorker support, showing how to use it, and linking to the
    relevant portions of the source code and testing spec.  Commit, push.
- * [ ] Update the minor version number and re-publish to npm.
+ * [x] Update the minor version number and re-publish to npm.
 
 ## Warning
 
