@@ -426,29 +426,60 @@ For each of them, do all of the following steps.
 
 ## Preparing various repos to be used in WebWorkers
 
- * [ ] Extend the first-order matching package with a function that checks
+ * [x] Extend the first-order matching package with a function that checks
    to see if the script is being run in a WebWorker.  Just check for the
    presence of the global `WorkerGlobalScope` object.  If it is, then
-   install a message listener that exposes the entire matching API to the
-   parent window.  Recall the functions for doing so,
+   install a message listener that exposes a version of the matching API to
+   the parent window.  Recall the functions for doing so,
    [described here](https://www.codeday.top/2017/09/02/37957.html).
- * [ ] Extend the tests in that module to ensure that the in-worker version
+   Here's a potential API:
+    * [x] `newProblem(name,x,y)` creates a new problem keyed by the given
+      name (overwriting any old one with that name) whose constraint set is
+      the single constraint that `x` must match `y`.  Both `x` and `y` are
+      `OMNode` instances, and `x` may contain metavariables.  Note that
+      since the client will need to create metavariables, we can either
+      provide an API function that will do so (though asynchronously of
+      course), or the client can import the matching package also.
+    * [x] `getSolution(name)` fetches the next solution to the named
+      problem, or null if there isn't another solution.  Send back an object
+      containing a success/failure boolean, a total number of solutions
+      found so far, and the next solution object iff the success boolean was
+      true.
+    * [x] `deleteProblem(name)` erases the named problem from memory
+ * [x] Extend the tests in that module to ensure that the in-worker version
    works just fine when accessed by message-passing.  You can get a
    WebWorker shim for node.js
    [here](https://www.npmjs.com/package/webworker-threads).  To do async
    testing in Jasmine, see the documentation on that feature
    [here](https://jasmine.github.io/2.0/introduction.html#section-Asynchronous_Support).
- * [ ] Commit and push those changes.
- * [ ] Extend the documentation in the mkdocs site in that repo so that it
+ * [x] Commit and push those changes.
+ * [x] Extend the documentation in the mkdocs site in that repo so that it
    mentions the WebWorker support, showing how to use it, and linking to the
    relevant portions of the source code and testing spec.  Commit, push.
- * [ ] Update the minor version number and re-publish to npm.
+ * [x] Update the minor version number and re-publish to npm.
  * [ ] Extend the Earley Parsing package with a function that checks to see
    if the script is being run in a WebWorker.  Just check for the presence
    of the global `WorkerGlobalScope` object.  If it is, then install a
-   message listener that exposes the entire parsing API to the parent
+   message listener that exposes a version of the parsing API to the parent
    window.  Recall the functions for doing so,
    [described here](https://www.codeday.top/2017/09/02/37957.html).
+   Here's a potential API:
+    * [ ] `newParser(name)` creates a new parser keyed by the given name,
+      with no tokenizer or expression builder, overwriting any old one with
+      the same name.
+    * [ ] `addRule(name,cat,seqs...)` adds one or more rules to the named
+      parser, with the LHS of each being the given category and the RHSs
+      being `seqs[0]`, `seqs[1]`, and so on.  The RHSs can be regular
+      expressions, arrays, or space-delimited strings
+    * [ ] `parse(name,text)` runs the named parser on the given text,
+      sending back an array of valid parsings, which may be empty.
+    * [ ] `addType(name,regexp)` adds a token type to the tokenizer for the
+      parser.  Note that the parser does not, by default, have a tokenizer,
+      and thus the first time this is called it will need to create one, and
+      either call `setOption('tokenizer',T)` in the parser to make it the
+      default tokenizer (later accessed through `P.defaults.tokenizer`) or
+      pass it in the options of every call to `parse()`.
+    * [ ] `deleteParser(name)` erases the named parser from memory
  * [ ] Extend the tests in that module to ensure that the in-worker version
    works just fine when accessed by message-passing.  You can get a
    WebWorker shim for node.js
